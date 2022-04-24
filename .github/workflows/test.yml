@@ -29,12 +29,12 @@ jobs:
         run: |
           find /usr/lib -name "libffi.so*"
           sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
-          wget https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
+          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
           tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
           cd forest-sdk-2.23.0-linux-deb/
-          apt-get update
-          apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
-          sh ./forest-sdk-2.23.0-linux-deb.run
+          sudo apt-get update
+          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
+          sudo ./forest-sdk-2.23.0-linux-deb.run
           qvm --version
           quilc --version
           echo "Starting qvm and quilc"
