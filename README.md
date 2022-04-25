@@ -58,7 +58,7 @@ Currently, the available devices are:
 | ------------- | ------------- |
 | `locale`  | `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'nq-qvm', 'Aspen-11']`  |
 | `IBMQ`    | Please check the IMBQ backends available to your account |
-| `QCS`     | `[nq-qvm`, `Aspen-11]`
+| `QCS`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
 
 With the notation `nq-qvm` it is intended that `n` is a positive integer. For example, `6q-qvm`.
 

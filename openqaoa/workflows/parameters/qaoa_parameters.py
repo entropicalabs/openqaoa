@@ -30,7 +30,7 @@ ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
 ALLOWED_MIXERS = ['x', 'xy']
 ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS
 
-ALLOWED_QVM_DEVICES = ['Aspen-11', '2q-qvm', '3q-qvm', '4q-qvm', '5q-qvm', '6q-qvm', '7q-qvm', '8q-qvm', '9q-qvm', '10q-qvm', '11q-qvm', '12q-qvm', '13q-qvm', '14q-qvm', '15q-qvm',
+ALLOWED_QVM_DEVICES = ['Aspen-11', 'Aspen-M-1', '2q-qvm', '3q-qvm', '4q-qvm', '5q-qvm', '6q-qvm', '7q-qvm', '8q-qvm', '9q-qvm', '10q-qvm', '11q-qvm', '12q-qvm', '13q-qvm', '14q-qvm', '15q-qvm',
                        '16q-qvm', '17q-qvm', '18q-qvm', '19q-qvm', '20q-qvm', '21q-qvm', '22q-qvm', '23q-qvm', '24q-qvm', '25q-qvm', '26q-qvm', '27q-qvm', '28q-qvm', '29q-qvm', '30q-qvm', '31q-qvm', '32q-qvm', '33q-qvm', '34q-qvm', '35q-qvm', '36q-qvm', '37q-qvm', '38q-qvm', '39q-qvm', '40q-qvm', '41q-qvm', '42q-qvm', '43q-qvm', '44q-qvm', '45q-qvm',
                        '46q-qvm', '47q-qvm', '48q-qvm', '49q-qvm', '50q-qvm', '51q-qvm', '52q-qvm', '53q-qvm', '54q-qvm', '55q-qvm', '56q-qvm', '57q-qvm', '58q-qvm', '59q-qvm', '60q-qvm',
                        '61q-qvm', '62q-qvm', '63q-qvm', '64q-qvm', '65q-qvm', '66q-qvm', '67q-qvm', '68q-qvm', '69q-qvm', '70q-qvm', '71q-qvm', '72q-qvm', '73q-qvm', '74q-qvm', '75q-qvm', '76q-qvm', '77q-qvm', '78q-qvm', '79q-qvm']
