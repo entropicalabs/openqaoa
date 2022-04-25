@@ -1,7 +1,13 @@
 name: test
 
 # Controls when the workflow will run
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:

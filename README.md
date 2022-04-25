@@ -8,7 +8,7 @@ Multi-backend SDK for quantum optimisation
 1. Clone the git repository:
 
 ```bash
-git clone https://gitlab.com/entropica/openqaoa-temporary.git
+git clone git@github.com:entropicalabs/openqaoa.git
 ```
 
 2. Creating a python `virtual enviorement` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8.8** for the environment.
@@ -78,6 +78,11 @@ rqaoa_type can take two values which select elimination strategies. The user can
 ### Factory mode
 
 The user is also free to directly access the source code without using the workflow API. 
+
+A few reference notebooks can be found:
+[comparing vectorized, pyquil, and qiskit backents](test_backends_correctness.ipynb)
+[Parameter sweep for vectorised](openqaoa_example_vectorised.ipynb)
+
 
 The basic procedure is the following
 
