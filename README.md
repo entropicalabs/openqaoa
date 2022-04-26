@@ -1,6 +1,6 @@
 # OpenQAOA
 
-Multi-backend SDK for quantum optimisation
+Multi-backend SDK for quantum optimization
 
 
 ## Installation instructions
@@ -21,7 +21,7 @@ pip install -e .
 
 ## Getting started
 
-There are two ways to solve optimisations problems using OpneQAOA. 
+There are two ways to solve optimizations problems using OpenQAOA. 
 
 ### Workflows
 
@@ -109,7 +109,7 @@ backend_obj = QAOAvectorizedBackendSimulator(circuit_params = circuit_params, ap
 
 ```
 
-And finally, create the classical optimiser and minimise the objective function
+And finally, create the classical optimizer and minimize the objective function
 
 ```
 optimizer_dict = {'method': 'cobyla', 'maxiter': 10}
@@ -117,7 +117,7 @@ optimizer_obj = ScipyOptimizer(backend_obj, variate_params, optimizer_dict)
 optimizer_obj()
 ```
 
-The result of the optimisation will the be accessible as 
+The result of the optimization will the be accessible as 
 ```
 optimizer_obj.results_information()
 ```
