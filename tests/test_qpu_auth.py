@@ -43,7 +43,7 @@ class TestingAccessObjectQiskit(unittest.TestCase):
 
     def setUp(self):
 
-        with open('./tests/credentials.json', 'r') as f:
+        with open('credentials.json', 'r') as f:
             json_obj = json.load(f)['QISKIT']
             self.API_TOKEN = json_obj['API_TOKEN']
             self.HUB = json_obj['HUB']

@@ -57,7 +57,7 @@ class AccessObjectQiskit(AccessObjectBase):
 
         Parameters
         ----------
-        api_token: str    
+        api_token: str
             Valid IBMQ Experience Token.
         hub: str
             Valid IBMQ hub name.
@@ -69,7 +69,7 @@ class AccessObjectQiskit(AccessObjectBase):
         selected_qpu: str
             The name of the QPU in which the user would like to connect with.
         """
-
+        
         self.api_token = api_token
         self.hub = hub
         self.group = group
