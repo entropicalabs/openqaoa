@@ -16,6 +16,7 @@ import networkx as nx
 import numpy as np
 import itertools
 import unittest
+from unittest.mock import patch
 
 from openqaoa.utilities import *
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian
@@ -124,6 +125,76 @@ class TestingUtilities(unittest.TestCase):
                     assert np.allclose(coefficients,correct_coefficients), f'The coefficients in the XY mixer Hamiltonian were not generated correctly for {input} input'
                     assert np.allclose(constant,correct_constant), f'The constant in the XY mixer Hamiltonian was not generated correctly for {input} input'
 
+        
+        # Exception case - Insert an connectivity input name that is not supported
+
+        # Supported connectivities
+        supported_connectivities = ['full','chain','star']
+
+        # Choose a wrong connectivity
+        connectivity = 'bubbletea'
+
+        # Attempt construction of Pauli operator 
+        with self.assertRaises(ValueError) as context:
+            mixer_hamiltonian = XY_mixer_hamiltonian(n_qubits,connectivity,input_coefficients)
+
+        # Check exception message
+        self.assertEqual(f"Please choose connection topology from {supported_connectivities}", str(context.exception))
+
+    def test_get_mixer_hamiltonian(self):
+        """
+        Tests the generic function for retrieving mixer Hamiltonians.
+
+        The test consists in retrieving mixing Hamiltonians from the different available types.
+        """
+
+        # Define number of qubits
+        n_qubits = 10
+
+        # Define a qubit connectivity for X, and a connectivity for XY mixers
+        connectivities = [None,'star','full','chain']
+
+        for connectivity in connectivities:
+
+            # Define connectivity explicit indexing
+            if connectivity == 'full':
+                terms_indices = list(itertools.combinations(range(n_qubits),2))
+                input_coefficients = 2*[1 for _ in range(len(terms_indices))]
+                label = 'xy'
+
+            elif connectivity == 'chain':
+                terms_indices = [(i,i+1) for i in range(n_qubits-1)]
+                input_coefficients = 2*[1 for _ in range(len(terms_indices))]
+                label = 'xy'
+
+            elif connectivity == 'star':
+                terms_indices = [(0,i) for i in range(1,n_qubits)]
+                input_coefficients = 2*[1 for _ in range(len(terms_indices))]
+                label = 'xy'
+
+            else:
+                input_coefficients = [1 for _ in range(n_qubits)]
+                label = 'x'
+
+            # Retrieve Hamiltonian and attributes
+            mixer_hamiltonian = get_mixer_hamiltonian(n_qubits,connectivity,input_coefficients)
+            terms = mixer_hamiltonian.terms
+            coefficients = mixer_hamiltonian.coeffs
+
+            # Generate correct Hamiltonian and attributes
+            if label == 'xy':
+                correct_mixer_hamiltonian = XY_mixer_hamiltonian(n_qubits,connectivity,input_coefficients)
+
+            else:
+                correct_mixer_hamiltonian = X_mixer_hamiltonian(n_qubits,input_coefficients)
+                
+            correct_terms = correct_mixer_hamiltonian.terms
+            correct_coefficients = correct_mixer_hamiltonian.coeffs
+
+            # Test that the mixer Hamiltonian was correctly generated
+            assert terms == correct_terms, f'The terms in the mixer Hamiltonian were not generated correctly for {connectivity} connectivity'
+            assert np.allclose(coefficients,correct_coefficients), f'The coefficients in the mixer Hamiltonian were not generated correctly for {connectivity} connectivity'
+             
     def test_graph_from_hamiltonian(self):
         """
         Tests the function that extracts the underlying graph from a Hamiltonian.
@@ -228,14 +299,17 @@ class TestingUtilities(unittest.TestCase):
             # Check for weighted and unweighted
             for weighted in [False,True]:
 
-                graph = random_k_regular_graph(degree,list(range(n_nodes)), weighted = weighted)
+                for biases in [False,True]:
 
-                # Test it has the correct number of edges for a regular graph
-                assert np.allclose(len(list(graph.edges)), degree*n_nodes/2), f'The number of edges is not correct'
+                    # Generate graph
+                    graph = random_k_regular_graph(degree,list(range(n_nodes)), weighted = weighted, biases = biases)
 
-                # Test graph is properly unweighted
-                if weighted is False:
-                    assert np.allclose(list(nx.get_edge_attributes(graph, 'weight').values()),[1 for _ in range(int(degree*n_nodes/2))]), f'Graph is not unweighted'
+                    # Test it has the correct number of edges for a regular graph
+                    assert np.allclose(len(list(graph.edges)), degree*n_nodes/2), f'The number of edges is not correct'
+
+                    # Test graph is properly unweighted
+                    if weighted is False:
+                        assert np.allclose(list(nx.get_edge_attributes(graph, 'weight').values()),[1 for _ in range(int(degree*n_nodes/2))]), f'Graph is not unweighted'
 
     def test_random_classical_hamiltonian(self):
         """"
