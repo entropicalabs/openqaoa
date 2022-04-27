@@ -311,21 +311,6 @@ class PauliOp:
         return cls('I', (qubit_idx,))
 
 
-def pauli_multiplication(pauli_op1: PauliOp, pauli_op2: PauliOp):
-    """
-    Return the product of two `PauliOp` as a new `PauliOp`
-
-    Parameters
-    ----------
-    pauli_op1: `PauliOp`
-        The first Pauli Operator
-    pauli_op2: `PauliOp`
-        The second Pauli Operator
-    """
-    pauli_op1 *= pauli_op2
-    return pauli_op1
-
-
 class Hamiltonian:
     """
     General Quantum Hamiltonian class.
@@ -357,10 +342,10 @@ class Hamiltonian:
                     self.constant += coeffs[i]
                 else:
                     self.terms.append(term)
-                phase = term.phase
-                # update the coefficients with phase from Pauli Operators
-                phase_adjusted_coeff = coeffs[i]*phase
-                self.coeffs.append(phase_adjusted_coeff)
+                    phase = term.phase
+                    # update the coefficients with phase from Pauli Operators
+                    phase_adjusted_coeff = coeffs[i]*phase
+                    self.coeffs.append(phase_adjusted_coeff)
             else:
                 raise ValueError(
                     "Hamiltonian only supports construction using Pauli Operators")
@@ -448,15 +433,11 @@ class Hamiltonian:
         """
         assert isinstance(other_hamiltonian, Hamiltonian)
         for other_term, other_coeff in zip(other_hamiltonian.terms, other_hamiltonian.coeffs):
-            if isinstance(other_term, PauliOp):
-                if other_term in self.terms:
-                    self.coeffs[self.terms.index(other_term)] += other_coeff
-                else:
-                    self.terms.append(other_term)
-                    self.coeffs.append(other_coeff)
+            if other_term in self.terms:
+                self.coeffs[self.terms.index(other_term)] += other_coeff
             else:
-                raise ValueError(
-                    "Hamiltonian terms should be `PauliOp` objects only")
+                self.terms.append(other_term)
+                self.coeffs.append(other_coeff)
 
     @property
     def hamiltonian_squared(self):
@@ -497,7 +478,9 @@ class Hamiltonian:
                               terms: List[Union[Tuple, List]],
                               coeffs: List[Union[float, int]],
                               constant: float):
+
         for coeff in coeffs:
+            
             if not isinstance(coeff, int) and not isinstance(coeff, float):
                 raise ValueError(
                     "Classical Hamiltonians only support Integer or Float coefficients")
@@ -513,21 +496,3 @@ class Hamiltonian:
                     "Hamiltonian only supports Linear and Quadratic terms")
 
         return cls(pauli_ops, coeffs, constant)
-
-
-def check_pauli_commutation(pauli_op1: PauliOp, pauli_op2: PauliOp):
-    """
-    Check whether two Pauli Operators commute
-
-    Parameters
-    ----------
-    pauli_op1 : `PauliOp`
-        Pauli Operator 1
-    pauli_op2 : `PauliOp`
-        Pauli Operator 2
-
-    Returns
-    -------
-    bool
-    """
-    pass
