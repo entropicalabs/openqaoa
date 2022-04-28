@@ -90,7 +90,10 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.qureg = self.circuit_params.qureg
-
+        
+        if self.prepend_state:
+            assert self.n_qubits >= len(prepend_state.get_qubits()), "Cannot attach a bigger circuit " \
+                                                                "to the QAOA routine"
         # TODO: access_object implementation for PyQuil
         self.parametric_circuit = self.parametric_qaoa_circuit
         native_prog = self.access_object.quantum_computer.compiler.quil_to_native_quil(
