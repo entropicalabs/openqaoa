@@ -14,22 +14,24 @@
 
 from collections import Counter
 import numpy as np
-from pyquil import Program, gates
+from pyquil import Program, gates, quilbase
 
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...backends.qpus.qpu_auth import AccessObjectPyQuil
 from ...qaoa_parameters.pauligate import RZZPauliGate, SWAPGate
 
-def check_edge_connectivity(circuit_params: QAOACircuitParams, access_object: AccessObjectPyQuil):
+def check_edge_connectivity(executable: Program, access_object: AccessObjectPyQuil):
     '''
     Check that the program does not contain 2-qubit terms that is not present in the QPU's topology (to prevent quilc from crashing).
     '''
-    
+
     qpu_graph = access_object.quantum_computer.qubit_topology()
-    terms = [pairs.qubit_indices for pairs in circuit_params.cost_hamiltonian.qubits_pairs] + [pairs.qubit_indices for pairs in circuit_params.mixer_hamiltonian.qubits_pairs]
     
-    for term in terms:
+    instrs = [instr for instr in executable if type(instr) == quilbase.Gate]
+    pair_instrs = [list(instr.get_qubits()) for instr in instrs if len(instr.get_qubits()) == 2]
+
+    for term in pair_instrs:
         if len(term) == 2:
             assert term in qpu_graph.edges(), f"Term {term} is not an edge on the QPU graph of {access_object.name}."   
     
@@ -88,9 +90,6 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.qureg = self.circuit_params.qureg
-        
-        # Check Hamiltonian connectivity against QPU connectivity
-        check_edge_connectivity(circuit_params, access_object)
 
         # TODO: access_object implementation for PyQuil
         self.parametric_circuit = self.parametric_qaoa_circuit
@@ -98,6 +97,10 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             self.parametric_circuit)
         self.prog_exe = self.access_object.quantum_computer.compiler.native_quil_to_executable(
             native_prog)
+        
+        # Check program connectivity against QPU connectivity
+        # TODO: reconcile with PRAGMA PRESERVE
+        # check_edge_connectivity(self.prog_exe, access_object)
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
         """
