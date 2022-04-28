@@ -336,16 +336,14 @@ class Hamiltonian:
         self.terms = []
         self.coeffs = []
         self.constant = constant
-        for i, term in enumerate(pauli_terms):
+        for term,coeff in zip(pauli_terms,coeffs):
             if isinstance(term, PauliOp):
                 if term._is_trivial:
-                    self.constant += coeffs[i]
+                    self.constant += coeff
                 else:
                     self.terms.append(term)
-                    phase = term.phase
                     # update the coefficients with phase from Pauli Operators
-                    phase_adjusted_coeff = coeffs[i]*phase
-                    self.coeffs.append(phase_adjusted_coeff)
+                    self.coeffs.append(coeff*term.phase)
             else:
                 raise ValueError(
                     "Hamiltonian only supports construction using Pauli Operators")
@@ -496,3 +494,4 @@ class Hamiltonian:
                     "Hamiltonian only supports Linear and Quadratic terms")
 
         return cls(pauli_ops, coeffs, constant)
+        
