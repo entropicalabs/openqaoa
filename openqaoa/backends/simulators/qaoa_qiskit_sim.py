@@ -176,8 +176,9 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         """
         A method to convert the QAOA circuit to QASM.
         """
-        qasm_circuit = self.parametric_circuit.qasm()
-        return qasm_circuit
+        raise NotImplementedError()
+#         qasm_circuit = self.parametric_circuit.qasm()
+#         return qasm_circuit
 
     def reset_circuit(self):
         raise NotImplementedError()
