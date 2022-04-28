@@ -16,7 +16,6 @@ import networkx as nx
 import numpy as np
 import itertools
 import unittest
-from unittest.mock import patch
 
 from openqaoa.utilities import *
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian

@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from urllib.parse import non_hierarchical
 import numpy as np
 from sympy import Symbol
 import unittest
