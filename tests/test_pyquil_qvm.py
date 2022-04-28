@@ -215,6 +215,10 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         assert ['RX', 'RY', 'RZ', 'RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX'] == [instr.name for instr in pyquil_backend.parametric_circuit if type(instr) == quilbase.Gate]
         
+        # Test if error is raised correctly
+        prepend_circuit = Program().inst(RX(np.pi, 0), RY(np.pi/2, 1), RZ(np.pi, 2))
+        self.assertRaises(AssertionError, lambda : QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = prepend_circuit, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)) 
+        
     def test_pyquil_vectorized_agreement(self):
 
         """
