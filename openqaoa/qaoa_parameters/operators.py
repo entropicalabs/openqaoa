@@ -494,4 +494,3 @@ class Hamiltonian:
                     "Hamiltonian only supports Linear and Quadratic terms")
 
         return cls(pauli_ops, coeffs, constant)
-        
