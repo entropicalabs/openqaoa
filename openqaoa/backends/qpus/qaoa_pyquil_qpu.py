@@ -45,7 +45,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         Either 'PRAGMA INITIAL_REWIRING "NAIVE"' or 
         'PRAGMA INITIAL_REWIRING "PARTIAL"'. If None, defaults to NAIVE.
     active_reset: 
-        #TODO
+        Whether to use the pyQuil's active reset scheme to reset qubits between shots. 
     """
 
     def __init__(self,
@@ -83,9 +83,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
         """
-        Creates a QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
-        and a set of circuit angles. Note that this function does not actually run
-        the circuit. To do this, you will need to subsequently execute the command self.eng.flush().
+        Injects angles into created executable parametric circuit.
 
         Parameters
         ----------
@@ -94,7 +92,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         Returns
         -------
         `pyquil.Program`
-            A pyquil.Program object.
+            A pyquil.Program (executable) object.
         """
         angles_list = np.array(self.obtain_angles_for_pauli_list(
             self.pseudo_circuit, params), dtype=float)
@@ -109,9 +107,9 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
     @property
     def parametric_qaoa_circuit(self) -> Program:
         """
-        Creates a QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
+        Creates a parametric QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
         and a set of circuit angles. Note that this function does not actually run
-        the circuit. To do this, you will need to subsequently execute the command self.eng.flush().
+        the circuit. 
 
         Parameters
         ----------
