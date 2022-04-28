@@ -81,7 +81,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
             qubit_connectivity = connectivity_topology_dict[qubit_connectivity]
         except KeyError:
             raise ValueError(
-                f'Please choose connection topology from {connectivity_topology_dict.keys()}')
+                f'Please choose connection topology from {list(connectivity_topology_dict.keys())}')
     else:
 
         indices = set([qubit for term in qubit_connectivity for qubit in term])
@@ -258,12 +258,12 @@ def plot_graph(G: nx.Graph, ax=None):
     edge_vmax = max(weights)
     cmap = plt.cm.seismic
     fig = plt.figure(figsize=(10, 6))
-
+    
     sm = plt.cm.ScalarMappable(cmap=cmap,
                                norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
     cbar = plt.colorbar(sm)
     cbar.ax.set_ylabel('Edge Weights', rotation=270)
-
+    
     if biases != []:
         vmin = min(biases)
         vmax = max(biases)
