@@ -22,7 +22,6 @@ from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees
 from openqaoa.qaoa_parameters import QAOAVariationalExtendedParams, QAOAVariationalStandardParams, Hamiltonian, PauliOp
 from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
 from openqaoa.qaoa_parameters.qaoa_params import create_qaoa_variational_params
-from openqaoa.backends.qaoa_backend import get_qaoa_backend
 
 """
 A set of tests for FastQAOA: see the notebook Test_Examples.ipynb for explanations of how the
@@ -177,8 +176,8 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
                                                                gammas_singles,
                                                                gammas_pairs)
 
-        backend_vectorized = get_qaoa_backend(
-            qaoa_circuit_params, 'vectorized')
+        backend_vectorized = QAOAvectorizedBackendSimulator(qaoa_circuit_params, prepend_state=None,
+                                                            append_state=None, init_hadamard=True)
 
         wf = backend_vectorized.wavefunction(variational_params_ext)
 
@@ -204,8 +203,8 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(
             n_qubits)
 
-        backend_vectorized = get_qaoa_backend(
-            qaoa_circuit_params, 'vectorized')
+        backend_vectorized = QAOAvectorizedBackendSimulator(qaoa_circuit_params, prepend_state=None,
+                                                            append_state=None, init_hadamard=True)
         exp_val, std_dev1 = backend_vectorized.expectation_w_uncertainty(
             variate_params)
 
