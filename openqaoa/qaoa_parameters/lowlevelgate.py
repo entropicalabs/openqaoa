@@ -162,22 +162,22 @@ class CX(TwoQubitGate):
     @property
     def _in_XY(self) -> List[Tuple[LowLevelGate, List]]:
     
-        return [(RX, [self.qubit_2, np.pi/2]), 
-                (RZ, [self.qubit_1, -np.pi/2]), 
-                (RZ, [self.qubit_1, np.pi/2]), 
-                (RiSWAP, [[self.qubit_1, self.qubit_2,np.pi]]), 
-                (RX, [self.qubit_1, np.pi/2]), 
-                (RiSWAP, [[self.qubit_1, self.qubit_2,np.pi]]), 
-                (RZ, [self.qubit_2, np.pi/2])]
+        return [(RX, [self.qubit_2, RotationAngle(lambda x: x, [], np.pi/2)]), 
+                (RZ, [self.qubit_1, RotationAngle(lambda x: x, [], -np.pi/2)]), 
+                (RZ, [self.qubit_1, RotationAngle(lambda x: x, [], np.pi/2)]), 
+                (RiSWAP, [[self.qubit_1, self.qubit_2, RotationAngle(lambda x: x, [], np.pi)]]), 
+                (RX, [self.qubit_1, RotationAngle(lambda x: x, [], np.pi/2)]), 
+                (RiSWAP, [[self.qubit_1, self.qubit_2, RotationAngle(lambda x: x, [], np.pi)]]), 
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, [], np.pi/2)])]
     
     @property
     def _in_CZ(self) -> List[Tuple[LowLevelGate, List]]:
         
-        return [(RY, [self.qubit_2, np.pi/2]), 
-                (RX, [self.qubit_2, np.pi]), 
+        return [(RY, [self.qubit_2, RotationAngle(lambda x: x, [], np.pi/2)]), 
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, [], np.pi)]), 
                 (CZ, [[self.qubit_1, self.qubit_2]]), 
-                (RY, [self.qubit_2, np.pi/2]), 
-                (RX, [self.qubit_2, np.pi])]
+                (RY, [self.qubit_2, RotationAngle(lambda x: x, [], np.pi/2)]), 
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, [], np.pi)])]
     
     def apply_gate(self, circuit, circuit_library: str, mode: Optional[str] = 'CX'):
         
@@ -195,7 +195,7 @@ class CX(TwoQubitGate):
         if mode == 'CX':
             circuit.cx(self.qubit_1, self.qubit_2)
         elif mode == 'CZ':
-            for each_object, init_params in self.in_CZ:
+            for each_object, init_params in self._in_CZ:
                 circuit = each_object(*init_params).apply_gate(circuit, 'ibm')
         
         return circuit
