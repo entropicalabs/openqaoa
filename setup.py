@@ -14,7 +14,7 @@ requirements = [
     "pytest==7.1.0",
     "sphinx==4.5.0",
     "sphinx-autodoc-typehints==1.18.1",
-    "sphinx-rtd-theme=1.0.0"
+    "sphinx-rtd-theme==1.0.0"
 ]
 
 setup(
