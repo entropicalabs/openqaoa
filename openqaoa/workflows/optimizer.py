@@ -79,8 +79,7 @@ class QAOA(Optimizer):
             init_type: str
                 Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
                 `'rand'`: Randomly initialise circuit parameters
-                `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit 
-                    parameters (inspired from Quantum Annealing)
+                `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit parameters (inspired from Quantum Annealing)
                 `'custom'`: User specified initial circuit parameters
             mixer_hamiltonian: str
                 Parameterisation of the mixer hamiltonian:
@@ -91,8 +90,7 @@ class QAOA(Optimizer):
             ramp_time: `float`
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
             trainable_params_dict: `dict`
-                Dictionary object specifying the initial value of each circuit parameter for the chosen
-                parameterisation, if the `init_type` is selected as `'custom'`.    
+                Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
         """
         if self.intialised_w_prob:
             raise AttributeError(
@@ -111,7 +109,8 @@ class QAOA(Optimizer):
         """
         Specify the device properties
 
-        Parameters:
+        Parameters
+        -------------------
         device_location: str
             Can only take the values `locale` for local simulations, `qcs` for Rigetti's QCS, and `ibmq` for IBM
         device_name: device_name
@@ -121,20 +120,20 @@ class QAOA(Optimizer):
         cloud_credentials: dict
             A dictionary containing the credentials to connecto to cloud services:
             - QCS (rigetti) signature: 
-                (name: str,
-                 as_qvm: bool = None, 
-                 noisy: bool = None,
-                 compiler_timeout: float = 20.0,
-                 execution_timeout: float = 20.0,
-                 client_configuration: QCSClientConfiguration = None,
-                 endpoint_id: str = None,
-                 engagement_manager: EngagementManager = None)
+            (name: str,
+            as_qvm: bool = None, 
+            noisy: bool = None,
+            compiler_timeout: float = 20.0,
+            execution_timeout: float = 20.0,
+            client_configuration: QCSClientConfiguration = None,
+            endpoint_id: str = None,
+            engagement_manager: EngagementManager = None)
             - IBMQ (IBM) signature:
-                api_token: str,
-                hub: str = None,
-                group: str = None,
-                project: str = None,
-                selected_qpu: str = None,
+            (api_token: str,
+            hub: str = None,
+            group: str = None,
+            project: str = None,
+            selected_qpu: str = None)
         """
         if kwargs['device_location'] == 'ibmq':
             kwargs['cloud_credentials']['device_location'] = kwargs['device_location']
@@ -163,11 +162,6 @@ class QAOA(Optimizer):
     def set_backend_properties(self, **kwargs):
         """
         Set the backend properties
-
-        Parameters
-        ----------
-        qpu_credentials: dict
-            Specify QPU credentials as a python dictionary with correct key,value pairs
 
         Parameters
         -------------------

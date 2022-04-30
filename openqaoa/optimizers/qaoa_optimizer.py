@@ -36,20 +36,18 @@ def get_optimizer(vqa_object: VQABaseBackend,
     """
     Initialise the specified optimizer class with provided method and optimizer-specific options
 
-        Parameters
-        ----------
-        vqa_object: `VQABaseBackend`
-                VQA Cost backend object
+    Parameters
+    ----------
+    vqa_object: `VQABaseBackend`
+            VQA Cost backend object
     variational_params: `QAOAVariationalBaseParams`
-
-        optimizer_dict:
-                Optimizer information dictionary used to construct the optimizer with
-                specified options
-
-        Returns
-        -------
-        optimizer:
-                optimizer object of type specified by specified method
+    optimizer_dict:
+            Optimizer information dictionary used to construct the optimizer with
+            specified options
+    Returns
+    -------
+    optimizer:
+            optimizer object of type specified by specified method
     """
     SUPPORTED_OPTIMIZERS = {
         'scipy': ScipyOptimizer,

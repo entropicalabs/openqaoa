@@ -56,7 +56,7 @@ class OptimizeVQA(ABC):
     #Optimizers that usually work the best for quantum optimization problems:
         1) Gradient free optimizer: BOBYQA, ImFil, Cobyla
         2) Gradient based optimizer: L-BFGS, ADAM
-        Note: Adam is not a part of scipy, it will added in a future version
+    Note: Adam is not a part of scipy, it will added in a future version
 
     '''
 
@@ -169,8 +169,7 @@ class OptimizeVQA(ABC):
         optimization process.
 
         RETURNS:
-        result: the optimized return object from the scipy.optimize package
-                the result is assigned to the attribute 'opt_result'
+        result: the optimized return object from the scipy.optimize package the result is assigned to the attribute 'opt_result'
         '''
         pass
 
@@ -190,23 +189,20 @@ class OptimizeVQA(ABC):
         TODO: 
             Decide results datatype: dictionary or namedtuple?
 
-
         PARAMS:
-        file_path: to save the results locally on the machine in pickle format,
-                    specify the entire file path to save the result_dictionary.
+        file_path: to save the results locally on the machine in pickle format, specify the entire file path to save the result_dictionary.
 
-        file_name: custom name for to save the data; a generic name with the time of 
-                    optimization is used if not specified
+        file_name: custom name for to save the data; a generic name with the time of optimization is used if not specified
 
         RETURNS:
         Dictionary with the following keys:
-            1) "opt result"
-            2) "parameter log"
-            3) "final params"
-            4) "cost progress list"
-            5) "optimization method"
-            6) "cost function calls"
-            7) "optimal cost"
+        1) "opt result"
+        2) "parameter log"
+        3) "final params"
+        4) "cost progress list"
+        5) "optimization method"
+        6) "cost function calls"
+        7) "optimal cost"
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name

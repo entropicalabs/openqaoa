@@ -300,11 +300,9 @@ class QAOABaseBackend(VQABaseBackend):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters as a 1D array (derived from an object of one of the
             parameter classes, containing hyperparameters and variable parameters).
-
         eta: `float`
-            The infinitesimal shift used to compute |∂jφ>, the partial derivative
+            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative
             of the wavefunction w.r.t a parameter. 
-
         Returns
         -------
         qfim_array: `np.ndarray`
@@ -483,7 +481,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
             the parameter classes, containing hyperparameters and variable parameters).
 
         eta: `float`
-            The infinitesimal shift used to compute |∂jφ>, the partial derivative 
+            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative 
             of the wavefunction w.r.t a parameter. 
 
         Returns
@@ -647,7 +645,7 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
             parameter classes, containing hyperparameters and variable parameters).
 
         eta: `float`
-            The infinitesimal shift used to compute |∂jφ>, the partial derivative
+            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative
             of the wavefunction w.r.t a parameter. 
 
         Returns
