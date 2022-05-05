@@ -56,8 +56,8 @@ class VQABaseBackend(ABC):
     implementation specific to their needs.
 
     NOTE:
-    In addition one can also implement other methods which are not necessitated by 
-    the ``VQABaseBackend`` Base Class
+        In addition one can also implement other methods which are not 
+        necessitated by the ``VQABaseBackend`` Base Class
 
 
     Parameters
