@@ -56,14 +56,18 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         The state appended to the circuit.
     init_hadamard: `bool`
         Whether to apply a Hadamard gate to the beginning of the QAOA part of the circuit.
+    cvar_alpha: `float`
+        Conditional Value-at-Risk (CVaR) – a measure that takes into account only the tail of the
+        probability distribution arising from the circut's count dictionary. Must be between 0 and 1. Check
+        https://arxiv.org/abs/1907.04769 for further details.
+    active_reset: 
+        Whether to use the pyQuil's active reset scheme to reset qubits between shots. 
     rewiring:
         Rewiring scheme to be used for Pyquil. 
         Either PRAGMA INITIAL_REWIRING "NAIVE" or PRAGMA INITIAL_REWIRING "PARTIAL". 
         If None, pyquil defaults according to:
         NAIVE: The qubits used in all instructions in the program satisfy the topological constraints of the device.
         PARTIAL: Otherwise.
-    active_reset: 
-        Whether to use the pyQuil's active reset scheme to reset qubits between shots. 
     """
 
     def __init__(self,
