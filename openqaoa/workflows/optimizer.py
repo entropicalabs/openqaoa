@@ -40,6 +40,7 @@ class Optimizer(ABC):
 class QAOA(Optimizer):
     """
     QAOA optimizer class to initialise parameters to run a desired QAOA program.
+
     Attributes
     -------------------
         algorithm: str
@@ -198,7 +199,6 @@ class QAOA(Optimizer):
         for key, value in kwargs.items():
             if hasattr(self.backend_properties, key):
                 if (key == 'device'):
-                    print('Sono qui')
                     if isinstance(self.device_properties.device, AccessObjectBase):
                         value = self.device_properties.device.accessObject
                 setattr(self.backend_properties, key, value)
@@ -328,6 +328,18 @@ class QAOA(Optimizer):
 
 
 class RQAOA(Optimizer):
+    """
+    RQAOA optimizer class to initialise parameters to run a desired QAOA program.
+    
+    Attributes
+    -------------------
+        algorithm: `str`
+            A string contaning the name of the algorithm, here fixed to `qaoa`
+        device_properties:
+        backend_properties:
+        classical_optimizer:
+        rqaoa_parameters:
+    """
     def __init__(self, rqaoa_type: str = 'adaptive'):
         self.algorithm = 'rqaoa'
         self.circuit_properties = CircuitProperties()
@@ -390,21 +402,19 @@ class RQAOA(Optimizer):
                 params_type=self.circuit_properties.param_type,
                 init_type=self.circuit_properties.init_type,
                 shots=self.backend_properties.n_shots,
-                optimizer_dict=self.classical_optimizer.asdict(),
-                max_terms_and_stats_list=self.rqaoa_parameters.max_terms_and_stats_list)
+                optimizer_dict=self.classical_optimizer.asdict())
         elif self.rqaoa_parameters.rqaoa_type == 'custom':
             res = custom_rqaoa(
                 hamiltonian=self.cost_hamil,
                 mixer_hamiltonian=self.mixer_hamil,
                 p=self.circuit_properties.p,
                 n_cutoff=self.rqaoa_parameters.n_cutoff,
-                steps=1,
+                steps= self.rqaoa_parameters.steps,
                 backend=self.device_properties.device_name,
                 params_type=self.circuit_properties.param_type,
                 init_type=self.circuit_properties.init_type,
                 shots=self.backend_properties.n_shots,
-                optimizer_dict=self.classical_optimizer.asdict(),
-                max_terms_and_stats_list=self.rqaoa_parameters.max_terms_and_stats_list)
+                optimizer_dict=self.classical_optimizer.asdict())
             pass
         else:
             raise f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom'
