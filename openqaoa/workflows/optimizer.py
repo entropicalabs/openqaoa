@@ -352,7 +352,7 @@ class RQAOA(Optimizer):
         information
     """
 
-    def __init__(self, rqaoa_type: str = 'adaptive', q: QAOA = QAOA()):
+    def __init__(self, rqaoa_type: str = 'adaptive', qaoa: QAOA = QAOA()):
         """
         Initializes the RQAOA optimizer class.
 
@@ -364,7 +364,8 @@ class RQAOA(Optimizer):
             QAOA instance specificying how QAOA is run within RQAOA
         """
         self.algorithm = 'rqaoa'
-        self.qaoa = q
+        self.qaoa = qaoa
+        # print(f'\n\nThe default device inside the class is {self.qaoa.device_properties.device}\n\n')
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
 
     def set_rqaoa_parameters(self, **kwargs):
@@ -421,7 +422,6 @@ class RQAOA(Optimizer):
                 init_type=self.qaoa.circuit_properties.init_type,
                 shots=self.qaoa.backend_properties.n_shots,
                 optimizer_dict=self.qaoa.classical_optimizer.asdict())
-            pass
         else:
             raise f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom'
 
