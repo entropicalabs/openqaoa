@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 from abc import ABC
-from typing import List, Union, Tuple, Any, Callable, Iterable
+from typing import List, Union, Tuple, Any, Callable, Iterable, Type
 import numpy as np
 
 from .operators import Hamiltonian
@@ -209,16 +209,16 @@ class QAOAVariationalBaseParams(ABC):
 
     Parameters
     ----------
-    qaoa_circuit_params: `QAOACircuitParams`
-            Specify the circuit parameters to construct circuit angles to be 
-            used for training
+    qaoa_circuit_params:
+        Specify the circuit parameters to construct circuit angles to be 
+        used for training
 
     Attributes
     ----------
 
     """
 
-    def __init__(self, qaoa_circuit_params: QAOACircuitParams):
+    def __init__(self, qaoa_circuit_params: Type[QAOACircuitParams]):
 
         self.qaoa_circuit_params = qaoa_circuit_params
         self.p = self.qaoa_circuit_params.p

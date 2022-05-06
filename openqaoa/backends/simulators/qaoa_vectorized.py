@@ -198,27 +198,16 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
     Parameters
     ----------
-    params:
-        Parameters object of ``Type[AbstractParams]``. This object bundles the problem
-        hyperparameters and the circuit trainable parameters (specific to QAOA).
-
-    init_prog:
-        Warm Starting the QAOA problem with some initial state other than the regular
-        $|+>\^{otimes n}$ rather some state prepared by ``init_prog``.
-        ``init_prog`` is also of Type[AbstractParams]
-
-    Attributes
-    ----------
-    Attributes of the parent class + mentioned below
-
-    n_qubits:
-        The number of qubits in the register.
-
-    wavefn:
-        The wavefunction of the qubit register.
-
+    circuit_params: QAOACircuitParams
+        circuit_params
+    prepend_state: np.array
+        prepend_state
+    append_state: np.array
+        append_state
+    init_hadamard: bool
+        init_hadamard
+    cvar_alpha: float
     """
-    
     def __init__(self,
                  circuit_params: QAOACircuitParams,
                  prepend_state: Optional[Union[np.ndarray, List[complex]]],
@@ -566,11 +555,11 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         """
         Executes the entire QAOA circuit, with angles specified within `params`.
         Steps:
-         1) creates a (2,...,2) dimensional matrix that represents a 2**n dimensional wavefunction
-         2) modify it according to the prepend_state option.
-         3) Modify it according to init_hadamard option.
-         4) Modify it according to list of gates in `params`.
-         5) Modify it accoding to append_state option.
+        1) creates a (2,...,2) dimensional matrix that represents a 2**n dimensional wavefunction
+        2) modify it according to the prepend_state option.
+        3) Modify it according to init_hadamard option.
+        4) Modify it according to list of gates in `params`.
+        5) Modify it accoding to append_state option.
 
         Parameters
         ----------

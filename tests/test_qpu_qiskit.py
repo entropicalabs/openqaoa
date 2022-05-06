@@ -281,7 +281,58 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit.to_instruction().definition,
                          qpu_circuit.to_instruction().definition)
+        
+    def test_expectations_in_init(self):
+        
+        """
+        Testing the Exceptions in the init function of the QiskitQPUShotBasedBackend
+        """
+        
+        nqubits = 3
+        p = 1
+        weights = [1, 1, 1]
+        gammas = [1/8*np.pi]
+        betas = [1/8*np.pi]
+        shots = 10000
 
+        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
+                                  PauliOp('ZZ', (0, 2))], weights, 1)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(circuit_params,
+                                                       betas, gammas)
+
+        qiskit_access_object = AccessObjectQiskit('', '', '', '', '')
+        
+        try:
+            QAOAQiskitQPUBackend(circuit_params, qiskit_access_object, 
+                                 shots, None, None, True)
+        except Exception as e:
+            self.assertEqual(str(e), 'Error connecting to IBMQ.')
+        
+        
+        self.assertRaises(Exception, QAOAQiskitQPUBackend, (circuit_params, 
+                                                            qiskit_access_object, 
+                                                            shots, None, None, 
+                                                            True))
+        
+        qiskit_access_object = AccessObjectQiskit(api_token=self.API_TOKEN,
+                                                  hub=self.HUB, group=self.GROUP,
+                                                  project=self.PROJECT, 
+                                                  selected_qpu='')
+        
+        try:
+            QAOAQiskitQPUBackend(circuit_params, qiskit_access_object, 
+                                 shots, None, None, True)
+        except Exception as e:
+            self.assertEqual(str(e), 'Connection to IBMQ was made. Error connecting to the specified backend.')
+        
+        
+        self.assertRaises(Exception, QAOAQiskitQPUBackend, (circuit_params, 
+                                                            qiskit_access_object, 
+                                                            shots, None, None, 
+                                                            True))
+            
     def test_remote_integration_sim_run(self):
         """
         Checks if Remote IBM QASM Simulator is similar/close to Local IBM 
@@ -325,34 +376,34 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             self.assertAlmostEqual(
                 qiskit_expectation, qiskit_statevec_expectation, delta=acceptable_delta)
 
-    def test_remote_integration_qpu_run(self):
-        """
-        Test Actual QPU Workflow. Checks if the expectation value is returned
-        after the circuit run.
-        """
+#     def test_remote_integration_qpu_run(self):
+#         """
+#         Test Actual QPU Workflow. Checks if the expectation value is returned
+#         after the circuit run.
+#         """
 
-        nqubits = 3
-        p = 1
-        weights = [1, 1, 1]
-        gammas = [[1/8*np.pi]]
-        betas = [[1/8*np.pi]]
-        shots = 10000
+#         nqubits = 3
+#         p = 1
+#         weights = [1, 1, 1]
+#         gammas = [[1/8*np.pi]]
+#         betas = [[1/8*np.pi]]
+#         shots = 10000
 
-        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
-                                  PauliOp('ZZ', (0, 2))], weights, 1)
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params,
-                                                       betas,
-                                                       gammas)
-        qiskit_access_object = AccessObjectQiskit(self.API_TOKEN, self.HUB, self.GROUP,
-                                                  self.PROJECT, 'ibmq_bogota')
+#         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
+#                                   PauliOp('ZZ', (0, 2))], weights, 1)
+#         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
+#         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+#         variate_params = QAOAVariationalStandardParams(circuit_params,
+#                                                        betas,
+#                                                        gammas)
+#         qiskit_access_object = AccessObjectQiskit(self.API_TOKEN, self.HUB, self.GROUP,
+#                                                   self.PROJECT, 'ibmq_bogota')
 
-        qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_access_object,
-                                              shots, None, None, False)
-        qiskit_expectation = qiskit_backend.expectation(variate_params)
+#         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_access_object,
+#                                               shots, None, None, False)
+#         qiskit_expectation = qiskit_backend.expectation(variate_params)
 
-        self.assertEqual(type(qiskit_expectation.item()), float)
+#         self.assertEqual(type(qiskit_expectation.item()), float)
 
 
 if __name__ == '__main__':

@@ -31,33 +31,31 @@ from . import optimization_methods as om
 class OptimizeVQA(ABC):
     '''    
     Training Class for optimizing VQA algorithm based on VQABaseBackend.
-    This function utilizes the __call__ method of the cost class.
+    This function utilizes the exepectation method of the backend class.
     Only the trainable parameters should be passed instead of the complete
     AbstractParams object. The construction is completely backend and type 
     of VQA agnostic. 
 
     This class is an AbstractBaseClass on top of which other specific Optimizer
     classes are built.
+    
+    .. Tip:: 
+        Optimizer that usually work the best for quantum optimization problems
+        
+        * Gradient free optimizer - Cobyla
 
-    PARAMETERS
+    Parameters
     ----------
-    vqa_object:
-        object of class qaoa which is contains methods and attributes 
-        of class qaoa which will be useful for optimization in this
-        module
+    vqa_object: 
+        An object of class basebackend which is responsible for constructing and 
+        executing the quantum circuit on the specified backend
 
-    method: 
-        which method to use for optimization. Choose a method from the list
-        of supported methods by scipy optimize
+    variational_params: 
+        An object that keeps track of the varying parameters of a problem for a 
+        specific parameterisation.
 
     optimizer_dict:
         All extra parameters needed for customising the optimising, as a dictionary
-
-    #Optimizers that usually work the best for quantum optimization problems:
-        1) Gradient free optimizer: BOBYQA, ImFil, Cobyla
-        2) Gradient based optimizer: L-BFGS, ADAM
-        Note: Adam is not a part of scipy, it will added in a future version
-
     '''
 
     def __init__(self,
@@ -89,7 +87,7 @@ class OptimizeVQA(ABC):
     @abstractmethod
     def __repr__(self):
         """
-        Overview of the instantiated optimier/trainer
+        Overview of the instantiated optimier/trainer.
         """
         string = f"Optimizer for VQA of type: {type(self.vqa).__base__.__name__} \n"
         string += f"Backend: {type(self.vqa).__name__} \n"
@@ -99,7 +97,7 @@ class OptimizeVQA(ABC):
 
     def __call__(self):
         """
-        Call the class instance to initiate the training process
+        Call the class instance to initiate the training process.
         """
         self.optimize()
         return self
@@ -108,31 +106,26 @@ class OptimizeVQA(ABC):
 
     def optimize_this(self, x):
         '''
-        A function wrapper for the qaoa cost method of the class
-        qaoa_pulse. This function will be passed as argument to be 
-        optimized by scipy optimize
+        A function wrapper to execute the circuit in the backend. This function 
+        will be passed as argument to be optimized by scipy optimize. There are
+        that log the outputs from the backend object depending on whether the 
+        user requests for it.
+        
+        .. Important::
+            #. Appends all intermediate parameters in ``self.param_log`` list
+            #. Appends the cost value after each iteration in the optimization process to ``self.cost_progress`` list
+            #. Checks if ``self.vqa`` has the ``self.counts`` attribute. If it exists, appends the counts of each state for that circuit evaluation to ``self.count_progress`` list.
+            #. Checks if ``self.vqa`` has the ``self.probability`` attribute. If it exists, appends the probability of each state for that circuit evaluation to ``self.count_progress`` list.
 
         Parameters
         ----------
-        x: parameters over which optimization is performed
+        x: 
+            parameters over which optimization is performed
 
-        Returns 
+        Returns
         -------
-        1) cost value: evaluated either on the declared backed or on the Wavefunction
-        Simulator if specified so
-
-        Actions
-        -------
-        1) Appends the cost value after each iteration in the optimization
-            process to self.cost_progress list
-        2) Appends all intermediate parameters in self.param_log list
-        3) Checks if self.vqa has the self.counts attribute. If it exists, appends 
-            the counts of each state for that circuit evaluation to 
-            self.count_progress list.
-        4) Checks if self.vqa has the self.probability attribute. If it exists, 
-            appends the probability of each state for that circuit evaluation to 
-            self.count_progress list.
-
+        :
+            Cost Value evaluated on the declared backed or on the Wavefunction Simulator if specified so
         '''
         # First we append the new parameters and its cost.
         self.param_log.append(deepcopy(x))
@@ -164,13 +157,14 @@ class OptimizeVQA(ABC):
     @abstractmethod
     def optimize(self):
         '''
-        Main method which implements the optimization process
+        Main method which implements the optimization process.
         Child classes must implement this method according to their respective
         optimization process.
 
-        RETURNS:
-        result: the optimized return object from the scipy.optimize package
-                the result is assigned to the attribute 'opt_result'
+        Returns
+        -------
+        :
+            The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
         '''
         pass
 
@@ -181,32 +175,41 @@ class OptimizeVQA(ABC):
                            file_path: str = None,
                            file_name: str = None):
         '''
-        This method returns a dictionary of all results of optimization
+        This method formats a dictionary that consists of all the results from 
+        the optimization process. The dictionary is returned by this method.
         The results can also be saved by providing the path to save the pickled file
 
-        NOTE: Child classes must implement this method so that the returned object,
-              a ``Dictionary`` is consistent across all Optimizers.
+        .. Important:: 
+            Child classes must implement this method so that the returned object,
+            a ``Dictionary`` is consistent across all Optimizers.
 
         TODO: 
             Decide results datatype: dictionary or namedtuple?
 
+        Parameters
+        ----------
+        file_path: 
+            To save the results locally on the machine in pickle format, specify 
+            the entire file path to save the result_dictionary.
 
-        PARAMS:
-        file_path: to save the results locally on the machine in pickle format,
-                    specify the entire file path to save the result_dictionary.
+        file_name:
+            Custom name for to save the data; a generic name with the time of 
+            optimization is used if not specified
 
-        file_name: custom name for to save the data; a generic name with the time of 
-                    optimization is used if not specified
-
-        RETURNS:
-        Dictionary with the following keys:
-            1) "opt result"
-            2) "parameter log"
-            3) "final params"
-            4) "cost progress list"
-            5) "optimization method"
-            6) "cost function calls"
-            7) "optimal cost"
+        Returns
+        -------
+        :
+            Dictionary with the following keys
+        
+                #. "opt result"
+                #. "parameter log"
+                #. "final params"
+                #. "cost progress list"
+                #. "count progress list"
+                #. "probability progress list"
+                #. "optimization method"
+                #. "cost function calls"
+                #. "optimal cost"
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
@@ -234,39 +237,45 @@ class OptimizeVQA(ABC):
 
 class ScipyOptimizer(OptimizeVQA):
     """
-    Python vanilla scipy based optimizer for the VQA class
+    Python vanilla scipy based optimizer for the VQA class.
+    
+    .. Tip::
+        Using bounds may result in lower optimization performance
 
     Parameters
     ----------
     vqa_object: 
-        object of class qaoa which is contains methods and attributes 
-        of class qaoa which will be useful for optimization in this
-        module
+        An object of class basebackend which is responsible for constructing and 
+        executing the quantum circuit on the specified backend
 
-    method: 
-        which method to use for optimization. Choose a method from the list
-        of supported methods by scipy optimize
+    variational_params: 
+        An object that keeps track of the varying parameters for a specific 
+        parameterisation.
 
     optimizer_dict:
-        jac: 
-            gradient as `Callable`, if defined else None
+        * jac
+        
+            * gradient as ``Callable``, if defined else ``None``
 
-        hess: 
-            hessian as `Callable`, if defined else None
+        * hess
+        
+            * hessian as ``Callable``, if defined else ``None``
 
-        bounds: 
-            parameter bounds while training, defaults to None
-            NOTE: "using bounds may result in lower optimization performance"
+        * bounds
+        
+            * parameter bounds while training, defaults to ``None``
 
-        constraints: 
-            Linear/Non-Linear constraints
-            (only for COBYLA, SLSQP and trust-constr)
+        * constraints
+        
+            * Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
 
-        tol: 
-            Tolerance for termination
+        * tol
+        
+            * Tolerance for termination
 
-        maxiters:
-            sets maxiters = 100 by default if not specified.
+        * maxiters
+        
+            * sets ``maxiters = 100`` by default if not specified.
 
     """
     GRADIENT_FREE = ['cobyla', 'nelder-mead', 'powell', 'slsqp']
@@ -284,7 +293,7 @@ class ScipyOptimizer(OptimizeVQA):
 
     def _validate_and_set_params(self, optimizer_dict):
         """
-        Verify that the specified arguments are valid for the particular optimizer
+        Verify that the specified arguments are valid for the particular optimizer.
         """
 
         if self.method not in ScipyOptimizer.SCIPY_METHODS:
@@ -344,7 +353,7 @@ class ScipyOptimizer(OptimizeVQA):
 
     def __repr__(self):
         """
-        Overview of the instantiated optimier/trainer
+        Overview of the instantiated optimier/trainer.
         """
         maxiter = self.options["maxiter"]
         string = f"Optimizer for VQA of type: {type(self.vqa).__base__.__name__} \n"
@@ -355,12 +364,12 @@ class ScipyOptimizer(OptimizeVQA):
 
     def optimize(self):
         '''
-        Main method which implements the optimization process using scipy.minimize
+        Main method which implements the optimization process using ``scipy.minimize``.
 
-        RETURNS
+        Returns
         -------
-        result: the optimized return object from the scipy.optimize package
-                the result is assigned to the attribute 'opt_result'
+        : 
+            The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
         '''
         if self.method not in ScipyOptimizer.GRADIENT_FREE:
             if self.hess == None:
@@ -380,29 +389,33 @@ class ScipyOptimizer(OptimizeVQA):
 
     def results_information(self, file_path: str = None, file_name: str = None):
         '''
-        This method returns a dictionary of all results of optimization
-        The results can also be saved by providing the path to save the pickled file
+        This method returns a dictionary of all results of optimization.
+        The results can also be saved by providing the path to save the pickled file.
 
         Parameters
         ----------
         file_path: 
-            to save the results locally on the machine in pickle format,
-            specify the entire file path to save the result_dictionary.
+            To save the results locally on the machine in pickle format,
+            specify the entire file path to save the ``result_dictionary``.
 
         file_name: 
-            File name to save the data. 
-            [DEFAULT] a generic name with the time of optimization is used if not specified
+            Custom name for to save the data; a generic name with the time of 
+            optimization is used if not specified
 
-        RETURNS
+        Returns
         -------
-        Dictionary with the following keys:
-            1) "opt result"
-            2) "parameter log"
-            3) "final params"
-            4) "cost progress list"
-            5) "optimization method"
-            6) "cost function calls"
-            7) "optimal cost"
+        :
+            Dictionary with the following keys
+        
+                #. "opt result"
+                #. "parameter log"
+                #. "final params"
+                #. "cost progress list"
+                #. "count progress list"
+                #. "probability progress list"
+                #. "optimization method"
+                #. "cost function calls"
+                #. "optimal cost"
         '''
         final_params = self.opt_result.x
         opt_cost = self.opt_result.fun
@@ -415,39 +428,46 @@ class ScipyOptimizer(OptimizeVQA):
 
 class CustomScipyGradientOptimizer(OptimizeVQA):
     """
-    Python vanilla scipy based optimizer for the VQA class
+    Python custom scipy gradient based optimizer for the VQA class.
+
+    .. Tip::
+        Using bounds may result in lower optimization performance
 
     Parameters
     ----------
     vqa_object: 
-        object of class qaoa which is contains methods and attributes 
-        of class qaoa which will be useful for optimization in this
-        module
+        An object of class basebackend which is responsible for constructing and 
+        executing the quantum circuit on the specified backend
 
-    method: 
-        which method to use for optimization. Choose a method from the list
-        of supported methods by scipy optimize
+    variational_params: 
+        An object that keeps track of the varying parameters for a specific 
+        parameterisation.
 
     optimizer_dict:
-        jac: 
-            gradient as `Callable`, if defined else None
+        * jac
+        
+            * gradient as ``Callable``, if defined else ``None``
 
-        hess: 
-            hessian as `Callable`, if defined else None
+        * hess
+        
+            * hessian as ``Callable``, if defined else ``None``
 
-        bounds: 
-            parameter bounds while training, defaults to None
-            NOTE: "using bounds may result in lower optimization performance"
+        * bounds
+        
+            * parameter bounds while training, defaults to ``None``
 
-        constraints: 
-            Linear/Non-Linear constraints
-            (only for COBYLA, SLSQP and trust-constr)
+        * constraints
+        
+            * Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
 
-        tol: 
-            Tolerance for termination
+        * tol
+        
+            * Tolerance for termination
 
-        maxiters:
-            sets maxiters = 100 by default if not specified.
+        * maxiters
+        
+            * sets ``maxiters = 100`` by default if not specified.
+
     """
     CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
                                   'rmsprop', 'natural_grad_descent', 'spsa']
@@ -464,7 +484,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
 
     def _validate_and_set_params(self, optimizer_dict):
         """
-        Verify that the specified arguments are valid for the particular optimizer
+        Verify that the specified arguments are valid for the particular optimizer.
         """
 
         if self.method not in CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS:
@@ -521,7 +541,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
 
     def __repr__(self):
         """
-        Overview of the instantiated optimier/trainer
+        Overview of the instantiated optimier/trainer.
         """
         maxiter = self.options["maxiter"]
         string = f"Optimizer for VQA of type: {type(self.vqa).__base__.__name__} \n"
@@ -532,12 +552,12 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
 
     def optimize(self):
         '''
-        Main method which implements the optimization process using scipy.minimize
+        Main method which implements the optimization process using ``scipy.minimize``.
 
-        RETURNS
+        Returns
         -------
-        result: the optimized return object from the scipy.optimize package
-                the result is assigned to the attribute 'opt_result'
+        : 
+            The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
         '''
         if self.method == 'vgd':
             method = om.grad_descent
@@ -567,29 +587,33 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
 
     def results_information(self, file_path: str = None, file_name: str = None):
         '''
-        This method returns a dictionary of all results of optimization
-        The results can also be saved by providing the path to save the pickled file
+        This method returns a dictionary of all results of optimization.
+        The results can also be saved by providing the path to save the pickled file.
 
         Parameters
         ----------
         file_path: 
-            to save the results locally on the machine in pickle format,
-            specify the entire file path to save the result_dictionary.
+            To save the results locally on the machine in pickle format,
+            specify the entire file path to save the ``result_dictionary``.
 
         file_name: 
-            File name to save the data. 
-            [DEFAULT] a generic name with the time of optimization is used if not specified
+            Custom name for to save the data; a generic name with the time of 
+            optimization is used if not specified
 
-        RETURNS
+        Returns
         -------
-        Dictionary with the following keys:
-            1) "opt result"
-            2) "parameter log"
-            3) "final params"
-            4) "cost progress list"
-            5) "optimization method"
-            6) "cost function calls"
-            7) "optimal cost"
+        :
+            Dictionary with the following keys
+        
+                #. "opt result"
+                #. "parameter log"
+                #. "final params"
+                #. "cost progress list"
+                #. "count progress list"
+                #. "probability progress list"
+                #. "optimization method"
+                #. "cost function calls"
+                #. "optimal cost"
         '''
         final_params = self.opt_result.x
         opt_cost = self.opt_result.fun
