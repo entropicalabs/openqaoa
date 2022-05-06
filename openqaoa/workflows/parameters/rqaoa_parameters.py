@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from ctypes import Union
+from typing import Union
 from .parameters import Parameters
 from openqaoa.qaoa_parameters import Hamiltonian
 
