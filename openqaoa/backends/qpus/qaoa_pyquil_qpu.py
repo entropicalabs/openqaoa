@@ -154,7 +154,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             parametric_circuit = Program()
         
         if self.rewiring != None:
-            if self.rewiring == 'PRAGMA INITIAL_REWIRING "NAIVE"' or self.rewiring == 'PRAGMA INITIAL_REWIRING "PARTIAL"' or self.rewiring == '':
+            if self.rewiring in ['PRAGMA INITIAL_REWIRING "NAIVE"', 'PRAGMA INITIAL_REWIRING "PARTIAL"', '']:
                 parametric_circuit += Program(self.rewiring)
             else:
                 raise ValueError('Rewiring command not recognized. Please use ''PRAGMA INITIAL_REWIRING "NAIVE"'' or ''PRAGMA INITIAL_REWIRING "PARTIAL"''')
