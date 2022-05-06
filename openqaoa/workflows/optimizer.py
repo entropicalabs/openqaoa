@@ -40,6 +40,7 @@ class Optimizer(ABC):
 class QAOA(Optimizer):
     """
     QAOA optimizer class to initialise parameters to run a desired QAOA program.
+
     Attributes
     -------------------
         algorithm: str
@@ -112,7 +113,7 @@ class QAOA(Optimizer):
         Parameters
         -------------------
         device_location: str
-            Can only take the values `locale` for local simulations, `qcs` for Rigetti's QCS, and `ibmq` for IBM
+            Can only take the values `local` for local simulations, `qcs` for Rigetti's QCS, and `ibmq` for IBM
         device_name: device_name
             The name of the device:
             for local devices it can be ['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized']
@@ -144,7 +145,7 @@ class QAOA(Optimizer):
             kwargs['cloud_credentials']['device_location'] = kwargs['device_location']
             kwargs['device'] = Credentials(
                 kwargs['cloud_credentials']).accessObject
-        elif kwargs['device_location'] == 'locale':
+        elif kwargs['device_location'] == 'local':
             kwargs['device'] = kwargs['device_name']
         else:
             Exception(
@@ -192,7 +193,6 @@ class QAOA(Optimizer):
         for key, value in kwargs.items():
             if hasattr(self.backend_properties, key):
                 if (key == 'device'):
-                    print('Sono qui')
                     if isinstance(self.device_properties.device, AccessObjectBase):
                         value = self.device_properties.device.accessObject
                 setattr(self.backend_properties, key, value)
@@ -292,9 +292,15 @@ class QAOA(Optimizer):
         print(
             f'Solving QAOA with \033[1m {self.device_properties.device_name} \033[0m on  \033[1m{self.device_properties.device_location}\033[0m')
         print(f'Using p={self.circuit_properties.p} with {self.circuit_properties.param_type} parameters initialsied as {self.circuit_properties.init_type}')
-        print(f'OpenQAOA will optimize \033[1m{self.classical_optimizer.maxiter} times\033[0m with \033[1m{self.classical_optimizer.method}\033[0m, each iteration will contain \033[1m{self.backend_properties.n_shots} shots\033[0m')
-        print(
-            f'The total numner of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
+        
+
+        if self.device_properties.device_name == 'vectorized':
+            print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations')
+        
+        else:
+            print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations. Each iteration will contain \033[1m{self.backend_properties.n_shots} shots\033[0m')
+            print(
+                f'The total numner of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
 
         return None
 
@@ -322,15 +328,44 @@ class QAOA(Optimizer):
 
 
 class RQAOA(Optimizer):
-    def __init__(self, rqaoa_type: str = 'adaptive'):
+    """
+    RQAOA optimizer class.
+    
+    Attributes
+    ----------
+    algorithm: `str`
+        A string contaning the name of the algorithm, here fixed to `rqaoa`
+    qaoa: 'QAOA'
+        QAOA class instance containing all the relevant information for the
+        QAOA runs at each recursive step.
+    rqaoa_parameters: 'RqaoaParameters'
+        Set of parameters containing all the relevant information for the 
+        recursive procedure.
+    result: `dict`
+        Dictionary containing the solution and all of the RQAOA procedure 
+        information
+    """
+
+    def __init__(self, rqaoa_type: str = 'adaptive', qaoa: QAOA = QAOA()):
+        """
+        Initializes the RQAOA optimizer class.
+
+        Parameters
+        ----------
+        rqaoa_type: `str`
+            Recursive scheme for RQAOA algorithm. Choose from `custom` or `adaptive`
+        q: `QAOA`
+            QAOA instance specificying how QAOA is run within RQAOA
+        """
         self.algorithm = 'rqaoa'
-        self.circuit_properties = CircuitProperties()
-        self.device_properties = DeviceProperties()
-        self.backend_properties = BackendProperties()
-        self.classical_optimizer = ClassicalOptimizer()
+        self.qaoa = qaoa
+        # print(f'\n\nThe default device inside the class is {self.qaoa.device_properties.device}\n\n')
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
 
     def set_rqaoa_parameters(self, **kwargs):
+        """
+        Sets the parameters for the RQAOA class.
+        """
         for key, value in kwargs.items():
             if hasattr(self.rqaoa_parameters, key):
                 setattr(self.rqaoa_parameters, key, value)
@@ -342,64 +377,45 @@ class RQAOA(Optimizer):
 
     def compile(self, problem: PUBO = None):
         """
-        Initialise the trainable parameters for QAOA according to the specified
-        strategies and by passing the problem statement
+        Initialize the trainable parameters for QAOA according to the specified
+        strategies and by passing the problem statement.
 
         Parameters
         ----------
         problem: `Problem`
-            QUBO problem to be solved by QAOA
+            QUBO problem to be solved by RQAOA
         """
 
-        self.mixer_hamil = get_mixer_hamiltonian(n_qubits=problem.n,
-                                                 qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
-                                                 coeffs=self.circuit_properties.mixer_coeffs)
-
-        self.cost_hamil = Hamiltonian.classical_hamiltonian(
-            terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
-
-        self.circuit_params = QAOACircuitParams(
-            self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p)
-        self.variate_params = create_qaoa_variational_params(qaoa_circuit_params=self.circuit_params, params_type=self.circuit_properties.param_type,
-                                                             init_type=self.circuit_properties.init_type, variational_params_dict=self.circuit_properties.variational_params_dict,
-                                                             linear_ramp_time=self.circuit_properties.linear_ramp_time, q=self.circuit_properties.q, seed=self.circuit_properties.seed)
-
-        self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
-                                        device=self.device_properties.device,
-                                        **self.backend_properties.asdict())
-
-        self.optimizer = get_optimizer(vqa_object=self.backend,
-                                       variational_params=self.variate_params,
-                                       optimizer_dict=self.classical_optimizer.asdict())
+        self.qaoa.compile(problem)
 
     def optimize(self):
+        """
+        Performs optimization using RQAOA with the `custom` method or the `adaptive` method.
+        """
         if self.rqaoa_parameters.rqaoa_type == 'adaptive':
             res = adaptive_rqaoa(
-                hamiltonian=self.cost_hamil,
-                mixer_hamiltonian=self.mixer_hamil,
-                p=self.circuit_properties.p,
+                hamiltonian=self.qaoa.cost_hamil,
+                mixer_hamiltonian=self.qaoa.mixer_hamil,
+                p=self.qaoa.circuit_properties.p,
                 n_max=self.rqaoa_parameters.n_max,
                 n_cutoff=self.rqaoa_parameters.n_cutoff,
-                backend=self.device_properties.device_name,
-                params_type=self.circuit_properties.param_type,
-                init_type=self.circuit_properties.init_type,
-                shots=self.backend_properties.n_shots,
-                optimizer_dict=self.classical_optimizer.asdict(),
-                max_terms_and_stats_list=self.rqaoa_parameters.max_terms_and_stats_list)
+                backend=self.qaoa.device_properties.device_name,
+                params_type=self.qaoa.circuit_properties.param_type,
+                init_type=self.qaoa.circuit_properties.init_type,
+                shots=self.qaoa.backend_properties.n_shots,
+                optimizer_dict=self.qaoa.classical_optimizer.asdict())
         elif self.rqaoa_parameters.rqaoa_type == 'custom':
             res = custom_rqaoa(
-                hamiltonian=self.cost_hamil,
-                mixer_hamiltonian=self.mixer_hamil,
-                p=self.circuit_properties.p,
+                hamiltonian=self.qaoa.cost_hamil,
+                mixer_hamiltonian=self.qaoa.mixer_hamil,
+                p=self.qaoa.circuit_properties.p,
                 n_cutoff=self.rqaoa_parameters.n_cutoff,
-                steps=1,
-                backend=self.device_properties.device_name,
-                params_type=self.circuit_properties.param_type,
-                init_type=self.circuit_properties.init_type,
-                shots=self.backend_properties.n_shots,
-                optimizer_dict=self.classical_optimizer.asdict(),
-                max_terms_and_stats_list=self.rqaoa_parameters.max_terms_and_stats_list)
-            pass
+                steps= self.rqaoa_parameters.steps,
+                backend=self.qaoa.device_properties.device_name,
+                params_type=self.qaoa.circuit_properties.param_type,
+                init_type=self.qaoa.circuit_properties.init_type,
+                shots=self.qaoa.backend_properties.n_shots,
+                optimizer_dict=self.qaoa.classical_optimizer.asdict())
         else:
             raise f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom'
 
@@ -413,8 +429,7 @@ class RQAOA(Optimizer):
 
 def format_output_results(optimizer_results: dict, classical_optimizer: dict, top_k_solutions: int) -> dict:
     """
-    Formats the output result for the entrypoint function based on flags in 
-    eqaoa_dict. The user is able to control the information that is returned
+    Formats the output result. The user is able to control the information that is returned
     from the optimization process with the flags (count_progress, cost_progress
     and parameter_log).
 

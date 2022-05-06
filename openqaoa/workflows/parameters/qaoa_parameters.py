@@ -236,7 +236,7 @@ class DeviceProperties(Parameters):
     """
 
     def __init__(self,
-                 device_location: str = 'locale',
+                 device_location: str = 'local',
                  device_name: str = 'vectorized',
                  cloud_credentials: Optional[dict] = {},
                  device: Union[str, AccessObjectBase] = 'vectorized'):
@@ -252,9 +252,9 @@ class DeviceProperties(Parameters):
 
     @device_location.setter
     def device_location(self, value):
-        if value not in ['locale', 'ibmq', 'qcs']:
+        if value not in ['local', 'ibmq', 'qcs']:
             raise ValueError(
-                f"Device location {value} is not recognised. Please use ['locale', 'ibmq', 'qcs']")
+                f"Device location {value} is not recognised. Please use ['local', 'ibmq', 'qcs']")
         self._device_location = value
 
     @property
