@@ -20,10 +20,7 @@ from pyquil.gates import RX, RY, RZ
 from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends import AccessObjectPyQuil, QAOAPyQuilQPUBackend
-from openqaoa.backends.qaoa_backend import get_qaoa_backend
-
-
-
+from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 
 class TestingQAOACostPyquilQVM(unittest.TestCase):
     
@@ -38,6 +35,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         
         """
         Checks if connection to qvm and quilc is successful.
+        TODO : improve test
         """
         
         # Check connection to qvm
@@ -49,6 +47,48 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         pass
     
+    def test_active_reset(self):
+        
+        """
+        Test if active_reset works fine.
+        Check for RESET instruction in parametric circuit when active_reset = True / False
+        """
+        
+        access_object_pyquil = AccessObjectPyQuil(name = "2q-qvm", as_qvm=True, execution_timeout = 3, compiler_timeout=3)
+        cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,))], [1,2], 1)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+        
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, active_reset = True)
+        assert 'RESET' in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
+        
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, active_reset = False)
+        assert 'RESET' not in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
+        
+    def test_rewiring(self):
+        
+        """
+        Test if rewiring works fine.
+        
+        """
+
+        access_object_pyquil = AccessObjectPyQuil(name = "2q-qvm", as_qvm=True, execution_timeout = 3, compiler_timeout=3)
+        cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,))], [1,2], 1)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+        
+        # Test if error is raised correctly
+        self.assertRaises(ValueError, lambda : QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'illegal string')) 
+        
+        # Test when rewiring = 'PRAGMA INITIAL_REWIRING "NAIVE"'
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'PRAGMA INITIAL_REWIRING "NAIVE"')
+        assert 'PRAGMA INITIAL_REWIRING "NAIVE"' in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
+        
+        # Test when rewiring = 'PRAGMA INITIAL_REWIRING "PARTIAL"'
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'PRAGMA INITIAL_REWIRING "PARTIAL"')
+        assert 'PRAGMA INITIAL_REWIRING "PARTIAL"' in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
+        
+        
     def test_qaoa_pyquil_expectation(self):
     
         """
@@ -65,8 +105,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         args = [np.pi/4, np.pi/4] # beta, gamma
         variate_params.update_from_raw(args)
-
-        backend_obj_pyquil = get_qaoa_backend(circuit_params, access_object_pyquil, n_shots=1)
+        
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
         backend_obj_pyquil.expectation(variate_params)
 
         assert np.isclose(backend_obj_pyquil.expectation(variate_params), -1)
@@ -83,7 +123,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,))], [1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        backend_obj_pyquil = get_qaoa_backend(circuit_params, access_object_pyquil, n_shots=1)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
 
         gate_names = [instr.name for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Gate]
         assert gate_names == ['H', 'H', 'RZ', 'RZ', 'RX', 'RX']
@@ -95,7 +135,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        backend_obj_pyquil = get_qaoa_backend(circuit_params, access_object_pyquil, n_shots=1)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
 
         gate_names = [instr.name for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Gate]
         assert gate_names == ['H', 'H', 'RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX']
@@ -175,6 +215,10 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         assert ['RX', 'RY', 'RZ', 'RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX'] == [instr.name for instr in pyquil_backend.parametric_circuit if type(instr) == quilbase.Gate]
         
+        # Test if error is raised correctly
+        prepend_circuit = Program().inst(RX(np.pi, 0), RY(np.pi/2, 1), RZ(np.pi, 2))
+        self.assertRaises(AssertionError, lambda : QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = prepend_circuit, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)) 
+        
     def test_pyquil_vectorized_agreement(self):
 
         """
@@ -191,11 +235,11 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         args = [np.pi/8, np.pi/4] # beta, gamma
 
         variate_params.update_from_raw(args)
-        backend_obj_pyquil = get_qaoa_backend(circuit_params, access_object_pyquil, n_shots=100)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, access_object = access_object_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=100)
         expt_pyquil = backend_obj_pyquil.expectation(variate_params)
         
         variate_params.update_from_raw(args)
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,'vectorized')
+        backend_obj_vectorized = QAOAvectorizedBackendSimulator(circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
         expt_vec, std_dev_vec = backend_obj_vectorized.expectation_w_uncertainty(variate_params)
 
         self.assertAlmostEqual(expt_vec, expt_pyquil, delta = std_dev_vec)

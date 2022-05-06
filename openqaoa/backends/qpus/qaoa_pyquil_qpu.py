@@ -11,15 +11,31 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+
 from collections import Counter
 import numpy as np
-from pyquil import Program, gates
+from pyquil import Program, gates, quilbase
 
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...backends.qpus.qpu_auth import AccessObjectPyQuil
 from ...qaoa_parameters.pauligate import RZZPauliGate, SWAPGate
 
+def check_edge_connectivity(executable: Program, access_object: AccessObjectPyQuil):
+    '''
+    Check that the program does not contain 2-qubit terms that is not present in the QPU's topology (to prevent quilc from crashing).
+    '''
+
+    qpu_graph = access_object.quantum_computer.qubit_topology()
+    
+    instrs = [instr for instr in executable if type(instr) == quilbase.Gate]
+    pair_instrs = [list(instr.get_qubits()) for instr in instrs if len(instr.get_qubits()) == 2]
+
+    for term in pair_instrs:
+        if len(term) == 2:
+            assert term in qpu_graph.edges(), f"Term {term} is not an edge on the QPU graph of {access_object.name}."   
+    
+    
 
 class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
     """
@@ -40,12 +56,18 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         The state appended to the circuit.
     init_hadamard: `bool`
         Whether to apply a Hadamard gate to the beginning of the QAOA part of the circuit.
+    cvar_alpha: `float`
+        Conditional Value-at-Risk (CVaR) – a measure that takes into account only the tail of the
+        probability distribution arising from the circut's count dictionary. Must be between 0 and 1. Check
+        https://arxiv.org/abs/1907.04769 for further details.
+    active_reset: 
+        Whether to use the pyQuil's active reset scheme to reset qubits between shots. 
     rewiring:
         Rewiring scheme to be used for Pyquil. 
-        Either 'PRAGMA INITIAL_REWIRING "NAIVE"' or 
-        'PRAGMA INITIAL_REWIRING "PARTIAL"'. If None, defaults to NAIVE.
-    active_reset: 
-        #TODO
+        Either PRAGMA INITIAL_REWIRING "NAIVE" or PRAGMA INITIAL_REWIRING "PARTIAL". 
+        If None, pyquil defaults according to:
+        NAIVE: The qubits used in all instructions in the program satisfy the topological constraints of the device.
+        PARTIAL: Otherwise.
     """
 
     def __init__(self,
@@ -57,7 +79,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  init_hadamard: bool,
                  cvar_alpha: float,
                  active_reset: bool = False,
-                 rewiring=None
+                 rewiring: str = ''
                  ):
 
         QAOABaseBackendShotBased.__init__(self,
@@ -72,20 +94,24 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.qureg = self.circuit_params.qureg
-
+        
+        if self.prepend_state:
+            assert self.n_qubits >= len(prepend_state.get_qubits()), "Cannot attach a bigger circuit " \
+                                                                "to the QAOA routine"
         # TODO: access_object implementation for PyQuil
         self.parametric_circuit = self.parametric_qaoa_circuit
         native_prog = self.access_object.quantum_computer.compiler.quil_to_native_quil(
             self.parametric_circuit)
         self.prog_exe = self.access_object.quantum_computer.compiler.native_quil_to_executable(
             native_prog)
-        # self.qaoa_circuit()
+        
+        # Check program connectivity against QPU connectivity
+        # TODO: reconcile with PRAGMA PRESERVE
+        # check_edge_connectivity(self.prog_exe, access_object)
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
         """
-        Creates a QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
-        and a set of circuit angles. Note that this function does not actually run
-        the circuit. To do this, you will need to subsequently execute the command self.eng.flush().
+        Injects angles into created executable parametric circuit.
 
         Parameters
         ----------
@@ -94,7 +120,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         Returns
         -------
         `pyquil.Program`
-            A pyquil.Program object.
+            A pyquil.Program (executable) object.
         """
         angles_list = np.array(self.obtain_angles_for_pauli_list(
             self.pseudo_circuit, params), dtype=float)
@@ -109,32 +135,42 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
     @property
     def parametric_qaoa_circuit(self) -> Program:
         """
-        Creates a QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
+        Creates a parametric QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
         and a set of circuit angles. Note that this function does not actually run
-        the circuit. To do this, you will need to subsequently execute the command self.eng.flush().
+        the circuit. 
 
         Parameters
         ----------
         params: `QAOAVariationalBaseParams`
-
+        
         Returns
         -------
         `pyquil.Program`
             A pyquil.Program object.
         """
-        parametric_circuit = Program()
+        if self.active_reset:
+            parametric_circuit = Program(gates.RESET())
+        else:
+            parametric_circuit = Program()
+        
+        if self.rewiring != None:
+            if self.rewiring in ['PRAGMA INITIAL_REWIRING "NAIVE"', 'PRAGMA INITIAL_REWIRING "PARTIAL"', '']:
+                parametric_circuit += Program(self.rewiring)
+            else:
+                raise ValueError('Rewiring command not recognized. Please use ''PRAGMA INITIAL_REWIRING "NAIVE"'' or ''PRAGMA INITIAL_REWIRING "PARTIAL"''')
+        
         # declare the read-out register
         ro = parametric_circuit.declare('ro', 'BIT', self.n_qubits)
 
         if self.prepend_state:
             parametric_circuit += self.prepend_state
+            
         # Initial state is all |+>
         if self.init_hadamard:
             for i in range(self.n_qubits):
                 parametric_circuit += gates.H(i)
 
         # create a list of gates in order of application on quantum circuit
-        low_level_gate_list = []  # TOCHECK - Variable is not used anywhere
         for each_gate in self.pseudo_circuit:
             gate_label = ''.join(str(label) for label in each_gate.pauli_label)
             angle_param = parametric_circuit.declare(
@@ -144,6 +180,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                 decomposition = each_gate.decomposition('standard2')
             else:
                 decomposition = each_gate.decomposition('standard')
+                
             # using the list above, construct the circuit
             for each_tuple in decomposition:
                 gate = each_tuple[0](*each_tuple[1])
@@ -152,6 +189,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         if self.append_state:
             parametric_circuit += self.append_state
+            
         # Measurement instructions
         for i, qubit in enumerate(self.qureg):
             parametric_circuit += gates.MEASURE(qubit, ro[i])
