@@ -45,8 +45,8 @@ Workflows can be customised using some convenient setter functions
 ```
 q_custom = QAOA()
 q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
-q_custom.set_device_properties(device_location='qcs', device_name='Aspen-11')
-q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
+q_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
+q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
 q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
 q_custom.compile(pubo_problem)
 q_custom.optimize()
