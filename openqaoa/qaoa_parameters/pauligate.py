@@ -13,8 +13,9 @@
 #   limitations under the License.
 
 from abc import ABC, abstractmethod
+from types import NoneType
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from .operators import Hamiltonian
 from .lowlevelgate import *
@@ -69,12 +70,20 @@ class PauliGate(GateMap):
         super().__init__(qubit_1)
 
         self.pauli_label = pauli_label
-        self.rotation_angle = None
 
     @property
     def pauli_label(self) -> List:
 
         return self._pauli_label
+
+    @property
+    def rotation_angle(self) -> Union[int, float, object, NoneType]:
+        return self._rotation_angle
+
+    @rotation_angle.setter
+    def rotation_angle(self, angle: Union[int, float, object] = None):
+
+        self._rotation_angle = angle
 
     @pauli_label.setter
     def pauli_label(self, input_label: List) -> None:

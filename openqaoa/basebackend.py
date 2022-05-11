@@ -131,8 +131,8 @@ class QAOABaseBackend(VQABaseBackend):
         super().__init__(prepend_state, append_state)
 
         self.circuit_params = circuit_params
-        self.n_qubits = len(circuit_params.qureg)
         self.cost_hamiltonian = circuit_params.cost_hamiltonian
+        self.n_qubits = self.cost_hamiltonian.n_qubits
         self.init_hadamard = init_hadamard
         self.cvar_alpha = cvar_alpha
 

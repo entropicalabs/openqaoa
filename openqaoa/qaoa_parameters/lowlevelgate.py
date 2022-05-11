@@ -13,76 +13,103 @@
 #   limitations under the License.
  
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 import numpy as np
 
 from qiskit import QuantumCircuit as qkQuantumCircuit
+from qiskit.circuit import Parameter as qkParameter
 from pyquil import Program as quilProgram
 from pyquil import gates as quilgates
+from pyquil.quilatom import QubitPlaceholder as quilQubitPlaceholder
 from .rotationangle import RotationAngle
 
 
 class LowLevelGate(ABC):
     
-    def apply_gate(self, circuit, circuit_library: str):
+    # def apply_gate(self, circuit, circuit_library: str):
         
-        if circuit_library == 'ibm':
-            return self._ibm_gate(circuit)
-        elif circuit_library == 'pyquil':
-            return self._pyquil_gate(circuit)
-        elif circuit_library == 'braket':
-            return self._braket_gate(circuit)
-        elif circuit_library == 'vector':
-            return self._vector_gate(circuit)
+    #     if circuit_library == 'ibm':
+    #         return self._ibm_gate(circuit)
+    #     elif circuit_library == 'pyquil':
+    #         return self._pyquil_gate(circuit)
+    #     elif circuit_library == 'braket':
+    #         return self._braket_gate(circuit)
+    #     elif circuit_library == 'vector':
+    #         return self._vector_gate(circuit)
     
     @abstractmethod
-    def _ibm_gate(self):
+    def ibm_gate(self,circuit):
         
         pass
     
     @abstractmethod
-    def _pyquil_gate(self):
+    def pyquil_gate(self,circuit):
         
         pass
     
     @abstractmethod
-    def _braket_gate(self):
+    def braket_gate(self,circuit):
         
         pass
         
     @abstractmethod
-    def _vector_gate(self):
+    def vector_gate(self,circuit):
         
         pass
     
     
 class OneQubitGate(LowLevelGate):
-    
-    def __init__(self, qubit_index: int, rotation_angle_obj: RotationAngle):
+
+    @abstractmethod
+    def ibm_gate(self, qubit_idx, rotation_angle, circuit):
         
-        self.qubit_1 = qubit_index
-        self.gate_label = rotation_angle_obj.pauli_label
-        self.rotation_angle_obj = rotation_angle_obj
+        pass
+    
+    @abstractmethod
+    def pyquil_gate(self, qubit_idx, rotation_angle, circuit):
+        
+        pass
+    
+    @abstractmethod
+    def braket_gate(self, qubit_idx, rotation_angle, circuit):
+        
+        pass
+        
+    @abstractmethod
+    def vector_gate(self, qubit_idx, rotation_angle, circuit):
+        
+        pass 
+    # def __init__(self, qubit_index: Union[int,object], rotation_angle_obj: RotationAngle):
+        
+    #     self.qubit_1 = qubit_index
+    #     self.gate_label = rotation_angle_obj.pauli_label
+    #     self.rotation_angle_obj = rotation_angle_obj
         
         
 class RY(OneQubitGate):
         
-    def _ibm_gate(self, circuit: qkQuantumCircuit) -> qkQuantumCircuit:
+    def ibm_gate(self,
+                  qubit_idx: int,
+                  rotation_angle_obj: RotationAngle,
+                  circuit: qkQuantumCircuit) -> qkQuantumCircuit:
         
-        circuit.ry(self.rotation_angle_obj.rotation_angle, self.qubit_1)
+        circuit.ry(rotation_angle_obj.rotation_angle, qubit_idx)
         return circuit
     
-    def _pyquil_gate(self, program: quilProgram) -> quilProgram:
+    def pyquil_gate(self,
+                     qubit_idx: quilQubitPlaceholder,
+                     rotation_angle_obj: RotationAngle,
+                     program: quilProgram) -> quilProgram:
 
         program += quilgates.RY(self.rotation_angle_obj.rotation_angle,
                                 self.qubit_1)
         return program
         
-    def _braket_gate(self):
+    def braket_gate(self):
         
         raise NotImplementedError()
         
-    def _vector_gate(self, input_obj):
+    def vector_gate(self, input_obj):
         input_obj.apply_ry(self.qubit_1, self.rotation_angle_obj.rotation_angle)
 
 

@@ -332,43 +332,46 @@ class Hamiltonian:
         """
         assert len(pauli_terms) == len(coeffs), \
             "Number of Pauli terms in Hamiltonian should be same as number of coefficients"
+        
+        physical_qureg = []
+        for pauli_term in pauli_terms:
+            if isinstance(pauli_term, PauliOp):
+                physical_qureg.extend(pauli_term.qubit_indices)
+            else:
+                raise TypeError(f"Pauli terms should be of type PauliOp and not {type(term)}")
+        physical_qureg = list(set(physical_qureg))
+        self.n_qubits = len(physical_qureg)
+
+        need_remapping = False
+        if physical_qureg != self.qureg:
+            print(f'Qubits in the specified Hamiltonian are remapped to {self.qureg}.'
+                   'Please specify the physical quantum register as an arugment in the Backend')
+            need_remapping = True
+            qubit_mapper = dict(zip(physical_qureg, self.qureg))
 
         self.terms = []
         self.coeffs = []
         self.constant = constant
         for term,coeff in zip(pauli_terms,coeffs):
-            if isinstance(term, PauliOp):
-                if term._is_trivial:
-                    self.constant += coeff
+            if term._is_trivial:
+                self.constant += coeff
+            else:
+                if need_remapping:
+                    new_indices = tuple(qubit_mapper[i] for i in term.qubit_indices)
+                    pauli_str = term.pauli_str
+                    self.terms.append(PauliOp(pauli_str, new_indices))
                 else:
                     self.terms.append(term)
-                    # update the coefficients with phase from Pauli Operators
-                    self.coeffs.append(coeff*term.phase)
-            else:
-                raise ValueError(
-                    "Hamiltonian only supports construction using Pauli Operators")
+                # update the coefficients with phase from Pauli Operators
+                self.coeffs.append(coeff*term.phase)
 
         if divide_into_singles_and_pairs:
             self._divide_into_singles_pairs()
 
     @property
-    def physical_qureg(self):
+    def qureg(self):
         """
-        The list of actual qubits used in the Hamiltonian
-        """
-        return list(set([i for j in self.terms for i in j.qubit_indices]))
-
-    @property
-    def n_qubits(self):
-        """
-        Number of qubits in the Hamiltonian
-        """
-        return len(self.physical_qureg)
-
-    @property
-    def logical_qureg(self):
-        """
-        List of qubits from 1 to n in Hamiltonian
+        List of qubits from 0 to n-1 in Hamiltonian
         """
         return list(range(self.n_qubits))
 

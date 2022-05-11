@@ -119,15 +119,12 @@ class QAOACircuitParams(VQACircuitParams):
 
     Parameters
     ----------    
-        cost_hamiltonian: `Hamiltonian` 
+    cost_hamiltonian: `Hamiltonian` 
 
-        mixer_hamiltonian: `Hamiltonian`
+    mixer_hamiltonian: `Hamiltonian`
 
-        physical_qureg: `List[int]`
-            Qubit register if specified, defaults to None
-
-        p: 
-            Number of QAOA layers; defaults to 1 if not specified
+    p: 
+        Number of QAOA layers; defaults to 1 if not specified
 
     Attributes
     ----------
@@ -135,10 +132,10 @@ class QAOACircuitParams(VQACircuitParams):
 
     Properties
     ----------
-        hamiltonian: 
-            Returns the problem Hamiltonian as a dictionary
-        hamiltonian_squared: 
-            Returns the problem Hamiltonian Squared as a dictionary
+    hamiltonian: 
+        Returns the problem Hamiltonian as a dictionary
+    hamiltonian_squared: 
+        Returns the problem Hamiltonian Squared as a dictionary
     """
 
     def __init__(self,
@@ -149,7 +146,7 @@ class QAOACircuitParams(VQACircuitParams):
         super().__init__(algorithm='QAOA')
         self.cost_hamiltonian = cost_hamiltonian
         self.mixer_hamiltonian = mixer_hamiltonian
-        self.qureg = cost_hamiltonian.physical_qureg
+        self.qureg = cost_hamiltonian.qureg
         self.p = p
 
     def __repr__(self):
