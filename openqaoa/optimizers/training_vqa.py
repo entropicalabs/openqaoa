@@ -27,6 +27,8 @@ from ..basebackend import VQABaseBackend
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
 
+from .logger_vqa import Logger
+
 
 class OptimizeVQA(ABC):
     '''    
@@ -72,17 +74,32 @@ class OptimizeVQA(ABC):
         self.variational_params = variational_params
         self.initial_params = variational_params.raw()
         self.method = optimizer_dict['method'].lower()
+        
+        optimizer_dict['cost_progress_bool'] = True
+        optimizer_dict['optimization_progress_bool'] = True
+                
+        self.log = Logger({'cost': {'history_update_bool': optimizer_dict.get('cost_progress_bool',True), 
+                                    'best_update_string': 'BestOnly'}, 
+                           'counts': {'history_update_bool': optimizer_dict.get('optimization_progress_bool',False), 
+                                      'best_update_string': 'Replace'}, 
+                           'probability': {'history_update_bool': optimizer_dict.get('optimization_progress_bool',False), 
+                                           'best_update_string': 'Replace'},
+                           'param_log': {'history_update_bool': optimizer_dict.get('parameter_log_bool',True), 
+                                         'best_update_string': 'Replace'}}, 
+                          {'best_update_structure': (['cost'], ['param_log', 
+                                                                'counts', 
+                                                                'probability'])})
 
-        self.cost_progress = []
-        self.count_progress = []
-        self.probability_progress = []
-        self.param_log = []
-        self.opt_result = None
+#         self.cost_progress = []
+#         self.count_progress = []
+#         self.probability_progress = []
+#         self.param_log = []
+#         self.opt_result = None
 
-        self.optimization_progress_bool = optimizer_dict.get(
-            'optimization_progress', False)
-        self.cost_progress_bool = optimizer_dict.get('cost_progress', False)
-        self.parameter_log_bool = optimizer_dict.get('parameter_log', False)
+#         self.optimization_progress_bool = optimizer_dict.get(
+#             'optimization_progress', False)
+#         self.cost_progress_bool = optimizer_dict.get('cost_progress', False)
+#         self.parameter_log_bool = optimizer_dict.get('parameter_log', False)
 
     @abstractmethod
     def __repr__(self):
@@ -127,30 +144,20 @@ class OptimizeVQA(ABC):
         :
             Cost Value evaluated on the declared backed or on the Wavefunction Simulator if specified so
         '''
-        # First we append the new parameters and its cost.
-        self.param_log.append(deepcopy(x))
+        
+        log_dict = {}
+        log_dict.update({'param_log': deepcopy(x)})
         self.variational_params.update_from_raw(deepcopy(x))
         callback_cost = self.vqa.expectation(self.variational_params)
-        self.cost_progress.append(callback_cost)
-
+        
+        log_dict.update({'cost': callback_cost})
+        
         if hasattr(self.vqa, 'counts'):
-            self.count_progress.append(self.vqa.counts)
+            log_dict.update({'counts': self.vqa.counts})
         elif hasattr(self.vqa, 'probability'):
-            self.probability_progress.append(self.vqa.probability)
-
-        # If optimization progress boolean is false, we do not record the
-        # counts and probablity progress. We only keep the best results.
-        if self.optimization_progress_bool == False:
-            if np.argmin(self.cost_progress) == len(self.cost_progress):
-                if hasattr(self.vqa, 'counts'):
-                    self.count_progress = [self.count_progress[-1]]
-                elif hasattr(self.vqa, 'probability'):
-                    self.probability_progress = [self.probability_progress[-1]]
-            else:
-                if hasattr(self.vqa, 'counts'):
-                    self.count_progress = [self.count_progress[0]]
-                elif hasattr(self.vqa, 'probability'):
-                    self.probability_progress = [self.probability_progress[0]]
+            log_dict.update({'probability': self.vqa.probability})
+            
+        self.log.log_variables(log_dict)
 
         return callback_cost
 
@@ -169,9 +176,6 @@ class OptimizeVQA(ABC):
         pass
 
     def results_dictionary(self,
-                           final_params,
-                           opt_cost,
-                           nfev,
                            file_path: str = None,
                            file_name: str = None):
         '''
@@ -201,29 +205,29 @@ class OptimizeVQA(ABC):
         :
             Dictionary with the following keys
         
-                #. "opt result"
                 #. "parameter log"
-                #. "final params"
+                #. "best param"
                 #. "cost progress list"
+                #. "best cost"
                 #. "count progress list"
+                #. "best count"
                 #. "probability progress list"
+                #. "best probability"
                 #. "optimization method"
-                #. "cost function calls"
-                #. "optimal cost"
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
-
+        
         result_dict = {
-            'opt result': self.opt_result,
-            'parameter log': np.array(self.param_log).tolist(),
-            'final params': np.array(final_params).tolist(),
-            'cost progress list': np.array(self.cost_progress).tolist(),
-            'count progress list': np.array(self.count_progress).tolist(),
-            'probability progress list': np.array(self.probability_progress).tolist(),
-            'optimization method': self.method,
-            'cost function calls': nfev,
-            'optimal cost': opt_cost
+            'parameter log': np.array(self.log.param_log.history).tolist(),
+            'best param': np.array(self.log.param_log.best).tolist(),
+            'cost progress list': np.array(self.log.cost.history).tolist(), 
+            'best cost': np.array(self.log.cost.best).tolist(), 
+            'count progress list': np.array(self.log.counts.history).tolist(),
+            'best count': np.array(self.log.counts.best).tolist(), 
+            'probability progress list': np.array(self.log.probability.history).tolist(),
+            'best probability': np.array(self.log.probability.best).tolist(),
+            'optimization method': self.method
         }
 
         if(file_path and os.path.isdir(file_path)):
@@ -371,21 +375,24 @@ class ScipyOptimizer(OptimizeVQA):
         : 
             The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
         '''
-        if self.method not in ScipyOptimizer.GRADIENT_FREE:
-            if self.hess == None:
-                result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
-                                  jac=self.jac, tol=self.tol, constraints=self.constraints,
-                                  options=self.options, bounds=self.bounds)
+        
+        try:
+            if self.method not in ScipyOptimizer.GRADIENT_FREE:
+                if self.hess == None:
+                    result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
+                                      jac=self.jac, tol=self.tol, constraints=self.constraints,
+                                      options=self.options, bounds=self.bounds)
+                else:
+                    result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
+                                      jac=self.jac, hess=self.hess, tol=self.tol,
+                                      constraints=self.constraints, options=self.options, bounds=self.bounds)
             else:
                 result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
-                                  jac=self.jac, hess=self.hess, tol=self.tol,
-                                  constraints=self.constraints, options=self.options, bounds=self.bounds)
-        else:
-            result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
-                              tol=self.tol, constraints=self.constraints, options=self.options, bounds=self.bounds)
-
-        self.opt_result = result
-        return self
+                                  tol=self.tol, constraints=self.constraints, options=self.options, bounds=self.bounds)
+        except Exception:
+            print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        finally:
+            return self
 
     def results_information(self, file_path: str = None, file_name: str = None):
         '''
@@ -407,22 +414,17 @@ class ScipyOptimizer(OptimizeVQA):
         :
             Dictionary with the following keys
         
-                #. "opt result"
                 #. "parameter log"
-                #. "final params"
+                #. "best param"
                 #. "cost progress list"
+                #. "best cost"
                 #. "count progress list"
+                #. "best count"
                 #. "probability progress list"
+                #. "best probability"
                 #. "optimization method"
-                #. "cost function calls"
-                #. "optimal cost"
         '''
-        final_params = self.opt_result.x
-        opt_cost = self.opt_result.fun
-        nfev = self.opt_result.nfev
-
-        results = self.results_dictionary(
-            final_params, opt_cost, nfev, file_path, file_name)
+        results = self.results_dictionary(file_path, file_name)
         return results
 
 
@@ -572,18 +574,20 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
             method = om.SPSA
-
-        if self.hess == None:
-            result = minimize(self.optimize_this, x0=self.initial_params, method=method,
-                              jac=self.jac, tol=self.tol, constraints=self.constraints,
-                              options=self.options, bounds=self.bounds)
-        else:
-            result = minimize(self.optimize_this, x0=self.initial_params, method=method,
-                              jac=self.jac, hess=self.hess, tol=self.tol, constraints=self.constraints,
-                              options=self.options, bounds=self.bounds)
-
-        self.opt_result = result
-        return self
+        
+        try:
+            if self.hess == None:
+                result = minimize(self.optimize_this, x0=self.initial_params, method=method,
+                                  jac=self.jac, tol=self.tol, constraints=self.constraints,
+                                  options=self.options, bounds=self.bounds)
+            else:
+                result = minimize(self.optimize_this, x0=self.initial_params, method=method,
+                                  jac=self.jac, hess=self.hess, tol=self.tol, constraints=self.constraints,
+                                  options=self.options, bounds=self.bounds)
+        except Exception:
+            print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        finally:
+            return self
 
     def results_information(self, file_path: str = None, file_name: str = None):
         '''
@@ -605,20 +609,15 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         :
             Dictionary with the following keys
         
-                #. "opt result"
                 #. "parameter log"
-                #. "final params"
+                #. "best param"
                 #. "cost progress list"
+                #. "best cost"
                 #. "count progress list"
+                #. "best count"
                 #. "probability progress list"
+                #. "best probability"
                 #. "optimization method"
-                #. "cost function calls"
-                #. "optimal cost"
         '''
-        final_params = self.opt_result.x
-        opt_cost = self.opt_result.fun
-        nfev = self.opt_result.nfev
-
-        results = self.results_dictionary(
-            final_params, opt_cost, nfev, file_path, file_name)
+        results = self.results_dictionary(file_path, file_name)
         return results

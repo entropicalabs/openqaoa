@@ -170,7 +170,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         job_state = False
         no_of_job_retries = 0
-        max_job_retries = 5
+        max_job_retries = 1
 
         while job_state == False:
             job = execute(circuit, backend=self.backend_qpu,
@@ -178,7 +178,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
             api_contact = False
             no_of_api_retries = 0
-            max_api_retries = 5
+            max_api_retries = 1
 
             while api_contact == False:
                 try:
@@ -192,7 +192,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                     time.sleep(5)
                 except (IBMQJobFailureError, IBMQJobInvalidStateError):
                     print(
-                        "There was an issue with the state of the Job in IBMQ. Resending the Job...")
+                        "There was an issue with the state of the Job in IBMQ.")
                     no_of_job_retries += 1
                     break
 
