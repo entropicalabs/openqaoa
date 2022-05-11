@@ -16,16 +16,11 @@ sys.path.insert(0, myPath + '/../')
 
 
 def notebook_test_function(name):
-    print(name)
-    # command = f"jupyter nbconvert --to script {name} --output /openqaoa/tests/"
-    # command = f"jupyter nbconvert --to notebook --execute {name}"
 
     with open(name) as f:
         nb = nbformat.read(f, as_version=4)
 
-    # print(f"Converting {name} to a python script")
-    # subprocess.call(command.split(" "), stderr=None, stdout=None)
-    ep = ExecutePreprocessor(timeout=600)
+    ep = ExecutePreprocessor(timeout=600, kernel_name='python')
 
     ep.preprocess(nb)
 
