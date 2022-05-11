@@ -19,6 +19,21 @@ git clone git@github.com:entropicalabs/openqaoa.git
 pip install -e .
 ```
 
+## Building the docs
+
+If you have installed OpenQAOA using the setup file then all the required libraries to build the docs should already be in place. However, if something went wrong they can be easily installed by running the following command
+
+```bash
+pip install sphinx, sphinx-autodoc-typehints, sphinx-rtd-theme
+```
+Then, simply navigate to the `docs` folder by typing `cd docs/` and simply type
+
+```bash
+make html
+```
+
+and the docs should appear in the folder `docs/build/html`, and can be opened by simply opening the `index.html` file.
+
 ## Getting started
 
 There are two ways to solve optimizations problems using OpenQAOA. 
@@ -29,16 +44,27 @@ There are two ways to solve optimizations problems using OpenQAOA.
 
 Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
 
-A reference jupyter notebook can be found [here](Workflows_example.ipynb)
+A reference jupyter notebook can be found [here](examples/Workflows_example.ipynb)
 
+Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
+
+First, create a problem instance. For example, an instance of vertex cover:
 ```
+from openqaoa.problems.problem import MinimumVertexCover
+n_qubits = 10
+terms = [(i,j) for j in range(n_qubits) for i in range(j)]
+weights = [1 for _ in range(len(terms))]
+pubo_problem = PUBO(n_qubits,terms,weights,encoding=[-1,1])
+```
+
+Once the binary problem is defined, the simplest workflow can be defined as 
+
+```  
 from openqaoa.workflows.optimizer import QAOA  
 q = QAOA()
 q.compile(pubo_problem)
-q.optimize()
+q.optimize() 
 ```
-
-where the `pubo_problem` is any instance from `openqaoa.problems.problem`. For example, `pubo_problem = NumberPartition([1,2,3]).get_pubo_problem()`.
 
 Workflows can be customised using some convenient setter functions
 
@@ -56,7 +82,7 @@ Currently, the available devices are:
 
 | Device location  | Device Name |
 | ------------- | ------------- |
-| `locale`  | `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'nq-qvm', 'Aspen-11']`  |
+| `local`  | `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'nq-qvm', 'Aspen-11']`  |
 | `IBMQ`    | Please check the IMBQ backends available to your account |
 | `QCS`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
 
@@ -80,8 +106,8 @@ rqaoa_type can take two values which select elimination strategies. The user can
 The user is also free to directly access the source code without using the workflow API. 
 
 A few reference notebooks can be found:
-[comparing vectorized, pyquil, and qiskit backents](test_backends_correctness.ipynb)
-[Parameter sweep for vectorised](openqaoa_example_vectorised.ipynb)
+[comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
+[Parameter sweep for vectorised](examples/openqaoa_example_vectorised.ipynb)
 
 
 The basic procedure is the following

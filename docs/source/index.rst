@@ -42,7 +42,7 @@ Clone the git repository:
    git clone git@github.com:entropicalabs/openqaoa.git
 
 Creating a python `virtual enviorement` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). 
-Make sure to use **python 3.8.8** for the environment.
+Make sure to use **python 3.8** for the environment.
 
 After cloning the repository `cd openqaoa` and pip install in edit mode:
 
@@ -55,7 +55,15 @@ Your first QAOA workflow
 -------------------------
 Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
 
-A reference jupyter notebook can be found [here](Workflows_example.ipynb)
+First, create a problem instance. For example, an instance of vertex cover:
+.. code-block:: python
+   from openqaoa.problems.problem import MinimumVertexCover
+   n_qubits = 10
+   terms = [(i,j) for j in range(n_qubits) for i in range(j)]
+   weights = [1 for _ in range(len(terms))]
+   pubo_problem = PUBO(n_qubits,terms,weights,encoding=[-1,1])
+
+Once the binary problem is defined, the simplest workflow can be defined as 
 
 .. code-block:: python
    
@@ -65,7 +73,6 @@ A reference jupyter notebook can be found [here](Workflows_example.ipynb)
    q.optimize()
 
 
-where the `pubo_problem` is any instance from `openqaoa.problems.problem`. For example, `pubo_problem = NumberPartition([1,2,3]).get_pubo_problem()`.
 
 Workflows can be customised using some convenient setter functions
 
@@ -74,7 +81,7 @@ Workflows can be customised using some convenient setter functions
    q_custom = QAOA()
    q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
    q_custom.set_device_properties(device_location='qcs', device_name='Aspen-11')
-   q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
+   q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
    q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
    q_custom.compile(pubo_problem)
    q_custom.optimize()
@@ -87,7 +94,7 @@ Currently, the available devices are:
 
    * - Device location
      - Device Name
-   * - `locale`
+   * - `local`
      - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'nq-qvm', 'Aspen-11']`
    * - `IBMQ`
      - Please check the IMBQ backends available to your account
