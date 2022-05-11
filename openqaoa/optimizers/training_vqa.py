@@ -85,7 +85,7 @@ class OptimizeVQA(ABC):
                            'param_log': {'history_update_bool': optimizer_dict.get('parameter_log',True), 
                                          'best_update_string': 'Replace'}, 
                            'func_evals': {'history_update_bool': False, 'best_update_string': 'HighestOnly'}}, 
-                          {'best_update_structure': (['cost'], ['param_log', 
+                          {'best_update_structure': (['cost', 'func_evals'], ['param_log', 
                                                                 'counts', 
                                                                 'probability'])})
 
@@ -210,7 +210,7 @@ class OptimizeVQA(ABC):
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
         
         result_dict = {
-            'number of evals': self.log.func_evals.best,
+            'number of evals': self.log.func_evals.best[0],
             'parameter log': np.array(self.log.param_log.history).tolist(),
             'best param': np.array(self.log.param_log.best).tolist(),
             'cost progress list': np.array(self.log.cost.history).tolist(), 
