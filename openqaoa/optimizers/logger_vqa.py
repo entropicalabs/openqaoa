@@ -51,6 +51,13 @@ class ReplaceValue(UpdateMethod):
         
         setattr(self, attribute_name, [new_value])
 
+        
+class EmptyValue(UpdateMethod):
+    
+    def update(self, attribute_name: str, new_value: Union[list, int, float, str]) -> None:
+        
+        setattr(self, attribute_name, []) 
+
 
 class IfLowerDo(UpdateMethod):
     
@@ -66,6 +73,22 @@ class IfLowerDo(UpdateMethod):
                 self._update_method.update(logger_variable, attribute_name, new_value)
         except IndexError:
             AppendValue.update(logger_variable, attribute_name, new_value)
+            
+            
+class IfHigherDo(UpdateMethod):
+    
+    def __init__(self, update_method: UpdateMethod):
+        
+        self._update_method = update_method
+    
+    def update(self, logger_variable: LoggerVariable, attribute_name: str, new_value: Union[list, int, float, str]) -> None:
+        
+        try:
+            old_value = getattr(logger_variable, attribute_name)[-1]
+            if new_value > old_value:
+                self._update_method.update(logger_variable, attribute_name, new_value)
+        except IndexError:
+            AppendValue.update(logger_variable, attribute_name, new_value)
         
 
 class LoggerVariableFactory(object):
@@ -74,9 +97,11 @@ class LoggerVariableFactory(object):
     Creates Logger Variable Objects
     """
     
-    history_bool_mapping = {'True': AppendValue, 'False': ReplaceValue}
-    best_string_mapping = {'BestOnly': IfLowerDo(ReplaceValue), 
-                           'BestSoFar': IfLowerDo(AppendValue), 
+    history_bool_mapping = {'True': AppendValue, 'False': EmptyValue}
+    best_string_mapping = {'HighestOnly': IfHigherDo(ReplaceValue), 
+                           'HighestSoFar': IfHigherDo(AppendValue), 
+                           'LowestOnly': IfLowerDo(ReplaceValue), 
+                           'LowestSoFar': IfLowerDo(AppendValue), 
                            'Replace': ReplaceValue, 
                            'Append': AppendValue}
     

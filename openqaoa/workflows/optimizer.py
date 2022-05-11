@@ -312,8 +312,8 @@ class QAOA(Optimizer):
 
 
         if self.device_properties.device_name == 'vectorized':
-            self.solution = list(self.results_information['probability progress list'][0].keys())[
-                np.argmax(list((self.results_information['probability progress list'][0].values())))]
+            self.solution = list(self.results_information['best probability'][0].keys())[
+                np.argmax(list((self.results_information['best probability'][0].values())))]
             self.results_information['cost'] = self.results_information['best cost']
         else:
             if self.device_properties.device_name == 'qiskit_statevec_simulator':

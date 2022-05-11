@@ -74,15 +74,17 @@ class OptimizeVQA(ABC):
         self.variational_params = variational_params
         self.initial_params = variational_params.raw()
         self.method = optimizer_dict['method'].lower()
-                
+        
+        self.func_evals = 0
         self.log = Logger({'cost': {'history_update_bool': optimizer_dict.get('cost_progress',True), 
-                                    'best_update_string': 'BestOnly'}, 
+                                    'best_update_string': 'LowestOnly'}, 
                            'counts': {'history_update_bool': optimizer_dict.get('optimization_progress',False), 
                                       'best_update_string': 'Replace'}, 
                            'probability': {'history_update_bool': optimizer_dict.get('optimization_progress',False), 
                                            'best_update_string': 'Replace'},
                            'param_log': {'history_update_bool': optimizer_dict.get('parameter_log',True), 
-                                         'best_update_string': 'Replace'}}, 
+                                         'best_update_string': 'Replace'}, 
+                           'func_evals': {'history_update_bool': False, 'best_update_string': 'HighestOnly'}}, 
                           {'best_update_structure': (['cost'], ['param_log', 
                                                                 'counts', 
                                                                 'probability'])})
@@ -137,6 +139,8 @@ class OptimizeVQA(ABC):
         callback_cost = self.vqa.expectation(self.variational_params)
         
         log_dict.update({'cost': callback_cost})
+        self.func_evals += 1
+        log_dict.update({'func_evals': self.func_evals})
         
         if hasattr(self.vqa, 'counts'):
             log_dict.update({'counts': self.vqa.counts})
@@ -190,7 +194,8 @@ class OptimizeVQA(ABC):
         -------
         :
             Dictionary with the following keys
-        
+                
+                #. "number of evals"
                 #. "parameter log"
                 #. "best param"
                 #. "cost progress list"
@@ -205,6 +210,7 @@ class OptimizeVQA(ABC):
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
         
         result_dict = {
+            'number of evals': self.log.func_evals.best,
             'parameter log': np.array(self.log.param_log.history).tolist(),
             'best param': np.array(self.log.param_log.best).tolist(),
             'cost progress list': np.array(self.log.cost.history).tolist(), 
@@ -401,6 +407,7 @@ class ScipyOptimizer(OptimizeVQA):
         :
             Dictionary with the following keys
         
+                #. "number of evals"
                 #. "parameter log"
                 #. "best param"
                 #. "cost progress list"
@@ -596,6 +603,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         :
             Dictionary with the following keys
         
+                #. "number of evals"
                 #. "parameter log"
                 #. "best param"
                 #. "cost progress list"
