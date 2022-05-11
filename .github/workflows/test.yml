@@ -54,6 +54,7 @@ jobs:
       - name: Run tests
         run: |
           source env/bin/activate
+          ipython kernel install --name "env" --user
           python -m pytest --junitxml=report.xml 
 
   docs:
