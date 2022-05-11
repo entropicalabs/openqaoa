@@ -75,28 +75,17 @@ class OptimizeVQA(ABC):
         self.initial_params = variational_params.raw()
         self.method = optimizer_dict['method'].lower()
                 
-        self.log = Logger({'cost': {'history_update_bool': optimizer_dict.get('cost_progress_bool',True), 
+        self.log = Logger({'cost': {'history_update_bool': optimizer_dict.get('cost_progress',True), 
                                     'best_update_string': 'BestOnly'}, 
-                           'counts': {'history_update_bool': optimizer_dict.get('optimization_progress_bool',False), 
+                           'counts': {'history_update_bool': optimizer_dict.get('optimization_progress',False), 
                                       'best_update_string': 'Replace'}, 
-                           'probability': {'history_update_bool': optimizer_dict.get('optimization_progress_bool',False), 
+                           'probability': {'history_update_bool': optimizer_dict.get('optimization_progress',False), 
                                            'best_update_string': 'Replace'},
-                           'param_log': {'history_update_bool': optimizer_dict.get('parameter_log_bool',True), 
+                           'param_log': {'history_update_bool': optimizer_dict.get('parameter_log',True), 
                                          'best_update_string': 'Replace'}}, 
                           {'best_update_structure': (['cost'], ['param_log', 
                                                                 'counts', 
                                                                 'probability'])})
-
-#         self.cost_progress = []
-#         self.count_progress = []
-#         self.probability_progress = []
-#         self.param_log = []
-#         self.opt_result = None
-
-#         self.optimization_progress_bool = optimizer_dict.get(
-#             'optimization_progress', False)
-#         self.cost_progress_bool = optimizer_dict.get('cost_progress', False)
-#         self.parameter_log_bool = optimizer_dict.get('parameter_log', False)
 
     @abstractmethod
     def __repr__(self):

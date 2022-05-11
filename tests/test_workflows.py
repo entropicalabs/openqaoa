@@ -78,6 +78,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         vc = MinimumVertexCover(g, field =1.0, penalty=10).get_pubo_problem()
 
         q = QAOA()
+        q.set_classical_optimizer(optimization_progress = True)
         q.compile(vc)
         q.optimize()
 
