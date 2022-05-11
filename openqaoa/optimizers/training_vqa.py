@@ -74,9 +74,6 @@ class OptimizeVQA(ABC):
         self.variational_params = variational_params
         self.initial_params = variational_params.raw()
         self.method = optimizer_dict['method'].lower()
-        
-        optimizer_dict['cost_progress_bool'] = True
-        optimizer_dict['optimization_progress_bool'] = True
                 
         self.log = Logger({'cost': {'history_update_bool': optimizer_dict.get('cost_progress_bool',True), 
                                     'best_update_string': 'BestOnly'}, 
