@@ -373,7 +373,7 @@ class ScipyOptimizer(OptimizeVQA):
         Returns
         -------
         : 
-            The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
+            Returns self after the optimization process is completed.
         '''
         
         try:
@@ -389,8 +389,9 @@ class ScipyOptimizer(OptimizeVQA):
             else:
                 result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
                                   tol=self.tol, constraints=self.constraints, options=self.options, bounds=self.bounds)
-        except Exception:
-            print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        except Exception as e:
+            print(e, '\n')
+            print("The optimization has been terminated early. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
             return self
 

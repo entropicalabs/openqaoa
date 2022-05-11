@@ -119,7 +119,7 @@ class Logger(object):
         updates are independent of one another.
         If the members in the tuple are not in the same list, then the updates
         for the members in that list is dependent on whether any change was
-        performed in the members of the list before it.
+        performed in all of members of the list before it.
         
         ([A], [B, C]) - If A is changed, update B and C
         ([A, B, C]) - Update A, B and C indepdently of each other.
