@@ -20,7 +20,7 @@ def notebook_test_function(name):
     with open(name) as f:
         nb = nbformat.read(f, as_version=4)
 
-    ep = ExecutePreprocessor(timeout=600, kernel_name='python')
+    ep = ExecutePreprocessor(timeout=600, kernel_name='env')
 
     ep.preprocess(nb)
 
