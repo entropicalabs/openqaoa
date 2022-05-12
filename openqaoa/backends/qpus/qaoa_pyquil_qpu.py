@@ -15,8 +15,6 @@
 from collections import Counter
 import numpy as np
 from pyquil import Program, gates, quilbase
-from pyquil.quilatom import QubitPlaceholder
-from pyquil.quil import address_qubits
 
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
@@ -107,11 +105,10 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                                                                 "to the QAOA routine"
         # TODO: access_object implementation for PyQuil
         self.parametric_circuit = self.parametric_qaoa_circuit
-        # address_qubits(self.parametric_circuit, qubit_mapping = dict(zip(self.qureg_placeholders,self.qubit_layout)))
-        # native_prog = self.access_object.quantum_computer.compiler.quil_to_native_quil(
-        #     self.parametric_circuit)
-        # self.prog_exe = self.access_object.quantum_computer.compiler.native_quil_to_executable(
-        #     native_prog)
+        native_prog = self.access_object.quantum_computer.compiler.quil_to_native_quil(
+            self.parametric_circuit)
+        self.prog_exe = self.access_object.quantum_computer.compiler.native_quil_to_executable(
+            native_prog)
         
         # Check program connectivity against QPU connectivity
         # TODO: reconcile with PRAGMA PRESERVE
@@ -168,7 +165,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                 raise ValueError('Rewiring command not recognized. Please use ''PRAGMA INITIAL_REWIRING "NAIVE"'' or ''PRAGMA INITIAL_REWIRING "PARTIAL"''')
         
         # declare the read-out register
-        ro = parametric_circuit.declare('ro', 'BIT', self.qureg)
+        ro = parametric_circuit.declare('ro', 'BIT', self.n_qubits)
 
         if self.prepend_state:
             parametric_circuit += self.prepend_state
@@ -193,7 +190,6 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             for each_tuple in decomposition:
                 gate = each_tuple[0]()
                 qubits, rotation_angle = each_tuple[1]
-                qubits = each_tuple[1][0]
                 if isinstance(qubits,list):
                     new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
                 else:
@@ -205,7 +201,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             
         # Measurement instructions
         for i, qubit in enumerate(self.qureg):
-            parametric_circuit += gates.MEASURE(qubit, ro[i])
+            parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], ro[i])
 
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 
