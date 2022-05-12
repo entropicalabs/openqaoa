@@ -435,7 +435,7 @@ def expectation_values(variational_params: QAOAVariationalBaseParams, qaoa_resul
     terms = list(hamiltonian.terms)
 
     # The QAOA angles
-    optimized_params = qaoa_results['final params']
+    optimized_params = qaoa_results['best param'][0]
 
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)

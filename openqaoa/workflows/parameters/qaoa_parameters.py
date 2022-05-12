@@ -373,9 +373,9 @@ class ClassicalOptimizer(Parameters):
                  lambd: float = None,
                  jac_options: dict = None,
                  hess_options: dict = None,
-                 optimization_progress_bool: bool = True,
-                 cost_progress: bool = False,
-                 parameter_log: bool = False,
+                 optimization_progress: bool = False,
+                 cost_progress: bool = True,
+                 parameter_log: bool = True,
                  top_k_solutions: int = 1):
         self.optimize = optimize
         self.method = method.lower()
@@ -391,11 +391,10 @@ class ClassicalOptimizer(Parameters):
         self.lambd = lambd
         self.jac_options = jac_options
         self.hess_options = hess_options
+        self.parameter_log = parameter_log
+        self.optimization_progress = optimization_progress
         self.cost_progress = cost_progress
         self.parameter_log = parameter_log
-        self.optimization_progress_bool = optimization_progress_bool
-        self.cost_progress_bool = cost_progress
-        self.parameter_log_bool = parameter_log
         self.top_k_solutions = top_k_solutions
 
     # @property

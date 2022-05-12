@@ -186,19 +186,19 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                     api_contact = True
                     job_state = True
                 except (IBMQJobApiError, IBMQJobTimeoutError):
-                    print("An Issue has occurred when trying to contact the IBMQ API.")
+                    print("There was an error when trying to contact the IBMQ API.")
                     job_state = True
                     no_of_api_retries += 1
                     time.sleep(5)
                 except (IBMQJobFailureError, IBMQJobInvalidStateError):
                     print(
-                        "There was an issue with the state of the Job in IBMQ. Resending the Job...")
+                        "There was an error with the state of the Job in IBMQ.")
                     no_of_job_retries += 1
                     break
 
                 if no_of_api_retries >= max_api_retries:
                     raise ConnectionError(
-                        "Number of Retries exceeded Maximum allowed.")
+                        "Number of API Retries exceeded Maximum allowed.")
 
             if no_of_job_retries >= max_job_retries:
                 raise ConnectionError(

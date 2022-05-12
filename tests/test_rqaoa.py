@@ -273,7 +273,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Compute list of expectation values and correlation matrix
         comp_exp_val_list, comp_corr_matrix = expectation_values(variational_params = None,
-                                                                 qaoa_results = {'final params' : fixed_angles},\
+                                                                 qaoa_results = {'best param' : [fixed_angles]},\
                                                                  qaoa_backend = None,\
                                                                  hamiltonian = hamiltonian,
                                                                  p = 1)
