@@ -26,8 +26,8 @@ def notebook_test_function(name):
 
 
 # @pytest.mark.notebook
-def test_1_Workflows_example():
-    notebook_test_function("./examples/Workflows_example.ipynb")
+# def test_1_Workflows_example():
+#     notebook_test_function("./examples/Workflows_example.ipynb")
 
 
 # @pytest.mark.notebook
