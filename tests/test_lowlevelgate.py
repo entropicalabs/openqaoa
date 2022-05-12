@@ -35,8 +35,8 @@ class TestingLowLevelGate(unittest.TestCase):
         rotation_angle_obj = RotationAngle(lambda x: x, [], np.pi)
         
         empty_circuit = QuantumCircuit(1)
-        llgate = RY(0, rotation_angle_obj)
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = RY()
+        output_circuit = llgate.apply_ibm_gate(0,rotation_angle_obj,empty_circuit)
 
         test_circuit = QuantumCircuit(1)
         test_circuit.ry(np.pi, 0)
@@ -44,8 +44,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(1)
-        llgate = RX(0, rotation_angle_obj)
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = RX()
+        output_circuit = llgate.apply_ibm_gate(0,rotation_angle_obj,empty_circuit)
 
         test_circuit = QuantumCircuit(1)
         test_circuit.rx(np.pi, 0)
@@ -53,8 +53,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(1)
-        llgate = RZ(0, rotation_angle_obj)
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = RZ()
+        output_circuit = llgate.apply_ibm_gate(0, rotation_angle_obj, empty_circuit)
 
         test_circuit = QuantumCircuit(1)
         test_circuit.rz(np.pi, 0)
@@ -65,8 +65,8 @@ class TestingLowLevelGate(unittest.TestCase):
             
         # Two Qubit Gate Tests
         empty_circuit = QuantumCircuit(2)
-        llgate = CZ([0, 1])
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = CZ()
+        output_circuit = llgate.apply_ibm_gate([0, 1],empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.cz(0, 1)
@@ -74,8 +74,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(2)
-        llgate = CX([0, 1])
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm', 'CX')
+        llgate = CX(mode='CX')
+        output_circuit = llgate.apply_ibm_gate([0, 1],empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.cx(0, 1)
@@ -83,8 +83,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(2)
-        llgate = CX([0, 1])
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm', 'CZ')
+        llgate = CX(mode='CZ')
+        output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.ry(np.pi/2, 1)
@@ -101,8 +101,8 @@ class TestingLowLevelGate(unittest.TestCase):
         rotation_angle_obj = RotationAngle(lambda x: x, [], np.pi)
         
         empty_circuit = QuantumCircuit(2)
-        llgate = RXX([0, 1], rotation_angle_obj)
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = RXX()
+        output_circuit = llgate.apply_ibm_gate([0, 1], rotation_angle_obj, empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.rxx(np.pi, 0, 1)
@@ -110,8 +110,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(2)
-        llgate = RYY([0, 1], rotation_angle_obj)
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = RYY()
+        output_circuit = llgate.apply_ibm_gate([0, 1], rotation_angle_obj, empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.ryy(np.pi, 0, 1)
@@ -119,8 +119,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(2)
-        llgate = RZZ([0, 1], rotation_angle_obj)
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = RZZ()
+        output_circuit = llgate.apply_ibm_gate([0, 1], rotation_angle_obj, empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.rzz(np.pi, 0, 1)
@@ -128,8 +128,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(2)
-        llgate = RXZ([0, 1], rotation_angle_obj)
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = RXZ()
+        output_circuit = llgate.apply_ibm_gate([0, 1], rotation_angle_obj, empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.rzx(np.pi, 1, 0)
@@ -137,8 +137,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(2)
-        llgate = CPHASE([0, 1], rotation_angle_obj)
-        output_circuit = llgate.apply_gate(empty_circuit, 'ibm')
+        llgate = CPHASE()
+        output_circuit = llgate.apply_ibm_gate([0, 1], rotation_angle_obj, empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.crz(np.pi, 0, 1)
@@ -151,9 +151,9 @@ class TestingLowLevelGate(unittest.TestCase):
         rotation_angle_obj = RotationAngle(lambda x: x, [], np.pi)
         
         empty_program = Program()
-        llgate = RY(0, rotation_angle_obj)
-        output_program = llgate.apply_gate(empty_program, 'pyquil')
-        
+        llgate = RY()
+        output_program = llgate.apply_pyquil_gate(0,rotation_angle_obj,empty_program)
+
         test_program = Program().inst(p_RY(np.pi, 0))
         
         output_gate_names = [instr.name for instr in output_program if type(instr) == quilbase.Gate]
@@ -161,9 +161,9 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
         
         empty_program = Program()
-        llgate = RX(0, rotation_angle_obj)
-        output_program = llgate.apply_gate(empty_program, 'pyquil')
-        
+        llgate = RX()
+        output_program = llgate.apply_pyquil_gate(0,rotation_angle_obj,empty_program)
+
         test_program = Program().inst(p_RX(np.pi, 0))
         
         output_gate_names = [instr.name for instr in output_program if type(instr) == quilbase.Gate]
@@ -171,8 +171,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
         
         empty_program = Program()
-        llgate = RZ(0, rotation_angle_obj)
-        output_program = llgate.apply_gate(empty_program, 'pyquil')
+        llgate = RZ()
+        output_program = llgate.apply_pyquil_gate(0,rotation_angle_obj,empty_program)
         
         test_program = Program().inst(p_RZ(np.pi, 0))
         
@@ -184,8 +184,8 @@ class TestingLowLevelGate(unittest.TestCase):
         
         # Two Qubit Gate Tests
         empty_program = Program()
-        llgate = CZ([0, 1])
-        output_program = llgate.apply_gate(empty_program, 'pyquil')
+        llgate = CZ()
+        output_program = llgate.apply_pyquil_gate([0, 1],empty_program)
 
         test_program = Program().inst(p_CZ(0, 1))
         
@@ -194,8 +194,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
         
         empty_program = Program()
-        llgate = CX([0, 1])
-        output_program = llgate.apply_gate(empty_program, 'pyquil')
+        llgate = CX()
+        output_program = llgate.apply_pyquil_gate([0, 1], empty_program)
 
         test_program = Program().inst(p_CX(0, 1))
         
@@ -209,8 +209,8 @@ class TestingLowLevelGate(unittest.TestCase):
         rotation_angle_obj = RotationAngle(lambda x: x, [], np.pi)
         
         empty_program = Program()
-        llgate = CPHASE([0, 1], rotation_angle_obj)
-        output_program = llgate.apply_gate(empty_program, 'pyquil')
+        llgate = CPHASE()
+        output_program = llgate.apply_pyquil_gate([0, 1], rotation_angle_obj, empty_program)
 
         test_program = Program().inst(p_CPHASE(np.pi, 0, 1))
         
@@ -219,8 +219,8 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
         
         empty_program = Program()
-        llgate = RiSWAP([0, 1], rotation_angle_obj)
-        output_program = llgate.apply_gate(empty_program, 'pyquil')
+        llgate = RiSWAP()
+        output_program = llgate.apply_pyquil_gate([0, 1], rotation_angle_obj, empty_program)
 
         test_program = Program().inst(p_XY(np.pi, 0, 1))
         
