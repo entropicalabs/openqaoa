@@ -84,7 +84,8 @@ class TestGetSamplesMethod(unittest.TestCase):
         betas, gammas = ([0], [0])
 
         cost_hamiltonian = random_classical_hamiltonian(reg)
-        mixer_hamiltonian = X_mixer_hamiltonian(len(reg))
+        n_qubits = cost_hamiltonian.n_qubits
+        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
         qaoa_circuit_params = QAOACircuitParams(
             cost_hamiltonian, mixer_hamiltonian, p)
         variational_params_std = QAOAVariationalStandardParams(
@@ -109,9 +110,9 @@ class TestGetSamplesMethod(unittest.TestCase):
             variational_params_std, n_samples=nshots)
 
         samples_dict_vec = {bin(x)[2:].zfill(
-            len(reg)): 0 for x in range(2**len(reg))}
+            n_qubits): 0 for x in range(2**n_qubits)}
         samples_dict_qiskit = {bin(x)[2:].zfill(
-            len(reg)): 0 for x in range(2**len(reg))}
+            n_qubits): 0 for x in range(2**n_qubits)}
 
         for shot_result in samples_vec:
             samples_dict_vec[shot_result] += 1/nshots
