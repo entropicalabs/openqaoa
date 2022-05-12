@@ -24,7 +24,7 @@ pip install -e .
 If you have installed OpenQAOA using the setup file then all the required libraries to build the docs should already be in place. However, if something went wrong they can be easily installed by running the following command
 
 ```bash
-pip install sphinx, sphinx-autodoc-typehints, sphinx-rtd-theme
+pip install sphinx sphinx-autodoc-typehints sphinx-rtd-theme
 ```
 Then, simply navigate to the `docs` folder by typing `cd docs/` and simply type
 
@@ -32,7 +32,7 @@ Then, simply navigate to the `docs` folder by typing `cd docs/` and simply type
 make html
 ```
 
-and the docs should appear in the folder `docs/build/html`, and can be opened by simply opening the `index.html` file.
+and the docs should appear in the folder `docs/build/html`, and can be opened by simply opening the `docs/build/html/index.html` file.
 
 ## Getting started
 
@@ -46,16 +46,15 @@ Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic f
 
 A reference jupyter notebook can be found [here](examples/Workflows_example.ipynb)
 
-Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
-
 First, create a problem instance. For example, an instance of vertex cover:
 ```
 from openqaoa.problems.problem import MinimumVertexCover
-n_qubits = 10
-terms = [(i,j) for j in range(n_qubits) for i in range(j)]
-weights = [1 for _ in range(len(terms))]
-pubo_problem = PUBO(n_qubits,terms,weights,encoding=[-1,1])
+g = networkx.circulant_graph(6, [1])
+vc = MinimumVertexCover(g, field =1.0, penalty=10)
+pubo_problem = vc.get_pubo_problem()
 ```
+
+Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
 
 Once the binary problem is defined, the simplest workflow can be defined as 
 
@@ -88,7 +87,11 @@ Currently, the available devices are:
 
 With the notation `nq-qvm` it is intended that `n` is a positive integer. For example, `6q-qvm`.
 
+The `vectorised` backend is developed by Entropica Labs and works by permuting active qubits (on which gates are to be applied in any given Hamiltonian term) to the beginning of the register, applying the gate, then undoing the permutation. This allows the operators and their action on the wavefunction to be constructed and performed in a simple, canonical way.
+
 #### Recursive QAOA
+
+A more cohmprensive notebook is [RQAOA_example](examples/RQAOA_example.ipynb)
 
 ```
 from openqaoa.workflows.optimizer import RQAOA
@@ -106,8 +109,8 @@ rqaoa_type can take two values which select elimination strategies. The user can
 The user is also free to directly access the source code without using the workflow API. 
 
 A few reference notebooks can be found:
-[comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
-[Parameter sweep for vectorised](examples/openqaoa_example_vectorised.ipynb)
+* [comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
+* [Parameter sweep for vectorised](examples/openqaoa_example_vectorised.ipynb)
 
 
 The basic procedure is the following
