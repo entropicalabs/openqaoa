@@ -97,8 +97,9 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.qureg = self.circuit_params.qureg
-        self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
+        # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
         self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout
+        self.qubit_mapping = dict(zip(self.qureg, self.qubit_layout))
 
         
         if self.prepend_state:
@@ -106,10 +107,11 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                                                                 "to the QAOA routine"
         # TODO: access_object implementation for PyQuil
         self.parametric_circuit = self.parametric_qaoa_circuit
-        native_prog = self.access_object.quantum_computer.compiler.quil_to_native_quil(
-            self.parametric_circuit)
-        self.prog_exe = self.access_object.quantum_computer.compiler.native_quil_to_executable(
-            native_prog)
+        # address_qubits(self.parametric_circuit, qubit_mapping = dict(zip(self.qureg_placeholders,self.qubit_layout)))
+        # native_prog = self.access_object.quantum_computer.compiler.quil_to_native_quil(
+        #     self.parametric_circuit)
+        # self.prog_exe = self.access_object.quantum_computer.compiler.native_quil_to_executable(
+        #     native_prog)
         
         # Check program connectivity against QPU connectivity
         # TODO: reconcile with PRAGMA PRESERVE
@@ -128,7 +130,6 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         `pyquil.Program`
             A pyquil.Program (executable) object.
         """
-        address_qubits(self.parametric_circuit,qubit_mapping = dict(zip(self.qureg_placeholders,self.qubit_layout)))
         angles_list = np.array(self.obtain_angles_for_pauli_list(
             self.pseudo_circuit, params), dtype=float)
         angle_declarations = list(self.prog_exe.declarations.keys())
@@ -167,15 +168,15 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                 raise ValueError('Rewiring command not recognized. Please use ''PRAGMA INITIAL_REWIRING "NAIVE"'' or ''PRAGMA INITIAL_REWIRING "PARTIAL"''')
         
         # declare the read-out register
-        ro = parametric_circuit.declare('ro', 'BIT', self.n_qubits)
+        ro = parametric_circuit.declare('ro', 'BIT', self.qureg)
 
         if self.prepend_state:
             parametric_circuit += self.prepend_state
             
         # Initial state is all |+>
         if self.init_hadamard:
-            for i in range(self.n_qubits):
-                parametric_circuit += gates.H(i)
+            for i in self.qureg:
+                parametric_circuit += gates.H(self.qubit_mapping[i])
 
         # create a list of gates in order of application on quantum circuit
         for each_gate in self.pseudo_circuit:
@@ -192,11 +193,11 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             for each_tuple in decomposition:
                 gate = each_tuple[0]()
                 qubits, rotation_angle = each_tuple[1]
-                qubits = each_tuple(1)[0]
+                qubits = each_tuple[1][0]
                 if isinstance(qubits,list):
-                    new_qubits = [self.qureg_placeholders[qubit] for qubit in qubits]
+                    new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
                 else:
-                    new_qubits = self.qureg_placeholders[qubits]
+                    new_qubits = self.qubit_mapping[qubits]
                 parametric_circuit = gate.apply_pyquil_gate(new_qubits,rotation_angle,parametric_circuit)
 
         if self.append_state:
