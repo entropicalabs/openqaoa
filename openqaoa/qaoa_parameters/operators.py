@@ -374,9 +374,9 @@ class Hamiltonian:
     coeffs: `List[complex,float,int]`
     constant: `float`
     qubits_pairs: `List[PauliOp]`
-    qubits_singles = `List[PauliOp]`
-    single_qubit_coeffs = `List[float]`
-    pair_qubit_coeffs = `List[float]`
+    qubits_singles: `List[PauliOp]`
+    single_qubit_coeffs: `List[float]`
+    pair_qubit_coeffs: `List[float]`
     qureg
     expression
     hamiltonian_squared

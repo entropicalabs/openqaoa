@@ -473,7 +473,7 @@ def ground_state_hamiltonian(hamiltonian: Hamiltonian) -> Tuple[float, list]:
     register = range(n_qubits)
 
     # Intialize energies
-    energies = np.zeros((2**len(register)))
+    energies = np.zeros(2**len(register))
 
     # Obtain spectrum, scanning term by term
     for i, term in enumerate(hamiltonian.terms):
