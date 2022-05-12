@@ -39,20 +39,84 @@ class Optimizer(ABC):
 
 class QAOA(Optimizer):
     """
-    QAOA optimizer class to initialise parameters to run a desired QAOA program.
+    A class implementing a QAOA workflow end to end.
+
+    It's basic usage cosinsts of 
+    1. Initialisation
+    2. Compilation
+    3. Optimisation
+
+    .. warning::
+        To all our dear beta testers: the setter functions will most likely change. Bear with us as we figure our the smoother way to create the workflows :-)
+        
+
+    .. note::
+        The attributes of the QAOA class should be initialised using the set methods of QAOA. For example, to set the circuit's depth to 10 you should run `set_circuit_properties(p=10)`
 
     Attributes
-    -------------------
-        algorithm: str
-            A string contaning the name of the algorithm, here fixed to `qaoa`
+    ----------
+        circuit_properties: CircuitProperties
+            The circut properties of the QAOA workflow. Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
+            For a complete list of its parameters and usage please see the method set_circuit_properties
+        device_properties: DeviceProperties
+            The device properties of the QAOA workflow. Use to set the device where the computation will be run
+            For a complete list of its parameters and usage please see the method set_device_properties
+        backend_properties: BackendProperties
+            The backend properties of the QAOA workflow. Use to set the backend properties such as the number of shots and the cvar values.
+            For a complete list of its parameters and usage please see the method set_backend_properties
+        classical_optimizer: ClassicalOptimizer
+            The classical optimiser properties of the QAOA workflow. Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
+            For a complete list of its parameters and usage please see the method set_classical_optimizer
+        device_properties: DeviceProperties
+            The device properties of the QAOA workflow. 
+            For a complete list of its parameters and usage please see the method set_device_properties
+        intialised_w_prob: bool
+            Deprecated feature: TOBE REMOVED
+        local_simulators: list[str]
+            A list containing the available local simulators
+        mixer_hamil: Hamiltonian
+            The desired mixer hamiltonian
+        cost_hamil: Hamiltonian
+            The desired mixer hamiltonian
+        circuit_params: QAOACircuitParams
+            the abstract and backend-agnostic representation of the underlying QAOA parameters
+        variate_params: QAOAVariationalBaseParams
+            The variational parameters. These are the parameters to be optimised by the classical optimiser
+        backend: VQABaseBackend
+            The openQAOA representation of the backend to be used to execute the quantum circuit
+        optimizer: OptimizeVQA
+            The classical optimiser
+        results_information: dict
+            A dictonary containg the logs of the optimiser
+        solution: list
+            A list providing the most probable bitstring
+
+    Examples
+    --------
+    Examples should be written in doctest format, and should illustrate how
+    to use the function.
+
+    >>> q = QAOA()
+    >>> q.compile(PUBO)
+    >>> q.optimise()
+
+    Where `PUBO` is a an isntance of `openqaoa.problems.problem.PUBO`
+
+    If you want to use non-default parameters:
+
+    >>> q_custom = QAOA()
+    >>> q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
+    >>> q_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
+    >>> q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
+    >>> q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
+    >>> q_custom.compile(pubo_problem)
+    >>> q_custom.optimize()
     """
     def __init__(self):
-        self.algorithm = 'qaoa'
         self.circuit_properties = CircuitProperties()
         self.device_properties = DeviceProperties()
         self.backend_properties = BackendProperties()
         self.classical_optimizer = ClassicalOptimizer()
-        self.extra_results = ExtraResults()
         self.intialised_w_prob = False
         self.local_simulators = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
 
@@ -261,6 +325,9 @@ class QAOA(Optimizer):
         Initialise the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement
 
+        .. note::
+            Compilation is necessary because it is the moment where the problem statement and the QAOA instructions are used to build the actual QAOA circuit.
+            
         Parameters
         ----------
         problem: `Problem`
@@ -305,6 +372,9 @@ class QAOA(Optimizer):
         return None
 
     def optimize(self):
+        '''
+        A method running the classical optimisation loop
+        '''
 
         self.optimizer.optimize()
         self.results_information = self.optimizer.results_information()
