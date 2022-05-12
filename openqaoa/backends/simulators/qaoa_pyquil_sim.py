@@ -104,6 +104,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector, QAOABas
                 decomposition = each_gate.decomposition('standard')
             # using the list above, construct the circuit
             for each_tuple in decomposition:
+                # qbitplaceholder = something
                 gate = each_tuple[0](*each_tuple[1])
                 parametric_circuit = gate.apply_gate(parametric_circuit, 'pyquil',
                                                      angle_param=angle_param)

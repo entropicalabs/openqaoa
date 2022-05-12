@@ -13,7 +13,7 @@
 #   limitations under the License.
 import numpy as np
 from time import time
-from typing import Optional
+from typing import Optional, List
 # IBM Qiskit imports
 from qiskit import QuantumCircuit, QuantumRegister, execute
 from qiskit.providers.ibmq.job import (IBMQJobApiError, IBMQJobInvalidStateError,
@@ -63,6 +63,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  prepend_state: Optional[QuantumCircuit],
                  append_state: Optional[QuantumCircuit],
                  init_hadamard: bool,
+                 qubit_layout: List[int] = [],
                  cvar_alpha: float = 1):
 
         QAOABaseBackendShotBased.__init__(self,
@@ -75,7 +76,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         QAOABaseBackendCloud.__init__(self, access_object)
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.circuit_params.qureg
+        self.qubit_layout = self.circuit_params.qureg if qubit_layout == [] else qubit_layout
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit" \
@@ -141,8 +142,8 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             decomposition = each_gate.decomposition('standard')
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](*each_tuple[1])
-                parametric_circuit = gate.apply_gate(parametric_circuit, 'ibm')
+                gate = each_tuple[0]()
+                parametric_circuit = gate.apply_ibm_gate(*each_tuple[1],parametric_circuit)
 
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
