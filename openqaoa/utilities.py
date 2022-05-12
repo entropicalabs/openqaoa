@@ -64,10 +64,6 @@ def XY_mixer_hamiltonian(n_qubits: int,
     """
     Construct a Hamiltonian object to implement the XY mixer.
 
-    Notes
-    -----
-    The XY mixer is not implemented with $$RXY$$ Pauli Gates, but $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
-
     Parameters
     ----------
     n_qubits: `int`
@@ -81,6 +77,10 @@ def XY_mixer_hamiltonian(n_qubits: int,
     -------
     hamiltonian: Hamiltonian
         The Hamiltonian object corresponding to the XY mixer.
+
+    Notes
+    -----
+    The XY mixer is not implemented with $$RXY$$ Pauli Gates, but $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
@@ -165,11 +165,6 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
     """
     Creates a networkx graph corresponding to a specified problem Hamiltonian.
 
-    Notes
-    -----
-    This function cannot handle non-QUBO terms.
-    Linear terms are stored as nodes with weights.
-
     Parameters
     ----------
     hamiltonian: `Hamiltonian`
@@ -181,6 +176,11 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
         The corresponding networkx graph with the edge weights being the
         two-qubit coupling coefficients,
         and the node weights being the single-qubit bias terms.
+
+    Notes
+    -----
+    This function cannot handle non-QUBO terms.
+    Linear terms are stored as nodes with weights.
     """
     # Define graph
     G = nx.Graph()
@@ -369,12 +369,6 @@ def random_classical_hamiltonian(reg: List[int],
     """
     Creates a random classical cost hamiltonian.
 
-    Notes
-    -----
-    Randomly selects which qubits that will have a bias term, then assigns them a bias coefficient.
-    Randomly selects which qubit pairs will have a coupling term, then assigns them a coupling coefficient.
-    In both cases, the random coefficient is drawn from the uniform distribution on the interval [0,1).
-
     Parameters
     ----------
     reg: `list`
@@ -398,6 +392,12 @@ def random_classical_hamiltonian(reg: List[int],
     random_hamil: `Hamiltonian`
         A random hamiltonian with randomly selected terms and coefficients and 
         with the specified constant term.
+
+    Notes
+    -----
+    Randomly selects which qubits that will have a bias term, then assigns them a bias coefficient.
+    Randomly selects which qubit pairs will have a coupling term, then assigns them a coupling coefficient.
+    In both cases, the random coefficient is drawn from the uniform distribution on the interval [0,1).
     """
     # Set the random seed
     np.random.seed(seed=seed)
@@ -691,11 +691,6 @@ def low_energy_states(hamiltonian: Hamiltonian,
     """
     Return threshold energy and the low energy states of the
     specified hamiltonian which are below this threshold. 
-    
-    Notes
-    -----
-    The threshold is calculated as `threshols_per` factors away from the
-    ground state of the Hamiltonain.
 
     Parameters
     ----------
@@ -712,6 +707,11 @@ def low_energy_states(hamiltonian: Hamiltonian,
     states: `list`
         The list of low energy states that lie below the low
         energy threshold.
+
+    Notes
+    -----
+    The threshold is calculated as `threshols_per` factors away from the
+    ground state of the Hamiltonian.
     """
     # Asserr threshold is bounded between 0 and 1
     assert threshold_per >= 0.0, "Threshold percentage should be above 0"
@@ -751,11 +751,6 @@ def low_energy_states_overlap(hamiltonian: Hamiltonian,
     below a specific threshold away from the ground state energy, and an input
     state, expressed in terms of a probability dictionary. 
 
-    Notes
-    -----
-    The threshold is calculated as `threshold_per` factors away from the ground state of the Hamiltonain.
-    For `threshold_per=0` the function returns the ground state overlap of the QAOA output.
-
     Parameters
     ----------
     hamiltonian: `Hamiltonian`
@@ -771,6 +766,11 @@ def low_energy_states_overlap(hamiltonian: Hamiltonian,
     -------
     total_overlap: `float`
         The total overlap with the low-energy states.
+
+    Notes
+    -----
+    The threshold is calculated as `threshold_per` factors away from the ground state of the Hamiltonain.
+    For `threshold_per=0` the function returns the ground state overlap of the QAOA output.
     """
     # Extract number of qubits from probability dictionary
     n_qubits = len(list(prob_dict.keys())[0])
@@ -795,10 +795,6 @@ def low_energy_states_overlap(hamiltonian: Hamiltonian,
 def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
     """
     Builds the cost Hamiltonian for the "Ring of Disagrees".
-    
-    Notes
-    -----
-    This model is introduced in https://arxiv.org/abs/1411.4028
 
     Parameters
     ----------
@@ -809,6 +805,10 @@ def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
     -------
     ring_hamil: `Hamiltonian`
         Hamiltonian object containing Ring of Disagrees model.
+
+    Notes
+    -----
+    This model is introduced in https://arxiv.org/abs/1411.4028
     """
 
     # Number of qubits from input register
