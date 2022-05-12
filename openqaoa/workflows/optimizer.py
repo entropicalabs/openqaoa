@@ -320,18 +320,23 @@ class QAOA(Optimizer):
         attributes_dict = convert2serialize(self)
         return attributes_dict
 
-    def compile(self, problem: PUBO = None):
+    def compile(self, problem: PUBO = None, verbose: bool = True):
         """
         Initialise the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement
 
         .. note::
             Compilation is necessary because it is the moment where the problem statement and the QAOA instructions are used to build the actual QAOA circuit.
+
+        .. tip::
+            Set Verbose to false if you are running batch computations! 
             
         Parameters
         ----------
         problem: `Problem`
             QUBO problem to be solved by QAOA
+        verbose: bool
+            Set True to have a summary of QAOA to displayed after compilation
         """
         self.mixer_hamil = get_mixer_hamiltonian(n_qubits=problem.n,
                                                  qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
@@ -354,20 +359,21 @@ class QAOA(Optimizer):
                                        variational_params=self.variate_params,
                                        optimizer_dict=self.classical_optimizer.asdict())
 
-        print('\t \033[1m ### Summary ###\033[0m')
-        print(f'OpenQAOA has ben compiled with the following properties')
-        print(
-            f'Solving QAOA with \033[1m {self.device_properties.device_name} \033[0m on  \033[1m{self.device_properties.device_location}\033[0m')
-        print(f'Using p={self.circuit_properties.p} with {self.circuit_properties.param_type} parameters initialsied as {self.circuit_properties.init_type}')
-        
-
-        if self.device_properties.device_name == 'vectorized':
-            print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations')
-        
-        else:
-            print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations. Each iteration will contain \033[1m{self.backend_properties.n_shots} shots\033[0m')
+        if verbose:
+            print('\t \033[1m ### Summary ###\033[0m')
+            print(f'OpenQAOA has ben compiled with the following properties')
             print(
-                f'The total numner of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
+                f'Solving QAOA with \033[1m {self.device_properties.device_name} \033[0m on  \033[1m{self.device_properties.device_location}\033[0m')
+            print(f'Using p={self.circuit_properties.p} with {self.circuit_properties.param_type} parameters initialsied as {self.circuit_properties.init_type}')
+            
+
+            if self.device_properties.device_name == 'vectorized':
+                print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations')
+            
+            else:
+                print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations. Each iteration will contain \033[1m{self.backend_properties.n_shots} shots\033[0m')
+                print(
+                    f'The total numner of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
 
         return None
 
@@ -445,7 +451,7 @@ class RQAOA(Optimizer):
 
         return None
 
-    def compile(self, problem: PUBO = None):
+    def compile(self, problem: PUBO = None, verbose: bool = True):
         """
         Initialize the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement.
@@ -454,9 +460,11 @@ class RQAOA(Optimizer):
         ----------
         problem: `Problem`
             QUBO problem to be solved by RQAOA
+        verbose: bool
+            !NotYetImplemented! Set true to have a summary of RQAOA to displayed after compilation
         """
 
-        self.qaoa.compile(problem)
+        self.qaoa.compile(problem, verbose=False)
 
     def optimize(self):
         """
