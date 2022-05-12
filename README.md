@@ -88,7 +88,7 @@ Currently, the available devices are:
 
 With the notation `nq-qvm` it is intended that `n` is a positive integer. For example, `6q-qvm`.
 
-The `vectorised` backend is developed by Entropica Labs and works by permuting active qubits (on which gates are to be applied in any given Hamiltonian term) to the beginning of the register, applying the gate, then undoing the permutation. This allows the operators and their action on the wavefunction to be constructed and performed in a simple, canonical way.
+The `vectorised` backend is developed by Entropica Labs and works by targeting active qubits (on which gates are to be applied in any given Hamiltonian term) by using the numpy slicing operators, and applying the gate operations in place. This allows the operators and their action on the wavefunction to be constructed and performed in a simple and fast way.
 
 #### Recursive QAOA
 
