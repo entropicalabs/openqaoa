@@ -42,7 +42,7 @@ Clone the git repository:
    git clone git@github.com:entropicalabs/openqaoa.git
 
 Creating a python `virtual enviorement` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). 
-Make sure to use **python 3.8.8** for the environment.
+Make sure to use **python 3.8** for the environment.
 
 After cloning the repository `cd openqaoa` and pip install in edit mode:
 
@@ -55,7 +55,18 @@ Your first QAOA workflow
 -------------------------
 Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
 
-A reference jupyter notebook can be found [here](Workflows_example.ipynb)
+First, create a problem instance. For example, an instance of vertex cover:
+.. code-block:: python
+   from openqaoa.problems.problem import MinimumVertexCover
+   import networkx
+   g = networkx.circulant_graph(6, [1])
+   vc = MinimumVertexCover(g, field =1.0, penalty=10)
+   pubo_problem = vc.get_pubo_problem()
+
+
+Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
+
+Once the binary problem is defined, the simplest workflow can be defined as 
 
 .. code-block:: python
    
@@ -65,16 +76,15 @@ A reference jupyter notebook can be found [here](Workflows_example.ipynb)
    q.optimize()
 
 
-where the `pubo_problem` is any instance from `openqaoa.problems.problem`. For example, `pubo_problem = NumberPartition([1,2,3]).get_pubo_problem()`.
 
 Workflows can be customised using some convenient setter functions
 
 .. code-block:: python
 
    q_custom = QAOA()
-   q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
-   q_custom.set_device_properties(device_location='qcs', device_name='Aspen-11')
-   q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
+   q_custom.set_circuit_properties(p=2, param_type='fourier', q=1, init_type='ramp', mixer_hamiltonian='x')
+   q_custom.set_device_properties(device_location='qcs', device_name='6q-qvm', cloud_credentials={'name' : "6q-qvm", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
+   q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
    q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
    q_custom.compile(pubo_problem)
    q_custom.optimize()
@@ -87,7 +97,7 @@ Currently, the available devices are:
 
    * - Device location
      - Device Name
-   * - `locale`
+   * - `local`
      - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'nq-qvm', 'Aspen-11']`
    * - `IBMQ`
      - Please check the IMBQ backends available to your account
@@ -108,6 +118,65 @@ Your first RQAOA workflow
    r.optimize()
 
 rqaoa_type can take two values which select elimination strategies. The user can choose between `adaptive` or `custom`.
+
+Factory mode
+------------
+The user is also free to directly access the source code without using the workflow API. 
+
+A few reference notebooks can be found:
+* [comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
+* [Parameter sweep for vectorised](examples/openqaoa_example_vectorised.ipynb)
+
+
+The basic procedure is the following
+
+First, import all the necessay functions
+
+.. code-block:: python
+
+   from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
+   from openqaoa.utilities import X_mixer_hamiltonian
+   from openqaoa.backends.qaoa_backend import QAOAvectorizedBackendSimulator
+   from openqaoa.optimizers.qaoa_optimizer import ScipyOptimizer
+
+
+then, specify terms and weights in order to define the cost hamiltonian
+
+.. code-block:: python
+
+   terms = [(1,2),(2,3),(0,3),(4,0),(1,),(3,)]
+   coeffs = [1,2,3,4,3,5]
+   n_qubits = 5
+
+   cost_hamil = Hamiltonian.classical_hamiltonian(terms=terms,coeffs=coeffs,constant=0)
+   mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
+   After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
+
+.. code-block:: python
+
+   qaoa_circuit_params = QAOACircuitParams(cost_hamil,mixer_hamil,p=1)
+   params = create_qaoa_variational_params(qaoa_circuit_params, params_type='fourier',init_type='rand',q=1)
+
+Then proceed by instantiating the backend device
+
+.. code-block:: python
+   backend_obj = QAOAvectorizedBackendSimulator(circuit_params = qaoa_circuit_params, append_state = None, prepend_state = None, init_hadamard = True)
+
+And finally, create the classical optimizer and minimize the objective function
+
+.. code-block:: python
+
+   optimizer_dict = {'method': 'cobyla', 'maxiter': 10}
+   optimizer_obj = ScipyOptimizer(backend_obj, params, optimizer_dict)
+   optimizer_obj()
+
+
+The result of the optimization will the be accessible as 
+
+.. code-block:: python
+
+   optimizer_obj.results_information()
+
 
 License
 ========
