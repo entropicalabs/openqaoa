@@ -13,10 +13,10 @@
 #   limitations under the License.
 
 """
-Collection of functions to return derivative computation functions. Called from QAOACosts' 'gradient_function' method.
+Collection of functions to return derivative computation functions. Usually called from the `derivative_function` method of a `QAOABaseBackend` object.
 New gradient/higher-order derivative computation methods can be added here. To add new computation methods:
-    1. Write function in the format : new_function(cost_std, cost_ext, params, params_ext, gradient_options), or with less arguments.
-    2. Give it a name, and add this under derivative_methods of DerivativeFunction, and as a possible 'out'.
+    1. Write function in the format : new_function(backend_obj, params_std, params_ext, gradient_options), or with less arguments.
+    2. Give this function a string identifier (eg: 'param_shift'), and add this to the list `derivative_methods` of the function `derivative`, and as a possible 'out'.
 
 """
 import numpy as np
@@ -24,9 +24,22 @@ import random
 
 
 def update_and_compute_expectation(backend_obj, params):
-    # Helper function that returns a function that takes in a list of raw parameters
-    # This function will handle (1) updating variational parameters with update_from_raw and (2) computing expectation.
-
+    """
+    Helper function that returns a callable that takes in a raw parameters (a list of floats) and returns an expectation value (a float).
+    This function will handle: 
+        (1) updating variational parameters with QAOAVariationalBaseParams.update_from_raw, and 
+        (2) computing expectation with QAOABaseBackend.expectation.
+        
+    PARAMETERS
+    ----------
+    backend_obj : `QAOABaseBackend`
+        backend object that computes expectation values when executed. 
+    
+    params : QAOAVariationalBaseParams
+        `QAOAVariationalBaseParams` object containing variational angles.
+    
+    """
+    
     def fun(args):
         params.update_from_raw(args)
         return backend_obj.expectation(params)
@@ -42,16 +55,16 @@ def derivative(derivative_dict: dict):
     ----------
     derivative_dict :
         derivative_type : str
-            Type of derivative to compute. Either `gradient` or `hessian`.
+            Type of derivative to compute. String of either `gradient` or `hessian`.
 
         derivative_method : str
-            Computational method of the derivative. Either `finite_difference`, `param_shift`, `stoch_param_shift`, or `grad_spsa`.
+            Computational method of the derivative. String of either `finite_difference`, `param_shift`, `stoch_param_shift`, or `grad_spsa`.
 
         derivative_options : dict
-            Dictionary containing options specific to each `derivative_method`.
+            Dictionary containing options specific to each `derivative_method` - see their docstrings for options.
 
-        cost_std : QAOACost
-            `QAOACost` object that computes expectation values when executed. Standard parametrisation.
+        backend_obj : QAOABaseBackend
+            `QAOABaseBackend` object that contains information about the abstract circuit to be executed.
 
         cost_ext : QAOACost
             `QAOACost` object that computes expectation values when executed. Extended parametrisation. Mainly used to compute parameter shifts at each individual gate, which is summed to recover the parameter shift for a parametrised layer.
@@ -65,7 +78,7 @@ def derivative(derivative_dict: dict):
     Returns
     -------
     out:
-        Callable derivative function.
+        Callable derivative function that accepts parameters (a list of floats) and returns the gradient (a list of floats).
     """
 
     derivative_type = derivative_dict['derivative_type']
@@ -81,8 +94,6 @@ def derivative(derivative_dict: dict):
                           } if derivative_dict['derivative_options'] is not None else default_derivative_options
 
     backend_obj = derivative_dict['backend_obj']
-    # cost_std = derivative_dict['cost_std']
-    # cost_ext = derivative_dict['cost_ext']
     params = derivative_dict['params']
     params_ext = derivative_dict['params_ext']
 
@@ -166,7 +177,7 @@ def grad_ps(backend_obj, params, params_ext):
     backend_obj : `QAOABaseBackend`
         backend object that computes expectation values when executed. 
 
-    params_std : `QAOAVariationalStandardParams`
+    params : `QAOAVariationalStandardParams`
         variational parameters object, standard parametrisation.
 
     params_ext : `QAOAVariationalExtendedParams`
@@ -177,28 +188,18 @@ def grad_ps(backend_obj, params, params_ext):
     grad_ps_func:
         Callable derivative function.
     """
-
+    
+    # TODO : clean up conversion part + handle Fourier parametrisation
+    
     fun = update_and_compute_expectation(backend_obj, params_ext)
 
     def grad_ps_func(args):
 
         # Convert standard to extended parameters before applying parameter shift
-        # TODO : clean this up
-        terms_lst = [len(params.mixer_1q_coeffs), len(params.mixer_2q_coeffs), len(
-            params.cost_1q_coeffs), len(params.cost_2q_coeffs)]
-        terms_lst_p = np.repeat(terms_lst, [params.p]*len(terms_lst))
-        args_ext = []
-        for i in range(4):  # 4 types of terms
-            for j in range(params.p):
-                for k in range(terms_lst_p[i*params.p + j]):
-                    if i < 2:
-                        args_ext.append(params.raw()[j])
-                    else:
-                        args_ext.append(
-                            params.raw()[j + int(len(params.raw())/2)])
-
-        coeffs_list = params.mixer_1q_coeffs + params.mixer_2q_coeffs + \
-            params.cost_1q_coeffs + params.cost_2q_coeffs
+        args_ext = params.convert_to_ext(args)
+        
+        coeffs_list = params.p*params.mixer_1q_coeffs + params.p*params.mixer_2q_coeffs + \
+            params.p*params.cost_1q_coeffs + params.p*params.cost_2q_coeffs
         grad_ext = np.zeros(len(args_ext))
 
         # Apply parameter shifts
@@ -209,9 +210,16 @@ def grad_ps(backend_obj, params, params_ext):
             grad_ext[i] = r*(fun(args_ext + (np.pi/(4*r))*vect_eta) -
                              fun(args_ext - (np.pi/(4*r))*vect_eta))
 
-        mat = np.zeros((4, params.p))
-
         # Convert extended param. gradient form back into std param. form
+        
+        m1q_entries = grad_ext[:params.p*len(params.mixer_1q_coeffs)]
+        m2q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) : params.p*len(params.mixer_2q_coeffs)]
+        c1q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs): params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs) + params.p*len(params.cost_1q_coeffs)]
+        c2q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs) + params.p*len(params.cost_1q_coeffs):]
+        subdivided_ext_grad = [m1q_entries, m2q_entries, c1q_entries, c2q_entries]
+        
+        # Sum up gradients (due to the chain rule), and re-express in standard form.
+        mat = np.zeros((4, params.p))
         for i in range(4):  # 4 types of terms
             for j in range(params.p):
                 mat[i][j] = np.sum(subdivided_ext_grad[i][j*int(len(subdivided_ext_grad[i]) /
@@ -219,6 +227,7 @@ def grad_ps(backend_obj, params, params_ext):
 
         grad_std = list(np.sum(mat[:2], axis=0)) + \
             list(np.sum(mat[2:], axis=0))
+        
         return np.array(grad_std)
 
     return grad_ps_func
