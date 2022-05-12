@@ -43,8 +43,8 @@ def test_3_openqaoa_example_vectorised():
 #     notebook_test_function("./examples/openqaoa_example.ipynb")
 
 # @pytest.mark.notebook
-# def test_5_QCS_pyquil_test():
-#     notebook_test_function("./examples/QCS_pyquil_test.ipynb")
+def test_5_QCS_pyquil_test():
+    notebook_test_function("./examples/QCS_pyquil_test.ipynb")
 
 
 # @pytest.mark.notebook
