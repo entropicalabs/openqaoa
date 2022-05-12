@@ -13,7 +13,7 @@
 #   limitations under the License.
 import numpy as np
 from time import time
-from typing import Optional
+from typing import Optional, List
 # IBM Qiskit imports
 from qiskit import QuantumCircuit, QuantumRegister, execute
 from qiskit.providers.ibmq.job import (IBMQJobApiError, IBMQJobInvalidStateError,
@@ -63,6 +63,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  prepend_state: Optional[QuantumCircuit],
                  append_state: Optional[QuantumCircuit],
                  init_hadamard: bool,
+                 qubit_layout: List[int] = [],
                  cvar_alpha: float = 1):
 
         QAOABaseBackendShotBased.__init__(self,
@@ -75,7 +76,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         QAOABaseBackendCloud.__init__(self, access_object)
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.circuit_params.qureg
+        self.qubit_layout = self.circuit_params.qureg if qubit_layout == [] else qubit_layout
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit" \

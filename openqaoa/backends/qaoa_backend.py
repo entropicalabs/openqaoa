@@ -38,10 +38,10 @@ DEVICE_ACCESS_OBJECT_MAPPER = {
 def _backend_arg_mapper(backend_obj: QAOABaseBackend,
                         n_shots: Optional[int] = None,
                         qiskit_simulation_method: Optional[str] = None,
-                        noise_model=None,
+                        noise_model = None,
                         active_reset: Optional[bool] = None,
-                        rewiring=None,
-                        qubit_layout=None):
+                        rewiring = None,
+                        qubit_layout = None):
 
     BACKEND_ARGS_MAPPER = {
         QAOAvectorizedBackendSimulator: {},
