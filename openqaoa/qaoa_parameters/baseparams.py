@@ -149,7 +149,7 @@ class QAOACircuitParams(VQACircuitParams):
         super().__init__(algorithm='QAOA')
         self.cost_hamiltonian = cost_hamiltonian
         self.mixer_hamiltonian = mixer_hamiltonian
-        self.qureg = cost_hamiltonian.physical_qureg
+        self.qureg = cost_hamiltonian.qureg
         self.p = p
 
     def __repr__(self):

@@ -534,19 +534,20 @@ class TestingOperators(unittest.TestCase):
 
         # Define terms and coefficients
         pair_indices = [(i, j) for j in range(n_qubits) for i in range(j)]
-        terms = [PauliOp('ZZ', indices) for indices in pair_indices] + [(0,5)]
+        error_term = (0,5)
+        terms = [PauliOp('ZZ', indices) for indices in pair_indices] + [error_term]
         coefficients = [1 for _ in range(len(terms))]
         
         # Attempt construction of Hamiltonian
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(TypeError) as context:
             hamiltonian = Hamiltonian(terms, coefficients, constant = 0)
 
         # Check exception message
-        self.assertEqual(f"Hamiltonian only supports construction using Pauli Operators", str(context.exception))
+        self.assertEqual(f"Pauli terms should be of type PauliOp and not {type(error_term)}", str(context.exception))
         
-    def test_hamiltonian_physical_qureg(self):
+    def test_hamiltonian_qureg(self):
         """
-        Tests the function that generated the physical quantum register in the Hamiltonian object.
+        Tests the function that generated the register in the Hamiltonian object.
 
         The test consists in generating registers from a set of examples.
         """
@@ -568,78 +569,14 @@ class TestingOperators(unittest.TestCase):
         hamiltonian = Hamiltonian(terms, coefficients, constant)
 
         # Extract physical register
-        phys_register = hamiltonian.physical_qureg
+        register = hamiltonian.qureg
 
         # Correct register
-        correct_phys_register = [0, 1, 2, 3, 4]
+        correct_register = [0, 1, 2, 3, 4]
 
         # Test if the extracted register is correct
         assert np.allclose(
-            phys_register, correct_phys_register), f'Physical register has been incorrectly constructed'
-
-    def test_hamiltonian_logical_qureg(self):
-        """
-        Tests the function that generated the logical quantum register in the Hamiltonian object.
-
-        The test consists in generating registers from a set of examples.
-        """
-
-        # Number of qubits in the register
-        n_qubits = 5
-
-        # Define Pauli terms
-        terms_indices = [(i, j) for j in range(n_qubits) for i in range(j)]
-        terms_strings = ['XX', 'YY']
-        terms = [PauliOp(string, indices)
-                 for indices in terms_indices for string in terms_strings]
-
-        # Define coefficients and constant
-        coefficients = [1 for _ in range(len(terms))]
-        constant = 2
-
-        # Define Hamiltonian
-        hamiltonian = Hamiltonian(terms, coefficients, constant)
-
-        # Extract logical register
-        logical_register = hamiltonian.logical_qureg
-
-        # Correct register
-        correct_logical_register = [0, 1, 2, 3, 4]
-
-        # Test if the extracted register is correct
-        assert np.allclose(
-            logical_register, correct_logical_register), f'Logical register has been incorrectly constructed'
-
-    def test_hamiltonian_n_qubits(self):
-        """
-        Tests the function that checks the number of qubits in the Hamiltonian.
-
-        The test consist in constructing a Hamiltonian and checking that the number of qubits
-        is generated correctly.
-        """
-
-        # Number of qubits in the register
-        correct_n_qubits = 5
-
-        # Define Pauli terms
-        terms_indices = [(i, j) for j in range(correct_n_qubits)
-                         for i in range(j)]
-        terms_strings = ['XX', 'YY']
-        terms = [PauliOp(string, indices)
-                 for indices in terms_indices for string in terms_strings]
-
-        # Define coefficients and constant
-        coefficients = [1 for _ in range(len(terms))]
-        constant = 2
-
-        # Define Hamiltonian
-        hamiltonian = Hamiltonian(terms, coefficients, constant)
-
-        # Extract number of qubits
-        n_qubits = hamiltonian.n_qubits
-
-        # Test that the number of qubits has been correctly computed
-        assert n_qubits == correct_n_qubits, f'The number of qubits was not correctly computed'
+            register, correct_register), f'Register has been incorrectly constructed'
 
     def test_hamiltonian_divide_into_singlets_pairs(self):
         """
