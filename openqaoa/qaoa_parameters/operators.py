@@ -409,7 +409,7 @@ class Hamiltonian:
             if isinstance(pauli_term, PauliOp):
                 physical_qureg.extend(pauli_term.qubit_indices)
             else:
-                raise TypeError(f"Pauli terms should be of type PauliOp and not {type(term)}")
+                raise TypeError(f"Pauli terms should be of type PauliOp and not {type(pauli_term)}")
         physical_qureg = list(set(physical_qureg))
 
         # Number of qubits
