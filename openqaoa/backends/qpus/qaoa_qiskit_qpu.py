@@ -141,8 +141,8 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             decomposition = each_gate.decomposition('standard')
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](*each_tuple[1])
-                parametric_circuit = gate.apply_gate(parametric_circuit, 'ibm')
+                gate = each_tuple[0]()
+                parametric_circuit = gate.apply_ibm_gate(*each_tuple[1],parametric_circuit)
 
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)

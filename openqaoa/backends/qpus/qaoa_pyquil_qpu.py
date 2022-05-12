@@ -15,6 +15,8 @@
 from collections import Counter
 import numpy as np
 from pyquil import Program, gates, quilbase
+from pyquil.quilatom import QubitPlaceholder
+from pyquil.quil import address_qubits
 
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
@@ -79,7 +81,8 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  init_hadamard: bool,
                  cvar_alpha: float,
                  active_reset: bool = False,
-                 rewiring: str = ''
+                 rewiring: str = '',
+                 qubit_layout: list = []
                  ):
 
         QAOABaseBackendShotBased.__init__(self,
@@ -94,6 +97,9 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.qureg = self.circuit_params.qureg
+        self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
+        self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout
+
         
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.get_qubits()), "Cannot attach a bigger circuit " \
@@ -122,6 +128,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         `pyquil.Program`
             A pyquil.Program (executable) object.
         """
+        address_qubits(self.parametric_circuit,qubit_mapping = dict(zip(self.qureg_placeholders,self.qubit_layout)))
         angles_list = np.array(self.obtain_angles_for_pauli_list(
             self.pseudo_circuit, params), dtype=float)
         angle_declarations = list(self.prog_exe.declarations.keys())
@@ -183,9 +190,14 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                 
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](*each_tuple[1])
-                parametric_circuit = gate.apply_gate(
-                    parametric_circuit, 'pyquil')
+                gate = each_tuple[0]()
+                qubits, rotation_angle = each_tuple[1]
+                qubits = each_tuple(1)[0]
+                if isinstance(qubits,list):
+                    new_qubits = [self.qureg_placeholders[qubit] for qubit in qubits]
+                else:
+                    new_qubits = self.qureg_placeholders[qubits]
+                parametric_circuit = gate.apply_pyquil_gate(new_qubits,rotation_angle,parametric_circuit)
 
         if self.append_state:
             parametric_circuit += self.append_state

@@ -140,7 +140,7 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
 
     G = nx.Graph()
 
-    for qubit in hamiltonian.physical_qureg:
+    for qubit in hamiltonian.qureg:
         G.add_node(qubit, weight=0)
 
     for term, weight in zip(hamiltonian.terms, hamiltonian.coeffs):

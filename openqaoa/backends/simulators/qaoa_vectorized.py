@@ -599,7 +599,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
             low_level_gate_list.extend(each_gate.decomposition('trivial'))
 
         for each_tuple in low_level_gate_list:
-            each_tuple[0](*each_tuple[1]).apply_gate(circuit = self, circuit_library = 'vector')
+            gate = each_tuple[0]()
+            gate.apply_vector_gate(*each_tuple[1],self)
 
         # Handle append state
         if self.append_state is not None:
