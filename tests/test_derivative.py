@@ -107,7 +107,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
             qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
 
         grad_stepsize = 0.00000001
-        #gradient_ps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'param_shift')
+        gradient_ps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'param_shift')
         gradient_fd = backend_vectorized.derivative_function(
             variational_params_std, 'gradient', 'finite_difference', {'stepsize': grad_stepsize})
         #gradient_sps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
@@ -120,8 +120,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
             dCdb = -4*np.cos(4*beta)*np.sin(2*gamma)
             dCdg = -2*np.sin(4*beta)*np.cos(2*gamma)
 
-            #assert np.isclose(dCdb, gradient_ps(point)[0], rtol=1e-05, atol=1e-05)
-            #assert np.isclose(dCdg, gradient_ps(point)[1], rtol=1e-05, atol=1e-05)
+            assert np.isclose(dCdb, gradient_ps(point)[0], rtol=1e-05, atol=1e-05)
+            assert np.isclose(dCdg, gradient_ps(point)[1], rtol=1e-05, atol=1e-05)
 
             assert np.isclose(dCdb, gradient_fd(
                 point)[0], rtol=1e-05, atol=1e-05)
