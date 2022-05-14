@@ -24,30 +24,36 @@ from openqaoa.utilities import X_mixer_hamiltonian
 
 """
 Unittest based testing of derivative computations.
-TODO : fix ps and sps, then uncomment relevant parts.
 """
 
 
 class TestQAOACostBaseClass(unittest.TestCase):
 
-    '''
+
     def test_gradient_agreement(self):
         "Test agreement between gradients computed from finite difference, parameter shift and SPS (all gates sampled) for weighted and unweighted graphs at several parameters."
-
+        
         # unweighted graph
         terms = [[0,1], [0,2], [1,3], [2]]
         weights = [1, 1, 1, 1]
         register = [0, 1, 2, 3]
         p = 2
+        nqubits = 4
 
-        hyperparams_std = HyperParams(terms, weights, register, p)
-        params_std = StandardParams.linear_ramp_from_hamiltonian(hyperparams_std)
-        vector_instance = QAOACostVector(params_std)
-
+        cost_hamiltonian = Hamiltonian.classical_hamiltonian(
+            terms, weights, constant=0)
+        mixer_hamiltonian = X_mixer_hamiltonian(nqubits)
+        qaoa_circuit_params = QAOACircuitParams(
+            cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = create_qaoa_variational_params(
+            qaoa_circuit_params, 'standard', 'ramp')
+        backend_vectorized = QAOAvectorizedBackendSimulator(
+            qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
+        
         grad_stepsize = 0.00000001
-        gradient_ps = vector_instance.derivative_function('gradient', 'param_shift')
-        gradient_fd = vector_instance.derivative_function('gradient', 'finite_difference', {'stepsize': grad_stepsize})
-        gradient_sps = vector_instance.derivative_function('gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
+        gradient_ps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'param_shift')
+        gradient_fd = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'finite_difference', {'stepsize': grad_stepsize})
+        gradient_sps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':-1, 'n_beta_pair':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
 
         params = [[0,0,0,0], [1,1,1,1], [np.pi/2, np.pi/2, np.pi/2, np.pi/2]]
 
@@ -60,20 +66,28 @@ class TestQAOACostBaseClass(unittest.TestCase):
                 assert np.isclose(grad, grad_ps[i], rtol=1e-05, atol=1e-05)
                 assert np.isclose(grad, grad_sps[i], rtol=1e-05, atol=1e-05)
 
-        # weighted graph
-        terms = [[0,1], [1,2], [0,3], [2], [], [1]]
-        weights = [1, 1.1, 1.5, 2, 0.8, -0.8]
+        # weighted graph with bias
+        terms = [[0,1], [1,2], [0,3], [2], [1]]
+        weights = [1, 1.1, 1.5, 2, -0.8]
         register = [0, 1, 2, 3]
         p = 2
+        nqubits = 4
 
-        hyperparams_std = HyperParams(terms, weights, register, p)
-        params_std = StandardParams.linear_ramp_from_hamiltonian(hyperparams_std)
-        vector_instance = QAOACostVector(params_std)
-
-        gradient_ps = vector_instance.derivative_function('gradient', 'param_shift')
-        gradient_fd = vector_instance.derivative_function('gradient', 'finite_difference', {'stepsize': grad_stepsize})
-        gradient_sps = vector_instance.derivative_function('gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
-
+        cost_hamiltonian = Hamiltonian.classical_hamiltonian(
+            terms, weights, constant=0.8)
+        mixer_hamiltonian = X_mixer_hamiltonian(nqubits)
+        qaoa_circuit_params = QAOACircuitParams(
+            cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = create_qaoa_variational_params(
+            qaoa_circuit_params, 'standard', 'ramp')
+        backend_vectorized = QAOAvectorizedBackendSimulator(
+            qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
+        
+        grad_stepsize = 0.00000001
+        gradient_ps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'param_shift')
+        gradient_fd = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'finite_difference', {'stepsize': grad_stepsize})
+        gradient_sps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':-1, 'n_beta_pair':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
+    
         params = [[0,0,0,0], [1,1,1,1], [np.pi/2, np.pi/2, np.pi/2, np.pi/2]]
 
         for param in params:
@@ -84,7 +98,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
             for i, grad in enumerate(grad_fd): 
                 assert np.isclose(grad, grad_ps[i], rtol=1e-05, atol=1e-05)
                 assert np.isclose(grad, grad_sps[i], rtol=1e-05, atol=1e-05)
-    '''
+
 
     def test_gradient_computation(self):
         "Test gradient computation by param. shift, finite difference, and SPS (all gates sampled) on barbell graph."
@@ -110,7 +124,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
         gradient_ps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'param_shift')
         gradient_fd = backend_vectorized.derivative_function(
             variational_params_std, 'gradient', 'finite_difference', {'stepsize': grad_stepsize})
-        #gradient_sps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
+        gradient_sps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':-1, 'n_beta_pair':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
 
         test_points = [[0, 0], [np.pi/2, np.pi/3], [1, 2]]
 
@@ -128,8 +142,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
             assert np.isclose(dCdg, gradient_fd(
                 point)[1], rtol=1e-05, atol=1e-05)
 
-            #assert np.isclose(dCdb, gradient_sps(point)[0], rtol=1e-05, atol=1e-05)
-            #assert np.isclose(dCdg, gradient_sps(point)[1], rtol=1e-05, atol=1e-05)
+            assert np.isclose(dCdb, gradient_sps(point)[0], rtol=1e-05, atol=1e-05)
+            assert np.isclose(dCdg, gradient_sps(point)[1], rtol=1e-05, atol=1e-05)
 
     def test_hessian_computation(self):
         "Test Hessian computation by finite difference on barbell graph"
@@ -173,23 +187,30 @@ class TestQAOACostBaseClass(unittest.TestCase):
             assert np.isclose(dCdgg, hessian_fd(
                 point)[1][1], rtol=1e-05, atol=1e-05)
 
-    '''
+
     def test_SPS_sampling(self):
         "Test that SPS samples all gates when (n_beta, n_gamma_pair, n_gamma_single) is (-1, -1, -1), on barbell graph."
         
         # Analytical cost expression : C(b,g) = -sin(4b)*sin(2g)
-        terms = [[0,1]]
+        terms = [[0, 1]]
         weights = [1]
         register = [0, 1]
         p = 1
-        
-        hyperparams_std = HyperParams(terms, weights, register, p)
-        params_std = StandardParams.linear_ramp_from_hamiltonian(hyperparams_std)
-        vector_instance = QAOACostVector(params_std)
-        
+        nqubits = 2
+
+        cost_hamiltonian = Hamiltonian.classical_hamiltonian(
+            terms, weights, constant=0)
+        mixer_hamiltonian = X_mixer_hamiltonian(nqubits)
+        qaoa_circuit_params = QAOACircuitParams(
+            cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = create_qaoa_variational_params(
+            qaoa_circuit_params, 'standard', 'ramp')
+        backend_vectorized = QAOAvectorizedBackendSimulator(
+            qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
+
         grad_stepsize = 0.00000001
-        gradient_sps1 = vector_instance.derivative_function('gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
-        gradient_sps2 = vector_instance.derivative_function('gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta':2, 'n_gamma_pair':1, 'n_gamma_single':0})
+        gradient_sps1 = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':-1, 'n_beta_pair':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
+        gradient_sps2 = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':2, 'n_beta_pair':-1, 'n_gamma_pair':1, 'n_gamma_single':0})
         
         test_points = [[0,0], [np.pi/2, np.pi/3], [1,2]]
         
@@ -198,7 +219,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
             
             assert np.isclose(gradient_sps1(point)[0], gradient_sps2(point)[0], rtol=1e-05, atol=1e-05)
             assert np.isclose(gradient_sps1(point)[1], gradient_sps2(point)[1], rtol=1e-05, atol=1e-05)
-    '''
+
 
 
 if __name__ == "__main__":
