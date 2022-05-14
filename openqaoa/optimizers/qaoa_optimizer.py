@@ -38,9 +38,12 @@ def get_optimizer(vqa_object: VQABaseBackend,
 
         Parameters
         ----------
-        vqa_object: `VQABaseBackend`
-                VQA Cost backend object
-    variational_params: `QAOAVariationalBaseParams`
+        vqa_object:
+            Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
+    
+        variational_params:
+            Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  
+            the type of parametrisation, and the angles of the VQA circuit.
 
         optimizer_dict:
                 Optimizer information dictionary used to construct the optimizer with
