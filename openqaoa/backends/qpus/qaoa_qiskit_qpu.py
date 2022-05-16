@@ -20,7 +20,7 @@ from qiskit.providers.ibmq.job import (IBMQJobApiError, IBMQJobInvalidStateError
                                        IBMQJobFailureError, IBMQJobTimeoutError)
 from qiskit.circuit import Parameter
 
-from .qpu_auth import AccessObjectQiskit
+from ...devices import DeviceQiskit
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...utilities import flip_counts
@@ -37,9 +37,9 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
     Parameters
     ----------
-    access_object: `AccessObjectQiskit`
-        An object of the class ``AccessObjectQiskit`` which contains the credentials
-        for accessing the QPU via cloud
+    device: `DeviceQiskit`
+        An object of the class ``DeviceQiskit`` which contains the credentials
+        for accessing the QPU via cloud and the name of the device.
     circuit_params: `QAOACircuitParams`
         An object of the class ``QAOACircuitParams`` which contains information on 
         circuit construction and depth of the circuit.
@@ -58,7 +58,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
     def __init__(self,
                  circuit_params: QAOACircuitParams,
-                 access_object: AccessObjectQiskit,
+                 device: DeviceQiskit,
                  n_shots: int,
                  prepend_state: Optional[QuantumCircuit],
                  append_state: Optional[QuantumCircuit],
@@ -73,7 +73,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                                           append_state,
                                           init_hadamard,
                                           cvar_alpha)
-        QAOABaseBackendCloud.__init__(self, access_object)
+        QAOABaseBackendCloud.__init__(self, device)
 
         self.qureg = QuantumRegister(self.n_qubits)
         self.qubit_layout = self.circuit_params.qureg if qubit_layout == [] else qubit_layout
@@ -82,9 +82,9 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit" \
                                                                "to the QAOA routine"
 
-        if self.access_object.provider_connected and self.access_object.qpu_connected:
-            self.backend_qpu = self.access_object.backend_device
-        elif self.access_object.provider_connected and self.access_object.qpu_connected in [False, None]:
+        if self.device.provider_connected and self.device.qpu_connected:
+            self.backend_qpu = self.device.backend_device
+        elif self.device.provider_connected and self.device.qpu_connected in [False, None]:
             raise Exception(
                 'Connection to IBMQ was made. Error connecting to the specified backend.')
         else:

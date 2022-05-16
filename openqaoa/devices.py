@@ -44,15 +44,18 @@ class DeviceBase(metaclass=abc.ABCMeta):
         pass
 
 class DeviceLocal(DeviceBase):
-	"""
-	This class is a placeholder for all locally accessible devices.
-	"""
-	def __init__(self, device_name: str):
-		self.device_name = device_name
+    """
+    This class is a placeholder for all locally accessible devices.
+    """
+    def __init__(self, device_name: str):
+        self.device_name = device_name
+        self.device_location = 'local'
 
-	def check_connection(self) -> bool:
-		return True
-
+    def check_connection(self) -> bool:
+        if self.device_name in SUPPORTED_LOCAL_SIMULATORS:
+            return True
+        else:
+            return False
 
 class DeviceQiskit(DeviceBase):
     """Contains the required information and methods needed to access remote
@@ -92,6 +95,7 @@ class DeviceQiskit(DeviceBase):
         self.group = group
         self.project = project
         self.device_name = device_name
+        self.device_location = 'ibmq'
 
         self.provider_connected = None
         self.qpu_connected = None
@@ -165,7 +169,7 @@ class DeviceQiskit(DeviceBase):
             return False
 
 
-class DevicePyQuil(DeviceBase):
+class DevicePyquil(DeviceBase):
     """
     Contains the required information and methods needed to access remote
     Rigetti QPUs via Pyquil.
@@ -223,6 +227,7 @@ class DevicePyQuil(DeviceBase):
         """
 
         self.device_name = device_name
+        self.device_location = 'qcs'
         self.as_qvm = as_qvm
         self.noisy = noisy
         self.compiler_timeout = compiler_timeout
@@ -251,40 +256,40 @@ class DevicePyQuil(DeviceBase):
         return True
 
 
-def device_class_arg_mapper(api_token: str = None,
+def device_class_arg_mapper(device_class:DeviceBase,
+                            api_token: str = None,
 							hub: str = None,
 							group: str = None,
 							project: str = None,
-                 			selected_qpu: str = None,
-							name: str = None,
 							as_qvm: bool = None,
 							noisy: bool = None,
-                			compiler_timeout: float = 20.0,
-                 			execution_timeout: float = 20.0,
+                			compiler_timeout: float = None,
+                 			execution_timeout: float = None,
                  			client_configuration: QCSClientConfiguration = None,
                  			endpoint_id: str = None,
                  			engagement_manager: EngagementManager = None
 							) -> dict:
-	DEVICE_ARGS_MAPPER = {
-		DeviceQiskit: {'api_token': api_token,
-					   'hub': hub,
-					   'group': group,
-					   'project': project,
-					   'selected_qpu': selected_qpu},
+    DEVICE_ARGS_MAPPER = {
+        DeviceQiskit: {'api_token': api_token,
+                        'hub': hub,
+                        'group': group,
+                        'project': project},
 
-		DevicePyQuil: {'name': name,
-					   'as_qvm': as_qvm,
-					   'noisy': noisy,
-					   'compiler_timeout': compiler_timeout,
-					   'execution_timeout': execution_timeout,
-					   'client_configuration': client_configuration,
-					   'endpoint_id': endpoint_id,
-					   'engagement_manager': engagement_manager}
-	}
+        DevicePyquil: {'as_qvm': as_qvm,
+                        'noisy': noisy,
+                        'compiler_timeout': compiler_timeout,
+                        'execution_timeout': execution_timeout,
+                        'client_configuration': client_configuration,
+                        'endpoint_id': endpoint_id,
+                        'engagement_manager': engagement_manager}
+    }
+
+    final_device_kwargs = {key: value for key, value in DEVICE_ARGS_MAPPER[device_class].items()
+                           if value is not None}
+    return final_device_kwargs
 
 
-
-def device(device_name: str, device_location: str, **kwargs):
+def create_device(location: str, name: str, **kwargs):
     """
     This function returns an instance of the appropriate device class.
 
@@ -303,14 +308,14 @@ def device(device_name: str, device_location: str, **kwargs):
     device: DeviceBase
         An instance of the appropriate device class.
     """
-    device_location = device_location.lower()
-    if device_location == 'ibmq':
+    location = location.lower()
+    if location == 'ibmq':
         device_class = DeviceQiskit
-    elif device_location == 'qcs':
-        device_class = DevicePyQuil
-    elif device_location == 'local':
+    elif location == 'qcs':
+        device_class = DevicePyquil
+    elif location == 'local':
         device_class = DeviceLocal
     else:
-        raise ValueError(f'Invalid device location, Choose from: {device_location}')
+        raise ValueError(f'Invalid device location, Choose from: {location}')
 
-    return device_class(device_name=device_name, **kwargs)
+    return device_class(device_name=name, **kwargs)

@@ -13,13 +13,10 @@
 #   limitations under the License.
 
 from typing import List, Dict, Optional, Union
-from pyquil.api._engagement_manager import EngagementManager
-from qcs_api_client.client import QCSClientConfiguration
 import numpy as np
 
 from openqaoa.basebackend import QuantumCircuitBase
-from openqaoa.backends.qpus.qpu_auth import AccessObjectBase, AccessObjectQiskit, AccessObjectPyQuil
-from openqaoa.basebackend import QuantumCircuitBase
+from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
 from .parameters import Parameters
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
@@ -30,11 +27,10 @@ ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
 ALLOWED_MIXERS = ['x', 'xy']
 ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS
 
-ALLOWED_QVM_DEVICES = ['Aspen-11', 'Aspen-M-1', '2q-qvm', '3q-qvm', '4q-qvm', '5q-qvm', '6q-qvm', '7q-qvm', '8q-qvm', '9q-qvm', '10q-qvm', '11q-qvm', '12q-qvm', '13q-qvm', '14q-qvm', '15q-qvm',
-                       '16q-qvm', '17q-qvm', '18q-qvm', '19q-qvm', '20q-qvm', '21q-qvm', '22q-qvm', '23q-qvm', '24q-qvm', '25q-qvm', '26q-qvm', '27q-qvm', '28q-qvm', '29q-qvm', '30q-qvm', '31q-qvm', '32q-qvm', '33q-qvm', '34q-qvm', '35q-qvm', '36q-qvm', '37q-qvm', '38q-qvm', '39q-qvm', '40q-qvm', '41q-qvm', '42q-qvm', '43q-qvm', '44q-qvm', '45q-qvm',
-                       '46q-qvm', '47q-qvm', '48q-qvm', '49q-qvm', '50q-qvm', '51q-qvm', '52q-qvm', '53q-qvm', '54q-qvm', '55q-qvm', '56q-qvm', '57q-qvm', '58q-qvm', '59q-qvm', '60q-qvm',
-                       '61q-qvm', '62q-qvm', '63q-qvm', '64q-qvm', '65q-qvm', '66q-qvm', '67q-qvm', '68q-qvm', '69q-qvm', '70q-qvm', '71q-qvm', '72q-qvm', '73q-qvm', '74q-qvm', '75q-qvm', '76q-qvm', '77q-qvm', '78q-qvm', '79q-qvm']
-ALLOWED_LOCAL_SIMUALTORS = ['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized']
+ALLOWED_QVM_DEVICES = ['Aspen-11', 'Aspen-M-1']
+ALLOWED_QVM_DEVICES.extend(f'{n}q-qvm' for n in range(2, 80))
+
+ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 ALLOWED_IMBQ_GLOBAL =  ['ibmq_qasm_simulator', 'ibmq_armonk', 'ibmq_santiago', 'ibmq_bogota', 'ibmq_lima', 'ibmq_belem', 'ibmq_quito', 'simulator_statevector', 'simulator_mps', 'simulator_extended_stabilizer', 'simulator_stabilizer', 'ibmq_manila']
 ALLOWED_DEVICES  = ALLOWED_LOCAL_SIMUALTORS + ALLOWED_QVM_DEVICES + ALLOWED_IMBQ_GLOBAL
 
@@ -117,128 +113,14 @@ class CircuitProperties(Parameters):
         self._p = value
 
 
-class Credentials(Parameters):
-    """
-    The general Credentials class for different QPU services
-    """
-
-    def __init__(self,
-                 qpu_credentials: Dict = None):
-        # TODO: once the credential code is ironed out put some proper try/except blocks
-        if qpu_credentials['device_location'].lower() == 'ibmq':
-            qpu_credentials.pop('device_location')
-            # try:
-            self.accessObject = IBMQCredentials(**qpu_credentials).credentials
-            # except:
-            #     raise ValueError(f"Cloud credentials {qpu_credentials} be wrong?")
-        elif qpu_credentials['device_location'].lower() == 'qcs':
-            # try:
-            qpu_credentials.pop('device_location')
-            self.accessObject = QCSCredentials(**qpu_credentials).credentials
-            # except:
-            #     raise ValueError("Could cloud credentials {qpu_credentials} be wrong?")
-        else:
-            pass
-
-
-class IBMQCredentials(Parameters):
-    """
-    Implement IBMQ specific credentials
-
-    A majority of the input parameters required for this can be found in
-    the user's IBMQ Experience account.
-
-    Parameters
-    ----------
-    api_token: str
-        Valid IBMQ Experience Token.
-    hub: str
-        Valid IBMQ hub name.
-    group: str
-        Valid IBMQ group name. 
-    project: str
-        The name of the project for which the experimental data will be 
-        saved in on IBMQ's end.
-    selected_qpu: str
-        The name of the QPU in which the user would like to connect with.
-    provider: str
-        Current it takes the default value of `ibmq`
-    """
-
-    def __init__(self,
-                 api_token: str,
-                 hub: str = None,
-                 group: str = None,
-                 project: str = None,
-                 selected_qpu: str = None,
-                 provider: str = 'ibmq'):
-
-        self.credentials = AccessObjectQiskit(
-            api_token=api_token, hub=hub, group=group, project=project, selected_qpu=selected_qpu)
-
-
-class QCSCredentials(Parameters):
-    """
-    Implement QCS specific credentials
-
-    Parameters
-    ----------
-    name: str 
-        The name of the desired quantum computer. This should correspond to 
-        a name returned by :py:func:`list_quantum_computers`. Names ending 
-        in "-qvm" will return a QVM. Names ending in "-pyqvm" will return a 
-        :py:class:`PyQVM`. Names ending in "-noisy-qvm" will return a QVM 
-        with a noise model. Otherwise, we will return a QPU with the given 
-        name.
-    as_qvm: bool 
-        An optional flag to force construction of a QVM (instead of a QPU). 
-        If specified and set to ``True``, a QVM-backed quantum computer will 
-        be returned regardless of the name's suffix.
-    noisy: bool
-        An optional flag to force inclusion of a noise model. If specified 
-        and set to ``True``, a quantum computer with a noise model will be 
-        returned regardless of the name's suffix. The generic QVM noise 
-        model is simple T1 and T2 noise plus readout error. See 
-        :py:func:`~pyquil.noise.decoherence_noise_with_asymmetric_ro`. Note, 
-        we currently do not support noise models based on QCS hardware; a 
-        value of `True`` will result in an error if the requested QPU is a 
-        QCS hardware QPU.
-    compiler_timeout: float
-        Time limit for compilation requests, in seconds.
-    execution_timeout: float
-        Time limit for execution requests, in seconds.
-    client_configuration: QCSClientConfiguration
-        Optional client configuration. If none is provided, a default one 
-        will be loaded.
-    endpoint_id: str
-        Optional quantum processor endpoint ID, as used in the 
-        `QCS API Docs`_.
-    engagement_manager: EngagementManager
-        Optional engagement manager. If none is provided, a default one will 
-        be created.
-    """
-
-    def __init__(self,
-                 name: str,
-                 as_qvm: bool = None, noisy: bool = None,
-                 compiler_timeout: float = 20.0,
-                 execution_timeout: float = 20.0,
-                 client_configuration: QCSClientConfiguration = None,
-                 endpoint_id: str = None,
-                 engagement_manager: EngagementManager = None):
-
-        self.credentials = AccessObjectPyQuil(
-            name, as_qvm=as_qvm, compiler_timeout=compiler_timeout, execution_timeout=execution_timeout,
-            client_configuration=client_configuration, endpoint_id=endpoint_id, engagement_manager=engagement_manager
-        )
-
-
 class BackendProperties(Parameters):
     """
     Choose the backend on which to run the QAOA circuits
 
     Parameters
     ----------
+    device: `DeviceBase`
+        The device to use for the backend.
     prepend_state: `Union[QuantumCircuitBase,np.ndarray(complex)]`
         The state prepended to the circuit.
     append_state: `Union[QuantumCircuitBase,np.ndarray(complex)]`
@@ -256,10 +138,11 @@ class BackendProperties(Parameters):
                  prepend_state: Optional[Union[QuantumCircuitBase,
                                                List[complex], np.ndarray]] = None,
                  append_state: Optional[Union[QuantumCircuitBase,
-                                              List[complex], np.ndarray]] = None,
+                                              np.ndarray]] = None,
                  init_hadamard: bool = True,
                  n_shots: int = 100,
                  cvar_alpha: float = 1):
+        
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state
@@ -276,45 +159,6 @@ class BackendProperties(Parameters):
     #         raise ValueError(
     #             f"cvar_alpha must be between 0 and 1. Received {value}.")
     #     self._cvar_alpha = value
-
-
-class DeviceProperties(Parameters):
-    """
-    Choose the device properties.
-    """
-
-    def __init__(self,
-                 device_location: str = 'local',
-                 device_name: str = 'vectorized',
-                 cloud_credentials: Optional[dict] = {},
-                 device: Union[str, AccessObjectBase] = 'vectorized'):
-
-        self.device_location = device_location
-        self.device_name = device_name
-        self.cloud_credentials = cloud_credentials
-        self.device = device
-
-    @property
-    def device_location(self):
-        return self._device_location
-
-    @device_location.setter
-    def device_location(self, value):
-        if value not in ['local', 'ibmq', 'qcs']:
-            raise ValueError(
-                f"Device location {value} is not recognised. Please use ['local', 'ibmq', 'qcs']")
-        self._device_location = value
-
-    @property
-    def device_name(self):
-        return self._device_name
-
-    @device_name.setter
-    def device_name(self, value):
-        if value not in ALLOWED_DEVICES:
-            raise ValueError(
-                f"Device name {value} is not recognised. Please use {ALLOWED_DEVICES}")
-        self._device_name = value
 
 
 class ClassicalOptimizer(Parameters):
