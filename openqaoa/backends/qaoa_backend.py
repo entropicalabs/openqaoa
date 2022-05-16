@@ -15,23 +15,24 @@ from typing import Union, Optional, List
 import numpy as np
 
 from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAPyQuilWavefunctionSimulatorBackend,
-                        QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, QAOAvectorizedBackendSimulator,
-                        AccessObjectBase, AccessObjectQiskit, AccessObjectPyQuil)
+                        QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
+                        QAOAvectorizedBackendSimulator)
+
+from ..devices import DeviceLocal, DevicePyQuil, DeviceQiskit, 
 from ..qaoa_parameters.baseparams import QAOACircuitParams
 from ..basebackend import QuantumCircuitBase, QAOABaseBackend
 
 DEVICE_NAME_TO_OBJECT_MAPPER = {
-    'qiskit_shot_simulator': QAOAQiskitBackendShotBasedSimulator,
-    'qiskit_statevec_simulator': QAOAQiskitBackendStatevecSimulator,
-    'qiskit_qasm_simulator': QAOAQiskitBackendShotBasedSimulator,
-    'vectorized': QAOAvectorizedBackendSimulator,
-    'pyquil_statevec_simulator': QAOAPyQuilWavefunctionSimulatorBackend,
-    'pyquil_wavefunction_simulator': QAOAPyQuilWavefunctionSimulatorBackend
+    'qiskit.qasm_simulator': QAOAQiskitBackendShotBasedSimulator,
+    'qiskit.shot_simulator': QAOAQiskitBackendShotBasedSimulator,
+    'qiskit.statevector_simulator': QAOAQiskitBackendStatevecSimulator,
+    'entropica.vectorized': QAOAvectorizedBackendSimulator,
+    'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend
 }
 
 DEVICE_ACCESS_OBJECT_MAPPER = {
-    AccessObjectQiskit: QAOAQiskitQPUBackend,
-    AccessObjectPyQuil: QAOAPyQuilQPUBackend
+    DeviceQiskit: QAOAQiskitQPUBackend,
+    DevicePyQuil: QAOAPyQuilQPUBackend
 }
 
 

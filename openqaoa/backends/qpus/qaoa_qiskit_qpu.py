@@ -83,7 +83,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                                                                "to the QAOA routine"
 
         if self.access_object.provider_connected and self.access_object.qpu_connected:
-            self.backend_qpu = self.access_object.backend_qpu
+            self.backend_qpu = self.access_object.backend_device
         elif self.access_object.provider_connected and self.access_object.qpu_connected in [False, None]:
             raise Exception(
                 'Connection to IBMQ was made. Error connecting to the specified backend.')
