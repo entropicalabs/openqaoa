@@ -47,6 +47,7 @@ Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic f
 A reference jupyter notebook can be found [here](examples/Workflows_example.ipynb)
 
 First, create a problem instance. For example, an instance of vertex cover:
+
 ```
 from openqaoa.problems.problem import MinimumVertexCover
 import networkx
@@ -57,6 +58,12 @@ pubo_problem = vc.get_pubo_problem()
 
 Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
 
+```
+from openqaoa.workflows.optimizer import QAOA  
+q = QAOA()
+q.compile(pubo_problem)
+q.optimize()
+```
 Once the binary problem is defined, the simplest workflow can be defined as 
 
 ```  
@@ -66,13 +73,22 @@ q.compile(pubo_problem)
 q.optimize() 
 ```
 
-Workflows can be customised using some convenient setter functions
+Workflows can be customised using some convenient setter functions. First, we need to set the device where we want to execute the workflow
+
+```
+from openqaoa.devices import create_device
+qcs_credentials = {'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10}
+device = create_device(location='qcs',name='6q-qvm',**qcs_credentials)
+```
+
+Then, the QAOA parameters can be set as follow
+
 
 ```
 q_custom = QAOA()
-q_custom.set_circuit_properties(p=2, param_type='fourier', q=1, init_type='ramp', mixer_hamiltonian='x')
-q_custom.set_device_properties(device_location='qcs', device_name='6q-qvm', cloud_credentials={'name' : "6q-qvm", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
-q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
+q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
+q_custom.set_device(device)
+q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
 q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
 q_custom.compile(pubo_problem)
 q_custom.optimize()
@@ -82,9 +98,9 @@ Currently, the available devices are:
 
 | Device location  | Device Name |
 | ------------- | ------------- |
-| `local`  | `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'nq-qvm', 'Aspen-11']`  |
-| `IBMQ`    | Please check the IMBQ backends available to your account |
-| `QCS`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
+| `local`  | `['qiskit.shot_simulator', 'qiskit.statevec_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
+| `ibmq`    | Please check the IMBQ backends available to your account |
+| `qcs`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
 
 With the notation `nq-qvm` it is intended that `n` is a positive integer. For example, `6q-qvm`.
 
@@ -109,7 +125,6 @@ rqaoa_type can take two values which select elimination strategies. The user can
 
 The user is also free to directly access the source code without using the workflow API. 
 
-A few reference notebooks can be found:
 * [comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
 * [Parameter sweep for vectorised](examples/openqaoa_example_vectorised.ipynb)
 
@@ -120,7 +135,7 @@ First, import all the necessay functions
 ```
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa.backends.qaoa_backend import QAOAvectorizedBackendSimulator
+from openqaoa.devices import DevicePyquil, create_device
 from openqaoa.optimizers.qaoa_optimizer import ScipyOptimizer
 ```
 
@@ -131,7 +146,6 @@ Then specify terms and weights in order to define the cost hamiltonian
 terms = [(1,2),(2,3),(0,3),(4,0),(1,),(3,)]
 coeffs = [1,2,3,4,3,5]
 n_qubits = 5
-
 cost_hamil = Hamiltonian.classical_hamiltonian(terms=terms,coeffs=coeffs,constant=0)
 mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
 ```
@@ -145,7 +159,8 @@ params = create_qaoa_variational_params(qaoa_circuit_params, params_type='fourie
 Then proceed by instantiating the backend device
 
 ```
-backend_obj = QAOAvectorizedBackendSimulator(circuit_params = qaoa_circuit_params, append_state = None, prepend_state = None, init_hadamard = True)
+device_pyquil = create_device('qcs',"Aspen-11", as_qvm=True, execution_timeout = 10, compiler_timeout=10)
+backend_obj_pyquil = get_qaoa_backend(circuit_params, device_pyquil, n_shots=1000)
 ```
 
 And finally, create the classical optimizer and minimize the objective function
@@ -160,7 +175,6 @@ The result of the optimization will the be accessible as
 ```
 optimizer_obj.results_information()
 ```
-
 
 ## Running the tests
 

@@ -77,14 +77,23 @@ Once the binary problem is defined, the simplest workflow can be defined as
 
 
 
-Workflows can be customised using some convenient setter functions
+Workflows can be customised using some convenient setter functions. First, we need to set the device where we want to execute the workflow
+
+.. code-block:: python
+
+   from openqaoa.devices import create_device
+   qcs_credentials = {'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10}
+   device = create_device(location='qcs',name='6q-qvm',**qcs_credentials)
+
+
+Then, the QAOA parameters can be set as follow
 
 .. code-block:: python
 
    q_custom = QAOA()
-   q_custom.set_circuit_properties(p=2, param_type='fourier', q=1, init_type='ramp', mixer_hamiltonian='x')
-   q_custom.set_device_properties(device_location='qcs', device_name='6q-qvm', cloud_credentials={'name' : "6q-qvm", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
-   q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
+   q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
+   q_custom.set_device(device)
+   q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
    q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
    q_custom.compile(pubo_problem)
    q_custom.optimize()
@@ -98,7 +107,7 @@ Currently, the available devices are:
    * - Device location
      - Device Name
    * - `local`
-     - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'nq-qvm', 'Aspen-11']`
+     - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`
    * - `IBMQ`
      - Please check the IMBQ backends available to your account
    * - `Rigetti's QCS`

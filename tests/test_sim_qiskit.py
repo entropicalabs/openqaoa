@@ -22,7 +22,7 @@ from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParam
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees
-
+from openqaoa.devices import DeviceLocal
 
 
 class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):

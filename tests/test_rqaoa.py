@@ -17,6 +17,7 @@ import unittest
 
 from openqaoa.qaoa_parameters import Hamiltonian
 from openqaoa.rqaoa import *
+from openqaoa.devices import DeviceLocal
 
 """
 Unittest based testing of current implementation of the RQAOA Algorithm
@@ -319,7 +320,8 @@ class TestingRQAOA(unittest.TestCase):
         ## Testing
 
         # Perform QAOA and obtain expectation values numerically
-        qaoa_backend = qaoa_cost_backend(circuit_params, device = 'vectorized', shots = None, qpu_params = None)
+
+        qaoa_backend = qaoa_cost_backend(circuit_params, device = DeviceLocal('vectorized'), shots = None, qpu_params = None)
         qaoa_results = optimize_qaoa(qaoa_backend,variational_params,optimizer_dict = {'method':'cobyla','maxiter':200})
         
         num_exp_vals_z,num_corr_matrix = expectation_values(variational_params,qaoa_results, qaoa_backend, hamiltonian, p = p, analytical = False)
