@@ -144,6 +144,25 @@ class Credentials(Parameters):
 class IBMQCredentials(Parameters):
     """
     Implement IBMQ specific credentials
+
+    A majority of the input parameters required for this can be found in
+    the user's IBMQ Experience account.
+
+    Parameters
+    ----------
+    api_token: str
+        Valid IBMQ Experience Token.
+    hub: str
+        Valid IBMQ hub name.
+    group: str
+        Valid IBMQ group name. 
+    project: str
+        The name of the project for which the experimental data will be 
+        saved in on IBMQ's end.
+    selected_qpu: str
+        The name of the QPU in which the user would like to connect with.
+    provider: str
+        Current it takes the default value of `ibmq`
     """
 
     def __init__(self,
@@ -161,6 +180,42 @@ class IBMQCredentials(Parameters):
 class QCSCredentials(Parameters):
     """
     Implement QCS specific credentials
+
+    Parameters
+    ----------
+    name: str 
+        The name of the desired quantum computer. This should correspond to 
+        a name returned by :py:func:`list_quantum_computers`. Names ending 
+        in "-qvm" will return a QVM. Names ending in "-pyqvm" will return a 
+        :py:class:`PyQVM`. Names ending in "-noisy-qvm" will return a QVM 
+        with a noise model. Otherwise, we will return a QPU with the given 
+        name.
+    as_qvm: bool 
+        An optional flag to force construction of a QVM (instead of a QPU). 
+        If specified and set to ``True``, a QVM-backed quantum computer will 
+        be returned regardless of the name's suffix.
+    noisy: bool
+        An optional flag to force inclusion of a noise model. If specified 
+        and set to ``True``, a quantum computer with a noise model will be 
+        returned regardless of the name's suffix. The generic QVM noise 
+        model is simple T1 and T2 noise plus readout error. See 
+        :py:func:`~pyquil.noise.decoherence_noise_with_asymmetric_ro`. Note, 
+        we currently do not support noise models based on QCS hardware; a 
+        value of `True`` will result in an error if the requested QPU is a 
+        QCS hardware QPU.
+    compiler_timeout: float
+        Time limit for compilation requests, in seconds.
+    execution_timeout: float
+        Time limit for execution requests, in seconds.
+    client_configuration: QCSClientConfiguration
+        Optional client configuration. If none is provided, a default one 
+        will be loaded.
+    endpoint_id: str
+        Optional quantum processor endpoint ID, as used in the 
+        `QCS API Docs`_.
+    engagement_manager: EngagementManager
+        Optional engagement manager. If none is provided, a default one will 
+        be created.
     """
 
     def __init__(self,
@@ -181,6 +236,20 @@ class QCSCredentials(Parameters):
 class BackendProperties(Parameters):
     """
     Choose the backend on which to run the QAOA circuits
+
+    Parameters
+    ----------
+    prepend_state: `Union[QuantumCircuitBase,np.ndarray(complex)]`
+        The state prepended to the circuit.
+    append_state: `Union[QuantumCircuitBase,np.ndarray(complex)]`
+        The state appended to the circuit.
+    init_hadamard: `bool`
+        Whether to apply a Hadamard gate to the beginning of the 
+        QAOA part of the circuit.
+    n_shots: `int`
+        The number of shots to be used for the shot-based computation.
+    cvar_alpha: `float`
+        The value of the CVaR parameter.
     """
 
     def __init__(self,
@@ -191,27 +260,6 @@ class BackendProperties(Parameters):
                  init_hadamard: bool = True,
                  n_shots: int = 100,
                  cvar_alpha: float = 1):
-        """
-        Parameters:
-            provider: str
-                The provider of the backend
-            cost_std_dev: bool
-                Return std dev of cost value along with cost value at each iteration
-                **Only for simulators**
-            init_hadamard: bool
-                Set to `False`, to start the QAOA circuit without the initial Hadamard
-                superposition
-            init_prog: Optional[AbstractParams]
-                Start the QAOA circuit in a pre-defined QAOA-like state, specified via 
-                QAOA `AbstractParams`
-            shots: Optional[int]
-                If using, a `shot-based simulator` or a `QPU, specify the number of shots
-                for each circuit execution
-            credentials: Optional[Credentials]
-                Provide, the service credentials for using `QPUs` offered by that service
-                provider. 
-        """
-
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state

@@ -755,7 +755,7 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
 
     """
 
-    register = hamiltonian.physical_qureg
+    register = hamiltonian.qureg
     max_terms = list(max_terms_and_stats.keys())
 
     # Initialize with every spin mapping to itself

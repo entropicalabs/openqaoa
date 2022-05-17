@@ -38,9 +38,10 @@ DEVICE_ACCESS_OBJECT_MAPPER = {
 def _backend_arg_mapper(backend_obj: QAOABaseBackend,
                         n_shots: Optional[int] = None,
                         qiskit_simulation_method: Optional[str] = None,
-                        noise_model=None,
+                        noise_model = None,
                         active_reset: Optional[bool] = None,
-                        rewiring=None):
+                        rewiring = None,
+                        qubit_layout = None):
 
     BACKEND_ARGS_MAPPER = {
         QAOAvectorizedBackendSimulator: {},
@@ -49,11 +50,14 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
         QAOAQiskitBackendShotBasedSimulator: {'n_shots': n_shots,
                                               'qiskit_simulation_method': qiskit_simulation_method,
                                               'noise_model': noise_model},
-        QAOAQiskitQPUBackend: {'n_shots': n_shots},
+        QAOAQiskitQPUBackend: {'n_shots': n_shots,
+                               'qubit_layout':qubit_layout},
         QAOAPyQuilQPUBackend: {'n_shots': n_shots,
                                'active_reset': active_reset,
-                               'rewiring': rewiring}
+                               'rewiring': rewiring,
+                               'qubit_layout':qubit_layout}
     }
+
     final_backend_kwargs = {key: value for key, value in BACKEND_ARGS_MAPPER[backend_obj].items()
                             if value is not None}
     return final_backend_kwargs

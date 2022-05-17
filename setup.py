@@ -16,7 +16,8 @@ requirements = [
     "sphinx==4.5.0",
     "sphinx-autodoc-typehints==1.18.1",
     "sphinx-rtd-theme==1.0.0",
-    "ipython==8.2.0" 
+    "ipython==8.2.0" ,
+    "nbconvert==6.5.0"
 ]
 
 setup(
@@ -24,7 +25,7 @@ setup(
     version='0.0.1',
     author='Entropica Labs',
     packages=find_packages(),
-    url="https://gitlab.com/entropica/openqaoa-temporary",
+    url="https://github.com/entropica/openqaoa",
     description="A python SDK for Quantum Optimisation",
     license='LICENSE.md',
     long_description=long_description,

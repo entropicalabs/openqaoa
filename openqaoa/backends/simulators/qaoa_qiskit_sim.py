@@ -145,7 +145,8 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
                 decomposition = each_gate.decomposition('standard')
             # Create Circuit
             for each_tuple in decomposition:
-                parametric_circuit = each_tuple[0](*each_tuple[1]).apply_gate(parametric_circuit, 'ibm')
+                low_gate = each_tuple[0]()
+                parametric_circuit = low_gate.apply_ibm_gate(*each_tuple[1],parametric_circuit)
         
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
@@ -314,7 +315,8 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
                 decomposition = each_gate.decomposition('standard')
             # Create Circuit
             for each_tuple in decomposition:
-                parametric_circuit = each_tuple[0](*each_tuple[1]).apply_gate(parametric_circuit, 'ibm')
+                low_gate = each_tuple[0]()
+                parametric_circuit = low_gate.apply_ibm_gate(*each_tuple[1],parametric_circuit)
 
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
