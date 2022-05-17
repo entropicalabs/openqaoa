@@ -18,9 +18,11 @@ from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
 
-SUPPORTED_LOCAL_SIMULATORS = ['qiskit.qasm_simulator', 'qiskit.shot_simulator',
-							  'qiskit.statevector_simulator','entropica.vectorized',
-							  'pyquil.statevector_simulator']
+SUPPORTED_LOCAL_SIMULATORS = [
+    'qiskit.qasm_simulator', 'qiskit.shot_simulator',
+    'qiskit.statevector_simulator','entropica.vectorized',
+    'pyquil.statevector_simulator'
+]
 
 
 class DeviceBase(metaclass=abc.ABCMeta):
@@ -71,7 +73,7 @@ class DeviceQiskit(DeviceBase):
 	"""
 
     def __init__(self, device_name: str, api_token: str,
-				 hub: str, group: str, project: str) -> None:
+				 hub: str, group: str, project: str):
         """A majority of the input parameters required for this can be found in
         the user's IBMQ Experience account.
 
@@ -187,7 +189,7 @@ class DevicePyquil(DeviceBase):
                  execution_timeout: float = 20.0,
                  client_configuration: QCSClientConfiguration = None,
                  endpoint_id: str = None,
-                 engagement_manager: EngagementManager = None) -> None:
+                 engagement_manager: EngagementManager = None):
         """
         Parameters
         ----------
@@ -258,17 +260,16 @@ class DevicePyquil(DeviceBase):
 
 def device_class_arg_mapper(device_class:DeviceBase,
                             api_token: str = None,
-							hub: str = None,
-							group: str = None,
-							project: str = None,
-							as_qvm: bool = None,
-							noisy: bool = None,
-                			compiler_timeout: float = None,
-                 			execution_timeout: float = None,
-                 			client_configuration: QCSClientConfiguration = None,
-                 			endpoint_id: str = None,
-                 			engagement_manager: EngagementManager = None
-							) -> dict:
+                            hub: str = None,
+                            group: str = None,
+                            project: str = None,
+                            as_qvm: bool = None,
+                            noisy: bool = None,
+                            compiler_timeout: float = None,
+                            execution_timeout: float = None,
+                            client_configuration: QCSClientConfiguration = None,
+                            endpoint_id: str = None,
+                            engagement_manager: EngagementManager = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
                         'hub': hub,

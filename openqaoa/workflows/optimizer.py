@@ -13,7 +13,6 @@
 #   limitations under the License.
 
 from abc import ABC
-from curses import setupterm
 import numpy as np
 from openqaoa.devices import DeviceLocal, DeviceBase
 
@@ -168,60 +167,6 @@ class QAOA(Optimizer):
 
         return None
 
-    # def set_device_properties(self, **kwargs):
-    #     """
-    #     Specify the device properties
-
-    #     Parameters
-    #     -------------------
-    #     device_location: str
-    #         Can only take the values `local` for local simulations, `qcs` for Rigetti's QCS, and `ibmq` for IBM
-    #     device_name: device_name
-    #         The name of the device:
-    #         for local devices it can be ['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized']
-    #         for cloud devices plese check the name from the provider itself
-    #     cloud_credentials: dict
-    #         A dictionary containing the credentials to connecto to cloud services:
-    #         - QCS (rigetti) signature: 
-    #         (name: str,
-    #         as_qvm: bool = None, 
-    #         noisy: bool = None,
-    #         compiler_timeout: float = 20.0,
-    #         execution_timeout: float = 20.0,
-    #         client_configuration: QCSClientConfiguration = None,
-    #         endpoint_id: str = None,
-    #         engagement_manager: EngagementManager = None)
-    #         - IBMQ (IBM) signature:
-    #         (api_token: str,
-    #         hub: str = None,
-    #         group: str = None,
-    #         project: str = None,
-    #         selected_qpu: str = None)
-    #     """
-    #     if kwargs['device_location'] == 'ibmq':
-    #         kwargs['cloud_credentials']['device_location'] = kwargs['device_location']
-    #         kwargs['cloud_credentials']['selected_qpu'] = kwargs['device_name']
-    #         kwargs['device'] = Credentials(
-    #             kwargs['cloud_credentials']).accessObject
-    #     elif kwargs['device_location'] == 'qcs':
-    #         kwargs['cloud_credentials']['device_location'] = kwargs['device_location']
-    #         kwargs['device'] = Credentials(
-    #             kwargs['cloud_credentials']).accessObject
-    #     elif kwargs['device_location'] == 'local':
-    #         kwargs['device'] = kwargs['device_name']
-    #     else:
-    #         Exception(
-    #             f'Something is not working in the device selection. Please check {kwargs["device_location"]}')
-
-    #     for key, value in kwargs.items():
-    #         if hasattr(self.device_properties, key):
-    #             setattr(self.device_properties, key, value)
-    #         else:
-    #             raise ValueError(
-    #                 f"Specified argument {key, value} is not supported by the circuit")
-
-    #     return None
-
     def set_backend_properties(self, **kwargs):
         """
         Set the backend properties
@@ -255,9 +200,6 @@ class QAOA(Optimizer):
 
         for key, value in kwargs.items():
             if hasattr(self.backend_properties, key):
-                if (key == 'device'):
-                    if isinstance(self.device_properties.device, AccessObjectBase):
-                        value = self.device_properties.device.accessObject
                 setattr(self.backend_properties, key, value)
             else:
                 raise ValueError(
