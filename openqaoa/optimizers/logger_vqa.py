@@ -146,8 +146,18 @@ class Logger(object):
         for the members in that list is dependent on whether any change was
         performed in all of members of the list before it.
         
+<<<<<<< HEAD
         ([A], [B, C]) - If A is changed, update B and C
         ([A, B, C]) - Update A, B and C indepdently of each other.
+=======
+<<<<<<< HEAD
+        ([[A], [B, C]]) - If A is changed, update B and C
+        ([[A, B, C]]) - Update A, B and C indepdently of each other.
+=======
+        ([A], [B, C]) - If A is changed, update B and C
+        ([A, B, C]) - Update A, B and C indepdently of each other.
+>>>>>>> main
+>>>>>>> add_logger
         """
         
         self.best_update_structure = best_update_structure
@@ -172,6 +182,10 @@ class Logger(object):
         # new layer in the structure if the previous layer was updated and all
         # members of the layers were changed from the update.
         for each_index in range(len(self.best_update_structure)):
+<<<<<<< HEAD
+=======
+#             print(self.best_update_structure[each_index])
+>>>>>>> add_logger
             change_count = 0
             for each_member in self.best_update_structure[each_index]:
                 if each_member in input_dict.keys():
@@ -179,6 +193,10 @@ class Logger(object):
                     old_best = logged_var.best.copy()
                     self._log_best(each_member, input_dict[each_member])
                     new_best = logged_var.best
+<<<<<<< HEAD
+=======
+#                     print(each_member, old_best, new_best)
+>>>>>>> add_logger
                     if type(new_best[0]) == np.ndarray:
                         if not np.array_equal(new_best, old_best):
                             change_count += 1

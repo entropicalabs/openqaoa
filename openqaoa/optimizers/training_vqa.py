@@ -76,6 +76,7 @@ class OptimizeVQA(ABC):
         self.method = optimizer_dict['method'].lower()
         
         self.func_evals = 0
+<<<<<<< HEAD
         self.log = Logger({'cost': {'history_update_bool': optimizer_dict.get('cost_progress',True), 
                                     'best_update_string': 'LowestOnly'}, 
                            'counts': {'history_update_bool': optimizer_dict.get('optimization_progress',False), 
@@ -88,6 +89,37 @@ class OptimizeVQA(ABC):
                           {'best_update_structure': (['cost', 'func_evals'], ['param_log', 
                                                                 'counts', 
                                                                 'probability'])})
+=======
+        self.log = Logger({'cost': 
+                           {
+                               'history_update_bool': optimizer_dict.get('cost_progress',True), 
+                               'best_update_string': 'LowestOnly'
+                           }, 
+                           'counts': 
+                           {
+                               'history_update_bool': optimizer_dict.get('optimization_progress',False), 
+                               'best_update_string': 'Replace'
+                           }, 
+                           'probability': 
+                           {
+                               'history_update_bool': optimizer_dict.get('optimization_progress',False), 
+                               'best_update_string': 'Replace'
+                           },
+                           'param_log': 
+                           {
+                               'history_update_bool': optimizer_dict.get('parameter_log',True), 
+                               'best_update_string': 'Replace'
+                           }, 
+                           'func_evals': 
+                           {
+                               'history_update_bool': False, 
+                               'best_update_string': 'HighestOnly'
+                           }
+                          }, 
+                          {'best_update_structure': 
+                           (['cost', 'func_evals'], 
+                            ['param_log', 'counts', 'probability'])})
+>>>>>>> add_logger
 
     @abstractmethod
     def __repr__(self):
