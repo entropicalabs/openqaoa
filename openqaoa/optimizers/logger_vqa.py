@@ -146,8 +146,9 @@ class Logger(object):
         for the members in that list is dependent on whether any change was
         performed in all of members of the list before it.
         
-        ([A], [B, C]) - If A is changed, update B and C
-        ([A, B, C]) - Update A, B and C indepdently of each other.
+        ([[A], [B, C]]) - If A is changed, update B and C
+        ([[A, B, C]]) - Update A, B and C indepdently of each other.
+
         """
         
         self.best_update_structure = best_update_structure
