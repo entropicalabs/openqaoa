@@ -1,7 +1,5 @@
 import unittest
 
-from openqaoa.backends.qpus.qpu_auth import *
-
 from openqaoa.optimizers.logger_vqa import Logger, LoggerVariable, LoggerVariableFactory, EmptyValue, AppendValue, ReplaceValue, IfLowerDo, IfHigherDo
 
 class TestingLoggerClass(unittest.TestCase):
