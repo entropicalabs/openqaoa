@@ -25,7 +25,7 @@ setup(
     version='0.0.1',
     author='Entropica Labs',
     packages=find_packages(),
-    url="https://github.com/entropica/openqaoa",
+    url="https://github.com/entropicalabs/openqaoa",
     description="A python SDK for Quantum Optimisation",
     license='LICENSE.md',
     long_description=long_description,
