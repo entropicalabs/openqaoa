@@ -20,6 +20,7 @@ from scipy.optimize._minimize import MINIMIZE_METHODS
 from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
+from openqaoa.devices import create_device
 from openqaoa.optimizers import get_optimizer
 
 """
@@ -37,7 +38,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
             'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        backend_obj_vectorized = get_qaoa_backend(circuit_params, 'vectorized')
+        device = create_device('local','vectorized')
+        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
         variate_params = create_qaoa_variational_params(
             circuit_params, 'standard', 'ramp')
 
@@ -75,7 +77,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
             'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        backend_obj_vectorized = get_qaoa_backend(circuit_params, 'vectorized')
+        device = create_device('local','vectorized')
+        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
         variate_params = create_qaoa_variational_params(
             circuit_params, 'standard', 'ramp')
         niter = 10
@@ -117,7 +120,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
             'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
-        backend_obj_vectorized = get_qaoa_backend(circuit_params, 'vectorized')
+        device = create_device('local','vectorized')
+        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
         variate_params = create_qaoa_variational_params(
             circuit_params, 'standard', 'ramp')
         niter = 5
@@ -165,7 +169,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
         variate_params = create_qaoa_variational_params(
             circuit_params, 'standard', 'ramp')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params, 'vectorized')
+        device = create_device('local','vectorized')
+        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
@@ -210,7 +215,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
             'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
-        backend_obj_vectorized = get_qaoa_backend(circuit_params, 'vectorized')
+        device = create_device('local','vectorized')
+        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
         variate_params = create_qaoa_variational_params(
             circuit_params, 'standard', 'ramp')
         niter = 5
@@ -256,7 +262,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
             'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
-        backend_obj_vectorized = get_qaoa_backend(circuit_params, 'vectorized')
+        device = create_device('local','vectorized')
+        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
         variate_params = create_qaoa_variational_params(
             circuit_params, 'standard', 'ramp')
         niter = 5

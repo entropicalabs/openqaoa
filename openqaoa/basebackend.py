@@ -28,7 +28,7 @@ from typing import Union, List, Type, Dict, Optional, Any, Tuple
 import numpy as np
 from copy import deepcopy
 
-from .backends.qpus.qpu_auth import AccessObjectBase
+from .devices import DeviceBase
 from .qaoa_parameters.pauligate import PauliGate, TwoPauliGate
 from .qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
@@ -56,8 +56,8 @@ class VQABaseBackend(ABC):
     implementation specific to their needs.
 
     NOTE:
-    In addition one can also implement other methods which are not necessitated by 
-    the ``VQABaseBackend`` Base Class
+        In addition one can also implement other methods which are not 
+        necessitated by the ``VQABaseBackend`` Base Class
 
 
     Parameters
@@ -124,15 +124,15 @@ class QAOABaseBackend(VQABaseBackend):
     def __init__(self,
                  circuit_params: QAOACircuitParams,
                  prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
-                 append_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
+                 append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
                  init_hadamard: bool,
                  cvar_alpha: float = 1):
 
         super().__init__(prepend_state, append_state)
 
         self.circuit_params = circuit_params
-        self.n_qubits = len(circuit_params.qureg)
         self.cost_hamiltonian = circuit_params.cost_hamiltonian
+        self.n_qubits = self.cost_hamiltonian.n_qubits
         self.init_hadamard = init_hadamard
         self.cvar_alpha = cvar_alpha
 
@@ -300,11 +300,9 @@ class QAOABaseBackend(VQABaseBackend):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters as a 1D array (derived from an object of one of the
             parameter classes, containing hyperparameters and variable parameters).
-
         eta: `float`
-            The infinitesimal shift used to compute |∂jφ>, the partial derivative
+            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative
             of the wavefunction w.r.t a parameter. 
-
         Returns
         -------
         qfim_array: `np.ndarray`
@@ -483,7 +481,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
             the parameter classes, containing hyperparameters and variable parameters).
 
         eta: `float`
-            The infinitesimal shift used to compute |∂jφ>, the partial derivative 
+            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative 
             of the wavefunction w.r.t a parameter. 
 
         Returns
@@ -647,7 +645,7 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
             parameter classes, containing hyperparameters and variable parameters).
 
         eta: `float`
-            The infinitesimal shift used to compute |∂jφ>, the partial derivative
+            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative
             of the wavefunction w.r.t a parameter. 
 
         Returns
@@ -685,9 +683,9 @@ class QAOABaseBackendCloud:
     respective provider through an API based access
     """
 
-    def __init__(self, access_object: AccessObjectBase):
-        self.access_object = access_object
-        access_object.check_connection()
+    def __init__(self, device: DeviceBase):
+        self.device = device
+        self.device.check_connection()
 
 
 class QAOABaseBackendParametric:

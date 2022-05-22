@@ -19,10 +19,10 @@ from qiskit import QuantumCircuit
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
 from openqaoa.qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
 from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
-from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendStatevecSimulator
+from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees
-
+from openqaoa.devices import DeviceLocal
 
 
 class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
@@ -163,8 +163,15 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
                                                             prepend_circuit, 
                                                             None, 
                                                             True)
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(circuit_params,
+                                                                  shots,
+                                                                  prepend_circuit, 
+                                                                  None, 
+                                                                  True, 1.0)
         
         statevec_circuit = qiskit_statevec_backend.qaoa_circuit(variate_params)
+        shot_circuit = qiskit_shot_backend.qaoa_circuit(variate_params)
+        shot_circuit.remove_final_measurements()
         
         # Trivial Decomposition
         main_circuit = QuantumCircuit(3)
@@ -178,6 +185,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         main_circuit.rx(-2*betas[0], 2)
         
         self.assertEqual(main_circuit.to_instruction().definition, statevec_circuit.to_instruction().definition)
+        self.assertEqual(main_circuit.to_instruction().definition, shot_circuit.to_instruction().definition)
     
     def test_append_circuit(self):
         
@@ -208,7 +216,15 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
                                                             None, 
                                                             append_circuit, 
                                                             True)
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(circuit_params,
+                                                                  shots,
+                                                                  None, 
+                                                                  append_circuit, 
+                                                                  True, 1.0)
+        
         statevec_circuit = qiskit_statevec_backend.qaoa_circuit(variate_params)
+        shot_circuit = qiskit_shot_backend.qaoa_circuit(variate_params)
+        shot_circuit.remove_final_measurements()
         
         # Standard Decomposition
         main_circuit = QuantumCircuit(3)
@@ -222,6 +238,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         main_circuit.x([0, 1, 2])
         
         self.assertEqual(main_circuit.to_instruction().definition, statevec_circuit.to_instruction().definition)
+        self.assertEqual(main_circuit.to_instruction().definition, shot_circuit.to_instruction().definition)
     
     def test_qaoa_circuit_wavefunction_expectation_equivalence_1(self):
         
@@ -518,7 +535,70 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             vector_expectation = vector_backend.expectation(variate_params)
             
             self.assertAlmostEqual(qiskit_expectation, vector_expectation)
-
+            
+    def test_shot_based_simulator(self):
+        
+        """
+        Test get_counts in shot-based qiskit simulator.
+        """
+        
+        nqubits = 3
+        p = 1
+        weights = [1, 1, 1]
+        gammas = [1/8*np.pi]
+        betas = [1/8*np.pi]
+        shots = 10000
+        
+        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
+                                  PauliOp('ZZ', (0, 2))], weights, 1)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(circuit_params, 
+                                                       betas, gammas)
+        
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(circuit_params,
+                                                                  shots,
+                                                                  None, 
+                                                                  None, 
+                                                                  True, 1.0)
+        
+        shot_result = qiskit_shot_backend.get_counts(variate_params)
+        
+        self.assertEqual(type(shot_result), dict)
+        
+    def test_standard_decomposition_branch_in_circuit_construction(self):
+        
+        """
+        XY Pauli is not an implemented low level gate. Produces NotImplementedError
+        as the standard decomposition for the XY PauliGate doesnt exist.
+        """
+        
+        nqubits = 3
+        p = 1
+        weights = [1, 1, 1]
+        gammas = [1/8*np.pi]
+        betas = [1/8*np.pi]
+        shots = 10000
+        
+        cost_hamil = Hamiltonian([PauliOp('XY', (0, 1)), PauliOp('XY', (1, 2)), 
+                                  PauliOp('XY', (0, 2))], weights, 1)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(circuit_params, 
+                                                       betas, gammas)
+        
+        self.assertRaises(NotImplementedError, QAOAQiskitBackendShotBasedSimulator, 
+                          circuit_params,
+                          shots,
+                          None, 
+                          None, 
+                          True, 1.0)
+        
+        self.assertRaises(NotImplementedError, QAOAQiskitBackendStatevecSimulator, 
+                          circuit_params,
+                          None, 
+                          None, 
+                          True)
 
 if __name__ == '__main__':
     unittest.main()
