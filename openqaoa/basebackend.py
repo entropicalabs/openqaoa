@@ -36,7 +36,6 @@ from .derivative_functions import derivative
 from .utilities import qaoa_probabilities
 from .cost_function import cost_function
 
-
 class QuantumCircuitBase:
     """
     Phantom class to indicate Quantum Circuits constructed using
@@ -315,7 +314,8 @@ class QAOABaseBackend(VQABaseBackend):
                             params: QAOAVariationalBaseParams,
                             derivative_type: Type[str] = None,
                             derivative_method: Type[str] = None,
-                            derivative_options: dict = None) -> callable:
+                            derivative_options: dict = None, 
+                            logger = None) -> callable:
         """
         Returns a callable function that calculates the gradient according to 
         the specified `gradient_method`.
@@ -347,7 +347,8 @@ class QAOABaseBackend(VQABaseBackend):
                            "derivative_options": derivative_options,
                            "backend_obj": self,
                            "params": deepcopy(params),
-                           "params_ext": params_ext}
+                           "params_ext": params_ext, 
+                           "logger": logger}
 
         out = derivative(derivative_dict)
 
