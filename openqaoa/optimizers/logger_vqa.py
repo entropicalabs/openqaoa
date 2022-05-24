@@ -1,6 +1,8 @@
 from typing import Union, List, Tuple
 from abc import ABC, abstractmethod
 import numpy as np
+import networkx as nx
+from copy import deepcopy
     
 class UpdateMethod(ABC):
     
@@ -121,7 +123,8 @@ class Logger(object):
             self._create_variable(attribute_name = attribute_name, 
                                   history_update_bool = attribute_properties['history_update_bool'], 
                                   best_update_string = attribute_properties['best_update_string'])
-        self._create_logger_update_structure(logger_update_structure['best_update_structure'])
+        self._create_logger_update_structure(logger_update_structure['root_nodes'], 
+                                             logger_update_structure['best_update_structure'])
     
     def _create_variable(self, attribute_name: str, history_update_bool: bool, 
                          best_update_string: str):
@@ -137,28 +140,62 @@ class Logger(object):
                     attribute_name, history_update_bool, best_update_string))
     
     def _create_logger_update_structure(self, 
-                                       best_update_structure: Tuple[List[str]]):
+                                        root_nodes: List[str],
+                                        best_update_relations: Tuple[List[str]]):
         
         """
-        If the members in the tuple are in the same list, it means that their
-        updates are independent of one another.
-        If the members in the tuple are not in the same list, then the updates
-        for the members in that list is dependent on whether any change was
-        performed in all of members of the list before it.
+        This method creates an internal representation of the way the Logger
+        Variables should be updated using a NetworkX Directed Graph.
         
-        ([[A], [B, C]]) - If A is changed, update B and C
-        ([[A, B, C]]) - Update A, B and C indepdently of each other.
-
+        Parameter
+        ---------
+        root_nodes: `list`
+            Starting points of the update graphs. The name of the Logger Variable 
+            that needs to be updated first should be named in this list.
+        best_update_relations: `list`
+            If the updating of B depends on A, (A changes, Update B). This 
+            relationship should be encapsuled/represented with the following 
+            list: ['A', 'B'].
         """
         
-        self.best_update_structure = best_update_structure
+        self.best_update_structure = nx.DiGraph()
+        
+        self.root_nodes = root_nodes
+        self.update_edges = best_update_relations
+        
+    @property
+    def update_edges(self):
+        
+        return self._update_edges
+    
+    @update_edges.setter
+    def update_edges(self, update_edges: Tuple[List[str]]):
+        
+        self.best_update_structure.add_edges_from(update_edges)
+        self._update_edges = update_edges
+        
+        return self._update_edges
+    
+    @property
+    def root_nodes(self):
+        
+        return self._root_nodes
+    
+    @root_nodes.setter
+    def root_nodes(self, root_nodes: List[str]):
+        
+        self.best_update_structure.add_nodes_from(root_nodes)
+        self._root_nodes = root_nodes
+        
+        return self._root_nodes
     
     def log_variables(self, input_dict: dict):
         
         """
         Updates all the histories of the logger variables.
         Best values of the logger variables are only updated according to the rules 
-        specified by its update structure.
+        specified by its update structure. If the attribute is not in the update
+        structure it isnt updated.
         
         input_dict:
             Should contain a dictionary with the key as the name of the 
@@ -172,21 +209,44 @@ class Logger(object):
         # Updates based on the logging structure. Only moves to update the
         # new layer in the structure if the previous layer was updated and all
         # members of the layers were changed from the update.
-        for each_index in range(len(self.best_update_structure)):
-            change_count = 0
-            for each_member in self.best_update_structure[each_index]:
-                if each_member in input_dict.keys():
-                    logged_var = getattr(self, each_member)
+        change_dict = dict()
+        
+        node_list = deepcopy(self.root_nodes)
+        
+        while len(node_list) != 0:
+
+            mid_list = []
+            for each_node in node_list:
+                
+                change_bool = False
+                
+                # Checks if a nodes predecessor has been updated. If not all
+                # of them were updated, the node is skipped.
+                node_predecessor = self.best_update_structure.pred[each_node]
+                updated_pred_count = np.sum([change_dict[each_precessor_node] for each_precessor_node in node_predecessor])
+                if len(node_predecessor) != updated_pred_count:
+                    continue
+                        
+                # Update node if attribute name is in input dictionary and 
+                # its predecessors hsa been updated.
+                if each_node in input_dict.keys():
+                    logged_var = getattr(self, each_node)
                     old_best = logged_var.best.copy()
-                    self._log_best(each_member, input_dict[each_member])
+                    self._log_best(each_node, input_dict[each_node])
                     new_best = logged_var.best
                     if type(new_best[0]) == np.ndarray:
                         if not np.array_equal(new_best, old_best):
-                            change_count += 1
+                            change_bool = True
                     elif new_best != old_best:
-                        change_count += 1
-            if change_count != len(self.best_update_structure[each_index]):
-                break
+                        change_bool = True
+
+                change_dict[each_node] = change_bool
+
+                if change_bool == True:
+                    mid_list.extend(self.best_update_structure.adj[each_node].keys())
+                    
+            node_list = list(set(mid_list))
+    
     
     def _log_history(self, attribute_name: str, attribute_value):
         

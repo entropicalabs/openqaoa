@@ -28,9 +28,12 @@ def update_and_compute_expectation(backend_obj, params, logger):
     # This function will handle (1) updating variational parameters with update_from_raw and (2) computing expectation.
 
     def fun(args):
-        current_eval = logger.func_evals.best[0]
-        current_eval += 1
-        logger.log_variables({'func_evals': current_eval})
+        current_total_eval = logger.func_evals.best[0]
+        current_total_eval += 1
+        current_jac_eval = logger.jac_func_evals.best[0]
+        current_jac_eval += 1
+        logger.log_variables({'func_evals': current_total_eval, 
+                              'jac_func_evals': current_jac_eval})
         params.update_from_raw(args)
         return backend_obj.expectation(params)
 

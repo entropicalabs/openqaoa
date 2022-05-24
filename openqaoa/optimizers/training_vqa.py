@@ -99,13 +99,22 @@ class OptimizeVQA(ABC):
                            {
                                'history_update_bool': False, 
                                'best_update_string': 'HighestOnly'
+                           },
+                           'jac_func_evals': 
+                           {
+                               'history_update_bool': False, 
+                               'best_update_string': 'HighestOnly'
                            }
                           }, 
-                          {'best_update_structure': 
-                           (['cost', 'func_evals'], 
-                            ['param_log', 'counts', 'probability'])})
+                          {
+                              'root_nodes': ['cost', 'func_evals', 'jac_func_evals'],
+                              'best_update_structure': (['cost', 'param_log'], 
+                                                        ['cost', 'counts'], 
+                                                        ['cost', 'probability'])
+                          })
         
         self.log.log_variables({'func_evals': 0})
+        self.log.log_variables({'jac_func_evals': 0})
 
     @abstractmethod
     def __repr__(self):
@@ -213,6 +222,7 @@ class OptimizeVQA(ABC):
             Dictionary with the following keys
                 
                 #. "number of evals"
+                #. "jac evals"
                 #. "parameter log"
                 #. "best param"
                 #. "cost progress list"
@@ -228,6 +238,7 @@ class OptimizeVQA(ABC):
         
         result_dict = {
             'number of evals': self.log.func_evals.best[0],
+            'jac evals': self.log.jac_func_evals.best[0],
             'parameter log': np.array(self.log.param_log.history).tolist(),
             'best param': np.array(self.log.param_log.best).tolist(),
             'cost progress list': np.array(self.log.cost.history).tolist(), 
