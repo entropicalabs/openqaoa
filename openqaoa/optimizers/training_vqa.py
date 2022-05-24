@@ -136,11 +136,10 @@ class OptimizeVQA(ABC):
 
     def optimize_this(self, x):
         '''
-        A function wrapper to execute the circuit in the backend. This function 
-        will be passed as argument to be optimized by scipy optimize. There are
-        that log the outputs from the backend object depending on whether the 
-        user requests for it.
-        
+        A function wrapper to execute the circuit in the backend. This function
+        will be passed as the fun argument in scipy.optimize.minimize. There are
+        helper classes that log the outputs from the backend object depending on
+        whether the user requests for it.
         .. Important::
             #. Appends all intermediate parameters in ``self.param_log`` list
             #. Appends the cost value after each iteration in the optimization process to ``self.cost_progress`` list
