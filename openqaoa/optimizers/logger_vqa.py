@@ -67,7 +67,7 @@ class IfLowerDo(UpdateMethod):
         
         self._update_method = update_method
     
-    def update(self, logger_variable: LoggerVariable, attribute_name: str, new_value: Union[list, int, float, str]) -> None:
+    def update(self, logger_variable: LoggerVariable, attribute_name: str, new_value: Union[int, float]) -> None:
         
         try:
             old_value = getattr(logger_variable, attribute_name)[-1]
@@ -83,7 +83,7 @@ class IfHigherDo(UpdateMethod):
         
         self._update_method = update_method
     
-    def update(self, logger_variable: LoggerVariable, attribute_name: str, new_value: Union[list, int, float, str]) -> None:
+    def update(self, logger_variable: LoggerVariable, attribute_name: str, new_value: Union[int, float]) -> None:
         
         try:
             old_value = getattr(logger_variable, attribute_name)[-1]
@@ -144,8 +144,8 @@ class Logger(object):
                                         best_update_relations: Tuple[List[str]]):
         
         """
-        This method creates an internal representation of the way the Logger
-        Variables should be updated using a NetworkX Directed Graph.
+        This method creates an internal representation based on the way in which 
+        the Logger Variables should be updated using a NetworkX Directed Graph.
         
         Parameter
         ---------
@@ -206,9 +206,7 @@ class Logger(object):
         for each_key in input_dict.keys():
             self._log_history(each_key, input_dict[each_key])
         
-        # Updates based on the logging structure. Only moves to update the
-        # new layer in the structure if the previous layer was updated and all
-        # members of the layers were changed from the update.
+        # Updates based on best_update_structure, the networkx graph.
         change_dict = dict()
         
         node_list = deepcopy(self.root_nodes)
@@ -239,9 +237,12 @@ class Logger(object):
                             change_bool = True
                     elif new_best != old_best:
                         change_bool = True
-
+                
+                # Keeps track of the nodes whose best values have changed
                 change_dict[each_node] = change_bool
-
+                
+                # Retrieve the next set of nodes to update if the current node
+                # was changed.
                 if change_bool == True:
                     mid_list.extend(self.best_update_structure.adj[each_node].keys())
                     

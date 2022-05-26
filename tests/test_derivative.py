@@ -93,12 +93,20 @@ class TestQAOACostBaseClass(unittest.TestCase):
                            {
                                'history_update_bool': False, 
                                'best_update_string': 'HighestOnly'
+                           }, 
+                           'jac_func_evals': 
+                           {
+                               'history_update_bool': False, 
+                               'best_update_string': 'HighestOnly'
                            }
                           }, 
-                          {'best_update_structure': 
-                           ([[ 'func_evals']])})
+                          {
+                              'root_nodes': ['func_evals', 'jac_func_evals'],
+                              'best_update_structure': []
+                          })
         
         self.log.log_variables({'func_evals': 0})
+        self.log.log_variables({'jac_func_evals': 0})
 
     def test_gradient_computation(self):
         "Test gradient computation by param. shift, finite difference, and SPS (all gates sampled) on barbell graph."
