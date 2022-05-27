@@ -1,3 +1,18 @@
+[//]: # badges
+
+![openqaoa_logo](https://github.com/entropicalabs/openqaoa/blob/improved_readme/.github/images/openqaoa_logo.png)
+
+<p align="center">
+  <!-- Tests (GitHub actions) -->
+  <a href="https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml">
+    <img src="https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml/badge.svg" />
+  </a>
+  <!-- License -->
+  <a href="https://www.apache.org/licenses/LICENSE-2.0">
+    <img src="https://img.shields.io/badge/%F0%9F%AA%AA%20license-Apache%20License%202.0-lightgrey" />
+  </a>
+</p>
+
 # OpenQAOA
 
 Multi-backend SDK for quantum optimization
