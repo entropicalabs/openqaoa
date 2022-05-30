@@ -240,13 +240,13 @@ class OptimizeVQA(ABC):
             'number of evals': self.log.func_evals.best[0],
             'jac evals': self.log.jac_func_evals.best[0],
             'parameter log': np.array(self.log.param_log.history).tolist(),
-            'best param': np.array(self.log.param_log.best).tolist(),
+            'best param': np.array(self.log.param_log.best[0]).tolist(),
             'cost progress list': np.array(self.log.cost.history).tolist(), 
-            'best cost': np.array(self.log.cost.best).tolist(), 
+            'best cost': np.array(self.log.cost.best[0]).tolist(), 
             'count progress list': np.array(self.log.counts.history).tolist(),
             'best count': np.array(self.log.counts.best).tolist(), 
             'probability progress list': np.array(self.log.probability.history).tolist(),
-            'best probability': np.array(self.log.probability.best).tolist(),
+            'best probability': np.array(self.log.probability.best[0]).tolist(),
             'optimization method': self.method
         }
 
