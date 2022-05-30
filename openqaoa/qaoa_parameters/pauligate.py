@@ -21,6 +21,34 @@ from .operators import Hamiltonian
 from .lowlevelgate import *
 from .rotationangle import RotationAngle
 
+def _commutes_trivially(gate1, gate2) -> bool:
+    
+    """
+    Checks if `gate1` and `gate2` do not share any qubits at all,
+    in which case they trivially commute with one another. 
+    """
+    
+    indices1, indices2 = set(), set()
+
+    if gate1.pauli_label[0] == '1q':
+        indices1.add(gate1.qubit_1)
+    elif gate1.pauli_label[0] == '2q':
+        indices1.add(gate1.qubit_1)
+        indices1.add(gate1.qubit_2)
+        
+    if gate2.pauli_label[0] == '1q':
+        indices2.add(gate2.qubit_1)
+    elif gate2.pauli_label[0] == '2q':
+        indices2.add(gate2.qubit_1)
+        indices2.add(gate2.qubit_2)
+        
+    intersection = indices1.intersection(indices2)
+    
+    if len(intersection) == 0:
+        return True
+    else:
+        return False
+    
 
 class GateMap(ABC):
 
@@ -61,6 +89,10 @@ class SWAPGate(GateMap):
 
         return [(RiSWAP, [[self.qubit_1, self.qubit_2, np.pi]]),
                 (CZ, [[self.qubit_1, self.qubit_2]])]
+    
+    def _commutes_with(self, gate: GateMap):
+        
+        return _commutes_trivially(self, gate)
 
 
 class PauliGate(GateMap):
@@ -87,6 +119,10 @@ class PauliGate(GateMap):
     @property
     def _decomposition_trivial(self) -> List[Tuple]:
         return self._decomposition_standard
+    
+    def _commutes_with(self, gate: GateMap):
+        
+        return _commutes_trivially(self, gate)
 
 
 class RYPauliGate(PauliGate):
@@ -142,6 +178,10 @@ class TwoPauliGate(PauliGate):
         return [(low_level_gate, [[self.qubit_1, self.qubit_2],
                                   RotationAngle(lambda x: x, self.pauli_label,
                                   self.rotation_angle)])]
+    
+    def _commutes_with(self, gate: GateMap):
+        
+        return _commutes_trivially(self, gate)
 
 
 class RXXPauliGate(TwoPauliGate):
