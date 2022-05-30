@@ -66,9 +66,6 @@ def derivative(derivative_dict: dict):
         backend_obj : QAOABaseBackend
             `QAOABaseBackend` object that contains information about the abstract circuit to be executed.
 
-        cost_ext : QAOACost
-            `QAOACost` object that computes expectation values when executed. Extended parametrisation. Mainly used to compute parameter shifts at each individual gate, which is summed to recover the parameter shift for a parametrised layer.
-
         params : QAOAVariationalBaseParams
             `QAOAVariationalBaseParams` object containing variational angles.
 
@@ -113,10 +110,15 @@ def derivative(derivative_dict: dict):
 
         if derivative_method == 'finite_difference':
             out = grad_fd(backend_obj, params, derivative_options)
+            
         elif derivative_method == 'param_shift':
+            assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
             out = grad_ps(backend_obj, params, params_ext)
+            
         elif derivative_method == 'stoch_param_shift':
+            assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
             out = grad_sps(backend_obj, params, params_ext, derivative_options)
+            
         elif derivative_method == 'grad_spsa':
             out = grad_spsa(backend_obj, params, derivative_options)
 
