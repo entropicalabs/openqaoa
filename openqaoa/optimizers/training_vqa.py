@@ -244,9 +244,9 @@ class OptimizeVQA(ABC):
             'cost progress list': np.array(self.log.cost.history).tolist(), 
             'best cost': np.array(self.log.cost.best[0]).tolist(), 
             'count progress list': np.array(self.log.counts.history).tolist(),
-            'best count': np.array(self.log.counts.best).tolist(), 
+            'best count': np.array(self.log.counts.best[0] if self.log.counts.best != [] else {}).tolist(), 
             'probability progress list': np.array(self.log.probability.history).tolist(),
-            'best probability': np.array(self.log.probability.best[0]).tolist(),
+            'best probability': np.array(self.log.probability.best[0] if self.log.probability.best != [] else {}).tolist(),
             'optimization method': self.method
         }
 
