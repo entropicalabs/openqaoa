@@ -22,6 +22,7 @@ from openqaoa.qaoa_parameters import Hamiltonian, create_qaoa_variational_params
 from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.optimizers.logger_vqa import Logger
+from openqaoa.derivative_functions import derivative
 
 """
 Unittest based testing of derivative computations.
@@ -130,8 +131,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         grad_stepsize = 0.00000001
         #gradient_ps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'param_shift')
-        gradient_fd = backend_vectorized.derivative_function(
-            variational_params_std, 'gradient', 'finite_difference', {'stepsize': grad_stepsize}, logger = self.log)
+        gradient_fd = derivative(backend_vectorized, variational_params_std, 
+                                 self.log, 'gradient', 'finite_difference',
+                                 {'stepsize': grad_stepsize})
         #gradient_sps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
 
         test_points = [[0, 0], [np.pi/2, np.pi/3], [1, 2]]
@@ -173,8 +175,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
         backend_vectorized = QAOAvectorizedBackendSimulator(
             qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
 
-        hessian_fd = backend_vectorized.derivative_function(
-            variational_params_std, 'hessian', 'finite_difference', {'stepsize': 0.0001}, logger = self.log)
+        hessian_fd = derivative(backend_vectorized, variational_params_std, 
+                                self.log,'hessian', 'finite_difference', 
+                                {'stepsize': 0.0001})
 
         test_points = [[0, 0], [np.pi/2, np.pi/3], [1, 2]]
 
