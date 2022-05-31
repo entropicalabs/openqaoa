@@ -29,6 +29,8 @@ from . import optimization_methods as om
 
 from .logger_vqa import Logger
 
+from ..derivative_functions import derivative
+
 
 class OptimizeVQA(ABC):
     '''    
@@ -244,9 +246,9 @@ class OptimizeVQA(ABC):
             'cost progress list': np.array(self.log.cost.history).tolist(), 
             'best cost': np.array(self.log.cost.best[0]).tolist(), 
             'count progress list': np.array(self.log.counts.history).tolist(),
-            'best count': np.array(self.log.counts.best).tolist(), 
+            'best count': np.array(self.log.counts.best[0] if self.log.counts.best != [] else {}).tolist(), 
             'probability progress list': np.array(self.log.probability.history).tolist(),
-            'best probability': np.array(self.log.probability.best[0]).tolist(),
+            'best probability': np.array(self.log.probability.best[0] if self.log.probability.best != [] else {}).tolist(),
             'optimization method': self.method
         }
 
@@ -334,8 +336,9 @@ class ScipyOptimizer(OptimizeVQA):
                 "Please specify either a string or provide callable gradient in order to use gradient based methods")
         else:
             if isinstance(jac, str):
-                self.jac = self.vqa_object.derivative_function(
-                    self.variational_params, 'gradient', jac, jac_options, self.log)
+                self.jac = derivative(
+                    self.vqa_object, self.variational_params, self.log, 'gradient', 
+                    jac, jac_options)
             else:
                 self.jac = jac
 
@@ -344,8 +347,9 @@ class ScipyOptimizer(OptimizeVQA):
             raise ValueError("Hessian needs to be of type Callable or str")
         else:
             if isinstance(hess, str):
-                self.hess = self.vqa_object.derivative_function(
-                    self.variational_params, 'hessian', hess, hess_options, self.log)
+                self.hess = derivative(
+                    self.vqa_object, self.variational_params, self.log, 'hessian', 
+                    hess, hess_options)
             else:
                 self.hess = hess
 
@@ -525,8 +529,9 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 "Please specify either a string or provide callable gradient in order to use gradient based methods")
         else:
             if isinstance(jac, str):
-                self.jac = self.vqa_object.derivative_function(
-                    self.variational_params, 'gradient', jac, jac_options, self.log)
+                self.jac = derivative(
+                    self.vqa_object, self.variational_params, self.log, 
+                    'gradient', jac, jac_options)
             else:
                 self.jac = jac
 
@@ -534,8 +539,9 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             raise ValueError("Hessian needs to be of type Callable or str")
         else:
             if isinstance(hess, str):
-                self.hess = self.vqa_object.derivative_function(
-                    self.variational_params, 'hessian', hess, hess_options, self.log)
+                self.hess = derivative(
+                    self.vqa_object, self.variational_params, self.log, 
+                    'hessian', hess, hess_options)
             else:
                 self.hess = hess
 

@@ -31,8 +31,6 @@ from copy import deepcopy
 from .devices import DeviceBase
 from .qaoa_parameters.pauligate import PauliGate, TwoPauliGate
 from .qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
-from .derivative_functions import derivative
 from .utilities import qaoa_probabilities
 from .cost_function import cost_function
 
@@ -309,52 +307,6 @@ class QAOABaseBackend(VQABaseBackend):
             with elements [QFI]_ij = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>.
         """
         pass
-
-    def derivative_function(self,
-                            params: QAOAVariationalBaseParams,
-                            derivative_type: Type[str] = None,
-                            derivative_method: Type[str] = None,
-                            derivative_options: dict = None, 
-                            logger = None) -> callable:
-        """
-        Returns a callable function that calculates the gradient according to 
-        the specified `gradient_method`.
-
-        Parameters
-        ----------
-        derivative_type: 
-            Gradient or Hessian. Choose from `['gradient', 'hessian']`
-
-        derivative_method:
-            Method that specifies method to compute gradient. 
-            Refer to `derivative_functions.py` for arguments.
-
-        derivative_options:
-            Dictionary containing options specific to different gradient computation methods.
-            Refer to `derivative_functions.py` for arguments.
-
-        Returns
-        -------
-        out:
-            The callable derivative function of the cost function, generated based on the
-            `derivative_type`, `derivative_method`, and `derivative_options` specified.
-        """
-        # Extended parametrisation cost vector is created for parameter shift and natural gradient computation.
-        params_ext = QAOAVariationalExtendedParams.empty(self.circuit_params)
-
-        derivative_dict = {"derivative_type": derivative_type,
-                           "derivative_method": derivative_method,
-                           "derivative_options": derivative_options,
-                           "backend_obj": self,
-                           "params": deepcopy(params),
-                           "params_ext": params_ext, 
-                           "logger": logger}
-
-        out = derivative(derivative_dict)
-
-        self.reset_circuit()
-
-        return out
 
     @abstractmethod
     def reset_circuit(self):
