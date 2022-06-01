@@ -66,7 +66,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
     noise_model: `dict`
         The noise parameters to be used for the simulation with format 
-        {decay: 5e-5, dephasing: 1e-4, overrot: 2, spam: 5e-2, readout01: 4e-2, readout10: 1e-2, depol1: 12e-4, depol2: 3e-2}.
+        {'decay': 5e-5, 'dephasing': 1e-4, 'overrot': 2, 'spam': 5e-2, 'readout01': 4e-2, 'readout10': 1e-2, 'depol1': 12e-4, 'depol2': 3e-2}.
         To deactivate individual error source, set entry to False.
 
     times: `list`
@@ -87,7 +87,9 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                  init_hadamard: bool,
                  cvar_alpha: float,
                  qiskit_simulation_method: str = 'automatic',
-                 noise_model: Optional[NoiseModel] = None):
+                 noise_model: Optional[dict] = {'decay': 5e-5, 'dephasing': 1e-4, 'overrot': 2, 'spam': 5e-2, 'readout01': 4e-2, 'readout10': 1e-2, 'depol1': 12e-4, 'depol2': 3e-2},
+                 times: Optional[list] = [20e-9, 200e-9, 5800e-9],
+                 allowed_jump_qubits: Optional[list] = None):
 
         self.qureg = QuantumRegister(self.n_qubits)
         self.qubit_layout = self.circuit_params.qureg
