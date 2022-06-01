@@ -1,0 +1,492 @@
+#   Copyright 2022 Entropica Labs
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+# General Imports
+from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector, QAOABaseBackend
+from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
+from ...utilities import flip_counts
+from ...cost_function import cost_function
+from ...qaoa_parameters.pauligate import (RXPauliGate, RYPauliGate, RZPauliGate, RXXPauliGate,
+                                          RYYPauliGate, RZZPauliGate, RZXPauliGate)
+
+import numpy as np
+import math
+from typing import Union, List, Tuple, Optional
+from scipy.integrate import solve_ivp
+
+# IBM Qiskit imports
+from qiskit import QuantumCircuit, QuantumRegister, transpile
+from qiskit.providers.aer import AerSimulator
+from qiskit.providers.aer.noise import NoiseModel
+from qiskit.opflow.primitive_ops import PauliSumOp
+from qiskit.quantum_info import Statevector
+from qiskit.circuit import Parameter
+from qiskit.converters import circuit_to_dag, dag_to_circuit
+from qutip import *
+
+"""
+QASM Simluator can be used for different simulation purposes with different Simulation methods
+    - supports different error models
+    - supports incluing real IBM backend error models
+"""
+
+class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
+    """
+    Master equation solver
+
+    Parameters
+    ----------
+    circuit_params: `QAOACircuitParams`
+        An object of the class ``QAOACircuitParams`` which contains information on 
+        circuit construction and depth of the circuit.
+
+    prepend_state: `QuantumCircuit`
+        The state prepended to the circuit.
+
+    append_state: `QuantumCircuit`
+        The state appended to the circuit.
+
+    init_hadamard: `bool`
+        Whether to apply a Hadamard gate to the beginning of the 
+        QAOA part of the circuit.
+
+    cvar_alpha: `float`
+        The value of alpha for the CVaR cost function.
+
+    noise_model: `dict`
+        The noise parameters to be used for the simulation with format 
+        {decay: 5e-5, dephasing: 1e-4, overrot: 2, spam: 5e-2, readout01: 4e-2, readout10: 1e-2, depol1: 12e-4, depol2: 3e-2}.
+        To deactivate individual error source, set entry to False.
+
+    times: `list`
+        The times for single qubit gates, two qubit gates and readout, defaults to [20e-9, 200e-9, 5800e-9]
+
+    allowed_jump_qubits: `list` 
+        The indices of the qubits on which jumps are allowed to occur, None means there are no restrictions
+        """   
+
+    QISKIT_PAULIGATE_LIBRARY = [RXPauliGate, RYPauliGate, RZPauliGate, RXXPauliGate,
+                            RYYPauliGate, RZZPauliGate, RZXPauliGate]
+
+    def __init__(self,
+                 circuit_params: QAOACircuitParams,
+                 n_shots: int,
+                 prepend_state: Optional[QuantumCircuit],
+                 append_state: Optional[QuantumCircuit],
+                 init_hadamard: bool,
+                 cvar_alpha: float,
+                 qiskit_simulation_method: str = 'automatic',
+                 noise_model: Optional[NoiseModel] = None):
+
+        self.qureg = QuantumRegister(self.n_qubits)
+        self.qubit_layout = self.circuit_params.qureg
+        
+        if self.prepend_state:
+            assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit " \
+                                                                "to the QAOA routine"
+        # For parametric circuits
+        self.parametric_circuit = self.parametric_qaoa_circuit
+
+    def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> QuantumCircuit:
+        """
+        The final QAOA circuit to be executed on the QPU.
+
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+        
+        Returns
+        -------
+        qaoa_circuit: `QuantumCircuit`
+            The final QAOA circuit after binding angles from variational parameters.
+        """
+        angles_list = self.obtain_angles_for_pauli_list(self.pseudo_circuit, params)
+        memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
+        new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
+        return new_parametric_circuit
+    
+    @property
+    def parametric_qaoa_circuit(self) -> QuantumCircuit:
+        """
+        Creates a parametric QAOA circuit, given the qubit pairs, single qubits with biases,
+        and a set of circuit angles. Note that this function does not actually run
+        the circuit.
+        """
+        # self.reset_circuit()
+        parametric_circuit = QuantumCircuit(self.qureg)
+
+        if self.prepend_state:
+            parametric_circuit = parametric_circuit.compose(self.prepend_state)
+        # Initial state is all |+>
+        if self.init_hadamard:
+            parametric_circuit.h(self.qureg)
+        
+        self.qiskit_parameter_list=[]
+        for each_gate in self.pseudo_circuit:
+            angle_param = Parameter(str(each_gate.pauli_label))
+            self.qiskit_parameter_list.append(angle_param)
+            each_gate.rotation_angle = angle_param
+            if type(each_gate) in self.QISKIT_PAULIGATE_LIBRARY:
+                decomposition = each_gate.decomposition('trivial')
+            else: 
+                decomposition = each_gate.decomposition('standard')
+            # Create Circuit
+            for each_tuple in decomposition:
+                low_gate = each_tuple[0]()
+                parametric_circuit = low_gate.apply_ibm_gate(*each_tuple[1],parametric_circuit)
+        
+        if self.append_state:
+            parametric_circuit = parametric_circuit.compose(self.append_state)
+        parametric_circuit.measure_all()
+
+        return parametric_circuit
+    
+    #new stuff
+    def build_mastereq(self, H, c_ops=None):
+    
+        def get_rhs(t, rho):
+            rho = rho.reshape([len(H),len(H)])
+            me_rhs = -1j*((H@rho)-(rho@H))
+
+            if c_ops is not None:
+                for c_op in c_ops:
+                    c_op_dag = np.conjugate(np.transpose(c_op))
+                    me_rhs += c_op@rho@c_op_dag - 0.5*(c_op_dag@c_op@rho + rho@c_op_dag@c_op)
+                
+            return np.ndarray.flatten(me_rhs)
+        return get_rhs
+
+    #Customiseable target_basis something that could be added later. What gates should be included?
+    def get_circuit_list(self, circuit, target_basis=['id', 'x', 'sx', 'rz', 'cx']):
+        circuit_list = list()
+        qc_qaoa = transpile(circuit, basis_gates=target_basis, optimization_level=0)
+        dag = circuit_to_dag(qc_qaoa)
+        layers = list(dag.multigraph_layers())
+
+        for k in range(len(layers)):
+            if k==0 or k==len(layers)-1:
+                continue
+            qc_qaoa_res = transpile(qc_qaoa, basis_gates=target_basis, optimization_level=0)
+            dag = circuit_to_dag(qc_qaoa_res)
+            layers = list(dag.multigraph_layers())
+            for layer in layers:
+                for node in layer:
+                    if layers.index(layer) != k and node._type == 'op':
+                        dag.remove_op_node(node)
+
+            layer_circ = transpile(dag_to_circuit(dag), basis_gates=target_basis, optimization_level=0)
+            circuit_list.append(layer_circ)
+        return circuit_list
+
+    def hamiltonian_from_list(self, params: QAOAVariationalBaseParams):
+        rz_type = "<class 'qiskit.circuit.library.standard_gates.rz.RZGate'>"
+        sx_type = "<class 'qiskit.circuit.library.standard_gates.sx.SXGate'>"
+        cx_type = "<class 'qiskit.circuit.library.standard_gates.x.CXGate'>"
+        x_type = "<class 'qiskit.circuit.library.standard_gates.x.XGate'>"
+        width = circuit_list[0].width()
+        
+        circuit = self.qaoa_circuit(self, params)
+        circuit_list = self.get_circuit_list(self, circuit)
+        t_gate_list = times[:2]
+
+        rz_h = Qobj(0.5*np.array([[1, 0], [0, -1]]))
+        sx_h = Qobj(np.pi*np.array([[0, 0.25], [0.25, 0]]))
+        cx_t_h = Qobj(np.pi*0.5*np.array([[1, -1], [-1, 1]]))
+        cx_c_h = Qobj(np.array([[0, 0], [0, 1]]))
+        x_h = Qobj(np.pi*0.5*np.array([[1, -1], [-1, 1]]))
+        id_h = qeye(2)
+        
+        def get_gate(gate_type):
+            if gate_type==rz_type:
+                return rz_h*float(gate[0].params[0])
+            elif gate_type==sx_type:
+                return sx_h
+            elif gate_type==x_type:
+                return x_h
+            elif gate_type==cx_type:
+                return [cx_t_h, cx_c_h]
+            else:
+                raise ValueError(f'Gate type is {gate_type}')
+        
+        def get_tensorprod(gate_type, position):
+            matrices = [id_h]*width
+            if gate_type==cx_type:
+                matrices[position[0]] = get_gate(gate_type)[0]  
+                matrices[position[1]] = get_gate(gate_type)[1] 
+            else:
+                matrices[position] = get_gate(gate_type)
+            
+            if width == 1:
+                tensorprod=matrices[0]
+            else:
+                tensorprod = tensor(matrices[0], matrices[1])
+                for k in range(width-2):
+                    l = k+2
+                    tensorprod = tensor(tensorprod, matrices[l])
+            return tensorprod
+                            
+        hamiltonian_list = list()
+        time_list = list()
+        gate_list = list()
+        
+        for layer in circuit_list:
+            layer_dict = dict()
+            current_hamiltonian = 0
+            two_qubit_gate = 0
+            for g,gate in enumerate(layer):
+                gate_type=str(type(gate[0]))
+                if gate_type==cx_type:
+                    two_qubit_gate = 1
+                    control_qubit=gate[1][0].index
+                    target_qubit=gate[1][1].index
+                    layer_dict[control_qubit] = 'cx_c'
+                    layer_dict[target_qubit] = 'cx_t'
+                    current_hamiltonian += get_tensorprod(gate_type, [target_qubit, control_qubit])
+                elif gate_type==rz_type or gate_type==sx_type or gate_type==x_type:
+                    target_qubit=gate[1][0].index
+                    if gate_type==x_type:
+                        layer_dict[target_qubit] = 'x'
+                    elif gate_type==sx_type:
+                        layer_dict[target_qubit] = 'sx'
+                    elif gate_type==rz_type:
+                        layer_dict[target_qubit] = 'rz'
+                    current_hamiltonian += get_tensorprod(gate_type, target_qubit)
+                else:
+                    raise ValueError(f'Gate type is {gate_type}')
+            gate_list.append(layer_dict)
+            if two_qubit_gate==0:
+                time_list.append(t_gate_list[0])
+                hamiltonian_list.append(np.array(current_hamiltonian)/t_gate_list[0])
+            else:
+                time_list.append(t_gate_list[1])
+                hamiltonian_list.append(np.array(current_hamiltonian)/t_gate_list[1])
+                    
+        return hamiltonian_list, time_list, gate_list  
+
+    def insert_op(self, op, k, n):
+        if k==0:
+            current_op = op
+        else:
+            current_op = identity(2)
+            for j in list(range(n))[1:k]:
+                current_op = tensor(current_op, identity(2))
+            current_op = tensor(current_op, op)
+        for l in list(range(n))[k+1:]:
+            current_op = tensor(current_op, identity(2))
+        return current_op
+
+    def run_circuit_mastereqn(self, params: QAOAVariationalBaseParams): 
+        hamiltonian_list, time_list, gate_list = self.hamiltonian_from_list(self, params)
+        width = len(hamiltonian_list[0])
+        n = int(math.log(width,2))
+        rho0 = np.zeros((width,width),dtype=np.complex_)
+        rho0[0][0] = 1+0j
+        y0 = np.ndarray.flatten(rho0)
+        
+        if allowed_jump_qubits is None:
+            allowed_jump_qubits = list(range(n))
+        
+        decay = bool(noise_model['decay'])
+        dephasing = bool(noise_model['dephasing'])
+        overrot = bool(noise_model['overrot'])
+        depol = bool(noise_model['depol1'] or noise_model['depol2'])
+        spam = bool(noise_model['spam'])
+        readout = bool(noise_model['readout01'] or noise_model['readout10'])
+
+        T1 = float(noise_model['decay'])
+        T2 = float(noise_model['dephasing'])
+        overrot_st_dev = float(noise_model['overrot'])
+        gate_error_list = [float(noise_model['depol1']), float(noise_model['depol2'])]
+        spam_error_prob = float(noise_model['swap'])
+        meas1_prep0_prob = float(noise_model['readout10'])
+        meas0_prep1_prob = float(noise_model['readout01'])
+
+        t_readout = times[-1]
+
+        decay_ops = list()
+        if decay:
+            for k in range(n):
+                if k not in allowed_jump_qubits:
+                    continue
+                current_op = self.insert_op(destroy(2), k, n)
+                decay_ops.append(np.array(current_op)) #*float(1/(np.sqrt(T1)))    
+        
+        dephasing_ops = list()
+        if dephasing:
+            for k in range(n):
+                if k not in allowed_jump_qubits:
+                    continue
+                current_op = self.insert_op(Qobj([[0,0],[0,1]]), k, n) #Qobj([[0,0],[0,1]])
+                dephasing_ops.append(np.array(current_op)) #*float(1/(np.sqrt(T2))) 
+            
+        t_start = 0
+        for k in range(len(hamiltonian_list)):
+            #c_ops = list(decay_ops + dephasing_ops)
+            c_ops = list([x*np.sqrt((1-np.exp(-time_list[k]/T1))/time_list[k]) for x in decay_ops] + [x*np.sqrt((1-np.exp(-time_list[k]/T2))/time_list[k]) for x in dephasing_ops])
+            for key in gate_list[k].keys():
+                if key not in allowed_jump_qubits:
+                    continue
+                if overrot:
+                    val = np.random.normal(0,overrot_st_dev)
+                    x = val/100*2*np.pi
+                    if gate_list[k][key]=='x' or gate_list[k][key]=='sx' or gate_list[k][key]=='cx_t':
+                        c_ops.append(np.array(self.insert_op(Qobj([[np.cos(x/2), -1j*np.sin(x/2)],[-1j*np.sin(x/2), np.cos(x/2)]]),key,n))*np.sqrt(1/time_list[k]))
+                    elif gate_list[k][key]=='rz':
+                        c_ops.append(np.array(self.insert_op(Qobj([[np.exp(-1j*0.5*x),0],[0,np.exp(1j*0.5*x)]]),key,n))*np.sqrt(1/time_list[k]))
+                if depol:
+                    if gate_list[k][key]=='cx_c' or gate_list[k][key]=='cx_t':
+                        c_ops.append(np.array(self.insert_op(sigmax()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n)))
+                        c_ops.append(np.array(self.insert_op(sigmay()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n)))
+                        c_ops.append(np.array(self.insert_op(sigmaz()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n)))
+                    elif gate_list[k][key]=='x' or gate_list[k][key]=='sx' or gate_list[k][key]=='rz':
+                        c_ops.append(np.array(self.insert_op(sigmax()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n)))
+                        c_ops.append(np.array(self.insert_op(sigmay()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n)))
+                        c_ops.append(np.array(self.insert_op(sigmaz()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n)))
+                                    
+            if spam and k==len(hamiltonian_list)-1:
+                for m in range(n):
+                    if k not in allowed_jump_qubits:
+                        continue
+                    c_ops.append(np.array(self.insert_op(sigmax()*np.sqrt(spam_error_prob/time_list[k]), m, n)))
+
+            if len(c_ops)==0:
+                c_ops=None
+            else:
+                c_ops = np.array(c_ops)
+            t_start += bool(k!=0)*time_list[k-1]
+            t_end = t_start + time_list[k]
+            result = solve_ivp(self.build_mastereq(H=hamiltonian_list[k], c_ops=c_ops), t_span=(t_start,t_end), y0=y0, method='RK45', atol=1e-8, rtol=1e-8)
+            y0 = result.y[:,-1]
+            rho = y0.reshape([int(np.sqrt(len(y0))),int(np.sqrt(len(y0)))])           
+                                            
+        if readout:
+            U_0 = Qobj([[np.sqrt(1-meas1_prep0_prob), np.sqrt(meas0_prep1_prob)],[np.sqrt(meas1_prep0_prob), np.sqrt(1-meas0_prep1_prob)]])
+            U = tensor(U_0, U_0)
+            for m in list(range(n-2)):
+                U = tensor(U, U_0)
+            U = Qobj(np.array(U))
+            rho = np.array(U * Qobj(rho) * U.dag())
+            
+            readout_ops = list()
+            for k in range(n):
+                if k not in allowed_jump_qubits:
+                    continue
+                current_op = np.array(self.insert_op(destroy(2), k, n))
+                readout_ops.append(current_op*np.sqrt(meas0_prep1_prob/t_readout))
+                current_op = np.array(self.insert_op(destroy(2).dag(), k, n))
+                readout_ops.append(current_op*np.sqrt(meas1_prep0_prob/t_readout))
+            
+            t_start += time_list[-1]
+            t_end = t_start + t_readout
+            result = solve_ivp(self.build_mastereq(H=np.array(self.insert_op(identity(2), 1, n)), c_ops=readout_ops), t_span=(t_start,t_end), y0=y0, method='RK45', atol=1e-8, rtol=1e-8)
+            y0 = result.y[:,-1]
+            rho = y0.reshape([int(np.sqrt(len(y0))),int(np.sqrt(len(y0)))])    
+                                    
+        return rho
+
+    def get_results(self, params: QAOAVariationalBaseParams) -> np.array:
+        """
+        Returns the density matrix of the final QAOA circuit after binding angles from variational parameters.
+
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+        
+        Returns
+        -------
+        rho: `np.array`
+            The density matrix of the final QAOA circuit after binding angles from variational parameters.
+        """
+        qaoa_circuit = self.qaoa_circuit(params) 
+        rho = self.run_circuit_mastereqn(params, allowed_jump_qubits=None)
+
+        return rho
+
+    #does this make sense? Parent class requires this function to be implemented...
+    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+        """
+        Returns the counts of the final QAOA circuit after binding angles from variational parameters.
+
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+        
+        Returns
+        -------
+        counts: `dict`
+            The counts of the final QAOA circuit after binding angles from variational parameters.
+        """
+        rho = self.get_results(self, params)
+        n = len(rho)
+        shots = self.n_shots
+        counts = dict()
+
+        for k in range(n):
+            string = f'{k:0{n}b}'
+            count = shots*rho[k][k]
+            counts[string] = count
+
+        return counts
+
+    def circuit_to_qasm(self):
+        """
+        A method to convert the QAOA circuit to QASM.
+        """
+        raise NotImplementedError()
+#         qasm_circuit = self.parametric_circuit.qasm()
+#         return qasm_circuit
+
+    def reset_circuit(self):
+        raise NotImplementedError()
+
+
+
+
+    #are the functions below needed? If so, reconstruct G from circuit_params and vice versa for optimisation procedure?
+    #def get_exp(mat, G, params: QAOAVariationalBaseParams):
+    #    expectation = 0
+    #    for k in range(len(mat)):
+    #        prob = np.real(mat[k][k])
+    #        n = len(G.nodes())
+    #        bitstring = f'{k:0{n}b}'
+    #        obj = maxcut_obj(bitstring, G)
+    #        expectation += prob * obj
+    #    return expectation
+
+    #change this so that G is not needed, update p, change how circuit is created
+    #G only needed for creating circuit (not needed here) and for calculating expectation
+    #def get_expectation_me(self, G, p, sign=1, allowed_jump_qubits=None, params: QAOAVariationalBaseParams): #why is this red?
+    #    n = len(G.nodes())
+        
+    #    def execute_circ(theta):        
+    #        circuit = self.qaoa_circuit(self, params)
+    #        expectation = self.get_exp(self.run_circuit_mastereqn(circuit, params, allowed_jump_qubits=allowed_jump_qubits), G)
+            
+    #        return expectation*sign
+        
+    #    return execute_circ
+    
+    #change this so that G is not needed, update params
+    #create new circuit by passing params?
+
+    #def run_qaoa_me(self, G, p, params: QAOAVariationalBaseParams, method='COBYLA'):
+    #    bounds = None #[(0,2*np.pi) for x in range(2*p_qt)]
+    #    tol=1e-5
+
+    #    expectation = self.get_expectation_me(G=G, p=p, params=params)
+    #    min_res = minimize(expectation,[0.1 for x in range(2*p)], method=method)
+    #    circuit = create_qaoa_circ(G, min_res.x, meas=False)
+    #    min_expectation_me = get_exp(run_circuit_mastereqn(circuit, params), G)
+    #    return min_expectation_me 
+    
