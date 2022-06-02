@@ -1,6 +1,6 @@
 [//]: # badges
 
-![openqaoa_logo](.github/images/openqaoa_logo.png)
+# <a href="https://github.com/entropicalabs/openqaoa"><img src=".github/images/openqaoa_logo.png?raw=true" alt="OpenQAOA logo" width="100"/></a>
 
 <p align="center">
   <!-- Tests (GitHub actions) -->
