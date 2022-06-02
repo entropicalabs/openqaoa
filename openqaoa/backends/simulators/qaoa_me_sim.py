@@ -415,7 +415,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
         return rho
 
-    #does this make sense? Parent class requires this function to be implemented...
+    #change such that sampled from distribution instead of scaled, and return probability dict in separate function
     def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
         """
         Returns the counts of the final QAOA circuit after binding angles from variational parameters.
@@ -434,12 +434,31 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         shots = self.n_shots
         counts = dict()
 
-        for k in range(n):
-            string = f'{k:0{n}b}'
-            count = shots*rho[k][k]
-            counts[string] = count
+        samples = np.random.choice(a=[f'{k:0{n}b}' for k in range(n)], p=[rho[k][k] for k in range(n)], size=shots)        
+
+        for k in samples:
+            if str(k) in counts.keys():
+                continue
+            counts[str(k)] = samples.count(k)
 
         return counts
+
+
+    #expected cost given probability distribution from density matrix, there is already a function that essentially does that somewhere else
+    def expectation(self):
+        exp = cost_function(probability_dict(self), self.cost_hamiltonian)
+        return exp
+
+    #dictionary {string: probability} with probabilities of outcomes
+    def probability_dict(self): 
+        probs = dict()
+        rho = self.get_results(self, params)
+        n = len(rho)
+
+        for k in range(n):
+            probs[f'{k:0{n}b}'] = rho[k][k]
+
+        return probs
 
     def circuit_to_qasm(self):
         """
@@ -450,6 +469,9 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 #         return qasm_circuit
 
     def reset_circuit(self):
+        raise NotImplementedError()
+
+    def qfim(self, params: QAOAVariationalBaseParams, eta: float = 0.00000001):
         raise NotImplementedError()
 
 
@@ -491,4 +513,9 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
     #    circuit = create_qaoa_circ(G, min_res.x, meas=False)
     #    min_expectation_me = get_exp(run_circuit_mastereqn(circuit, params), G)
     #    return min_expectation_me 
+
+    #for k in range(n):
+    #string = f'{k:0{n}b}'
+    #count = shots*rho[k][k]
+    #counts[string] = count
     
