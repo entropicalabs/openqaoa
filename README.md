@@ -1,6 +1,6 @@
 [//]: # badges
 
-![openqaoa_logo](images/openqaoa_logo.png)
+![openqaoa_logo](.github/images/openqaoa_logo.png)
 
 <p align="center">
   <!-- Tests (GitHub actions) -->
