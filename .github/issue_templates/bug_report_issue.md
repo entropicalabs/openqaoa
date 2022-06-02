@@ -4,7 +4,6 @@ Before submitting raising this issue, I have already checked that I am:
 
 - [ ] running the latest version
 - [ ] made sure that this issue has not already been filed
-- [ ] I'm reporting the issue to the correct repository
 
 ## Expected Behavior
 
