@@ -1,22 +1,19 @@
-[//]: # badges
+ <div align="center">
 
-# <a href="https://github.com/entropicalabs/openqaoa"><img src=".github/images/openqaoa_logo.png?raw=true" alt="OpenQAOA logo" width="100"/></a>
+  <!-- OpenQAOA logo -->
+  <a href="https://github.com/entropicalabs/openqaoa"><img src=".github/images/openqaoa_logo.png?raw=true" alt="OpenQAOA logo" width="100"/></a>
 
-<p align="center">
-  <!-- Tests (GitHub actions) -->
-  <a href="https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml">
-    <img src="https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml/badge.svg" />
-  </a>
-  <!-- License -->
-  <a href="https://www.apache.org/licenses/LICENSE-2.0">
-    <img src="https://img.shields.io/badge/%F0%9F%AA%AA%20license-Apache%20License%202.0-lightgrey" />
-  </a>
-</p>
+#
+
+  [![build test](https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml/badge.svg)](https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml)<!-- Tests (GitHub actions) -->
+  [![License](https://img.shields.io/badge/%F0%9F%AA%AA%20license-Apache%20License%202.0-lightgrey)](LICENSE.md)<!-- License -->
+  [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)<!-- Covenant Code of conduct -->
+
+</div>
 
 # OpenQAOA
 
-Multi-backend SDK for quantum optimization
-
+A multi-backend python library for quantum optimization usig QAOA on Quantum computers and Quantum computer simulators.
 
 ## Installation instructions
 
@@ -30,7 +27,7 @@ git clone git@github.com:entropicalabs/openqaoa.git
 
 3. After cloning the repository `cd openqaoa` and pip install in edit mode. Use the following command for a vanilla install with the `scipy` optimizers:
 
-```bash 
+```bash
 pip install -e .
 ```
 
@@ -41,6 +38,7 @@ If you have installed OpenQAOA using the setup file then all the required librar
 ```bash
 pip install sphinx sphinx-autodoc-typehints sphinx-rtd-theme
 ```
+
 Then, simply navigate to the `docs` folder by typing `cd docs/` and simply type
 
 ```bash
@@ -51,7 +49,7 @@ and the docs should appear in the folder `docs/build/html`, and can be opened by
 
 ## Getting started
 
-There are two ways to solve optimizations problems using OpenQAOA. 
+There are two ways to solve optimizations problems using OpenQAOA.
 
 ### Workflows
 
@@ -79,7 +77,8 @@ q = QAOA()
 q.compile(pubo_problem)
 q.optimize()
 ```
-Once the binary problem is defined, the simplest workflow can be defined as 
+
+Once the binary problem is defined, the simplest workflow can be defined as
 
 ```  
 from openqaoa.workflows.optimizer import QAOA  
@@ -97,7 +96,6 @@ device = create_device(location='qcs',name='6q-qvm',**qcs_credentials)
 ```
 
 Then, the QAOA parameters can be set as follow
-
 
 ```
 q_custom = QAOA()
@@ -135,25 +133,23 @@ r.optimize()
 
 rqaoa_type can take two values which select elimination strategies. The user can choose between `adaptive` or `custom`.
 
-
 ### Factory mode
 
-The user is also free to directly access the source code without using the workflow API. 
+The user is also free to directly access the source code without using the workflow API.
 
 * [comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
 * [Parameter sweep for vectorised](examples/openqaoa_example_vectorised.ipynb)
 
-
 The basic procedure is the following
 
 First, import all the necessay functions
+
 ```
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.devices import DevicePyquil, create_device
 from openqaoa.optimizers.qaoa_optimizer import ScipyOptimizer
 ```
-
 
 Then specify terms and weights in order to define the cost hamiltonian
 
@@ -166,6 +162,7 @@ mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
 ```
 
 After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
+
 ```
 qaoa_circuit_params = QAOACircuitParams(cost_hamil,mixer_hamil,p=1)
 params = create_qaoa_variational_params(qaoa_circuit_params, params_type='fourier',init_type='rand',q=1)
@@ -186,7 +183,8 @@ optimizer_obj = ScipyOptimizer(backend_obj, params, optimizer_dict)
 optimizer_obj()
 ```
 
-The result of the optimization will the be accessible as 
+The result of the optimization will the be accessible as
+
 ```
 optimizer_obj.results_information()
 ```
