@@ -41,9 +41,9 @@ QASM Simluator can be used for different simulation purposes with different Simu
     - supports incluing real IBM backend error models
 """
 
-class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
+class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
     """
-    Master equation solver
+    Monte Carlo solver
 
     Parameters
     ----------
@@ -101,7 +101,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         self.noise_model = noise_model
         self.times = times
         self.allowed_jump_qubits = allowed_jump_qubits
-
+        self.n_shots = n_shots
         self.qureg = QuantumRegister(self.n_qubits)
         self.qubit_layout = self.circuit_params.qureg
         
@@ -303,14 +303,12 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
     def run_circuit_mastereqn(self, params: QAOAVariationalBaseParams): 
         hamiltonian_list, time_list, gate_list = self.hamiltonian_from_list(params)
         width = len(hamiltonian_list[0])
-        n = int(math.log(width,2))
-        rho0 = np.zeros((width,width),dtype=np.complex_)
-        rho0[0][0] = 1+0j
-        y0 = np.ndarray.flatten(rho0)
-        
-        if self.allowed_jump_qubits is None:
-            self.allowed_jump_qubits = list(range(n))
-        
+        n = int(np.log2(width))
+        psi0 = basis(width,0)
+        jumps = dict() # time: [qubit, jump operator]
+        states = list()
+        times = list()
+
         decay = bool(self.noise_model['decay'])
         dephasing = bool(self.noise_model['dephasing'])
         overrot = bool(self.noise_model['overrot'])
@@ -327,27 +325,35 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         meas0_prep1_prob = float(self.noise_model['readout01'])
 
         t_readout = self.times[-1]
-
+        
+        if self.allowed_jump_qubits is None:
+            self.allowed_jump_qubits = list(range(n))
+        
+        ops_ind = list()
+        
         decay_ops = list()
         if decay:
             for k in range(n):
                 if k not in self.allowed_jump_qubits:
                     continue
-                current_op = self.insert_op(destroy(2), k, n)
-                decay_ops.append(np.array(current_op)) #*float(1/(np.sqrt(T1)))    
-        
+                current_op = Qobj(np.array(self.insert_op(destroy(2), k, n))) #*float(1/(np.sqrt(T1))) 
+                decay_ops.append(current_op)
+                ops_ind.append([k, 'decay'])
+                
         dephasing_ops = list()
         if dephasing:
             for k in range(n):
                 if k not in self.allowed_jump_qubits:
                     continue
-                current_op = self.insert_op(Qobj([[0,0],[0,1]]), k, n) #Qobj([[0,0],[0,1]])
-                dephasing_ops.append(np.array(current_op)) #*float(1/(np.sqrt(T2))) 
-            
+                current_op = Qobj(np.array(self.insert_op(Qobj([[0,0],[0,1]]), k, n))) #*float(1/(np.sqrt(T2))), Qobj([[0,0],[0,1]])
+                dephasing_ops.append(current_op) 
+                ops_ind.append([k, 'dephasing'])
+
         t_start = 0
+
         for k in range(len(hamiltonian_list)):
-            #c_ops = list(decay_ops + dephasing_ops)
             c_ops = list([x*np.sqrt((1-np.exp(-time_list[k]/T1))/time_list[k]) for x in decay_ops] + [x*np.sqrt((1-np.exp(-time_list[k]/T2))/time_list[k]) for x in dephasing_ops])
+            current_ops_ind = ops_ind.copy()
             for key in gate_list[k].keys():
                 if key not in self.allowed_jump_qubits:
                     continue
@@ -355,59 +361,79 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                     val = np.random.normal(0,overrot_st_dev)
                     x = val/100*2*np.pi
                     if gate_list[k][key]=='x' or gate_list[k][key]=='sx' or gate_list[k][key]=='cx_t':
-                        c_ops.append(np.array(self.insert_op(Qobj([[np.cos(x/2), -1j*np.sin(x/2)],[-1j*np.sin(x/2), np.cos(x/2)]]),key,n))*np.sqrt(1/time_list[k]))
+                        c_ops.append(Qobj(np.array(self.insert_op(Qobj([[np.cos(x/2), -1j*np.sin(x/2)],[-1j*np.sin(x/2), np.cos(x/2)]])*np.sqrt(1/time_list[k]),key,n))))
+                        
                     elif gate_list[k][key]=='rz':
-                        c_ops.append(np.array(self.insert_op(Qobj([[np.exp(-1j*0.5*x),0],[0,np.exp(1j*0.5*x)]]),key,n))*np.sqrt(1/time_list[k]))
+                        c_ops.append(Qobj(np.array(self.insert_op(Qobj([[np.exp(-1j*0.5*x),0],[0,np.exp(1j*0.5*x)]])*np.sqrt(1/time_list[k]),key,n))))
+                    current_ops_ind.append([key, 'overrot'])
                 if depol:
                     if gate_list[k][key]=='cx_c' or gate_list[k][key]=='cx_t':
-                        c_ops.append(np.array(self.insert_op(sigmax()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n)))
-                        c_ops.append(np.array(self.insert_op(sigmay()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n)))
-                        c_ops.append(np.array(self.insert_op(sigmaz()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n)))
+                        c_ops.append(Qobj(np.array(self.insert_op(sigmax()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n))))
+                        c_ops.append(Qobj(np.array(self.insert_op(sigmay()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n))))
+                        c_ops.append(Qobj(np.array(self.insert_op(sigmaz()*np.sqrt(gate_error_list[1]/(time_list[k]*3)),key,n))))
+                        
                     elif gate_list[k][key]=='x' or gate_list[k][key]=='sx' or gate_list[k][key]=='rz':
-                        c_ops.append(np.array(self.insert_op(sigmax()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n)))
-                        c_ops.append(np.array(self.insert_op(sigmay()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n)))
-                        c_ops.append(np.array(self.insert_op(sigmaz()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n)))
-                                    
+                        c_ops.append(Qobj(np.array(self.insert_op(sigmax()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n))))
+                        c_ops.append(Qobj(np.array(self.insert_op(sigmay()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n))))
+                        c_ops.append(Qobj(np.array(self.insert_op(sigmaz()*np.sqrt(gate_error_list[0]/(time_list[k]*3)),key,n))))
+                    current_ops_ind.append([key, 'depolx'])
+                    current_ops_ind.append([key, 'depoly'])
+                    current_ops_ind.append([key, 'depolz'])
+                    
             if spam and k==len(hamiltonian_list)-1:
                 for m in range(n):
                     if k not in self.allowed_jump_qubits:
                         continue
-                    c_ops.append(np.array(self.insert_op(sigmax()*np.sqrt(spam_error_prob/time_list[k]), m, n)))
+                    c_ops.append(Qobj(np.array(self.insert_op(sigmax()*np.sqrt(spam_error_prob/time_list[k]), m, n))))
+                    current_ops_ind.append([m, 'spam'])
 
-            if len(c_ops)==0:
-                c_ops=None
+            tlist = np.linspace(0,time_list[k],100)
+            times += [x+t_start for x in tlist]
+            stdout_backup = sys.stdout
+            sys.stdout = sys.__stdout__
+            mc = mcsolve(H=Qobj(hamiltonian_list[k]), psi0=psi0, tlist=tlist, c_ops=c_ops, e_ops=[], ntraj=[1], progress_bar=None)
+            sys.stdout = stdout_backup
+            if c_ops==[]:
+                psi0 = mc.states[-1] # final result of previous step
+                states.extend(mc.states)
             else:
-                c_ops = np.array(c_ops)
-            t_start += bool(k!=0)*time_list[k-1]
-            t_end = t_start + time_list[k]
-            result = solve_ivp(self.build_mastereq(H=hamiltonian_list[k], c_ops=c_ops), t_span=(t_start,t_end), y0=y0, method='RK45', atol=1e-8, rtol=1e-8)
-            y0 = result.y[:,-1]
-            rho = y0.reshape([int(np.sqrt(len(y0))),int(np.sqrt(len(y0)))])           
-                                            
-        if readout:
-            U_0 = Qobj([[np.sqrt(1-meas1_prep0_prob), np.sqrt(meas0_prep1_prob)],[np.sqrt(meas1_prep0_prob), np.sqrt(1-meas0_prep1_prob)]])
-            U = tensor(U_0, U_0)
-            for m in list(range(n-2)):
-                U = tensor(U, U_0)
-            U = Qobj(np.array(U))
-            rho = np.array(U * Qobj(rho) * U.dag())
+                psi0 = mc.states[0][-1]
+                states.extend(mc.states[0])
+            jump_times = mc.col_times
+            jump_ind = mc.col_which
+            if jump_ind is not None:
+                for count,ind in enumerate(jump_ind[0]):
+                    jumps[t_start+jump_times[0][count]] = current_ops_ind[ind] # time: [qubit, type]
+            t_start += time_list[k]
             
+        if readout:
             readout_ops = list()
+            current_ops_ind = list()
             for k in range(n):
                 if k not in self.allowed_jump_qubits:
                     continue
-                current_op = np.array(self.insert_op(destroy(2), k, n))
-                readout_ops.append(current_op*np.sqrt(meas0_prep1_prob/t_readout))
-                current_op = np.array(self.insert_op(destroy(2).dag(), k, n))
+                current_op = Qobj(np.array(self.insert_op(destroy(2), k, n)))
+                readout_ops.append(current_op*np.sqrt(meas0_prep1_prob/t_readout)) 
+                current_op = Qobj(np.array(self.insert_op(destroy(2).dag(), k, n)))
                 readout_ops.append(current_op*np.sqrt(meas1_prep0_prob/t_readout))
+                current_ops_ind.append([k, 'readout01'])
+                current_ops_ind.append([k, 'readout10'])
             
-            t_start += time_list[-1]
-            t_end = t_start + t_readout
-            result = solve_ivp(self.build_mastereq(H=np.array(self.insert_op(identity(2), 1, n)), c_ops=readout_ops), t_span=(t_start,t_end), y0=y0, method='RK45', atol=1e-8, rtol=1e-8)
-            y0 = result.y[:,-1]
-            rho = y0.reshape([int(np.sqrt(len(y0))),int(np.sqrt(len(y0)))])    
+            tlist = np.linspace(0,t_readout,100)
+            times += [x+t_start for x in tlist]
+            stdout_backup = sys.stdout
+            sys.stdout = sys.__stdout__
+            mc = mcsolve(H=Qobj(np.array(self.insert_op(identity(2), 1, n))), psi0=psi0, tlist=tlist, c_ops=readout_ops, e_ops=[], ntraj=[1], progress_bar=None)
+            sys.stdout = stdout_backup
+            psi0 = mc.states[0][-1] # final result of previous step
+            jump_times = mc.col_times
+            jump_ind = mc.col_which
+            if jump_ind is not None:
+                for count,ind in enumerate(jump_ind[0]):
+                    jumps[t_start+jump_times[0][count]] = current_ops_ind[ind] 
+            states.extend(mc.states[0])
                                     
-        return rho
+        return states, times, jumps
 
     def get_results(self, params: QAOAVariationalBaseParams) -> np.array:
         """
@@ -419,18 +445,22 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         
         Returns
         -------
-        rho: `np.array`
-            The density matrix of the final QAOA circuit after binding angles from variational parameters.
+        results: `list`
+            List containing the final density matrix of the QAOA circuit, a list of states sampled during the execution of the circuit at times indicated 
+            in a list called times and a dictionary jumps, with keys being times at which jumps occurred and values being lists [qubit, type] where qubit 
+            indicates on which qubit the respective jump occurred and type what kind of jump occurred. All for n_shots trajectories.
         """
-        qaoa_circuit = self.qaoa_circuit(params) 
-        rho = self.run_circuit_mastereqn(params)
+        results = list()
+        for k in range(self.n_shots):
+            rho, states, times, jumps = self.get_results(params)
+            results.append([rho, states, times, jumps])
 
-        return rho
+        return results
 
     #change such that sampled from distribution instead of scaled, and return probability dict in separate function
     def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
         """
-        Returns the counts of the final QAOA circuit after binding angles from variational parameters.
+        Returns n_shots trajectories of the final QAOA circuit after binding angles from variational parameters.
 
         Parameters
         ----------
@@ -439,15 +469,17 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         Returns
         -------
         counts: `dict`
-            The counts of the final QAOA circuit after binding angles from variational parameters.
+            The n_shots trajectories of the final QAOA circuit after binding angles from variational parameters produced by the probability distribution
+            obtrained when averaging over n_shots trajectories
         """
-        rho = self.get_results(params)
+        probs = self.probability_dict(params)
+
         n = len(rho)
         shots = self.n_shots
         counts = dict()
         logn = int(np.log2(n))
 
-        samples = np.random.choice(a=[f'{k:0{logn}b}' for k in range(n)], p=[np.real(rho[k][k]) for k in range(n)], size=shots)        
+        samples = np.random.choice(a=[f'{k:0{logn}b}' for k in range(n)], p=[probs[f'{k:0{logn}b}'] for k in range(n)], size=shots)        
 
         for k in samples:
             if str(k) in counts.keys():
@@ -465,12 +497,20 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
     #dictionary {string: probability} with probabilities of outcomes
     def probability_dict(self, params: QAOAVariationalBaseParams): 
         probs = dict()
-        rho = self.get_results(params)
+        results = self.get_results(params)
+        rho_sum = np.array(results[0][0])
+        
+        if len(results)>1:
+            for k in list(range(len(results)))[1:]:
+                rho_sum += np.array(results[k][0])            
+
+        rho_sum /= self.n_shots
+
         n = len(rho)
         logn = int(np.log2(n))
 
         for k in range(n):
-            probs[f'{k:0{logn}b}'] = np.real(rho[k][k])
+            probs[f'{k:0{logn}b}'] = np.real(rho_sum[k][k])
 
         return probs
 
