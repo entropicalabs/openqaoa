@@ -1,6 +1,6 @@
 ## Prerequisites
 
-Before submitting raising this issue, I have already checked that I am:
+Before raising this issue, I have already checked that I am:
 
 - [ ] running the latest version
 - [ ] made sure that this issue has not already been filed

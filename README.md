@@ -1,7 +1,7 @@
  <div align="center">
 
   <!-- OpenQAOA logo -->
-  <a href="https://github.com/entropicalabs/openqaoa"><img src=".github/images/openqaoa_logo.png?raw=true" alt="OpenQAOA logo" width="500"/></a>
+  <a href="https://github.com/entropicalabs/openqaoa"><img src=".github/images/openqaoa_logo.png?raw=true" alt="OpenQAOA logo" width="300"/></a>
 
 #
 

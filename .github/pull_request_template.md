@@ -1,13 +1,14 @@
 ## Description
 
 - Please include a summary of the changes and the related issue
-- Please also include relevant context. 
+- Please also include relevant context.
 - List any dependencies that are required for this change, if any.
 - **Fixes # (issue)**
 
-## Checklist:
+## Checklist
 
 [//]: <> (- [ ] My code follows the style guidelines of this project)
+
 - [ ] I have performed a self-review of my code.
 - [ ] I have commented my code and used numpy-style docstrings
 - [ ] I have made corresponding updates to the documentation.
