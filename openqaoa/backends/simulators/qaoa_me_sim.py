@@ -90,6 +90,17 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                  noise_model: Optional[dict] = {'decay': 5e-5, 'dephasing': 1e-4, 'overrot': 2, 'spam': 5e-2, 'readout01': 4e-2, 'readout10': 1e-2, 'depol1': 12e-4, 'depol2': 3e-2},
                  times: Optional[list] = [20e-9, 200e-9, 5800e-9],
                  allowed_jump_qubits: Optional[list] = None):
+        
+        QAOABaseBackend.__init__(self,
+                 circuit_params,
+                 prepend_state,
+                 append_state,
+                 init_hadamard,
+                 cvar_alpha)
+
+        self.noise_model = noise_model
+        self.times = times
+        self.allowed_jump_qubits = allowed_jump_qubits
 
         self.qureg = QuantumRegister(self.n_qubits)
         self.qubit_layout = self.circuit_params.qureg
@@ -102,7 +113,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> QuantumCircuit:
         """
-        The final QAOA circuit to be executed on the QPU.
+        The final QAOA circuit.
 
         Parameters
         ----------
@@ -150,7 +161,8 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
-        parametric_circuit.measure_all()
+        
+        #parametric_circuit.measure_all()
 
         return parametric_circuit
     
@@ -170,8 +182,9 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         return get_rhs
 
     #Customiseable target_basis something that could be added later. What gates should be included?
-    def get_circuit_list(self, circuit, target_basis=['id', 'x', 'sx', 'rz', 'cx']):
+    def get_circuit_list(self, params: QAOAVariationalBaseParams, target_basis=['id', 'x', 'sx', 'rz', 'cx']):
         circuit_list = list()
+        circuit = self.qaoa_circuit(params)
         qc_qaoa = transpile(circuit, basis_gates=target_basis, optimization_level=0)
         dag = circuit_to_dag(qc_qaoa)
         layers = list(dag.multigraph_layers())
@@ -196,11 +209,10 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         sx_type = "<class 'qiskit.circuit.library.standard_gates.sx.SXGate'>"
         cx_type = "<class 'qiskit.circuit.library.standard_gates.x.CXGate'>"
         x_type = "<class 'qiskit.circuit.library.standard_gates.x.XGate'>"
+                
+        circuit_list = self.get_circuit_list(params)
+        t_gate_list = self.times[:2]
         width = circuit_list[0].width()
-        
-        circuit = self.qaoa_circuit(self, params)
-        circuit_list = self.get_circuit_list(self, circuit)
-        t_gate_list = times[:2]
 
         rz_h = Qobj(0.5*np.array([[1, 0], [0, -1]]))
         sx_h = Qobj(np.pi*np.array([[0, 0.25], [0.25, 0]]))
@@ -289,37 +301,37 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         return current_op
 
     def run_circuit_mastereqn(self, params: QAOAVariationalBaseParams): 
-        hamiltonian_list, time_list, gate_list = self.hamiltonian_from_list(self, params)
+        hamiltonian_list, time_list, gate_list = self.hamiltonian_from_list(params)
         width = len(hamiltonian_list[0])
         n = int(math.log(width,2))
         rho0 = np.zeros((width,width),dtype=np.complex_)
         rho0[0][0] = 1+0j
         y0 = np.ndarray.flatten(rho0)
         
-        if allowed_jump_qubits is None:
-            allowed_jump_qubits = list(range(n))
+        if self.allowed_jump_qubits is None:
+            self.allowed_jump_qubits = list(range(n))
         
-        decay = bool(noise_model['decay'])
-        dephasing = bool(noise_model['dephasing'])
-        overrot = bool(noise_model['overrot'])
-        depol = bool(noise_model['depol1'] or noise_model['depol2'])
-        spam = bool(noise_model['spam'])
-        readout = bool(noise_model['readout01'] or noise_model['readout10'])
+        decay = bool(self.noise_model['decay'])
+        dephasing = bool(self.noise_model['dephasing'])
+        overrot = bool(self.noise_model['overrot'])
+        depol = bool(self.noise_model['depol1'] or self.noise_model['depol2'])
+        spam = bool(self.noise_model['spam'])
+        readout = bool(self.noise_model['readout01'] or self.noise_model['readout10'])
+        
+        T1 = float(self.noise_model['decay'])
+        T2 = float(self.noise_model['dephasing'])
+        overrot_st_dev = float(self.noise_model['overrot'])
+        gate_error_list = [float(self.noise_model['depol1']), float(self.noise_model['depol2'])]
+        spam_error_prob = float(self.noise_model['spam'])
+        meas1_prep0_prob = float(self.noise_model['readout10'])
+        meas0_prep1_prob = float(self.noise_model['readout01'])
 
-        T1 = float(noise_model['decay'])
-        T2 = float(noise_model['dephasing'])
-        overrot_st_dev = float(noise_model['overrot'])
-        gate_error_list = [float(noise_model['depol1']), float(noise_model['depol2'])]
-        spam_error_prob = float(noise_model['swap'])
-        meas1_prep0_prob = float(noise_model['readout10'])
-        meas0_prep1_prob = float(noise_model['readout01'])
-
-        t_readout = times[-1]
+        t_readout = self.times[-1]
 
         decay_ops = list()
         if decay:
             for k in range(n):
-                if k not in allowed_jump_qubits:
+                if k not in self.allowed_jump_qubits:
                     continue
                 current_op = self.insert_op(destroy(2), k, n)
                 decay_ops.append(np.array(current_op)) #*float(1/(np.sqrt(T1)))    
@@ -327,7 +339,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         dephasing_ops = list()
         if dephasing:
             for k in range(n):
-                if k not in allowed_jump_qubits:
+                if k not in self.allowed_jump_qubits:
                     continue
                 current_op = self.insert_op(Qobj([[0,0],[0,1]]), k, n) #Qobj([[0,0],[0,1]])
                 dephasing_ops.append(np.array(current_op)) #*float(1/(np.sqrt(T2))) 
@@ -337,7 +349,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
             #c_ops = list(decay_ops + dephasing_ops)
             c_ops = list([x*np.sqrt((1-np.exp(-time_list[k]/T1))/time_list[k]) for x in decay_ops] + [x*np.sqrt((1-np.exp(-time_list[k]/T2))/time_list[k]) for x in dephasing_ops])
             for key in gate_list[k].keys():
-                if key not in allowed_jump_qubits:
+                if key not in self.allowed_jump_qubits:
                     continue
                 if overrot:
                     val = np.random.normal(0,overrot_st_dev)
@@ -358,7 +370,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                                     
             if spam and k==len(hamiltonian_list)-1:
                 for m in range(n):
-                    if k not in allowed_jump_qubits:
+                    if k not in self.allowed_jump_qubits:
                         continue
                     c_ops.append(np.array(self.insert_op(sigmax()*np.sqrt(spam_error_prob/time_list[k]), m, n)))
 
@@ -382,7 +394,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
             
             readout_ops = list()
             for k in range(n):
-                if k not in allowed_jump_qubits:
+                if k not in self.allowed_jump_qubits:
                     continue
                 current_op = np.array(self.insert_op(destroy(2), k, n))
                 readout_ops.append(current_op*np.sqrt(meas0_prep1_prob/t_readout))
@@ -411,7 +423,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
             The density matrix of the final QAOA circuit after binding angles from variational parameters.
         """
         qaoa_circuit = self.qaoa_circuit(params) 
-        rho = self.run_circuit_mastereqn(params, allowed_jump_qubits=None)
+        rho = self.run_circuit_mastereqn(params)
 
         return rho
 
@@ -429,12 +441,12 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         counts: `dict`
             The counts of the final QAOA circuit after binding angles from variational parameters.
         """
-        rho = self.get_results(self, params)
+        rho = self.get_results(params)
         n = len(rho)
         shots = self.n_shots
         counts = dict()
 
-        samples = np.random.choice(a=[f'{k:0{n}b}' for k in range(n)], p=[rho[k][k] for k in range(n)], size=shots)        
+        samples = np.random.choice(a=[f'{k:0{n}b}' for k in range(n)], p=[np.real(rho[k][k]) for k in range(n)], size=shots)        
 
         for k in samples:
             if str(k) in counts.keys():
@@ -445,22 +457,23 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
 
     #expected cost given probability distribution from density matrix, there is already a function that essentially does that somewhere else
-    def expectation(self):
-        exp = cost_function(probability_dict(self), self.cost_hamiltonian)
-        return exp
+    def expectation(self, params: QAOAVariationalBaseParams):
+        exp = cost_function(self.probability_dict(params), self.cost_hamiltonian)
+        return np.real(exp)
 
     #dictionary {string: probability} with probabilities of outcomes
-    def probability_dict(self): 
+    def probability_dict(self, params: QAOAVariationalBaseParams): 
         probs = dict()
-        rho = self.get_results(self, params)
+        rho = self.get_results(params)
         n = len(rho)
+        logn = int(np.log2(n))
 
         for k in range(n):
-            probs[f'{k:0{n}b}'] = rho[k][k]
+            probs[f'{k:0{logn}b}'] = np.real(rho[k][k])
 
         return probs
 
-    def circuit_to_qasm(self):
+    def circuit_to_qasm(self, params: QAOAVariationalBaseParams):
         """
         A method to convert the QAOA circuit to QASM.
         """
@@ -471,7 +484,8 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
     def reset_circuit(self):
         raise NotImplementedError()
 
-    def qfim(self, params: QAOAVariationalBaseParams, eta: float = 0.00000001):
+    def qfim(self, params: QAOAVariationalBaseParams,eta: float = 0.00000001):
+
         raise NotImplementedError()
 
 
