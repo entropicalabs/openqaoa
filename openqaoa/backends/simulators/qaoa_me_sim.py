@@ -101,7 +101,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         self.noise_model = noise_model
         self.times = times
         self.allowed_jump_qubits = allowed_jump_qubits
-
+        self.n_shots = n_shots
         self.qureg = QuantumRegister(self.n_qubits)
         self.qubit_layout = self.circuit_params.qureg
         
@@ -166,7 +166,6 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
         return parametric_circuit
     
-    #new stuff
     def build_mastereq(self, H, c_ops=None):
     
         def get_rhs(t, rho):
@@ -422,7 +421,6 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         rho: `np.array`
             The density matrix of the final QAOA circuit after binding angles from variational parameters.
         """
-        qaoa_circuit = self.qaoa_circuit(params) 
         rho = self.run_circuit_mastereqn(params)
 
         return rho
@@ -452,7 +450,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         for k in samples:
             if str(k) in counts.keys():
                 continue
-            counts[str(k)] = samples.count(k)
+            counts[str(k)] = list(samples).count(k)
 
         return counts
 

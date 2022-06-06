@@ -24,6 +24,7 @@ import numpy as np
 import math
 from typing import Union, List, Tuple, Optional
 from scipy.integrate import solve_ivp
+import sys
 
 # IBM Qiskit imports
 from qiskit import QuantumCircuit, QuantumRegister, transpile
@@ -166,7 +167,6 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
         return parametric_circuit
     
-    #new stuff
     def build_mastereq(self, H, c_ops=None):
     
         def get_rhs(t, rho):
@@ -452,8 +452,8 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         """
         results = list()
         for k in range(self.n_shots):
-            rho, states, times, jumps = self.get_results(params)
-            results.append([rho, states, times, jumps])
+            states, times, jumps = self.run_circuit_mastereqn(params)
+            results.append([states, times, jumps])
 
         return results
 
@@ -472,19 +472,23 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
             The n_shots trajectories of the final QAOA circuit after binding angles from variational parameters produced by the probability distribution
             obtrained when averaging over n_shots trajectories
         """
-        probs = self.probability_dict(params)
+        results = self.get_results(params)
 
-        n = len(rho)
+        n = self.n_qubits
         shots = self.n_shots
         counts = dict()
-        logn = int(np.log2(n))
+        logn = self.n_qubits
+        outcomes = list()
 
-        samples = np.random.choice(a=[f'{k:0{logn}b}' for k in range(n)], p=[probs[f'{k:0{logn}b}'] for k in range(n)], size=shots)        
+        for k in range(len(results)):
+            rho = np.array(results[k][0][-1]*results[k][0][-1].dag())
+            sample = np.random.choice(a=[f'{k:0{logn}b}' for k in range(len(rho))], p=[np.real(rho[k][k]) for k in range(len(rho))], size=1)
+            outcomes.append(sample[0])
 
-        for k in samples:
+        for k in outcomes:
             if str(k) in counts.keys():
                 continue
-            counts[str(k)] = samples.count(k)
+            counts[str(k)] = outcomes.count(k)
 
         return counts
 
@@ -498,15 +502,15 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
     def probability_dict(self, params: QAOAVariationalBaseParams): 
         probs = dict()
         results = self.get_results(params)
-        rho_sum = np.array(results[0][0])
+        rho_sum = np.array(results[0][0][-1]*results[0][0][-1].dag())
         
         if len(results)>1:
             for k in list(range(len(results)))[1:]:
-                rho_sum += np.array(results[k][0])            
+                rho_sum += np.array(results[k][0][-1]*results[k][0][-1].dag())          
 
         rho_sum /= self.n_shots
 
-        n = len(rho)
+        n = len(rho_sum)
         logn = int(np.log2(n))
 
         for k in range(n):
