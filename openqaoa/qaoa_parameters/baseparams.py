@@ -18,6 +18,7 @@ import numpy as np
 
 from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
+from .variational_params_converters import converter
 
 
 def _is_iterable_empty(in_iterable):
@@ -374,6 +375,28 @@ class QAOAVariationalBaseParams(ABC):
                 A Parameter object with the parameters filled by ``np.empty``
         """
         raise NotImplementedError()
+
+    @classmethod
+    def from_other_parameters(cls, params):
+        """Alternative to ``__init__`` that takes parameters with less degrees
+        of freedom as the input.
+        Parameters
+        ----------
+        params: Type[AbstractParams]
+            The input parameters
+        Returns
+        -------
+        Type[AbstractParams]:
+            The converted paramters s.t. all the rotation angles of the in
+            and output parameters are the same.
+        Note
+        ----
+        If all conversion functions for your parametrization are in
+        qaoa._parameter_conversions.py and correctly registered for converter
+        you don't need to override this function in its child classes
+        """
+        # Todo: Somehow fix this deferred import w/o creating cyclic imports?
+        return converter(params, cls)
 
     def raw_rotation_angles(self) -> np.ndarray:
         """
