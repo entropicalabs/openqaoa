@@ -27,14 +27,6 @@ StandardWithBias <------ FourierWithBias
        |
     Annealing
 """
-# from __future__ import (QAOAVariationalAnnealingParams,
-# 						QAOAVariationalStandardParams,
-# 						QAOAVariationalExtendedParams,
-# 						QAOAVariationalStandardWithBiasParams,
-# 						QAOAVariationalFourierParams,
-# 						QAOAVariationalFourierWithBiasParams,
-# 						QAOAVariationalFourierExtendedParams)
-
 from __future__ import annotations
 from typing import Type
 
@@ -42,13 +34,18 @@ from copy import deepcopy
 import numpy as np
 from scipy.fftpack import dct, dst
 
-from . import (QAOAVariationalAnnealingParams,
-                             QAOAVariationalStandardParams,
-                             QAOAVariationalExtendedParams,
-                             QAOAVariationalStandardWithBiasParams,
-                             QAOAVariationalFourierParams,
-                             QAOAVariationalFourierWithBiasParams,
-                             QAOAVariationalFourierExtendedParams)
+from . import (annealingparams,
+               standardparams,
+               fourierparams,
+               extendedparams)
+
+QAOAVariationalAnnealingParams = annealingparams.QAOAVariationalAnnealingParams
+QAOAVariationalStandardParams = standardparams.QAOAVariationalStandardParams
+QAOAVariationalExtendedParams = extendedparams.QAOAVariationalExtendedParams
+QAOAVariationalStandardWithBiasParams = standardparams.QAOAVariationalStandardWithBiasParams
+QAOAVariationalFourierParams = fourierparams.QAOAVariationalFourierParams
+QAOAVariationalFourierWithBiasParams = fourierparams.QAOAVariationalFourierWithBiasParams
+QAOAVariationalFourierExtendedParams = fourierparams.QAOAVariationalFourierExtendedParams
 
 
 def annealing_to_standard(
@@ -108,7 +105,7 @@ def fourier_to_standard(
 
 
 def fourier_w_bias_to_standard_w_bias(
-        params: QAOAVariationalFourierWithBiasParams) ->QAOAVariationalStandardWithBiasParams:
+        params: QAOAVariationalFourierWithBiasParams) -> QAOAVariationalStandardWithBiasParams:
     out = deepcopy(params)
     out.__class__ = QAOAVariationalStandardWithBiasParams
     out.betas = dct(params.v, n=out.p)
