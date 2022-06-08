@@ -294,7 +294,7 @@ class QAOA(Optimizer):
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device = self.device,
-                                        **self.backend_properties.asdict())
+                                        **self.backend_properties.__dict__)
 
         self.optimizer = get_optimizer(vqa_object=self.backend,
                                        variational_params=self.variate_params,
@@ -327,8 +327,8 @@ class QAOA(Optimizer):
         self.results_information = self.optimizer.results_information()
 
         if self.device.device_name == 'vectorized':
-            self.solution = list(self.results_information['best probability'][0].keys())[
-                np.argmax(list((self.results_information['best probability'][0].values())))]
+            self.solution = list(self.results_information['best probability'].keys())[
+                np.argmax(list((self.results_information['best probability'].values())))]
             self.results_information['cost'] = self.results_information['best cost']
         else:
             if self.device.device_name == 'qiskit.statevector_simulator':
