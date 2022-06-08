@@ -230,8 +230,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
             qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
 
         grad_stepsize = 0.00000001
-        gradient_sps1 = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':-1, 'n_beta_pair':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1})
-        gradient_sps2 = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':2, 'n_beta_pair':-1, 'n_gamma_pair':1, 'n_gamma_single':0})
+        gradient_sps1 = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':-1, 'n_beta_pair':-1, 'n_gamma_pair':-1, 'n_gamma_single':-1},logger=self.log)
+        gradient_sps2 = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'stoch_param_shift', {'stepsize':grad_stepsize, 'n_beta_single':2, 'n_beta_pair':-1, 'n_gamma_pair':1, 'n_gamma_single':0},logger=self.log)
         
         test_points = [[0,0], [np.pi/2, np.pi/3], [1,2]]
         
