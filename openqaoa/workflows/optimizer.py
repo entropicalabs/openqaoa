@@ -14,17 +14,17 @@
 
 from abc import ABC
 import numpy as np
+from openqaoa.devices import DeviceLocal, DeviceBase
 
 from openqaoa.rqaoa.rqaoa import custom_rqaoa
 from openqaoa.problems.problem import PUBO
 from openqaoa.problems.helper_functions import convert2serialize
-from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, DeviceProperties, BackendProperties, ClassicalOptimizer, Credentials, ExtraResults
+from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer, ExtraResults
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.utilities import get_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
-from openqaoa.backends.qpus.qpu_auth import AccessObjectBase
 from openqaoa.rqaoa import adaptive_rqaoa, custom_rqaoa
 
 
@@ -58,18 +58,12 @@ class QAOA(Optimizer):
         circuit_properties: CircuitProperties
             The circut properties of the QAOA workflow. Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
             For a complete list of its parameters and usage please see the method set_circuit_properties
-        device_properties: DeviceProperties
-            The device properties of the QAOA workflow. Use to set the device where the computation will be run
-            For a complete list of its parameters and usage please see the method set_device_properties
         backend_properties: BackendProperties
             The backend properties of the QAOA workflow. Use to set the backend properties such as the number of shots and the cvar values.
             For a complete list of its parameters and usage please see the method set_backend_properties
         classical_optimizer: ClassicalOptimizer
             The classical optimiser properties of the QAOA workflow. Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
             For a complete list of its parameters and usage please see the method set_classical_optimizer
-        device_properties: DeviceProperties
-            The device properties of the QAOA workflow. 
-            For a complete list of its parameters and usage please see the method set_device_properties
         intialised_w_prob: bool
             Deprecated feature: TOBE REMOVED
         local_simulators: list[str]
@@ -112,14 +106,17 @@ class QAOA(Optimizer):
     >>> q_custom.compile(pubo_problem)
     >>> q_custom.optimize()
     """
-    def __init__(self):
+    def __init__(self, device = DeviceLocal('vectorized')):
         self.circuit_properties = CircuitProperties()
-        self.device_properties = DeviceProperties()
+        self.device = device
         self.backend_properties = BackendProperties()
         self.classical_optimizer = ClassicalOptimizer()
         self.intialised_w_prob = False
         self.local_simulators = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
 
+    def set_device(self, device: DeviceBase):
+        self.device = device
+        
     def set_circuit_properties(self, **kwargs):
         """
         Specify the circuit properties to construct QAOA circuit
@@ -170,66 +167,13 @@ class QAOA(Optimizer):
 
         return None
 
-    def set_device_properties(self, **kwargs):
-        """
-        Specify the device properties
-
-        Parameters
-        -------------------
-        device_location: str
-            Can only take the values `local` for local simulations, `qcs` for Rigetti's QCS, and `ibmq` for IBM
-        device_name: device_name
-            The name of the device:
-            for local devices it can be ['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized']
-            for cloud devices plese check the name from the provider itself
-        cloud_credentials: dict
-            A dictionary containing the credentials to connecto to cloud services:
-            - QCS (rigetti) signature: 
-            (name: str,
-            as_qvm: bool = None, 
-            noisy: bool = None,
-            compiler_timeout: float = 20.0,
-            execution_timeout: float = 20.0,
-            client_configuration: QCSClientConfiguration = None,
-            endpoint_id: str = None,
-            engagement_manager: EngagementManager = None)
-            - IBMQ (IBM) signature:
-            (api_token: str,
-            hub: str = None,
-            group: str = None,
-            project: str = None,
-            selected_qpu: str = None)
-        """
-        if kwargs['device_location'] == 'ibmq':
-            kwargs['cloud_credentials']['device_location'] = kwargs['device_location']
-            kwargs['cloud_credentials']['selected_qpu'] = kwargs['device_name']
-            kwargs['device'] = Credentials(
-                kwargs['cloud_credentials']).accessObject
-        elif kwargs['device_location'] == 'qcs':
-            kwargs['cloud_credentials']['device_location'] = kwargs['device_location']
-            kwargs['device'] = Credentials(
-                kwargs['cloud_credentials']).accessObject
-        elif kwargs['device_location'] == 'local':
-            kwargs['device'] = kwargs['device_name']
-        else:
-            Exception(
-                f'Something is not working in the device selection. Please check {kwargs["device_location"]}')
-
-        for key, value in kwargs.items():
-            if hasattr(self.device_properties, key):
-                setattr(self.device_properties, key, value)
-            else:
-                raise ValueError(
-                    f"Specified argument {key, value} is not supported by the circuit")
-
-        return None
-
     def set_backend_properties(self, **kwargs):
         """
         Set the backend properties
 
         Parameters
         -------------------
+            device: DeviceBase
             prepend_state: [Union[QuantumCircuitBase,List[complex], np.ndarray]
                 The state prepended to the circuit.
             append_state: [Union[QuantumCircuitBase,List[complex], np.ndarray]
@@ -256,9 +200,6 @@ class QAOA(Optimizer):
 
         for key, value in kwargs.items():
             if hasattr(self.backend_properties, key):
-                if (key == 'device'):
-                    if isinstance(self.device_properties.device, AccessObjectBase):
-                        value = self.device_properties.device.accessObject
                 setattr(self.backend_properties, key, value)
             else:
                 raise ValueError(
@@ -352,8 +293,8 @@ class QAOA(Optimizer):
                                                              linear_ramp_time=self.circuit_properties.linear_ramp_time, q=self.circuit_properties.q, seed=self.circuit_properties.seed)
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
-                                        device=self.device_properties.device,
-                                        **self.backend_properties.asdict())
+                                        device = self.device,
+                                        **self.backend_properties.__dict__)
 
         self.optimizer = get_optimizer(vqa_object=self.backend,
                                        variational_params=self.variate_params,
@@ -363,11 +304,11 @@ class QAOA(Optimizer):
             print('\t \033[1m ### Summary ###\033[0m')
             print(f'OpenQAOA has ben compiled with the following properties')
             print(
-                f'Solving QAOA with \033[1m {self.device_properties.device_name} \033[0m on  \033[1m{self.device_properties.device_location}\033[0m')
+                f'Solving QAOA with \033[1m {self.device.device_name} \033[0m on  \033[1m{self.device.device_location}\033[0m')
             print(f'Using p={self.circuit_properties.p} with {self.circuit_properties.param_type} parameters initialsied as {self.circuit_properties.init_type}')
             
 
-            if self.device_properties.device_name == 'vectorized':
+            if self.device.device_name == 'vectorized':
                 print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations')
             
             else:
@@ -385,14 +326,12 @@ class QAOA(Optimizer):
         self.optimizer.optimize()
         self.results_information = self.optimizer.results_information()
 
-
-
-        if self.device_properties.device_name == 'vectorized':
-            self.solution = list(self.results_information['best probability'][0].keys())[
-                np.argmax(list((self.results_information['best probability'][0].values())))]
+        if self.device.device_name == 'vectorized':
+            self.solution = list(self.results_information['best probability'].keys())[
+                np.argmax(list((self.results_information['best probability'].values())))]
             self.results_information['cost'] = self.results_information['best cost']
         else:
-            if self.device_properties.device_name == 'qiskit_statevec_simulator':
+            if self.device.device_name == 'qiskit.statevector_simulator':
                 self.counts = dict(self.backend.get_counts(self.variate_params, n_shots=1000))
             else:
                 self.counts = dict(self.backend.get_counts(self.variate_params))
@@ -477,7 +416,7 @@ class RQAOA(Optimizer):
                 p=self.qaoa.circuit_properties.p,
                 n_max=self.rqaoa_parameters.n_max,
                 n_cutoff=self.rqaoa_parameters.n_cutoff,
-                backend=self.qaoa.device_properties.device_name,
+                device=self.qaoa.device,
                 params_type=self.qaoa.circuit_properties.param_type,
                 init_type=self.qaoa.circuit_properties.init_type,
                 shots=self.qaoa.backend_properties.n_shots,
@@ -489,7 +428,7 @@ class RQAOA(Optimizer):
                 p=self.qaoa.circuit_properties.p,
                 n_cutoff=self.rqaoa_parameters.n_cutoff,
                 steps= self.rqaoa_parameters.steps,
-                backend=self.qaoa.device_properties.device_name,
+                device=self.qaoa.device,
                 params_type=self.qaoa.circuit_properties.param_type,
                 init_type=self.qaoa.circuit_properties.init_type,
                 shots=self.qaoa.backend_properties.n_shots,

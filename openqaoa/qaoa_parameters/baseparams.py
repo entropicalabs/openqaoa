@@ -20,6 +20,7 @@ from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
 
 
+
 def _is_iterable_empty(in_iterable):
     if isinstance(in_iterable, Iterable):    # Is Iterable
         return all(map(_is_iterable_empty, in_iterable))
@@ -366,14 +367,31 @@ class QAOAVariationalBaseParams(ABC):
         Parameters
         ----------
         qaoa_circuit_params:
-                QAOACircuitParams object containing information about terms,weights,register and p
+            QAOACircuitParams object containing information about terms,weights,register and p
 
         Returns
         -------
-        VariationalBaseParams
-                A Parameter object with the parameters filled by ``np.empty``
+        VariationalBaseParams:
+            A Parameter object with the parameters filled by ``np.empty``
         """
         raise NotImplementedError()
+
+    @classmethod
+    def from_other_parameters(cls, params):
+        """Alternative to ``__init__`` that takes parameters with less degrees
+        of freedom as the input.
+        Parameters
+        ----------
+        params: QAOAVaritionalBaseParams
+            The input parameters object to construct the new parameters object from.
+        Returns
+        -------
+        QAOAVariationalBaseParams:
+            The converted paramters s.t. all the rotation angles of the in
+            and output parameters are the same.
+        """
+        from . import converter
+        return converter(params, cls)
 
     def raw_rotation_angles(self) -> np.ndarray:
         """

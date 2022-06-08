@@ -16,14 +16,14 @@ import numpy as np
 from pyquil import Program, gates
 from pyquil.api import WavefunctionSimulator
 
-from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendStatevector
+from ...basebackend import QAOABaseBackendStatevector
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...qaoa_parameters.pauligate import (
     RXPauliGate, RYPauliGate, RZPauliGate)
 from ...cost_function import cost_function
 
 
-class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector, QAOABaseBackendParametric):
+class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
     """
     A local Wavefunction simulator backend for the PyQuil service provider
     """
@@ -40,8 +40,6 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector, QAOABas
                                             append_state, init_hadamard,
                                             cvar_alpha)
 
-        self.parametric_circuit = self.parametric_qaoa_circuit
-
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
         """
         Creates a QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
@@ -57,63 +55,34 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector, QAOABas
         `pyquil.Program`
                 A pyquil.Program object.
         """
-        angles_list = self.obtain_angles_for_pauli_list(
-            self.pseudo_circuit, params)
-        angle_declarations = list(self.parametric_circuit.declarations.keys())
-        for i, param_name in enumerate(angle_declarations):
-            self.parametric_circuit.write_memory(
-                region_name=param_name, value=angles_list[i])
+        self.assign_angles(params)
 
-        return self.parametric_circuit
-
-    @property
-    def parametric_qaoa_circuit(self) -> Program:
-        """
-        Creates a QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
-        and a set of circuit angles. Note that this function does not actually run
-        the circuit. To do this, you will need to subsequently execute the command self.eng.flush().
-
-        Parameters
-        ----------
-        params: `QAOAVariationalBaseParams`
-
-        Returns
-        -------
-        `pyquil.Program`
-                A pyquil.Program object.
-        """
-        parametric_circuit = Program()
-
+        circuit = Program()
         if self.prepend_state:
-            parametric_circuit += self.prepend_state
+            circuit += self.prepend_state
+
         # Initial state is all |+>
         if self.init_hadamard:
             for i in range(self.n_qubits):
-                parametric_circuit += gates.H(i)
+                circuit += gates.H(i)
 
         # create a list of gates in order of application on quantum circuit
         low_level_gate_list = []
-        for each_gate in self.pseudo_circuit:
-            gate_label = ''.join(str(label) for label in each_gate.pauli_label)
-            angle_param = parametric_circuit.declare(
-                f'pauli{gate_label}', 'REAL', 1)
-            each_gate.rotation_angle = angle_param
+        for i,each_gate in enumerate(self.pseudo_circuit):
             if type(each_gate) in self.PYQUIL_PAULIGATE_LIBRARY:
                 decomposition = each_gate.decomposition('trivial')
             else:
                 decomposition = each_gate.decomposition('standard')
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                # qbitplaceholder = something
-                gate = each_tuple[0](*each_tuple[1])
-                parametric_circuit = gate.apply_gate(parametric_circuit, 'pyquil',
-                                                     angle_param=angle_param)
+                low_gate = each_tuple[0]()
+                circuit = low_gate.apply_pyquil_gate(*each_tuple[1],circuit)
 
         if self.append_state:
-            parametric_circuit += self.append_state
+            circuit += self.append_state
 
-        return parametric_circuit
-
+        return circuit
+    
     def wavefunction(self,
                      params: QAOAVariationalBaseParams):
         """

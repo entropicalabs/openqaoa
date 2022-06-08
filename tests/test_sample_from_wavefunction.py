@@ -19,6 +19,7 @@ from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.qaoa_parameters import QAOAVariationalStandardParams, Hamiltonian
 from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
 from openqaoa.utilities import random_classical_hamiltonian, X_mixer_hamiltonian
+from openqaoa.devices import DeviceLocal
 
 
 class TestGetSamplesMethod(unittest.TestCase):
@@ -51,9 +52,9 @@ class TestGetSamplesMethod(unittest.TestCase):
             qaoa_circuit_params, betas, gammas)
 
         backend_vectorized = get_qaoa_backend(
-            qaoa_circuit_params, 'vectorized')
+            qaoa_circuit_params, DeviceLocal('vectorized'))
         backend_qiskit_statevec = get_qaoa_backend(
-            qaoa_circuit_params, 'qiskit_statevec_simulator')
+            qaoa_circuit_params, DeviceLocal('qiskit.statevector_simulator'))
 
         shot_results_vec = backend_vectorized.sample_from_wavefunction(
             variational_params_std, n_samples=15)
@@ -75,7 +76,7 @@ class TestGetSamplesMethod(unittest.TestCase):
               ``decimal`` argument in `np.testing.assert_array_almost_equal` to something lower!
         """
         # testing a large number of shots!
-        nshots = 100000
+        nshots = 500000
 
         # random 6-qubit Hamiltonian with betas, gammas = 0,0 => only hadamards
         reg = [0, 1, 2, 3, 4, 5]
@@ -92,9 +93,9 @@ class TestGetSamplesMethod(unittest.TestCase):
             qaoa_circuit_params, betas, gammas)
 
         backend_vectorized = get_qaoa_backend(
-            qaoa_circuit_params, 'vectorized')
+            qaoa_circuit_params, DeviceLocal('vectorized'))
         backend_qiskit_statevec = get_qaoa_backend(
-            qaoa_circuit_params, 'qiskit_statevec_simulator')
+            qaoa_circuit_params, DeviceLocal('qiskit.statevector_simulator'))
 
         # wf_vec = backend_vectorized.wavefunction(variational_params_std)
         prob_wf_vec = np.array(list(backend_vectorized.probability_dict(
@@ -117,7 +118,7 @@ class TestGetSamplesMethod(unittest.TestCase):
         for shot_result in samples_vec:
             samples_dict_vec[shot_result] += 1/nshots
 
-        for shot_result in samples_vec:
+        for shot_result in samples_qiskit:
             samples_dict_qiskit[shot_result] += 1/nshots
 
         samples_prob_vec = np.array(
