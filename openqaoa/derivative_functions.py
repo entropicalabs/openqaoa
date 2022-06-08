@@ -294,7 +294,7 @@ def grad_sps(backend_obj, params_std, params_ext, gradient_options, logger):
     if n_gamma_single == -1: n_gamma_single = gamma_single_len
     if n_gamma_pair == -1: n_gamma_pair = gamma_pair_len
         
-    fun = update_and_compute_expectation(backend_obj, params_ext)
+    fun = update_and_compute_expectation(backend_obj, params_ext, logger)
     
     def grad_sps_func(args):
 
