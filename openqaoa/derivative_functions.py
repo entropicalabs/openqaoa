@@ -23,11 +23,17 @@ import numpy as np
 import random
 
 
-def update_and_compute_expectation(backend_obj, params):
+def update_and_compute_expectation(backend_obj, params, logger):
     # Helper function that returns a function that takes in a list of raw parameters
     # This function will handle (1) updating variational parameters with update_from_raw and (2) computing expectation.
 
     def fun(args):
+        current_total_eval = logger.func_evals.best[0]
+        current_total_eval += 1
+        current_jac_eval = logger.jac_func_evals.best[0]
+        current_jac_eval += 1
+        logger.log_variables({'func_evals': current_total_eval, 
+                              'jac_func_evals': current_jac_eval})
         params.update_from_raw(args)
         return backend_obj.expectation(params)
 
@@ -67,7 +73,9 @@ def derivative(derivative_dict: dict):
     out:
         Callable derivative function.
     """
-
+    
+    logger = derivative_dict['logger']
+    
     derivative_type = derivative_dict['derivative_type']
     derivative_method = derivative_dict['derivative_method']
 
@@ -100,23 +108,23 @@ def derivative(derivative_dict: dict):
     if derivative_type == 'gradient':
 
         if derivative_method == 'finite_difference':
-            out = grad_fd(backend_obj, params, derivative_options)
+            out = grad_fd(backend_obj, params, derivative_options, logger)
         elif derivative_method == 'param_shift':
-            out = grad_ps(backend_obj, params, params_ext)
+            out = grad_ps(backend_obj, params, params_ext, logger)
         elif derivative_method == 'stoch_param_shift':
-            out = grad_sps(backend_obj, params, params_ext, derivative_options)
+            out = grad_sps(backend_obj, params, params_ext, derivative_options, logger)
         elif derivative_method == 'grad_spsa':
-            out = grad_spsa(backend_obj, params, derivative_options)
+            out = grad_spsa(backend_obj, params, derivative_options, logger)
 
     elif derivative_type == 'hessian':
 
         if derivative_method == 'finite_difference':
-            out = hessian_fd(backend_obj, params, derivative_options)
+            out = hessian_fd(backend_obj, params, derivative_options, logger)
 
     return out
 
 
-def grad_fd(backend_obj, params, gradient_options):
+def grad_fd(backend_obj, params, gradient_options, logger):
     """
     Returns a callable function that calculates the gradient with the finite difference method.
 
@@ -137,7 +145,7 @@ def grad_fd(backend_obj, params, gradient_options):
 
     # Set default value of eta
     eta = gradient_options['stepsize']
-    fun = update_and_compute_expectation(backend_obj, params)
+    fun = update_and_compute_expectation(backend_obj, params, logger)
 
     def grad_fd_func(args):
 
@@ -157,7 +165,7 @@ def grad_fd(backend_obj, params, gradient_options):
     return grad_fd_func
 
 
-def grad_ps(backend_obj, params, params_ext):
+def grad_ps(backend_obj, params, params_ext, logger):
     """
     Returns a callable function that calculates the gradient with the parameter shift method.
 
@@ -178,7 +186,7 @@ def grad_ps(backend_obj, params, params_ext):
         Callable derivative function.
     """
 
-    fun = update_and_compute_expectation(backend_obj, params_ext)
+    fun = update_and_compute_expectation(backend_obj, params_ext, logger)
 
     def grad_ps_func(args):
 
@@ -224,7 +232,7 @@ def grad_ps(backend_obj, params, params_ext):
     return grad_ps_func
 
 
-def grad_sps(backend_obj, params_std, params_ext, gradient_options):
+def grad_sps(backend_obj, params_std, params_ext, gradient_options, logger):
     """
     Returns a callable function that approximates the gradient with the stochastic parameter shift method, which samples (n_beta, n_gamma_pair, n_gamma_single) gates at each layer instead of all gates. See "Algorithm 4" of https://arxiv.org/pdf/1910.01155.pdf. By convention, (n_beta, n_gamma_pair, n_gamma_single) = (-1, -1, -1) will sample all gates (which is then equivalent to the full parameter shift rule).
 
@@ -344,7 +352,7 @@ def grad_sps(backend_obj, params_std, params_ext, gradient_options):
     return grad_sps_func
 
 
-def hessian_fd(backend_obj, params, hessian_options):
+def hessian_fd(backend_obj, params, hessian_options, logger):
     """
     Returns a callable function that calculates the hessian with the finite difference method.
 
@@ -368,7 +376,7 @@ def hessian_fd(backend_obj, params, hessian_options):
     """
 
     eta = hessian_options['stepsize']
-    fun = update_and_compute_expectation(backend_obj, params)
+    fun = update_and_compute_expectation(backend_obj, params, logger)
 
     def hessian_fd_func(args):
         hess = np.zeros((len(args), len(args)))
@@ -394,7 +402,7 @@ def hessian_fd(backend_obj, params, hessian_options):
     return hessian_fd_func
 
 
-def grad_spsa(backend_obj, params, gradient_options):
+def grad_spsa(backend_obj, params, gradient_options, logger):
     """
     Returns a callable function that calculates the gradient approxmiation with the Simultaneous Perturbation Stochastic Approximation (SPSA) method.
 
@@ -417,7 +425,7 @@ def grad_spsa(backend_obj, params, gradient_options):
 
     """
     c = gradient_options['stepsize']
-    fun = update_and_compute_expectation(backend_obj, params)
+    fun = update_and_compute_expectation(backend_obj, params, logger)
 
     def grad_spsa_func(args):
         delta = (2*np.random.randint(0, 2, size=len(args))-1)

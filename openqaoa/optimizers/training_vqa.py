@@ -75,7 +75,6 @@ class OptimizeVQA(ABC):
         self.initial_params = variational_params.raw()
         self.method = optimizer_dict['method'].lower()
         
-        self.func_evals = 0
         self.log = Logger({'cost': 
                            {
                                'history_update_bool': optimizer_dict.get('cost_progress',True), 
@@ -100,11 +99,22 @@ class OptimizeVQA(ABC):
                            {
                                'history_update_bool': False, 
                                'best_update_string': 'HighestOnly'
+                           },
+                           'jac_func_evals': 
+                           {
+                               'history_update_bool': False, 
+                               'best_update_string': 'HighestOnly'
                            }
                           }, 
-                          {'best_update_structure': 
-                           (['cost', 'func_evals'], 
-                            ['param_log', 'counts', 'probability'])})
+                          {
+                              'root_nodes': ['cost', 'func_evals', 'jac_func_evals'],
+                              'best_update_structure': (['cost', 'param_log'], 
+                                                        ['cost', 'counts'], 
+                                                        ['cost', 'probability'])
+                          })
+        
+        self.log.log_variables({'func_evals': 0})
+        self.log.log_variables({'jac_func_evals': 0})
 
     @abstractmethod
     def __repr__(self):
@@ -129,9 +139,7 @@ class OptimizeVQA(ABC):
     def optimize_this(self, x):
         '''
         A function wrapper to execute the circuit in the backend. This function 
-        will be passed as argument to be optimized by scipy optimize. There are
-        that log the outputs from the backend object depending on whether the 
-        user requests for it.
+        will be passed as argument to be optimized by scipy optimize.
         
         .. Important::
             #. Appends all intermediate parameters in ``self.param_log`` list
@@ -156,8 +164,9 @@ class OptimizeVQA(ABC):
         callback_cost = self.vqa.expectation(self.variational_params)
         
         log_dict.update({'cost': callback_cost})
-        self.func_evals += 1
-        log_dict.update({'func_evals': self.func_evals})
+        current_eval = self.log.func_evals.best[0]
+        current_eval += 1
+        log_dict.update({'func_evals': current_eval})
         
         if hasattr(self.vqa, 'counts'):
             log_dict.update({'counts': self.vqa.counts})
@@ -213,6 +222,7 @@ class OptimizeVQA(ABC):
             Dictionary with the following keys
                 
                 #. "number of evals"
+                #. "jac evals"
                 #. "parameter log"
                 #. "best param"
                 #. "cost progress list"
@@ -228,14 +238,15 @@ class OptimizeVQA(ABC):
         
         result_dict = {
             'number of evals': self.log.func_evals.best[0],
+            'jac evals': self.log.jac_func_evals.best[0],
             'parameter log': np.array(self.log.param_log.history).tolist(),
-            'best param': np.array(self.log.param_log.best).tolist(),
+            'best param': np.array(self.log.param_log.best[0]).tolist(),
             'cost progress list': np.array(self.log.cost.history).tolist(), 
-            'best cost': np.array(self.log.cost.best).tolist(), 
+            'best cost': np.array(self.log.cost.best[0]).tolist(), 
             'count progress list': np.array(self.log.counts.history).tolist(),
-            'best count': np.array(self.log.counts.best).tolist(), 
+            'best count': np.array(self.log.counts.best[0] if self.log.counts.best != [] else {}).tolist(), 
             'probability progress list': np.array(self.log.probability.history).tolist(),
-            'best probability': np.array(self.log.probability.best).tolist(),
+            'best probability': np.array(self.log.probability.best[0] if self.log.probability.best != [] else {}).tolist(),
             'optimization method': self.method
         }
 
@@ -324,7 +335,7 @@ class ScipyOptimizer(OptimizeVQA):
         else:
             if isinstance(jac, str):
                 self.jac = self.vqa_object.derivative_function(
-                    self.variational_params, 'gradient', jac, jac_options)
+                    self.variational_params, 'gradient', jac, jac_options, self.log)
             else:
                 self.jac = jac
 
@@ -334,7 +345,7 @@ class ScipyOptimizer(OptimizeVQA):
         else:
             if isinstance(hess, str):
                 self.hess = self.vqa_object.derivative_function(
-                    self.variational_params, 'hessian', hess, hess_options)
+                    self.variational_params, 'hessian', hess, hess_options, self.log)
             else:
                 self.hess = hess
 
@@ -515,7 +526,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         else:
             if isinstance(jac, str):
                 self.jac = self.vqa_object.derivative_function(
-                    self.variational_params, 'gradient', jac, jac_options)
+                    self.variational_params, 'gradient', jac, jac_options, self.log)
             else:
                 self.jac = jac
 
@@ -524,7 +535,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         else:
             if isinstance(hess, str):
                 self.hess = self.vqa_object.derivative_function(
-                    self.variational_params, 'hessian', hess, hess_options)
+                    self.variational_params, 'hessian', hess, hess_options, self.log)
             else:
                 self.hess = hess
 
