@@ -87,7 +87,6 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                  append_state: Optional[QuantumCircuit],
                  init_hadamard: bool,
                  cvar_alpha: float,
-                 qiskit_simulation_method: str = 'automatic',
                  noise_model: Optional[dict] = {'decay': 5e-5, 'dephasing': 1e-4, 'overrot': 2, 'spam': 5e-2, 'readout01': 4e-2, 'readout10': 1e-2, 'depol1': 12e-4, 'depol2': 3e-2},
                  times: Optional[list] = [20e-9, 200e-9, 5800e-9],
                  allowed_jump_qubits: Optional[list] = None):
@@ -482,7 +481,7 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
         for k in range(len(results)):
             rho = np.array(results[k][0][-1]*results[k][0][-1].dag())
-            sample = np.random.choice(a=[f'{k:0{logn}b}' for k in range(len(rho))], p=[np.real(rho[k][k]) for k in range(len(rho))], size=1)
+            sample = np.random.choice(a=[f'{m:0{logn}b}' for m in range(len(rho))], p=[np.real(rho[m][m]) for m in range(len(rho))], size=1)
             outcomes.append(sample[0])
 
         for k in outcomes:

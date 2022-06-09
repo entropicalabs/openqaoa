@@ -16,7 +16,7 @@ import numpy as np
 
 from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAPyQuilWavefunctionSimulatorBackend,
                         QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
-                        QAOAvectorizedBackendSimulator)
+                        QAOAvectorizedBackendSimulator, QAOAMEBackendSimulator, QAOAMCBackendSimulator)
 
 from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit
 from ..qaoa_parameters.baseparams import QAOACircuitParams
@@ -27,7 +27,9 @@ DEVICE_NAME_TO_OBJECT_MAPPER = {
     'qiskit.shot_simulator': QAOAQiskitBackendShotBasedSimulator,
     'qiskit.statevector_simulator': QAOAQiskitBackendStatevecSimulator,
     'vectorized': QAOAvectorizedBackendSimulator,
-    'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend
+    'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend,
+    'mesolver': QAOAMEBackendSimulator,
+    'mcsolver': QAOAMCBackendSimulator
 }
 
 DEVICE_ACCESS_OBJECT_MAPPER = {
@@ -42,7 +44,9 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
                         noise_model = None,
                         active_reset: Optional[bool] = None,
                         rewiring = None,
-                        qubit_layout = None):
+                        qubit_layout = None,
+                        allowed_jump_qubits = None,
+                        times = None):
 
     BACKEND_ARGS_MAPPER = {
         QAOAvectorizedBackendSimulator: {},
@@ -56,7 +60,15 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
         QAOAPyQuilQPUBackend: {'n_shots': n_shots,
                                'active_reset': active_reset,
                                'rewiring': rewiring,
-                               'qubit_layout':qubit_layout}
+                               'qubit_layout':qubit_layout},
+        QAOAMEBackendSimulator: {'n_shots': n_shots,
+                                'noise_model': noise_model,
+                                'times': times,
+                                'allowed_jump_qubits': allowed_jump_qubits},
+        QAOAMCBackendSimulator: {'n_shots': n_shots,
+                                'noise_model': noise_model,
+                                'times': times,
+                                'allowed_jump_qubits': allowed_jump_qubits}
     }
 
     final_backend_kwargs = {key: value for key, value in BACKEND_ARGS_MAPPER[backend_obj].items()

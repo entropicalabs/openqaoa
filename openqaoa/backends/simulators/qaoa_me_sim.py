@@ -86,7 +86,6 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                  append_state: Optional[QuantumCircuit],
                  init_hadamard: bool,
                  cvar_alpha: float,
-                 qiskit_simulation_method: str = 'automatic',
                  noise_model: Optional[dict] = {'decay': 5e-5, 'dephasing': 1e-4, 'overrot': 2, 'spam': 5e-2, 'readout01': 4e-2, 'readout10': 1e-2, 'depol1': 12e-4, 'depol2': 3e-2},
                  times: Optional[list] = [20e-9, 200e-9, 5800e-9],
                  allowed_jump_qubits: Optional[list] = None):
