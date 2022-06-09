@@ -15,39 +15,27 @@
 from abc import ABC, abstractmethod
 # from types import NoneType
 import numpy as np
+from scipy.sparse import csc_matrix, kron, diags
 from typing import List, Tuple, Union
 
 from .operators import Hamiltonian
 from .lowlevelgate import *
 from .rotationangle import RotationAngle
 
-def _commutes_trivially(gate1, gate2) -> bool:
-    
-    """
-    Checks if `gate1` and `gate2` do not share any qubits at all,
-    in which case they trivially commute with one another. 
-    """
-    
-    indices1, indices2 = set(), set()
+# commutation relations between pauli operators
+noncommutation_dict = {'X' : ['Y', 'Z'], 'Y' : ['Z', 'Z'], 'Z' : ['X', 'Y']}
 
-    if gate1.pauli_label[0] == '1q':
-        indices1.add(gate1.qubit_1)
-    elif gate1.pauli_label[0] == '2q':
-        indices1.add(gate1.qubit_1)
-        indices1.add(gate1.qubit_2)
-        
-    if gate2.pauli_label[0] == '1q':
-        indices2.add(gate2.qubit_1)
-    elif gate2.pauli_label[0] == '2q':
-        indices2.add(gate2.qubit_1)
-        indices2.add(gate2.qubit_2)
-        
-    intersection = indices1.intersection(indices2)
+def _get_qubit_intersection(gate1, gate2):
     
-    if len(intersection) == 0:
-        return True
-    else:
-        return False
+    """
+    Returns qubits shared by `gate1` and `gate2`.
+    If there are no shared qubits (i.e len(output) = 0), then `gate1` and `gate2` trivially commute with one another. 
+    """
+    
+    gate1_ind = set(gate1._qubit_indices)
+    gate2_ind = set(gate2._qubit_indices)
+    
+    return gate1_ind.intersection(gate2_ind)
     
 
 class GateMap(ABC):
@@ -59,7 +47,7 @@ class GateMap(ABC):
     def decomposition(self, decomposition_type: str) -> List[Tuple]:
 
         try:
-            return getattr(self, '_decomposition_'+decomposition_type)
+            return getattr(self, '_decomposition_' + decomposition_type)
         except Exception as e:
             print(e, '\nReturning default decomposition.')
             return getattr(self, '_decomposition_standard')
@@ -67,6 +55,11 @@ class GateMap(ABC):
     @property
     @abstractmethod
     def _decomposition_standard(self) -> List[Tuple]:
+        pass
+    
+    @property
+    @abstractmethod
+    def _qubit_indices(self) -> List[int]:
         pass
 
 
@@ -76,7 +69,11 @@ class SWAPGate(GateMap):
 
         super().__init__(qubit_1)
         self.qubit_2 = qubit_2
-
+    
+    @property
+    def _qubit_indices(self) -> List[int]:
+        return [self.qubit_1, self.qubit_2]
+    
     @property
     def _decomposition_standard(self) -> List[Tuple]:
 
@@ -90,11 +87,24 @@ class SWAPGate(GateMap):
         return [(RiSWAP, [[self.qubit_1, self.qubit_2, np.pi]]),
                 (CZ, [[self.qubit_1, self.qubit_2]])]
     
-    def _commutes_with(self, gate: GateMap):
+    def _commutes_with(self, gate: GateMap) -> bool:
         
-        return _commutes_trivially(self, gate)
-
-
+        commuting_gates = ['RXXPauliGate', 'RYYPauliGate', 'RZZPauliGate']
+        
+        qubit_intersection = _get_qubit_intersection(self, gate)
+        
+        # Check if gates commute trivially first
+        if len(qubit_intersection) == 0:
+            return True
+        elif len(qubit_intersection) == 2:
+            if gate.__class__.__name__ in commuting_gates:
+                return True
+            else:
+                return False
+        else:
+            return False
+            
+            
 class PauliGate(GateMap):
 
     def __init__(self, qubit_1: int, pauli_label: List):
@@ -103,10 +113,13 @@ class PauliGate(GateMap):
 
         self.pauli_label = pauli_label
         self.rotation_angle = None
-
+    
+    @property
+    def _qubit_indices(self) -> List[int]:
+        return [self.qubit_1]
+    
     @property
     def pauli_label(self) -> List:
-
         return self._pauli_label
 
     @pauli_label.setter
@@ -120,10 +133,31 @@ class PauliGate(GateMap):
     def _decomposition_trivial(self) -> List[Tuple]:
         return self._decomposition_standard
     
-    def _commutes_with(self, gate: GateMap):
+    @property
+    @abstractmethod
+    def _pauli_str(self) -> List[str]:
+        pass
+    
+    def _commutes_with(self, gate: GateMap) -> bool:
         
-        return _commutes_trivially(self, gate)
+        commute = True
+        
+        qubit_intersection = _get_qubit_intersection(self, gate)
+        
+        # Check if gates commute trivially first
+        if len(qubit_intersection) == 0:
+            return commute
+        else:
+            for ind in qubit_intersection:
+                s1 = self._pauli_str[self._qubit_indices.index(ind)]
+                s2 = gate._pauli_str[gate._qubit_indices.index(ind)]
+                intersection_commute = s2 not in noncommutation_dict[s1]
 
+                if intersection_commute == False:
+                    commute = False
+                    break
+                    
+            return commute
 
 class RYPauliGate(PauliGate):
 
@@ -132,15 +166,23 @@ class RYPauliGate(PauliGate):
 
         return [(RY, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
                                                   self.rotation_angle)])]
+    
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'Y'
 
 
 class RXPauliGate(PauliGate):
-
+    
     @property
     def _decomposition_standard(self) -> List[Tuple]:
 
         return [(RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
                                                   self.rotation_angle)])]
+    
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'X'
 
 
 class RZPauliGate(PauliGate):
@@ -151,6 +193,10 @@ class RZPauliGate(PauliGate):
         return [(RZ, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
                                                   self.rotation_angle)])]
 
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'Z'
+
 
 class TwoPauliGate(PauliGate):
 
@@ -158,10 +204,13 @@ class TwoPauliGate(PauliGate):
 
         super().__init__(qubit_1, pauli_index)
         self.qubit_2 = qubit_2
+        
+    @property
+    def _qubit_indices(self) -> List[int]:
+        return [self.qubit_1, self.qubit_2]
 
     @property
     def pauli_label(self) -> List:
-
         return self._pauli_label
 
     @pauli_label.setter
@@ -178,10 +227,6 @@ class TwoPauliGate(PauliGate):
         return [(low_level_gate, [[self.qubit_1, self.qubit_2],
                                   RotationAngle(lambda x: x, self.pauli_label,
                                   self.rotation_angle)])]
-    
-    def _commutes_with(self, gate: GateMap):
-        
-        return _commutes_trivially(self, gate)
 
 
 class RXXPauliGate(TwoPauliGate):
@@ -201,6 +246,10 @@ class RXXPauliGate(TwoPauliGate):
                 (RX, [self.qubit_1, np.pi]),
                 (RY, [self.qubit_2, np.pi/2]),
                 (RX, [self.qubit_2, np.pi])]
+    
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'XX'
 
 
 class RXYPauliGate(TwoPauliGate):
@@ -209,6 +258,10 @@ class RXYPauliGate(TwoPauliGate):
     def _decomposition_standard(self) -> List[Tuple]:
 
         raise NotImplementedError()
+    
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'XY'
 
 
 class RYYPauliGate(TwoPauliGate):
@@ -224,6 +277,10 @@ class RYYPauliGate(TwoPauliGate):
                 (CX, [[self.qubit_1, self.qubit_2]]),
                 (RY, [self.qubit_2, -np.pi/2]),
                 (RX, [self.qubit_2, -np.pi/2])]
+    
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'YY'
 
 
 class RZXPauliGate(TwoPauliGate):
@@ -239,6 +296,10 @@ class RZXPauliGate(TwoPauliGate):
                 (CX, [[self.qubit_1, self.qubit_2]]),
                 (RY, [self.qubit_2, np.pi/2]),
                 (RX, [self.qubit_2, np.pi])]
+    
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'ZX'
 
 
 class RZZPauliGate(TwoPauliGate):
@@ -260,7 +321,10 @@ class RZZPauliGate(TwoPauliGate):
                                                   self.rotation_angle)]),
                 (CPHASE, [[self.qubit_1, self.qubit_2],
                  RotationAngle(lambda x: -2*x, self.pauli_label, self.rotation_angle)])]
-
+    
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'ZZ'
 
 class RYZPauliGate(TwoPauliGate):
 
@@ -268,6 +332,10 @@ class RYZPauliGate(TwoPauliGate):
     def _decomposition_standard(self) -> List[Tuple]:
 
         raise NotImplementedError()
+        
+    @property
+    def _pauli_str(self) -> List[str]:
+        return 'YZ'
 
 
 class RiSWAPPauliGate(TwoPauliGate):
