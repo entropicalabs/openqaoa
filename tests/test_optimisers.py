@@ -25,6 +25,8 @@ from openqaoa.optimizers import get_optimizer
 from openqaoa.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
 
+from openqaoa.optimizers.logger_vqa import Logger
+
 """
 Unittest based testing of custom optimizers.
 """

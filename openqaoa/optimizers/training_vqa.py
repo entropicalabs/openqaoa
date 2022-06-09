@@ -34,8 +34,9 @@ from ..derivative_functions import derivative
 
 class OptimizeVQA(ABC):
     '''    
-    Training Class for optimizing VQA algorithm based on VQABaseBackend.
-    This function utilizes the exepectation method of the backend class.
+    Training Class for optimizing VQA algorithm that wraps around VQABaseBackend and QAOAVariationalBaseParams objects.
+    This function utilizes the `update_from_raw` of the QAOAVariationalBaseParams class and `expectation` method of 
+    the VQABaseBackend class to create a wrapper callable which is passed into scipy.optimize.minimize for minimization.
     Only the trainable parameters should be passed instead of the complete
     AbstractParams object. The construction is completely backend and type 
     of VQA agnostic. 
@@ -50,16 +51,23 @@ class OptimizeVQA(ABC):
 
     Parameters
     ----------
-    vqa_object: 
-        An object of class basebackend which is responsible for constructing and 
-        executing the quantum circuit on the specified backend
-
-    variational_params: 
-        An object that keeps track of the varying parameters of a problem for a 
-        specific parameterisation.
+    vqa_object:
+        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
+    
+    variational_params:
+        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
+    
+    method: 
+        which method to use for optimization. Choose a method from the list
+        of supported methods by scipy optimize, or from the list of custom gradient optimisers.
 
     optimizer_dict:
-        All extra parameters needed for customising the optimising, as a dictionary
+        All extra parameters needed for customising the optimising, as a dictionary.
+
+    #Optimizers that usually work the best for quantum optimization problems:
+        1) Gradient free optimizer: BOBYQA, ImFil, Cobyla
+        2) Gradient based optimizer: L-BFGS, ADAM (With parameter shift gradients)
+        Note: Adam is not a part of scipy, it will added in a future version
     '''
 
     def __init__(self,
@@ -152,7 +160,12 @@ class OptimizeVQA(ABC):
         Parameters
         ----------
         x: 
-            parameters over which optimization is performed
+            Parameters (a list of floats) over which optimization is performed.
+
+        Returns 
+        -------
+        cost value: 
+            Cost value which is evaluated on the declared backend.
 
         Returns
         -------
@@ -270,22 +283,18 @@ class ScipyOptimizer(OptimizeVQA):
 
     Parameters
     ----------
-    vqa_object: 
-        An object of class basebackend which is responsible for constructing and 
-        executing the quantum circuit on the specified backend
-
-    variational_params: 
-        An object that keeps track of the varying parameters for a specific 
-        parameterisation.
+    vqa_object:
+        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
+    
+    variational_params:
+        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
-        * jac
-        
-            * gradient as ``Callable``, if defined else ``None``
+        jac: 
+            gradient as `Callable` if defined. else None
 
-        * hess
-        
-            * hessian as ``Callable``, if defined else ``None``
+        hess: 
+            hessian as `Callable` if defined. else None
 
         * bounds
         
@@ -463,13 +472,11 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
 
     Parameters
     ----------
-    vqa_object: 
-        An object of class basebackend which is responsible for constructing and 
-        executing the quantum circuit on the specified backend
-
-    variational_params: 
-        An object that keeps track of the varying parameters for a specific 
-        parameterisation.
+    vqa_object:
+        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
+    
+    variational_params:
+        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
         * jac

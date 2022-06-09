@@ -294,7 +294,7 @@ class QAOA(Optimizer):
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device = self.device,
-                                        **self.backend_properties.asdict())
+                                        **self.backend_properties.__dict__)
 
         self.optimizer = get_optimizer(vqa_object=self.backend,
                                        variational_params=self.variate_params,

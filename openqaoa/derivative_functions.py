@@ -13,10 +13,10 @@
 #   limitations under the License.
 
 """
-Collection of functions to return derivative computation functions. Called from QAOACosts' 'gradient_function' method.
+Collection of functions to return derivative computation functions. Usually called from the `derivative_function` method of a `QAOABaseBackend` object.
 New gradient/higher-order derivative computation methods can be added here. To add new computation methods:
-    1. Write function in the format : new_function(cost_std, cost_ext, params, params_ext, gradient_options), or with less arguments.
-    2. Give it a name, and add this under derivative_methods of DerivativeFunction, and as a possible 'out'.
+    1. Write function in the format : new_function(backend_obj, params_std, params_ext, gradient_options), or with less arguments.
+    2. Give this function a string identifier (eg: 'param_shift'), and add this to the list `derivative_methods` of the function `derivative`, and as a possible 'out'.
 
 """
 from __future__ import annotations
@@ -25,6 +25,7 @@ import numpy as np
 import random
 
 from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
+
 
 def update_and_compute_expectation(backend_obj: QAOABaseBackend, 
                                    params: QAOAVariationalBaseParams, 
@@ -84,12 +85,12 @@ def derivative(backend_obj: QAOABaseBackend,
     out:
         The callable derivative function of the cost function, generated based on the `derivative_type`, `derivative_method`, and `derivative_options` specified.
     """
-    
     # Default derivative_options used if none are specified.
     default_derivative_options = {"stepsize": 0.00001,
-                                  "n_beta": -1,
-                                  "n_gamma_pair": -1,
-                                  "n_gamma_single": -1}
+                                  "n_beta_single": -1,
+                                  "n_beta_pair": -1,
+                                  "n_gamma_single": -1,
+                                  "n_gamma_pair": -1}
 
     derivative_options = {**default_derivative_options, **derivative_options
                           } if derivative_options is not None else default_derivative_options
@@ -114,8 +115,10 @@ def derivative(backend_obj: QAOABaseBackend,
         if derivative_method == 'finite_difference':
             out = grad_fd(backend_obj, params, derivative_options, logger)
         elif derivative_method == 'param_shift':
+            assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
             out = grad_ps(backend_obj, params, params_ext, logger)
         elif derivative_method == 'stoch_param_shift':
+            assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
             out = grad_sps(backend_obj, params, params_ext, derivative_options, logger)
         elif derivative_method == 'grad_spsa':
             out = grad_spsa(backend_obj, params, derivative_options, logger)
@@ -178,7 +181,7 @@ def grad_ps(backend_obj, params, params_ext, logger):
     backend_obj : `QAOABaseBackend`
         backend object that computes expectation values when executed. 
 
-    params_std : `QAOAVariationalStandardParams`
+    params : `QAOAVariationalStandardParams`
         variational parameters object, standard parametrisation.
 
     params_ext : `QAOAVariationalExtendedParams`
@@ -188,29 +191,19 @@ def grad_ps(backend_obj, params, params_ext, logger):
     -------
     grad_ps_func:
         Callable derivative function.
-    """
-
+    """    
+    # TODO : clean up conversion part + handle Fourier parametrisation
+    
     fun = update_and_compute_expectation(backend_obj, params_ext, logger)
+    
+    coeffs_list = params.p*params.mixer_1q_coeffs + params.p*params.mixer_2q_coeffs + \
+            params.p*params.cost_1q_coeffs + params.p*params.cost_2q_coeffs
 
     def grad_ps_func(args):
 
         # Convert standard to extended parameters before applying parameter shift
-        # TODO : clean this up
-        terms_lst = [len(params.mixer_1q_coeffs), len(params.mixer_2q_coeffs), len(
-            params.cost_1q_coeffs), len(params.cost_2q_coeffs)]
-        terms_lst_p = np.repeat(terms_lst, [params.p]*len(terms_lst))
-        args_ext = []
-        for i in range(4):  # 4 types of terms
-            for j in range(params.p):
-                for k in range(terms_lst_p[i*params.p + j]):
-                    if i < 2:
-                        args_ext.append(params.raw()[j])
-                    else:
-                        args_ext.append(
-                            params.raw()[j + int(len(params.raw())/2)])
-
-        coeffs_list = params.mixer_1q_coeffs + params.mixer_2q_coeffs + \
-            params.cost_1q_coeffs + params.cost_2q_coeffs
+        args_ext = params.convert_to_ext(args)
+        
         grad_ext = np.zeros(len(args_ext))
 
         # Apply parameter shifts
@@ -221,9 +214,16 @@ def grad_ps(backend_obj, params, params_ext, logger):
             grad_ext[i] = r*(fun(args_ext + (np.pi/(4*r))*vect_eta) -
                              fun(args_ext - (np.pi/(4*r))*vect_eta))
 
-        mat = np.zeros((4, params.p))
-
         # Convert extended param. gradient form back into std param. form
+        
+        m1q_entries = grad_ext[:params.p*len(params.mixer_1q_coeffs)]
+        m2q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) : params.p*len(params.mixer_2q_coeffs)]
+        c1q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs): params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs) + params.p*len(params.cost_1q_coeffs)]
+        c2q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs) + params.p*len(params.cost_1q_coeffs):]
+        subdivided_ext_grad = [m1q_entries, m2q_entries, c1q_entries, c2q_entries]
+        
+        # Sum up gradients (due to the chain rule), and re-express in standard form.
+        mat = np.zeros((4, params.p))
         for i in range(4):  # 4 types of terms
             for j in range(params.p):
                 mat[i][j] = np.sum(subdivided_ext_grad[i][j*int(len(subdivided_ext_grad[i]) /
@@ -231,6 +231,7 @@ def grad_ps(backend_obj, params, params_ext, logger):
 
         grad_std = list(np.sum(mat[:2], axis=0)) + \
             list(np.sum(mat[2:], axis=0))
+        
         return np.array(grad_std)
 
     return grad_ps_func
@@ -238,7 +239,7 @@ def grad_ps(backend_obj, params, params_ext, logger):
 
 def grad_sps(backend_obj, params_std, params_ext, gradient_options, logger):
     """
-    Returns a callable function that approximates the gradient with the stochastic parameter shift method, which samples (n_beta, n_gamma_pair, n_gamma_single) gates at each layer instead of all gates. See "Algorithm 4" of https://arxiv.org/pdf/1910.01155.pdf. By convention, (n_beta, n_gamma_pair, n_gamma_single) = (-1, -1, -1) will sample all gates (which is then equivalent to the full parameter shift rule).
+    Returns a callable function that approximates the gradient with the stochastic parameter shift method, which samples (n_beta_single, n_beta_pair, n_gamma_single, n_gamma_pair) gates at each layer instead of all gates. See "Algorithm 4" of https://arxiv.org/pdf/1910.01155.pdf. By convention, (n_beta_single, n_beta_pair, n_gamma_single, n_gamma_pair) = (-1, -1, -1, -1) will sample all gates (which is then equivalent to the full parameter shift rule).
 
     PARAMETERS
     ----------
@@ -252,106 +253,92 @@ def grad_sps(backend_obj, params_std, params_ext, gradient_options, logger):
         variational parameters object, extended parametrisation.
 
     gradient_options :
-        n_beta : 
-            Number of X gates to sample for the parameter shift.
+        n_beta_single : 
+            Number of single-qubit mixer gates to sample for the stochastic parameter shift.
+        n_beta_pair : 
+            Number of X two-qubit mixer gates to sample for the stochastic parameter shift.
         n_gamma_pair : 
-            Number of ZZ gates to sample for the parameter shift.
+            Number of two-qubit cost gates to sample for the stochastic parameter shift.
         n_gamma_single : 
-            Number of Z gates to sample for the parameter shift.
+            Number of single-qubit cost gates to sample for the stochastic parameter shift.
 
     RETURNS
     -------
     grad_sps_func:
         Callable derivative function.
     """
-
-    n_beta = gradient_options['n_beta']
-    n_gamma_pair = gradient_options['n_gamma_pair']
+    
+    n_beta_single = gradient_options['n_beta_single']
+    n_beta_pair = gradient_options['n_beta_pair']
     n_gamma_single = gradient_options['n_gamma_single']
-
-    beta_len = len(params_ext.betas[0])
-    gamma_pair_len = len(params_ext.gammas_pairs[0])
+    n_gamma_pair = gradient_options['n_gamma_pair']
+    
+    beta_single_len = len(params_ext.betas_singles[0])
+    beta_pair_len = len(params_ext.betas_pairs[0])
     gamma_single_len = len(params_ext.gammas_singles[0])
+    gamma_pair_len = len(params_ext.gammas_pairs[0])
+    
+    coeffs_list = params_std.p*params_std.mixer_1q_coeffs + params_std.p*params_std.mixer_2q_coeffs + \
+            params_std.p*params_std.cost_1q_coeffs + params_std.p*params_std.cost_2q_coeffs
+    
+    assert (-1 <= n_beta_single <= beta_single_len) and (-1 <= n_beta_pair <= beta_pair_len) and (-1 <= n_gamma_single <= gamma_single_len) and (-1 <= n_gamma_pair <= gamma_pair_len),\
+        f"Invalid (n_beta_single, n_beta_pair, n_gamma_pair, n_gamma_single). Each n must be -1 or integers less than or equals to ({str(beta_single_len)}, {str(beta_pair_len)}, {str(gamma_single_len)}, {str(gamma_pair_len)})"
 
-    assert (-1 <= n_beta <= beta_len) and (-1 <= n_gamma_pair <= gamma_pair_len) and (-1 <= n_gamma_single <= gamma_single_len),\
-        "Invalid (n_beta, n_gamma_pair, n_gamma_single). Each n must be -1 or integers less than or equals to (" + \
-        str(beta_len) + ", " + str(gamma_pair_len) + \
-        ", " + str(gamma_single_len) + ")."
-
-    if n_beta == -1:
-        n_beta = beta_len
-    if n_gamma_pair == -1:
-        n_gamma_pair = gamma_pair_len
-    if n_gamma_single == -1:
-        n_gamma_single = gamma_single_len
-
-    timesteps = params_std.p
-    p_ext = np.zeros(len(params_ext.raw()))
-    grad_ext = np.zeros(len(params_ext.raw()))
-
-    b = [len(x) for x in params_ext.betas]
-    gs = [len(x) for x in params_ext.gammas_singles]
-    gp = [len(x) for x in params_ext.gammas_pairs]
-
-    pair_indices = [ind for ind, x in enumerate(
-        params_std.hyperparameters.terms) if len(x) == 2]
-    single_indices = [ind for ind, x in enumerate(
-        params_std.hyperparameters.terms) if len(x) == 1]
-    weights = params_std.hyperparameters.weights
-
-    def grad_sps_func(params):
-        cost_std(params)  # TODO : Temporary fix. See ent_10_13, part 3.
-        grad = np.zeros(len(params))
+    if n_beta_single == -1: n_beta_single = beta_single_len
+    if n_beta_pair == -1: n_beta_pair = beta_pair_len
+    if n_gamma_single == -1: n_gamma_single = gamma_single_len
+    if n_gamma_pair == -1: n_gamma_pair = gamma_pair_len
+        
+    fun = update_and_compute_expectation(backend_obj, params_ext, logger)
+    
+    def grad_sps_func(args):
 
         # Convert standard to extended parameters before applying parameter shift
-        p_ext = np.repeat(list(params) + list(params_std.gammas), b + gs + gp)
+        args_ext = params_std.convert_to_ext(args)
+        
+        grad_ext = np.zeros(len(args_ext))
 
         # Generate lists of random gates to sample. Note : Gates sampled in each layer is not necessarily the same, but the number of sampled gates in each layer is the same.
-        sampled_beta, sampled_gamma_pair, sampled_gamma_single = [], [], []
-        for i in range(timesteps):
-            sampled_beta += random.sample(range(beta_len*i,
-                                          beta_len*(i+1)), n_beta)
-            sampled_gamma_pair += random.sample(
-                range(gamma_pair_len*i, gamma_pair_len*(i+1)), n_gamma_pair)
-            sampled_gamma_single += random.sample(
-                range(gamma_single_len*i, gamma_single_len*(i+1)), n_gamma_single)
+        sampled_indices = []
+        for p in range(params_std.p):
+            sampled_indices.append(random.sample(range(p*len(params_std.mixer_1q_coeffs) , (p+1)*len(params_std.mixer_1q_coeffs)), n_beta_single))
 
-        # Apply parameter shift to ext parameters
-        for i in range(len(params_ext.raw())):
-            vect_eta = np.zeros(len(p_ext))
-            vect_eta[i] = 1
+            sampled_indices.append(random.sample(range(params_std.p*len(params_std.mixer_1q_coeffs) + p*len(params_std.mixer_2q_coeffs) , params_std.p*len(params_std.mixer_1q_coeffs) + (p+1)*len(params_std.mixer_2q_coeffs)), n_beta_pair))
 
-            if i < len(params_ext.betas.flatten()):  # (beta/X terms)
-                if (i) in sampled_beta:
-                    r = 1
-                    grad_ext[i] = (beta_len/n_beta)*r*(cost_ext(p_ext + (np.pi/(4*r))
-                                                                * vect_eta) - cost_ext(p_ext - (np.pi/(4*r))*vect_eta))
+            sampled_indices.append(random.sample(range(params_std.p*(len(params_std.mixer_1q_coeffs) + len(params_std.mixer_2q_coeffs)) + p*len(params_std.cost_1q_coeffs) , params_std.p*(len(params_std.mixer_1q_coeffs) + len(params_std.mixer_2q_coeffs)) + (p+1)*len(params_std.cost_1q_coeffs)), n_gamma_single))
 
-            # (gamma/ZZ terms)
-            elif i >= len(params_ext.betas.flatten()) + len(params_ext.gammas_singles.flatten()):
-                if (i - len(params_ext.betas.flatten()) - len(params_ext.gammas_singles.flatten())) in sampled_gamma_pair:
-                    r = weights[pair_indices[(i - len(params_ext.betas.flatten()) - len(
-                        params_ext.gammas_singles.flatten())) % len(pair_indices)]]
-                    grad_ext[i] = (gamma_pair_len/n_gamma_pair)*r*(cost_ext(
-                        p_ext + (np.pi/(4*r))*vect_eta) - cost_ext(p_ext - (np.pi/(4*r))*vect_eta))
+            sampled_indices.append(random.sample(range(params_std.p*(len(params_std.mixer_1q_coeffs) + len(params_std.mixer_2q_coeffs) + len(params_std.cost_1q_coeffs)) + p*len(params_std.cost_2q_coeffs) , params_std.p*(len(params_std.mixer_1q_coeffs) + len(params_std.mixer_2q_coeffs) + len(params_std.cost_1q_coeffs)) + (p+1)*len(params_std.cost_2q_coeffs)), n_gamma_pair))
+    
+        sampled_indices = [item for sublist in sampled_indices for item in sublist]
 
-            else:  # (single Z terms)
-                if (i - len(params_ext.betas.flatten())) in sampled_gamma_single:
-                    r = weights[single_indices[(
-                        i - len(params_ext.betas.flatten())) % len(single_indices)]]
-                    grad_ext[i] = (gamma_single_len/n_gamma_single)*r*(cost_ext(
-                        p_ext + (np.pi/(4*r))*vect_eta) - cost_ext(p_ext - (np.pi/(4*r))*vect_eta))
+        # Apply parameter shifts
+        for i in range(len(args_ext)):
+            if (i) in sampled_indices:
+                vect_eta = np.zeros(len(args_ext))
+                vect_eta[i] = 1
+                r = coeffs_list[i]
+                grad_ext[i] = r*(fun(args_ext + (np.pi/(4*r))*vect_eta) -
+                                 fun(args_ext - (np.pi/(4*r))*vect_eta))
 
-        # Convert gradient (ext back to std)
-        s1 = np.split((np.tile([0] + list(np.cumsum(b + gs + gp)),
-                      (2, 1)).flatten('F'))[1:-1], len(b + gs + gp))
-        s2 = [grad_ext[x[0]:x[1]] for x in s1]
-        a = [np.sum(x) for x in s2]
-        grad = list(a[: len(params_ext.betas)]) + \
-            list(
-                np.sum(np.reshape(a[len(params_ext.betas):], (2, timesteps)), axis=0))
+        # Convert extended param. gradient form back into std param. form
+        
+        m1q_entries = grad_ext[:params_std.p*len(params_std.mixer_1q_coeffs)]
+        m2q_entries = grad_ext[params_std.p*len(params_std.mixer_1q_coeffs) : params_std.p*len(params_std.mixer_2q_coeffs)]
+        c1q_entries = grad_ext[params_std.p*len(params_std.mixer_1q_coeffs) + params_std.p*len(params_std.mixer_2q_coeffs): params_std.p*len(params_std.mixer_1q_coeffs) + params_std.p*len(params_std.mixer_2q_coeffs) + params_std.p*len(params_std.cost_1q_coeffs)]
+        c2q_entries = grad_ext[params_std.p*len(params_std.mixer_1q_coeffs) + params_std.p*len(params_std.mixer_2q_coeffs) + params_std.p*len(params_std.cost_1q_coeffs):]
+        subdivided_ext_grad = [m1q_entries, m2q_entries, c1q_entries, c2q_entries]
+        
+        # Sum up gradients (due to the chain rule), and re-express in standard form.
+        mat = np.zeros((4, params_std.p))
+        for i in range(4):  # 4 types of terms
+            for j in range(params_std.p):
+                mat[i][j] = np.sum(subdivided_ext_grad[i][j*int(len(subdivided_ext_grad[i]) /
+                                   params_std.p):(j+1)*int(len(subdivided_ext_grad[i])/params_std.p)])
 
-        return np.array(grad)
+        grad_std = list(np.sum(mat[:2], axis=0)) + \
+            list(np.sum(mat[2:], axis=0))
+        
+        return np.array(grad_std)
 
     return grad_sps_func
 
@@ -436,83 +423,3 @@ def grad_spsa(backend_obj, params, gradient_options, logger):
         return np.real((fun(args + c*delta) - fun(args - c*delta))*delta/(2*c))
 
     return grad_spsa_func
-
-
-'''
-def grad_sps(cost_std, cost_ext, params_std, params_ext, gradient_options):
-    """
-    Returns a callable function that calculates the gradient with the Stochastic Parameter Shift method. 
-    See "Algorithm 4" of https://arxiv.org/pdf/1910.01155.pdf. (Deprecated)
-    
-    'gradient_options' parameters : 
-    -------------------------------
-        n_beta : Number of X gates to sample for the parameter shift.
-        n_gamma : Number of ZZ gates to sample for the parameter shift.
-
-    """
-    
-    # TODO : Update and integrate with grad_ps
-    
-    n_beta = gradient_options['n_beta']
-    n_gamma = gradient_options['n_gamma']
-
-    n_nodes = len(params_std.reg)
-    timesteps = params_std.p
-    beta_len = len(params_ext.betas[0])
-    gamma_len = len(params_ext.gammas_pairs[0])
-
-    assert n_beta <= beta_len and n_gamma <= gamma_len,\
-    "Invalid (n_beta, n_gamma). Maximum is (" + str(beta_len) + ", " + str(gamma_len) + ")."
-
-    if n_beta == 0:
-        n_beta = beta_len
-    if n_gamma == 0:
-        n_gamma = gamma_len
-
-    def grad_sps_func(params):
-
-            p_ext = np.zeros(timesteps*(beta_len + gamma_len))
-            grad = np.zeros(2*timesteps)
-
-            # convert standard to extended parameters before applying parameter shift
-            # note : built-in standard to extended converter not working?
-            c = 0
-            for j in range(len(p_ext)):
-                if j < timesteps*beta_len: # (beta/X terms)
-
-                    if ((j+1) % beta_len) == False:
-                        p_ext[j] = params[c]
-                        c +=1
-                    else:
-                        p_ext[j] = params[c]   
-                else: # (gamma/Z terms)
-                    if ((j+1 - timesteps*beta_len) % gamma_len)== False :
-                        p_ext[j] = params[c]
-                        c += 1
-                    else:
-                        p_ext[j] = params[c]
-
-
-            for i in range(2*timesteps):
-
-                if i < len(params_std.betas):
-
-                    for k1 in random.sample(range(0, beta_len), n_beta):
-                        vect_eta = np.zeros(len(p_ext))
-                        c = i*beta_len + k1
-                        vect_eta[c] = 1
-                        r = 1
-                        grad[i] += np.real((beta_len/n_beta)*r*(cost_ext(p_ext + (np.pi/(4*r))*vect_eta) - cost_ext(p_ext - (np.pi/(4*r))*vect_eta)))
-
-                else:
-
-                    for k2 in random.sample(range(0, gamma_len), n_gamma):
-                        vect_eta = np.zeros(len(p_ext))
-                        c = gamma_len*(i-len(params_std.betas)) + beta_len*len(params_ext.betas) + k2 
-                        vect_eta[c] = 1
-                        r = 1
-                        grad[i] += np.real((gamma_len/n_gamma)*r*(cost_ext(p_ext + (np.pi/(4*r))*vect_eta) - cost_ext(p_ext - (np.pi/(4*r))*vect_eta)))
-
-            return grad
-    return grad_sps_func
-'''
