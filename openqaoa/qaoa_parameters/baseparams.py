@@ -15,6 +15,7 @@
 from abc import ABC
 from typing import List, Union, Tuple, Any, Callable, Iterable, Type
 import numpy as np
+import copy
 
 from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
@@ -197,8 +198,86 @@ class QAOACircuitParams(VQACircuitParams):
             _pseudo_circuit.extend(mixer_pauli_gate_list[each_p])
 
         return _pseudo_circuit
+    
+    def separate_pseudocircuit_into_commuting(self, pseudo_circ, n_qubits):
+    
+        '''
+        Separates the pseudocircuit/a list of pauligate object into blocks, where each block only contains gates that commute with one another.
+        Note : This code assumes that the underlying qubit register is [0, ..., n]
+        '''
+
+        commuting_block_lst = []
+        pointer = 0
+        while pointer != len(pseudo_circ):
+
+            commuting_block = [pseudo_circ[pointer]]
+            binary_marker = np.zeros(n_qubits) # used to mark the qubit index whenever a non-commuting gate is encountered
+
+            for gate in pseudo_circ[pointer + 1:]:
+
+                if np.array_equal(binary_marker, np.ones(n_qubits)) == True:
+                    break
+
+                # If gate commutes with everything in commuting_block, add into commuting_block.
+                # else, if it does not commute with one of the gates, update binary marker for indices at the gate's qubits.
+                encountered_noncommuting = False
+                for commuting_gate in commuting_block:
+
+                    if gate._commutes_with(commuting_gate) == False: 
+
+                        for index in gate._qubit_indices:
+                            binary_marker[index] = 1
+
+                        encountered_noncommuting = True
+                        break
+                
+                
+                # TODO: check this
+                # If this gate is not blocked by gates before it, and does not share qubits with `commuting_gate`, add this to the block
+                if encountered_noncommuting == False and (binary_marker[gate._qubit_indices[0]] == 0 and binary_marker[gate._qubit_indices[1]] == 0):
+                    commuting_block.append(gate)
+                    pointer += 1
+
+            pointer += 1
+            commuting_block_lst.append(commuting_block)
+
+        return commuting_block_lst
+    
+    def separate_pseudocircuit_into_parallelizable(self, pseudo_circuit):
+        '''
+        Re-orders terms and weights so that non-qubit-sharing (i.e parallelizable) blocks are grouped together.
+        This is an edge coloring problem.
+        Assumes that terms commute with one another, so that they can be re-ordered arbitrarily.
+
+        '''
+
+        gates = copy.deepcopy(pseudo_circuit)
+
+        nonsharing_blocks = []
+        while len(gates) != 0:
+
+            nonsharing_block = []
+            target_index = 0 # always compare the first pair with all others
+
+            pop_indices = [target_index] # indices to be popped later
+            reference_list = [gates[target_index]._qubit_indices] # reference list that is checked for commutation
+            for i, gate in enumerate(gates):
+
+                if i != target_index:
+                    if all(elem not in [item for sublist in reference_list for item in sublist] for elem in gate._qubit_indices):
+                        pop_indices.append(i)
+                        reference_list.append(gate._qubit_indices)
+
+            for pop_index in sorted(pop_indices, reverse=True):
+                nonsharing_block.append(gates[pop_index])
+                gates.pop(pop_index)
+
+            nonsharing_blocks.append(nonsharing_block)
+
+        return nonsharing_blocks
 
 
+    
 class QAOAVariationalBaseParams(ABC):
     """
     A class that initialises and keeps track of the Variational

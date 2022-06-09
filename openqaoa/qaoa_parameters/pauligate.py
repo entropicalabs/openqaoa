@@ -15,7 +15,6 @@
 from abc import ABC, abstractmethod
 # from types import NoneType
 import numpy as np
-from scipy.sparse import csc_matrix, kron, diags
 from typing import List, Tuple, Union
 
 from .operators import Hamiltonian
