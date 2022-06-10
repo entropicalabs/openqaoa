@@ -16,7 +16,6 @@
 Utility and convenience functions for a number of QAOA applications.
 """
 
-from argparse import ArgumentDefaultsHelpFormatter
 from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
