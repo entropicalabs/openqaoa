@@ -614,10 +614,10 @@ def final_solution(max_terms_and_stats_list: list, cl_states: list, hamiltonian:
                 if i is None:
 
                     # Basis change
-                    state = int((1 - val)/2)
-
+                    binary_val = int((1 - val)/2)
+                    
                     # Insert fixed value of j
-                    state.insert(j, state)
+                    state.insert(j, binary_val)
 
                 # If j unfixed, it is enslaved to i
                 else:
