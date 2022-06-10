@@ -23,36 +23,6 @@ from openqaoa.qaoa_parameters import QAOACircuitParams, QAOAVariationalBaseParam
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.utilities import bitstring_energy, ground_state_hamiltonian, get_mixer_hamiltonian, expectation_values
 
-def qaoa_cost_backend(params: QAOACircuitParams, device: DeviceBase,
-                      shots: int, qpu_params:dict= None):
-    """
-    Returns a QAOA backend initialised by the specified initialisation strategy.
-    Parameters
-    ----------
-    params: `QAOACircuitParams`
-        Parameters that define the circuit.
-    device: `DeviceBase`
-        Specific device we want to use. Defaults to 'vectorized'.
-    shots: `int`
-        The number of shots if one chooses shot-based simulations.
-        Defaults to None.
-    qpu_params: `dict`
-        Dictionary containing all information regarding the QPU system
-        used to run the circuit on. Defaults to None.
-    Returns
-    -------
-    qaoa_backend: `QAOABaseBackend`
-        The specified QAOA backend.
-    """
-
-    # Construct backend
-    qubit_layout = qpu_params.get(['qubit_layout']) if isinstance(qpu_params,dict) else None
-    qaoa_backend = get_qaoa_backend(params, device=device, 
-                                    n_shots=shots,
-                                    qubit_layout=qubit_layout)
-
-    return qaoa_backend
-
 
 def optimize_qaoa(qaoa_backend: QAOABaseBackend, variational_params: QAOAVariationalBaseParams, optimizer_dict: dict):
     """
@@ -672,9 +642,8 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
                    device: DeviceBase = DeviceLocal('vectorized'),
                    params_type: str = 'standard',
                    init_type: str = 'ramp',
-                   shots: int = None,
                    optimizer_dict: dict = {'method': 'cobyla', 'maxiter': 200},
-                   qpu_params: dict = None,
+                   backend_properties: dict = {},
                    max_terms_and_stats_list: list = None,
                    original_hamiltonian: Hamiltonian = None
                    ):
@@ -704,15 +673,12 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
         Parametrization to be used during QAOA run. Defaults to 'standard'.   
     init_type: `str`, optional
         Parametrization to be used during QAOA run. Defaults to 'ramp'.
-    shots: `int`, optional
-        The number of shots if one chooses shot-based simulations.
-        Defaults to None.  
     optimizer_dict: `dict`, optional
         Specifications on the optimizer to be used during QAOA run.
         Method defaults to 'cobyla'. Maximum iterations default to 200.
-    qpu_params: `dict`, optional
-        Dictionary containing all information regarding the QPU system
-        used to run the circuit on. Defaults to None.             
+    backend_properties: `dict`, optional
+        Dictionary containing all information regarding the backend
+        used to run the circuit on. Default is empty.            
     max_terms_and_stats_list: `list`, optional
         List tracking the terms with with highest expectation value and the
         associated expectation value. Defaults to None.
@@ -787,8 +753,7 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
             circuit_params, params_type, init_type)
 
         # Retrieve backend
-        qaoa_backend = qaoa_cost_backend(
-            circuit_params, device, shots, qpu_params)
+        qaoa_backend = get_qaoa_backend(circuit_params,**backend_properties,device=device)
 
         # Run QAOA
         qaoa_results = optimize_qaoa(
@@ -819,8 +784,8 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
         new_hamiltonian = redefine_hamiltonian(hamiltonian, spin_map)
 
         # Restart process with new parameters
-        return adaptive_rqaoa(new_hamiltonian, mixer, p, n_max, n_cutoff, device, params_type, init_type, shots,
-                              optimizer_dict, qpu_params, max_terms_and_stats_list, original_hamiltonian)
+        return adaptive_rqaoa(new_hamiltonian, mixer, p, n_max, n_cutoff, device, params_type, init_type,
+                              optimizer_dict, backend_properties, max_terms_and_stats_list, original_hamiltonian)
 
 
 def custom_rqaoa(hamiltonian: Hamiltonian,
@@ -831,9 +796,8 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
                  device: DeviceBase = DeviceLocal('vectorized'),
                  params_type: str = 'standard',
                  init_type: str = 'ramp',
-                 shots: int = None,
                  optimizer_dict: dict = {'method': 'cobyla', 'maxiter': 200},
-                 qpu_params: dict = None,
+                 backend_properties: dict = {},
                  max_terms_and_stats_list: list = None,
                  original_hamiltonian: Hamiltonian = None,
                  counter=None
@@ -864,15 +828,12 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
         Parametrization to be used during QAOA run. Defaults to 'standard'.
     init_type: `str`, optional
         Parametrization to be used during QAOA run. Defaults to 'ramp'.
-    shots: `int`, optional
-        The number of shots if one chooses shot-based simulations.
-        Defaults to None.
     optimizer_dict: `dict`, optional
         Specifications on the optimizer to be used during QAOA run.
         Method defaults to 'cobyla'. Maximum iterations default to 200.
-    qpu_params: `dict`, optional
-        Dictionary containing all information regarding the QPU system
-        used to run the circuit on. Defaults to None.
+    backend_properties: `dict`, optional
+        Dictionary containing all information regarding the backend
+        used to run the circuit on. Defaults is empty.
     max_terms_and_stats_list: 
         List tracking the terms with with highest expectation value and the
         associated expectation value. Defaults to None.
@@ -963,8 +924,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
             circuit_params, params_type, init_type)
 
         # Retrieve backend
-        qaoa_backend = qaoa_cost_backend(
-            circuit_params, device, shots, qpu_params)
+        qaoa_backend = get_qaoa_backend(circuit_params,**backend_properties,device=device)
 
         # Run QAOA
         qaoa_results = optimize_qaoa(
@@ -998,7 +958,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
         counter += 1
 
         # Restart process with new parameters
-        return custom_rqaoa(new_hamiltonian, mixer, p, n_cutoff, steps, device, params_type, init_type, shots,
-                            optimizer_dict, qpu_params, max_terms_and_stats_list, original_hamiltonian, counter)
+        return custom_rqaoa(new_hamiltonian, mixer, p, n_cutoff, steps, device, params_type, init_type,
+                            optimizer_dict, backend_properties, max_terms_and_stats_list, original_hamiltonian, counter)
 
 # END

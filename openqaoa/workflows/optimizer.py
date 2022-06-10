@@ -123,12 +123,12 @@ class QAOA(Optimizer):
 
         Parameters
         -------------------
-            qubit_register: list
+            qubit_register: `list`
                 Select the desired qubits to run the QAOA program. Meant to be used as a qubit
                 selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
-            p: int
+            p: `int`
                 Depth `p` of the QAOA circuit
-            q: int
+            q: `int`
                 Analogue of `p` of the QAOA circuit in the Fourier parameterisation
             param_type: `str`
                 Choose the QAOA circuit parameterisation. Currently supported parameterisations include:
@@ -138,12 +138,12 @@ class QAOA(Optimizer):
                 `'fourier'`: Fourier circuit parameterisation
                 `'fourier_extended'`: Fourier circuit parameterisation with individual parameter for each qubit and term in Hamiltonian.
                 `'fourier_w_bias'`: Fourier circuit parameterisation with aseparate parameter for single-qubit terms
-            init_type: str
+            init_type: `str`
                 Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
                 `'rand'`: Randomly initialise circuit parameters
                 `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit parameters (inspired from Quantum Annealing)
                 `'custom'`: User specified initial circuit parameters
-            mixer_hamiltonian: str
+            mixer_hamiltonian: `str`
                 Parameterisation of the mixer hamiltonian:
                 `'x'`: Randomly initialise circuit parameters
                 `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
@@ -280,6 +280,7 @@ class QAOA(Optimizer):
             Set True to have a summary of QAOA to displayed after compilation
         """
         self.mixer_hamil = get_mixer_hamiltonian(n_qubits=problem.n,
+                                                 mixer_type = self.circuit_properties.mixer_hamiltonian,
                                                  qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
                                                  coeffs=self.circuit_properties.mixer_coeffs)
 
@@ -374,8 +375,10 @@ class RQAOA(Optimizer):
         """
         self.algorithm = 'rqaoa'
         self.qaoa = qaoa
-        # print(f'\n\nThe default device inside the class is {self.qaoa.device_properties.device}\n\n')
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
+        self.rqaoa_mixer = {'type':self.qaoa.circuit_properties.mixer_hamiltonian,
+                            'connectivity':self.qaoa.circuit_properties.mixer_qubit_connectivity,
+                            'coeffs':self.qaoa.circuit_properties.mixer_coeffs}
 
     def set_rqaoa_parameters(self, **kwargs):
         """
@@ -412,27 +415,27 @@ class RQAOA(Optimizer):
         if self.rqaoa_parameters.rqaoa_type == 'adaptive':
             res = adaptive_rqaoa(
                 hamiltonian=self.qaoa.cost_hamil,
-                mixer_hamiltonian=self.qaoa.mixer_hamil,
+                mixer=self.rqaoa_mixer,
                 p=self.qaoa.circuit_properties.p,
                 n_max=self.rqaoa_parameters.n_max,
                 n_cutoff=self.rqaoa_parameters.n_cutoff,
                 device=self.qaoa.device,
                 params_type=self.qaoa.circuit_properties.param_type,
                 init_type=self.qaoa.circuit_properties.init_type,
-                shots=self.qaoa.backend_properties.n_shots,
-                optimizer_dict=self.qaoa.classical_optimizer.asdict())
+                optimizer_dict=self.qaoa.classical_optimizer.asdict(),
+                backend_properties = self.qaoa.backend_properties.__dict__)
         elif self.rqaoa_parameters.rqaoa_type == 'custom':
             res = custom_rqaoa(
                 hamiltonian=self.qaoa.cost_hamil,
-                mixer_hamiltonian=self.qaoa.mixer_hamil,
+                mixer=self.rqaoa_mixer,
                 p=self.qaoa.circuit_properties.p,
                 n_cutoff=self.rqaoa_parameters.n_cutoff,
                 steps= self.rqaoa_parameters.steps,
                 device=self.qaoa.device,
                 params_type=self.qaoa.circuit_properties.param_type,
                 init_type=self.qaoa.circuit_properties.init_type,
-                shots=self.qaoa.backend_properties.n_shots,
-                optimizer_dict=self.qaoa.classical_optimizer.asdict())
+                optimizer_dict=self.qaoa.classical_optimizer.asdict(),
+                backend_properties = self.qaoa.backend_properties.__dict__)
         else:
             raise f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom'
 

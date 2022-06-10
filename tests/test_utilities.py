@@ -21,6 +21,7 @@ from openqaoa.utilities import *
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
+from openqaoa.problems.problem import MinimumVertexCover
 
 """
 Unit test based testing of the utility functions
@@ -685,26 +686,42 @@ class TestingUtilities(unittest.TestCase):
         Tests the function that computed the expectation value of the Hamiltonian from an
         analytical function valid for a single layer QAOA Ansatz with the X mixer.
 
-        The test consists in computing the expectation value of an example Hamiltonian.
+        The test consists in computing the expectation value of an example Hamiltonian for different angles.
         """
-        ## Problem definition
+        ## Problem definition - Minimum Vertex Cover on a Ring
 
         # Number of qubits
-        n_qubits = 10
+        n_qubits = 6
 
-        # Edges and weights of the graph
-        pair_edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] 
-        self_edges = [(i,) for i in range(n_qubits)]
-        pair_weights = [1 for _ in range(len(pair_edges))] # All weights equal to 1
-        self_weights = [-1 for _ in range(len(self_edges))]
+        # Edges of the graph
+        edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
 
-        edges = pair_edges + self_edges
-        weights = pair_weights + self_weights
+        # Define graph and add edges
+        G = nx.Graph()
+        G.add_edges_from(edges)
 
-        # Cost and mixer Hamiltonians
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+        # PUBO instance of the problem
+        field = 1.0
+        penalty = 10.0
+        mvc = MinimumVertexCover(G, field=field, penalty=penalty).get_pubo_problem()
 
-        pass
+        # Minimum Vertex Cover Hamiltonian
+        hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
+
+        # Set of angles on which to compute the energy
+        angle_set = [(0,0),(np.pi/4,0),(2*np.pi,np.pi),(np.pi/8,np.pi/2)]
+
+        # Test correct and computed energies
+        for angles in angle_set:
+            b,g = angles
+
+            correct_energy = n_qubits*(-np.sin(2*b)*np.sin(2*g*field)*np.cos(g*penalty/2) + \
+            (1/2)*np.sin(2*b)**2*np.cos(g*penalty/2)**2*(1 - np.cos(2*g*field)) - \
+                np.sin(4*b)*np.cos(g*field)*np.sin(g*penalty/2)*np.cos(g*penalty/2) ) + mvc.constant
+
+            energy = energy_expectation_analytical(angles,hamiltonian)
+            
+            assert energy == correct_energy, f'Computed energy {energy} is not equal to correct value {correct_energy} for (beta,gamma) = {(b,g)}'
 
     def test_flip_counts(self):
         """
