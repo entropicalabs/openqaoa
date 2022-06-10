@@ -604,7 +604,7 @@ class TestingUtilities(unittest.TestCase):
             assert np.allclose(corr,comp_corr), f'Incorrectly computed correlation term'
 
         # Fix a set of angles for testing full set of expectation values and correlations
-        fixed_angles = (np.pi/4,np.pi/8)
+        fixed_angles = [np.pi/4,np.pi/8]
 
         # Correct solutions
         exp_val_list = np.array([-np.sqrt(2)/4,np.sqrt(2)/4,-np.sqrt(2)/4,np.sqrt(2)/4])
@@ -617,7 +617,7 @@ class TestingUtilities(unittest.TestCase):
 
         # Compute list of expectation values and correlation matrix
         comp_exp_val_list, comp_corr_matrix = expectation_values(variational_params = None,
-                                                                 qaoa_results = {'best param' : [fixed_angles]},\
+                                                                 qaoa_results = {'best param' : fixed_angles},\
                                                                  qaoa_backend = None,\
                                                                  hamiltonian = hamiltonian,
                                                                  p = 1, 
@@ -664,7 +664,7 @@ class TestingUtilities(unittest.TestCase):
         ## Testing
 
         # Perform QAOA and obtain expectation values numerically
-        qaoa_backend = get_qaoa_backend(circuit_params, device = 'vectorized', n_shots = None)
+        qaoa_backend = get_qaoa_backend(circuit_params, device = DeviceLocal('vectorized'), n_shots = None)
         optimizer = get_optimizer(qaoa_backend, variational_params, optimizer_dict = {'method':'cobyla','maxiter':200})
         optimizer()
         qaoa_results = optimizer.results_information()

@@ -16,10 +16,12 @@
 Utility and convenience functions for a number of QAOA applications.
 """
 
+from argparse import ArgumentDefaultsHelpFormatter
 from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+from .devices import DeviceLocal
 import networkx as nx
 
 from openqaoa.qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
@@ -897,7 +899,7 @@ def expectation_values(variational_params: QAOAVariationalBaseParams, qaoa_resul
     terms = list(hamiltonian.terms)
 
     # The QAOA angles
-    optimized_params = qaoa_results['best param'][0]
+    optimized_params = qaoa_results['best param']
     
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)
@@ -927,7 +929,7 @@ def expectation_values(variational_params: QAOAVariationalBaseParams, qaoa_resul
 
     # If multilayer ansatz, perform numerical computation
     else:
-
+        
         # Update variational parameters
         variational_params.update_from_raw(optimized_params)
 

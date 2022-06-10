@@ -18,58 +18,27 @@ from operator import itemgetter
 
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.basebackend import QAOABaseBackend
-from openqaoa.backends.qpus.qpu_auth import AccessObjectQiskit, AccessObjectPyQuil
+from ..devices import DeviceBase, create_device, DeviceLocal
 from openqaoa.qaoa_parameters import QAOACircuitParams, QAOAVariationalBaseParams, Hamiltonian, create_qaoa_variational_params
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.utilities import bitstring_energy, ground_state_hamiltonian, get_mixer_hamiltonian, expectation_values
 
-def create_access_params(qpu_params: dict):
-    """
-    Generates the AccessObject containing the credentials for the QPU backend.
-
-    Parameters
-    ----------
-    qpu_params: `dict`
-        Dictionary containing all the respective QPU attributes for backend retrieval.
-
-    Returns
-    -------
-    access_params: `AccessObject`
-        AccessObject containing the credentials to retrieve the QPU backend.
-    """
-
-    if 'ibmq' in qpu_params['device']:
-
-        access_params = AccessObjectQiskit(api_token=qpu_params['token'], hub=qpu_params['hub'], group=qpu_params['group'],
-                                           project=qpu_params['project'], selected_qpu=qpu_params['device'])
-
-    # elif 'pyquil' in qpu_params['device']:
-
-    #     access_params =  NAccessObjectPyQuil(selected_qpu=qpu_params['device'])
-
-    else:
-        raise NotImplementedError()
-
-    return access_params
-
-
-def qaoa_cost_backend(params: QAOACircuitParams, device: str, shots: int, qpu_params: dict = None):
+def qaoa_cost_backend(params: QAOACircuitParams, device: DeviceBase,
+                      shots: int, qpu_params:dict= None):
     """
     Returns a QAOA backend initialised by the specified initialisation strategy.
-
     Parameters
     ----------
     params: `QAOACircuitParams`
         Parameters that define the circuit.
-    device: `str`
+    device: `DeviceBase`
         Specific device we want to use. Defaults to 'vectorized'.
     shots: `int`
         The number of shots if one chooses shot-based simulations.
         Defaults to None.
-    qpu_params: `dict`, optional
+    qpu_params: `dict`
         Dictionary containing all information regarding the QPU system
         used to run the circuit on. Defaults to None.
-
     Returns
     -------
     qaoa_backend: `QAOABaseBackend`
@@ -77,19 +46,10 @@ def qaoa_cost_backend(params: QAOACircuitParams, device: str, shots: int, qpu_pa
     """
 
     # Construct backend
-    if qpu_params is None:
-
-        qaoa_backend = get_qaoa_backend(params, device=device, n_shots=shots)
-
-    # QPU hardware backend
-    else:
-
-        # Define access object for QPU
-        access_params = create_access_params(qpu_params)
-
-        # Obtain backend
-        qaoa_backend = get_qaoa_backend(
-            params, device=access_params, qubit_layout=qpu_params['qubit_layout'], n_shots=shots)
+    qubit_layout = qpu_params.get(['qubit_layout']) if isinstance(qpu_params,dict) else None
+    qaoa_backend = get_qaoa_backend(params, device=device, 
+                                    n_shots=shots,
+                                    qubit_layout=qubit_layout)
 
     return qaoa_backend
 
@@ -709,7 +669,7 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
                    p: int = 1,
                    n_max: int = 1,
                    n_cutoff: int = 5,
-                   backend: str = 'vectorized',
+                   device: DeviceBase = DeviceLocal('vectorized'),
                    params_type: str = 'standard',
                    init_type: str = 'ramp',
                    shots: int = None,
@@ -738,8 +698,8 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
     n_cutoff: `int`, optional
         Cut-off value of spins at which the system is solved classically. 
         Defaults to 5.
-    backend: `str`, optional
-        Backend to be used during QAOA run. Defaults to 'vectorized'.     
+    device: `DeviceBase`
+        Device to be used during QAOA run. Defaults to `DeviceLocal('vectorized')`.   
     params_type: `str`, optional
         Parametrization to be used during QAOA run. Defaults to 'standard'.   
     init_type: `str`, optional
@@ -828,7 +788,7 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
 
         # Retrieve backend
         qaoa_backend = qaoa_cost_backend(
-            circuit_params, backend, shots, qpu_params)
+            circuit_params, device, shots, qpu_params)
 
         # Run QAOA
         qaoa_results = optimize_qaoa(
@@ -859,7 +819,7 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
         new_hamiltonian = redefine_hamiltonian(hamiltonian, spin_map)
 
         # Restart process with new parameters
-        return adaptive_rqaoa(new_hamiltonian, mixer, p, n_max, n_cutoff, backend, params_type, init_type, shots,
+        return adaptive_rqaoa(new_hamiltonian, mixer, p, n_max, n_cutoff, device, params_type, init_type, shots,
                               optimizer_dict, qpu_params, max_terms_and_stats_list, original_hamiltonian)
 
 
@@ -868,7 +828,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
                  p: int = 1,
                  n_cutoff: int = 5,
                  steps: Union[list,int] = 1,
-                 backend: str = 'vectorized',
+                 device: DeviceBase = DeviceLocal('vectorized'),
                  params_type: str = 'standard',
                  init_type: str = 'ramp',
                  shots: int = None,
@@ -898,8 +858,8 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
     n_cutoff: `int`, optional
         Cut-off value of spins at which the system is solved classically. 
         Defaults to 5.
-    backend: `str`, optional
-        Backend to be used during QAOA run. Defaults to 'vectorized'.
+    device: `DeviceBase`
+        Device to be used during QAOA run. Defaults to `DeviceLocal('vectorized')`.  
     params_type: `str`, optional
         Parametrization to be used during QAOA run. Defaults to 'standard'.
     init_type: `str`, optional
@@ -1004,7 +964,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
 
         # Retrieve backend
         qaoa_backend = qaoa_cost_backend(
-            circuit_params, backend, shots, qpu_params)
+            circuit_params, device, shots, qpu_params)
 
         # Run QAOA
         qaoa_results = optimize_qaoa(
@@ -1038,7 +998,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
         counter += 1
 
         # Restart process with new parameters
-        return custom_rqaoa(new_hamiltonian, mixer, p, n_cutoff, steps, backend, params_type, init_type, shots,
+        return custom_rqaoa(new_hamiltonian, mixer, p, n_cutoff, steps, device, params_type, init_type, shots,
                             optimizer_dict, qpu_params, max_terms_and_stats_list, original_hamiltonian, counter)
 
 # END
