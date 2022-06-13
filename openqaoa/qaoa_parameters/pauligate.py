@@ -13,8 +13,9 @@
 #   limitations under the License.
 
 from abc import ABC, abstractmethod
+# from types import NoneType
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from .operators import Hamiltonian
 from .lowlevelgate import *
@@ -82,7 +83,7 @@ class PauliGate(GateMap):
         gate_type = ['1q']
         gate_type.extend(input_label)
         self._pauli_label = gate_type
-
+    
     @property
     def _decomposition_trivial(self) -> List[Tuple]:
         return self._decomposition_standard

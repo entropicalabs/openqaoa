@@ -166,12 +166,10 @@ def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
         except:
             raise ValueError(f"For the selected {params_type} parameterisation, please specify a"
                              f" dictionary with correct {VARIATIONAL_PARAMS_DICT_KEYS[params_type]} keys")
-
     elif init_type == 'ramp':
         qaoa_variational_params = params_class.linear_ramp_from_hamiltonian(qaoa_circuit_params,
                                                                             *variational_params_args,
                                                                             linear_ramp_time)
-
     elif init_type == 'rand':
         qaoa_variational_params = params_class.random(qaoa_circuit_params,
                                                       *variational_params_args,
@@ -181,3 +179,31 @@ def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
                          f" Please choose from {SUPPORTED_INITIALIZATION_TYPES}")
 
     return qaoa_variational_params
+
+def qaoa_variational_params_converter(target_params_type: str,
+                                      current_params_obj: QAOAVariationalBaseParams) -> QAOAVariationalBaseParams:
+    """
+    Convert the current variational parameters object to the target variational parameters object.
+
+    Parameters
+    ----------
+    target_params_type: ``str``
+        Type of variational parameters to be created.
+    current_params_obj: ``QAOAVariationalBaseParams``
+        Current variational parameters object.
+
+    Returns
+    -------
+    converted_params_obj: ``QAOAVariationalBaseParams``
+        Converted variational parameters object.
+    """
+
+    try:
+        new_params_class = PARAMS_CLASSES_MAPPER[target_params_type]
+    except KeyError:
+        raise ValueError(f"{target_params_type} Parameterisation is not supported."
+                         f" Choose from {PARAMS_CLASSES_MAPPER.keys()}")
+
+    converted_params_obj = new_params_class.from_other_parameters(current_params_obj)
+
+    return converted_params_obj

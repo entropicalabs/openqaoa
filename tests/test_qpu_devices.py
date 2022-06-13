@@ -15,7 +15,7 @@
 import unittest
 import json
 
-from openqaoa.backends.qpus.qpu_auth import AccessObjectQiskit
+from openqaoa.devices import DeviceQiskit
 
 
 """
@@ -26,7 +26,7 @@ to return true if the device provided was correct, and false if invalid.
 """
 
 
-class TestingAccessObjectQiskit(unittest.TestCase):
+class TestingDeviceQiskit(unittest.TestCase):
 
     """This tests checks that Object used to access IBMQ and their available
     QPUs can be established.
@@ -65,51 +65,51 @@ class TestingAccessObjectQiskit(unittest.TestCase):
 
     def test_check_connection_provider_no_backend_wrong_credentials(self):
 
-        access_obj = AccessObjectQiskit(api_token='', hub='', group='',
+        device_obj = DeviceQiskit(api_token='', hub='', group='',
                                         project='')
 
-        self.assertEqual(access_obj.check_connection(), False)
-        self.assertEqual(access_obj.provider_connected, False)
-        self.assertEqual(access_obj.qpu_connected, None)
+        self.assertEqual(device_obj.check_connection(), False)
+        self.assertEqual(device_obj.provider_connected, False)
+        self.assertEqual(device_obj.qpu_connected, None)
 
     def test_check_connection_provider_no_backend_provided_credentials(self):
 
-        access_obj = AccessObjectQiskit(api_token=self.API_TOKEN,
+        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
                                         hub=self.HUB, group=self.GROUP,
                                         project=self.PROJECT)
 
-        self.assertEqual(access_obj.check_connection(), True)
-        self.assertEqual(access_obj.provider_connected, True)
-        self.assertEqual(access_obj.qpu_connected, None)
+        self.assertEqual(device_obj.check_connection(), True)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, None)
 
     def test_check_connection_provider_right_backend_provided_credentials(self):
 
-        access_obj = AccessObjectQiskit(api_token=self.API_TOKEN,
+        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
                                         hub=self.HUB, group=self.GROUP,
                                         project=self.PROJECT)
 
-        access_obj.check_connection()
-        valid_qpu_name = access_obj.available_qpus[0]
+        device_obj.check_connection()
+        valid_qpu_name = device_obj.available_qpus[0]
 
-        access_obj = AccessObjectQiskit(api_token=self.API_TOKEN,
+        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
                                         hub=self.HUB, group=self.GROUP,
                                         project=self.PROJECT,
                                         selected_qpu=valid_qpu_name)
 
-        self.assertEqual(access_obj.check_connection(), True)
-        self.assertEqual(access_obj.provider_connected, True)
-        self.assertEqual(access_obj.qpu_connected, True)
+        self.assertEqual(device_obj.check_connection(), True)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, True)
 
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
 
-        access_obj = AccessObjectQiskit(api_token=self.API_TOKEN,
+        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
                                         hub=self.HUB, group=self.GROUP,
                                         project=self.PROJECT,
                                         selected_qpu='random_invalid_backend')
 
-        self.assertEqual(access_obj.check_connection(), False)
-        self.assertEqual(access_obj.provider_connected, True)
-        self.assertEqual(access_obj.qpu_connected, False)
+        self.assertEqual(device_obj.check_connection(), False)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, False)
 
 
 if __name__ == '__main__':
