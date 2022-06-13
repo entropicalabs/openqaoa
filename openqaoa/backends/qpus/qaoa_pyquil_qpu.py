@@ -178,7 +178,10 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         # Initial state is all |+>
         if self.init_hadamard:
             for i in self.qureg:
-                parametric_circuit += gates.H(self.qubit_mapping[i])
+                parametric_circuit += gates.RZ(np.pi, self.qubit_mapping[i]) 
+                parametric_circuit += gates.RX(np.pi/2, self.qubit_mapping[i]) 
+                parametric_circuit += gates.RZ(np.pi/2, self.qubit_mapping[i]) 
+                parametric_circuit += gates.RX(-np.pi/2, self.qubit_mapping[i]) 
 
         # create a list of gates in order of application on quantum circuit
         for each_gate in self.pseudo_circuit:
