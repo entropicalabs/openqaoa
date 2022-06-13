@@ -367,11 +367,11 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         slc_q2_1 = tuple(1 if i == self.n_qubits - qubit_2 - 1
                          else slice(None) for i in range(self.n_qubits))
 
-        wfn[slc_q1_0] *= np.exp(-1j * rotation_angle)
-        wfn[slc_q1_1] *= np.exp(1j * rotation_angle)
+        wfn[slc_q1_0] *= -1j
+        wfn[slc_q1_1] *= 1j
 
-        wfn[slc_q2_0] *= np.exp(-1j * rotation_angle)
-        wfn[slc_q2_1] *= np.exp(1j * rotation_angle)
+        wfn[slc_q2_0] *= -1j
+        wfn[slc_q2_1] *= 1j
 
         C = np.cos(rotation_angle / 2)
         S = -1j * np.sin(rotation_angle / 2)
@@ -509,6 +509,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
                          else slice(None) for i in range(self.n_qubits))
         slc_q1_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
                          else slice(None) for i in range(self.n_qubits))
+        wfn[slc_q1_0] *= -1j
+        wfn[slc_q1_1] *= 1j
 
         # Action of Z part
         slc_q2_0 = tuple(0 if i == self.n_qubits - qubit_2 - 1
