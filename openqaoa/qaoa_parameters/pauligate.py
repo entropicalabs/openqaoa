@@ -55,14 +55,41 @@ class SWAPGate(GateMap):
         return [(CX, [[self.qubit_1, self.qubit_2]]),
                 (CX, [[self.qubit_2, self.qubit_1]]),
                 (CX, [[self.qubit_1, self.qubit_2]])]
-
+    
     @property
     def _decomposition_standard2(self) -> List[Tuple]:
 
-        return [(RiSWAP, [[self.qubit_1, self.qubit_2, np.pi]]),
-                (CZ, [[self.qubit_1, self.qubit_2]])]
+        return [(RZ, [self.qubit_1, np.pi/2]),
+                (RZ, [self.qubit_2, np.pi/2]),
+                
+                # X gate decomposition
+                (RZ, [self.qubit_1, np.pi]),
+                (RX, [self.qubit_1, np.pi/2]),
+                (RZ, [self.qubit_1, np.pi]),
+                (RX, [self.qubit_1, -np.pi/2]),
+                
+                # X gate decomposition
+                (RZ, [self.qubit_2, np.pi]),
+                (RX, [self.qubit_2, np.pi/2]),
+                (RZ, [self.qubit_2, np.pi]),
+                (RX, [self.qubit_2, -np.pi/2]),
+                
+                (RiSWAP, [[self.qubit_1, self.qubit_2, np.pi]]),
+                (CZ, [[self.qubit_1, self.qubit_2]]),
+                
+                # X gate decomposition
+                (RZ, [self.qubit_1, np.pi]),
+                (RX, [self.qubit_1, np.pi/2]),
+                (RZ, [self.qubit_1, np.pi]),
+                (RX, [self.qubit_1, -np.pi/2]),
+                
+                # X gate decomposition
+                (RZ, [self.qubit_2, np.pi]),
+                (RX, [self.qubit_2, np.pi/2]),
+                (RZ, [self.qubit_2, np.pi]),
+                (RX, [self.qubit_2, -np.pi/2])]
 
-
+    
 class PauliGate(GateMap):
 
     def __init__(self, qubit_1: int, pauli_label: List):
