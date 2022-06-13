@@ -21,7 +21,7 @@ from openqaoa.basebackend import QAOABaseBackend
 from ..devices import DeviceBase, create_device, DeviceLocal
 from openqaoa.qaoa_parameters import QAOACircuitParams, QAOAVariationalBaseParams, Hamiltonian, create_qaoa_variational_params
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
-from openqaoa.utilities import bitstring_energy, ground_state_hamiltonian, get_mixer_hamiltonian, expectation_values
+from openqaoa.utilities import bitstring_energy, ground_state_hamiltonian, get_mixer_hamiltonian, exp_val_hamiltonian_termwise
 
 
 def optimize_qaoa(qaoa_backend: QAOABaseBackend, variational_params: QAOAVariationalBaseParams, optimizer_dict: dict):
@@ -760,7 +760,7 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
             qaoa_backend, variational_params, optimizer_dict)
 
         # Obtain statistical results
-        exp_vals_z, corr_matrix = expectation_values(
+        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(
             variational_params, qaoa_results, qaoa_backend, hamiltonian, mixer_type = mixer['type'], p = p)
 
         # Retrieve highest expectation values according to adaptive method
@@ -931,7 +931,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
             qaoa_backend, variational_params, optimizer_dict)
 
         # Obtain statistical results
-        exp_vals_z, corr_matrix = expectation_values(
+        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(
             variational_params, qaoa_results, qaoa_backend, hamiltonian, mixer_type = mixer['type'], p = p)
 
         # Retrieve highest expectation values

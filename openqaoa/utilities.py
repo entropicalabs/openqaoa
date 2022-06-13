@@ -785,7 +785,7 @@ def low_energy_states_overlap(hamiltonian: Hamiltonian,
     return total_overlap
 
 
-def exp_val_single_spin(spin: int, prob_dict: dict):
+def exp_val_single(spin: int, prob_dict: dict):
     """
     Computes expectation value <Z> of a given spin.
 
@@ -799,7 +799,7 @@ def exp_val_single_spin(spin: int, prob_dict: dict):
     Returns:
     -------
     exp_val: `float`
-        Expectation value of the spin\
+        Expectation value of the spin
     """
 
     # Initialize expectation value
@@ -817,13 +817,13 @@ def exp_val_single_spin(spin: int, prob_dict: dict):
     return exp_val
 
 
-def term_corr(spins: tuple, prob_dict: dict):
+def exp_val_pair(spins: tuple, prob_dict: dict):
     """
     Computes the correlation Mij = <Z_{i}Z_{j}> between qubits i,j using the QAOA optimized 
     wavefunction.
 
     NOTE: In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be
-    subtracted later. This is done in the expectation_values() function used as a 
+    subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a 
     wrapper for this function. 
 
     Parameters
@@ -855,7 +855,7 @@ def term_corr(spins: tuple, prob_dict: dict):
     return corr
 
 
-def expectation_values(variational_params: QAOAVariationalBaseParams, qaoa_results: dict, qaoa_backend, hamiltonian: Hamiltonian, mixer_type:str, p: int, analytical: bool = True, shot_based: bool = False, shots: int = 100):
+def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, qaoa_results: dict, qaoa_backend, hamiltonian: Hamiltonian, mixer_type:str, p: int, analytical: bool = True, shot_based: bool = False, shots: int = 100):
     """
     Computes the single spin expectation values <Z_{i}> and the correlation matrix Mij = <Z_{i}Z_{j}>,
     using the optimization results obtained from QAOA tranining the specified QAOA cost backend.
@@ -910,21 +910,21 @@ def expectation_values(variational_params: QAOAVariationalBaseParams, qaoa_resul
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
 
-            # If constant term, ignore
-            if len(term) == 0:
-                continue
-
             # If bias term compute expectation value
-            elif len(term) == 1:
+            if len(term) == 1:
                 i = term.qubit_indices[0]
-                exp_vals_z[i] = exp_val_single_spin_analytical(
+                exp_vals_z[i] = exp_val_single_analytical(
                     i, hamiltonian, optimized_params)
 
             # If two-body term compute correlation
-            else:
+            elif len(term) == 2:
                 i, j = term.qubit_indices
-                corr_matrix[i][j] = term_corr_analytical(
+                corr_matrix[i][j] = exp_val_pair_analytical(
                     (i, j), hamiltonian, optimized_params)
+
+            # If constant term, ignore
+            else:
+                continue
 
     # If multilayer ansatz, perform numerical computation
     else:
@@ -944,19 +944,19 @@ def expectation_values(variational_params: QAOAVariationalBaseParams, qaoa_resul
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
 
+            # If bias term compute expectation value
+            if len(term) == 1:
+                i = term.qubit_indices[0]
+                exp_vals_z[i] = exp_val_single(i, counts_dict)
+
+            # If two-body term compute correlation
+            elif len(term) == 2:
+                i, j = term.qubit_indices
+                corr_matrix[i][j] = exp_val_pair((i, j), counts_dict)
+
             # If constant term, ignore
             if len(term) == 0:
                 continue
-
-            # If bias term compute expectation value
-            elif len(term) == 1:
-                i = term.qubit_indices[0]
-                exp_vals_z[i] = exp_val_single_spin(i, counts_dict)
-
-            # If two-body term compute correlation
-            else:
-                i, j = term.qubit_indices
-                corr_matrix[i][j] = term_corr((i, j), counts_dict)
 
     # Remove expectation value contribution from the correlations
     corr_matrix -= np.outer(exp_vals_z, exp_vals_z)
@@ -969,7 +969,7 @@ def expectation_values(variational_params: QAOAVariationalBaseParams, qaoa_resul
 ################################################################################
 
 
-def exp_val_single_spin_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: tuple):
+def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: tuple):
     """
     Computes the single spin expectation value <Z> from an analytically
     derived expression for a single layer QAOA Ansatz. 
@@ -1003,10 +1003,10 @@ def exp_val_single_spin_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_ang
     weights = hamiltonian.coeffs
 
     # Hamiltonian from graph definitions
-    Hg = dict(zip(edges, weights))
+    hamil_graph = dict(zip(edges, weights))
 
     # Spin biases
-    h_u = Hg[(spin,)] if Hg.get((spin,)) is not None else 0
+    h_u = hamil_graph[(spin,)] if hamil_graph.get((spin,)) is not None else 0
 
     # QAOA angles
     beta, gamma = qaoa_angles
@@ -1025,7 +1025,7 @@ def exp_val_single_spin_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_ang
         edge = tuple([min(spin, n), max(spin, n)])
 
         # If edge not present in the graph the associated weight is set to 0
-        J_un = 0 if Hg.get(edge) is None else Hg[edge]
+        J_un = 0 if hamil_graph.get(edge) is None else hamil_graph[edge]
 
         # Add factor to the products
         exp_val *= np.cos(2*gamma*J_un)
@@ -1033,7 +1033,7 @@ def exp_val_single_spin_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_ang
     return exp_val
 
 
-def term_corr_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles: tuple):
+def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles: tuple):
     """
     Computes <Z_{i}Z_{j}> correlation between apair of spins analytically. It is an extension from the 
     expression derived by Bravyi et al. in arXiv:1910.08980 which includes the effect of biases. 
@@ -1041,7 +1041,7 @@ def term_corr_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles: tu
     NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
 
     NOTE: In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be
-    subtracted later. This is done in the expectation_values() function used as a 
+    subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a 
     wrapper for this function. 
 
     NOTE: OpenQAOA uses a different sign convention for the QAOA Ansatz than Bravy et al. - there is 
@@ -1076,17 +1076,17 @@ def term_corr_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles: tu
     weights = hamiltonian.coeffs
 
     # Hamiltonian from graph definitions
-    Hg = dict(zip(edges, weights))
+    hamil_graph = dict(zip(edges, weights))
 
     # Spins whose correlation we compute
     u, v = spins
 
     # Coupling between the spins
-    J_uv = Hg[spins] if Hg.get(spins) is not None else 0
+    J_uv = hamil_graph[spins] if hamil_graph.get(spins) is not None else 0
 
     # Spin biases
-    h_u = Hg[(u,)] if Hg.get((u,)) is not None else 0
-    h_v = Hg[(v,)] if Hg.get((v,)) is not None else 0
+    h_u = hamil_graph[(u,)] if hamil_graph.get((u,)) is not None else 0
+    h_v = hamil_graph[(v,)] if hamil_graph.get((v,)) is not None else 0
 
     # QAOA angles
     beta, gamma = qaoa_angles
@@ -1113,8 +1113,8 @@ def term_corr_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles: tu
         edge2 = tuple([min(v, n), max(v, n)])
 
         # If edge not present in the graph the associated weight is set to 0
-        J_un = 0 if Hg.get(edge1) is None else Hg[edge1]
-        J_vn = 0 if Hg.get(edge2) is None else Hg[edge2]
+        J_un = 0 if hamil_graph.get(edge1) is None else hamil_graph[edge1]
+        J_vn = 0 if hamil_graph.get(edge2) is None else hamil_graph[edge2]
 
         # Add factor to the products
         prod1 *= np.cos(2*gamma*(J_un - J_vn))
@@ -1154,11 +1154,11 @@ def energy_expectation_analytical(angles:Union[list,tuple],hamiltonian:Hamiltoni
         
         if len(term) == 2:
         
-            local_energy = term_corr_analytical(term,hamiltonian,angles)
+            local_energy = exp_val_pair_analytical(term,hamiltonian,angles)
             
         else:
             
-            local_energy = exp_val_single_spin_analytical(term[0],hamiltonian,angles)
+            local_energy = exp_val_single_analytical(term[0],hamiltonian,angles)
         
         energy += coeff * local_energy
     
