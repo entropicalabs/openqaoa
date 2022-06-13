@@ -17,6 +17,7 @@ import numpy as np
 import itertools
 import unittest
 
+# from openqaoa.devices import DeviceLocal
 from openqaoa.utilities import *
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
@@ -548,15 +549,15 @@ class TestingUtilities(unittest.TestCase):
             assert np.allclose(rod_coefficients,correct_rod_coefficients), f'The coefficients in the uniform ROD Hamiltonian were not generated correctly'
             assert np.allclose(rod_constant,correct_rod_constant), f'The constant in the uniform ROD Hamiltonian was not generated correctly'
 
-    def test_expectation_values_analytical(self):
+    def test_exp_val_hamiltonian_termwise_analytical(self):
         """
         Test of the function that computes singlet expectation values and correlations terms
         analytically for p = 1 and the function computing the full set of expectation values
         when analytical results can be obtained (p=1).
 
-        NOTE: Correlations in the term_corr_analytical() and term_corr() functions are computed 
+        NOTE: Correlations in the exp_val_pair_analytical() and exp_val_pair() functions are computed 
         as average value <Z_{i}Z_{j}>, meaning it includes the <Z_{i}><Z_{j}> contribution. 
-        This is subtracted by default in the expectation_values() function.
+        This is subtracted by default in the exp_val_hamiltonian_termwise() function.
 
         The tests consist in: computing expectation values for some example cases for the 
         first function, and a full set of expectation values for a given example. 
@@ -597,8 +598,8 @@ class TestingUtilities(unittest.TestCase):
             corr = np.round(qaoa_angles_cases[qaoa_angles][1],16)
             
             # Compute expectation values and correlations
-            comp_exp_val = np.round(exp_val_single_spin_analytical(spin,hamiltonian,qaoa_angles),16)
-            comp_corr = np.round(term_corr_analytical(pair,hamiltonian,qaoa_angles),16)
+            comp_exp_val = np.round(exp_val_single_analytical(spin,hamiltonian,qaoa_angles),16)
+            comp_corr = np.round(exp_val_pair_analytical(pair,hamiltonian,qaoa_angles),16)
 
             # Test if computed results are correct
             assert np.allclose(exp_val,comp_exp_val), f'Incorrectly computed singlet expectation value'
@@ -617,7 +618,7 @@ class TestingUtilities(unittest.TestCase):
         corr_matrix -= np.outer(exp_val_list,exp_val_list)
 
         # Compute list of expectation values and correlation matrix
-        comp_exp_val_list, comp_corr_matrix = expectation_values(variational_params = None,
+        comp_exp_val_list, comp_corr_matrix = exp_val_hamiltonian_termwise(variational_params = None,
                                                                  qaoa_results = {'best param' : fixed_angles},\
                                                                  qaoa_backend = None,\
                                                                  hamiltonian = hamiltonian,
@@ -630,14 +631,14 @@ class TestingUtilities(unittest.TestCase):
         for j in range(len(comp_corr_matrix)):
             assert np.allclose(corr_matrix[j],comp_corr_matrix[j]), f'Computed correlation matrix is incorrect'
     
-    def test_expectation_values(self):
+    def test_exp_val_hamiltonian_termwise(self):
         """
         Test of the function that computes singlet expectation values and correlations numerically through
         the QAOA output distribution of states.
 
         The test consist of computing the singlet expectation values and correlations for a given problem.
         The result is constrasted with the analytical result, whose implementation is tested in 
-        test_expectation_values_analytical().
+        test_exp_val_hamiltonian_termwise_analytical().
         """
 
         ## Problem definition
@@ -670,10 +671,10 @@ class TestingUtilities(unittest.TestCase):
         optimizer()
         qaoa_results = optimizer.results_information()
         
-        num_exp_vals_z,num_corr_matrix = expectation_values(variational_params,qaoa_results, qaoa_backend, hamiltonian, mixer_type='x', p = p, analytical = False)
+        num_exp_vals_z,num_corr_matrix = exp_val_hamiltonian_termwise(variational_params,qaoa_results, qaoa_backend, hamiltonian, mixer_type='x', p = p, analytical = False)
 
         # Analytical expectation values
-        exp_vals_z, corr_matrix = expectation_values(variational_params,qaoa_results, qaoa_backend, hamiltonian, mixer_type='x', p = p)
+        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params,qaoa_results, qaoa_backend, hamiltonian, mixer_type='x', p = p)
 
         # Test if computed results are correct
         assert np.allclose(exp_vals_z,num_exp_vals_z), f'Computed singlet expectation values are incorrect'
