@@ -20,6 +20,7 @@ from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+from .devices import DeviceLocal
 import networkx as nx
 from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 

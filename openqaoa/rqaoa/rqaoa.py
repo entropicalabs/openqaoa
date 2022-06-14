@@ -888,7 +888,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
         n_elim = steps[counter]
 
         # If the step eliminates more spins than available, reduce step to match cutoff
-        if n_qubits - n_cutoff < n_elim:
+        if n_qubits - n_elim <= 0:
             n_elim = n_qubits - n_cutoff
 
         # Define circuit parameters
