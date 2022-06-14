@@ -247,8 +247,25 @@ class OptimizeVQA(ABC):
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
+
+
+        if hasattr(self.vqa, 'probability'):
+            probs = list(self.log.probability.best[0].values())
+            index_highest_prob_states = np.argwhere(probs == np.max(probs))
+            degeneracy = len(index_highest_prob_states)
+            solutions_bitstrings = [list(self.log.probability.best[0].keys())[e[0]] for e in index_highest_prob_states]
+            # cost = self.results_information['best cost']
+        elif hasattr(self.vqa, 'counts'):
+            counts = list(self.log.counts.best[0].values())
+            index_highest_count_states = np.argwhere(counts == np.max(counts))
+            degeneracy = len(index_highest_count_states)
+            solutions_bitstrings = [list(self.log.counts.best[0].keys())[e[0]] for e in index_highest_count_states]
         
         result_dict = {
+            'solution': {
+                'bitstring' : solutions_bitstrings,
+                'degeneracy' : degeneracy
+            },
             'number of evals': self.log.func_evals.best[0],
             'jac evals': self.log.jac_func_evals.best[0],
             'parameter log': np.array(self.log.param_log.history).tolist(),

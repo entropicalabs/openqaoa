@@ -22,6 +22,7 @@ import scipy.spatial
 import itertools
 
 from .helper_functions import convert2serialize, check_kwargs
+from openqaoa.qaoa_parameters import Hamiltonian
 
 class Encoding():
     """
@@ -200,6 +201,13 @@ class PUBO:
         ising_weights.append(constant_term)
 
         return PUBO(n_variables, ising_terms, ising_weights, Encoding.ISING_ENCODING)
+
+    @property
+    def hamiltonian(self):
+        """
+        Returns the Hamiltonian of the problem.
+        """
+        return Hamiltonian.classical_hamiltonian(self.terms,self.weights,self.constant)
 
 class TSP(Problem):
     def __init__(self, coordinates=None, n_cities=10):
