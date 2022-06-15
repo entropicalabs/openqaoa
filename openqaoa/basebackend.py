@@ -138,7 +138,7 @@ class QAOABaseBackend(VQABaseBackend):
 
         self.pseudo_circuit = deepcopy(self.circuit_params.pseudo_circuit)
 
-    def assign_angles(self, params: QAOAVariationalBaseParams) -> List[PauliGate]:
+    def assign_angles(self, params: QAOAVariationalBaseParams) -> None:
         """
         Assigns the angle values of the variational parameters to the circuit gates
         specified as a list of gates in the ``pseudo_circuit``.

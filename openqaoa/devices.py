@@ -13,10 +13,15 @@
 #   limitations under the License.
 
 import abc
+import numpy as np
 from qiskit import IBMQ
 from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
+
+from boto3.session import Session
+from braket.aws import AwsDevice
+from braket.aws.aws_session import AwsSession
 
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
@@ -69,7 +74,7 @@ class DeviceQiskit(DeviceBase):
 		When connection to a provider is established, this attribute contains a list
 		of backend names which can be used to access the selected backend by reinitialising
 		the Access Object with the name of the available backend as input to the
-		selected_backend parameter.
+		device_name parameter.
 	"""
 
     def __init__(self, device_name: str, api_token: str,
@@ -175,13 +180,6 @@ class DevicePyquil(DeviceBase):
     """
     Contains the required information and methods needed to access remote
     Rigetti QPUs via Pyquil.
-
-    Attributes:
-	available_qpus: `list`
-		When connection to AWS is established, this attribute contains a list
-		of device names which can be used to access the selected device by
-		reinitialising the Access Object with the name of the available device
-		as input to the selected_device parameter.
     """
 
     def __init__(self, device_name: str, as_qvm: bool = None, noisy: bool = None,
@@ -256,6 +254,107 @@ class DevicePyquil(DeviceBase):
         """
 
         return True
+    
+    
+class DeviceAWS(DeviceBase):
+    
+    """
+    Contains the required information and methods needed to access QPUs hosted
+    on AWS Braket.
+    
+    Attributes:
+	available_qpus: `list`
+		When connection to AWS is established, this attribute contains a list
+		of device names which can be used to access the selected device by
+		reinitialising the Access Object with the name of the available device
+		as input to the device_name parameter.
+    """
+    
+    def __init__(self, device_name: str, aws_access_key_id: str, 
+                 aws_secret_access_key: str, aws_region: str, 
+                 s3_bucket_name: str, folder_name: str = 'oq_runs'):
+        
+        """A majority of the input parameters required for this can be found in
+        the user's AWS Web Services account.
+
+        Parameters
+        ----------
+		device_name: `str`
+			The name of the QPU device in AWS Braket to be used
+        aws_access_key_id: `str`
+            Valid AWS Access Key ID.
+        aws_secret_access_key: `str`
+            Valid AWS Secret Access Key.
+        aws_region: `str`
+            AWS Region where the device the user is planning to access is located. 
+        s3_bucket_name: `str`
+            The name of the s3 bucket the user has connected with AWS Braket. 
+            The output of the experiments from Braket will be stored in this.
+        folder_name: `str`
+            The name of the folder in the s3 bucket that will contain the results
+            from the tasks performed in this run.
+        """
+        
+        self.device_name = device_name
+        self.device_location = 'aws'
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
+        self.aws_region = aws_region
+        self.s3_bucket_name = s3_bucket_name
+        self.folder_name = folder_name
+    
+    def check_connection(self) -> bool:
+        
+        self.provider_connected = self._check_provider_connection()
+
+        if self.provider_connected == False:
+            return self.provider_connected
+        
+        # Only QPUs that are available for the specified aws region on Braket 
+        # will be shown. We filter out QPUs that do not work with the circuit model
+        device_filter = np.multiply(
+            [each_dict['deviceStatus'] == 'ONLINE' for each_dict in self.aws_session.search_devices()],
+            [each_dict['providerName'] != 'D-Wave Systems' for each_dict in self.aws_session.search_devices()]
+        )
+        active_devices = np.array(self.aws_session.search_devices())[device_filter].tolist()
+        
+        self.available_qpus = [backend_dict['deviceName']
+                               for backend_dict in active_devices]
+
+        if self.device_name == '':
+            return self.provider_connected
+
+        self.qpu_connected = self._check_backend_connection()
+
+        if self.provider_connected and self.qpu_connected:
+            return True
+        else:
+            return False
+        
+    def _check_backend_connection(self) -> bool:
+        
+        if self.device_name in self.available_qpus:
+            self.device_arn = self.aws_session.search_devices()[self.available_qpus.index(self.device_name)]['deviceArn']
+            self.backend_device = AwsDevice(self.device_arn, self.aws_session)
+            return True
+        else:
+            print(
+                f"Please choose from {self.available_qpus} for this provider")
+            return False
+    
+    def _check_provider_connection(self) -> bool:
+        
+        try:
+            sesh = Session(aws_access_key_id = self.aws_access_key_id, 
+                           aws_secret_access_key = self.aws_secret_access_key, 
+                           region_name = self.aws_region)
+            self.aws_session = AwsSession(sesh)
+
+            return True
+        except Exception as e:
+            print('An Exception has occured when trying to connect with the \
+            provider: {}'.format(e))
+            return False
 
 
 def device_class_arg_mapper(device_class:DeviceBase,
