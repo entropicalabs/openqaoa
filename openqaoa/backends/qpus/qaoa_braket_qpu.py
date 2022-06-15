@@ -17,6 +17,9 @@ from typing import Optional, List
 # AWS Braket imports
 
 from braket.circuits import Circuit
+from braket.circuits.gates import H
+from braket.circuits.result_types import Probability
+from braket.circuits.free_parameter import FreeParameter
 
 from ...devices import DeviceAWS
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
@@ -99,61 +102,44 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
             The final QAOA circuit constructed using the angles from variational params.
         """
         
-        circuit = Circuit()
-        if self.prepend_state:
-            circuit += self.prepend_state
-            
-        if self.init_hadamard:
-            for each_qubit in self.qubit_layout:
-                circuit += H().h(each_qubit)
-        
-        self.assign_angles(params)
-        
-        for each_gate in self.pseudo_circuit:
-            decomposition = each_gate.decomposition('standard')
-            # using the list above, construct the circuit
-            for each_tuple in decomposition:
-                gate = each_tuple[0]()
-                circuit = gate.apply_aws_gate(*each_tuple[1], circuit)
-                
-        if self.append_state:
-            circuit += self.append_state
-            
-        circuit += Probability.probability()
-                
-        return circuit
+        angles_list = self.obtain_angles_for_pauli_list(
+            self.pseudo_circuit, params)
+        memory_map = dict(zip([each_free_param_obj.name for each_free_param_obj in self.braket_parameter_list], angles_list))
+        new_parametric_circuit = self.parametric_circuit.make_bound_circuit(
+            memory_map)
+        return new_parametric_circuit
 
     @property
-    def parametric_qaoa_circuit(self) -> QuantumCircuit:
+    def parametric_qaoa_circuit(self) -> Circuit:
         """
         Creates a parametric QAOA circuit, given the qubit pairs, single qubits with biases,
         and a set of circuit angles. Note that this function does not actually run
         the circuit.
         """ 
-        circuit = Circuit()
+        parametric_circuit = Circuit()
         if self.prepend_state:
-            circuit += self.prepend_state
+            parametric_circuit += self.prepend_state
             
         # Initial state is all |+>
         if self.init_hadamard:
             for each_qubit in self.qubit_layout:
-                circuit += H().h(each_qubit)
+                parametric_circuit += H.h(each_qubit)
 
-        self.qiskit_parameter_list = []
+        self.braket_parameter_list = []
         for each_gate in self.pseudo_circuit:
-            angle_param = Parameter(str(each_gate.pauli_label))
-            self.qiskit_parameter_list.append(angle_param)
+            angle_param = FreeParameter(str(each_gate.pauli_label))
+            self.braket_parameter_list.append(angle_param)
             each_gate.rotation_angle = angle_param
             decomposition = each_gate.decomposition('standard')
             # using the list above, construct the circuit
             for each_tuple in decomposition:
                 gate = each_tuple[0]()
-                parametric_circuit = gate.apply_ibm_gate(*each_tuple[1],parametric_circuit)
+                parametric_circuit = gate.apply_braket_gate(*each_tuple[1], parametric_circuit)
 
         if self.append_state:
-            circuit += self.append_state
+            parametric_circuit += self.append_state
             
-        circuit += Probability.probability()
+        parametric_circuit += Probability.probability()
 
         return parametric_circuit
 
@@ -180,41 +166,27 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         max_job_retries = 5
 
         while job_state == False:
-            job = execute(circuit, backend=self.backend_qpu,
-                          shots=self.n_shots, initial_layout=self.qubit_layout)
+            job = self.backend_qpu.run(circuit, 
+                                       (self.device.s3_bucket_name, 
+                                        self.device.folder_name), 
+                                       shots = self.n_shots)
 
-            api_contact = False
-            no_of_api_retries = 0
-            max_api_retries = 5
-
-            while api_contact == False:
-                try:
-                    counts = job.result().get_counts()
-                    api_contact = True
-                    job_state = True
-                except (IBMQJobApiError, IBMQJobTimeoutError):
-                    print("There was an error when trying to contact the IBMQ API.")
-                    job_state = True
-                    no_of_api_retries += 1
-                    time.sleep(5)
-                except (IBMQJobFailureError, IBMQJobInvalidStateError):
-                    print(
-                        "There was an error with the state of the Job in IBMQ.")
-                    no_of_job_retries += 1
-                    break
-
-                if no_of_api_retries >= max_api_retries:
-                    raise ConnectionError(
-                        "Number of API Retries exceeded Maximum allowed.")
+            try:
+                counts = job.result().measurement_counts
+                job_state = True
+            except AttributeError:
+                print("The task did not complete successfully or the connection timed out. Resending Task.")
+                no_of_job_retries += 1
+                break
 
             if no_of_job_retries >= max_job_retries:
                 raise ConnectionError(
                     "An Error Occurred with the Job(s) sent to IBMQ.")
 
         # Expose counts
-        counts_flipped = flip_counts(counts)
-        self.counts = counts_flipped
-        return counts_flipped
+#         counts_flipped = flip_counts(counts)
+        self.counts = counts
+        return counts
 
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
         """
