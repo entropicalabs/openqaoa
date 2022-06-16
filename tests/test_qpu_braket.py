@@ -326,8 +326,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                                             True))
         
         aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
-                                  self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
-                                  self.S3_BUCKET_NAME)
+                               self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
+                               self.S3_BUCKET_NAME)
         
         try:
             QAOAAWSQPUBackend(circuit_params, aws_device, 
@@ -340,6 +340,36 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                                             aws_device, 
                                                             shots, None, None, 
                                                             True))
+        
+#     def test_remote_integration_qpu_run(self):
+#         """
+#         Test Actual QPU Workflow. Checks if the expectation value is returned
+#         after the circuit run.
+#         """
+
+#         nqubits = 3
+#         p = 1
+#         weights = [1, 1, 1]
+#         gammas = [[1/8*np.pi]]
+#         betas = [[1/8*np.pi]]
+#         shots = 10000
+
+#         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
+#                                   PauliOp('ZZ', (0, 2))], weights, 1)
+#         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
+#         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+#         variate_params = QAOAVariationalStandardParams(circuit_params,
+#                                                        betas,
+#                                                        gammas)
+#         aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
+#                                self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
+#                                self.S3_BUCKET_NAME)
+
+#         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+#                                            shots, None, None, False)
+#         aws_expectation = aws_backend.expectation(variate_params)
+        
+#         self.assertEqual(type(aws_expectation.item()), float)
 
 
 if __name__ == '__main__':
