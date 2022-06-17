@@ -24,6 +24,7 @@ from __future__ import annotations
 import numpy as np
 import random
 
+from copy import deepcopy
 from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
 
 
@@ -109,6 +110,8 @@ def derivative(backend_obj: QAOABaseBackend,
     assert derivative_method in derivative_methods,\
         "Unknown derivative computation method specified - please choose between " + \
         str(derivative_methods)
+    
+    params = deepcopy(params)
 
     if derivative_type == 'gradient':
 
