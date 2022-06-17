@@ -79,8 +79,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        qiskit_device = DeviceQiskit(self.API_TOKEN, self.HUB, self.GROUP,
-                                                  self.PROJECT, 'ibmq_qasm_simulator')
+        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                               shots, None,
@@ -137,8 +138,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        qiskit_device = DeviceQiskit(self.API_TOKEN, self.HUB, self.GROUP,
-                                                  self.PROJECT, 'ibmq_qasm_simulator')
+        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                               shots, None,
@@ -200,8 +202,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        qiskit_device = DeviceQiskit(self.API_TOKEN, self.HUB, self.GROUP,
-                                                  self.PROJECT, 'ibmq_qasm_simulator')
+        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                               shots, prepend_circuit,
@@ -253,8 +256,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        qiskit_device = DeviceQiskit(self.API_TOKEN, self.HUB, self.GROUP,
-                                                  self.PROJECT, 'ibmq_qasm_simulator')
+        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                               shots, None,
@@ -316,10 +320,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
                                                             shots, None, None, 
                                                             True))
         
-        qiskit_device = DeviceQiskit(api_token=self.API_TOKEN,
-                                                  hub=self.HUB, group=self.GROUP,
-                                                  project=self.PROJECT, 
-                                                  selected_qpu='')
+        qiskit_device = DeviceQiskit('', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
         
         try:
             QAOAQiskitQPUBackend(circuit_params, qiskit_device, 
@@ -358,8 +361,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             variate_params = QAOAVariationalStandardParams(circuit_params,
                                                            betas[i],
                                                            gammas[i])
-            qiskit_device = DeviceQiskit(self.API_TOKEN, self.HUB, self.GROUP,
-                                                      self.PROJECT, 'ibmq_qasm_simulator')
+            qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                         self.API_TOKEN, self.HUB, self.GROUP, 
+                                         self.PROJECT)
 
             qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                                   shots, None, None, False)

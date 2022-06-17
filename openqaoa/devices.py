@@ -15,6 +15,8 @@
 import abc
 import numpy as np
 from qiskit import IBMQ
+from qiskit.providers.ibmq import IBMQAccountError
+
 from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
@@ -160,7 +162,12 @@ class DeviceQiskit(DeviceBase):
         """
 
         try:
-            if IBMQ.active_account() is None or IBMQ.active_account()['token'] != self.api_token:
+            if IBMQ.active_account() is None:
+                self.provider = IBMQ.enable_account(self.api_token, hub=self.hub,
+                                                    group=self.group,
+                                                    project=self.project)
+            elif IBMQ.active_account()['token'] != self.api_token:
+                IBMQ.disable_account()
                 self.provider = IBMQ.enable_account(self.api_token, hub=self.hub,
                                                     group=self.group,
                                                     project=self.project)
@@ -169,7 +176,7 @@ class DeviceQiskit(DeviceBase):
                                                   project=self.project)
 
             return True
-
+        
         except Exception as e:
             print('An Exception has occured when trying to connect with the \
             provider: {}'.format(e))
