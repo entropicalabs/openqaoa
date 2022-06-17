@@ -24,6 +24,7 @@ from openqaoa.devices import create_device
 from openqaoa.optimizers import get_optimizer
 from openqaoa.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
+from openqaoa.qfim import qfim
 
 """
 Unittest based testing of custom optimizers.
@@ -263,8 +264,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Stepwise optimize
         def step(x0):
-            qfim = backend_obj_vectorized.qfim(variate_params)
-            scaled_gradient = np.linalg.solve(qfim(x0), jac(x0))
+            qfim_ = qfim(backend_obj_vectorized, variate_params, self.log)
+            scaled_gradient = np.linalg.solve(qfim_(x0), jac(x0))
             x1 = x0 - stepsize*scaled_gradient
             variate_params.update_from_raw(x1)
             return [x1, np.real(backend_obj_vectorized.expectation(variate_params))]
