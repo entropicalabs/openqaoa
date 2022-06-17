@@ -30,6 +30,7 @@ from . import optimization_methods as om
 from .logger_vqa import Logger
 
 from ..derivative_functions import derivative
+from ..qfim import qfim
 
 
 class OptimizeVQA(ABC):
@@ -604,8 +605,8 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             method = om.rmsprop
         elif self.method == 'natural_grad_descent':
             method = om.natural_grad_descent
-            self.options['qfim'] = self.vqa_object.qfim(
-                self.variational_params)
+            self.options['qfim'] = qfim(self.vqa_object,
+                self.variational_params, self.log)
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
             method = om.SPSA
