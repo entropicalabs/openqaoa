@@ -16,6 +16,7 @@ import abc
 import numpy as np
 from qiskit import IBMQ
 from qiskit.providers.ibmq import IBMQAccountError
+from qiskit.providers.ibmq.api.exceptions import RequestsApiError
 
 from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
@@ -176,6 +177,10 @@ class DeviceQiskit(DeviceBase):
                                                   project=self.project)
 
             return True
+        
+        except RequestsApiError as e:
+            print('The api key used was invalid: {}'.format(e))
+            return False
         
         except Exception as e:
             print('An Exception has occured when trying to connect with the \
