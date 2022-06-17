@@ -14,7 +14,6 @@
 
 from typing import Union
 import numpy as np
-from operator import itemgetter
 
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.basebackend import QAOABaseBackend
@@ -266,12 +265,6 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
     Hamiltonian result in fixing spins to a specific value. In this case, the parent spin is set 
     to None.
 
-    Additionally, it generates a different version of the max_terms_and_costs object, where
-    the terms corresponds the actual elimination rules as defined in the spin map, and
-    the costs correspond to the sign of the factors connecting the spin and its parent.
-    The pairs in the dictionary keys are ordered as (i,j) enforcing i<j, for easy retrieval
-    of the full solution at the end of the process.
-
     Parameters
     ----------
     hamiltonian: `Hamiltonian`
@@ -292,15 +285,6 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
         with factor 1. The rest are mapped to a parent spin with a multiplicative 
         factor resulting from the constraints, with the parent spin being None if
         the spin is fixed.
-
-    new_max_terms_and_stats: `dict`
-        Dictionary containing the terms and associated expectation values, obtained from
-        the elimination relations resulting from the pair and costs in the
-        original max_terms_and_costs. This dictionary is ordered in increasing
-        order with respect to j in the terms (i,j) defining the dictionary 
-        keys. This facilitates the backtracking of the elimination when 
-        constructing the final solution at the end of the process.
-
     """
 
     register = hamiltonian.qureg
@@ -379,26 +363,12 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
                 spin_map.update({spin_unfixed: (
                     factor_unfixed**(-1) * factor_fixed * np.sign(stat), spin_fixed)})
 
-    # Initialize new dictionary containing max_terms_and_costs associated with elimination rules
-    new_max_terms_and_stats = {}
-
-    # Correct all dependencies and populate new_max_terms_and_costs
+    # Correct all dependencies
     for spin in spin_candidates:
-
         parent_spin, cumulative_factor = find_parent(spin_map, spin)
         spin_map.update({spin: (cumulative_factor, parent_spin)})
 
-        # Ensure we do not store a (i,i) term, note that parent_spin < spin
-        if spin != parent_spin:
-            new_max_terms_and_stats.update(
-                {(parent_spin, spin): np.sign(cumulative_factor)})
-
-    # Order the terms for easier reconstruction of the final solution
-    keys = sorted(new_max_terms_and_stats.keys(), key=itemgetter(1))
-    new_max_terms_and_stats = {
-        key: new_max_terms_and_stats[key] for key in keys}
-
-    return spin_map, new_max_terms_and_stats
+    return spin_map
 
 
 def hamiltonian_from_dict(hamiltonian_dict: dict):
@@ -473,8 +443,9 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
     Returns
     -------
     new_hamiltonian: `Hamiltonian`
-        Hamiltonian object containing the reduced problem statement after spin eliminatinos.
-
+        Hamiltonian object containing the reduced problem statement after spin eliminations.
+    spin_map: `dict`
+        Updated spin_map with sponatenous eliminations from cancellations during spin removal process.
     """
 
     # Define new Hamiltonian as a dictionary
@@ -557,20 +528,49 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
                 else:
                     new_hamiltonian_dict[new_edge] += new_weight
 
+    # New qubit register
+    register = set([spin for term in new_hamiltonian_dict.keys() for spin in term])
+    
+    # Remove vanishing edges
+    new_hamiltonian_dict = {edge:weight for edge,weight in new_hamiltonian_dict.items() if round(weight,10) != 0}
+
+    # Check for isolated nodes comparing register and quadratic register after removing vanishing terms
+    quadratic_edges = [edge for edge in new_hamiltonian_dict if len(edge) == 2]
+    quadratic_register = set([spin for term in quadratic_edges for spin in term])
+
+    # If lengths do not match, there are isolated nodes
+    if len(register) != len(quadratic_register):
+        isolated_nodes = register.difference(quadratic_register)
+
+        # Fix isolated nodes
+        for node in isolated_nodes:
+            singlet = (node,)
+
+            # If no linear term acting on the node, fix arbitrarily
+            if new_hamiltonian_dict.get(singlet) is None:
+                spin_map.update({node:(1,None)})
+
+            # If linear term present, fix accordingly
+            else:
+                spin_map.update({node:(new_hamiltonian_dict.get(singlet),None)})
+
+                # Delete isolated node from new hamiltonian
+                new_hamiltonian.pop((node,))
+
     # Redefine new Hamiltonian from the dictionary
     new_hamiltonian = hamiltonian_from_dict(new_hamiltonian_dict)
 
-    return new_hamiltonian
+    return new_hamiltonian, spin_map
 
 
-def final_solution(max_terms_and_stats_list: list, cl_states: list, hamiltonian: Hamiltonian):
+def final_solution(elimination_tracker: list, cl_states: list, hamiltonian: Hamiltonian):
     """
     Constructs the final solution to the problem by obtaining the final states from adding the removed 
     spins into the classical results and computing the corresponding energy.
 
     Parameters
     ----------
-    max__terms_and_stats_list: `dict`
+    elimination_tracker: `list`
         List of dictionaries, where each dictionary contains the elimination rules
         applied at each step of the process. Dictionary keys correspond to spin
         pairs (i,j), always with i<j to ensure proper reconstruction of the state,
@@ -590,7 +590,7 @@ def final_solution(max_terms_and_stats_list: list, cl_states: list, hamiltonian:
     """
 
     # Reverse max_cost_list, reverse max_pair_list
-    max_terms_and_stats_list = max_terms_and_stats_list[::-1]
+    elimination_tracker = elimination_tracker[::-1]
 
     # Initialize list containg full solutions
     full_solution = {}
@@ -602,7 +602,7 @@ def final_solution(max_terms_and_stats_list: list, cl_states: list, hamiltonian:
         state = [int(bit) for bit in cl_state]
 
         # Extract terms and costs from each elimination step
-        for terms_and_stats in max_terms_and_stats_list:
+        for terms_and_stats in elimination_tracker:
 
             # Back track elimination from the specific step
             for term, val in terms_and_stats.items():
@@ -644,7 +644,7 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
                    init_type: str = 'ramp',
                    optimizer_dict: dict = {'method': 'cobyla', 'maxiter': 200},
                    backend_properties: dict = {},
-                   max_terms_and_stats_list: list = None,
+                   elimination_tracker: list = None,
                    original_hamiltonian: Hamiltonian = None
                    ):
     """
@@ -679,9 +679,8 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
     backend_properties: `dict`, optional
         Dictionary containing all information regarding the backend
         used to run the circuit on. Default is empty.            
-    max_terms_and_stats_list: `list`, optional
-        List tracking the terms with with highest expectation value and the
-        associated expectation value. Defaults to None.
+    elimination_tracker: `list`, optional
+        List tracking the set of performed eliminations. Defaults to None.
     original_hamiltonian: `Hamiltonian`, optional
         Hamiltonian associated with the original problem. Defaults to None
         and it is stored in the first step of the process.   
@@ -710,8 +709,8 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
         original_hamiltonian = hamiltonian
 
     # Initialize tracker
-    if max_terms_and_stats_list is None:
-        max_terms_and_stats_list = []
+    if elimination_tracker is None:
+        elimination_tracker = []
 
     # Ensure we do not eliminate beyond the cutoff
     if (n_qubits - n_cutoff) < n_max:
@@ -729,15 +728,15 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
 
         # Retrieve full solutions including eliminated spins and their energies
         full_solutions = final_solution(
-            max_terms_and_stats_list, cl_ground_states, original_hamiltonian)
+            elimination_tracker, cl_ground_states, original_hamiltonian)
 
         # Compute description dictionary containing all the information
         rqaoa_info = {}
         rqaoa_info['solution'] = full_solutions
         rqaoa_info['classical output'] = classical_sol_dict
-        rqaoa_info['elimination rules'] = max_terms_and_stats_list
-        rqaoa_info['schedule'] = [len(max_tc) for max_tc in max_terms_and_stats_list]
-        rqaoa_info['total steps'] = len(max_terms_and_stats_list)
+        rqaoa_info['elimination rules'] = elimination_tracker
+        rqaoa_info['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
+        rqaoa_info['total steps'] = len(elimination_tracker)
 
         # Return classical solution
         return rqaoa_info
@@ -766,26 +765,19 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
         # Retrieve highest expectation values according to adaptive method
         max_terms_and_stats = ada_max_terms(exp_vals_z, corr_matrix, n_max)
 
-        # If no expectation values were obtained, singlets are correlations are equal to 0 and leftover spins are disconnected
-        if max_terms_and_stats == {}:
+        # Generate spin map
+        spin_map = spin_mapping(hamiltonian, max_terms_and_stats)
 
-            # Using leftover freedom we fix all spins up to cutoff value
-            for j in range(n_qubits-n_cutoff):
+        # Eliminate spins and redefine hamiltonian
+        new_hamiltonian,spin_map = redefine_hamiltonian(hamiltonian, spin_map)
 
-                # We arbitrarily choose to fix the last spins with value 1
-                max_terms_and_stats.update({(j + n_cutoff,): 1})
-
-        # Generate spin map and redefine list of max_terms_and_costs according to elimination rules
-        spin_map, final_max_terms_and_stats = spin_mapping(
-            hamiltonian, max_terms_and_stats)
-        max_terms_and_stats_list.append(final_max_terms_and_stats)
-
-        # Eliminate spins and redefine cost hamiltonian
-        new_hamiltonian = redefine_hamiltonian(hamiltonian, spin_map)
+        # Extract final set of eliminations with correct dependencies and update tracker
+        eliminations = {(spin_map[spin][1],spin):spin_map[spin][0] for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]}
+        elimination_tracker.append(eliminations)
 
         # Restart process with new parameters
         return adaptive_rqaoa(new_hamiltonian, mixer, p, n_max, n_cutoff, device, params_type, init_type,
-                              optimizer_dict, backend_properties, max_terms_and_stats_list, original_hamiltonian)
+                              optimizer_dict, backend_properties, elimination_tracker, original_hamiltonian)
 
 
 def custom_rqaoa(hamiltonian: Hamiltonian,
@@ -798,7 +790,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
                  init_type: str = 'ramp',
                  optimizer_dict: dict = {'method': 'cobyla', 'maxiter': 200},
                  backend_properties: dict = {},
-                 max_terms_and_stats_list: list = None,
+                 elimination_tracker: list = None,
                  original_hamiltonian: Hamiltonian = None,
                  counter=None
                  ):
@@ -834,12 +826,13 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
     backend_properties: `dict`, optional
         Dictionary containing all information regarding the backend
         used to run the circuit on. Defaults is empty.
-    max_terms_and_stats_list: 
-        List tracking the terms with with highest expectation value and the
-        associated expectation value. Defaults to None.
+    elimination_tracker: `list`, optional
+        List tracking the set of performed eliminations. Defaults to None.
     original_hamiltonian: `Hamiltonian`, optional
         Hamiltonian associated with the original problem. Defaults to None
         and it is stored in the first step of the process.
+    counter: `int`,optional
+        Recursive step counter. Defaults to None.
 
     Returns
     -------
@@ -865,8 +858,8 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
         original_hamiltonian = hamiltonian
 
     # Initialize tracker
-    if max_terms_and_stats_list is None:
-        max_terms_and_stats_list = []
+    if elimination_tracker is None:
+        elimination_tracker = []
 
     # If schedule is not given one spin is eliminated at a time
     if type(steps) is int:
@@ -892,16 +885,16 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
 
         # Retrieve full solutions including eliminated spins and their energies
         full_solutions = final_solution(
-            max_terms_and_stats_list, cl_ground_states, original_hamiltonian)
+            elimination_tracker, cl_ground_states, original_hamiltonian)
 
         # Compute description dictionary containing all the information
         rqaoa_info = {}
         rqaoa_info['solution'] = full_solutions
         rqaoa_info['classical output'] = classical_sol_dict
-        rqaoa_info['elimination rules'] = max_terms_and_stats_list
+        rqaoa_info['elimination rules'] = elimination_tracker
         rqaoa_info['schedule'] = [len(max_tc)
-                                  for max_tc in max_terms_and_stats_list]
-        rqaoa_info['total steps'] = len(max_terms_and_stats_list)
+                                  for max_tc in elimination_tracker]
+        rqaoa_info['total steps'] = len(elimination_tracker)
 
         # Return classical solution
         return rqaoa_info
@@ -927,38 +920,29 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
         qaoa_backend = get_qaoa_backend(circuit_params,**backend_properties,device=device)
 
         # Run QAOA
-        qaoa_results = optimize_qaoa(
-            qaoa_backend, variational_params, optimizer_dict)
+        qaoa_results = optimize_qaoa(qaoa_backend, variational_params, optimizer_dict)
 
         # Obtain statistical results
-        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(
-            variational_params, qaoa_results, qaoa_backend, hamiltonian, mixer_type = mixer['type'], p = p)
+        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, qaoa_results, qaoa_backend, hamiltonian, mixer_type = mixer['type'], p = p)
 
         # Retrieve highest expectation values
         max_terms_and_stats = max_terms(exp_vals_z, corr_matrix, n_elim)
 
-        # If no expectation values were obtained, singlets are correlations are equal to 0 and leftover spins are disconnected
-        if max_terms_and_stats == {}:
-
-            # Using leftover freedom we fix all spins up to cutoff value
-            for j in range(n_qubits-n_cutoff):
-
-                # We arbitrarily choose to fix the last spins with value 1
-                max_terms_and_stats.update({(j + n_cutoff,): 1})
-
-        # Generate spin map and redefine list of max_terms_and_costs according to elimination rules
-        spin_map, final_max_terms_and_stats = spin_mapping(
-            hamiltonian, max_terms_and_stats)
-        max_terms_and_stats_list.append(final_max_terms_and_stats)
+        # Generate spin map 
+        spin_map = spin_mapping(hamiltonian, max_terms_and_stats)
 
         # Eliminate spins and redefine hamiltonian
-        new_hamiltonian = redefine_hamiltonian(hamiltonian, spin_map)
+        new_hamiltonian,spin_map = redefine_hamiltonian(hamiltonian, spin_map)
+
+        # Extract final set of eliminations with correct dependencies and update tracker
+        eliminations = {(spin_map[spin][1],spin):spin_map[spin][0] for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]}
+        elimination_tracker.append(eliminations)
 
         # Add one step to the counter
         counter += 1
 
         # Restart process with new parameters
         return custom_rqaoa(new_hamiltonian, mixer, p, n_cutoff, steps, device, params_type, init_type,
-                            optimizer_dict, backend_properties, max_terms_and_stats_list, original_hamiltonian, counter)
+                            optimizer_dict, backend_properties, elimination_tracker, original_hamiltonian, counter)
 
 # END

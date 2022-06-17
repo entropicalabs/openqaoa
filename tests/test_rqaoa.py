@@ -86,23 +86,16 @@ class TestingRQAOA(unittest.TestCase):
         spin_map = dict({(0,(1,0)),(1,(-1,0)),(2,(1,2)),(3,(1,3)),(4,(1,2)),\
                 (5,(1,2)),(6,(1,6)),(7,(-1,None)),(8,(1,8)),(9,(1,0))})
 
-        new_max_tc = dict({(0, 1): -1, (2,4):1, (2,5): 1, (None,7):-1, (0, 9): 1}) # The function also returns final constraints
-
         # Compute the spin_map and final constraints from the function
-        comp_spin_map, comp_new_max_tc = spin_mapping(hamiltonian,max_terms_and_stats)
+        comp_spin_map = spin_mapping(hamiltonian,max_terms_and_stats)
 
         # Check both outputs contain the same number of keys as the correct solution
         assert len(spin_map) == len(comp_spin_map), f'Computed spin_map has incorrect length'
-        assert len(new_max_tc) == len(comp_new_max_tc), f'Output max_terms_and_stats dictionary has incorrect length '
         
         # Test the spin_map matches the correct solution
         for key in spin_map.keys():
             assert spin_map[key][0] == comp_spin_map[key][0], f'Computed spin_map contains incorrect factor'
             assert spin_map[key][1] == comp_spin_map[key][1], f'Computed spin_map contains incorrect parent spin'
-        
-        # Test the final constraints match the correct solution
-        for key in new_max_tc.keys():
-            assert new_max_tc[key] == comp_new_max_tc[key], f'Output max_terms_and_stats contains incorrect factor'
 
     def test_max_terms(self):
         """
@@ -233,7 +226,7 @@ class TestingRQAOA(unittest.TestCase):
         hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
 
         # Compute new hamiltonian
-        comp_hamiltonian = redefine_hamiltonian(input_hamiltonian, spin_map)
+        comp_hamiltonian,comp_spin_map = redefine_hamiltonian(input_hamiltonian, spin_map)
 
         # Test computed Hamiltonian contains the correct terms
         assert hamiltonian.terms == comp_hamiltonian.terms, f'Terms in the computed Hamiltonian are incorrect'
