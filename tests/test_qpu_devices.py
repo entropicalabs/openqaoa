@@ -43,7 +43,12 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     def setUp(self):
 
-        with open('./tests/credentials.json', 'r') as f:
+        try:
+            opened_f = open('./tests/credentials.json', 'r')
+        except FileNotFoundError:
+            opened_f = open('credentials.json', 'r')
+                
+        with opened_f as f:
             json_obj = json.load(f)['QISKIT']
             self.API_TOKEN = json_obj['API_TOKEN']
             self.HUB = json_obj['HUB']
