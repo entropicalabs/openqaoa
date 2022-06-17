@@ -65,8 +65,10 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     def test_check_connection_provider_no_backend_wrong_credentials(self):
 
-        device_obj = DeviceQiskit(api_token='', hub='', group='',
-                                        project='')
+        device_obj = DeviceQiskit(device_name='', 
+                                  api_token='', 
+                                  hub='', group='',
+                                  project='')
 
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, False)
@@ -74,9 +76,10 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     def test_check_connection_provider_no_backend_provided_credentials(self):
 
-        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
-                                        hub=self.HUB, group=self.GROUP,
-                                        project=self.PROJECT)
+        device_obj = DeviceQiskit(device_name='', 
+                                  api_token=self.API_TOKEN,
+                                  hub=self.HUB, group=self.GROUP,
+                                  project=self.PROJECT)
 
         self.assertEqual(device_obj.check_connection(), True)
         self.assertEqual(device_obj.provider_connected, True)
@@ -84,17 +87,18 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     def test_check_connection_provider_right_backend_provided_credentials(self):
 
-        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
-                                        hub=self.HUB, group=self.GROUP,
-                                        project=self.PROJECT)
+        device_obj = DeviceQiskit(device_name='', 
+                                  api_token=self.API_TOKEN,
+                                  hub=self.HUB, group=self.GROUP,
+                                  project=self.PROJECT)
 
         device_obj.check_connection()
         valid_qpu_name = device_obj.available_qpus[0]
 
-        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
-                                        hub=self.HUB, group=self.GROUP,
-                                        project=self.PROJECT,
-                                        selected_qpu=valid_qpu_name)
+        device_obj = DeviceQiskit(device_name=valid_qpu_name, 
+                                  api_token=self.API_TOKEN, 
+                                  hub=self.HUB, group=self.GROUP,
+                                  project=self.PROJECT)
 
         self.assertEqual(device_obj.check_connection(), True)
         self.assertEqual(device_obj.provider_connected, True)
@@ -102,10 +106,10 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
 
-        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
-                                        hub=self.HUB, group=self.GROUP,
-                                        project=self.PROJECT,
-                                        selected_qpu='random_invalid_backend')
+        device_obj = DeviceQiskit(device_name='random_invalid_backend', 
+                                  api_token=self.API_TOKEN,
+                                  hub=self.HUB, group=self.GROUP,
+                                  project=self.PROJECT)
 
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, True)
