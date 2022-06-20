@@ -36,8 +36,13 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
     """
 
     def setUp(self):
-
-        with open('./tests/credentials.json', 'r') as f:
+        
+        try:
+            opened_f = open('./tests/credentials.json', 'r')
+        except FileNotFoundError:
+            opened_f = open('credentials.json', 'r')
+                
+        with opened_f as f:
             json_obj = json.load(f)['AWS']
             self.AWS_ACCESS_KEY_ID = json_obj['AWS_ACCESS_KEY_ID']
             self.AWS_SECRET_ACCESS_KEY = json_obj['AWS_SECRET_ACCESS_KEY']
