@@ -119,6 +119,8 @@ With the notation `nq-qvm` it is intended that `n` is a positive integer. For ex
 
 The `vectorised` backend is developed by Entropica Labs and works by targeting active qubits (on which gates are to be applied in any given Hamiltonian term) by using the numpy slicing operators, and applying the gate operations in place. This allows the operators and their action on the wavefunction to be constructed and performed in a simple and fast way.
 
+Note that in order to use the Rigetti devices you either need to be running your code on Rigetti's [Quantum Cloud Services](https://qcs.rigetti.com/sign-in) or, in case you want to run it locally from your machine, start qvm and quilc. More information on how to start them can be found in https://docs.rigetti.com/qcs/getting-started.
+
 #### Recursive QAOA
 
 A more cohmprensive notebook is [RQAOA_example](examples/RQAOA_example.ipynb)

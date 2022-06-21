@@ -19,28 +19,21 @@ New gradient/higher-order derivative computation methods can be added here. To a
     2. Give this function a string identifier (eg: 'param_shift'), and add this to the list `derivative_methods` of the function `derivative`, and as a possible 'out'.
 
 """
+from __future__ import annotations
+
 import numpy as np
 import random
 
+from copy import deepcopy
+from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
 
-def update_and_compute_expectation(backend_obj, params, logger):
-    """
-    Helper function that returns a callable that takes in a raw parameters (a list of floats) and returns an expectation value (a float).
-    This function will handle: 
-        (1) updating variational parameters with QAOAVariationalBaseParams.update_from_raw, and 
-        (2) computing expectation with QAOABaseBackend.expectation.
-        
-    PARAMETERS
-    ----------
-    backend_obj : `QAOABaseBackend`
-        backend object that computes expectation values when executed. 
-    
-    params : QAOAVariationalBaseParams
-        `QAOAVariationalBaseParams` object containing variational angles.
-        
-    logger : 
-        Logger object to keep track of function evaluations    
-    """
+
+def update_and_compute_expectation(backend_obj: QAOABaseBackend, 
+                                   params: QAOAVariationalBaseParams, 
+                                   logger: Logger):
+    # Helper function that returns a function that takes in a list of raw parameters
+    # This function will handle (1) updating variational parameters with update_from_raw and (2) computing expectation.
+
     def fun(args):
         current_total_eval = logger.func_evals.best[0]
         current_total_eval += 1
@@ -53,43 +46,46 @@ def update_and_compute_expectation(backend_obj, params, logger):
 
     return fun
 
-
-def derivative(derivative_dict: dict):
+def derivative(backend_obj: QAOABaseBackend, 
+               params: QAOAVariationalBaseParams, 
+               logger: Logger, 
+               derivative_type: str = None, 
+               derivative_method: str = None, 
+               derivative_options: dict = None):
     """
-    Called from `cost_function.py`. Returns a callable derivative function, generated according to parameters in `derivative_dict`. 
+    Returns a callable function that calculates the gradient according to the specified `gradient_method`.
 
     PARAMETERS
     ----------
-    derivative_dict :
-        derivative_type : str
-            Type of derivative to compute. String of either `gradient` or `hessian`.
+    backend_obj: QAOABaseBackend
+        `QAOABaseBackend` object that contains information about the backend that is being used to perform the QAOA circuit
+        
+    params : QAOAVariationalBaseParams
+        `QAOAVariationalBaseParams` object containing variational angles.
+        
+    logger: Logger
+        Logger Class required to log information from the evaluations required for the jacobian/hessian computation.
+    
+    derivative_type : str
+        Type of derivative to compute. Either `gradient` or `hessian`.
 
-        derivative_method : str
-            Computational method of the derivative. String of either `finite_difference`, `param_shift`, `stoch_param_shift`, or `grad_spsa`.
+    derivative_method : str
+        Computational method of the derivative. Either `finite_difference`, `param_shift`, `stoch_param_shift`, or `grad_spsa`.
 
-        derivative_options : dict
-            Dictionary containing options specific to each `derivative_method` - see their docstrings for options.
+    derivative_options : dict
+        Dictionary containing options specific to each `derivative_method`.
 
-        backend_obj : QAOABaseBackend
-            `QAOABaseBackend` object that contains information about the abstract circuit to be executed.
+    cost_std : QAOACost
+        `QAOACost` object that computes expectation values when executed. Standard parametrisation.
 
-        params : QAOAVariationalBaseParams
-            `QAOAVariationalBaseParams` object containing variational angles.
-
-        params_ext : VariationalExtendedParams
-            extended parametrisation object (for parameter shift and related methods)
+    cost_ext : QAOACost
+        `QAOACost` object that computes expectation values when executed. Extended parametrisation. Mainly used to compute parameter shifts at each individual gate, which is summed to recover the parameter shift for a parametrised layer.
 
     Returns
     -------
     out:
-        Callable derivative function that accepts parameters (a list of floats) and returns the gradient (a list of floats).
+        The callable derivative function of the cost function, generated based on the `derivative_type`, `derivative_method`, and `derivative_options` specified.
     """
-    
-    logger = derivative_dict['logger']
-    
-    derivative_type = derivative_dict['derivative_type']
-    derivative_method = derivative_dict['derivative_method']
-
     # Default derivative_options used if none are specified.
     default_derivative_options = {"stepsize": 0.00001,
                                   "n_beta_single": -1,
@@ -97,12 +93,12 @@ def derivative(derivative_dict: dict):
                                   "n_gamma_single": -1,
                                   "n_gamma_pair": -1}
 
-    derivative_options = {**default_derivative_options, **derivative_dict['derivative_options']
-                          } if derivative_dict['derivative_options'] is not None else default_derivative_options
+    derivative_options = {**default_derivative_options, **derivative_options
+                          } if derivative_options is not None else default_derivative_options
 
-    backend_obj = derivative_dict['backend_obj']
-    params = derivative_dict['params']
-    params_ext = derivative_dict['params_ext']
+    # cost_std = derivative_dict['cost_std']
+    # cost_ext = derivative_dict['cost_ext']
+    params_ext = QAOAVariationalExtendedParams.empty(backend_obj.circuit_params)
 
     derivative_types = ['gradient', 'hessian']
     assert derivative_type in derivative_types,\
@@ -114,6 +110,8 @@ def derivative(derivative_dict: dict):
     assert derivative_method in derivative_methods,\
         "Unknown derivative computation method specified - please choose between " + \
         str(derivative_methods)
+    
+    params = deepcopy(params)
 
     if derivative_type == 'gradient':
 
