@@ -27,6 +27,7 @@ from openqaoa.optimizers.logger_vqa import Logger
 from openqaoa.qfim import qfim
 
 from openqaoa.optimizers.logger_vqa import Logger
+from openqaoa.qfim import qfim
 
 """
 Unittest based testing of custom optimizers.
