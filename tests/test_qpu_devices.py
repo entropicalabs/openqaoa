@@ -14,6 +14,7 @@
 
 import unittest
 import json
+import os 
 
 from openqaoa.devices import DeviceQiskit
 
@@ -45,7 +46,10 @@ class TestingDeviceQiskit(unittest.TestCase):
 
         with open('./tests/credentials.json', 'r') as f:
             json_obj = json.load(f)['QISKIT']
-            self.API_TOKEN = json_obj['API_TOKEN']
+            if json_obj['API_TOKEN'] == 'YOUR_API_TOKEN':
+                    self.API_TOKEN = os.environ['IBMQ_TOKEN']
+            else:
+                self.API_TOKEN = json_obj['API_TOKEN']
             self.HUB = json_obj['HUB']
             self.GROUP = json_obj['GROUP']
             self.PROJECT = json_obj['PROJECT']
@@ -65,8 +69,11 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     def test_check_connection_provider_no_backend_wrong_credentials(self):
 
-        device_obj = DeviceQiskit(api_token='', hub='', group='',
-                                        project='')
+        device_obj = DeviceQiskit(device_name='', 
+                                 api_token='',
+                                 hub='',
+                                 group='',
+                                 project='')
 
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, False)
@@ -74,9 +81,11 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     def test_check_connection_provider_no_backend_provided_credentials(self):
 
-        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
-                                        hub=self.HUB, group=self.GROUP,
-                                        project=self.PROJECT)
+        device_obj = DeviceQiskit(device_name='',
+                                api_token=self.API_TOKEN,
+                                hub=self.HUB,
+                                group=self.GROUP,
+                                project=self.PROJECT)
 
         self.assertEqual(device_obj.check_connection(), True)
         self.assertEqual(device_obj.provider_connected, True)
@@ -84,17 +93,20 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     def test_check_connection_provider_right_backend_provided_credentials(self):
 
-        device_obj = DeviceQiskit(api_token=self.API_TOKEN,
-                                        hub=self.HUB, group=self.GROUP,
-                                        project=self.PROJECT)
+        device_obj = DeviceQiskit(device_name='',
+                                api_token=self.API_TOKEN,
+                                hub=self.HUB,
+                                group=self.GROUP,
+                                project=self.PROJECT)
 
         device_obj.check_connection()
         valid_qpu_name = device_obj.available_qpus[0]
 
         device_obj = DeviceQiskit(api_token=self.API_TOKEN,
-                                        hub=self.HUB, group=self.GROUP,
-                                        project=self.PROJECT,
-                                        selected_qpu=valid_qpu_name)
+                                 hub=self.HUB,
+                                 group=self.GROUP,
+                                 project=self.PROJECT,
+                                 device_name=valid_qpu_name)
 
         self.assertEqual(device_obj.check_connection(), True)
         self.assertEqual(device_obj.provider_connected, True)
@@ -103,9 +115,9 @@ class TestingDeviceQiskit(unittest.TestCase):
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
 
         device_obj = DeviceQiskit(api_token=self.API_TOKEN,
-                                        hub=self.HUB, group=self.GROUP,
-                                        project=self.PROJECT,
-                                        selected_qpu='random_invalid_backend')
+                                    hub=self.HUB, group=self.GROUP,
+                                    project=self.PROJECT,
+                                    device_name='random_invalid_backend')
 
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, True)
