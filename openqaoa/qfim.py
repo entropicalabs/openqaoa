@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from copy import deepcopy
+from .basebackend import QAOABaseBackendShotBased
 
 def log_qfim_evals(logger: Logger) -> Logger:
     
