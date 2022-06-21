@@ -40,6 +40,9 @@ def qfim(backend_obj: QAOABaseBackend,
             with elements [QFI]_ij = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>.
         """
         
+        if isinstance(backend_obj, QAOABaseBackendShotBased):
+            raise NotImplementedError("QFIM computation is not currently available on shot-based")
+        
         psi = backend_obj.wavefunction(params)
         log_qfim_evals(logger)
         
