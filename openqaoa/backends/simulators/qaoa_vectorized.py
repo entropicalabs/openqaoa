@@ -619,7 +619,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
                     
             else:
                 raise ValueError('Unsupported append_state specified (Not an ndarray, or not of shape (2**n, 2**n).')
-        
+                
+        self.measurement_outcomes = [(component) for component in self.wavefn]
 
                 
     def wavefunction(self,

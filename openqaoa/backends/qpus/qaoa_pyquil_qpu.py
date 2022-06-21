@@ -229,7 +229,10 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         # TODO: check the endian (big or little) ordering of measurement outcomes
         meas_list = [''.join(str(bit) for bit in bitstring)
                      for bitstring in result.readout_data['ro']]
+        
+        # Expose counts
         counts = Counter(list(meas_list))
+        self.measurement_outcomes = counts
         return counts
 
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
