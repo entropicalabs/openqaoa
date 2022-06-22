@@ -22,8 +22,9 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.devices import create_device
 from openqaoa.optimizers import get_optimizer
-
+from openqaoa.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
+from openqaoa.qfim import qfim
 
 """
 Unittest based testing of custom optimizers.
@@ -43,15 +44,20 @@ class TestQAOACostBaseClass(unittest.TestCase):
                            {
                                'history_update_bool': False, 
                                'best_update_string': 'HighestOnly'
+                           },
+                           'qfim_func_evals': 
+                           {
+                               'history_update_bool': False, 
+                               'best_update_string': 'HighestOnly'
                            }
                           }, 
                           {
-                              'root_nodes': ['func_evals', 'jac_func_evals'], 
+                              'root_nodes': ['func_evals', 'jac_func_evals', 
+                                             'qfim_func_evals'], 
                               'best_update_structure': []
                           })
         
-        self.log.log_variables({'func_evals': 0})
-        self.log.log_variables({'jac_func_evals': 0})
+        self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
 
     def test_scipy_optimizers_global(self):
         " Check that final value of all scipy MINIMIZE_METHODS optimizers agrees with pre-computed optimized value."
@@ -77,10 +83,10 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         for i, optimizer_dict in enumerate(optimizer_dicts):
 
-            optimizer_dict['jac'] = backend_obj_vectorized.derivative_function(
-                variate_params, 'gradient', 'finite_difference', logger = self.log)
-            optimizer_dict['hess'] = backend_obj_vectorized.derivative_function(
-                variate_params, 'hessian', 'finite_difference', logger = self.log)
+            optimizer_dict['jac'] = derivative(backend_obj_vectorized, 
+                variate_params, self.log, 'gradient', 'finite_difference')
+            optimizer_dict['hess'] = derivative(backend_obj_vectorized, 
+                variate_params, self.log, 'hessian', 'finite_difference')
 
             # Optimize
             vector_optimizer = get_optimizer(
@@ -88,7 +94,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
             vector_optimizer()
 
             y_opt = vector_optimizer.results_information()[
-                'cost progress list']
+                'intermediate cost']
 
             assert np.isclose(y_precomp[i], y_opt[-1], rtol=1e-04,
                               atol=1e-04), f"{optimizer_dict['method']} failed the test."
@@ -129,7 +135,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
             vector_optimizer()
 
             y_opt = vector_optimizer.results_information()[
-                'cost progress list']
+                'intermediate cost']
 
             assert np.isclose(y_precomp[i], y_opt[-1], rtol=1e-04,
                               atol=1e-04), f"{optimizer_dict['method']} method failed the test."
@@ -152,15 +158,16 @@ class TestQAOACostBaseClass(unittest.TestCase):
         stepsize = 0.001
 
         params_array = variate_params.raw().copy()
-        jac = backend_obj_vectorized.derivative_function(
-            variate_params, 'gradient', 'finite_difference', {'stepsize': grad_stepsize}, logger = self.log)
+        jac = derivative(backend_obj_vectorized, variate_params, self.log, 
+                         'gradient', 'finite_difference', 
+                         {'stepsize': grad_stepsize})
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
                                          'method': 'vgd', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac})
         vector_optimizer()
         y_opt = vector_optimizer.results_information()[
-            'cost progress list'][1:4]
+            'intermediate cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
@@ -199,17 +206,19 @@ class TestQAOACostBaseClass(unittest.TestCase):
         stepsize = 0.001
 
         params_array = variate_params.raw().copy()
-        jac = backend_obj_vectorized.derivative_function(
-            variate_params, 'gradient', 'finite_difference', {'stepsize': grad_stepsize}, logger = self.log)
-        hess = backend_obj_vectorized.derivative_function(
-            variate_params, 'hessian', 'finite_difference', {'stepsize': grad_stepsize}, logger = self.log)
+        jac = derivative(backend_obj_vectorized, variate_params, self.log, 
+                         'gradient', 'finite_difference', 
+                         {'stepsize': grad_stepsize})
+        hess = derivative(backend_obj_vectorized, variate_params, self.log, 
+                          'hessian', 'finite_difference', 
+                          {'stepsize': grad_stepsize})
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
                                          'method': 'newton', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac, 'hess': hess})
         vector_optimizer()
         y_opt = vector_optimizer.results_information()[
-            'cost progress list'][1:4]
+            'intermediate cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
@@ -247,20 +256,21 @@ class TestQAOACostBaseClass(unittest.TestCase):
         stepsize = 0.001
 
         params_array = variate_params.raw().copy()
-        jac = backend_obj_vectorized.derivative_function(
-            variate_params, 'gradient', 'finite_difference', {'stepsize': grad_stepsize}, logger = self.log)
+        jac = derivative(backend_obj_vectorized, variate_params, self.log, 
+                         'gradient', 'finite_difference', 
+                         {'stepsize': grad_stepsize})
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
                                          'method': 'natural_grad_descent', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac})
         vector_optimizer()
         y_opt = vector_optimizer.results_information()[
-            'cost progress list'][1:4]
+            'intermediate cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
-            qfim = backend_obj_vectorized.qfim(variate_params)
-            scaled_gradient = np.linalg.solve(qfim(x0), jac(x0))
+            qfim_ = qfim(backend_obj_vectorized, variate_params, self.log)
+            scaled_gradient = np.linalg.solve(qfim_(x0), jac(x0))
             x1 = x0 - stepsize*scaled_gradient
             variate_params.update_from_raw(x1)
             return [x1, np.real(backend_obj_vectorized.expectation(variate_params))]
@@ -294,8 +304,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
         stepsize = 0.001
 
         params_array = variate_params.raw().copy()
-        jac = backend_obj_vectorized.derivative_function(
-            variate_params, 'gradient', 'finite_difference', {'stepsize': grad_stepsize}, logger = self.log)
+        jac = derivative(backend_obj_vectorized, variate_params, self.log, 
+                         'gradient', 'finite_difference', 
+                         {'stepsize': grad_stepsize})
 
         decay = 0.9
         eps = 1e-07
@@ -305,7 +316,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'method': 'rmsprop', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac, 'decay': decay, 'eps': eps})
         vector_optimizer()
         y_opt = vector_optimizer.results_information()[
-            'cost progress list'][1:4]
+            'intermediate cost'][1:4]
 
         # Stepwise optimize
         def step(x0, sqgrad0):

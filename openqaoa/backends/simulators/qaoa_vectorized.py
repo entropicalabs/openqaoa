@@ -21,7 +21,7 @@ import numpy as np
 from scipy.sparse import csc_matrix, kron, diags
 from scipy.linalg import expm
 
-from ...utilities import qaoa_probabilities
+from ...utilities import qaoa_wavefunction
 from ...basebackend import QAOABaseBackendStatevector, QuantumCircuitBase
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...qaoa_parameters.operators import Hamiltonian
@@ -619,7 +619,6 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
                     
             else:
                 raise ValueError('Unsupported append_state specified (Not an ndarray, or not of shape (2**n, 2**n).')
-        
 
                 
     def wavefunction(self,
@@ -644,6 +643,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         self.wavefn.shape = 2 ** self.n_qubits
         
+        self.measurement_outcomes = qaoa_wavefunction(self.wavefn.flatten())
+        
         # Make format same as ProjectQ
         wf = [(component) for component in self.wavefn]
 
@@ -664,8 +665,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         # Reshape wavefunction
         wavefn_ = self.wavefn
-
-        self.probability = qaoa_probabilities(self.wavefn.flatten())
+        
+        self.measurement_outcomes = qaoa_wavefunction(self.wavefn.flatten())
 
         # Build the Hamiltonian operator as an array
         ham_op = _build_cost_hamiltonian(self.n_qubits, self.cost_hamiltonian)
@@ -699,7 +700,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # Reshape wavefunction
         wavefn_ = self.wavefn
 
-        self.probability = qaoa_probabilities(self.wavefn.flatten())
+        self.measurement_outcomes = qaoa_wavefunction(self.wavefn.flatten())
 
         # Build the Hamiltonian operator as an array
         ham_op = _build_cost_hamiltonian(self.n_qubits, self.cost_hamiltonian)
