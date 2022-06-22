@@ -619,7 +619,7 @@ class TestingUtilities(unittest.TestCase):
 
         # Compute list of expectation values and correlation matrix
         comp_exp_val_list, comp_corr_matrix = exp_val_hamiltonian_termwise(variational_params = None,
-                                                                 qaoa_results = {'best param' : fixed_angles},\
+                                                                 qaoa_results = {'optimized param' : fixed_angles},\
                                                                  qaoa_backend = None,\
                                                                  hamiltonian = hamiltonian,
                                                                  p = 1, 

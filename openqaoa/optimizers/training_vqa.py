@@ -243,7 +243,7 @@ class OptimizeVQA(ABC):
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
-
+        
         mea_out = list(self.log.measurement_outcomes.best[0].values())
         index_likliest_states = np.argwhere(mea_out == np.max(mea_out))
         degeneracy = len(index_likliest_states)

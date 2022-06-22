@@ -94,7 +94,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
             vector_optimizer()
 
             y_opt = vector_optimizer.results_information()[
-                'cost progress list']
+                'intermediate cost']
 
             assert np.isclose(y_precomp[i], y_opt[-1], rtol=1e-04,
                               atol=1e-04), f"{optimizer_dict['method']} failed the test."
@@ -135,7 +135,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
             vector_optimizer()
 
             y_opt = vector_optimizer.results_information()[
-                'cost progress list']
+                'intermediate cost']
 
             assert np.isclose(y_precomp[i], y_opt[-1], rtol=1e-04,
                               atol=1e-04), f"{optimizer_dict['method']} method failed the test."
@@ -167,7 +167,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'method': 'vgd', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac})
         vector_optimizer()
         y_opt = vector_optimizer.results_information()[
-            'cost progress list'][1:4]
+            'intermediate cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
@@ -218,7 +218,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'method': 'newton', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac, 'hess': hess})
         vector_optimizer()
         y_opt = vector_optimizer.results_information()[
-            'cost progress list'][1:4]
+            'intermediate cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
@@ -265,7 +265,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'method': 'natural_grad_descent', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac})
         vector_optimizer()
         y_opt = vector_optimizer.results_information()[
-            'cost progress list'][1:4]
+            'intermediate cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
@@ -316,7 +316,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'method': 'rmsprop', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac, 'decay': decay, 'eps': eps})
         vector_optimizer()
         y_opt = vector_optimizer.results_information()[
-            'cost progress list'][1:4]
+            'intermediate cost'][1:4]
 
         # Stepwise optimize
         def step(x0, sqgrad0):
