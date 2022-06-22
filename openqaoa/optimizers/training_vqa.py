@@ -28,6 +28,7 @@ from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
 
 from .logger_vqa import Logger
+from .result import Result
 
 from ..derivative_functions import derivative
 from ..qfim import qfim
@@ -241,38 +242,39 @@ class OptimizeVQA(ABC):
                 #. "optimized measurement outcomes"
                 #. "optimization method"
         '''
-        date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
-        file_name = f'opt_results_{date_time}' if file_name is None else file_name
+        # date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
+        # file_name = f'opt_results_{date_time}' if file_name is None else file_name
         
-        mea_out = list(self.log.measurement_outcomes.best[0].values())
-        index_likliest_states = np.argwhere(mea_out == np.max(mea_out))
-        degeneracy = len(index_likliest_states)
-        solutions_bitstrings = [list(self.log.measurement_outcomes.best[0].keys())[e[0]] for e in index_likliest_states]
+        # mea_out = list(self.log.measurement_outcomes.best[0].values())
+        # index_likliest_states = np.argwhere(mea_out == np.max(mea_out))
+        # degeneracy = len(index_likliest_states)
+        # solutions_bitstrings = [list(self.log.measurement_outcomes.best[0].keys())[e[0]] for e in index_likliest_states]
         
-        result_dict = {
-            'solution': {
-                'bitstring' : solutions_bitstrings,
-                'degeneracy' : degeneracy
-            },
-            'number of evals': self.log.func_evals.best[0],
-            'jac evals': self.log.jac_func_evals.best[0],
-            'qfim evals': self.log.qfim_func_evals.best[0],
-            'parameter log': np.array(self.log.param_log.history).tolist(),
-            'optimized param': np.array(self.log.param_log.best[0]).tolist(),
-            'intermediate cost': np.array(self.log.cost.history).tolist(), 
-            'optimized cost': np.array(self.log.cost.best[0]).tolist(), 
-            'intermediate measurement outcomes': np.array(self.log.measurement_outcomes.history).tolist(),
-            'optimized measurement outcomes': np.array(self.log.measurement_outcomes.best[0] if self.log.measurement_outcomes.best != [] else {}).tolist(),
-            'optimization method': self.method
-        }
+        # result_dict = {
+        #     'solution': {
+        #         'bitstring' : solutions_bitstrings,
+        #         'degeneracy' : degeneracy
+        #     },
+        #     'number of evals': self.log.func_evals.best[0],
+        #     'jac evals': self.log.jac_func_evals.best[0],
+        #     'qfim evals': self.log.qfim_func_evals.best[0],
+        #     'parameter log': np.array(self.log.param_log.history).tolist(),
+        #     'optimized param': np.array(self.log.param_log.best[0]).tolist(),
+        #     'intermediate cost': np.array(self.log.cost.history).tolist(), 
+        #     'optimized cost': np.array(self.log.cost.best[0]).tolist(), 
+        #     'intermediate measurement outcomes': np.array(self.log.measurement_outcomes.history).tolist(),
+        #     'optimized measurement outcomes': np.array(self.log.measurement_outcomes.best[0] if self.log.measurement_outcomes.best != [] else {}).tolist(),
+        #     'optimization method': self.method
+        # }
+        result = Result(self.log, self.method)
 
-        if(file_path and os.path.isdir(file_path)):
-            print('Saving results locally')
-            pickled_file = open(f'{file_path}/{file_name}.pcl', 'wb')
-            pickle.dump(result_dict, pickled_file)
-            pickled_file.close()
+        # if(file_path and os.path.isdir(file_path)):
+        #     print('Saving results locally')
+        #     pickled_file = open(f'{file_path}/{file_name}.pcl', 'wb')
+        #     pickle.dump(result_dict, pickled_file)
+        #     pickled_file.close()
 
-        return result_dict
+        return result  # result_dict
 
 
 class ScipyOptimizer(OptimizeVQA):
