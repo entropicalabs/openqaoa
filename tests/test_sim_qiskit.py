@@ -504,7 +504,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         
         nqubits = 3
         p = [np.random.randint(1, 4) for i in range(ntrials)]
-        weights = [[np.random.rand(), np.random.rand(), np.random.rand()] for i in range(ntrials)]
+        weights = [[np.random.rand(), np.random.rand(), np.random.rand(), np.random.rand()] for i in range(ntrials)]
         init_hadamards = [np.random.choice([True, False]) for i in range(ntrials)]
         constants = [np.random.rand() for i in range(ntrials)]
         
@@ -513,8 +513,9 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             gammas = [np.random.rand()*np.pi for i in range(p[i])]
             betas = [np.random.rand()*np.pi for i in range(p[i])]
         
-            cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
-                                      PauliOp('ZZ', (0, 2))], weights[i], constants[i])
+            cost_hamil = Hamiltonian([PauliOp('Z', (0, )), PauliOp('ZZ', (0, 1)),
+                                      PauliOp('ZZ', (1, 2)), PauliOp('ZZ', (0, 2))], 
+                                     weights[i], constants[i])
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
             circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p[i])
             variate_params = QAOAVariationalStandardParams(circuit_params, 
