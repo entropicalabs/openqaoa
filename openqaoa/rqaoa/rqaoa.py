@@ -99,13 +99,7 @@ def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
 
         # Eliminate the expectation value with highest absolute value - round to suppress errors from numbers approximating 0
         if np.abs(max_corr) > np.abs(max_val):
-
-            # If maximum value is 0, all expectation values are vanishing
-            if max_corr == 0:
-                break
-
-            else:
-                max_terms_and_stats.update({max_term: max_corr})
+            max_terms_and_stats.update({max_term: max_corr})
 
             # Set the term to 0 to check for the next one
             M[max_term] = 0
@@ -115,7 +109,6 @@ def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
             # If maximum value is 0, all expectation values are vanishing
             if max_val == 0:
                 break
-
             else:
                 max_terms_and_stats.update({max_spin: max_val})
 
@@ -124,8 +117,9 @@ def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
 
     # Flag if we have have not been able to extract any relation for the terms
     if max_terms_and_stats == {}:
-        print(f'All expectation values are 0 ---> Nodes are disconnected\n')
-
+        print(f'All expectation values are 0: Breaking degeneracy by fixing a qubit\n')
+        max_terms_and_stats = {(0,):-1.0}
+        
     return max_terms_and_stats
 
 
@@ -172,13 +166,7 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
 
         # Eliminate the expectation value with highest absolute value - round to suppress errors from numbers approximating 0
         if np.abs(max_corr) > np.abs(max_val):
-
-            # If maximum value is 0, all expectation values are vanishing
-            if max_corr == 0:
-                break
-
-            else:
-                max_terms_and_stats.update({max_term: max_corr})
+            max_terms_and_stats.update({max_term: max_corr})
 
             # Set the term to 0 to check for the next one
             M[max_term] = 0
@@ -188,13 +176,17 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
             # If maximum value is 0, all expectation values are vanishing
             if max_val == 0:
                 break
-
             else:
                 max_terms_and_stats.update({max_spin: max_val})
 
             # Set the spin value to 0 to check for the next one
             Z[max_spin] = 0
 
+    # Flag if we have have not been able to extract any relation for the terms
+    if max_terms_and_stats == {}:
+        print(f'All expectation values are 0: Breaking degeneracy by fixing a qubit\n')
+        max_terms_and_stats = {(0,):-1.0}
+        
     # Correlation average magnitude
     avg_mag_stats = np.round(
         np.mean(np.abs(list(max_terms_and_stats.values()))), 10)
@@ -209,10 +201,6 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
         max_keys = list(max_terms_and_stats.keys())[0:n_max]
         max_terms_and_stats = {
             key: max_terms_and_stats[key] for key in max_keys}
-
-    # Flag if we have have not been able to extract any relation for the terms
-    if max_terms_and_stats == {}:
-        print(f'All expectation values are 0 ---> Nodes are disconnected\n')
 
     return max_terms_and_stats
 
@@ -299,7 +287,7 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
     # Order term entries in descending magnitude order for correct insertion in solution
     sorted_max_ts = sorted(max_terms_and_stats.items(),
                            key=lambda x: np.abs(x[1]), reverse=True)
-
+    
     # Build spin map from all expectation values
     for term, stat in sorted_max_ts:
 
@@ -315,7 +303,7 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
             # If not, fix it
             if parent is not None:
                 spin_map.update({spin: (np.sign(stat), None)})
-
+                
         # Correlation terms
         else:
 
@@ -331,14 +319,11 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
 
                 # Ensure we keep the spin with lowest label for future state reconstruction
                 if parent_remove < parent_keep:
-
                     parent_keep, parent_remove = parent_remove, parent_keep
                     factor_keep, factor_remove = factor_remove, factor_keep
 
-                # Check for cyclic dependenencies
+                # If a cycle is encountered one edge is discarded
                 if parent_remove == parent_keep:
-
-                    # If a cycle is encountered one edge is discarded
                     continue
 
                 # Update the spin map
@@ -352,7 +337,7 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
 
             # If one spin has been fixed, fix the second one according to correlation value
             else:
-
+            
                 # Extract fixed and unfixed spins
                 spin_fixed, factor_fixed = (parent_keep, factor_keep) if parent_keep is None else (
                     parent_remove, factor_remove)
@@ -367,7 +352,7 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
     for spin in spin_candidates:
         parent_spin, cumulative_factor = find_parent(spin_map, spin)
         spin_map.update({spin: (cumulative_factor, parent_spin)})
-
+    
     return spin_map
 
 
@@ -420,7 +405,7 @@ def hamiltonian_from_dict(hamiltonian_dict: dict):
 
     # New edges
     new_edges = list(label_edges_mapping.values())
-
+    
     # New hamiltonian
     hamiltonian = Hamiltonian.classical_hamiltonian(
         terms=new_edges, coeffs=weights, constant=0)
@@ -529,19 +514,18 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
                     new_hamiltonian_dict[new_edge] += new_weight
 
     # New qubit register
-    register = set([spin for term in new_hamiltonian_dict.keys() for spin in term])
+    new_register = set([spin for term in new_hamiltonian_dict.keys() for spin in term])
     
     # Remove vanishing edges
     new_hamiltonian_dict = {edge:weight for edge,weight in new_hamiltonian_dict.items() if round(weight,10) != 0}
 
-    # Check for isolated nodes comparing register and quadratic register after removing vanishing terms
-    quadratic_edges = [edge for edge in new_hamiltonian_dict if len(edge) == 2]
-    quadratic_register = set([spin for term in quadratic_edges for spin in term])
+    # Define quadratic register after removing vanishing terms
+    new_quadratic_register = set([spin for edge in new_hamiltonian_dict.keys() if len(edge) == 2 for spin in edge])
 
     # If lengths do not match, there are isolated nodes
-    if len(register) != len(quadratic_register):
-        isolated_nodes = register.difference(quadratic_register)
-
+    if len(new_register) != len(new_quadratic_register):
+        isolated_nodes = new_register.difference(new_quadratic_register)
+        
         # Fix isolated nodes
         for node in isolated_nodes:
             singlet = (node,)
@@ -550,12 +534,13 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
             if new_hamiltonian_dict.get(singlet) is None:
                 spin_map.update({node:(1,None)})
 
-            # If linear term present, fix accordingly
+            # If linear term present, fix accordingly by anti-aligning
             else:
-                spin_map.update({node:(new_hamiltonian_dict.get(singlet),None)})
+                factor = -np.sign(new_hamiltonian_dict.get(singlet))
+                spin_map.update({node:(factor,None)})
 
                 # Delete isolated node from new hamiltonian
-                new_hamiltonian.pop((node,))
+                new_hamiltonian_dict.pop((node,))
 
     # Redefine new Hamiltonian from the dictionary
     new_hamiltonian = hamiltonian_from_dict(new_hamiltonian_dict)
@@ -901,7 +886,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
 
     # If above cutoff, proceed quantumly
     else:
-
+        
         # Number of spins to eliminate according the schedule
         n_elim = steps[counter]
 

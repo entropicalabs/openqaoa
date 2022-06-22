@@ -444,10 +444,12 @@ class TestingOperators(unittest.TestCase):
 
         ## First example
 
-        # Define Pauli terms
-        trivial_indices = [(i,) for i in range(n_qubits)]
-        singlet_indices = [(i,) for i in range(n_qubits)]
-        pair_indices = [(i, j) for j in range(n_qubits) for i in range(j)]
+        # Define Pauli terms using shifted indices
+        idx_ref = 3
+        indices_ref = list(range(idx_ref,n_qubits+idx_ref))
+        trivial_indices = [(i,) for i in indices_ref]
+        singlet_indices = [(i,) for i in indices_ref]
+        pair_indices = [(i, j) for j in indices_ref for i in range(idx_ref,j)]
 
         trivial_terms = [PauliOp('I', indices) for indices in trivial_indices]
         linear_terms = [PauliOp('Z', indices) for indices in singlet_indices]
@@ -467,8 +469,16 @@ class TestingOperators(unittest.TestCase):
         hamiltonian = Hamiltonian(terms, coefficients, constant)
 
         # Correct attributes
-        correct_terms = linear_terms + quadratic_terms
-        correct_coefficients = linear_coeffs + quadratic_coeffs
+        correct_indices = list(range(n_qubits))
+        correct_singlet_indices = [(i,) for i in correct_indices]
+        correct_pair_indices = [(i, j) for j in correct_indices for i in range(j)]
+        correct_linear_terms = [PauliOp('Z', indices) for indices in correct_singlet_indices]
+        correct_quadratic_terms = [PauliOp('ZZ', indices) for indices in correct_pair_indices]
+        correct_linear_coeffs = [-1 for _ in range(len(correct_singlet_indices))]
+        correct_quadratic_coeffs = [0.5 for _ in range(len(correct_pair_indices))]
+
+        correct_terms = correct_linear_terms + correct_quadratic_terms
+        correct_coefficients = correct_linear_coeffs + correct_quadratic_coeffs
         correct_constant = constant + sum(trivial_coeffs)
 
         # Test Hamiltonian was defined correctly
@@ -521,7 +531,6 @@ class TestingOperators(unittest.TestCase):
 
         # Attempt construction of Hamiltonian
         with self.assertRaises(AssertionError) as context:
-
             hamiltonian = Hamiltonian(terms, coefficients, constant = 0)
             
         # Check exception message
@@ -596,17 +605,21 @@ class TestingOperators(unittest.TestCase):
         correct_quadratic_terms = [
             PauliOp('ZZ', indices) for indices in pair_indices]
 
-        terms = correct_linear_terms + correct_quadratic_terms
+        constant_term = [PauliOp('I', (0,))]
+
+        terms = correct_linear_terms + correct_quadratic_terms + constant_term
 
         # Define coefficients and constant
         correct_linear_coeffs = [-1 for _ in range(len(singlet_indices))]
         correct_quadratic_coeffs = [1 for _ in range(len(pair_indices))]
-        coefficients = correct_linear_coeffs + correct_quadratic_coeffs
+        constant_coeff = [1]
+        coefficients = correct_linear_coeffs + correct_quadratic_coeffs + constant_coeff
 
+        constant = 1
         correct_constant = 2
 
         # Define Hamiltonian
-        hamiltonian = Hamiltonian(terms, coefficients, correct_constant)
+        hamiltonian = Hamiltonian(terms, coefficients, constant)
 
         # Extract singlets and pairs attributes
         linear_terms = hamiltonian.qubits_singles
@@ -948,7 +961,7 @@ class TestingOperators(unittest.TestCase):
 
     def test_classical_hamiltonian(self):
         """
-        Tests the function that generates a classical Hamiltonian, i.e. a Hamiltonian composed onli
+        Tests the function that generates a classical Hamiltonian, i.e. a Hamiltonian composed only
         of Z Pauli operators.
 
         The tests consists in generating a Hamiltonian from a given set of graph edges and weights.
@@ -982,7 +995,7 @@ class TestingOperators(unittest.TestCase):
         # Exception case - inserting coefficients that are not interegers or floats
 
         # Define hamiltonian attributes
-        terms_exc = [PauliOp('ZZ',(0,1)), PauliOp('ZZ',(0,2)),PauliOp('ZZ',(1,2))]
+        terms_exc = [(0,1),(0,2),(1,2)]
         constant_exc = 2
 
         # Define different types of coefficients containing exceptions
@@ -1001,14 +1014,13 @@ class TestingOperators(unittest.TestCase):
         # Exception case - generating terms beyond quadratic order
 
         # Define hamiltonian attributes
-        terms_exc = [PauliOp('Z',(0,)), PauliOp('ZZ',(0,1)), PauliOp('ZZ',(0,2)),
-                    PauliOp('ZZ',(1,2)), PauliOp('ZZZ',(1,2,3))]
+        terms_exc = [(0,),(0,1),(0,2),(1,2),(1,2,3)]
         coefficients_exc = [1,0.5,0.5,0.5,3]
         constant_exc = 2
 
         # Test the exception is raised - Attempt construction of Hamiltonian
-        with self.assertRaises(NotImplementedError) as context:
-            hamiltonian_exc = Hamiltonian(terms_exc,coefficients_exc,constant_exc)
+        with self.assertRaises(ValueError) as context:
+            hamiltonian_exc = Hamiltonian.classical_hamiltonian(terms_exc,coefficients_exc,constant_exc)
 
         # Check exception message
         self.assertEqual("Hamiltonian only supports Linear and Quadratic terms", str(context.exception))

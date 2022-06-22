@@ -654,7 +654,7 @@ class TestingUtilities(unittest.TestCase):
         weights = [10 for _ in range(len(edges))]
 
         # Hyperparameters
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 10)
 
         # Mixer Hamiltonian
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
