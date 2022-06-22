@@ -67,3 +67,19 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
         params.append(check_kwarg(expected_param, default_value, **kwargs))
 
     return tuple(params)
+
+def docplex2qubo(model):
+    """
+    Translates an optimization problem encoded in Docplex to an QUBO problem.
+
+    Args:
+        model: The docplex.mp model to be loaded.
+
+    Returns:
+        The QUBO that corresponds to the model.
+
+    """
+    from ..problems.problem import FromDocplex2QUBO
+    # We have to check that the model is in a quadratic form and does not include
+    # any integer variable or restrictions that there are not supported
+    return FromDocplex2QUBO(model).get_pubo_problem()

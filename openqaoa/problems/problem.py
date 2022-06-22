@@ -168,7 +168,7 @@ class PUBO:
         qubo_terms, qubo_weights, n_variables = self.terms, self.weights, self.n
         ising_terms, ising_weights = [], []
         
-        constant_term = 0
+        constant_term = self.constant
         linear_terms = np.zeros(n_variables)
         
         # Process the given terms and weights
@@ -706,3 +706,138 @@ class MinimumVertexCover(Problem):
         terms, weights = self.terms_and_weights()
 
         return PUBO(self.G.number_of_nodes(), list(terms), list(weights), encoding=Encoding.ISING_ENCODING)
+    
+class FromDocplex2QUBO:
+    
+    def __init__(self, model):
+        
+        
+        """
+        Creates an instance to translate Docplex models to its PUBO representation
+
+        Parameters
+        ----------
+        model : Docplex model
+            It is an object that has the mathematical expressions (Cost function, Inequality and Equality constraints)
+            of an optimization problem.
+
+        Returns
+        -------
+        The PUBO encoding of this problem.
+
+        """
+        # assign the docplex Model
+        self.model = model
+        
+        # save the index in a dict
+        self.idx_terms = {}
+        for x in self.model.iter_variables():
+            self.idx_terms[x] = x.index
+            
+
+    def linear_expr(self, expr):
+        """
+        Creates the terms and weights of the linear part of the objective function.
+
+        Parameters
+        ----------
+        expr : model.objective_expr
+            A docplex model attribute.
+
+        Returns
+        -------
+        terms : List
+            List of terms of the problem.
+        weights : List[float]
+            List of weights of the problem.
+
+        """
+
+        # init list of terms and coeffs
+        terms = []
+        weights = []
+
+        #save the terms and coeffs of the linear part 
+        for x, weight in expr.get_linear_part().iter_terms():
+            terms.append((self.idx_terms[x], ))
+            weights.append(self.sense * weight)
+        return terms, weights
+
+    def quadratic_expr(self, expr):
+        """
+        Creates the terms and weights of the quadratic part of the objective function.
+
+        Parameters
+        ----------
+        expr : model.objective_expr
+            A docplex model attribute.
+
+        Returns
+        -------
+        terms : List
+            List of terms of the problem.
+        weights : List[float]
+            List of weights of the problem.
+
+        """
+
+        # init list of terms and coeffs
+        terms = []
+        weights = []
+        
+        #save the terms and coeffs of the quadratic part, 
+        #considering two index i and j 
+        for x, y, weight in expr.iter_quad_triplets():
+            i = self.idx_terms[x]
+            j = self.idx_terms[y]
+            terms.append((i, j))
+            weights.append(self.sense * weight)
+        return terms, weights
+    
+    def get_pubo_problem(self):
+        """
+        Creates a PUBO problem form a Docplex model
+
+        Parameters
+        ----------
+        model : Docplex model
+            It is an object that has the mathematical expressions (Cost function, Inequality and Equality constraints)
+            of an optimization problem.
+
+        Returns
+        -------
+        The PUBO encoding of this problem.
+
+        """
+        #valid the expression is an equation
+        self.objective_expr = self.model.objective_expr
+        # objective sense
+        if self.model.objective_sense.is_minimize():
+            self.sense = 1
+        else:
+            self.sense = -1
+        
+        n_variables = self.model.number_of_variables
+        # obtain the constant from the model
+        constant = self.objective_expr.constant
+        
+        
+        # save the terms and coeffs form the linear part
+        terms, weights = self.linear_expr(self.objective_expr)
+        
+        # adding the constant part of the QUBO 
+        terms += [[]]
+        weights += [self.sense * constant]
+        
+        # in case exist a quadratic part
+        if self.objective_expr:
+            
+            #save the terms and coeffs form the quadratic part
+            terms_quad, quad_weights = self.quadratic_expr(self.objective_expr)
+        
+            # join linear and quadratic terms
+            terms.extend(terms_quad)
+            weights.extend(quad_weights)
+            
+        #convert the docplex terms in a Hamiltonian
+        return  PUBO(n_variables, terms, weights, encoding=Encoding.BINARY_ENCODING)
