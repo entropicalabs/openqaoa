@@ -339,7 +339,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
          """
         ckt = self.qaoa_circuit(params)
         wf = Statevector(ckt).data
-        self.measurement_outcomes = qaoa_wavefunction(output_wf)
+        self.measurement_outcomes = qaoa_wavefunction(wf)
         return wf
 
     def expectation(self,

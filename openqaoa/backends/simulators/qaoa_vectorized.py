@@ -643,6 +643,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         self.wavefn.shape = 2 ** self.n_qubits
         
+        self.measurement_outcomes = qaoa_wavefunction(self.wavefn.flatten())
+        
         # Make format same as ProjectQ
         wf = [(component) for component in self.wavefn]
 

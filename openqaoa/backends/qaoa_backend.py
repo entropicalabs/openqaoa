@@ -26,7 +26,7 @@ DEVICE_NAME_TO_OBJECT_MAPPER = {
     'qiskit.qasm_simulator': QAOAQiskitBackendShotBasedSimulator,
     'qiskit.shot_simulator': QAOAQiskitBackendShotBasedSimulator,
     'qiskit.statevector_simulator': QAOAQiskitBackendStatevecSimulator,
-    'entropica.vectorized': QAOAvectorizedBackendSimulator,
+    'vectorized': QAOAvectorizedBackendSimulator,
     'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend
 }
 
