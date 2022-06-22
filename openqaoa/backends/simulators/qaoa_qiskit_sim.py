@@ -15,7 +15,7 @@
 # General Imports
 from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts
+from ...utilities import flip_counts, qaoa_wavefunction
 from ...cost_function import cost_function
 from ...qaoa_parameters.pauligate import (RXPauliGate, RYPauliGate, RZPauliGate, RXXPauliGate,
                                           RYYPauliGate, RZZPauliGate, RZXPauliGate)
@@ -339,7 +339,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
          """
         ckt = self.qaoa_circuit(params)
         wf = Statevector(ckt).data
-        self.measurement_outcomes = wf
+        self.measurement_outcomes = qaoa_wavefunction(output_wf)
         return wf
 
     def expectation(self,
@@ -359,7 +359,9 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
             expectation value of cost operator wrt to quantum state produced by QAOA circuit
         """
         ckt = self.qaoa_circuit(params)
-        cost = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil))
+        output_wf = Statevector(ckt)
+        self.measurement_outcomes = qaoa_wavefunction(output_wf.data)
+        cost = np.real(output_wf.expectation_value(self.qiskit_cost_hamil))
         return cost
 
     def expectation_w_uncertainty(self, 
@@ -380,6 +382,8 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
             to quantum state produced by QAOA circuit.
         """
         ckt = self.qaoa_circuit(params)
+        output_wf = Statevector(ckt)
+        self.measurement_outcomes = qaoa_wavefunction(output_wf.data)
         cost = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil))
         cost_sq = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil_sq))
         
