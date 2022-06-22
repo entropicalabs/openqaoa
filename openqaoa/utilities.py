@@ -899,6 +899,7 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, 
 
     # The QAOA angles
     optimized_params = qaoa_results['optimized param']
+
     
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)
