@@ -65,9 +65,9 @@ class TestingResultOutputs(unittest.TestCase):
                 q.compile(vc)
                 q.optimize()
                 
-                self.assertEqual(recorded_evals[each_choice[0]], len(q.results_information['parameter log']))
-                self.assertEqual(recorded_evals[each_choice[1]], len(q.results_information['intermediate cost']))
-                self.assertEqual(recorded_evals[each_choice[2]], len(q.results_information['intermediate measurement outcomes']))
+                self.assertEqual(recorded_evals[each_choice[0]], len(q.results_information.intermediate['parameter log']))
+                self.assertEqual(recorded_evals[each_choice[1]], len(q.results_information.intermediate['intermediate cost']))
+                self.assertEqual(recorded_evals[each_choice[2]], len(q.results_information.intermediate['intermediate measurement outcomes']))
                 
 
 if __name__ == '__main__':

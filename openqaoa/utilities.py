@@ -1235,39 +1235,6 @@ def flip_counts(counts_dictionary: dict) -> dict:
 
     return output_counts_dictionary
 
-def qaoa_wavefunction(statevector) -> dict:
-    """
-    Return a qiskit-style statevector dictionary from a statevector.
-    
-    Parameters
-    ----------
-    statevector: `np.ndarray[complex]`
-        The wavefunction that needs to be formatted.
-
-    Returns
-    -------
-    prob_dict: `dict`
-        Probabilities represented as a python dictionary with basis states stored
-        as keys and their probabilities as their corresponding values.
-    """
-
-    # Extract number of qubits from size of probability
-    n_qubits = int(np.log2(len(statevector)))
-
-    # Initialize probability dictionary
-    vect_dict = {}
-
-    for x in range(len(statevector)):
-
-        # Define binary representation of each state, with qubit-0 most significant bit
-        key = np.binary_repr(x, n_qubits)[::-1]
-
-        # Update probability dictionary
-        vect_dict.update({key: statevector[x]})
-
-    return vect_dict
-
-
 def qaoa_probabilities(statevector) -> dict:
     """
     Return a qiskit-style probability dictionary from a statevector.

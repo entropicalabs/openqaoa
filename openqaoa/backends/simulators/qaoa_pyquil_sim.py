@@ -21,7 +21,6 @@ from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBase
 from ...qaoa_parameters.pauligate import (
     RXPauliGate, RYPauliGate, RZPauliGate)
 from ...cost_function import cost_function
-from ...utilities import qaoa_wavefunction
 
 
 class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
@@ -104,7 +103,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
 
         wf_sim = WavefunctionSimulator()
         wf = wf_sim.wavefunction(program)
-        self.measurement_outcomes = qaoa_wavefunction(wf)
+        self.measurement_outcomes = wf.amplitudes
         return wf
 
     def expectation(self, params: QAOAVariationalBaseParams) -> float:
