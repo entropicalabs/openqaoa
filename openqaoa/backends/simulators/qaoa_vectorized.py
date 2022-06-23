@@ -226,9 +226,19 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
     # Apply gate methods
     def apply_rx(self, qubit_1: int, rotation_angle: float):
-        """
+        r"""
         Applies the RX(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
+        
+        **Definition of RX(`theta`):**
 
+        .. math::
+
+        RX(\theta) = \exp\left(-i \theta X\right) =
+            \begin{pmatrix}
+                \cos{\theta}   & -i\sin{\theta} \\
+                -i\sin{\theta} & \cos{\theta}
+            \end{pmatrix}
+            
         Parameters
         ----------
         qubit_1:
@@ -243,16 +253,26 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         """
 
         C = np.cos(rotation_angle/2)
-        S = 1j * np.sin(rotation_angle/2)
+        S = -1j * np.sin(rotation_angle/2)
         
         wfn = (C * self.wavefn) + (S * np.flip(self.wavefn, self.n_qubits - qubit_1 - 1))
-        wfn *= np.exp(-1j * rotation_angle)
+
         self.wavefn = wfn
 
     def apply_ry(self, qubit_1: int, rotation_angle: float):
-        """
+        r"""
         Applies the RY(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
+        
+        **Definition of RY(`theta`):**
 
+        .. math::
+
+        RY(\theta) = \exp\left(-i \theta Y\right) =
+            \begin{pmatrix}
+                \cos{\theta} & -\sin{\theta} \\
+                \sin{\theta} & \cos{\theta}
+            \end{pmatrix}
+            
         Parameters
         ----------
         qubit_1:
@@ -282,9 +302,19 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn =  (C * self.wavefn) + (S * np.flip(wfn, self.n_qubits - qubit_1 - 1))
 
     def apply_rz(self, qubit_1: int, rotation_angle: float):
-        """
+        r"""
         Applies the RZ(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
+        
+        **Definition of RZ(`theta`):**
 
+        .. math::
+
+        RZ(\theta) = \exp\left(-i\frac{\theta}{2}Z\right) =
+            \begin{pmatrix}
+                e^{-i\frac{\theta}{2}} & 0 \\
+                0 & e^{i\frac{\theta}{2}}
+            \end{pmatrix}
+            
         Parameters
         ----------
         qubit_1:
@@ -303,12 +333,25 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         slc_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
                        else slice(None) for i in range(self.n_qubits))
 
-        self.wavefn[slc_0] *= np.exp(1j * rotation_angle/2)
-        self.wavefn[slc_1] *= np.exp(-1j * rotation_angle/2)
+        self.wavefn[slc_0] *= np.exp(-1j * rotation_angle/2)
+        self.wavefn[slc_1] *= np.exp(1j * rotation_angle/2)
 
     def apply_rxx(self, qubit_1: int, qubit_2: int, rotation_angle: float):
-        """
+        r"""
         Applies the RXX(`theta` = `rotation_angle`) gate on `qubit_1` and `qubit_2` in a vectorized way.
+        
+        **Definition of RXX(`theta`):**
+
+        .. math::
+
+        R_{XX}(\theta) = \exp\left(-i \theta X{\otimes}X\right) =
+            \begin{pmatrix}
+                \cos\left(\theta\right)   & 0           & 0           & -i\sin\left(\theta\right) \\
+                0           & \cos\left(\theta\right)   & -i\sin\left(\theta\right) & 0 \\
+                0           & -i\sin\left(\theta\right) & \cos\left(\theta\right)   & 0 \\
+                -i\sin\left(\theta\right) & 0           & 0           & \cos\left(\theta\right)
+            \end{pmatrix}
+            
 
         Parameters
         ----------
@@ -328,15 +371,27 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         
         # SH TODO : investigate if slicing 01 and 10 coefficients and swapping once them is faster than flipping twice 
         C = np.cos(rotation_angle/2)
-        S = 1j * np.sin(rotation_angle/2)
+        S = -1j * np.sin(rotation_angle/2)
         
         wfn = (C * self.wavefn) + (S * np.flip(np.flip(self.wavefn, self.n_qubits - qubit_1 - 1), self.n_qubits - qubit_2 - 1))
-        wfn *= np.exp(-1j * rotation_angle)
         self.wavefn = wfn
 
     def apply_ryy(self, qubit_1: int, qubit_2: int, rotation_angle: float):
-        """
+        r"""
         Applies the RYY(`theta` = `rotation_angle`) gate on `qubit_1` and `qubit_2` in a vectorized way.
+        
+        **Definition of RYY(`theta`):**
+
+        .. math::
+
+        R_{YY}(\theta) = \exp\left(-i \theta X{\otimes}X\right) =
+            \begin{pmatrix}
+                \cos\left(\theta\right)   & 0           & 0           & -i\sin\left(\theta\right) \\
+                0           & \cos\left(\theta\right)   & -i\sin\left(\theta\right) & 0 \\
+                0           & -i\sin\left(\theta\right) & \cos\left(\theta\right)   & 0 \\
+                -i\sin\left(\theta\right) & 0           & 0           & \cos\left(\theta\right)
+            \end{pmatrix}
+            
 
         Parameters
         ----------
@@ -365,8 +420,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         slc_q2_1 = tuple(1 if i == self.n_qubits - qubit_2 - 1
                          else slice(None) for i in range(self.n_qubits))
 
-        wfn[slc_q1_0] *= -1j
-        wfn[slc_q1_1] *= 1j
+        wfn[slc_q1_0] *= 1j
+        wfn[slc_q1_1] *= -1j
 
         wfn[slc_q2_0] *= -1j
         wfn[slc_q2_1] *= 1j
@@ -384,8 +439,6 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        \newcommand{\th}{\frac{\theta}{2}}
-
         RZZ(\theta) = \exp\left(-i \th Z{\otimes}Z\right) =
             \begin{pmatrix}
                 e^{-i \frac{\theta}{2}} & 0 & 0 & 0 \\
@@ -394,7 +447,6 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
                 0 & 0 & 0 & e^{-i \frac{\theta}{2}}
             \end{pmatrix}
             
-
         Parameters
         ----------
         qubit_1:
@@ -412,7 +464,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         """
         
         '''
-        Note : one can also slice the 01 and 10 elements:
+        # Note : one can also slice the 01 and 10 elements:
         slc_pair01 = tuple(1 if i == self.n_qubits - qubit_1 - 1
                            else 0 if i == self.n_qubits - qubit_2 - 1
                            else slice(None) for i in range(self.n_qubits))
@@ -425,12 +477,11 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
                            else slice(None) for i in range(self.n_qubits))
         slc_pair11 = tuple(1 if i in [self.n_qubits - qubit_1 - 1, self.n_qubits - qubit_2 - 1, ]
                            else slice(None) for i in range(self.n_qubits))
-
-        self.wavefn[slc_pair00] *= np.exp(1j * rotation_angle)
-        self.wavefn[slc_pair11] *= np.exp(1j * rotation_angle)
         
-        self.wavefn *= np.exp(-1j * rotation_angle/2) # global phase
-
+        self.wavefn[slc_pair00] *= np.exp(-1j * rotation_angle)
+        self.wavefn[slc_pair11] *= np.exp(-1j * rotation_angle)
+        self.wavefn *= np.exp(1j * rotation_angle/2)
+        
 
     def apply_rxy(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         """
@@ -468,7 +519,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
     def apply_rzx(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         """
-        Applies the RXZ(`theta` = `rotation_angle`) gate on `qubit_1` and `qubit_2` in a vectorized way.
+        Applies the RZX(`theta` = `rotation_angle`) gate on `qubit_1` and `qubit_2` in a vectorized way.
 
         Parameters
         ----------
