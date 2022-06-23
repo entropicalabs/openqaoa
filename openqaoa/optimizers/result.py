@@ -56,17 +56,17 @@ class Result():
 
         self.intermediate = {
             'parameter log': np.array(self.log.param_log.history).tolist(),
-            'intermediate cost': np.array(self.log.cost.history).tolist(),
-            'intermediate measurement outcomes': np.array(
-                self.log.measurement_outcomes.history).tolist()
+            'intermediate cost': self.log.cost.history,
+            'intermediate measurement outcomes': 
+                self.log.measurement_outcomes.history
         }
 
         self.optimized = {
             'optimized param': np.array(self.log.param_log.best[0]).tolist(),
-            'optimized cost': np.array(self.log.cost.best[0]).tolist(),
-            'optimized measurement outcomes': np.array(
+            'optimized cost': self.log.cost.best[0],
+            'optimized measurement outcomes': 
                 self.log.measurement_outcomes.best[0]
-                if self.log.measurement_outcomes.best != [] else {}).tolist()
+                if self.log.measurement_outcomes.best != [] else {}
         }
 
     def __repr__(self):
