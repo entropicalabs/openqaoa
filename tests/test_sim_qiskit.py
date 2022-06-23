@@ -252,9 +252,9 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         
         nqubits = 3
         p = 1
-        weights = [1,1,1]
-        gammas = [[0], [0]]
-        betas = [[0], [1/8 * np.pi]]
+        weights = [1,2,3]
+        gammas = [[3], [2]]
+        betas = [[1], [1/8]]
         
         for i in range(2):
         
@@ -280,37 +280,38 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
                                                            True)
             vector_wavefunction = vector_backend.wavefunction(variate_params)
             vector_expectation = vector_backend.expectation(variate_params)
-
-    #         print(qiskit_wavefunction, vector_wavefunction)
-    #         print(qiskit_expectation, vector_expectation)
-
+            
+            self.assertAlmostEqual(qiskit_expectation, vector_expectation)
+            
             for j in range(2**nqubits):
                 self.assertAlmostEqual(qiskit_wavefunction[j].real, 
                                        vector_wavefunction[j].real)
                 self.assertAlmostEqual(qiskit_wavefunction[j].imag, 
                                        vector_wavefunction[j].imag)
-            self.assertAlmostEqual(qiskit_expectation, vector_expectation)
+            
             
     def test_qaoa_circuit_wavefunction_expectation_equivalence_2(self):
         
-        """Due to the differnce in the constructions of the statevector simulators, 
+        """Due to the difference in the constructions of the statevector simulators, 
         there is a global phase difference between the results obtained from
-        qiskit's statevector simulator and EQAOA's vector simulator. In order to
+        qiskit's statevector simulator and OpenQAOA's vectorised simulator. In order to
         show the equivalence between the wavefunctions produced, the expectation 
-        to a random operator is computed.
+        of a random operator is computed.
         """
         
         nqubits = 3
         p = 1
-        weights = [1,1,1]
+        weights = [1,2,3]
         gammas = [[1/8 * np.pi], [1/8 * np.pi]]
-        betas = [[0], [1/8 * np.pi]]
+        betas = [[1], [1/8 * np.pi]]
         
         for i in range(2):
         
             cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                       PauliOp('ZZ', (0, 2))], weights, 1)
+
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
+            
             circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
             variate_params = QAOAVariationalStandardParams(circuit_params, 
                                                            betas[i], 
@@ -323,23 +324,129 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
 
             qiskit_wavefunction = qiskit_backend.wavefunction(variate_params)
             qiskit_expectation = qiskit_backend.expectation(variate_params)
-
+            
             vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
                                                        None, 
                                                        None, 
                                                        True)
             vector_wavefunction = vector_backend.wavefunction(variate_params)
             vector_expectation = vector_backend.expectation(variate_params)
+            
+            random_operator = np.random.rand(2**nqubits, 2**nqubits) + np.random.rand(2**nqubits, 2**nqubits)*1j
+            random_herm = random_operator + random_operator.conj().T
 
-            random_operator = np.random.rand(2**nqubits, 2**nqubits)
+            expect_qiskit = np.matmul(np.array(qiskit_wavefunction).T.conjugate(), np.matmul(random_herm, np.array(qiskit_wavefunction)))
+            expect_vector = np.matmul(np.array(vector_wavefunction).T.conjugate(), np.matmul(random_herm, np.array(vector_wavefunction)))
 
-            expect_qiskit = (np.matmul(np.matmul(np.array([qiskit_wavefunction]),random_operator), 
-                            np.array([qiskit_wavefunction]).T.conjugate()))
-            expect_vector = (np.matmul(np.matmul(np.array([vector_wavefunction]),random_operator), 
-                            np.array([vector_wavefunction]).T.conjugate()))
+            self.assertAlmostEqual(expect_qiskit.real, expect_vector.real)
+            self.assertAlmostEqual(expect_qiskit.imag, expect_vector.imag)
+            self.assertAlmostEqual(qiskit_expectation, vector_expectation)
+            
+    def test_qaoa_circuit_wavefunction_expectation_equivalence_3(self):
+        
+        """Due to the difference in the constructions of the statevector simulators, 
+        there is a global phase difference between the results obtained from
+        qiskit's statevector simulator and OpenQAOA's vectorised simulator. In order to
+        show the equivalence between the wavefunctions produced, the expectation 
+        of a random operator is computed.
+        
+        Nonuniform mixer weights.
+        """
+        
+        nqubits = 3
+        p = 1
+        weights = [1,2,3]
+        gammas = [[1/8 * np.pi], [1/8 * np.pi]]
+        betas = [[1], [1/8 * np.pi]]
+        
+        for i in range(2):
+        
+            cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
+                                      PauliOp('ZZ', (0, 2))], weights, 1)
 
-            self.assertAlmostEqual(expect_qiskit[0].real[0], expect_vector[0].real[0])
-            self.assertAlmostEqual(expect_qiskit[0].imag[0], expect_vector[0].imag[0])
+            mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits, coeffs = [1,2,3])
+            
+            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+            variate_params = QAOAVariationalStandardParams(circuit_params, 
+                                                           betas[i], 
+                                                           gammas[i])
+
+            qiskit_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+                                                                None, 
+                                                                None, 
+                                                                True)
+
+            qiskit_wavefunction = qiskit_backend.wavefunction(variate_params)
+            qiskit_expectation = qiskit_backend.expectation(variate_params)
+            
+            vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
+                                                       None, 
+                                                       None, 
+                                                       True)
+            vector_wavefunction = vector_backend.wavefunction(variate_params)
+            vector_expectation = vector_backend.expectation(variate_params)
+            
+            random_operator = np.random.rand(2**nqubits, 2**nqubits) + np.random.rand(2**nqubits, 2**nqubits)*1j
+            random_herm = random_operator + random_operator.conj().T
+
+            expect_qiskit = np.matmul(np.array(qiskit_wavefunction).T.conjugate(), np.matmul(random_herm, np.array(qiskit_wavefunction)))
+            expect_vector = np.matmul(np.array(vector_wavefunction).T.conjugate(), np.matmul(random_herm, np.array(vector_wavefunction)))
+
+            self.assertAlmostEqual(expect_qiskit.real, expect_vector.real)
+            self.assertAlmostEqual(expect_qiskit.imag, expect_vector.imag)
+            self.assertAlmostEqual(qiskit_expectation, vector_expectation)
+            
+    def test_qaoa_circuit_wavefunction_expectation_equivalence_4(self):
+        
+        """Due to the difference in the constructions of the statevector simulators, 
+        there is a global phase difference between the results obtained from
+        qiskit's statevector simulator and OpenQAOA's vectorised simulator. In order to
+        show the equivalence between the wavefunctions produced, the expectation 
+        of a random operator is computed.
+        
+        Y, YY and XX mixers with nonuniform weights.
+        """
+        
+        nqubits = 3
+        p = 1
+        weights = [1,2,3]
+        gammas = [[1/8 * np.pi], [1/8 * np.pi]]
+        betas = [[1], [1/8 * np.pi]]
+        
+        for i in range(2):
+        
+            cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
+                                      PauliOp('ZZ', (0, 2))], weights, 1)
+            mixer_hamil = Hamiltonian([PauliOp('Y', (0,)), PauliOp('YY', (0,1)), PauliOp('XX', (1,2))], [1,2,3], 1)
+            
+            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+            variate_params = QAOAVariationalStandardParams(circuit_params, 
+                                                           betas[i], 
+                                                           gammas[i])
+
+            qiskit_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+                                                                None, 
+                                                                None, 
+                                                                True)
+
+            qiskit_wavefunction = qiskit_backend.wavefunction(variate_params)
+            qiskit_expectation = qiskit_backend.expectation(variate_params)
+            
+            vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
+                                                       None, 
+                                                       None, 
+                                                       True)
+            vector_wavefunction = vector_backend.wavefunction(variate_params)
+            vector_expectation = vector_backend.expectation(variate_params)
+            
+            random_operator = np.random.rand(2**nqubits, 2**nqubits) + np.random.rand(2**nqubits, 2**nqubits)*1j
+            random_herm = random_operator + random_operator.conj().T
+
+            expect_qiskit = np.matmul(np.array(qiskit_wavefunction).T.conjugate(), np.matmul(random_herm, np.array(qiskit_wavefunction)))
+            expect_vector = np.matmul(np.array(vector_wavefunction).T.conjugate(), np.matmul(random_herm, np.array(vector_wavefunction)))
+
+            self.assertAlmostEqual(expect_qiskit.real, expect_vector.real)
+            self.assertAlmostEqual(expect_qiskit.imag, expect_vector.imag)
             self.assertAlmostEqual(qiskit_expectation, vector_expectation)
 
     def test_cost_call(self):
@@ -512,8 +619,8 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             
             gammas = [np.random.rand()*np.pi for i in range(p[i])]
             betas = [np.random.rand()*np.pi for i in range(p[i])]
-        
-            cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
+            
+            cost_hamil = Hamiltonian([PauliOp('ZZ', (0,1)), PauliOp('ZZ', (1, 2)), 
                                       PauliOp('ZZ', (0, 2))], weights[i], constants[i])
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
             circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p[i])
