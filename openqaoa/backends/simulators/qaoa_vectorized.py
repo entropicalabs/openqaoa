@@ -393,8 +393,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         slc_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
                        else slice(None) for i in range(self.n_qubits))
 
-        self.wavefn[slc_0] *= np.exp(-1j * rotation_angle/2)
-        self.wavefn[slc_1] *= np.exp(1j * rotation_angle/2)
+        self.wavefn[slc_0] *= np.exp(1j * rotation_angle/2)
+        self.wavefn[slc_1] *= np.exp(-1j * rotation_angle/2)
 
     def apply_rxx(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         r"""
