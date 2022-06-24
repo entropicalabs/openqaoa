@@ -236,7 +236,6 @@ def find_parent(spin_map: dict, spin: int, factor: int = 1):
 
     # Recursively follow dependencies
     else:
-        # factor *= spin_map[spin][0]
         spin = parent_spin
 
     return find_parent(spin_map, spin, factor)
@@ -244,14 +243,14 @@ def find_parent(spin_map: dict, spin: int, factor: int = 1):
 
 def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
     """
-    Generates a spin map between the original problem graph and the reduced graph.
+    Generates a map between spins in the original problem graph and in the reduced graph.
     Elimination constraints from correlations define a constrained spin, to be removed, and a 
-    parent spin,to be kept. Ultimately, parent spins determine the state of multiple spins by a 
+    parent spin, to be kept. Parent spins determine the state of multiple spins by a 
     chain of dependencies between spins due to the different constraints. Note that there 
     is always a parent spin and only one. If cycles are present, less edges will 
-    be eliminated to satisfy this requirement. Constraints following from biases in the
-    Hamiltonian result in fixing spins to a specific value. In this case, the parent spin is set 
-    to None.
+    be eliminated to satisfy this requirement. Constraints following from biases result in 
+    fixing spins to a specific value. In this case, the parent spin is set 
+    to None. Spins in the map that are not eliminated are mapped to themselves.
 
     Parameters
     ----------
@@ -265,14 +264,8 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
     spin_map: `dict`
         Dictionary containing all the mapping dependencies. The keys
         correspond to the original spins. The values are tuple pairs,
-        containing the new (parent) spin and the factor relating both.
+        containing the parent spin and the factor relating both.
         The structure is: { old_spin : (factor, new_spin) }.
-
-        Spins in the map that are not eliminated (parent spins and spins 
-        that are not candidates for elimination) are mapped to themselves 
-        with factor 1. The rest are mapped to a parent spin with a multiplicative 
-        factor resulting from the constraints, with the parent spin being None if
-        the spin is fixed.
     """
 
     register = hamiltonian.qureg

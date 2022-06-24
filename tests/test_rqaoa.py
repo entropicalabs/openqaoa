@@ -285,13 +285,16 @@ class TestingRQAOA(unittest.TestCase):
         """
         Test the overall wrapper of the Adaptive RQAOA algorithm.
 
-        The test consists in solving two examples. First, an unweighted Ising ring problem in the presence of a very weak
+        The test consists in solving four examples. We consider a standard X mixer as a mixing Hamiltonian 
+        for all cases. First, an unweighted Ising ring problem in the presence of a very weak
         external field, such that the ground state solution remains the same as without it but we 
-        ensure the system works in general. This is done for different elimination schemes, varying 
-        the maximum number of allowed eliminations from 1 to 4. Second, a Minimum Vertex Cover problem on a ring, 
-        which requires handling both types of eliminations and the consideration of isolated nodes resulting 
-        from cancellation. Third, a Minimum Vertex Cover problem on a fully-connected graph.
-        We consider a standard X mixer as a mixing Hamiltonian for both cases.
+        ensure the system works in general. Second, a Minimum Vertex Cover problem on a ring,
+        which requires handling both types of eliminations and the consideration of isolated nodes 
+        resulting from cancellation. Third and fourth, a Minimum Vertex Cover problem and an unweighted
+        Ising Hamiltonian on a fully-connected graph to test the handling of isolated nodes and high
+        degeneracies.
+
+        The unsupported custom mixer connectivities exception is also tested.
         """
         # EXAMPLE 1
 
@@ -476,13 +479,16 @@ class TestingRQAOA(unittest.TestCase):
         """
         Test the overall wrapper of the Custom RQAOA algorithm.
 
-        The test consists in solving three examples. First, an unweighted Ising ring problem in the presence of a very weak
+        The test consists in solving four examples. We consider a standard X mixer as a mixing Hamiltonian 
+        for all cases. First, an unweighted Ising ring problem in the presence of a very weak
         external field, such that the ground state solution remains the same as without it but we 
-        ensure the system works in general. This is done for different elimination schemes, for fixed
-        elimination and for an input schedule. Second, a Minimum Vertex Cover problem on a ring,
+        ensure the system works in general. Second, a Minimum Vertex Cover problem on a ring,
         which requires handling both types of eliminations and the consideration of isolated nodes 
-        resulting from cancellation. Third, a Minimum Vertex Cover problem on a fully-connected graph.
-        We consider a standard X mixer as a mixing Hamiltonian for both cases.
+        resulting from cancellation. Third and fourth, a Minimum Vertex Cover problem and an unweighted
+        Ising Hamiltonian on a fully-connected graph to test the handling of isolated nodes and high
+        degeneracies.
+
+        The unsupported custom mixer connectivities exception is also tested.
         """
         # EXAMPLE 1
 
