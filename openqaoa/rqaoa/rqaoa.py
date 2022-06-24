@@ -921,3 +921,4 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
         # Restart process with new parameters
         return custom_rqaoa(new_hamiltonian, mixer, p, n_cutoff, steps, device, params_type, init_type,
                             optimizer_dict, backend_properties, elimination_tracker, original_hamiltonian, counter)
+
