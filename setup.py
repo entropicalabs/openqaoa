@@ -17,7 +17,8 @@ requirements = [
     "sphinx-autodoc-typehints==1.18.1",
     "sphinx-rtd-theme==1.0.0",
     "ipython==8.2.0" ,
-    "nbconvert==6.5.0"
+    "nbconvert==6.5.0",
+    "amazon-braket-sdk==1.23.0"
 ]
 
 setup(
