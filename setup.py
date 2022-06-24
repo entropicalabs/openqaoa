@@ -18,7 +18,8 @@ requirements = [
     "sphinx-rtd-theme==1.0.0",
     "ipython==8.2.0" ,
     "nbconvert==6.5.0",
-    "amazon-braket-sdk==1.23.0"
+    "amazon-braket-sdk==1.23.0",
+    "pytest-cov==3.0.0"
 ]
 
 setup(

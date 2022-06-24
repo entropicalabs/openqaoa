@@ -17,43 +17,12 @@ import unittest
 
 from openqaoa.qaoa_parameters import Hamiltonian
 from openqaoa.rqaoa import *
-from openqaoa.devices import DeviceLocal
 
 """
 Unittest based testing of current implementation of the RQAOA Algorithm
 """
 
 class TestingRQAOA(unittest.TestCase):
-
-    def test_classical_exact_solution(self):
-        """
-        Test of the classical solver function which computes the solution of the problem when 
-        the number of qubits reaches the cutoff value.
-
-        The test consists in obtaining the solution for an unweighted ring graph.
-        """
-        ## Problem definition
-
-        # Number of variables/qubits
-        n_qubits = 10 
-
-        # Terms and weights of the graph
-        terms = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] # Ring structure
-        weights = [1 for _ in range(len(terms))] # All weights equal to 1
-
-        # Define Hamiltonian
-        hamiltonian = Hamiltonian.classical_hamiltonian(terms, weights, constant = 0) 
-
-        ## Testing
-
-        # Exact solution to the problem
-        solutions = [np.array([1,0,1,0,1,0,1,0,1,0]),np.array([0,1,0,1,0,1,0,1,0,1])]
-
-        # Obtain solution from function
-        _, comp_solutions = classical_exact_solution(hamiltonian)
-
-        # Test function result
-        assert np.allclose(solutions,comp_solutions), f'Computed solutions are incorrect'
 
     def test_find_parent(self):
         """
@@ -204,138 +173,7 @@ class TestingRQAOA(unittest.TestCase):
         for key in max_tc.keys():
             assert max_tc[key] == comp_max_tc[key], f'Computed set of singlets/correlations contains incorrect values'
 
-    def test_expectation_values_analytical(self):
-        """
-        Test of the function that computes singlet expectation values and correlations terms
-        analytically for p = 1 and the function computing the full set of expectation values
-        when analytical results can be obtained (p=1).
-
-        NOTE: Correlations in the term_corr_analytical() and term_corr() functions are computed 
-        as average value <Z_{i}Z_{j}>, meaning it includes the <Z_{i}><Z_{j}> contribution. 
-        This is subtracted by default in the expectation_values() function.
-
-        The tests consist in: computing expectation values for some example cases for the 
-        first function, and a full set of expectation values for a given example. 
-        """
-
-        ## Problem definition
-
-        # Number of qubits
-        n_qubits = 4
-
-        # Edges and weights of the graph
-        pair_edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] 
-        self_edges = [(i,) for i in range(n_qubits)]
-        pair_weights = [1 for _ in range(len(pair_edges))] # All weights equal to 1
-        self_weights = [(-1)**j for j in range(len(self_edges))]
-
-        edges = pair_edges + self_edges
-        weights = pair_weights + self_weights
-
-        # Hamiltonian
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-
-        ## Testing
-
-        # Spin and pair whose expectation values are computed
-        spin = 0
-        pair = (0,1)
-        
-        # Correct solution
-        qaoa_angles_cases = {(0,0):(0,0),(np.pi,0):(0,0),(np.pi/4,np.pi/4):(0,0),\
-            (np.pi/4,np.pi/8):(-np.sqrt(2)/4,-0.25),(np.pi/8,0):(0,0)} # (beta,gamma):(exp_val,corr)
-
-        # Compute singlet expectation values and correlations for each set of angles
-        for qaoa_angles in qaoa_angles_cases.keys():
-            
-            # Extract correct solution
-            exp_val = np.round(qaoa_angles_cases[qaoa_angles][0],16)
-            corr = np.round(qaoa_angles_cases[qaoa_angles][1],16)
-            
-            # Compute expectation values and correlations
-            comp_exp_val = np.round(exp_val_single_spin_analytical(spin,hamiltonian,qaoa_angles),16)
-            comp_corr = np.round(term_corr_analytical(pair,hamiltonian,qaoa_angles),16)
-
-            # Test if computed results are correct
-            assert np.allclose(exp_val,comp_exp_val), f'Incorrectly computed singlet expectation value'
-            assert np.allclose(corr,comp_corr), f'Incorrectly computed correlation term'
-
-        # Fix a set of angles for testing full set of expectation values and correlations
-        fixed_angles = (np.pi/4,np.pi/8)
-
-        # Correct solutions
-        exp_val_list = np.array([-np.sqrt(2)/4,np.sqrt(2)/4,-np.sqrt(2)/4,np.sqrt(2)/4])
-        corr_matrix = np.array([[0.0,-1/4,0,-1/4],\
-                              [0.0,0.0,-1/4,0],\
-                              [0.0,0.0,0.0,-1/4],\
-                              [0.0,0.0,0.0,0.0]])
-
-        corr_matrix -= np.outer(exp_val_list,exp_val_list)
-
-        # Compute list of expectation values and correlation matrix
-        comp_exp_val_list, comp_corr_matrix = expectation_values(variational_params = None,
-                                                                 qaoa_results = {'best param' : [fixed_angles]},\
-                                                                 qaoa_backend = None,\
-                                                                 hamiltonian = hamiltonian,
-                                                                 p = 1)
-
-        # Test if computed results are correct
-        assert np.allclose(exp_val_list,comp_exp_val_list), f'Computed set of singlet expectation values is incorrect'
-
-        for j in range(len(comp_corr_matrix)):
-            assert np.allclose(corr_matrix[j],comp_corr_matrix[j]), f'Computed correlation matrix is incorrect'
-    
-    def test_expectation_values(self):
-        """
-        Test of the function that computes singlet expectation values and correlations numerically through
-        the QAOA output distribution of states.
-
-        The test consist of computing the singlet expectation values and correlations for a given problem.
-        The result is constrasted with the analytical result, whose implementation is tested in 
-        test_expectation_values_analytical().
-        """
-
-        ## Problem definition
-
-        # Number of qubits
-        n_qubits = 10
-
-        # Number of QAOA layers - necessary only for the definition of circuit parameters
-        p = 1
-
-        # Terms and weights of the graph
-        edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
-        weights = [10 for _ in range(len(edges))]
-
-        # Hyperparameters
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-
-        # Mixer Hamiltonian
-        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-
-        # Define circuit and variational parameters
-        circuit_params = QAOACircuitParams(hamiltonian,mixer_hamiltonian, p = p)
-        variational_params = create_qaoa_variational_params(circuit_params, params_type = 'standard', init_type = 'ramp')
-
-        ## Testing
-
-        # Perform QAOA and obtain expectation values numerically
-
-        qaoa_backend = qaoa_cost_backend(circuit_params, device = DeviceLocal('vectorized'), shots = None, qpu_params = None)
-        qaoa_results = optimize_qaoa(qaoa_backend,variational_params,optimizer_dict = {'method':'cobyla','maxiter':200})
-        
-        num_exp_vals_z,num_corr_matrix = expectation_values(variational_params,qaoa_results, qaoa_backend, hamiltonian, p = p, analytical = False)
-
-        # Analytical expectation values
-        exp_vals_z, corr_matrix = expectation_values(variational_params,qaoa_results, qaoa_backend, hamiltonian, p = p)
-
-        # Test if computed results are correct
-        assert np.allclose(exp_vals_z,num_exp_vals_z), f'Computed singlet expectation values are incorrect'
-
-        for j in range(len(num_corr_matrix)):
-            assert np.allclose(corr_matrix[j],num_corr_matrix[j]), f'Computed correlation matrix is incorrect'
-
-    def test_hamiltonian_from_graph(self):
+    def test_hamiltonian_from_dict(self):
         """
         Test the function that computes a calssical Hamiltonian from a given graph, accounting for approriate
         labelling of the nodes and edges.
@@ -344,23 +182,20 @@ class TestingRQAOA(unittest.TestCase):
         """
         
         # Trial graph
-        input_graph = dict({(1,2):1,(2,5):2,(10,14):3,(6,9):4,(6,14):5,(5,6):6})
+        input_dict = dict({(1,2):1,(2,5):2,(10,14):3,(6,9):4,(6,14):5,(5,6):6})
 
         # Correct hamiltonian
-        correct_graph = dict({(0,1):1,(1,2):2,(2,3):6,(3,4):4,(3,6):5,(5,6):3})
-        hamiltonian = Hamiltonian.classical_hamiltonian(list(correct_graph.keys()),list(correct_graph.values()), constant = 0)
+        correct_dict = dict({(0,1):1,(1,2):2,(2,3):6,(3,4):4,(3,6):5,(5,6):3})
+        hamiltonian = Hamiltonian.classical_hamiltonian(list(correct_dict.keys()),list(correct_dict.values()), constant = 0)
         hamiltonian_dict = {term.qubit_indices:coeff for term,coeff in zip(hamiltonian.terms,hamiltonian.coeffs)}
 
         # Compute hamiltonian from input graph
-        comp_hamiltonian = hamiltonian_from_graph(input_graph)
+        comp_hamiltonian = hamiltonian_from_dict(input_dict)
         comp_hamiltonian_dict = {term.qubit_indices:coeff for term,coeff in zip(comp_hamiltonian.terms,comp_hamiltonian.coeffs)}
 
 
         # Test computed Hamiltonian contains the correct terms
         assert hamiltonian_dict == comp_hamiltonian_dict, f'Terms and coefficients in the computed Hamiltonian are incorrect'
-
-        # Test computed Hamiltonian contains the correct terms
-        # assert np.allclose(hamiltonian.coeffs,comp_hamiltonian.coeffs), f'Coefficients in the computed Hamiltonian are incorrect'
 
         # Test computed Hamiltonian contains the correct terms
         assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
@@ -409,34 +244,13 @@ class TestingRQAOA(unittest.TestCase):
         # Test computed Hamiltonian contains the correct terms
         assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
 
-    def test_final_opt_strings(self):
+    def test_final_solution(self):
         """
-        Test the function that reconstructs the final output state by backtracking the
-        elimination history.
+        Test the function that reconstructs the final solution by backtracking the
+        elimination history and computing the energy of the final states.
 
-        The test consists in reconstructing a state for a given elimination history.
-        """
-
-        # Trial elimination history and ouput of classical solver
-        max_terms_and_stats_list = [{(0, 1): -1.0, (0, 9): -1.0}, {(0, 1): 1.0, (0, 7): 1.0}, 
-                                        {(0, 1): -1.0, (0, 5): -1.0}, {(0, 1): 1.0}]
-
-        classical_results = {'cost min': 0, 'opt strings': [np.array([0, 1, 0]), np.array([1, 0, 1])]}
-
-        # Correct solutions
-        solutions = [[0,1,0,1,0,1,0,1,0,1],[1,0,1,0,1,0,1,0,1,0]]
-
-        # Compute solutions
-        comp_solutions = final_opt_strings(max_terms_and_stats_list, classical_results)
-
-        # Test the computed solutions
-        assert np.allclose(solutions,comp_solutions), f'Solution backtracking process is incorrect'
-
-    def test_final_energy(self):
-        """
-        Testing of the function which computes the energy of the states.
-
-        The test consist in computing the energy of two given states for a ring-like geometry.
+        The test consists in reconstructing a set of states for a given elimination history 
+        amnd computing their energies.
         """
 
         ## Problem definition
@@ -453,18 +267,22 @@ class TestingRQAOA(unittest.TestCase):
 
         ## Testing
 
-        # Trial states
-        states = [[0,1,0,1,0,1,0,1,0,1],[1,0,1,0,1,0,1,0,1,0]]
+        # Trial elimination history and ouput of classical solver
+        max_terms_and_stats_list = [{(0, 1): -1.0, (0, 9): -1.0}, {(0, 1): 1.0, (0, 7): 1.0}, 
+                                        {(0, 1): -1.0, (0, 5): -1.0}, {(0, 1): 1.0}]
 
-        # Correct solution
+        classical_states = [[0, 1, 0],[1, 0, 1]]
+
+        # Correct solutions
+        states = ['0101010101','1010101010']
         energies = [-10, -10]
+        correct_full_solution = dict(zip(states,energies))
 
-        # Compute energies for the given trial states
-        full_solution = final_energy(states,hamiltonian)
-        comp_energies = list(full_solution.values())
-        
-        # Test if computed solution is correcrt
-        assert np.allclose(energies,comp_energies), f'Computed energy is incorrect'
+        # Compute solutions
+        full_solution = final_solution(max_terms_and_stats_list, classical_states, hamiltonian)
+
+        # Test the computed solutions
+        assert correct_full_solution == full_solution, f'Solution was not computed correctly'
 
     def test_adaptive_rqaoa(self):
         """
@@ -499,7 +317,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Cost and mixer Hamiltonians
         hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
+        mixer = {'type':'x'}
 
         ## Testing
 
@@ -510,7 +328,7 @@ class TestingRQAOA(unittest.TestCase):
         for nmax in Nmax:
             
             # Compute Ada-RQAOA solution
-            result = adaptive_rqaoa(hamiltonian, mixer_hamiltonian, p = p, n_max = nmax)
+            result = adaptive_rqaoa(hamiltonian, mixer, p = p, n_max = nmax)
             full_sol = result['solution']
 
             # Test the number of solution states is correct
@@ -553,7 +371,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Cost and mixer Hamiltonians
         hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits = n_qubits)
+        mixer = {'type':'x'}
 
         ## Testing
 
@@ -564,7 +382,7 @@ class TestingRQAOA(unittest.TestCase):
         for schedule in schedules:
             
             # Compute RQAOA solution
-            result = custom_rqaoa(hamiltonian, mixer_hamiltonian, p = p, steps = schedule)
+            result = custom_rqaoa(hamiltonian, mixer, p = p, steps = schedule)
             full_sol = result['solution']
 
             # Test the number of solution states is correct
