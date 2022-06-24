@@ -12,12 +12,29 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from logging.config import dictConfig
+from re import I
 import matplotlib.pyplot as plt
 from typing import Type
 import numpy as np
 
 from .logger_vqa import Logger
+from ..qaoa_parameters.operators import Hamiltonian
+from ..utilities import qaoa_probabilities, bitstring_energy
 
+def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
+
+    if type(measurement_outcomes) == type(np.array([])):
+        measurement_outcomes = qaoa_probabilities(measurement_outcomes)
+
+    mea_out = list(measurement_outcomes.values())
+    index_likliest_states = np.argwhere(mea_out == np.max(mea_out))
+    # degeneracy = len(index_likliest_states)
+    solutions_bitstrings = [list(measurement_outcomes.keys())[
+        e[0]] for e in index_likliest_states]
+
+    return {'solutions_bitstrings' : solutions_bitstrings, 
+            'bitstring_energy' : bitstring_energy(cost_hamiltonian, solutions_bitstrings[0])}
 
 class Result():
     '''
@@ -32,21 +49,13 @@ class Result():
 
     def __init__(self,
                  log: Type[Logger],
-                 method: Type[str],):
+                 method: Type[str],
+                 cost_hamiltonian: Type[Hamiltonian]):
 
         self.log = log
         self.method = method
 
-        mea_out = list(self.log.measurement_outcomes.best[0].values())
-        index_likliest_states = np.argwhere(mea_out == np.max(mea_out))
-        degeneracy = len(index_likliest_states)
-        solutions_bitstrings = [list(self.log.measurement_outcomes.best[0].keys())[
-            e[0]] for e in index_likliest_states]
-
-        self.solution = {
-            'bitstring': solutions_bitstrings,
-            'degeneracy': degeneracy
-        }
+        self.most_probable_states = most_probable_bitstring(cost_hamiltonian, self.log.measurement_outcomes.best[0])
 
         self.evals = {
             'number of evals': self.log.func_evals.best[0],
@@ -69,19 +78,21 @@ class Result():
                 if self.log.measurement_outcomes.best != [] else {}
         }
 
-    def __repr__(self):
-        """Return an overview over the parameters and hyperparameters
-        Todo
-        ----
-        Split this into ``__repr__`` and ``__str__`` with a more verbose
-        output in ``__repr__``.
-        """
-        string = "Optimization Results:\n"
-        string += "\tThe solution is " + str(self.solution['degeneracy']) + " degenerate" "\n"
-        string += "\tThe most probable bitstrings are: " + str(self.solution['bitstring']) + "\n"
-        string += "\tThe associated cost is: " + str(self.optimized['optimized cost']) + "\n"
+        self.hamiltonian = {'cost hamiltonian' : cost_hamiltonian}
 
-        return (string)
+    # def __repr__(self):
+    #     """Return an overview over the parameters and hyperparameters
+    #     Todo
+    #     ----
+    #     Split this into ``__repr__`` and ``__str__`` with a more verbose
+    #     output in ``__repr__``.
+    #     """
+    #     string = "Optimization Results:\n"
+    #     string += "\tThe solution is " + str(self.solution['degeneracy']) + " degenerate" "\n"
+    #     string += "\tThe most probable bitstrings are: " + str(self.solution['bitstring']) + "\n"
+    #     string += "\tThe associated cost is: " + str(self.optimized['optimized cost']) + "\n"
+
+    #     return (string)
 
 
     def plot_cost(self, figsize=(10,8), label='Cost', linestyle='--', color='b'):

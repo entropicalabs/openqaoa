@@ -250,31 +250,14 @@ class OptimizeVQA(ABC):
         # degeneracy = len(index_likliest_states)
         # solutions_bitstrings = [list(self.log.measurement_outcomes.best[0].keys())[e[0]] for e in index_likliest_states]
         
-        # result_dict = {
-        #     'solution': {
-        #         'bitstring' : solutions_bitstrings,
-        #         'degeneracy' : degeneracy
-        #     },
-        #     'number of evals': self.log.func_evals.best[0],
-        #     'jac evals': self.log.jac_func_evals.best[0],
-        #     'qfim evals': self.log.qfim_func_evals.best[0],
-        #     'parameter log': np.array(self.log.param_log.history).tolist(),
-        #     'optimized param': np.array(self.log.param_log.best[0]).tolist(),
-        #     'intermediate cost': np.array(self.log.cost.history).tolist(), 
-        #     'optimized cost': np.array(self.log.cost.best[0]).tolist(), 
-        #     'intermediate measurement outcomes': np.array(self.log.measurement_outcomes.history).tolist(),
-        #     'optimized measurement outcomes': np.array(self.log.measurement_outcomes.best[0] if self.log.measurement_outcomes.best != [] else {}).tolist(),
-        #     'optimization method': self.method
-        # }
-        result = Result(self.log, self.method)
-
+        self.qaoa_result = Result(self.log, self.method, self.vqa.cost_hamiltonian)
         # if(file_path and os.path.isdir(file_path)):
         #     print('Saving results locally')
         #     pickled_file = open(f'{file_path}/{file_name}.pcl', 'wb')
         #     pickle.dump(result_dict, pickled_file)
         #     pickled_file.close()
 
-        return result  # result_dict
+        return  # result_dict
 
 
 class ScipyOptimizer(OptimizeVQA):
@@ -429,43 +412,8 @@ class ScipyOptimizer(OptimizeVQA):
             print(e, '\n')
             print("The optimization has been terminated early. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
+            self.results_dictionary()
             return self
-
-    def results_information(self, file_path: str = None, file_name: str = None):
-        '''
-        This method returns a dictionary of all results of optimization.
-        The results can also be saved by providing the path to save the pickled file.
-
-        Parameters
-        ----------
-        file_path: 
-            To save the results locally on the machine in pickle format,
-            specify the entire file path to save the ``result_dictionary``.
-
-        file_name: 
-            Custom name for to save the data; a generic name with the time of 
-            optimization is used if not specified
-
-        Returns
-        -------
-        :
-            Dictionary with the following keys
-                
-                #. "solution"
-                    #. "bitstring"
-                    #. "degeneracy"
-                #. "number of evals"
-                #. "jac evals"
-                #. "parameter log"
-                #. "optimized param"
-                #. "intermediate cost"
-                #. "optimized cost"
-                #. "intermediate measurement outcomes"
-                #. "optimized measurement outcomes"
-                #. "optimization method"
-        '''
-        results = self.results_dictionary(file_path, file_name)
-        return results
 
 
 class CustomScipyGradientOptimizer(OptimizeVQA):
@@ -627,40 +575,5 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         except Exception:
             print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
+            self.results_dictionary()
             return self
-
-    def results_information(self, file_path: str = None, file_name: str = None):
-        '''
-        This method returns a dictionary of all results of optimization.
-        The results can also be saved by providing the path to save the pickled file.
-
-        Parameters
-        ----------
-        file_path: 
-            To save the results locally on the machine in pickle format,
-            specify the entire file path to save the ``result_dictionary``.
-
-        file_name: 
-            Custom name for to save the data; a generic name with the time of 
-            optimization is used if not specified
-
-        Returns
-        -------
-        :
-            Dictionary with the following keys
-                
-                #. "solution"
-                    #. "bitstring"
-                    #. "degeneracy"
-                #. "number of evals"
-                #. "jac evals"
-                #. "parameter log"
-                #. "optimized param"
-                #. "intermediate cost"
-                #. "optimized cost"
-                #. "intermediate measurement outcomes"
-                #. "optimized measurement outcomes"
-                #. "optimization method"
-        '''
-        results = self.results_dictionary(file_path, file_name)
-        return results

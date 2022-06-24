@@ -20,8 +20,8 @@ class TestingLoggerClass(unittest.TestCase):
         q.compile(vc, verbose=False)
         q.optimize()
 
-        for k in ['solution', 'evals', 'intermediate', 'optimized']:
-            if k in [a for a in dir(q.results_information) if not a.startswith('__')]:
+        for k in ['most_probable_states', 'evals', 'intermediate', 'optimized']:
+            if k in [a for a in dir(q.results) if not a.startswith('__')]:
                 pass
             else:
                 raise ValueError()

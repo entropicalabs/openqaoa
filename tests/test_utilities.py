@@ -619,8 +619,8 @@ class TestingUtilities(unittest.TestCase):
 
         # Compute list of expectation values and correlation matrix
         comp_exp_val_list, comp_corr_matrix = exp_val_hamiltonian_termwise(variational_params = None,
-                                                                 qaoa_results = {'optimized param' : fixed_angles},\
-                                                                 qaoa_backend = None,\
+                                                                 qaoa_optimized_params =fixed_angles,
+                                                                 qaoa_backend = None,
                                                                  hamiltonian = hamiltonian,
                                                                  p = 1, 
                                                                  mixer_type='x')
@@ -654,7 +654,7 @@ class TestingUtilities(unittest.TestCase):
         weights = [10 for _ in range(len(edges))]
 
         # Hyperparameters
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 10)
 
         # Mixer Hamiltonian
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
@@ -669,12 +669,12 @@ class TestingUtilities(unittest.TestCase):
         qaoa_backend = get_qaoa_backend(circuit_params, device = DeviceLocal('vectorized'), n_shots = None)
         optimizer = get_optimizer(qaoa_backend, variational_params, optimizer_dict = {'method':'cobyla','maxiter':200})
         optimizer()
-        qaoa_results = optimizer.results_information()
+        qaoa_results = optimizer.qaoa_result
         
-        num_exp_vals_z,num_corr_matrix = exp_val_hamiltonian_termwise(variational_params,qaoa_results, qaoa_backend, hamiltonian, mixer_type='x', p = p, analytical = False)
+        num_exp_vals_z,num_corr_matrix = exp_val_hamiltonian_termwise(variational_params,qaoa_results.optimized['optimized param'], qaoa_backend, hamiltonian, mixer_type='x', p = p, analytical = False)
 
         # Analytical expectation values
-        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params,qaoa_results, qaoa_backend, hamiltonian, mixer_type='x', p = p)
+        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params,qaoa_results.optimized['optimized param'], qaoa_backend, hamiltonian, mixer_type='x', p = p)
 
         # Test if computed results are correct
         assert np.allclose(exp_vals_z,num_exp_vals_z), f'Computed singlet expectation values are incorrect'

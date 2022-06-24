@@ -61,7 +61,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.compile(vc)
         q.optimize()
 
-        result = str(list(q.results_information['intermediate measurement outcomes'][0].keys())[np.argmax(list((q.results_information['intermediate measurement outcomes'][0].values())))])
+        result = q.results.most_probable_states['solutions_bitstrings'][0]
         assert '010101' == result or '101010' == result
 
 

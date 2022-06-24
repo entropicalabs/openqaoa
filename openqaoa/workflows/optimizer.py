@@ -325,12 +325,10 @@ class QAOA(Optimizer):
         '''
 
         self.optimizer.optimize()
-        self.results_information = self.optimizer.results_information()
-
-
+        self.results = self.optimizer.qaoa_result # TODO: results and qaoa_results will differ
 
         print(f'optimization completed.')
-        return None
+        return
 
 
 class RQAOA(Optimizer):
