@@ -76,7 +76,7 @@ class TestingVanillaQAOA(unittest.TestCase):
     def test_end_to_end_vectorized(self):
         
         g = nw.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_pubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
 
         q = QAOA()
         q.set_classical_optimizer(optimization_progress = True)
@@ -116,7 +116,7 @@ class TestingRQAOA(unittest.TestCase):
         """
         
         g = nw.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_pubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
 
         r = RQAOA()
         r.compile(vc)
