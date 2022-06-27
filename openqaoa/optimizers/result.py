@@ -42,9 +42,11 @@ class Result():
 
     Parameters
     ----------
-    log:
-
-    method:
+    log: `Logger`
+        The raw logger generated from the training vqa part of the QAOA. 
+    method: `str`
+        Stores the name of the optimisation used by the classical optimiser
+    cost_hamiltonian: 
     '''
 
     def __init__(self,

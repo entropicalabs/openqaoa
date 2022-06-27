@@ -70,5 +70,18 @@ class TestingLoggerClass(unittest.TestCase):
         assert set(['0101', '1010']) == set(mps_sv['solutions_bitstrings']) # Equality for sv
         assert set(['0101', '1010']) >= set(mps_shot['solutions_bitstrings']) # Subset for shot/qpu
 
+
+    def test_plot_cost(self):
+
+        # Create the problem
+        g = nx.circulant_graph(6, [1])
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_pubo_problem()
+        
+        q = QAOA()
+        q.compile(vc, verbose=False)
+        q.optimize()
+
+        q.results.plot_cost()
+
 if __name__ == '__main__':
     unittest.main()
