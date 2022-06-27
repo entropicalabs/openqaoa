@@ -24,14 +24,20 @@ class TestProblem(unittest.TestCase):
 
 	#TESTING QUBO CLASS METHODS
 	def test_qubo_terms_and_weight_same_size(self):
-		"""Test that creating a QUBO problem with invalid terms and weights
-		sizes raises an exception"""
+		"""
+		Test that creating a QUBO problem with invalid terms and weights
+		sizes raises an exception and check the constant is detected correctly
+		"""
 		n = 2
-		terms = [[0], [1]]
+		terms_wrong = [[0], [1]]
+		terms_correct = [[0], [1], []]
 		weights = [1, 2, 3]
 
 		with self.assertRaises(ValueError):
-			qubo_problem = QUBO(n, terms, weights)
+			qubo_problem = QUBO(n, terms_wrong, weights)
+		
+		qubo_problem = QUBO(n, terms_correct, weights)
+		self.assertEqual(qubo_problem.constant, 3)
 
 	def test_qubo_cleaning_terms(self):
 		"""Test that cleaning terms works for a QUBO problem"""
