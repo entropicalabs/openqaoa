@@ -24,7 +24,7 @@ from pyquil.gates import CNOT as p_CX
 from pyquil.gates import XY as p_XY
 from pyquil.gates import CPHASE as p_CPHASE
 
-from openqaoa.qaoa_parameters.pauligate import RY, RX, RZ, CZ, CX, RXX, RYY, RZZ, RXZ, CPHASE, RiSWAP
+from openqaoa.qaoa_parameters.pauligate import RY, RX, RZ, CZ, CX, RXX, RYY, RZZ, RZX, CPHASE, RiSWAP
 from openqaoa.qaoa_parameters.rotationangle import RotationAngle
 
 class TestingLowLevelGate(unittest.TestCase):
@@ -128,11 +128,11 @@ class TestingLowLevelGate(unittest.TestCase):
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
         empty_circuit = QuantumCircuit(2)
-        llgate = RXZ()
+        llgate = RZX()
         output_circuit = llgate.apply_ibm_gate([0, 1], rotation_angle_obj, empty_circuit)
 
         test_circuit = QuantumCircuit(2)
-        test_circuit.rzx(np.pi, 1, 0)
+        test_circuit.rzx(np.pi, 0, 1)
         
         self.assertEqual(test_circuit.to_instruction().definition, output_circuit.to_instruction().definition)
         
