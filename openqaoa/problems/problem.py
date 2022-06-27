@@ -78,21 +78,18 @@ class QUBO:
         """
         terms = list(terms)
         weights = list(weights)
+
+        # Check that terms and weights have matching lengths
         if len(terms) != len(weights):
             raise ValueError('The number of terms and number of weights do not match')
 
         constant = 0
         try:
             constant_index = [i for i, term in enumerate(terms) if len(term) == 0][0]
-#             constant = weights[constant_index]
             constant = weights.pop(constant_index)
             terms.pop(constant_index)
         except:
-            # print('No constant term found')
             pass
-        
-
-        # Check that terms and weights have matching lengths
         
         # If the user wants to clean the terms and weights or if the number of
         # terms is not too big, we go through the cleaning process
