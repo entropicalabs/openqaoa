@@ -223,6 +223,33 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
                                          append_state,
                                          init_hadamard,
                                          cvar_alpha)
+        
+        if self.n_qubits > 0:
+            self.wavefn = np.zeros((2**self.n_qubits,),dtype=complex)
+            self.wavefn[0] = 1
+            self.wavefn = self.wavefn.reshape([2] * self.n_qubits)
+        else:
+            self.wavefn = []
+            
+        # Handle prepend state
+        if self.prepend_state is not None:
+
+            if isinstance(self.prepend_state, np.ndarray):
+                
+                if np.shape(self.prepend_state) == np.shape(self.wavefn):
+                    self.wavefn = self.prepend_state
+                elif np.shape(self.prepend_state) == (2**self.n_qubits,):
+                    self.wavefn = self.prepend_state.reshape([2] * self.n_qubits)
+                else:
+                    raise ValueError('Error : Unsupported prepend_state specified. Not of shape (2**n,) or (2, 2, ..., 2)).')
+
+            else:
+                raise ValueError('Error : Unsupported prepend_state specified. Not an ndarray.')
+                
+        # Handle init_hadamard
+        if self.init_hadamard:
+            for i in range(self.n_qubits):
+                self.apply_hadamard(i)
 
     # Apply gate methods
     def apply_rx(self, qubit_1: int, rotation_angle: float):
@@ -254,7 +281,6 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         C = np.cos(rotation_angle/2)
         S = -1j * np.sin(rotation_angle/2)
-        
         wfn = (C * self.wavefn) + (S * np.flip(self.wavefn, self.n_qubits - qubit_1 - 1))
 
         self.wavefn = wfn
