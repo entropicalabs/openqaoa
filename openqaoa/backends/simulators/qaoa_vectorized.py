@@ -652,10 +652,17 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # Handle prepend state
         if self.prepend_state is not None:
 
-            if isinstance(self.prepend_state, np.ndarray) and (np.shape(self.prepend_state) == np.shape(self.wavefn) or np.shape(self.prepend_state) == (2**self.n_qubits,)):
-                self.wavefn = self.prepend_state
+            if isinstance(self.prepend_state, np.ndarray):
+                
+                if np.shape(self.prepend_state) == np.shape(self.wavefn):
+                    self.wavefn = self.prepend_state
+                elif np.shape(self.prepend_state) == (2**self.n_qubits,):
+                    self.wavefn = self.prepend_state.reshape([2] * self.n_qubits)
+                else:
+                    raise ValueError('Error : Unsupported prepend_state specified. Not of shape (2**n,) or (2, 2, ..., 2)).')
+
             else:
-                raise ValueError('Error : Unsupported prepend_state specified (Not an ndarray, not of shape (2**n,), or not of shape (2, 2, ..., 2)).')
+                raise ValueError('Error : Unsupported prepend_state specified. Not an ndarray.')
 
         # Handle init_hadamard
         if self.init_hadamard:
