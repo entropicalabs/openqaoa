@@ -18,26 +18,16 @@ import json
 from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS, SUPPORTED_LOCAL_SIMULATORS
 
 
-"""
-TODO: Logic for test_check_connection_aws_no_device_provided_credentials while 
-correct. Returning true for the check_connection() function if no device was
-provided might be a strange behaviour since check_connection() is also expected
-to return true if the device provided was correct, and false if invalid.
-"""
-
-
 class TestingDeviceQiskit(unittest.TestCase):
 
-    """This tests checks that Object used to access IBMQ and their available
+    """These tests check the Object used to access IBMQ and their available
     QPUs can be established.
 
     For any tests using provided credentials, the tests will only pass if those
     details provided are correct/valid with IBMQ.
 
-    Please ensure that the provided api token in the crendentials.json is 
-    correct.
-    Note that the defaults for hub, group, project and valid backend can also be 
-    changed in crendentials.json, in most cases, they can be left alone. 
+    Please ensure that the provided api token, hub, group and project in the 
+    crendentials.json are correct.
     All of these can be found in your IBMQ Account Page.
     """
 
@@ -69,6 +59,11 @@ class TestingDeviceQiskit(unittest.TestCase):
                 "Please provide an appropriate IBMQ Project name in crendentials.json.")
 
     def test_check_connection_provider_no_backend_wrong_credentials(self):
+        
+        """
+        If no information provided, check_connection should return False.
+        The provider_connected attribute should be updated to False.
+        """
 
         device_obj = DeviceQiskit(device_name='', 
                                   api_token='', 
@@ -80,6 +75,12 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, None)
 
     def test_check_connection_provider_no_backend_provided_credentials(self):
+        
+        """
+        If no information about the device name, but the credentials
+        used are correct, check_connection should return True.
+        The provider_connected attribute should be updated to True.
+        """
 
         device_obj = DeviceQiskit(device_name='', 
                                   api_token=self.API_TOKEN,
@@ -91,6 +92,13 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, None)
 
     def test_check_connection_provider_right_backend_provided_credentials(self):
+        
+        """
+        If the correct device name is provided and the credentials
+        used are correct, check_connection should return True.
+        The provider_connected attribute should be updated to True.
+        The qpu_connected attribute should be updated to True.
+        """
 
         device_obj = DeviceQiskit(device_name='', 
                                   api_token=self.API_TOKEN,
@@ -110,6 +118,13 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, True)
 
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
+        
+        """
+        If device name provided is incorrect, and not empty, and the credentials
+        used are correct, check_connection should return False.
+        The provider_connected attribute should be updated to True.
+        The qpu_connected attribute should be updated to False.
+        """
 
         device_obj = DeviceQiskit(device_name='random_invalid_backend', 
                                   api_token=self.API_TOKEN,
@@ -122,6 +137,11 @@ class TestingDeviceQiskit(unittest.TestCase):
         
 
 class TestingDeviceLocal(unittest.TestCase):
+    
+    """
+    This tests check that the Device Object created for local devices have the
+    appropriate behaviour.
+    """
     
     def test_supported_device_names(self):
         
@@ -138,6 +158,16 @@ class TestingDeviceLocal(unittest.TestCase):
 
 
 class TestingDeviceAWS(unittest.TestCase):
+    
+    """These tests check the Object used to access AWS Braket and their 
+    available QPUs can be established.
+
+    For any tests using provided credentials, the tests will only pass if those
+    details provided are correct/valid with AWS Braket.
+
+    Please ensure that the provided access keys, aws region and s3 bucket names in the 
+    crendentials.json are correct.
+    """
     
     def setUp(self):
 
@@ -168,6 +198,11 @@ class TestingDeviceAWS(unittest.TestCase):
             
     def test_check_connection_provider_no_backend_wrong_credentials(self):
         
+        """
+        If no information provided, check_connection should return False.
+        The provider_connected attribute should be updated to False.
+        """
+        
         device_obj = DeviceAWS(device_name = '', aws_access_key_id = '', 
                                aws_secret_access_key = '', aws_region = '', 
                                s3_bucket_name = '')
@@ -177,6 +212,12 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, None)
         
     def test_check_connection_provider_no_backend_provided_credentials(self):
+        
+        """
+        If no information about the device name, but the credentials
+        used are correct, check_connection should return True.
+        The provider_connected attribute should be updated to True.
+        """
 
         device_obj = DeviceAWS(device_name='', 
                                aws_access_key_id=self.AWS_ACCESS_KEY_ID,
@@ -189,6 +230,13 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, None)
 
     def test_check_connection_provider_right_backend_provided_credentials(self):
+        
+        """
+        If the correct device name is provided and the credentials
+        used are correct, check_connection should return True.
+        The provider_connected attribute should be updated to True.
+        The qpu_connected attribute should be updated to True.
+        """
 
         device_obj = DeviceAWS(device_name='', 
                                aws_access_key_id=self.AWS_ACCESS_KEY_ID,
@@ -210,6 +258,13 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, True)
 
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
+        
+        """
+        If device name provided is incorrect, and not empty, and the credentials
+        used are correct, check_connection should return False.
+        The provider_connected attribute should be updated to True.
+        The qpu_connected attribute should be updated to False.
+        """
 
         device_obj = DeviceAWS(device_name='random_invalid_backend', 
                                aws_access_key_id=self.AWS_ACCESS_KEY_ID,
