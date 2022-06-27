@@ -22,10 +22,8 @@ from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy
 
-def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
 
-    if type(measurement_outcomes) == type(np.array([])):
-        measurement_outcomes = qaoa_probabilities(measurement_outcomes)
+def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
 
     mea_out = list(measurement_outcomes.values())
     index_likliest_states = np.argwhere(mea_out == np.max(mea_out))
@@ -33,8 +31,9 @@ def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
     solutions_bitstrings = [list(measurement_outcomes.keys())[
         e[0]] for e in index_likliest_states]
 
-    return {'solutions_bitstrings' : solutions_bitstrings, 
-            'bitstring_energy' : bitstring_energy(cost_hamiltonian, solutions_bitstrings[0])}
+    return {'solutions_bitstrings': solutions_bitstrings,
+            'bitstring_energy': bitstring_energy(cost_hamiltonian, solutions_bitstrings[0])}
+
 
 class Result():
     '''
@@ -46,7 +45,6 @@ class Result():
         The raw logger generated from the training vqa part of the QAOA. 
     method: `str`
         Stores the name of the optimisation used by the classical optimiser
-    cost_hamiltonian: 
     '''
 
     def __init__(self,
@@ -54,33 +52,32 @@ class Result():
                  method: Type[str],
                  cost_hamiltonian: Type[Hamiltonian]):
 
-        self.log = log
         self.method = method
 
-        self.most_probable_states = most_probable_bitstring(cost_hamiltonian, self.log.measurement_outcomes.best[0])
-
         self.evals = {
-            'number of evals': self.log.func_evals.best[0],
-            'jac evals': self.log.jac_func_evals.best[0],
-            'qfim evals': self.log.qfim_func_evals.best[0]
+            'number of evals': log.func_evals.best[0],
+            'jac evals': log.jac_func_evals.best[0],
+            'qfim evals': log.qfim_func_evals.best[0]
         }
 
         self.intermediate = {
-            'parameter log': np.array(self.log.param_log.history).tolist(),
-            'intermediate cost': self.log.cost.history,
-            'intermediate measurement outcomes': 
-                self.log.measurement_outcomes.history
+            'parameter log': np.array(log.param_log.history).tolist(),
+            'intermediate cost': log.cost.history,
+            'intermediate measurement outcomes':
+                log.measurement_outcomes.history
         }
 
         self.optimized = {
-            'optimized param': np.array(self.log.param_log.best[0]).tolist(),
-            'optimized cost': self.log.cost.best[0],
-            'optimized measurement outcomes': 
-                self.log.measurement_outcomes.best[0]
-                if self.log.measurement_outcomes.best != [] else {}
+            'optimized param': np.array(log.param_log.best[0]).tolist(),
+            'optimized cost': log.cost.best[0],
+            'optimized measurement outcomes':
+                log.measurement_outcomes.best[0]
+                if log.measurement_outcomes.best != [] else {}
         }
 
-        self.hamiltonian = {'cost hamiltonian' : cost_hamiltonian}
+        self.most_probable_states = most_probable_bitstring(cost_hamiltonian,
+                                                            self.get_counts(log.measurement_outcomes.best[0]))
+
 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
@@ -96,8 +93,27 @@ class Result():
 
     #     return (string)
 
+    @classmethod
+    def get_counts(self, measurement_outcomes):
+        """
+        Converts probabilities to counts when the measurement outcomes are a numpy array, that is a state vector
 
-    def plot_cost(self, figsize=(10,8), label='Cost', linestyle='--', color='b'):
+        Parameters
+        ----------
+            measurement_outcomes: `Union[np.array, dict]`
+                The measurement outcome as returned by the Logger. It can either be a statevector or a count dictionary
+        Returns
+        -------
+        `dict`
+            The count dictionary obtained either throught the statevector or the actual measurement counts
+        """
+
+        if type(measurement_outcomes) == type(np.array([])):
+            measurement_outcomes = qaoa_probabilities(measurement_outcomes)
+
+        return measurement_outcomes
+
+    def plot_cost(self, figsize=(10, 8), label='Cost', linestyle='--', color='b'):
         """
         A simpler helper function to plot the cost associated to a QAOA workflow
 
@@ -115,10 +131,10 @@ class Result():
 
         plt.figure(figsize=figsize)
         plt.plot(range(self.evals['number of evals']),
-                self.intermediate['intermediate cost'], 
-                label = label,
-                linestyle=linestyle,
-                color=color)
+                 self.intermediate['intermediate cost'],
+                 label=label,
+                 linestyle=linestyle,
+                 color=color)
 
         plt.ylabel('Cost')
         plt.xlabel('Number of function evaluations')
