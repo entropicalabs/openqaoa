@@ -224,6 +224,9 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
                                          init_hadamard,
                                          cvar_alpha)
         
+        # Build the Hamiltonian operator as an array
+        self.ham_op = _build_cost_hamiltonian(self.n_qubits, self.cost_hamiltonian)
+
         if self.n_qubits > 0:
             self.wavefn = np.zeros((2**self.n_qubits,),dtype=complex)
             self.wavefn[0] = 1
@@ -771,11 +774,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         self.probability = qaoa_probabilities(self.wavefn.flatten())
 
-        # Build the Hamiltonian operator as an array
-        ham_op = _build_cost_hamiltonian(self.n_qubits, self.cost_hamiltonian)
-
         # Compute the expectation value and its standard deviation
-        ham_wf = ham_op * wavefn_
+        ham_wf = self.ham_op * wavefn_
         exp_val = np.real(np.vdot(wavefn_, ham_wf))
 
         out = exp_val
@@ -805,11 +805,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         self.probability = qaoa_probabilities(self.wavefn.flatten())
 
-        # Build the Hamiltonian operator as an array
-        ham_op = _build_cost_hamiltonian(self.n_qubits, self.cost_hamiltonian)
-
         # Compute the expectation value and its standard deviation
-        ham_wf = ham_op * wavefn_
+        ham_wf = self.ham_op * wavefn_
         exp_val = np.real(np.vdot(wavefn_, ham_wf))
 
         exp_val_sq = np.real(np.vdot(ham_wf, ham_wf))
