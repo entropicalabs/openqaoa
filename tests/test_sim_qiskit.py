@@ -417,7 +417,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         
             cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                       PauliOp('ZZ', (0, 2))], weights, 1)
-            mixer_hamil = Hamiltonian([PauliOp('Y', (0,)), PauliOp('YY', (0,1)), PauliOp('XX', (1,2))], [1,2,3], 1)
+            mixer_hamil = Hamiltonian([PauliOp('Y', (0,)), PauliOp('YY', (0,1)), PauliOp('XX', (1,2)), PauliOp('XZ', (1,2))], [1,2,3,4], 1)
             
             circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
             variate_params = QAOAVariationalStandardParams(circuit_params, 

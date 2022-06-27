@@ -541,7 +541,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         C = np.cos(rotation_angle / 2)
         S = 1j * np.sin(rotation_angle / 2)
-        self.wavefn = (C * self.wavefn) + (S * np.flip(np.flip(wfn, self.n_qubits - qubit_2 - 1), self.n_qubits - qubit_1 - 1))
+        self.wavefn = (C * self.wavefn) + (S * np.flip(np.flip(wfn, self.n_qubits - qubit_1 - 1), self.n_qubits - qubit_2 - 1))
 
     def apply_rzx(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         """
@@ -574,7 +574,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         wfn[slc_q2_1] *= -1
 
         C = np.cos(rotation_angle / 2)
-        S = 1j * np.sin(rotation_angle / 2)
+        S = -1j * np.sin(rotation_angle / 2)
         self.wavefn = (C * self.wavefn) + (S * np.flip(wfn, self.n_qubits - qubit_2 - 1))
 
     def apply_ryz(self, qubit_1: int, qubit_2: int, rotation_angle: float):
