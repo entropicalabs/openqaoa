@@ -794,7 +794,7 @@ class FromDocplex2QUBO:
             weights.append(self.sense * weight)
         return terms, weights
     
-    def get_pubo_problem(self):
+    def get_qubo_problem(self):
         """
         Creates a PUBO problem form a Docplex model
 
