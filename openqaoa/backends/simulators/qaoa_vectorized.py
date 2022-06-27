@@ -260,10 +260,10 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        RX(\theta) = \exp\left(-i \theta X\right) =
+        RX(\theta) = \exp\left(-i \frac{\theta}{2} X\right) =
             \begin{pmatrix}
-                \cos{\theta}   & -i\sin{\theta} \\
-                -i\sin{\theta} & \cos{\theta}
+                \cos{\frac{\theta}{2}}   & -i\sin{\frac{\theta}{2}} \\
+                -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
             \end{pmatrix}
             
         Parameters
@@ -293,10 +293,10 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        RY(\theta) = \exp\left(-i \theta Y\right) =
+        RY(\theta) = \exp\left(-i \frac{\theta}{2} Y\right) =
             \begin{pmatrix}
-                \cos{\theta} & -\sin{\theta} \\
-                \sin{\theta} & \cos{\theta}
+                \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} \\
+                \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
             \end{pmatrix}
             
         Parameters
@@ -335,10 +335,10 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        RZ(\theta) = \exp\left(-i\frac{\theta}{2}Z\right) =
+        RZ(\theta) = \exp\left(-i\frac{\frac{\theta}{2}}{2}Z\right) =
             \begin{pmatrix}
-                e^{-i\frac{\theta}{2}} & 0 \\
-                0 & e^{i\frac{\theta}{2}}
+                e^{-i\frac{\frac{\theta}{2}}{2}} & 0 \\
+                0 & e^{i\frac{\frac{\theta}{2}}{2}}
             \end{pmatrix}
             
         Parameters
@@ -370,12 +370,12 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        R_{XX}(\theta) = \exp\left(-i \theta X{\otimes}X\right) =
+        R_{XX}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
             \begin{pmatrix}
-                \cos\left(\theta\right)   & 0           & 0           & -i\sin\left(\theta\right) \\
-                0           & \cos\left(\theta\right)   & -i\sin\left(\theta\right) & 0 \\
-                0           & -i\sin\left(\theta\right) & \cos\left(\theta\right)   & 0 \\
-                -i\sin\left(\theta\right) & 0           & 0           & \cos\left(\theta\right)
+                \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
+                0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
+                0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
+                -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
             \end{pmatrix}
             
 
@@ -410,12 +410,12 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        R_{YY}(\theta) = \exp\left(-i \theta X{\otimes}X\right) =
+        R_{YY}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
             \begin{pmatrix}
-                \cos\left(\theta\right)   & 0           & 0           & -i\sin\left(\theta\right) \\
-                0           & \cos\left(\theta\right)   & -i\sin\left(\theta\right) & 0 \\
-                0           & -i\sin\left(\theta\right) & \cos\left(\theta\right)   & 0 \\
-                -i\sin\left(\theta\right) & 0           & 0           & \cos\left(\theta\right)
+                \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
+                0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
+                0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
+                -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
             \end{pmatrix}
             
 
