@@ -870,16 +870,19 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
     ----------
     variational_params: `QAOAVariationalBaseParams`
         Set of variational parameters in the QAOA ansatz.
-    qaoa_optimized_angles: `list`
-        Optimized angles of the underlying QAOA.
-    qaoa_optimized_counts: `dict`
-        Dictionary containing the measurement counts of optimized QAOA circuit.
     qaoa_backend: `QAOABaseBackend`
         Chosen backend on which QAOA is performed.
     hamiltonian: `Hamiltonian`
         Hamiltonian object containing the problem statement.
     p: `int`
         Number of layers in QAOA ansatz.
+    qaoa_optimized_angles: `list`
+        Optimized angles of the underlying QAOA.
+    qaoa_optimized_counts: `dict`
+        Dictionary containing the measurement counts of optimized QAOA circuit.
+    analytical: `bool`
+        Boolean that indicates whether to use analytical or numerical expectation
+        calculation methods.
 
     Returns
     -------

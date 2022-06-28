@@ -50,7 +50,6 @@ class TestingLoggerClass(unittest.TestCase):
                                                  0.016895  +0.05117122j,  0.23799586+0.04022615j])
 
         # from a shot simulator
-
         optimized_measurement_outcomes_shot = {'0010': 1,
                                             '0110': 2,
                                             '1000': 1,
@@ -84,6 +83,49 @@ class TestingLoggerClass(unittest.TestCase):
         q.optimize()
 
         q.results.plot_cost()
+
+    def test_get_counts(self):
+
+        cost_hamil = Hamiltonian([PauliOp('ZZ',(0, 3)),
+                         PauliOp('ZZ',(0, 1)),
+                         PauliOp('ZZ',(1, 2)),
+                         PauliOp('ZZ',(2, 3)),
+                         PauliOp('Z',(0,)),
+                         PauliOp('Z',(1,)),
+                         PauliOp('Z',(2,)),
+                         PauliOp('Z',(3,))], [2.5, 2.5, 2.5, 2.5, 4.5, 4.5, 4.5, 4.5], 12) 
+        # measurement outcome from a statevector_simulator backend
+        optimized_measurement_outcomes_sv = np.array([ 0.18256422-0.1296918j , -0.03786405-0.13158363j,
+                                                -0.03786405-0.13158363j, -0.01910622+0.3151214j ,
+                                                -0.03786405-0.13158363j,  0.42313283+0.15529604j,
+                                                -0.01910622+0.3151214j ,  0.016895  +0.05117122j,
+                                                -0.03786405-0.13158363j, -0.01910622+0.3151214j ,
+                                                 0.42313283+0.15529604j,  0.016895  +0.05117122j,
+                                                -0.01910622+0.3151214j ,  0.016895  +0.05117122j,
+                                                 0.016895  +0.05117122j,  0.23799586+0.04022615j])
+
+        counts_from_sv = qaoa_probabilities(optimized_measurement_outcomes_sv)
+
+        # measurement outcome from a shot simulator or QPU
+        optimized_measurement_outcomes_shot = {'0010': 1,
+                                            '0110': 2,
+                                            '1000': 1,
+                                            '1001': 13,
+                                            '0000': 1,
+                                            '1100': 10,
+                                            '1110': 201,
+                                            '1111': 37,
+                                            '0101': 225,
+                                            '1101': 57,
+                                            '0011': 8,
+                                            '1010': 228,
+                                            '0111': 74,
+                                            '1011': 115}
+
+
+        assert(optimized_measurement_outcomes_shot == Result.get_counts(optimized_measurement_outcomes_shot))
+        assert(counts_from_sv == Result.get_counts(optimized_measurement_outcomes_sv))
+ 
 
 if __name__ == '__main__':
     unittest.main()

@@ -93,7 +93,8 @@ class Result():
 
     #     return (string)
 
-    def get_counts(self, measurement_outcomes):
+    @staticmethod
+    def get_counts(measurement_outcomes):
         """
         Converts probabilities to counts when the measurement outcomes are a numpy array, that is a state vector
 
