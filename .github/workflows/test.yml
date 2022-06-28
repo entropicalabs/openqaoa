@@ -57,6 +57,9 @@ jobs:
       - name: Run tests
         env:
           IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }}
+          IBMQ_HUB ibm-q
+          IBMQ_GROUP open
+          IBMQ_PROJECT main
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
