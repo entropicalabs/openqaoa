@@ -16,7 +16,7 @@ from typing import Union
 import numpy as np
 
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.basebackend import QAOABaseBackend
+from openqaoa.basebackend import QAOABaseBackend, QAOABaseBackendStatevector
 from ..devices import DeviceBase, create_device, DeviceLocal
 from openqaoa.qaoa_parameters import QAOACircuitParams, QAOAVariationalBaseParams, Hamiltonian, create_qaoa_variational_params
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
@@ -734,10 +734,16 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
         qaoa_results = optimize_qaoa(
             qaoa_backend, variational_params, optimizer_dict)
 
-        # Obtain statistical results
-        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(
-            variational_params, qaoa_results.optimized['optimized param'], qaoa_backend, hamiltonian, mixer_type = mixer['type'], p = p)
-
+                # Obtain statistical results
+        qaoa_results_optimized = qaoa_results.optimized 
+        qaoa_optimized_angles = qaoa_results_optimized['optimized param']
+        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
+        if isinstance(qaoa_backend, QAOABaseBackendStatevector):
+            exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
+                qaoa_backend, hamiltonian, mixer['type'], p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=True)
+        else:
+            exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
+                qaoa_backend, hamiltonian, mixer['type'], p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=False)
         # Retrieve highest expectation values according to adaptive method
         max_terms_and_stats = ada_max_terms(exp_vals_z, corr_matrix, n_max)
 
@@ -899,8 +905,15 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
         qaoa_results = optimize_qaoa(qaoa_backend, variational_params, optimizer_dict)
 
         # Obtain statistical results
-        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, qaoa_results.optimized['optimized param'],
-                                                                qaoa_backend, hamiltonian, mixer_type = mixer['type'], p = p)
+        qaoa_results_optimized = qaoa_results.optimized 
+        qaoa_optimized_angles = qaoa_results_optimized['optimized param']
+        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
+        if isinstance(qaoa_backend, QAOABaseBackendStatevector):
+            exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
+                qaoa_backend, hamiltonian, mixer['type'], p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=True)
+        else:
+            exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
+                qaoa_backend, hamiltonian, mixer['type'], p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=False)
 
         # Retrieve highest expectation values
         max_terms_and_stats = max_terms(exp_vals_z, corr_matrix, n_elim)
