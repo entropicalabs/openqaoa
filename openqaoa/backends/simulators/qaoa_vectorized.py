@@ -254,6 +254,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
             for i in range(self.n_qubits):
                 self.apply_hadamard(i)
 
+        self.wavefn_init = copy(self.wavefn)
+
     # Apply gate methods
     def apply_rx(self, qubit_1: int, rotation_angle: float):
         r"""
@@ -671,32 +673,33 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         None
         """
         
-        if self.n_qubits > 0:
-            self.wavefn = np.zeros((2**self.n_qubits,),dtype=complex)
-            self.wavefn[0] = 1
-            self.wavefn = self.wavefn.reshape([2] * self.n_qubits)
-        else:
-            self.wavefn = []
+        self.reset_circuit()
+        # if self.n_qubits > 0:
+        #     self.wavefn = np.zeros((2**self.n_qubits,),dtype=complex)
+        #     self.wavefn[0] = 1
+        #     self.wavefn = self.wavefn.reshape([2] * self.n_qubits)
+        # else:
+        #     self.wavefn = []
             
-        # Handle prepend state
-        if self.prepend_state is not None:
+        # # Handle prepend state
+        # if self.prepend_state is not None:
 
-            if isinstance(self.prepend_state, np.ndarray):
+        #     if isinstance(self.prepend_state, np.ndarray):
                 
-                if np.shape(self.prepend_state) == np.shape(self.wavefn):
-                    self.wavefn = self.prepend_state
-                elif np.shape(self.prepend_state) == (2**self.n_qubits,):
-                    self.wavefn = self.prepend_state.reshape([2] * self.n_qubits)
-                else:
-                    raise ValueError('Error : Unsupported prepend_state specified. Not of shape (2**n,) or (2, 2, ..., 2)).')
+        #         if np.shape(self.prepend_state) == np.shape(self.wavefn):
+        #             self.wavefn = self.prepend_state
+        #         elif np.shape(self.prepend_state) == (2**self.n_qubits,):
+        #             self.wavefn = self.prepend_state.reshape([2] * self.n_qubits)
+        #         else:
+        #             raise ValueError('Error : Unsupported prepend_state specified. Not of shape (2**n,) or (2, 2, ..., 2)).')
 
-            else:
-                raise ValueError('Error : Unsupported prepend_state specified. Not an ndarray.')
+        #     else:
+        #         raise ValueError('Error : Unsupported prepend_state specified. Not an ndarray.')
 
-        # Handle init_hadamard
-        if self.init_hadamard:
-            for i in range(self.n_qubits):
-                self.apply_hadamard(i)
+        # # Handle init_hadamard
+        # if self.init_hadamard:
+        #     for i in range(self.n_qubits):
+        #         self.apply_hadamard(i)
         
         # Assign angles and apply gates
         self.assign_angles(params)
@@ -780,7 +783,6 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         out = exp_val
 
-        self.reset_circuit()
         return out
 
     def expectation_w_uncertainty(self,
@@ -813,14 +815,13 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         std_dev = (exp_val_sq - exp_val ** 2) ** 0.5
         out = exp_val, std_dev
 
-        self.reset_circuit()
         return out
 
     def reset_circuit(self):
         """
-        Reset the circuit by resetting the wavefunction. To be removed.
+        Reset the circuit by resetting the wavefunction.
         """
-        pass
+        self.wavefn = copy(self.wavefn_init)
             
     def circuit_to_qasm(self):
         """
