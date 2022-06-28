@@ -20,7 +20,7 @@ from pyquil import get_qc
 
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
-    'qiskit.statevector_simulator','entropica.vectorized',
+    'qiskit.statevector_simulator','vectorized',
     'pyquil.statevector_simulator'
 ]
 

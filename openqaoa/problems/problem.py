@@ -165,6 +165,13 @@ class QUBO:
                     [float(i) for i in weights])
     
 
+    @property
+    def hamiltonian(self):
+        """
+        Returns the Hamiltonian of the problem.
+        """
+        return Hamiltonian.classical_hamiltonian(self.terms,self.weights,self.constant)
+
 class TSP(Problem):
     def __init__(self, coordinates=None):
         """

@@ -22,7 +22,6 @@ from copy import copy
 from scipy.sparse import csc_matrix, kron, diags
 from scipy.linalg import expm
 
-from ...utilities import qaoa_probabilities
 from ...basebackend import QAOABaseBackendStatevector, QuantumCircuitBase
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...qaoa_parameters.operators import Hamiltonian
@@ -704,7 +703,6 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
                     
             else:
                 raise ValueError('Unsupported append_state specified (Not an ndarray, or not of shape (2**n, 2**n).')
-        
 
                 
     def wavefunction(self,
@@ -729,6 +727,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         self.wavefn.shape = 2 ** self.n_qubits
         
+        self.measurement_outcomes = self.wavefn.flatten()
+        
         # Make format same as ProjectQ
         wf = [(component) for component in self.wavefn]
 
@@ -749,8 +749,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         # Reshape wavefunction
         wavefn_ = self.wavefn
-
-        self.probability = qaoa_probabilities(self.wavefn.flatten())
+        
+        self.measurement_outcomes = self.wavefn.flatten()
 
         # Compute the expectation value and its standard deviation
         ham_wf = self.ham_op * wavefn_
@@ -780,7 +780,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # Reshape wavefunction
         wavefn_ = self.wavefn
 
-        self.probability = qaoa_probabilities(self.wavefn.flatten())
+        self.measurement_outcomes = self.wavefn.flatten()
 
         # Compute the expectation value and its standard deviation
         ham_wf = self.ham_op * wavefn_

@@ -103,6 +103,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
 
         wf_sim = WavefunctionSimulator()
         wf = wf_sim.wavefunction(program)
+        self.measurement_outcomes = wf.amplitudes
         return wf
 
     def expectation(self, params: QAOAVariationalBaseParams) -> float:

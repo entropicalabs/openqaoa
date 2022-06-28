@@ -20,6 +20,7 @@ from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+# from openqaoa.optimizers.result import Result
 from .devices import DeviceLocal
 import networkx as nx
 
@@ -855,7 +856,15 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
     return corr
 
 
-def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, qaoa_results: dict, qaoa_backend, hamiltonian: Hamiltonian, mixer_type:str, p: int, analytical: bool = True, shot_based: bool = False, shots: int = 100):
+def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
+                                qaoa_optimized_params: list,
+                                qaoa_backend,
+                                hamiltonian: Hamiltonian, 
+                                mixer_type:str, 
+                                p: int, 
+                                analytical: bool = True, 
+                                shot_based: bool = False, 
+                                shots: int = 100):
     """
     Computes the single spin expectation values <Z_{i}> and the correlation matrix Mij = <Z_{i}Z_{j}>,
     using the optimization results obtained from QAOA tranining the specified QAOA cost backend.
@@ -864,8 +873,8 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, 
     ----------
     variational_params: `QAOAVariationalBaseParams`
         Set of variational parameters in the QAOA ansatz.
-    qaoa_results: `dict`
-        Results dictionary from QAOA run.
+    qaoa_results: `list`
+    Optimized angles of the underlying QAOA.
     qaoa_backend: `QAOABaseBAckend`
         Chosen backend on which QAOA is performed.
     hamiltonian: `Hamiltonian`
@@ -898,7 +907,8 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, 
     terms = list(hamiltonian.terms)
 
     # The QAOA angles
-    optimized_params = qaoa_results['best param']
+    optimized_params = qaoa_optimized_params
+
     
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)
@@ -1233,7 +1243,6 @@ def flip_counts(counts_dictionary: dict) -> dict:
         output_counts_dictionary[key[::-1]] = value
 
     return output_counts_dictionary
-
 
 def qaoa_probabilities(statevector) -> dict:
     """

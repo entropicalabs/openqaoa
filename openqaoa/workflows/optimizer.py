@@ -325,22 +325,10 @@ class QAOA(Optimizer):
         '''
 
         self.optimizer.optimize()
-        self.results_information = self.optimizer.results_information()
-
-        if self.device.device_name == 'vectorized':
-            self.solution = list(self.results_information['best probability'].keys())[
-                np.argmax(list((self.results_information['best probability'].values())))]
-            self.results_information['cost'] = self.results_information['best cost']
-        else:
-            if self.device.device_name == 'qiskit.statevector_simulator':
-                self.counts = dict(self.backend.get_counts(self.variate_params, n_shots=1000))
-            else:
-                self.counts = dict(self.backend.get_counts(self.variate_params))
-            self.solution = list(self.counts.keys())[np.argmax(list(self.counts.values()))]
-        # self.result = format_output_results(self.results_information, self.classical_optimizer.asdict(), self.extra_results.top_k_solutions)
+        self.results = self.optimizer.qaoa_result # TODO: results and qaoa_results will differ
 
         print(f'optimization completed.')
-        return None
+        return
 
 
 class RQAOA(Optimizer):

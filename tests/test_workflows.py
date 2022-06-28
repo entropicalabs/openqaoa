@@ -25,28 +25,6 @@ from openqaoa.problems.problem import MinimumVertexCover
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']
-"""
-TODO: Logic for test_check_connection_aws_no_device_provided_credentials while 
-correct. Returning true for the check_connection() function if no device was
-provided might be a strange behaviour since check_connection() is also expected
-to return true if the device provided was correct, and false if invalid.
-"""
-
-
-class TestingAccessObjectQiskit(unittest.TestCase):
-
-    """This tests checks that Object used to access IBMQ and their available
-    QPUs can be established.
-
-    For any tests using provided credentials, the tests will only pass if those
-    details provided are correct/valid with IBMQ.
-
-    Please ensure that the provided api token in the crendentials.json is 
-    correct.
-    Note that the defaults for hub, group, project and valid backend can also be 
-    changed in crendentials.json, in most cases, they can be left alone. 
-    All of these can be found in your IBMQ Account Page.
-    """
 
 
 class TestingVanillaQAOA(unittest.TestCase):
@@ -83,7 +61,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.compile(vc)
         q.optimize()
 
-        result = str(list(q.results_information['probability progress list'][0].keys())[np.argmax(list((q.results_information['probability progress list'][0].values())))])
+        result = q.results.most_probable_states['solutions_bitstrings'][0]
         assert '010101' == result or '101010' == result
 
 
