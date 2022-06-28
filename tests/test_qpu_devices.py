@@ -14,6 +14,7 @@
 
 import unittest
 import json
+import os
 
 from openqaoa.devices import DeviceQiskit, DeviceLocal, SUPPORTED_LOCAL_SIMULATORS
 
