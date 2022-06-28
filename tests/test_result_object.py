@@ -86,14 +86,6 @@ class TestingLoggerClass(unittest.TestCase):
 
     def test_get_counts(self):
 
-        cost_hamil = Hamiltonian([PauliOp('ZZ',(0, 3)),
-                         PauliOp('ZZ',(0, 1)),
-                         PauliOp('ZZ',(1, 2)),
-                         PauliOp('ZZ',(2, 3)),
-                         PauliOp('Z',(0,)),
-                         PauliOp('Z',(1,)),
-                         PauliOp('Z',(2,)),
-                         PauliOp('Z',(3,))], [2.5, 2.5, 2.5, 2.5, 4.5, 4.5, 4.5, 4.5], 12) 
         # measurement outcome from a statevector_simulator backend
         optimized_measurement_outcomes_sv = np.array([ 0.18256422-0.1296918j , -0.03786405-0.13158363j,
                                                 -0.03786405-0.13158363j, -0.01910622+0.3151214j ,
