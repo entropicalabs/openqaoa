@@ -18,7 +18,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_pubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
         
         q = QAOA()
         q.compile(vc, verbose=False)
@@ -76,7 +76,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_pubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
         
         q = QAOA()
         q.compile(vc, verbose=False)

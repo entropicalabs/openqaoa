@@ -319,7 +319,7 @@ class RXY(TwoQubitGateWithAngle):
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
         input_obj.apply_rxy(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
     
-class RXZ(TwoQubitGateWithAngle):
+class RZX(TwoQubitGateWithAngle):
     
     def __init__(self):
 
@@ -337,12 +337,12 @@ class RXZ(TwoQubitGateWithAngle):
                        circuit: qkQuantumCircuit):                       
         
         circuit.rzx(rotation_angle_obj.rotation_angle,
-                    qubit_indices[1],
-                    qubit_indices[0])
+                    qubit_indices[0],
+                    qubit_indices[1])
         return circuit
     
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
-        input_obj.apply_rxz(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
+        input_obj.apply_rzx(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
 
     
 class RYZ(TwoQubitGateWithAngle):

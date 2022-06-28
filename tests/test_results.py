@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from argparse import SUPPRESS
 from openqaoa.workflows.optimizer import QAOA
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
@@ -45,7 +44,7 @@ class TestingResultOutputs(unittest.TestCase):
         """
         
         g = nw.circulant_graph(3, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_pubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
         
         choice_combination = list(itertools.product([True, False], [True, False], [True, False]))
         recorded_evals = [0, 5]
