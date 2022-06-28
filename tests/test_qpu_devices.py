@@ -41,9 +41,9 @@ class TestingDeviceQiskit(unittest.TestCase):
             
             try:
                 self.API_TOKEN = os.environ['IBMQ_TOKEN']
-                self.HUB = os.environ['IBMQ_TOKEN']
-                self.GROUP = os.environ['IBMQ_TOKEN']
-                self.PROJECT = os.environ['IBMQ_TOKEN']
+                self.HUB = os.environ['IBMQ_HUB']
+                self.GROUP = os.environ['IBMQ_GROUP']
+                self.PROJECT = os.environ['IBMQ_PROJECT']
             except Exception:
                 self.API_TOKEN = json_obj['API_TOKEN']
                 self.HUB = json_obj['HUB']
