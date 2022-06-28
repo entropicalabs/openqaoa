@@ -6,6 +6,7 @@ from openqaoa.problems.problem import MinimumVertexCover
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian
 from openqaoa.optimizers.result import Result
 from openqaoa.optimizers.result import most_probable_bitstring
+from openqaoa.utilities import qaoa_probabilities
 from openqaoa.workflows.optimizer import QAOA  
 
 class TestingLoggerClass(unittest.TestCase):
@@ -65,7 +66,7 @@ class TestingLoggerClass(unittest.TestCase):
                                             '0111': 74,
                                             '1011': 115}
  
-        mps_sv =  most_probable_bitstring(cost_hamil, Result.get_counts(optimized_measurement_outcomes_sv))
+        mps_sv =  most_probable_bitstring(cost_hamil, qaoa_probabilities(optimized_measurement_outcomes_sv))
         mps_shot =  most_probable_bitstring(cost_hamil, optimized_measurement_outcomes_shot)
 
         assert set(['0101', '1010']) == set(mps_sv['solutions_bitstrings']) # Equality for sv

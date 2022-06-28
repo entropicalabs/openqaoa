@@ -20,11 +20,9 @@ from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
-# from openqaoa.optimizers.result import Result
-from .devices import DeviceLocal
 import networkx as nx
+from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 
-from openqaoa.qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 
 def X_mixer_hamiltonian(n_qubits: int,
                         coeffs: List[float] = None) -> Hamiltonian:
@@ -857,14 +855,13 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
 
 
 def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
-                                qaoa_optimized_params: list,
                                 qaoa_backend,
                                 hamiltonian: Hamiltonian, 
                                 mixer_type:str, 
-                                p: int, 
-                                analytical: bool = True, 
-                                shot_based: bool = False, 
-                                shots: int = 100):
+                                p: int,
+                                qaoa_optimized_angles: Optional[list] = None,
+                                qaoa_optimized_counts: Optional[dict] = None,
+                                analytical: bool = True):
     """
     Computes the single spin expectation values <Z_{i}> and the correlation matrix Mij = <Z_{i}Z_{j}>,
     using the optimization results obtained from QAOA tranining the specified QAOA cost backend.
@@ -873,24 +870,16 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
     ----------
     variational_params: `QAOAVariationalBaseParams`
         Set of variational parameters in the QAOA ansatz.
-    qaoa_results: `list`
-    Optimized angles of the underlying QAOA.
-    qaoa_backend: `QAOABaseBAckend`
+    qaoa_optimized_angles: `list`
+        Optimized angles of the underlying QAOA.
+    qaoa_optimized_counts: `dict`
+        Dictionary containing the measurement counts of optimized QAOA circuit.
+    qaoa_backend: `QAOABaseBackend`
         Chosen backend on which QAOA is performed.
     hamiltonian: `Hamiltonian`
         Hamiltonian object containing the problem statement.
     p: `int`
         Number of layers in QAOA ansatz.
-    analytical: `bool`
-        Boolean parameter which allows to manually switch off analytical
-        computation of the statistics for a single layer QAOA ansatz. Defaults
-        to True.
-    shot_based: `bool`
-        Boolean specificying whether our simulation is shot based.
-        Defaults to False.
-    shots: `int`
-        Number of shots to consider if the simulation is shot based.
-        Defaults to 100.   
 
     Returns
     -------
@@ -905,17 +894,14 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
 
     # Extract Hamiltonian terms
     terms = list(hamiltonian.terms)
-
-    # The QAOA angles
-    optimized_params = qaoa_optimized_params
-
     
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)
     corr_matrix = np.zeros((n_qubits, n_qubits))
 
     # If single layer ansatz use analytical results
-    if analytical and p == 1 and mixer_type == 'x':
+    if (analytical == True and p == 1 and mixer_type == 'x' and
+        isinstance(qaoa_optimized_angles, list)):
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
@@ -924,13 +910,13 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
             if len(term) == 1:
                 i = term.qubit_indices[0]
                 exp_vals_z[i] = exp_val_single_analytical(
-                    i, hamiltonian, optimized_params)
+                    i, hamiltonian, qaoa_optimized_angles)
 
             # If two-body term compute correlation
             elif len(term) == 2:
                 i, j = term.qubit_indices
                 corr_matrix[i][j] = exp_val_pair_analytical(
-                    (i, j), hamiltonian, optimized_params)
+                    (i, j), hamiltonian, qaoa_optimized_angles)
 
             # If constant term, ignore
             else:
@@ -938,18 +924,11 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
 
     # If multilayer ansatz, perform numerical computation
     else:
-        
-        # Update variational parameters
-        variational_params.update_from_raw(optimized_params)
 
-        # Obtain state probabilities from QAOA simulation
-        if shot_based:
-            counts_dict = qaoa_backend.get_counts(variational_params)
-
+        if isinstance(qaoa_optimized_counts, dict):
+            counts_dict = qaoa_optimized_counts
         else:
-            opt_wf = qaoa_backend.wavefunction(variational_params)
-            counts_dict = {bin(i)[2:].zfill(n_qubits)[
-                ::-1]: np.real(np.conjugate(amp)*amp) for i, amp in enumerate(opt_wf)}
+            raise ValueError("Please specify optimized counts to compute expectation values.")
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:

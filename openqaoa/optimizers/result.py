@@ -93,15 +93,14 @@ class Result():
 
     #     return (string)
 
-    @classmethod
     def get_counts(self, measurement_outcomes):
         """
         Converts probabilities to counts when the measurement outcomes are a numpy array, that is a state vector
 
         Parameters
         ----------
-            measurement_outcomes: `Union[np.array, dict]`
-                The measurement outcome as returned by the Logger. It can either be a statevector or a count dictionary
+        measurement_outcomes: `Union[np.array, dict]`
+            The measurement outcome as returned by the Logger. It can either be a statevector or a count dictionary
         Returns
         -------
         `dict`
