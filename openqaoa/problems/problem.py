@@ -824,10 +824,10 @@ class ShortestPath(Problem):
         """
 
         n_nodes, edge_probability, seed, source, dest = check_kwargs(['n_nodes', 'edge_probability','seed', 'source', 'dest'],
-                                                                    [None, None, None, None, None], **kwargs)
+                                                                    [None, None, 1234, 0, 1], **kwargs)
         G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
 
-        DEFAULT_WEIGHTS = 0.1
+        DEFAULT_WEIGHTS = 1.0
 
         for (u, v) in G.edges():
             G.edges[u,v]['weight'] = DEFAULT_WEIGHTS
@@ -835,6 +835,38 @@ class ShortestPath(Problem):
             G.nodes[w]['weight'] = DEFAULT_WEIGHTS
 
         return ShortestPath(G,source,dest)
+
+    def convert_binary_to_ising(self, terms, weights):
+        """
+        Converts the weights from a [0, 1] encoding to an Ising problem [-1, 1] 0 is mapped to +1 and 1 to -1 respectively
+
+        Parameters
+        ----------
+        terms: list[list]
+            terms of the hamiltonian
+        weights: list[float]
+
+        Returns
+        -------
+        terms_weights: tuple(list[list],list[float])
+            Tuple containing the converted list of terms and list of weights
+        """
+        new_terms_weights = []
+        constant = 0
+
+        for i, term in enumerate(terms):
+            if len(term) == 1:
+                new_terms_weights.append((term,-0.5*weights[i]))
+                constant += 0.5*weights[i]
+            elif len(term) == 2:
+                for t in term:
+                    new_terms_weights.append(([t], -0.5*weights[i]))
+                new_terms_weights.append((term, 0.25*weights[i]))
+                constant += 0.25*weights[i]
+
+        new_terms_weights.append(([], constant))
+
+        return tuple(zip(*(new_terms_weights)))
 
     def terms_and_weights(self):
         """
@@ -917,7 +949,8 @@ class ShortestPath(Problem):
         The QUBO encoding of this problem.
         """
         # Extract terms and weights from the problem definition
-        terms, weights = self.terms_and_weights()
+        bin_terms, bin_weights = self.terms_and_weights()
+        terms, weights = self.convert_binary_to_ising(bin_terms, bin_weights)
         n_variables = self.G.number_of_nodes() + self.G.number_of_edges() - 2
 
         return QUBO(n_variables, list(terms), list(weights))
