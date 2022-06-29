@@ -112,6 +112,31 @@ class CircuitProperties(Parameters):
                 f"Number of layers `p` cannot be smaller or equal to zero. Value {value} was provided")
         self._p = value
 
+    @property
+    def annealing_time(self):
+        return self._annealing_time
+
+    @annealing_time.setter
+    def annealing_time(self, value):
+        if value <= 0:
+            raise ValueError(
+                f"The annealing time `annealing_time` cannot be smaller or equal to zero. Value {value} was provided")
+        self._annealing_time = value
+
+
+    # @property
+    # def mixer_qubit_connectivity(self):
+    #     return self._mixer_qubit_connectivity
+
+    # @annealing_time.setter
+    # def mixer_qubit_connectivity(self, value):
+    #     print(value)
+    #     if (self.mixer_hamiltonian != 'xy') and (value != None):
+    #         self._mixer_qubit_connectivity = None
+    #         raise ValueError(f"mixer_qubit_connectivity can be used if and only if `mixer_hamiltonian` is set to `xy`")
+    #     else:
+    #         print(value)
+    #         self._mixer_qubit_connectivity = value
 
 class BackendProperties(Parameters):
     """

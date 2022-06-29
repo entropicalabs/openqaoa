@@ -281,7 +281,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
 
         C = np.cos(rotation_angle/2)
@@ -314,7 +314,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
 
         wfn = copy(self.wavefn)
@@ -356,7 +356,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
 
         slc_0 = tuple(0 if i == self.n_qubits - qubit_1 - 1
@@ -397,7 +397,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         # SH TODO : investigate if slicing 01 and 10 coefficients and swapping once them is faster than flipping twice 
@@ -437,7 +437,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
 
         wfn = copy(self.wavefn)
@@ -491,7 +491,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         '''
@@ -531,7 +531,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         wfn = copy(self.wavefn)
@@ -565,7 +565,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         wfn = copy(self.wavefn)
@@ -599,7 +599,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         wfn = copy(self.wavefn)
@@ -636,7 +636,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         # vectorized hadamard gate, for when init_hadamard = True
@@ -670,7 +670,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         # reset the wavefunction back to its initialisation state
         self.reset_circuit()

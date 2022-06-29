@@ -65,15 +65,15 @@ html_static_path = ['_static']
 
 # -- More customizations ----------------------------------------------------
 # Document __init__ and __call__ functions
-def skip(app, what, name, obj, would_skip, options):
-    if name == "__call__":
-        print("Documenting Call")
-        return False
+# def skip(app, what, name, obj, would_skip, options):
+#     if name == "__call__":
+#         print("Documenting Call")
+#         return False
 
-    if type(obj) == shapedArray:
-        return True
-    return would_skip
+#     if type(obj) == shapedArray:
+#         return True
+#     return would_skip
 
 
-def setup(app):
-    app.connect("autodoc-skip-member", skip)
+# def setup(app):
+#     app.connect(skip)
