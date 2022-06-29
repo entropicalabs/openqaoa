@@ -61,14 +61,14 @@ class Result():
         }
 
         self.intermediate = {
-            'parameter log': np.array(log.param_log.history).tolist(),
+            'angles log': np.array(log.param_log.history).tolist(),
             'intermediate cost': log.cost.history,
             'intermediate measurement outcomes':
                 log.measurement_outcomes.history
         }
 
         self.optimized = {
-            'optimized param': np.array(log.param_log.best[0]).tolist(),
+            'optimized angles': np.array(log.param_log.best[0]).tolist(),
             'optimized cost': log.cost.best[0],
             'optimized measurement outcomes':
                 log.measurement_outcomes.best[0]
@@ -139,6 +139,6 @@ class Result():
         plt.ylabel('Cost')
         plt.xlabel('Number of function evaluations')
         plt.legend()
-        plt.title('Cost progress list')
+        plt.title('Cost history')
 
         return

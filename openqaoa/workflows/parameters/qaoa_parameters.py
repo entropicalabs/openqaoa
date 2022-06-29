@@ -21,8 +21,8 @@ from .parameters import Parameters
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
 
-ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias',
-                       'extended', 'fourier', 'fourier_extended', 'fourier_w_bias']
+ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
+                       'fourier_extended', 'fourier_w_bias', 'annealing']
 ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
 ALLOWED_MIXERS = ['x', 'xy']
 ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS
