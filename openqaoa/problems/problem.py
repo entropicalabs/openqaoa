@@ -734,6 +734,9 @@ class FromDocplex2QUBO:
         for x in self.model.iter_variables():
             self.idx_terms[x] = x.index
             
+        # save a dictionary with the qubo information
+        self.qubo_dict = {}
+            
 
     def linear_expr(self, expr):
         """
@@ -752,16 +755,12 @@ class FromDocplex2QUBO:
             List of weights of the problem.
 
         """
-
-        # init list of terms and coeffs
-        terms = []
-        weights = []
-
-        #save the terms and coeffs of the linear part 
         for x, weight in expr.get_linear_part().iter_terms():
-            terms.append((self.idx_terms[x], ))
-            weights.append(self.sense * weight)
-        return terms, weights
+            try:
+                self.qubo_dict[(self.idx_terms[x], )] += self.sense * weight
+            except:
+                self.qubo_dict[(self.idx_terms[x], )] = self.sense * weight
+                
 
     def quadratic_expr(self, expr):
         """
@@ -781,19 +780,32 @@ class FromDocplex2QUBO:
 
         """
 
-        # init list of terms and coeffs
-        terms = []
-        weights = []
         
         #save the terms and coeffs of the quadratic part, 
         #considering two index i and j 
         for x, y, weight in expr.iter_quad_triplets():
             i = self.idx_terms[x]
             j = self.idx_terms[y]
-            terms.append((i, j))
-            weights.append(self.sense * weight)
-        return terms, weights
+            if i == j: # if this is a Z1**2 for example
+                try: # if the dictionary do not have the specific key
+                    self.qubo_dict[(i, )] += self.sense * weight
+                except:
+                    self.qubo_dict[(i, )] = self.sense * weight
+            else:
+                try:
+                    self.qubo_dict[(i, j)] += self.sense * weight
+                except:
+                    self.qubo_dict[(i, j)] = self.sense * weight
     
+    def linear_constraint(self, resize):
+        penality = 0
+        for constraint in self.model.iter_linear_constraints():
+            if constraint.sense_string == "EQ":
+                penality += resize * (constraint.get_left_expr() - constraint.get_right_expr()) ** 2
+            
+        self.linear_expr(penality)
+        self.quadratic_expr(penality)
+        
     def get_qubo_problem(self):
         """
         Creates a PUBO problem form a Docplex model
@@ -823,21 +835,20 @@ class FromDocplex2QUBO:
         
         
         # save the terms and coeffs form the linear part
-        terms, weights = self.linear_expr(self.objective_expr)
+        self.linear_expr(self.objective_expr)
         
         # adding the constant part of the QUBO 
-        terms += [[]]
-        weights += [self.sense * constant]
-        
-        # in case exist a quadratic part
-        if self.objective_expr:
+        self.qubo_dict[()] = self.sense * constant
             
-            #save the terms and coeffs form the quadratic part
-            terms_quad, quad_weights = self.quadratic_expr(self.objective_expr)
+        #save the terms and coeffs form the quadratic part
+        self.quadratic_expr(self.objective_expr)
         
-            # join linear and quadratic terms
-            terms.extend(terms_quad)
-            weights.extend(quad_weights)
+        # Add the linear constraints into the qubo
+        # self.linear_constraint(resize=1)
+
             
         #convert the docplex terms in a Hamiltonian
-        return  PUBO(n_variables, terms, weights, encoding=Encoding.BINARY_ENCODING)
+        return  PUBO(n_variables, self.qubo_dict.keys(), self.qubo_dict.values(), encoding=Encoding.BINARY_ENCODING)
+        
+        
+    
