@@ -258,18 +258,18 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
     # Apply gate methods
     def apply_rx(self, qubit_1: int, rotation_angle: float):
-        r"""
+        """
         Applies the RX(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
         
         **Definition of RX(`theta`):**
 
         .. math::
 
-        RX(\theta) = \exp\left(-i \frac{\theta}{2} X\right) =
-            \begin{pmatrix}
-                \cos{\frac{\theta}{2}}   & -i\sin{\frac{\theta}{2}} \\
-                -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
-            \end{pmatrix}
+            RX(\theta) = \exp\left(-i \frac{\theta}{2} X\right) =
+                \begin{pmatrix}
+                    \cos{\frac{\theta}{2}}   & -i\sin{\frac{\theta}{2}} \\
+                    -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
+                \end{pmatrix}
             
         Parameters
         ----------
@@ -291,18 +291,18 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn = wfn
 
     def apply_ry(self, qubit_1: int, rotation_angle: float):
-        r"""
+        """
         Applies the RY(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
         
         **Definition of RY(`theta`):**
 
         .. math::
 
-        RY(\theta) = \exp\left(-i \frac{\theta}{2} Y\right) =
-            \begin{pmatrix}
-                \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} \\
-                \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
-            \end{pmatrix}
+            RY(\theta) = \exp\left(-i \frac{\theta}{2} Y\right) =
+                \begin{pmatrix}
+                    \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} \\
+                    \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
+                \end{pmatrix}
             
         Parameters
         ----------
@@ -333,18 +333,18 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn =  (C * self.wavefn) + (S * np.flip(wfn, self.n_qubits - qubit_1 - 1))
 
     def apply_rz(self, qubit_1: int, rotation_angle: float):
-        r"""
+        """
         Applies the RZ(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
         
         **Definition of RZ(`theta`):**
 
         .. math::
 
-        RZ(\theta) = \exp\left(-i\frac{\frac{\theta}{2}}{2}Z\right) =
-            \begin{pmatrix}
-                e^{-i\frac{\frac{\theta}{2}}{2}} & 0 \\
-                0 & e^{i\frac{\frac{\theta}{2}}{2}}
-            \end{pmatrix}
+            RZ(\theta) = \exp\left(-i\frac{\frac{\theta}{2}}{2}Z\right) =
+                \begin{pmatrix}
+                    e^{-i\frac{\frac{\theta}{2}}{2}} & 0 \\
+                    0 & e^{i\frac{\frac{\theta}{2}}{2}}
+                \end{pmatrix}
             
         Parameters
         ----------
@@ -368,20 +368,20 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn[slc_1] *= np.exp(1j * rotation_angle/2)
 
     def apply_rxx(self, qubit_1: int, qubit_2: int, rotation_angle: float):
-        r"""
+        """
         Applies the RXX(`theta` = `rotation_angle`) gate on `qubit_1` and `qubit_2` in a vectorized way.
         
         **Definition of RXX(`theta`):**
 
         .. math::
 
-        R_{XX}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
-            \begin{pmatrix}
-                \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
-                0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
-                0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
-                -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
-            \end{pmatrix}
+            R_{XX}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
+                \begin{pmatrix}
+                    \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
+                    0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
+                    0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
+                    -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
+                \end{pmatrix}
             
 
         Parameters
@@ -415,13 +415,13 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        R_{YY}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
-            \begin{pmatrix}
-                \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
-                0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
-                0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
-                -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
-            \end{pmatrix}
+            R_{YY}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
+                \begin{pmatrix}
+                    \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
+                    0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
+                    0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
+                    -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
+                \end{pmatrix}
             
 
         Parameters
@@ -470,13 +470,13 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        RZZ(\theta) = \exp\left(-i \th Z{\otimes}Z\right) =
-            \begin{pmatrix}
-                e^{-i \frac{\theta}{2}} & 0 & 0 & 0 \\
-                0 & e^{i \frac{\theta}{2}} & 0 & 0 \\
-                0 & 0 & e^{i \frac{\theta}{2}} & 0 \\
-                0 & 0 & 0 & e^{-i \frac{\theta}{2}}
-            \end{pmatrix}
+            RZZ(\theta) = \exp\left(-i \th Z{\otimes}Z\right) =
+                \begin{pmatrix}
+                    e^{-i \frac{\theta}{2}} & 0 & 0 & 0 \\
+                    0 & e^{i \frac{\theta}{2}} & 0 & 0 \\
+                    0 & 0 & e^{i \frac{\theta}{2}} & 0 \\
+                    0 & 0 & 0 & e^{-i \frac{\theta}{2}}
+                \end{pmatrix}
             
         Parameters
         ----------

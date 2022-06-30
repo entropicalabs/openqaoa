@@ -1,8 +1,3 @@
-docs/source/index.rst .. OpenQAOA documentation master file, created by
-   sphinx-quickstart on Fri Apr 29 05:09:06 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to OpenQAOA's documentation!
 ====================================
 
@@ -199,47 +194,33 @@ Contents
 
 .. toctree::
    :maxdepth: 3
-   :caption: Workflows
+   :caption: About Entropica Labs
+
+   about
+
+.. toctree::
+   :maxdepth: 3
+   :caption: General reference
+
+   faq
+   changelog
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Tutorials
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API reference
 
    workflows
-
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Inputs
-
    problems
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Parametrisation
-
    qaoaparameters
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Backend and devices
-
    backends
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Logger and Results
-
    logger_and_results
-
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Classical Optimisers
-
    optimizers
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Classical Optimisers
-
    utilities
+
 
 Indices and tables
 ==================

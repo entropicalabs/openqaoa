@@ -53,7 +53,7 @@ Build-in problems
 Helper functions
 ----------------
 
-.. automodule:: openqaoa.problems.problem.helper_functions
+.. automodule:: openqaoa.problems.helper_functions
     :members:
     :undoc-members:
     :show-inheritance:
