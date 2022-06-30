@@ -414,8 +414,9 @@ class MaximumCut(Problem):
         -------
             A random instance of the Maximum Cut problem.
         """
-        n_nodes, edge_probability, seed = check_kwargs(['n_nodes', 'edge_probability', 'seed'],
-                                                        [None, None, None], **kwargs)
+        n_nodes, edge_probability = check_kwargs(['n_nodes', 'edge_probability'],
+                                                        [None, None], **kwargs)
+        seed = kwargs.get('seed', None)    
         G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
         return MaximumCut(G)
 
@@ -723,8 +724,9 @@ class MinimumVertexCover(Problem):
         A random instance of the Minimum Vertex Cover problem.
         """
 
-        n_nodes, edge_probability, seed = check_kwargs(['n_nodes', 'edge_probability','seed'],
-                                                        [None, None, None], **kwargs)
+        n_nodes, edge_probability = check_kwargs(['n_nodes', 'edge_probability'],
+                                                        [None, None], **kwargs)
+        seed = kwargs.get('seed', None)
         G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
 
         DEFAULT_FIELD = 1.0
