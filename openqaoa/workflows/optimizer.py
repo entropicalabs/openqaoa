@@ -178,6 +178,13 @@ class QAOA(Optimizer):
                     "Specified argument is not supported by the circuit")
         self.circuit_properties = CircuitProperties(**kwargs)
 
+        for key, value in kwargs.items():
+            if hasattr(self.circuit_properties, key):
+                setattr(self.circuit_properties, key, value)
+            else:
+                raise ValueError(
+                    "Specified argument is not supported by the circuit")
+
         return None
 
     def set_backend_properties(self, **kwargs):

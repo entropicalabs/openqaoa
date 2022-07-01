@@ -64,7 +64,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         circuit construction and depth of the circuit.
     n_shots: `int`
         The number of shots to be taken for each circuit.
-    prepend_state: `pyquil.Program`s
+    prepend_state: `pyquil.Program`
         The state prepended to the circuit.
     append_state: `pyquil.Program`
         The state appended to the circuit.
