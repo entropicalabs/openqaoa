@@ -170,7 +170,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         qaoa_circuit = self.qaoa_circuit(params)
         counts = self.backend_simulator.run(qaoa_circuit, shots=self.n_shots).result().get_counts()
         flipped_counts = flip_counts(counts)
-        self.counts = flipped_counts
+        self.measurement_outcomes = flipped_counts
         return flipped_counts
 
     def circuit_to_qasm(self):
@@ -339,6 +339,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
          """
         ckt = self.qaoa_circuit(params)
         wf = Statevector(ckt).data
+        self.measurement_outcomes = wf
         return wf
 
     def expectation(self,
@@ -358,7 +359,9 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
             expectation value of cost operator wrt to quantum state produced by QAOA circuit
         """
         ckt = self.qaoa_circuit(params)
-        cost = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil))
+        output_wf = Statevector(ckt)
+        self.measurement_outcomes = output_wf.data
+        cost = np.real(output_wf.expectation_value(self.qiskit_cost_hamil))
         return cost
 
     def expectation_w_uncertainty(self, 
@@ -379,6 +382,8 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
             to quantum state produced by QAOA circuit.
         """
         ckt = self.qaoa_circuit(params)
+        output_wf = Statevector(ckt)
+        self.measurement_outcomes = output_wf.data
         cost = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil))
         cost_sq = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil_sq))
         
