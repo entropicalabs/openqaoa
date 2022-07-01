@@ -258,14 +258,14 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
     # Apply gate methods
     def apply_rx(self, qubit_1: int, rotation_angle: float):
-        r"""
+        """
         Applies the RX(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
         
         **Definition of RX(`theta`):**
 
         .. math::
 
-        RX(\theta) = \exp\left(-i \frac{\theta}{2} X\right) =
+            RX(\theta) = \exp\left(-i \frac{\theta}{2} X\right) =
             \begin{pmatrix}
                 \cos{\frac{\theta}{2}}   & -i\sin{\frac{\theta}{2}} \\
                 -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
@@ -281,7 +281,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
 
         C = np.cos(rotation_angle/2)
@@ -298,12 +298,12 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        RY(\theta) = \exp\left(-i \frac{\theta}{2} Y\right) =
+            RY(\theta) = \exp\left(-i \frac{\theta}{2} Y\right) =
             \begin{pmatrix}
                 \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} \\
                 \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
             \end{pmatrix}
-            
+
         Parameters
         ----------
         qubit_1:
@@ -314,7 +314,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
 
         wfn = copy(self.wavefn)
@@ -340,11 +340,11 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        RZ(\theta) = \exp\left(-i\frac{\frac{\theta}{2}}{2}Z\right) =
-            \begin{pmatrix}
-                e^{-i\frac{\frac{\theta}{2}}{2}} & 0 \\
-                0 & e^{i\frac{\frac{\theta}{2}}{2}}
-            \end{pmatrix}
+            RZ(\theta) = \exp\left(-i\frac{\frac{\theta}{2}}{2}Z\right) =
+                \begin{pmatrix}
+                    e^{-i\frac{\frac{\theta}{2}}{2}} & 0 \\
+                    0 & e^{i\frac{\frac{\theta}{2}}{2}}
+                \end{pmatrix}
             
         Parameters
         ----------
@@ -356,7 +356,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
 
         slc_0 = tuple(0 if i == self.n_qubits - qubit_1 - 1
@@ -375,13 +375,13 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        R_{XX}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
-            \begin{pmatrix}
-                \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
-                0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
-                0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
-                -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
-            \end{pmatrix}
+            R_{XX}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
+                \begin{pmatrix}
+                    \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
+                    0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
+                    0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
+                    -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
+                \end{pmatrix}
             
 
         Parameters
@@ -397,7 +397,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         # SH TODO : investigate if slicing 01 and 10 coefficients and swapping once them is faster than flipping twice 
@@ -415,13 +415,13 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        R_{YY}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
-            \begin{pmatrix}
-                \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
-                0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
-                0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
-                -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
-            \end{pmatrix}
+            R_{YY}(\theta) = \exp\left(-i \frac{\theta}{2} X{\otimes}X\right) =
+                \begin{pmatrix}
+                    \cos\left(\frac{\theta}{2}\right)   & 0           & 0           & -i\sin\left(\frac{\theta}{2}\right) \\
+                    0           & \cos\left(\frac{\theta}{2}\right)   & -i\sin\left(\frac{\theta}{2}\right) & 0 \\
+                    0           & -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)   & 0 \\
+                    -i\sin\left(\frac{\theta}{2}\right) & 0           & 0           & \cos\left(\frac{\theta}{2}\right)
+                \end{pmatrix}
             
 
         Parameters
@@ -437,7 +437,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
 
         wfn = copy(self.wavefn)
@@ -470,13 +470,13 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         .. math::
 
-        RZZ(\theta) = \exp\left(-i \th Z{\otimes}Z\right) =
-            \begin{pmatrix}
-                e^{-i \frac{\theta}{2}} & 0 & 0 & 0 \\
-                0 & e^{i \frac{\theta}{2}} & 0 & 0 \\
-                0 & 0 & e^{i \frac{\theta}{2}} & 0 \\
-                0 & 0 & 0 & e^{-i \frac{\theta}{2}}
-            \end{pmatrix}
+            RZZ(\theta) = \exp\left(-i \th Z{\otimes}Z\right) =
+                \begin{pmatrix}
+                    e^{-i \frac{\theta}{2}} & 0 & 0 & 0 \\
+                    0 & e^{i \frac{\theta}{2}} & 0 & 0 \\
+                    0 & 0 & e^{i \frac{\theta}{2}} & 0 \\
+                    0 & 0 & 0 & e^{-i \frac{\theta}{2}}
+                \end{pmatrix}
             
         Parameters
         ----------
@@ -491,7 +491,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         '''
@@ -531,7 +531,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         wfn = copy(self.wavefn)
@@ -565,7 +565,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         wfn = copy(self.wavefn)
@@ -599,7 +599,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         wfn = copy(self.wavefn)
@@ -636,7 +636,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         
         # vectorized hadamard gate, for when init_hadamard = True
@@ -670,7 +670,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         Returns
         -------
-        None
+            None
         """
         # reset the wavefunction back to its initialisation state
         self.reset_circuit()

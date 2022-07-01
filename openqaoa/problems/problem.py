@@ -46,36 +46,33 @@ class Problem(ABC):
 
 
 class QUBO:
+    """
+    Creates an instance of Quadratic Unconstrained Binary Optimization (QUBO)
+    class, which offers a way to encode optimization problems.
+
+    Parameters
+    ----------
+    n: `int`
+        The number of variables in the representation.
+    terms: `List[Tuple[int, ...],List]`
+        The different terms in the QUBO encoding, indicating the different
+        interactions between variables.
+    weights: `List[float]`
+        The list of weights (or coefficients) corresponding to each
+        interaction defined in `terms`.
+    clean_terms_and_weights: `bool`
+        Boolean indicating whether terms and weights can be cleaned by
+        combining similar terms.
+
+    Returns
+    -------
+        An instance of the Polynomial Unconstrained Binary Optimization 
+        (QUBO) class.
+    """
     # Maximum number of terms allowed to enable the cleaning procedure
     TERMS_CLEANING_LIMIT = 5000
 
     def __init__(self, n, terms, weights, clean_terms_and_weights=False):
-        """
-        Creates an instance of Quadratic Unconstrained Binary Optimization (QUBO)
-        class, which offers a way to encode optimization problems.
-
-        Parameters
-        ----------
-        n: int
-            The number of variables in the representation.
-        terms: List[Tuple[int, ...],List]
-            The different terms in the QUBO encoding, indicating the different
-            interactions between variables.
-        weights: List[float]
-            The list of weights (or coefficients) corresponding to each
-            interaction defined in `terms`.
-        encoding: List[int]
-            The encoding of variables. Either Binary ([0, 1]) encoding,
-            Ising ([-1, 1]) encoding.
-        clean_terms_and_weights: bool
-            Boolean indicating whether terms and weights can be cleaned by
-            combining similar terms.
-
-        Returns
-        -------
-            An instance of the Polynomial Unconstrained Binary Optimization 
-            (QUBO) class.
-        """
         terms = list(terms)
         weights = list(weights)
 
@@ -173,19 +170,20 @@ class QUBO:
         return Hamiltonian.classical_hamiltonian(self.terms,self.weights,self.constant)
 
 class TSP(Problem):
-    def __init__(self, coordinates=None):
-        """
-        Creates an instance of the Traveling Salesman problem.
+    """
+    Creates an instance of the Traveling Salesman problem.
 
-        Parameters
-        ----------
-        coordinates: List[Tuple[float, float]]
-            The list of coordinates of the different cities.
-    
-        Returns
-        -------
-            An instance of the Traveling Salesman problem.
-        """
+    Parameters
+    ----------
+    coordinates: List[Tuple[float, float]]
+        The list of coordinates of the different cities.
+
+    Returns
+    -------
+        An instance of the Traveling Salesman problem.
+    """
+    def __init__(self, coordinates=None):
+        
         self.coordinates = np.array(coordinates)
         self.n_cities = self.coordinates.shape[0]
 
@@ -298,19 +296,19 @@ class TSP(Problem):
         return QUBO(n,ising_terms,ising_coeffs)
 
 class NumberPartition(Problem):
+    """
+    Creates an instance of the Number Partitioning problem.
+
+    Parameters
+    ----------
+    numbers: `List[int]`
+        The list of numbers to be partitioned.
+
+    Returns
+    -------
+        An instance of the Number Partitioning problem.
+    """
     def __init__(self, numbers=None):
-        """
-        Creates an instance of the Number Partitioning problem.
-
-        Parameters
-        ----------
-        numbers: List[int]
-            The list of numbers to be partitioned.
-
-        Returns
-        -------
-            An instance of the Number Partitioning problem.
-        """
         # Set the numbers to be partitioned. If not given, generate a random list with integers
         self.numbers = numbers
         self.n_numbers = None if numbers==None else len(self.numbers)
@@ -322,7 +320,7 @@ class NumberPartition(Problem):
 
         Parameters
         ----------
-        n_numbers: int
+        n_numbers: `int`
             The number of numbers to be partitioned. This is a required 
             keyword argument.
 
@@ -374,22 +372,23 @@ class NumberPartition(Problem):
         return QUBO(self.n_numbers, terms, weights)
 
 class MaximumCut(Problem):
+    """
+    Creates an instance of the Maximum Cut problem.
+
+    Parameters
+    ----------
+    G: `nx.Graph`
+        The input graph as NetworkX graph instance.
+
+    Returns
+    -------
+        An instance of the Maximum Cut problem.
+    """
 
     DEFAULT_EDGE_WEIGHT = 1.0
 
     def __init__(self, G):
-        """
-        Creates an instance of the Maximum Cut problem.
 
-        Parameters
-        ----------
-        G: nx.Graph
-            The input graph as NetworkX graph instance.
-
-        Returns
-        -------
-            An instance of the Maximum Cut problem.
-        """
         # Relabel nodes to integers starting from 0
         mapping = dict(zip(G, range(G.number_of_nodes())))
         self.G = nx.relabel_nodes(G, mapping)
@@ -441,25 +440,25 @@ class MaximumCut(Problem):
         return QUBO(self.G.number_of_nodes(), terms, weights)
 
 class Knapsack(Problem):
+    """
+    Creates an instance of the Kanpsack problem.
+
+    Parameters
+    ----------
+    values: `List[int]`
+        The values of the items that can be placed in the kanpsack.
+    weights: `List[int]`
+        The weight of the items that can be placed in the knapsack.
+    weight_capacity: `int`
+        The maximum weight the knapsack can hold.
+    penalty: `float`
+        Penalty for the weight constraint.
+
+    Returns
+    -------
+        An instance of the Knapsack problem.
+    """
     def __init__(self, values, weights, weight_capacity, penalty):
-        """
-        Creates an instance of the Kanpsack problem.
-
-        Parameters
-        ----------
-        values: List[int]
-            The values of the items that can be placed in the kanpsack.
-        weights: List[int]
-            The weight of the items that can be placed in the knapsack.
-        weight_capacity: int
-            The maximum weight the knapsack can hold.
-        penalty: float
-            Penalty for the weight constraint.
-
-        Returns
-        -------
-            An instance of the Knapsack problem.
-        """
         # Check whether the input is valid. Number of values should match the number of weights.
         if len(values) != len(weights):
             raise ValueError('Number of items does not match given value and weights')
@@ -581,27 +580,27 @@ class SlackFreeKnapsack(Knapsack):
     A slack variable free approach to the Knapsack problem Hamiltonian. 
     The Hamiltonian consists of decision qubits with a quadratic penalty term centred
     on `W`, i.e. the maximum Knapsack Capacity.
+    
+    Creates an instance of the SlackFreeKanpsack problem.
+
+    Parameters
+    ----------
+    values: List[int]
+        The values of the items that can be placed in the kanpsack.
+    weights: List[int]
+        The weight of the items that can be placed in the knapsack.
+    weight_capacity: int
+        The maximum weight the knapsack can hold.
+    penalty: float
+        Penalty for the weight constraint.
+
+    Returns
+    -------
+        An instance of the SlackFreeKnapsack problem.
     """
 
     def __init__(self, values, weights, weight_capacity, penalty):
-        """
-        Creates an instance of the SlackFreeKanpsack problem.
 
-        Parameters
-        ----------
-        values: List[int]
-            The values of the items that can be placed in the kanpsack.
-        weights: List[int]
-            The weight of the items that can be placed in the knapsack.
-        weight_capacity: int
-            The maximum weight the knapsack can hold.
-        penalty: float
-            Penalty for the weight constraint.
-
-        Returns
-        -------
-            An instance of the SlackFreeKnapsack problem.
-        """
         super().__init__(values, weights, weight_capacity, penalty)
     
     def terms_and_weights(self):
@@ -676,23 +675,23 @@ class SlackFreeKnapsack(Knapsack):
 
 
 class MinimumVertexCover(Problem):
+    """
+    Creates an instance of the Minimum Vertex Cover problem.
+
+    Parameters
+    ----------
+    G: nx.Graph
+        The input graph as NetworkX graph instance.
+    field: float
+        The strength of the artificial field minimizing the size of the cover.
+    penalty: float
+        The strength of the penalty enforcing the cover constraint.
+
+    Returns
+    -------
+    An instance of the Minimum Vertex Cover problem.
+    """
     def __init__(self,G,field,penalty):
-        """
-        Creates an instance of the Minimum Vertex Cover problem.
-
-        Parameters
-        ----------
-        G: nx.Graph
-            The input graph as NetworkX graph instance.
-        field: float
-            The strength of the artificial field minimizing the size of the cover.
-        penalty: float
-            The strength of the penalty enforcing the cover constraint.
-
-        Returns
-        -------
-        An instance of the Minimum Vertex Cover problem.
-        """
 
         # Relabel nodes to integers starting from 0
         mapping = dict(zip(G, range(G.number_of_nodes())))
