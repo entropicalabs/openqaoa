@@ -18,6 +18,11 @@ print(sys.path)
 
 from openqaoa.qaoa_parameters.baseparams import shapedArray
 
+import mock
+ 
+MOCK_MODULES = ['matplotlib', 'numpy', 'scipy', 'networkx']
+for mod_name in MOCK_MODULES:
+sys.modules[mod_name] = mock.Mock()
 
 # -- Project information -----------------------------------------------------
 
