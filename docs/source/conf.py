@@ -1,4 +1,4 @@
-# Configuration file for the Sphinx documentation builder.
+ # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
@@ -10,11 +10,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import mock
+# import mock
  
-MOCK_MODULES = ['matplotlib', 'matplotlib.pyplot', 'numpy', 'scipy', 'networkx']
-for mod_name in MOCK_MODULES:
-	sys.modules[mod_name] = mock.Mock()
+# MOCK_MODULES = ['matplotlib', 'matplotlib.pyplot', 'numpy', 'scipy', 'networkx']
+# for mod_name in MOCK_MODULES:
+# 	sys.modules[mod_name] = mock.Mock()
 
 import os
 import sys
