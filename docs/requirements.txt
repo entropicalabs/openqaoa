@@ -1,1 +1,4 @@
 matplotlib>=2.2
+numpy>=1.22
+qiskit>=0.36
+pyquil>=3.1
