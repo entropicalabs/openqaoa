@@ -132,6 +132,9 @@ class BackendProperties(Parameters):
         The number of shots to be used for the shot-based computation.
     cvar_alpha: `float`
         The value of the CVaR parameter.
+    qubit_layout: `Union[List[int], np.ndarray]`
+        Mapping from physical to logical qubit indices, used to eventually 
+        construct the quantum circuit.
     """
 
     def __init__(self,
@@ -142,7 +145,8 @@ class BackendProperties(Parameters):
                  init_hadamard: bool = True,
                  n_shots: int = 100,
                  cvar_alpha: float = 1,
-                 noise_model = None):
+                 noise_model = None,
+                 qubit_layout: Optional[Union[List[int], np.ndarray]] = None):
         
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
@@ -150,6 +154,7 @@ class BackendProperties(Parameters):
         self.append_state = append_state
         self.cvar_alpha = cvar_alpha
         self.noise_model = noise_model
+        self.qubit_layout = qubit_layout
 
     # @property
     # def cvar_alpha(self):
