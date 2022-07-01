@@ -232,10 +232,10 @@ class QAOA(Optimizer):
                 Maximum number of iterations.
             jac: str
                 Method to compute the gradient vector. Choose from:
-                ['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']        
+                ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
             hess: str
                 Method to compute the hessian. Choose from:
-                ['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']
+                ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
             constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
                 Scipy-based constraints on parameters of optimization. Will be available soon
             bounds: scipy.optimize.Bounds

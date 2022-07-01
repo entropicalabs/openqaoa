@@ -157,6 +157,11 @@ class BackendProperties(Parameters):
         The number of shots to be used for the shot-based computation.
     cvar_alpha: `float`
         The value of the CVaR parameter.
+    qubit_layout: `Union[List[int], np.ndarray]`
+        Mapping from physical to logical qubit indices, used to eventually 
+        construct the quantum circuit.  For example, for a system composed by 3 qubits
+       `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
+        and the right hand side is the logical qubits
     """
 
     def __init__(self,
@@ -166,13 +171,15 @@ class BackendProperties(Parameters):
                                               np.ndarray]] = None,
                  init_hadamard: bool = True,
                  n_shots: int = 100,
-                 cvar_alpha: float = 1):
+                 cvar_alpha: float = 1,
+                 qubit_layout: Optional[Union[List[int], np.ndarray]] = None):
         
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state
         self.append_state = append_state
         self.cvar_alpha = cvar_alpha
+        self.qubit_layout = qubit_layout
 
     # @property
     # def cvar_alpha(self):
@@ -201,11 +208,11 @@ class ClassicalOptimizer(Parameters):
         Maximum number of iterations.
     jac: str
         Method to compute the gradient vector. Choose from:
-        `['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']        
+        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
     hess:
         Method to compute the hessian. Choose from:
-        `['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']
-    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
+        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
+    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints 
         Scipy-based constraints on parameters of optimization 
     bounds: scipy.scipy.optimize.Bounds
         Scipy-based bounds on parameters of optimization 

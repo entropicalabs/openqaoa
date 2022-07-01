@@ -26,6 +26,18 @@ def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
     '''
     Check that the program does not contain 2-qubit terms that is not present in the QPU's topology (to prevent quilc from crashing).
+    
+    Parameters
+    ----------
+    executable: `Program`
+        pyQuil executable program.
+    device: `DevicePyquil`
+        An object of the class ``DevicePyquil`` which contains information on pyQuil's `QuantumComputer` object, used to extract the selected QPU's topology.
+    
+    Returns
+    -------
+        None
+    """
     '''
 
     qpu_graph = device.quantum_computer.qubit_topology()
