@@ -20,7 +20,9 @@ from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOAB
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...devices import DevicePyquil
 
+
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
+
     '''
     Check that the program does not contain 2-qubit terms that is not present in the QPU's topology (to prevent quilc from crashing).
     
@@ -44,6 +46,7 @@ def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
     for term in pair_instrs:
         if len(term) == 2:
+
             assert term in qpu_graph.edges(), f"Term {term} is not an edge on the QPU graph of {device.device_name}."
     
     
@@ -123,6 +126,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         
         # Check program connectivity against QPU connectivity
         # TODO: reconcile with PRAGMA PRESERVE
+
         # check_edge_connectivity(self.prog_exe, device)
 
         # check_edge_connectivity(self.prog_exe, device)
