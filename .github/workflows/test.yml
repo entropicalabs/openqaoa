@@ -55,6 +55,7 @@ jobs:
           cd ..
           
       - name: Run tests
+        uses: docker://pandoc/latex:2.9
         env:
           IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }}
           IBMQ_HUB: ibm-q
