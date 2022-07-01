@@ -134,7 +134,9 @@ class BackendProperties(Parameters):
         The value of the CVaR parameter.
     qubit_layout: `Union[List[int], np.ndarray]`
         Mapping from physical to logical qubit indices, used to eventually 
-        construct the quantum circuit.
+        construct the quantum circuit.  For example, for a system composed by 3 qubits
+       `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
+        and the right hand side is the logical qubits
     """
 
     def __init__(self,
