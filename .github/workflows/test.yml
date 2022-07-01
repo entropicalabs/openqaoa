@@ -61,7 +61,6 @@ jobs:
           IBMQ_GROUP: open
           IBMQ_PROJECT: main
         run: |
-          sudo apt-get install pandoc
           source env/bin/activate
           ipython kernel install --name "env" --user
           python -m pytest --cov --cov-report=xml:coverage.xml
@@ -106,6 +105,7 @@ jobs:
       
       - name: Build and test Sphinx docs
         run: |
+          sudo apt-get install pandoc
           cd docs/
           make html
   
