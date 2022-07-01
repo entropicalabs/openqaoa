@@ -307,6 +307,9 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
         Matplotlib axes to plot on. Defaults to None.
     """
     
+    # Create plot figure
+    fig = plt.figure(figsize=(10, 6))
+        
     # Extract all graph attributes
     biases_and_nodes = nx.get_node_attributes(G, 'weight')
     biases = list(biases_and_nodes.values())
@@ -323,9 +326,6 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
         # Define color map
         cmap = plt.cm.seismic
 
-        # Create plot figure
-        fig = plt.figure(figsize=(10, 6))
-        
         # Define normalized color map
         sm = plt.cm.ScalarMappable(cmap=cmap,
                                 norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
