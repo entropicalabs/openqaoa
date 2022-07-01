@@ -39,6 +39,7 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx.ext.mathjax",
     "IPython.sphinxext.ipython_console_highlighting",
+    "nbsphinx"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -56,6 +57,8 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+# html_logo = 'Entropica_logo.png'
+# html_favicon ='favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

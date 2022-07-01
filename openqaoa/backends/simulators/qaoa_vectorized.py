@@ -266,10 +266,10 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         .. math::
 
             RX(\theta) = \exp\left(-i \frac{\theta}{2} X\right) =
-                \begin{pmatrix}
-                    \cos{\frac{\theta}{2}}   & -i\sin{\frac{\theta}{2}} \\
-                    -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
-                \end{pmatrix}
+            \begin{pmatrix}
+                \cos{\frac{\theta}{2}}   & -i\sin{\frac{\theta}{2}} \\
+                -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
+            \end{pmatrix}
             
         Parameters
         ----------
@@ -291,7 +291,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn = wfn
 
     def apply_ry(self, qubit_1: int, rotation_angle: float):
-        """
+        r"""
         Applies the RY(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
         
         **Definition of RY(`theta`):**
@@ -299,11 +299,11 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         .. math::
 
             RY(\theta) = \exp\left(-i \frac{\theta}{2} Y\right) =
-                \begin{pmatrix}
-                    \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} \\
-                    \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
-                \end{pmatrix}
-            
+            \begin{pmatrix}
+                \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} \\
+                \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}
+            \end{pmatrix}
+
         Parameters
         ----------
         qubit_1:
@@ -333,7 +333,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn =  (C * self.wavefn) + (S * np.flip(wfn, self.n_qubits - qubit_1 - 1))
 
     def apply_rz(self, qubit_1: int, rotation_angle: float):
-        """
+        r"""
         Applies the RZ(`theta` = `rotation_angle`) gate on `qubit_1` in a vectorized way.
         
         **Definition of RZ(`theta`):**
@@ -368,7 +368,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn[slc_1] *= np.exp(1j * rotation_angle/2)
 
     def apply_rxx(self, qubit_1: int, qubit_2: int, rotation_angle: float):
-        """
+        r"""
         Applies the RXX(`theta` = `rotation_angle`) gate on `qubit_1` and `qubit_2` in a vectorized way.
         
         **Definition of RXX(`theta`):**

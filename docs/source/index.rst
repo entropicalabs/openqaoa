@@ -209,11 +209,14 @@ Contents
    :maxdepth: 3
    :caption: Tutorials
 
+   notebooks/advanced_parametrisation.ipynb
+
 .. toctree::
    :maxdepth: 3
    :caption: API reference
 
    workflows
+   rqaoa
    problems
    qaoaparameters
    backends
