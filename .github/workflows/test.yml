@@ -55,13 +55,13 @@ jobs:
           cd ..
           
       - name: Run tests
-        uses: docker://pandoc/latex:2.9
         env:
           IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }}
           IBMQ_HUB: ibm-q
           IBMQ_GROUP: open
           IBMQ_PROJECT: main
         run: |
+          sudo apt-get install pandoc
           source env/bin/activate
           ipython kernel install --name "env" --user
           python -m pytest --cov --cov-report=xml:coverage.xml
