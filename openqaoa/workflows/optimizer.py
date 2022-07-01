@@ -267,7 +267,7 @@ class QAOA(Optimizer):
 
         return None
 
-    def compile(self, problem: QUBO = None, verbose: bool = True):
+    def compile(self, problem: QUBO = None, verbose: bool = False):
         """
         Initialise the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement
@@ -332,7 +332,7 @@ class QAOA(Optimizer):
 
         return None
 
-    def optimize(self):
+    def optimize(self, verbose=False):
         '''
         A method running the classical optimisation loop
         '''
@@ -344,7 +344,8 @@ class QAOA(Optimizer):
         # TODO: results and qaoa_results will differ
         self.results = self.optimizer.qaoa_result
 
-        print(f'optimization completed.')
+        if verbose:
+            print(f'optimization completed.')
         return
 
 
