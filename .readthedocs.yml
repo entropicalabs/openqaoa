@@ -10,11 +10,11 @@ build:
   os: ubuntu-20.04
   tools:
     python: "3.8"
-	jobs:
+  jobs:
     pre_build:
       - echo "Creating the notebook folder"
       - mkdir ../docs/source/notebooks
-			- cp ../examples/advanced_parametrisation.ipynb ../docs/source/notebooks/advanced_parametrisation.ipynb
+      - cp ../examples/advanced_parametrisation.ipynb ../docs/source/notebooks/advanced_parametrisation.ipynb
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
