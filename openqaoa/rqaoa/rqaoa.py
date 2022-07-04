@@ -736,7 +736,7 @@ def adaptive_rqaoa(hamiltonian: Hamiltonian,
 
                 # Obtain statistical results
         qaoa_results_optimized = qaoa_results.optimized 
-        qaoa_optimized_angles = qaoa_results_optimized['optimized param']
+        qaoa_optimized_angles = qaoa_results_optimized['optimized angles']
         qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
         if isinstance(qaoa_backend, QAOABaseBackendStatevector):
             exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
@@ -906,7 +906,7 @@ def custom_rqaoa(hamiltonian: Hamiltonian,
 
         # Obtain statistical results
         qaoa_results_optimized = qaoa_results.optimized 
-        qaoa_optimized_angles = qaoa_results_optimized['optimized param']
+        qaoa_optimized_angles = qaoa_results_optimized['optimized angles']
         qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
         if isinstance(qaoa_backend, QAOABaseBackendStatevector):
             exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
