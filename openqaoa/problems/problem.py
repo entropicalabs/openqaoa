@@ -805,8 +805,7 @@ class ShortestPath(Problem):
         """
         Creates a random instance of the Shortest problem, whose graph is
         random following the Erdos-Renyi model. By default the node and edge 
-        weights are set to 0.1 and the default constraint is taken to be 10 times 
-        larger.
+        weights are set to 1.0 and the default constraint is taken to be as large.
 
         Parameters
         ----------
@@ -860,7 +859,7 @@ class ShortestPath(Problem):
                 constant += 0.5*weights[i]
             elif len(term) == 2:
                 for t in term:
-                    new_terms_weights.append(([t], -0.5*weights[i]))
+                    new_terms_weights.append(([t], -0.25*weights[i]))
                 new_terms_weights.append((term, 0.25*weights[i]))
                 constant += 0.25*weights[i]
 
@@ -926,7 +925,7 @@ class ShortestPath(Problem):
         path_flow_terms_weights = []
         for i in range(n_nodes):
             if i != d and i != s:
-                shift = shift = int(i>s)+int(i>d)
+                shift = int(i>s)+int(i>d)
                 path_flow_terms_weights.append(([i-shift], 4))
                 for j, x in enumerate(self.G.edges()):
                     if i in x:

@@ -7,7 +7,7 @@ Problems
     :inherited-members:
 
 
-.. autoclass:: openqaoa.problems.problem.PUBO
+.. autoclass:: openqaoa.problems.problem.QUBO
     :members:
     :show-inheritance:
     :inherited-members:
@@ -41,6 +41,11 @@ Pre built clasess
     :inherited-members:
 
 .. autoclass:: openqaoa.problems.problem.MinimumVertexCover
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoclass:: openqaoa.problems.problem.ShortestPath
     :members:
     :show-inheritance:
     :inherited-members:
