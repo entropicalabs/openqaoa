@@ -16,7 +16,7 @@ build:
       - pwd
       - ls -lah
       - mkdir ./docs/source/notebooks
-      - cp ./examples/* ./docs/source/notebooks/*
+      - cp ./examples/* ./docs/source/notebooks/
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
