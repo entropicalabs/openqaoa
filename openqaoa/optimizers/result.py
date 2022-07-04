@@ -61,14 +61,14 @@ class Result():
         }
 
         self.intermediate = {
-            'parameter log': np.array(log.param_log.history).tolist(),
+            'angles log': np.array(log.param_log.history).tolist(),
             'intermediate cost': log.cost.history,
             'intermediate measurement outcomes':
                 log.measurement_outcomes.history
         }
 
         self.optimized = {
-            'optimized param': np.array(log.param_log.best[0]).tolist(),
+            'optimized angles': np.array(log.param_log.best[0]).tolist(),
             'optimized cost': log.cost.best[0],
             'optimized measurement outcomes':
                 log.measurement_outcomes.best[0]
@@ -113,32 +113,33 @@ class Result():
 
         return measurement_outcomes
 
-    def plot_cost(self, figsize=(10, 8), label='Cost', linestyle='--', color='b'):
+    def plot_cost(self, figsize=(10, 8), label='Cost', linestyle='--', color='b', ax=None):
         """
         A simpler helper function to plot the cost associated to a QAOA workflow
 
         Parameters
         ----------
-            figsize tuple
-                The size of the figure to be plotted. Defaults to (10,8).
-            label str
-                The label of the cost line, defaults to 'Cost'.
-            linestyle str
-                The linestyle of the poloit. Defaults to '--'.
-            color str
-                The color of the line. Defaults to 'b'.
+        figsize: `tuple`
+            The size of the figure to be plotted. Defaults to (10,8).
+        label: `str`
+            The label of the cost line, defaults to 'Cost'.
+        linestyle: `str`
+            The linestyle of the poloit. Defaults to '--'.
+        color: `str`
+            The color of the line. Defaults to 'b'.
         """
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        
+        ax.plot(range(self.evals['number of evals']),
+                self.intermediate['intermediate cost'],
+                label=label,
+                linestyle=linestyle,
+                color=color)
 
-        plt.figure(figsize=figsize)
-        plt.plot(range(self.evals['number of evals']),
-                 self.intermediate['intermediate cost'],
-                 label=label,
-                 linestyle=linestyle,
-                 color=color)
-
-        plt.ylabel('Cost')
-        plt.xlabel('Number of function evaluations')
-        plt.legend()
-        plt.title('Cost progress list')
+        ax.set_ylabel('Cost')
+        ax.set_xlabel('Number of function evaluations')
+        ax.legend()
+        ax.set_title('Cost history')
 
         return

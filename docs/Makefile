@@ -25,12 +25,21 @@ help:
 
 # NDK_PATH := $ ln -s /openqaoa/examples ./notebooks
 
-html: source/notebooks/AdvancedParametrisation.rst
-	sphinx-build -M html source build
+# html: source/notebooks/1_workflows_example.rst
+# 		# source/notebooks/1_workflows_example.rst
+# 		# source/notebooks/2_simulators_comparison.rst
+# 		# source/notebooks/3_qaoa_on_qpus.rst
+# 		# source/notebooks/4_qaoa_variational_parameters.rst
+# 		# source/notebooks/5_advanced_parameterization.rst
+# 		# source/notebooks/6_fast_qaoa_simulator.rst
+# 		# source/notebooks/7_cost_landscapes_w_manual_mode.rst
+# 		# source/notebooks/8_results_example.rst
+# 		# source/notebooks/9_RQAOA_example.rst
+# 	sphinx-build -M html source build
 
 
-source/notebooks/AdvancedParametrisation.rst:
-	./notebook_converter.sh ../examples/advanced_parametrisation.ipynb
+# source/notebooks/1_workflows_example.rst:
+# 	./notebook_converter.sh
 
 clean:
 	rm -r source/notebooks/

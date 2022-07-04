@@ -307,29 +307,36 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
         Matplotlib axes to plot on. Defaults to None.
     """
     
+    # Create plot figure
+    fig = plt.figure(figsize=(10, 6))
+        
     # Extract all graph attributes
     biases_and_nodes = nx.get_node_attributes(G, 'weight')
     biases = list(biases_and_nodes.values())
     edges_and_weights = nx.get_edge_attributes(G, 'weight')
-    weights = list(edges_and_weights.values())
     pos = nx.shell_layout(G)
 
     # extract minimum and maximum weights for side bar limits
-    edge_vmin = min(weights)
-    edge_vmax = max(weights)
-
-    # Define color map
-    cmap = plt.cm.seismic
-
-    # Create plot figure
-    fig = plt.figure(figsize=(10, 6))
+    weights = list(edges_and_weights.values())
     
-    # Define normalized color map
-    sm = plt.cm.ScalarMappable(cmap=cmap,
-                               norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
-    # Add colormap to plot
-    cbar = plt.colorbar(sm)
-    cbar.ax.set_ylabel('Edge Weights', rotation=270)
+    if weights != []:
+        edge_vmin = min(weights)
+        edge_vmax = max(weights)
+
+        # Define color map
+        cmap = plt.cm.seismic
+
+        # Define normalized color map
+        sm = plt.cm.ScalarMappable(cmap=cmap,
+                                norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
+        # Add colormap to plot
+        cbar = plt.colorbar(sm)
+        cbar.ax.set_ylabel('Edge Weights', rotation=270)
+    else:
+        weights = [1] * len(G.edges())
+        edge_vmin = None
+        edge_vmax = None
+        cmap = None    
     
     # If biases are present define reference values and color map for side bar
     if biases != []:
@@ -347,8 +354,8 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
 
     else:
         # Draw graph
-        nx.draw(G, pos, node_color=biases, edge_color=weights, width=1.5,
-                edge_cmap=cmap, cmap=cmap, edge_vmin=edge_vmin,
+        nx.draw(G, pos, edge_color=weights, width=1.5,
+                edge_cmap=cmap, edge_vmin=edge_vmin,
                 edge_vmax=edge_vmax, with_labels=True)
     
     # Show plot

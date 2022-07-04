@@ -14,6 +14,7 @@
 
 from abc import ABC, abstractmethod
 from collections import defaultdict, Counter
+from random import seed
 
 import networkx as nx
 import numpy as np
@@ -203,7 +204,11 @@ class TSP(Problem):
             A random instance of the Traveling Salesman problem.
         """
         n_cities = check_kwargs(['n_cities'], [None], **kwargs)[0]
-
+        seed = kwargs.get('seed')
+        
+        if isinstance(seed, int):
+            np.random.seed(seed)
+        
         box_size = np.sqrt(n_cities)
         coordinates = box_size * np.random.rand(n_cities, 2)
         return TSP(coordinates)
@@ -329,7 +334,11 @@ class NumberPartition(Problem):
             A random instance of the Number Partitioning problem.
         """
         n_numbers = check_kwargs(['n_numbers'], [None], **kwargs)
-
+        seed = kwargs.get('seed')
+        
+        if isinstance(seed, int):
+            np.random.seed(seed)
+        
         numbers = list(map(int, np.random.randint(1, 10, size=n_numbers)))
         return NumberPartition(numbers)
 
@@ -413,8 +422,10 @@ class MaximumCut(Problem):
         -------
             A random instance of the Maximum Cut problem.
         """
-        n_nodes, edge_probability, seed = check_kwargs(['n_nodes', 'edge_probability', 'seed'],
-                                                        [None, None, None], **kwargs)
+        n_nodes, edge_probability = check_kwargs(['n_nodes', 'edge_probability'],
+                                                        [None, None], **kwargs)
+        seed = kwargs.get('seed', None)
+
         G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
         return MaximumCut(G)
 
@@ -484,6 +495,10 @@ class Knapsack(Problem):
             A random instance of the Knapsack problem.
         """
         n_items = check_kwargs(['n_items'], [None], **kwargs)[0]
+        seed = kwargs.get('seed')
+
+        if isinstance(seed, int):
+            np.random.seed(seed)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
@@ -722,8 +737,9 @@ class MinimumVertexCover(Problem):
         A random instance of the Minimum Vertex Cover problem.
         """
 
-        n_nodes, edge_probability, seed = check_kwargs(['n_nodes', 'edge_probability','seed'],
-                                                        [None, None, None], **kwargs)
+        n_nodes, edge_probability = check_kwargs(['n_nodes', 'edge_probability'],
+                                                        [None, None], **kwargs)
+        seed = kwargs.get('seed', None)
         G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
 
         DEFAULT_FIELD = 1.0

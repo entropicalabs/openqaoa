@@ -167,13 +167,13 @@ class QAOA(Optimizer):
             trainable_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
         """
-
         for key, value in kwargs.items():
             if hasattr(self.circuit_properties, key):
-                setattr(self.circuit_properties, key, value)
+                pass
             else:
                 raise ValueError(
                     "Specified argument is not supported by the circuit")
+        self.circuit_properties = CircuitProperties(**kwargs)
 
         return None
 
@@ -210,11 +210,12 @@ class QAOA(Optimizer):
 
         for key, value in kwargs.items():
             if hasattr(self.backend_properties, key):
-                setattr(self.backend_properties, key, value)
+                pass# setattr(self.backend_properties, key, value)
             else:
                 raise ValueError(
                     f'Specified argument `{value}` for `{key}` in set_backend_properties is not supported')
 
+        self.backend_properties = BackendProperties(**kwargs)
         return None
 
     def set_classical_optimizer(self, **kwargs):
@@ -260,11 +261,12 @@ class QAOA(Optimizer):
         """
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
-                setattr(self.classical_optimizer, key, value)
+                pass #setattr(self.classical_optimizer, key, value)
             else:
                 raise ValueError(
                     'Specified argument is not supported by the Classical Optimizer')
 
+        self.classical_optimizer = ClassicalOptimizer(**kwargs)
         return None
 
     def compile(self, problem: QUBO = None, verbose: bool = False):
