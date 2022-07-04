@@ -209,7 +209,6 @@ Contents
    :maxdepth: 3
    :caption: Tutorials
 
-   notebooks/advanced_parametrisation.ipynb
    notebooks/1_workflows_example.ipynb
    notebooks/2_simulators_comparison.ipynb
    notebooks/3_qaoa_on_qpus.ipynb
