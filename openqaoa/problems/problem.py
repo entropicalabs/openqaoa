@@ -734,8 +734,7 @@ class FromDocplex2QUBO:
         for x in self.model.iter_variables():
             self.idx_terms[x] = x.index
             
-        # save a dictionary with the qubo information
-        self.qubo_dict = {}
+        
             
 
     def linear_expr(self, expr):
@@ -756,10 +755,10 @@ class FromDocplex2QUBO:
 
         """
         for x, weight in expr.get_linear_part().iter_terms():
-            try:
-                self.qubo_dict[(self.idx_terms[x], )] += self.sense * weight
-            except:
-                self.qubo_dict[(self.idx_terms[x], )] = self.sense * weight
+            # try:
+            self.qubo_dict[(self.idx_terms[x], )] += self.sense * weight
+            # except:
+            #     self.qubo_dict[(self.idx_terms[x], )] = self.sense * weight
                 
 
     def quadratic_expr(self, expr):
@@ -787,26 +786,27 @@ class FromDocplex2QUBO:
             i = self.idx_terms[x]
             j = self.idx_terms[y]
             if i == j: # if this is a Z1**2 for example
-                try: # if the dictionary do not have the specific key
-                    self.qubo_dict[(i, )] += self.sense * weight
-                except:
-                    self.qubo_dict[(i, )] = self.sense * weight
+                # try: # if the dictionary do not have the specific key
+                self.qubo_dict[(i, )] += self.sense * weight
+                # except:
+                #     self.qubo_dict[(i, )] = self.sense * weight
             else:
-                try:
-                    self.qubo_dict[(i, j)] += self.sense * weight
-                except:
-                    self.qubo_dict[(i, j)] = self.sense * weight
+                # try:
+                self.qubo_dict[(i, j)] += self.sense * weight
+                # except:
+                #     self.qubo_dict[(i, j)] = self.sense * weight
     
-    def linear_constraint(self, resize):
-        penality = 0
+    def linear_constraint(self, multiplier:float):
         for constraint in self.model.iter_linear_constraints():
             if constraint.sense_string == "EQ":
-                penality += resize * (constraint.get_left_expr() - constraint.get_right_expr()) ** 2
-            
-        self.linear_expr(penality)
-        self.quadratic_expr(penality)
+                left_exp = constraint.get_left_expr()
+                right_exp = constraint.get_right_expr()
+                penalty = multiplier * (left_exp + -1*right_exp)**2
+                self.linear_expr(penalty)
+                self.quadratic_expr(penalty)
+        self.constant += penalty.constant
         
-    def get_qubo_problem(self):
+    def get_qubo_problem(self, multiplier: float = 1.0):
         """
         Creates a PUBO problem form a Docplex model
 
@@ -821,6 +821,8 @@ class FromDocplex2QUBO:
         The PUBO encoding of this problem.
 
         """
+        # save a dictionary with the qubo information
+        self.qubo_dict = defaultdict(float)
         #valid the expression is an equation
         self.objective_expr = self.model.objective_expr
         # objective sense
@@ -831,24 +833,27 @@ class FromDocplex2QUBO:
         
         n_variables = self.model.number_of_variables
         # obtain the constant from the model
-        constant = self.objective_expr.constant
+        self.constant = self.objective_expr.constant
         
         
         # save the terms and coeffs form the linear part
         self.linear_expr(self.objective_expr)
         
         # adding the constant part of the QUBO 
-        self.qubo_dict[()] = self.sense * constant
+        # self.qubo_dict[()] = self.sense * constant
             
         #save the terms and coeffs form the quadratic part
         self.quadratic_expr(self.objective_expr)
         
         # Add the linear constraints into the qubo
-        # self.linear_constraint(resize=1)
-
+        self.linear_constraint(multiplier=multiplier)
+        # 
+        terms = list(self.qubo_dict.keys()) + [[]]
+        
+        weights = list(self.qubo_dict.values()) + [self.constant]
             
         #convert the docplex terms in a Hamiltonian
-        return  PUBO(n_variables, self.qubo_dict.keys(), self.qubo_dict.values(), encoding=Encoding.BINARY_ENCODING)
+        return  PUBO(n_variables, terms, weights, encoding=Encoding.BINARY_ENCODING)
         
         
     
