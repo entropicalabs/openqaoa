@@ -241,7 +241,7 @@ class QAOAVariationalBaseParams(ABC):
 
     def __str__(self):
 
-        raise NotImplementedError()
+        return self.__repr__()
 
     @property
     def mixer_1q_angles(self) -> np.ndarray:

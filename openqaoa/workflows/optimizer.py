@@ -23,7 +23,7 @@ from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, Bac
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.utilities import get_mixer_hamiltonian
-from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER
+from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.rqaoa import adaptive_rqaoa, custom_rqaoa
 
@@ -41,32 +41,30 @@ class QAOA(Optimizer):
     """
     A class implementing a QAOA workflow end to end.
 
-    It's basic usage cosinsts of 
-    1. Initialisation
+    It's basic usage consists of 
+    1. Initialization
     2. Compilation
-    3. Optimisation
+    3. Optimization
 
     .. warning::
         To all our dear beta testers: the setter functions will most likely change. Bear with us as we figure our the smoother way to create the workflows :-)
-        
+
 
     .. note::
-        The attributes of the QAOA class should be initialised using the set methods of QAOA. For example, to set the circuit's depth to 10 you should run `set_circuit_properties(p=10)`
+        The attributes of the QAOA class should be initialized using the set methods of QAOA. For example, to set the circuit's depth to 10 you should run `set_circuit_properties(p=10)`
 
     Attributes
     ----------
-        circuit_properties: CircuitProperties
-            The circut properties of the QAOA workflow. Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
+        circuit_properties: `CircuitProperties`
+            The circuit properties of the QAOA workflow. Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
             For a complete list of its parameters and usage please see the method set_circuit_properties
-        backend_properties: BackendProperties
+        backend_properties: `BackendProperties`
             The backend properties of the QAOA workflow. Use to set the backend properties such as the number of shots and the cvar values.
             For a complete list of its parameters and usage please see the method set_backend_properties
-        classical_optimizer: ClassicalOptimizer
+        classical_optimizer: `ClassicalOptimizer`
             The classical optimiser properties of the QAOA workflow. Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
             For a complete list of its parameters and usage please see the method set_classical_optimizer
-        intialised_w_prob: bool
-            Deprecated feature: TOBE REMOVED
-        local_simulators: list[str]
+        local_simulators: list[str]`
             A list containing the available local simulators
         mixer_hamil: Hamiltonian
             The desired mixer hamiltonian
@@ -80,10 +78,10 @@ class QAOA(Optimizer):
             The openQAOA representation of the backend to be used to execute the quantum circuit
         optimizer: OptimizeVQA
             The classical optimiser
-        results_information: dict
-            A dictonary containg the logs of the optimiser
-        solution: list
-            A list providing the most probable bitstring
+        results: `Result`
+            Contains the logs of the optimisation process
+        compiled: `Bool`
+            A boolean flag to check whether the QAOA object has been correctly compiled at least once
 
     Examples
     --------
@@ -94,7 +92,7 @@ class QAOA(Optimizer):
     >>> q.compile(QUBO)
     >>> q.optimise()
 
-    Where `QUBO` is a an isntance of `openqaoa.problems.problem.QUBO`
+    Where `QUBO` is a an instance of `openqaoa.problems.problem.QUBO`
 
     If you want to use non-default parameters:
 
@@ -106,17 +104,30 @@ class QAOA(Optimizer):
     >>> q_custom.compile(qubo_problem)
     >>> q_custom.optimize()
     """
-    def __init__(self, device = DeviceLocal('vectorized')):
+
+    def __init__(self, device=DeviceLocal('vectorized')):
         self.circuit_properties = CircuitProperties()
         self.device = device
         self.backend_properties = BackendProperties()
         self.classical_optimizer = ClassicalOptimizer()
-        self.intialised_w_prob = False
         self.local_simulators = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
+        self.cloud_provider = list(DEVICE_ACCESS_OBJECT_MAPPER.keys())
+        self.compiled = False
 
     def set_device(self, device: DeviceBase):
+        """"
+        Specify the device to be used by the QAOA.
+
+        Parameters
+        ----------
+        location: `str`
+            Can be either local, qcs, or ibmq
+        name: `str`
+            The name of the device to be used, for local simulators please refer to `q.local_simulators`.
+            For cloud providers please refer to the provider's naming conventions
+        """
         self.device = device
-        
+
     def set_circuit_properties(self, **kwargs):
         """
         Specify the circuit properties to construct QAOA circuit
@@ -147,6 +158,8 @@ class QAOA(Optimizer):
                 Parameterisation of the mixer hamiltonian:
                 `'x'`: Randomly initialise circuit parameters
                 `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
+            mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
+                The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`.
             annealing_time: `float`
                 Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
             ramp_time: `float`
@@ -154,17 +167,13 @@ class QAOA(Optimizer):
             trainable_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
         """
-        if self.intialised_w_prob:
-            raise AttributeError(
-                "Cannot change circuit properties after initialisation with the problem")
-        else:
-            for key, value in kwargs.items():
-                if hasattr(self.circuit_properties, key):
-                    pass
-                else:
-                    raise ValueError(
-                        "Specified argument is not supported by the circuit")
-            self.circuit_properties = CircuitProperties(**kwargs)
+        for key, value in kwargs.items():
+            if hasattr(self.circuit_properties, key):
+                pass
+            else:
+                raise ValueError(
+                    "Specified argument is not supported by the circuit")
+        self.circuit_properties = CircuitProperties(**kwargs)
 
         return None
 
@@ -224,10 +233,10 @@ class QAOA(Optimizer):
                 Maximum number of iterations.
             jac: str
                 Method to compute the gradient vector. Choose from:
-                ['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']        
+                ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
             hess: str
                 Method to compute the hessian. Choose from:
-                ['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']
+                ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
             constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
                 Scipy-based constraints on parameters of optimization. Will be available soon
             bounds: scipy.optimize.Bounds
@@ -260,11 +269,7 @@ class QAOA(Optimizer):
         self.classical_optimizer = ClassicalOptimizer(**kwargs)
         return None
 
-    def asdict(self):
-        attributes_dict = convert2serialize(self)
-        return attributes_dict
-
-    def compile(self, problem: QUBO = None, verbose: bool = True):
+    def compile(self, problem: QUBO = None, verbose: bool = False):
         """
         Initialise the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement
@@ -274,7 +279,7 @@ class QAOA(Optimizer):
 
         .. tip::
             Set Verbose to false if you are running batch computations! 
-            
+
         Parameters
         ----------
         problem: `Problem`
@@ -283,7 +288,7 @@ class QAOA(Optimizer):
             Set True to have a summary of QAOA to displayed after compilation
         """
         self.mixer_hamil = get_mixer_hamiltonian(n_qubits=problem.n,
-                                                 mixer_type = self.circuit_properties.mixer_hamiltonian,
+                                                 mixer_type=self.circuit_properties.mixer_hamiltonian,
                                                  qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
                                                  coeffs=self.circuit_properties.mixer_coeffs)
 
@@ -292,17 +297,23 @@ class QAOA(Optimizer):
 
         self.circuit_params = QAOACircuitParams(
             self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p)
-        self.variate_params = create_qaoa_variational_params(qaoa_circuit_params=self.circuit_params, params_type=self.circuit_properties.param_type,
-                                                             init_type=self.circuit_properties.init_type, variational_params_dict=self.circuit_properties.variational_params_dict,
-                                                             linear_ramp_time=self.circuit_properties.linear_ramp_time, q=self.circuit_properties.q, seed=self.circuit_properties.seed)
+        self.variate_params = create_qaoa_variational_params(qaoa_circuit_params=self.circuit_params,
+                                                             params_type=self.circuit_properties.param_type,
+                                                             init_type=self.circuit_properties.init_type, 
+                                                             variational_params_dict=self.circuit_properties.variational_params_dict,
+                                                             linear_ramp_time=self.circuit_properties.linear_ramp_time, 
+                                                             q=self.circuit_properties.q, 
+                                                             seed=self.circuit_properties.seed)
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
-                                        device = self.device,
+                                        device=self.device,
                                         **self.backend_properties.__dict__)
 
         self.optimizer = get_optimizer(vqa_object=self.backend,
                                        variational_params=self.variate_params,
                                        optimizer_dict=self.classical_optimizer.asdict())
+
+        self.compiled = True
 
         if verbose:
             print('\t \033[1m ### Summary ###\033[0m')
@@ -310,34 +321,40 @@ class QAOA(Optimizer):
             print(
                 f'Solving QAOA with \033[1m {self.device.device_name} \033[0m on  \033[1m{self.device.device_location}\033[0m')
             print(f'Using p={self.circuit_properties.p} with {self.circuit_properties.param_type} parameters initialsied as {self.circuit_properties.init_type}')
-            
 
             if self.device.device_name == 'vectorized':
-                print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations')
-            
+                print(
+                    f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations')
+
             else:
-                print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations. Each iteration will contain \033[1m{self.backend_properties.n_shots} shots\033[0m')
+                print(
+                    f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations. Each iteration will contain \033[1m{self.backend_properties.n_shots} shots\033[0m')
                 print(
                     f'The total numner of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
 
         return None
 
-    def optimize(self):
+    def optimize(self, verbose=False):
         '''
         A method running the classical optimisation loop
         '''
 
-        self.optimizer.optimize()
-        self.results = self.optimizer.qaoa_result # TODO: results and qaoa_results will differ
+        if self.compiled == False:
+            raise ValueError('Please compile the QAOA before optimizing it!')
 
-        print(f'optimization completed.')
+        self.optimizer.optimize()
+        # TODO: results and qaoa_results will differ
+        self.results = self.optimizer.qaoa_result
+
+        if verbose:
+            print(f'optimization completed.')
         return
 
 
 class RQAOA(Optimizer):
     """
     RQAOA optimizer class.
-    
+
     Attributes
     ----------
     algorithm: `str`
@@ -367,9 +384,9 @@ class RQAOA(Optimizer):
         self.algorithm = 'rqaoa'
         self.qaoa = qaoa
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
-        self.rqaoa_mixer = {'type':self.qaoa.circuit_properties.mixer_hamiltonian,
-                            'connectivity':self.qaoa.circuit_properties.mixer_qubit_connectivity,
-                            'coeffs':self.qaoa.circuit_properties.mixer_coeffs}
+        self.rqaoa_mixer = {'type': self.qaoa.circuit_properties.mixer_hamiltonian,
+                            'connectivity': self.qaoa.circuit_properties.mixer_qubit_connectivity,
+                            'coeffs': self.qaoa.circuit_properties.mixer_coeffs}
 
     def set_rqaoa_parameters(self, **kwargs):
         """
@@ -414,19 +431,19 @@ class RQAOA(Optimizer):
                 params_type=self.qaoa.circuit_properties.param_type,
                 init_type=self.qaoa.circuit_properties.init_type,
                 optimizer_dict=self.qaoa.classical_optimizer.asdict(),
-                backend_properties = self.qaoa.backend_properties.__dict__)
+                backend_properties=self.qaoa.backend_properties.__dict__)
         elif self.rqaoa_parameters.rqaoa_type == 'custom':
             res = custom_rqaoa(
                 hamiltonian=self.qaoa.cost_hamil,
                 mixer=self.rqaoa_mixer,
                 p=self.qaoa.circuit_properties.p,
                 n_cutoff=self.rqaoa_parameters.n_cutoff,
-                steps= self.rqaoa_parameters.steps,
+                steps=self.rqaoa_parameters.steps,
                 device=self.qaoa.device,
                 params_type=self.qaoa.circuit_properties.param_type,
                 init_type=self.qaoa.circuit_properties.init_type,
                 optimizer_dict=self.qaoa.classical_optimizer.asdict(),
-                backend_properties = self.qaoa.backend_properties.__dict__)
+                backend_properties=self.qaoa.backend_properties.__dict__)
         else:
             raise f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom'
 
@@ -436,58 +453,3 @@ class RQAOA(Optimizer):
     def asdict(self):
         attributes_dict = convert2serialize(self)
         return attributes_dict
-
-
-def format_output_results(optimizer_results: dict, classical_optimizer: dict, top_k_solutions: int) -> dict:
-    """
-    Formats the output result. The user is able to control the information that is returned
-    from the optimization process with the flags (count_progress, cost_progress
-    and parameter_log).
-
-    Returns
-    -------
-        output:
-            Appropriately formatted results of the optimization.
-    """
-
-    if classical_optimizer['optimization_progress']:
-        lowest_cost_index = np.argmin(optimizer_results['cost progress list'])
-
-        if len(optimizer_results['count progress list']) != 0:
-            final_state = optimizer_results['count progress list'][lowest_cost_index]
-        elif len(optimizer_results['probability progress list']) != 0:
-            final_state = optimizer_results['probability progress list'][lowest_cost_index]
-    else:
-        if len(optimizer_results['count progress list']) != 0:
-            final_state = optimizer_results['count progress list'][0]
-        elif len(optimizer_results['probability progress list']) != 0:
-            final_state = optimizer_results['probability progress list'][0]
-
-    solutions = sorted(final_state, key=final_state.get,
-                       reverse=True)[:top_k_solutions]
-
-    output_solution = [[int(i) for i in each_solution]
-                       for each_solution in solutions]
-
-    output = {"cost": optimizer_results['optimal cost'],
-              "solution": output_solution,
-              "function evals": optimizer_results['cost function calls'],
-              "optimizer raw result": optimizer_results['opt result'],
-              "optimal angles": optimizer_results['final params'],
-              "optimization method": classical_optimizer['method'],
-              "eqaoa_version": '0.0.1'}  # TO CHANGE
-
-    if classical_optimizer['optimization_progress']:
-        output.update(
-            {"count progress": optimizer_results['count progress list']})
-        output.update(
-            {"probability progress": optimizer_results['probability progress list']})
-
-    if classical_optimizer['cost_progress']:
-        output.update(
-            {"cost progress": optimizer_results['cost progress list']})
-
-    if classical_optimizer['parameter_log']:
-        output.update({"parameter log": optimizer_results['parameter log']})
-
-    return output

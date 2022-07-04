@@ -112,6 +112,31 @@ class CircuitProperties(Parameters):
                 f"Number of layers `p` cannot be smaller or equal to zero. Value {value} was provided")
         self._p = value
 
+    @property
+    def annealing_time(self):
+        return self._annealing_time
+
+    @annealing_time.setter
+    def annealing_time(self, value):
+        if value <= 0:
+            raise ValueError(
+                f"The annealing time `annealing_time` cannot be smaller or equal to zero. Value {value} was provided")
+        self._annealing_time = value
+
+
+    # @property
+    # def mixer_qubit_connectivity(self):
+    #     return self._mixer_qubit_connectivity
+
+    # @annealing_time.setter
+    # def mixer_qubit_connectivity(self, value):
+    #     print(value)
+    #     if (self.mixer_hamiltonian != 'xy') and (value != None):
+    #         self._mixer_qubit_connectivity = None
+    #         raise ValueError(f"mixer_qubit_connectivity can be used if and only if `mixer_hamiltonian` is set to `xy`")
+    #     else:
+    #         print(value)
+    #         self._mixer_qubit_connectivity = value
 
 class BackendProperties(Parameters):
     """
@@ -134,7 +159,9 @@ class BackendProperties(Parameters):
         The value of the CVaR parameter.
     qubit_layout: `Union[List[int], np.ndarray]`
         Mapping from physical to logical qubit indices, used to eventually 
-        construct the quantum circuit.
+        construct the quantum circuit.  For example, for a system composed by 3 qubits
+       `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
+        and the right hand side is the logical qubits
     """
 
     def __init__(self,
@@ -183,11 +210,11 @@ class ClassicalOptimizer(Parameters):
         Maximum number of iterations.
     jac: str
         Method to compute the gradient vector. Choose from:
-        `['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']        
+        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
     hess:
         Method to compute the hessian. Choose from:
-        `['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']
-    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
+        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
+    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints 
         Scipy-based constraints on parameters of optimization 
     bounds: scipy.scipy.optimize.Bounds
         Scipy-based bounds on parameters of optimization 
