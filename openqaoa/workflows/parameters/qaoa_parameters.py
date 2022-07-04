@@ -59,7 +59,7 @@ class CircuitProperties(Parameters):
         self.init_type = init_type
         self.qubit_register = qubit_register
         self.p = p
-        self.q = q if param_type.lower() == 'fourier' else None
+        self.q = q if param_type.lower() in ['fourier','fourier_extended', 'fourier_w_bias'] else None
         self.variational_params_dict = variational_params_dict
         self.annealing_time = annealing_time if annealing_time is not None else 0.7*self.p
         self.linear_ramp_time = linear_ramp_time if linear_ramp_time is not None else 0.7*self.p
@@ -157,6 +157,8 @@ class BackendProperties(Parameters):
         The number of shots to be used for the shot-based computation.
     cvar_alpha: `float`
         The value of the CVaR parameter.
+    noise_model: `NoiseModel`
+        The noise model to be used for the shot-based simulator.
     qubit_layout: `Union[List[int], np.ndarray]`
         Mapping from physical to logical qubit indices, used to eventually 
         construct the quantum circuit.  For example, for a system composed by 3 qubits
