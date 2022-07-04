@@ -63,3 +63,8 @@ Helper functions
     :members:
     :show-inheritance:
     :inherited-members:
+
+.. autoclass:: openqaoa.problems.problem.ShortestPath
+    :members:
+    :show-inheritance:
+    :inherited-members:
