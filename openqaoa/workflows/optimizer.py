@@ -180,10 +180,11 @@ class QAOA(Optimizer):
 
         for key, value in kwargs.items():
             if hasattr(self.circuit_properties, key):
-                setattr(self.circuit_properties, key, value)
+                pass
             else:
                 raise ValueError(
                     "Specified argument is not supported by the circuit")
+        self.circuit_properties = CircuitProperties(**kwargs)
 
         return None
 
