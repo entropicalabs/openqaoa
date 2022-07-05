@@ -107,7 +107,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         """
 
         angles_list = self.obtain_angles_for_pauli_list(
-            self.pseudo_circuit, params)
+            self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = self.parametric_circuit.bind_parameters(
             memory_map)
@@ -135,7 +135,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             parametric_circuit.h(self.qureg)
 
         self.qiskit_parameter_list = []
-        for each_gate in self.pseudo_circuit:
+        for each_gate in self.abstract_circuit:
             angle_param = Parameter(str(each_gate.pauli_label))
             self.qiskit_parameter_list.append(angle_param)
             each_gate.rotation_angle = angle_param
