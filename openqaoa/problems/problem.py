@@ -774,25 +774,25 @@ class MinimumVertexCover(Problem):
 
         return QUBO(self.G.number_of_nodes(), list(terms), list(weights))
 
-
 class ShortestPath(Problem):
+    """
+    Creates an instance of the Shortest Path problem.
+
+    Parameters
+    ----------
+    G: nx.Graph
+        The input graph as NetworkX graph instance.
+    source: int
+        The index of the source node.
+    dest: int
+        The index of the destination node.
+
+    Returns
+    -------
+        An instance of the Shortest Path problem.
+    """
     def __init__(self, G, source, dest):
-        """
-        Creates an instance of the Shortest Path problem
-
-        Parameters
-        ----------
-        G: nx.Graph
-            The input graph as NetworkX graph instance.
-        source: int
-            The index of the source node.
-        dest: int
-            The index of the destination node.
-
-        Returns
-        -------
-            An instance of the Shortest Path problem.
-        """
+        
         # Relabel nodes to integers starting from 0
         mapping = dict(zip(G, range(G.number_of_nodes())))
         self.G = nx.relabel_nodes(G, mapping)
