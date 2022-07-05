@@ -143,7 +143,7 @@ def _build_cost_hamiltonian(n_qubits: int,
         the Hamiltonian as a diagonal matrix reshaped to a [2]*n_qubits dimensional array
 
     """
-
+    
     bias_qubits = cost_hamiltonian.qubits_singles
     biases = cost_hamiltonian.single_qubit_coeffs
     pairs = cost_hamiltonian.qubits_pairs
@@ -151,6 +151,13 @@ def _build_cost_hamiltonian(n_qubits: int,
 
     terms = cost_hamiltonian.terms
     weights = cost_hamiltonian.coeffs
+    
+    # Check for non-classical terms
+    cost_ham_pauli_str_lst = [term.pauli_str for term in terms]
+    for term in cost_ham_pauli_str_lst:
+        if str(term) != 'Z' and str(term) != 'ZZ':
+            raise Exception(f"Currently, only classical cost Hamiltonians that consists of 'Z' and 'ZZ' terms are supported, but a '{term}' term was encountered.")
+        
 
     ## ZZ operator on first two qubits, identity on all others to the right
     # Diagonal matrix (vector) for cost function
