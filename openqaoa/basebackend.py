@@ -466,8 +466,6 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
         samples = self.sample_from_wavefunction(params, n_shots)
 
         unique_nums, frequency = np.unique(samples, return_counts=True)
-        # unique_shots = [np.binary_repr(num, self.n_qubits)[
-        #     ::-1] for num in unique_nums]
         counts = dict(zip(unique_nums, frequency))
 
         return counts
