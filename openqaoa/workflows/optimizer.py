@@ -303,10 +303,10 @@ class QAOA(Optimizer):
 
         if verbose:
             print('\t \033[1m ### Summary ###\033[0m')
-            print(f'OpenQAOA has ben compiled with the following properties')
+            print(f'OpenQAOA has been compiled with the following properties')
             print(
                 f'Solving QAOA with \033[1m {self.device.device_name} \033[0m on  \033[1m{self.device.device_location}\033[0m')
-            print(f'Using p={self.circuit_properties.p} with {self.circuit_properties.param_type} parameters initialsied as {self.circuit_properties.init_type}')
+            print(f'Using p={self.circuit_properties.p} with {self.circuit_properties.param_type} parameters initialized as {self.circuit_properties.init_type}')
             
 
             if self.device.device_name == 'vectorized':
@@ -315,7 +315,7 @@ class QAOA(Optimizer):
             else:
                 print(f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations. Each iteration will contain \033[1m{self.backend_properties.n_shots} shots\033[0m')
                 print(
-                    f'The total numner of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
+                    f'The total number of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
 
         return None
 
