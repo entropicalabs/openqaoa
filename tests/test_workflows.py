@@ -77,7 +77,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             assert q.device.device_name == d
             assert q.device.device_location == 'local'
 
-
     def test_set_device_cloud(self):
         """"
         Check that all QPU-provider related devices are correctly initialised

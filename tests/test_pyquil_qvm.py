@@ -127,7 +127,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
 
         gate_names = [instr.name for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Gate]
-        assert gate_names == ['H', 'H', 'RZ', 'RZ', 'RX', 'RX']
+        assert gate_names == ['RZ','RX','RZ','RX','RZ','RX','RZ','RX', 'RZ', 'RZ', 'RX', 'RX']
 
         measurement_gate_no = len([instr for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Measurement])
         assert measurement_gate_no == 2
@@ -139,7 +139,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
 
         gate_names = [instr.name for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Gate]
-        assert gate_names == ['H', 'H', 'RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX']
+        assert gate_names == ['RZ', 'RX', 'RZ', 'RX', 'RZ', 'RX', 'RZ', 'RX', 'RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX']
 
         measurement_gate_no = len([instr for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Measurement])
         assert measurement_gate_no == 2
@@ -160,7 +160,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
                                               n_shots = 10, prepend_state = None, 
                                               append_state = None, init_hadamard = True, cvar_alpha = 1)
 
-        assert ['H', 'H', 'RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX'] == [instr.name for instr in pyquil_backend.parametric_circuit if type(instr) == quilbase.Gate]
+        assert ['RZ', 'RX', 'RZ', 'RX', 'RZ', 'RX', 'RZ', 'RX', 'RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX'] == [instr.name for instr in pyquil_backend.parametric_circuit if type(instr) == quilbase.Gate]
 
         # Without hadamard
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)

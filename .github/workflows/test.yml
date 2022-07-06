@@ -105,6 +105,7 @@ jobs:
       
       - name: Build and test Sphinx docs
         run: |
+          sudo apt-get install pandoc
           cd docs/
           make html
   

@@ -67,7 +67,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
     ----------
     n_qubits: `int`
         The number of qubits in the system.
-    qubit_connectivity: `list` or `str`, optional
+    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
         The connectivity of the qubits in the mixer Hamiltonian.
     coeffs: `list`, optional
         The coefficients of the XY terms in the Hamiltonian.
@@ -79,7 +79,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
 
     Notes
     -----
-    The XY mixer is not implemented with $$RXY$$ Pauli Gates, but $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
+        The XY mixer is not implemented with $$RXY$$ Pauli Gates, but $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
@@ -105,7 +105,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
             1, 'Qubit index in connectivity list is out of range'
         assert min(indices) >= 0, 'Qubit index should be a positive integer'
 
-    # If no coefficients provided, set all to the nnumber of terms
+    # If no coefficients provided, set all to the number of terms
     coeffs = [0.5]*2*len(qubit_connectivity) if coeffs is None else coeffs
 
     # Initialize list of terms
@@ -307,29 +307,36 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
         Matplotlib axes to plot on. Defaults to None.
     """
     
+    # Create plot figure
+    fig = plt.figure(figsize=(10, 6))
+        
     # Extract all graph attributes
     biases_and_nodes = nx.get_node_attributes(G, 'weight')
     biases = list(biases_and_nodes.values())
     edges_and_weights = nx.get_edge_attributes(G, 'weight')
-    weights = list(edges_and_weights.values())
     pos = nx.shell_layout(G)
 
     # extract minimum and maximum weights for side bar limits
-    edge_vmin = min(weights)
-    edge_vmax = max(weights)
-
-    # Define color map
-    cmap = plt.cm.seismic
-
-    # Create plot figure
-    fig = plt.figure(figsize=(10, 6))
+    weights = list(edges_and_weights.values())
     
-    # Define normalized color map
-    sm = plt.cm.ScalarMappable(cmap=cmap,
-                               norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
-    # Add colormap to plot
-    cbar = plt.colorbar(sm)
-    cbar.ax.set_ylabel('Edge Weights', rotation=270)
+    if weights != []:
+        edge_vmin = min(weights)
+        edge_vmax = max(weights)
+
+        # Define color map
+        cmap = plt.cm.seismic
+
+        # Define normalized color map
+        sm = plt.cm.ScalarMappable(cmap=cmap,
+                                norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
+        # Add colormap to plot
+        cbar = plt.colorbar(sm)
+        cbar.ax.set_ylabel('Edge Weights', rotation=270)
+    else:
+        weights = [1] * len(G.edges())
+        edge_vmin = None
+        edge_vmax = None
+        cmap = None    
     
     # If biases are present define reference values and color map for side bar
     if biases != []:
@@ -347,8 +354,8 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
 
     else:
         # Draw graph
-        nx.draw(G, pos, node_color=biases, edge_color=weights, width=1.5,
-                edge_cmap=cmap, cmap=cmap, edge_vmin=edge_vmin,
+        nx.draw(G, pos, edge_color=weights, width=1.5,
+                edge_cmap=cmap, edge_vmin=edge_vmin,
                 edge_vmax=edge_vmax, with_labels=True)
     
     # Show plot
@@ -788,14 +795,14 @@ def exp_val_single(spin: int, prob_dict: dict):
     """
     Computes expectation value <Z> of a given spin.
 
-    Parameters:
+    Parameters
     ----------
     spin: `int`
         Spin whose expectation value we compute.
     prob_dict: `dict`
         Dictionary containing the configuration probabilities of each spin.
 
-    Returns:
+    Returns
     -------
     exp_val: `float`
         Expectation value of the spin
@@ -968,7 +975,7 @@ def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: 
     
     NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
 
-    Parameters:
+    Parameters
     ----------
     spin: `int`
         The spin whose expectation value we compute.
@@ -1127,7 +1134,7 @@ def energy_expectation_analytical(angles:Union[list,tuple],hamiltonian:Hamiltoni
     NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian and classical
     Hamiltonians with up to quadratic terms.
 
-    Parameters:
+    Parameters
     ----------
     angles: `list` or `tuple`
         QAOA angles at which the Hamiltonian expectation value is computed
@@ -1167,7 +1174,7 @@ def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
     Parameters
     ----------
     reg: `list`
-    Rregister of qubits in the system.
+        register of qubits in the system.
 
     Returns
     -------

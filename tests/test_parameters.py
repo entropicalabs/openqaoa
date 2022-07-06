@@ -23,6 +23,8 @@ from scipy.fft import dst, dct
 from openqaoa.qaoa_parameters import *
 from openqaoa.utilities import X_mixer_hamiltonian
 
+from openqaoa.qaoa_parameters.qaoa_params import create_qaoa_variational_params, PARAMS_CLASSES_MAPPER
+
 register = [0, 1, 2]
 terms = [[0, 1], [2], [0, 2]]
 weights = [1, 0.5, -2.0]
@@ -333,6 +335,22 @@ class TestingQAOAParameters(unittest.TestCase):
                           betas_pairs,
                           gammas_singles,
                           gammas_pairs)
+        
+    def test_str_and_repr(self):
+        
+        qaoa_circuit_params = QAOACircuitParams(
+            cost_hamiltonian, mixer_hamiltonian, p=2)
+        
+        for each_key_value in PARAMS_CLASSES_MAPPER.keys():
+            variate_params = create_qaoa_variational_params(qaoa_circuit_params, 
+                                                            params_type = each_key_value, 
+                                                            init_type = 'rand', 
+                                                            q = 1, 
+                                                            total_annealing_time = 1)
+            
+            self.assertEqual(variate_params.__str__(), variate_params.__repr__())
+        
+        
     # # Plot Tests
 
     # def test_StandardParams_plot(self):
