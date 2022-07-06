@@ -29,5 +29,5 @@ Adaptive RQAOA
 References
 ----------
 
-[1] S. Bravyi, A. Kliesch, R. Koenig, and E. Tang, `Physical Review Letters 125, 260505 (2020) <https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.260505>`.
+[1] S. Bravyi, A. Kliesch, R. Koenig, and E. Tang, `Physical Review Letters 125, 260505 (2020) <https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.260505>`_.
 [2] E.I. Rodriguez Chiacchio, V. Sharma, E. Munro (Work in progress)

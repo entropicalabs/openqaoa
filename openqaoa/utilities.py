@@ -79,7 +79,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
 
     Notes
     -----
-        The XY mixer is not implemented with $$RXY$$ Pauli Gates, but $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
+        The XY mixer is not implemented with $$RXY$$ Gates, but with $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
