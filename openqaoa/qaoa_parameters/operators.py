@@ -503,11 +503,11 @@ class Hamiltonian:
             Symbolic expression for the Hamiltonian.
         """
         # Ensure sympy is installed
-        try:
-            from sympy import Symbol
-        except ImportError:
-            raise ImportError(
-                "Sympy is not installed. Pip install sympy to use this method")
+        # try:
+        from sympy import Symbol
+        # except ImportError:
+        #     raise ImportError(
+        #         "Sympy is not installed. Pip install sympy to use this method")
                 
         # Generate expression
         hamiltonian_expression = Symbol(str(self.constant))
