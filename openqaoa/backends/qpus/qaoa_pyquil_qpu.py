@@ -19,7 +19,7 @@ from pyquil import Program, gates, quilbase
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...devices import DevicePyquil
-from ...qaoa_parameters.pauligate import RZZPauliGate, SWAPGate
+from ...qaoa_parameters.gatemap import RZZGateMap, SWAPGateMap
 
 
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
@@ -145,7 +145,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             A pyquil.Program (executable) object.
         """
         angles_list = np.array(self.obtain_angles_for_pauli_list(
-            self.pseudo_circuit, params), dtype=float)
+            self.abstract_circuit, params), dtype=float)
         angle_declarations = list(self.prog_exe.declarations.keys())
         angle_declarations.remove('ro')
         for i, param_name in enumerate(angle_declarations):
@@ -196,12 +196,12 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                 parametric_circuit += gates.RX(-np.pi/2, self.qubit_mapping[i]) 
 
         # create a list of gates in order of application on quantum circuit
-        for each_gate in self.pseudo_circuit:
+        for each_gate in self.abstract_circuit:
             gate_label = ''.join(str(label) for label in each_gate.pauli_label)
             angle_param = parametric_circuit.declare(
                 f'pauli{gate_label}', 'REAL', 1)
             each_gate.rotation_angle = angle_param
-            if isinstance(each_gate, RZZPauliGate) or isinstance(each_gate, SWAPGate):
+            if isinstance(each_gate, RZZGateMap) or isinstance(each_gate, SWAPGateMap):
                 decomposition = each_gate.decomposition('standard2')
             else:
                 decomposition = each_gate.decomposition('standard')

@@ -689,7 +689,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.assign_angles(params)
         
         low_level_gate_list = []
-        for each_gate in self.pseudo_circuit:
+        for each_gate in self.abstract_circuit:
             low_level_gate_list.extend(each_gate.decomposition('trivial'))
 
         for each_tuple in low_level_gate_list:

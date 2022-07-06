@@ -287,13 +287,13 @@ class QAOA(Optimizer):
         verbose: bool
             Set True to have a summary of QAOA to displayed after compilation
         """
-        self.mixer_hamil = get_mixer_hamiltonian(n_qubits=problem.n,
+        self.cost_hamil = Hamiltonian.classical_hamiltonian(
+            terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
+        
+        self.mixer_hamil = get_mixer_hamiltonian(n_qubits=self.cost_hamil.n_qubits,
                                                  mixer_type=self.circuit_properties.mixer_hamiltonian,
                                                  qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
                                                  coeffs=self.circuit_properties.mixer_coeffs)
-
-        self.cost_hamil = Hamiltonian.classical_hamiltonian(
-            terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
 
         self.circuit_params = QAOACircuitParams(
             self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p)

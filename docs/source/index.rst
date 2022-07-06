@@ -10,7 +10,7 @@ Features
 Key features of OpenQAOA:
 
 * Simple yet customisable workflows for QAOA and RQAOA deployable on
-   * IMBQ devices
+   * IBMQ devices
    * Rigettis' Quantum Clound Services
    * AWS's Braket
    * Local simulators (including Rigettis' QVM, IBM's Qiskit, and Entropica Labs' vectorized simulator)
@@ -51,6 +51,7 @@ Your first QAOA workflow
 Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
 
 First, create a problem instance. For example, an instance of vertex cover:
+
 .. code-block:: python
 
    from openqaoa.problems.problem import MinimumVertexCover
@@ -105,7 +106,7 @@ Currently, the available devices are:
    * - `local`
      - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`
    * - `IBMQ`
-     - Please check the IMBQ backends available to your account
+     - Please check the IBMQ backends available to your account
    * - `Rigetti's QCS`
      - `[nq-qvm, Aspen-11, Aspen-M-1]`
 
@@ -155,7 +156,8 @@ then, specify terms and weights in order to define the cost hamiltonian
 
    cost_hamil = Hamiltonian.classical_hamiltonian(terms=terms,coeffs=coeffs,constant=0)
    mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
-   After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
+   
+After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
 
 .. code-block:: python
 

@@ -140,7 +140,7 @@ rqaoa_type can take two values which select elimination strategies. The user can
 
 The user is also free to directly access the source code without using the workflow API.
 
-* [comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
+* [comparing vectorized, pyquil, and qiskit backends](examples/test_backends_correctness.ipynb)
 * [Parameter sweep for vectorised](examples/openqaoa_example_vectorised.ipynb)
 
 The basic procedure is the following
