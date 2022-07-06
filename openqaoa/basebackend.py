@@ -138,7 +138,7 @@ class QAOABaseBackend(VQABaseBackend):
     def assign_angles(self, params: QAOAVariationalBaseParams) -> List[RotationGateMap]:
         """
         Assigns the angle values of the variational parameters to the circuit gates
-        specified as a list of gates in the ``pseudo_circuit``.
+        specified as a list of gates in the ``abstract_circuit``.
 
         Parameters
         ----------
@@ -165,7 +165,7 @@ class QAOABaseBackend(VQABaseBackend):
                     angle = params.cost_1q_angles[pauli_label_index[0],
                                                   pauli_label_index[1]]
             each_pauli.rotation_angle = angle
-        self.pseudo_circuit = abstract_pauli_circuit
+        self.abstract_circuit = abstract_pauli_circuit
 
     def obtain_angles_for_pauli_list(self,
                                      input_pauli_list: List[RotationGateMap],
