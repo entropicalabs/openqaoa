@@ -206,21 +206,20 @@ class TestingVanillaQAOA(unittest.TestCase):
         Updating all attributes at the same time.
         """
         
-        default_pairings = {'param_type': 'standard', 
-                            'init_type': 'ramp', 
-                            'qubit_register': [], 
-                            'p': 1, 
-                            'q': None, 
-                            'annealing_time': 0.7, 
-                            'linear_ramp_time': 0.7, 
-                            'variational_params_dict': {}, 
-                            'mixer_hamiltonian': 'x', 
-                            'mixer_qubit_connectivity': None, 
-                            'mixer_coeffs': None, 
-                            'seed': None}
+#         default_pairings = {'param_type': 'standard', 
+#                             'init_type': 'ramp', 
+#                             'qubit_register': [], 
+#                             'p': 1, 
+#                             'q': None, 
+#                             'annealing_time': 0.7, 
+#                             'linear_ramp_time': 0.7, 
+#                             'variational_params_dict': {}, 
+#                             'mixer_hamiltonian': 'x', 
+#                             'mixer_qubit_connectivity': None, 
+#                             'mixer_coeffs': None, 
+#                             'seed': None}
         
         q = QAOA()
-        print(q.circuit_properties.variational_params_dict)
 
         # TODO: Some weird error related to the initialisation of QAOA here
 #         for each_key, each_value in default_pairings.items():
@@ -505,8 +504,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         Different methods would return different Optimizer classes.
         Check that the correct class is returned.
         """
-        
-        print(available_optimizers())
         
         g = nw.circulant_graph(6, [1])
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
