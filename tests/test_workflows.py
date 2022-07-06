@@ -109,9 +109,8 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         q = QAOA()
         q.set_classical_optimizer(optimization_progress = True)
-            
-        with pytest.raises(AttributeError):
-            q.optimize()
+
+        self.assertRaises(ValueError, lambda: q.optimize())
             
     def test_cost_hamil(self):
         
@@ -498,7 +497,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.set_classical_optimizer(jac = 'JaC', hess = 'HeSS')
         
         self.assertEqual(q.classical_optimizer.jac, 'jac')
-        self.assertEqual(q.classical_optimizer.jac, 'hess')
+        self.assertEqual(q.classical_optimizer.hess, 'hess')
         
     def test_set_classical_optimizer_method_selectors(self):
         
