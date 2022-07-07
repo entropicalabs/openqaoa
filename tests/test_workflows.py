@@ -129,6 +129,47 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.cost_hamil.expression, test_hamil.expression)
         self.assertEqual(q.circuit_params.cost_hamiltonian.expression, 
                          test_hamil.expression)
+        
+    def test_set_circuit_properties_fourier_q(self):
+        
+        """
+        The value of q should be None if the param_type used is not fourier.
+        Else if param_type is fourier, fourier_extended or fourier_w_bias, it
+        should be the value of q, if it is provided.
+        """
+        
+        fourier_param_types = ['fourier', 'fourier_extended', 'fourier_w_bias']
+        
+        q = QAOA()
+        
+        for each_param_type in fourier_param_types:
+            q.set_circuit_properties(param_type = "fourier", q = 1)
+            self.assertEqual(q.circuit_properties.q, 1)
+        
+        q.set_circuit_properties(param_type = "standard", q = 1)
+        
+        self.assertEqual(q.circuit_properties.q, None)
+        
+    def test_set_circuit_properties_annealing_time_linear_ramp_time(self):
+        
+        """
+        Check that linear_ramp_time and annealing_time are updated appropriately 
+        as the value of p is changed. 
+        """
+        
+        q = QAOA()
+        
+        q.set_circuit_properties(p=3)
+        
+        self.assertEqual(q.circuit_properties.annealing_time, 0.7*3)
+        self.assertEqual(q.circuit_properties.linear_ramp_time, 0.7*3)
+        
+        q.set_circuit_properties(p=2)
+        
+        self.assertEqual(q.circuit_properties.annealing_time, 0.7*2)
+        self.assertEqual(q.circuit_properties.linear_ramp_time, 0.7*2)
+        
+        
             
     def test_set_circuit_properties_circuit_params_mixer_x(self):
         
@@ -230,7 +271,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                            'init_type': 'rand', 
                            'qubit_register': [0, 1], 
                            'p': 2, 
-                           'q': 1, 
+                           'q': 2, 
                            'annealing_time': 1.0, 
                            'linear_ramp_time': 1.0, 
                            'variational_params_dict': {'key': 'value'}, 
