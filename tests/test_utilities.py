@@ -17,7 +17,7 @@ import numpy as np
 import itertools
 import unittest
 
-# from openqaoa.devices import DeviceLocal
+from openqaoa.devices import DeviceLocal
 from openqaoa.utilities import *
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
@@ -619,11 +619,12 @@ class TestingUtilities(unittest.TestCase):
 
         # Compute list of expectation values and correlation matrix
         comp_exp_val_list, comp_corr_matrix = exp_val_hamiltonian_termwise(variational_params = None,
-                                                                 qaoa_results = {'best param' : fixed_angles},\
-                                                                 qaoa_backend = None,\
-                                                                 hamiltonian = hamiltonian,
-                                                                 p = 1, 
-                                                                 mixer_type='x')
+                                                                        qaoa_backend = None,
+                                                                        hamiltonian = hamiltonian,
+                                                                        p = 1, 
+                                                                        mixer_type='x',
+                                                                        qaoa_optimized_angles = fixed_angles,
+                                                                        analytical=True)
 
         # Test if computed results are correct
         assert np.allclose(exp_val_list,comp_exp_val_list), f'Computed set of singlet expectation values is incorrect'
@@ -666,15 +667,21 @@ class TestingUtilities(unittest.TestCase):
         ## Testing
 
         # Perform QAOA and obtain expectation values numerically
-        qaoa_backend = get_qaoa_backend(circuit_params, device = DeviceLocal('vectorized'), n_shots = None)
+        qaoa_backend = get_qaoa_backend(circuit_params, device = DeviceLocal('vectorized'))
         optimizer = get_optimizer(qaoa_backend, variational_params, optimizer_dict = {'method':'cobyla','maxiter':200})
         optimizer()
-        qaoa_results = optimizer.results_information()
+        qaoa_results = optimizer.qaoa_result
         
-        num_exp_vals_z,num_corr_matrix = exp_val_hamiltonian_termwise(variational_params,qaoa_results, qaoa_backend, hamiltonian, mixer_type='x', p = p, analytical = False)
+        qaoa_results_optimized = qaoa_results.optimized 
+        qaoa_optimized_angles = qaoa_results_optimized['optimized angles']
+        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
+        num_exp_vals_z, num_corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
+            qaoa_backend, hamiltonian, 'x', p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=False)
 
         # Analytical expectation values
-        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params,qaoa_results, qaoa_backend, hamiltonian, mixer_type='x', p = p)
+        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
+            qaoa_backend, hamiltonian, 'x', p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=True)
+
 
         # Test if computed results are correct
         assert np.allclose(exp_vals_z,num_exp_vals_z), f'Computed singlet expectation values are incorrect'

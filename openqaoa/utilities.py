@@ -20,10 +20,9 @@ from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
-from .devices import DeviceLocal
 import networkx as nx
+from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 
-from openqaoa.qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 
 def X_mixer_hamiltonian(n_qubits: int,
                         coeffs: List[float] = None) -> Hamiltonian:
@@ -68,7 +67,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
     ----------
     n_qubits: `int`
         The number of qubits in the system.
-    qubit_connectivity: `list` or `str`, optional
+    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
         The connectivity of the qubits in the mixer Hamiltonian.
     coeffs: `list`, optional
         The coefficients of the XY terms in the Hamiltonian.
@@ -80,7 +79,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
 
     Notes
     -----
-    The XY mixer is not implemented with $$RXY$$ Pauli Gates, but $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
+        The XY mixer is not implemented with $$RXY$$ Gates, but with $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
@@ -106,7 +105,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
             1, 'Qubit index in connectivity list is out of range'
         assert min(indices) >= 0, 'Qubit index should be a positive integer'
 
-    # If no coefficients provided, set all to the nnumber of terms
+    # If no coefficients provided, set all to the number of terms
     coeffs = [0.5]*2*len(qubit_connectivity) if coeffs is None else coeffs
 
     # Initialize list of terms
@@ -308,29 +307,36 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
         Matplotlib axes to plot on. Defaults to None.
     """
     
+    # Create plot figure
+    fig = plt.figure(figsize=(10, 6))
+        
     # Extract all graph attributes
     biases_and_nodes = nx.get_node_attributes(G, 'weight')
     biases = list(biases_and_nodes.values())
     edges_and_weights = nx.get_edge_attributes(G, 'weight')
-    weights = list(edges_and_weights.values())
     pos = nx.shell_layout(G)
 
     # extract minimum and maximum weights for side bar limits
-    edge_vmin = min(weights)
-    edge_vmax = max(weights)
-
-    # Define color map
-    cmap = plt.cm.seismic
-
-    # Create plot figure
-    fig = plt.figure(figsize=(10, 6))
+    weights = list(edges_and_weights.values())
     
-    # Define normalized color map
-    sm = plt.cm.ScalarMappable(cmap=cmap,
-                               norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
-    # Add colormap to plot
-    cbar = plt.colorbar(sm)
-    cbar.ax.set_ylabel('Edge Weights', rotation=270)
+    if weights != []:
+        edge_vmin = min(weights)
+        edge_vmax = max(weights)
+
+        # Define color map
+        cmap = plt.cm.seismic
+
+        # Define normalized color map
+        sm = plt.cm.ScalarMappable(cmap=cmap,
+                                norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
+        # Add colormap to plot
+        cbar = plt.colorbar(sm)
+        cbar.ax.set_ylabel('Edge Weights', rotation=270)
+    else:
+        weights = [1] * len(G.edges())
+        edge_vmin = None
+        edge_vmax = None
+        cmap = None    
     
     # If biases are present define reference values and color map for side bar
     if biases != []:
@@ -348,8 +354,8 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
 
     else:
         # Draw graph
-        nx.draw(G, pos, node_color=biases, edge_color=weights, width=1.5,
-                edge_cmap=cmap, cmap=cmap, edge_vmin=edge_vmin,
+        nx.draw(G, pos, edge_color=weights, width=1.5,
+                edge_cmap=cmap, edge_vmin=edge_vmin,
                 edge_vmax=edge_vmax, with_labels=True)
     
     # Show plot
@@ -789,14 +795,14 @@ def exp_val_single(spin: int, prob_dict: dict):
     """
     Computes expectation value <Z> of a given spin.
 
-    Parameters:
+    Parameters
     ----------
     spin: `int`
         Spin whose expectation value we compute.
     prob_dict: `dict`
         Dictionary containing the configuration probabilities of each spin.
 
-    Returns:
+    Returns
     -------
     exp_val: `float`
         Expectation value of the spin
@@ -855,7 +861,14 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
     return corr
 
 
-def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, qaoa_results: dict, qaoa_backend, hamiltonian: Hamiltonian, mixer_type:str, p: int, analytical: bool = True, shot_based: bool = False, shots: int = 100):
+def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
+                                qaoa_backend,
+                                hamiltonian: Hamiltonian, 
+                                mixer_type:str, 
+                                p: int,
+                                qaoa_optimized_angles: Optional[list] = None,
+                                qaoa_optimized_counts: Optional[dict] = None,
+                                analytical: bool = True):
     """
     Computes the single spin expectation values <Z_{i}> and the correlation matrix Mij = <Z_{i}Z_{j}>,
     using the optimization results obtained from QAOA tranining the specified QAOA cost backend.
@@ -864,24 +877,19 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, 
     ----------
     variational_params: `QAOAVariationalBaseParams`
         Set of variational parameters in the QAOA ansatz.
-    qaoa_results: `dict`
-        Results dictionary from QAOA run.
-    qaoa_backend: `QAOABaseBAckend`
+    qaoa_backend: `QAOABaseBackend`
         Chosen backend on which QAOA is performed.
     hamiltonian: `Hamiltonian`
         Hamiltonian object containing the problem statement.
     p: `int`
         Number of layers in QAOA ansatz.
+    qaoa_optimized_angles: `list`
+        Optimized angles of the underlying QAOA.
+    qaoa_optimized_counts: `dict`
+        Dictionary containing the measurement counts of optimized QAOA circuit.
     analytical: `bool`
-        Boolean parameter which allows to manually switch off analytical
-        computation of the statistics for a single layer QAOA ansatz. Defaults
-        to True.
-    shot_based: `bool`
-        Boolean specificying whether our simulation is shot based.
-        Defaults to False.
-    shots: `int`
-        Number of shots to consider if the simulation is shot based.
-        Defaults to 100.   
+        Boolean that indicates whether to use analytical or numerical expectation
+        calculation methods.
 
     Returns
     -------
@@ -896,16 +904,14 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, 
 
     # Extract Hamiltonian terms
     terms = list(hamiltonian.terms)
-
-    # The QAOA angles
-    optimized_params = qaoa_results['best param']
     
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)
     corr_matrix = np.zeros((n_qubits, n_qubits))
 
     # If single layer ansatz use analytical results
-    if analytical and p == 1 and mixer_type == 'x':
+    if (analytical == True and p == 1 and mixer_type == 'x' and
+        isinstance(qaoa_optimized_angles, list)):
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
@@ -914,13 +920,13 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, 
             if len(term) == 1:
                 i = term.qubit_indices[0]
                 exp_vals_z[i] = exp_val_single_analytical(
-                    i, hamiltonian, optimized_params)
+                    i, hamiltonian, qaoa_optimized_angles)
 
             # If two-body term compute correlation
             elif len(term) == 2:
                 i, j = term.qubit_indices
                 corr_matrix[i][j] = exp_val_pair_analytical(
-                    (i, j), hamiltonian, optimized_params)
+                    (i, j), hamiltonian, qaoa_optimized_angles)
 
             # If constant term, ignore
             else:
@@ -928,18 +934,11 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams, 
 
     # If multilayer ansatz, perform numerical computation
     else:
-        
-        # Update variational parameters
-        variational_params.update_from_raw(optimized_params)
 
-        # Obtain state probabilities from QAOA simulation
-        if shot_based:
-            counts_dict = qaoa_backend.get_counts(variational_params)
-
+        if isinstance(qaoa_optimized_counts, dict):
+            counts_dict = qaoa_optimized_counts
         else:
-            opt_wf = qaoa_backend.wavefunction(variational_params)
-            counts_dict = {bin(i)[2:].zfill(n_qubits)[
-                ::-1]: np.real(np.conjugate(amp)*amp) for i, amp in enumerate(opt_wf)}
+            raise ValueError("Please specify optimized counts to compute expectation values.")
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
@@ -976,7 +975,7 @@ def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: 
     
     NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
 
-    Parameters:
+    Parameters
     ----------
     spin: `int`
         The spin whose expectation value we compute.
@@ -1135,7 +1134,7 @@ def energy_expectation_analytical(angles:Union[list,tuple],hamiltonian:Hamiltoni
     NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian and classical
     Hamiltonians with up to quadratic terms.
 
-    Parameters:
+    Parameters
     ----------
     angles: `list` or `tuple`
         QAOA angles at which the Hamiltonian expectation value is computed
@@ -1175,7 +1174,7 @@ def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
     Parameters
     ----------
     reg: `list`
-    Rregister of qubits in the system.
+        register of qubits in the system.
 
     Returns
     -------
@@ -1233,7 +1232,6 @@ def flip_counts(counts_dictionary: dict) -> dict:
         output_counts_dictionary[key[::-1]] = value
 
     return output_counts_dictionary
-
 
 def qaoa_probabilities(statevector) -> dict:
     """

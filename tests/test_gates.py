@@ -24,10 +24,10 @@ from pyquil.gates import CNOT as p_CX
 from pyquil.gates import XY as p_XY
 from pyquil.gates import CPHASE as p_CPHASE
 
-from openqaoa.qaoa_parameters.pauligate import RY, RX, RZ, CZ, CX, RXX, RYY, RZZ, RZX, CPHASE, RiSWAP
+from openqaoa.qaoa_parameters.gates import RY, RX, RZ, CZ, CX, RXX, RYY, RZZ, RZX, CPHASE, RiSWAP
 from openqaoa.qaoa_parameters.rotationangle import RotationAngle
 
-class TestingLowLevelGate(unittest.TestCase):
+class TestingGate(unittest.TestCase):
     
     def test_ibm_gates_1q(self):
         

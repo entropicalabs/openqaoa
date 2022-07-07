@@ -29,7 +29,7 @@ import numpy as np
 from copy import deepcopy
 
 from .devices import DeviceBase
-from .qaoa_parameters.pauligate import PauliGate, TwoPauliGate
+from .qaoa_parameters.gatemap import RotationGateMap, TwoQubitRotationGateMap
 from .qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from .utilities import qaoa_probabilities
 from .cost_function import cost_function
@@ -133,12 +133,12 @@ class QAOABaseBackend(VQABaseBackend):
         self.init_hadamard = init_hadamard
         self.cvar_alpha = cvar_alpha
 
-        self.pseudo_circuit = deepcopy(self.circuit_params.pseudo_circuit)
+        self.abstract_circuit = deepcopy(self.circuit_params.abstract_circuit)
 
-    def assign_angles(self, params: QAOAVariationalBaseParams) -> List[PauliGate]:
+    def assign_angles(self, params: QAOAVariationalBaseParams) -> List[RotationGateMap]:
         """
         Assigns the angle values of the variational parameters to the circuit gates
-        specified as a list of gates in the ``pseudo_circuit``.
+        specified as a list of gates in the ``abstract_circuit``.
 
         Parameters
         ----------
@@ -146,18 +146,18 @@ class QAOABaseBackend(VQABaseBackend):
             The variational parameters(angles) to be assigned to the circuit gates
         """
         # if circuit is non-parameterised, then assign the angle values to the circuit
-        pseudo_pauli_circuit = self.pseudo_circuit
+        abstract_pauli_circuit = self.abstract_circuit
 
-        for each_pauli in pseudo_pauli_circuit:
+        for each_pauli in abstract_pauli_circuit:
             pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoPauliGate):
+            if isinstance(each_pauli, TwoQubitRotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle = params.mixer_2q_angles[pauli_label_index[0],
                                                    pauli_label_index[1]]
                 elif each_pauli.pauli_label[1] == 'cost':
                     angle = params.cost_2q_angles[pauli_label_index[0],
                                                   pauli_label_index[1]]
-            elif isinstance(each_pauli, PauliGate):
+            elif isinstance(each_pauli, RotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle = params.mixer_1q_angles[pauli_label_index[0],
                                                    pauli_label_index[1]]
@@ -165,40 +165,40 @@ class QAOABaseBackend(VQABaseBackend):
                     angle = params.cost_1q_angles[pauli_label_index[0],
                                                   pauli_label_index[1]]
             each_pauli.rotation_angle = angle
-        self.pseudo_circuit = pseudo_pauli_circuit
+        self.abstract_circuit = abstract_pauli_circuit
 
     def obtain_angles_for_pauli_list(self,
-                                     input_pauli_list: List[PauliGate],
+                                     input_pauli_list: List[RotationGateMap],
                                      params: QAOAVariationalBaseParams) -> List[float]:
         """
         This method uses the pauli gate list information to obtain the pauli angles
         from the VariationalBaseParams object. The floats in the list are in the order
-        of the input PauliGates list.
+        of the input RotationGateMaps list.
 
         Parameters
         ----------
-        input_pauli_list: `List[PauliGate]`
-            The PauliGates list
+        input_pauli_list: `List[RotationGateMap]`
+            The RotationGateMaps list
         params: `QAOAVariationalBaseParams`
             The variational parameters(angles) to be assigned to the circuit gates
 
         Returns
         -------
         angles_list: `List[float]`
-            The list of angles in the order of gates in the `PauliGate` list
+            The list of angles in the order of gates in the `RotationGateMap` list
         """
         angle_list = []
 
         for each_pauli in input_pauli_list:
             pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoPauliGate):
+            if isinstance(each_pauli, TwoQubitRotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle_list.append(params.mixer_2q_angles[pauli_label_index[0],
                                                              pauli_label_index[1]])
                 elif each_pauli.pauli_label[1] == 'cost':
                     angle_list.append(params.cost_2q_angles[pauli_label_index[0],
                                                             pauli_label_index[1]])
-            elif isinstance(each_pauli, PauliGate):
+            elif isinstance(each_pauli, RotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle_list.append(params.mixer_1q_angles[pauli_label_index[0],
                                                              pauli_label_index[1]])
@@ -466,8 +466,6 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
         samples = self.sample_from_wavefunction(params, n_shots)
 
         unique_nums, frequency = np.unique(samples, return_counts=True)
-        # unique_shots = [np.binary_repr(num, self.n_qubits)[
-        #     ::-1] for num in unique_nums]
         counts = dict(zip(unique_nums, frequency))
 
         return counts

@@ -13,40 +13,19 @@
 #   limitations under the License.
 
 from argparse import SUPPRESS
+from threading import local
 from openqaoa.workflows.optimizer import QAOA, RQAOA
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
-from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS
+from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS, DeviceLocal, DevicePyquil, DeviceQiskit
 import unittest
 import networkx as nw
-import numpy as np
+import pytest
 
 from openqaoa.problems.problem import MinimumVertexCover
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']
-"""
-TODO: Logic for test_check_connection_aws_no_device_provided_credentials while 
-correct. Returning true for the check_connection() function if no device was
-provided might be a strange behaviour since check_connection() is also expected
-to return true if the device provided was correct, and false if invalid.
-"""
-
-
-class TestingAccessObjectQiskit(unittest.TestCase):
-
-    """This tests checks that Object used to access IBMQ and their available
-    QPUs can be established.
-
-    For any tests using provided credentials, the tests will only pass if those
-    details provided are correct/valid with IBMQ.
-
-    Please ensure that the provided api token in the crendentials.json is 
-    correct.
-    Note that the defaults for hub, group, project and valid backend can also be 
-    changed in crendentials.json, in most cases, they can be left alone. 
-    All of these can be found in your IBMQ Account Page.
-    """
 
 
 class TestingVanillaQAOA(unittest.TestCase):
@@ -83,12 +62,58 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.compile(vc)
         q.optimize()
 
-        result = str(list(q.results_information['probability progress list'][0].keys())[np.argmax(list((q.results_information['probability progress list'][0].values())))])
+        result = q.results.most_probable_states['solutions_bitstrings'][0]
         assert '010101' == result or '101010' == result
 
+    def test_set_device_local(self):
+        """"
+        Check that all local devices are correctly initialised
+        """
+        q = QAOA()
+        for d in q.local_simulators:
+            q.set_device(create_device(location='local', name=d))
+            assert type(q.device) == DeviceLocal
+            assert q.device.device_name == d
+            assert q.device.device_location == 'local'
+
+
+    def test_set_device_cloud(self):
+        """"
+        Check that all local devices are correctly initialised
+        """
+        q = QAOA()
+        q.set_device(create_device('qcs', 
+                                name='6q-qvm',
+                                **{'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10}))
+        assert type(q.device) == DevicePyquil
+        assert q.device.device_name == '6q-qvm'
+        assert q.device.device_location ==  'qcs'
+
+
+        q.set_device(create_device('ibmq', 
+                                name='place_holder',
+                                **{"api_token": "**",
+                                "hub": "***", 
+                                "group": "***", 
+                                "project": "***"}))
+        assert type(q.device) == DeviceQiskit
+        assert q.device.device_name == 'place_holder'
+        assert q.device.device_location ==  'ibmq'
+
+    def test_compile_before_optimise(self):
+        """
+        Assert that compilation has to be called before optimisation
+        """    
+        g = nw.circulant_graph(6, [1])
+        # vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+
+        q = QAOA()
+        q.set_classical_optimizer(optimization_progress = True)
+            
+        with pytest.raises(ValueError):
+            q.optimize()
 
 class TestingRQAOA(unittest.TestCase):
-
     """
     Unit test based testing of the RQAOA worlkflow class
     """

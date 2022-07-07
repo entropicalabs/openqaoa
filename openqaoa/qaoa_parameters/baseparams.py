@@ -185,19 +185,19 @@ class QAOACircuitParams(VQACircuitParams):
         return string
 
     @property
-    def pseudo_circuit(self) -> List:
+    def abstract_circuit(self) -> List:
 
-        cost_pauli_gate_list = HamiltonianMapper.repeat_paulis(
+        cost_gate_map_list = HamiltonianMapper.repeat_gate_maps(
             self.cost_hamiltonian, 'cost', self.p)
-        mixer_pauli_gate_list = HamiltonianMapper.repeat_paulis(
+        mixer_gate_map_list = HamiltonianMapper.repeat_gate_maps(
             self.mixer_hamiltonian, 'mixer', self.p)
 
-        _pseudo_circuit = []
+        _abstract_circuit = []
         for each_p in range(self.p):
-            _pseudo_circuit.extend(cost_pauli_gate_list[each_p])
-            _pseudo_circuit.extend(mixer_pauli_gate_list[each_p])
+            _abstract_circuit.extend(cost_gate_map_list[each_p])
+            _abstract_circuit.extend(mixer_gate_map_list[each_p])
 
-        return _pseudo_circuit
+        return _abstract_circuit
 
 
 class QAOAVariationalBaseParams(ABC):
@@ -241,7 +241,7 @@ class QAOAVariationalBaseParams(ABC):
 
     def __str__(self):
 
-        raise NotImplementedError()
+        return self.__repr__()
 
     @property
     def mixer_1q_angles(self) -> np.ndarray:

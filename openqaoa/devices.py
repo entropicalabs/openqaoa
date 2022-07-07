@@ -20,7 +20,7 @@ from pyquil import get_qc
 
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
-    'qiskit.statevector_simulator','entropica.vectorized',
+    'qiskit.statevector_simulator','vectorized',
     'pyquil.statevector_simulator'
 ]
 
@@ -36,12 +36,12 @@ class DeviceBase(metaclass=abc.ABCMeta):
         provided to access the remote QPU is valid.
 
         Returns
-		-------
-		bool 
-			True if a connection can be established. If False, the error 
-			should be logged and printable. (Not creating an exception 
-			here is good for extendibility. i.e. able to try multiple
-			providers without exiting the program.)
+        -------
+        bool 
+            True if a connection can be established. If False, the error 
+            should be logged and printable. (Not creating an exception 
+            here is good for extendibility. i.e. able to try multiple
+            providers without exiting the program.)
         """
         pass
 
@@ -63,7 +63,7 @@ class DeviceQiskit(DeviceBase):
     """Contains the required information and methods needed to access remote
     qiskit QPUs.
 
-    Attributes
+    Parameters
 	----------
 	available_qpus: `list`
 		When connection to a provider is established, this attribute contains a list

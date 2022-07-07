@@ -28,6 +28,7 @@ from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
 
 from .logger_vqa import Logger
+from .result import Result
 
 from ..derivative_functions import derivative
 from ..qfim import qfim
@@ -91,12 +92,7 @@ class OptimizeVQA(ABC):
                                'history_update_bool': optimizer_dict.get('cost_progress',True), 
                                'best_update_string': 'LowestOnly'
                            }, 
-                           'counts': 
-                           {
-                               'history_update_bool': optimizer_dict.get('optimization_progress',False), 
-                               'best_update_string': 'Replace'
-                           }, 
-                           'probability': 
+                           'measurement_outcomes': 
                            {
                                'history_update_bool': optimizer_dict.get('optimization_progress',False), 
                                'best_update_string': 'Replace'
@@ -126,8 +122,7 @@ class OptimizeVQA(ABC):
                               'root_nodes': ['cost', 'func_evals', 'jac_func_evals', 
                                              'qfim_func_evals'],
                               'best_update_structure': (['cost', 'param_log'], 
-                                                        ['cost', 'counts'], 
-                                                        ['cost', 'probability'])
+                                                        ['cost', 'measurement_outcomes'])
                           })
         
         self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
@@ -156,12 +151,6 @@ class OptimizeVQA(ABC):
         '''
         A function wrapper to execute the circuit in the backend. This function 
         will be passed as argument to be optimized by scipy optimize.
-        
-        .. Important::
-            #. Appends all intermediate parameters in ``self.param_log`` list
-            #. Appends the cost value after each iteration in the optimization process to ``self.cost_progress`` list
-            #. Checks if ``self.vqa`` has the ``self.counts`` attribute. If it exists, appends the counts of each state for that circuit evaluation to ``self.count_progress`` list.
-            #. Checks if ``self.vqa`` has the ``self.probability`` attribute. If it exists, appends the probability of each state for that circuit evaluation to ``self.count_progress`` list.
 
         Parameters
         ----------
@@ -189,10 +178,7 @@ class OptimizeVQA(ABC):
         current_eval += 1
         log_dict.update({'func_evals': current_eval})
         
-        if hasattr(self.vqa, 'counts'):
-            log_dict.update({'counts': self.vqa.counts})
-        elif hasattr(self.vqa, 'probability'):
-            log_dict.update({'probability': self.vqa.probability})
+        log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
             
         self.log.log_variables(log_dict)
 
@@ -242,44 +228,32 @@ class OptimizeVQA(ABC):
         :
             Dictionary with the following keys
                 
+                #. "solution"
+                    #. "bitstring"
+                    #. "degeneracy"
                 #. "number of evals"
                 #. "jac evals"
                 #. "qfim evals"
                 #. "parameter log"
-                #. "best param"
-                #. "cost progress list"
-                #. "best cost"
-                #. "count progress list"
-                #. "best count"
-                #. "probability progress list"
-                #. "best probability"
+                #. "optimized param"
+                #. "intermediate cost"
+                #. "optimized cost"
+                #. "intermediate measurement outcomes"
+                #. "optimized measurement outcomes"
                 #. "optimization method"
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
         
-        result_dict = {
-            'number of evals': self.log.func_evals.best[0],
-            'jac evals': self.log.jac_func_evals.best[0],
-            'qfim evals': self.log.qfim_func_evals.best[0],
-            'parameter log': np.array(self.log.param_log.history).tolist(),
-            'best param': np.array(self.log.param_log.best[0]).tolist(),
-            'cost progress list': np.array(self.log.cost.history).tolist(), 
-            'best cost': np.array(self.log.cost.best[0]).tolist(), 
-            'count progress list': np.array(self.log.counts.history).tolist(),
-            'best count': np.array(self.log.counts.best[0] if self.log.counts.best != [] else {}).tolist(), 
-            'probability progress list': np.array(self.log.probability.history).tolist(),
-            'best probability': np.array(self.log.probability.best[0] if self.log.probability.best != [] else {}).tolist(),
-            'optimization method': self.method
-        }
-
+        self.qaoa_result = Result(self.log, self.method, self.vqa.cost_hamiltonian)
+        
         if(file_path and os.path.isdir(file_path)):
             print('Saving results locally')
             pickled_file = open(f'{file_path}/{file_name}.pcl', 'wb')
-            pickle.dump(result_dict, pickled_file)
+            pickle.dump(self.qaoa_result, pickled_file)
             pickled_file.close()
 
-        return result_dict
+        return  # result_dict
 
 
 class ScipyOptimizer(OptimizeVQA):
@@ -434,41 +408,8 @@ class ScipyOptimizer(OptimizeVQA):
             print(e, '\n')
             print("The optimization has been terminated early. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
+            self.results_dictionary()
             return self
-
-    def results_information(self, file_path: str = None, file_name: str = None):
-        '''
-        This method returns a dictionary of all results of optimization.
-        The results can also be saved by providing the path to save the pickled file.
-
-        Parameters
-        ----------
-        file_path: 
-            To save the results locally on the machine in pickle format,
-            specify the entire file path to save the ``result_dictionary``.
-
-        file_name: 
-            Custom name for to save the data; a generic name with the time of 
-            optimization is used if not specified
-
-        Returns
-        -------
-        :
-            Dictionary with the following keys
-        
-                #. "number of evals"
-                #. "parameter log"
-                #. "best param"
-                #. "cost progress list"
-                #. "best cost"
-                #. "count progress list"
-                #. "best count"
-                #. "probability progress list"
-                #. "best probability"
-                #. "optimization method"
-        '''
-        results = self.results_dictionary(file_path, file_name)
-        return results
 
 
 class CustomScipyGradientOptimizer(OptimizeVQA):
@@ -630,38 +571,5 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         except Exception:
             print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
+            self.results_dictionary()
             return self
-
-    def results_information(self, file_path: str = None, file_name: str = None):
-        '''
-        This method returns a dictionary of all results of optimization.
-        The results can also be saved by providing the path to save the pickled file.
-
-        Parameters
-        ----------
-        file_path: 
-            To save the results locally on the machine in pickle format,
-            specify the entire file path to save the ``result_dictionary``.
-
-        file_name: 
-            Custom name for to save the data; a generic name with the time of 
-            optimization is used if not specified
-
-        Returns
-        -------
-        :
-            Dictionary with the following keys
-        
-                #. "number of evals"
-                #. "parameter log"
-                #. "best param"
-                #. "cost progress list"
-                #. "best cost"
-                #. "count progress list"
-                #. "best count"
-                #. "probability progress list"
-                #. "best probability"
-                #. "optimization method"
-        '''
-        results = self.results_dictionary(file_path, file_name)
-        return results

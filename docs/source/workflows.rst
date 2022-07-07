@@ -7,14 +7,14 @@ Workflows are designed to aid the user to focus on the optimisation problem, whi
 
 
 Workflows - ABC
-----------------------------------
+---------------
 .. autoclass:: openqaoa.workflows.optimizer.Optimizer
     :members:
     :undoc-members:
     :inherited-members:
 
 QAOA
-----------------------------------
+----
 .. autoclass:: openqaoa.workflows.optimizer.QAOA
     :members:
     :undoc-members:
@@ -22,8 +22,38 @@ QAOA
 
 
 RQAOA
-----------------------------------
+-----
 .. autoclass:: openqaoa.workflows.optimizer.RQAOA
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+
+Workflow QAOA Parameters
+------------------------
+.. autoclass:: openqaoa.workflows.parameters.qaoa_parameters.CircuitProperties
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+.. autoclass:: openqaoa.workflows.parameters.qaoa_parameters.BackendProperties
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+.. autoclass:: openqaoa.workflows.parameters.qaoa_parameters.ClassicalOptimizer
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+.. autoclass:: openqaoa.workflows.parameters.qaoa_parameters.ExtraResults
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+Workflow RQAOA Parameters
+-------------------------
+.. autoclass:: openqaoa.workflows.parameters.rqaoa_parameters.RqaoaParameters
     :members:
     :undoc-members:
     :inherited-members:
