@@ -16,6 +16,7 @@
 Construct Pauli operators and Hamiltonians.
 """
 from collections import Counter
+from sympy import Symbol
 import numpy as np
 from typing import List, Union, Tuple
 
@@ -504,7 +505,7 @@ class Hamiltonian:
         """
         # Ensure sympy is installed
         # try:
-        from sympy import Symbol
+#         from sympy import Symbol
         # except ImportError:
         #     raise ImportError(
         #         "Sympy is not installed. Pip install sympy to use this method")
