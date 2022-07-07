@@ -822,6 +822,11 @@ class ShortestPath(Problem):
         self.source = source
         self.dest = dest
 
+        assert source in list(G.nodes), f"Source node not within nodes of input graph"
+        assert dest in list(G.nodes), f"Destination node not within nodes of input graph"
+        assert source != dest, "Source and destination nodes cannot be the same"
+
+
     @staticmethod
     def random_instance(**kwargs):
         """
