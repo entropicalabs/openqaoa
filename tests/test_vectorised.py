@@ -124,6 +124,7 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         assert np.array_equal(perm2, perm2_expected)
         assert np.array_equal(perminv2, perminv2_expected)
 
+        
     ##########################################################
     # TESTS OF BASIC CIRCUIT OPERATIONS (SAME AS FOR PROJECTQ)
     ##########################################################
@@ -368,6 +369,21 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
 
         assert correct_config in config_vec
     
+    def test_afunction_throws_exception(self):
+        # Make sure that exception is raised when Hamiltonian contains nonclassical (non-Z or ZZ terms)
+        
+        def test_nonclassical_hamiltonian_error():
+
+            cost_hamil = Hamiltonian(
+                [PauliOp('Y', (0,)), PauliOp('Z', (1,))], [1, 1], 1)
+            mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
+            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+            variate_params = create_qaoa_variational_params(
+                circuit_params, 'standard', 'ramp')
+            backend_obj = QAOAvectorizedBackendSimulator(
+                circuit_params, None, None, True)
+        
+        self.assertRaises(Exception, test_nonclassical_hamiltonian_error)
     
     ##########################################################
     # TESTS OF APPLY GATE METHODS
