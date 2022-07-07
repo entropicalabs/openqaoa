@@ -169,11 +169,12 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.circuit_properties.annealing_time, 0.7*2)
         self.assertEqual(q.circuit_properties.linear_ramp_time, 0.7*2)
         
-        
             
     def test_set_circuit_properties_circuit_params_mixer_x(self):
         
-        g = nw.circulant_graph(6, [1])
+        nodes = 6
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
 
         q = QAOA()
@@ -184,7 +185,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(type(q.circuit_params), QAOACircuitParams)
         self.assertEqual(q.circuit_params.p, 2)
 
-        mixer_hamil = X_mixer_hamiltonian(n_qubits = 6)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits = nodes)
 
         self.assertEqual(q.mixer_hamil.expression, mixer_hamil.expression)
         self.assertEqual(q.circuit_params.mixer_hamiltonian.expression, 
@@ -192,24 +193,31 @@ class TestingVanillaQAOA(unittest.TestCase):
             
     def test_set_circuit_properties_circuit_params_mixer_xy(self):
         
-        g = nw.circulant_graph(6, [1])
-        problem = MinimumVertexCover(g, field =1.0, penalty=10)
+        g_c = nw.circulant_graph(6, [1])
+        g_f = nw.complete_graph(6)
+        # A 5-sided star graoh requires 6 qubit. (Center Qubit of the pattern)
+        g_s = nw.star_graph(5)
+        problems = [MinimumVertexCover(g_c, field =1.0, penalty=10), 
+                   MinimumVertexCover(g_f, field =1.0, penalty=10), 
+                   MinimumVertexCover(g_s, field =1.0, penalty=10)]
+        qubit_connectivity_name = ['chain', 'full', 'star']
+        
+        for i in range(3):
+            q = QAOA()
+            q.set_circuit_properties(mixer_hamiltonian = 'xy', 
+                                     mixer_qubit_connectivity = qubit_connectivity_name[i],
+                                     p = 2)
 
-        q = QAOA()
-        q.set_circuit_properties(mixer_hamiltonian = 'xy', 
-                                 mixer_qubit_connectivity = 'chain',
-                                 p = 2)
+            q.compile(problem = problems[i].get_qubo_problem())
 
-        q.compile(problem = problem.get_qubo_problem())
+            self.assertEqual(type(q.circuit_params), QAOACircuitParams)
+            self.assertEqual(q.circuit_params.p, 2)
 
-        self.assertEqual(type(q.circuit_params), QAOACircuitParams)
-        self.assertEqual(q.circuit_params.p, 2)
-
-        mixer_hamil = XY_mixer_hamiltonian(n_qubits = 6, qubit_connectivity = 'chain')
-
-        self.assertEqual(q.mixer_hamil.expression, mixer_hamil.expression)
-        self.assertEqual(q.circuit_params.mixer_hamiltonian.expression, 
-                         mixer_hamil.expression)
+            mixer_hamil = XY_mixer_hamiltonian(n_qubits = 6, qubit_connectivity = qubit_connectivity_name[i])
+            
+            self.assertEqual(q.mixer_hamil.expression, mixer_hamil.expression)
+            self.assertEqual(q.circuit_params.mixer_hamiltonian.expression, 
+                             mixer_hamil.expression)
         
     def test_set_circuit_properties_variate_params(self):
         
@@ -227,10 +235,12 @@ class TestingVanillaQAOA(unittest.TestCase):
                         QAOAVariationalFourierExtendedParams, 
                         QAOAVariationalFourierWithBiasParams]
         
-        for i in range(len(object_types)):
+        nodes = 6
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
+        problem = MinimumVertexCover(g, field =1.0, penalty=10)
         
-            g = nw.circulant_graph(6, [1])
-            problem = MinimumVertexCover(g, field =1.0, penalty=10)
+        for i in range(len(object_types)):
 
             q = QAOA()
             q.set_circuit_properties(param_type = param_type_names[i], q=1)
@@ -337,7 +347,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         Also Checks if defaults from workflows are used in the backend.
         """
         
-        g = nw.circulant_graph(6, [1])
+        nodes = 6
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
         qubo_problem = problem.get_qubo_problem()
         
@@ -363,7 +375,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         backend object responds appropriately.
         """
         
-        g = nw.circulant_graph(3, [1])
+        nodes = 3
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
         qubo_problem = problem.get_qubo_problem()
         
@@ -402,7 +416,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         Incorrect size of prepend state and append state.
         """
         
-        g = nw.circulant_graph(3, [1])
+        nodes = 3
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
         qubo_problem = problem.get_qubo_problem()
         
@@ -438,7 +454,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         Also Checks if defaults from workflows are used in the backend.
         """
         
-        g = nw.circulant_graph(6, [1])
+        nodes = 6
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
         qubo_problem = problem.get_qubo_problem()
         
@@ -462,7 +480,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         Also Checks if defaults from workflows are used in the backend.
         """
         
-        g = nw.circulant_graph(6, [1])
+        nodes = 6
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
         qubo_problem = problem.get_qubo_problem()
         
@@ -487,7 +507,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         Also Checks if defaults from workflows are used in the backend.
         """
         
-        g = nw.circulant_graph(6, [1])
+        nodes = 6
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
         qubo_problem = problem.get_qubo_problem()
         
@@ -546,7 +568,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         Check that the correct class is returned.
         """
         
-        g = nw.circulant_graph(6, [1])
+        nodes = 6
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
         qubo_problem = problem.get_qubo_problem()
         
