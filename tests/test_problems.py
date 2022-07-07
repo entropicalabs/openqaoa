@@ -336,7 +336,32 @@ class TestProblem(unittest.TestCase):
 		self.assertEqual(sp_prob.terms, ShortestPath(gr, 0, 2).get_qubo_problem().terms)
 		self.assertEqual(sp_prob.weights, ShortestPath(gr, 0, 2).get_qubo_problem().weights)
 		self.assertEqual(sp_prob.constant, ShortestPath(gr, 0, 2).get_qubo_problem().constant)
-		
+        
+        
+	def test_assertion_error(self):
+
+		def test_assertion_fn():
+			n_row = 1
+			n_col = 1
+
+			G = nx.triangular_lattice_graph(n_row, n_col)
+			G = nx.convert_node_labels_to_integers(G)
+			G.remove_edges_from(nx.selfloop_edges(G))
+
+			node_weights = np.round(np.random.rand(len(G.nodes())), 3)
+			edge_weights = np.round(np.random.rand(len(G.edges())), 3)
+
+			node_dict = dict(zip(list(G.nodes()), node_weights))
+			edge_dict = dict(zip(list(G.edges()), edge_weights))
+
+			nx.set_edge_attributes(G, values = edge_dict, name = 'weight')
+			nx.set_node_attributes(G, values = node_dict, name = 'weight')
+
+			shortest_path_problem = ShortestPath(G, 0, -1)
+			shortest_path_qubo = shortest_path_problem.get_qubo_problem()
+
+		self.assertRaises(Exception, test_assertion_fn)
+
 
 if __name__ == '__main__':
 	unittest.main()
