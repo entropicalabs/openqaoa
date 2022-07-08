@@ -13,13 +13,14 @@
 #   limitations under the License.
 
 from argparse import SUPPRESS
+from threading import local
 from openqaoa.workflows.optimizer import QAOA, RQAOA
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
-from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS
+from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS, DeviceLocal, DevicePyquil, DeviceQiskit
 import unittest
 import networkx as nw
-import numpy as np
+import pytest
 
 from openqaoa.problems.problem import MinimumVertexCover
 
@@ -64,9 +65,55 @@ class TestingVanillaQAOA(unittest.TestCase):
         result = q.results.most_probable_states['solutions_bitstrings'][0]
         assert '010101' == result or '101010' == result
 
+    def test_set_device_local(self):
+        """"
+        Check that all local devices are correctly initialised
+        """
+        q = QAOA()
+        for d in q.local_simulators:
+            q.set_device(create_device(location='local', name=d))
+            assert type(q.device) == DeviceLocal
+            assert q.device.device_name == d
+            assert q.device.device_location == 'local'
+
+
+    def test_set_device_cloud(self):
+        """"
+        Check that all local devices are correctly initialised
+        """
+        q = QAOA()
+        q.set_device(create_device('qcs', 
+                                name='6q-qvm',
+                                **{'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10}))
+        assert type(q.device) == DevicePyquil
+        assert q.device.device_name == '6q-qvm'
+        assert q.device.device_location ==  'qcs'
+
+
+        q.set_device(create_device('ibmq', 
+                                name='place_holder',
+                                **{"api_token": "**",
+                                "hub": "***", 
+                                "group": "***", 
+                                "project": "***"}))
+        assert type(q.device) == DeviceQiskit
+        assert q.device.device_name == 'place_holder'
+        assert q.device.device_location ==  'ibmq'
+
+    def test_compile_before_optimise(self):
+        """
+        Assert that compilation has to be called before optimisation
+        """    
+        g = nw.circulant_graph(6, [1])
+        # vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+
+        q = QAOA()
+        q.set_classical_optimizer(optimization_progress = True)
+            
+        with pytest.raises(ValueError):
+            q.optimize()
 
 class TestingRQAOA(unittest.TestCase):
-
     """
     Unit test based testing of the RQAOA worlkflow class
     """

@@ -20,6 +20,7 @@ def qfim(backend_obj: QAOABaseBackend,
          params: QAOAVariationalBaseParams, 
          logger: Logger, 
          eta: float = 0.00000001):
+    
         """
         Returns a callable qfim_fun(args) that computes the quantum fisher information matrix at `args` according to :
         $$[QFI]_{ij} = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>$$.

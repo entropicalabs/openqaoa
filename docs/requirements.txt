@@ -1,0 +1,9 @@
+matplotlib>=2.2
+numpy==1.21
+qiskit==0.36
+pyquil>=3.1
+nbsphinx==0.8.9
+sphinx>=4.5.0
+sphinx-autodoc-typehints==1.18.1
+sphinx-rtd-theme==1.0.0
+ipython==8.2.0
