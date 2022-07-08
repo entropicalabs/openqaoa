@@ -14,6 +14,7 @@
 
 import unittest
 import json
+import os
 
 from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS, SUPPORTED_LOCAL_SIMULATORS
 
@@ -22,10 +23,12 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     """These tests check the Object used to access IBMQ and their available
     QPUs can be established.
-
     For any tests using provided credentials, the tests will only pass if those
     details provided are correct/valid with IBMQ.
+<<<<<<< HEAD
 
+=======
+>>>>>>> dev
     Please ensure that the provided api token, hub, group and project in the 
     crendentials.json are correct.
     All of these can be found in your IBMQ Account Page.
@@ -40,10 +43,17 @@ class TestingDeviceQiskit(unittest.TestCase):
                 
         with opened_f as f:
             json_obj = json.load(f)['QISKIT']
-            self.API_TOKEN = json_obj['API_TOKEN']
-            self.HUB = json_obj['HUB']
-            self.GROUP = json_obj['GROUP']
-            self.PROJECT = json_obj['PROJECT']
+            
+            try:
+                self.API_TOKEN = os.environ['IBMQ_TOKEN']
+                self.HUB = os.environ['IBMQ_HUB']
+                self.GROUP = os.environ['IBMQ_GROUP']
+                self.PROJECT = os.environ['IBMQ_PROJECT']
+            except Exception:
+                self.API_TOKEN = json_obj['API_TOKEN']
+                self.HUB = json_obj['HUB']
+                self.GROUP = json_obj['GROUP']
+                self.PROJECT = json_obj['PROJECT']
 
         if self.API_TOKEN == "YOUR_API_TOKEN_HERE":
             raise ValueError(
@@ -275,6 +285,27 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, False)
+        
+
+class TestingDeviceLocal(unittest.TestCase):
+    
+    """
+    This tests check that the Device Object created for local devices have the
+    appropriate behaviour.
+    """
+    
+    def test_supported_device_names(self):
+        
+        for each_device_name in SUPPORTED_LOCAL_SIMULATORS:
+            device_obj = DeviceLocal(each_device_name)
+            
+            self.assertEqual(device_obj.check_connection(), True)
+    
+    def test_unsupported_device_names(self):
+        
+        device_obj = DeviceLocal('unsupported_device')
+        
+        self.assertEqual(device_obj.check_connection(), False)
 
 if __name__ == '__main__':
     unittest.main()

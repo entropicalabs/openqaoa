@@ -207,7 +207,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         # Expose counts
         counts_flipped = flip_counts(counts)
-        self.counts = counts_flipped
+        self.measurement_outcomes = counts_flipped
         return counts_flipped
 
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:

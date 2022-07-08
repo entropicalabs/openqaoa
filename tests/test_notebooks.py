@@ -62,3 +62,7 @@ def test_8_testing_decompositions():
 # @pytest.mark.notebook
 def test_9_testing_variate_params():
     notebook_test_function("./examples/testing_variate_params.ipynb")
+
+# @pytest.mark.notebook
+def test_10_testing_result_object():
+    notebook_test_function("./examples/testing_result_object.ipynb")

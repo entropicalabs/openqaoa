@@ -66,7 +66,7 @@ from openqaoa.problems.problem import MinimumVertexCover
 import networkx
 g = networkx.circulant_graph(6, [1])
 vc = MinimumVertexCover(g, field =1.0, penalty=10)
-pubo_problem = vc.get_pubo_problem()
+qubo_problem = vc.get_qubo_problem()
 ```
 
 Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
@@ -74,16 +74,16 @@ Where [networkx](https://networkx.org/) is an open source Python package that ca
 ```python
 from openqaoa.workflows.optimizer import QAOA  
 q = QAOA()
-q.compile(pubo_problem)
+q.compile(qubo_problem)
 q.optimize()
 ```
 
 Once the binary problem is defined, the simplest workflow can be defined as
 
-```  
+```python
 from openqaoa.workflows.optimizer import QAOA  
 q = QAOA()
-q.compile(pubo_problem)
+q.compile(qubo_problem)
 q.optimize() 
 ```
 
@@ -103,7 +103,7 @@ q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', m
 q_custom.set_device(device)
 q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
 q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
-q_custom.compile(pubo_problem)
+q_custom.compile(qubo_problem)
 q_custom.optimize()
 ```
 
@@ -129,7 +129,7 @@ A more cohmprensive notebook is [RQAOA_example](examples/RQAOA_example.ipynb)
 from openqaoa.workflows.optimizer import RQAOA
 r = RQAOA(rqaoa_type='adaptive')
 r.set_rqaoa_parameters(n_max=5, n_cutoff = 5)
-r.compile(pubo_problem)
+r.compile(qubo_problem)
 r.optimize()
 ```
 

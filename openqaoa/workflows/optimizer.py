@@ -17,7 +17,7 @@ import numpy as np
 from openqaoa.devices import DeviceLocal, DeviceBase
 
 from openqaoa.rqaoa.rqaoa import custom_rqaoa
-from openqaoa.problems.problem import PUBO
+from openqaoa.problems.problem import QUBO
 from openqaoa.problems.helper_functions import convert2serialize
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer, ExtraResults
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
@@ -91,10 +91,10 @@ class QAOA(Optimizer):
     to use the function.
 
     >>> q = QAOA()
-    >>> q.compile(PUBO)
+    >>> q.compile(QUBO)
     >>> q.optimise()
 
-    Where `PUBO` is a an isntance of `openqaoa.problems.problem.PUBO`
+    Where `QUBO` is a an isntance of `openqaoa.problems.problem.QUBO`
 
     If you want to use non-default parameters:
 
@@ -103,7 +103,7 @@ class QAOA(Optimizer):
     >>> q_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
     >>> q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
     >>> q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
-    >>> q_custom.compile(pubo_problem)
+    >>> q_custom.compile(qubo_problem)
     >>> q_custom.optimize()
     """
     def __init__(self, device = DeviceLocal('vectorized')):
@@ -261,7 +261,7 @@ class QAOA(Optimizer):
         attributes_dict = convert2serialize(self)
         return attributes_dict
 
-    def compile(self, problem: PUBO = None, verbose: bool = True):
+    def compile(self, problem: QUBO = None, verbose: bool = True):
         """
         Initialise the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement
@@ -325,22 +325,10 @@ class QAOA(Optimizer):
         '''
 
         self.optimizer.optimize()
-        self.results_information = self.optimizer.results_information()
-
-        if self.device.device_name == 'vectorized':
-            self.solution = list(self.results_information['best probability'].keys())[
-                np.argmax(list((self.results_information['best probability'].values())))]
-            self.results_information['cost'] = self.results_information['best cost']
-        else:
-            if self.device.device_name == 'qiskit.statevector_simulator':
-                self.counts = dict(self.backend.get_counts(self.variate_params, n_shots=1000))
-            else:
-                self.counts = dict(self.backend.get_counts(self.variate_params))
-            self.solution = list(self.counts.keys())[np.argmax(list(self.counts.values()))]
-        # self.result = format_output_results(self.results_information, self.classical_optimizer.asdict(), self.extra_results.top_k_solutions)
+        self.results = self.optimizer.qaoa_result # TODO: results and qaoa_results will differ
 
         print(f'optimization completed.')
-        return None
+        return
 
 
 class RQAOA(Optimizer):
@@ -393,7 +381,7 @@ class RQAOA(Optimizer):
 
         return None
 
-    def compile(self, problem: PUBO = None, verbose: bool = True):
+    def compile(self, problem: QUBO = None, verbose: bool = True):
         """
         Initialize the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement.
