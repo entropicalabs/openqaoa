@@ -369,6 +369,8 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
         Make a more informed choice of the default value for ``q``. Probably
         depending on ``n_qubits``
         """
+        
+        assert q is not None, f"Depth q for {cls.__name__} must be specified"
 
         if time is None:
             time = 0.7 * qaoa_circuit_params.p
@@ -603,6 +605,9 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
             for the Hamiltonian specified by register, terms, weights.
 
         """
+       
+        assert q is not None, f"Depth q for {cls.__name__} must be specified"
+        
         # create evenly spaced timelayers at the centers of p intervals
         p = qaoa_circuit_params.p
 
