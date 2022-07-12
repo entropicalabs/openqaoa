@@ -168,45 +168,7 @@ class QUBO:
         """
         Returns the Hamiltonian of the problem.
         """
-<<<<<<< HEAD
-        qubo_terms, qubo_weights, n_variables = self.terms, self.weights, self.n
-        ising_terms, ising_weights = [], []
-        
-        constant_term = self.constant
-        linear_terms = np.zeros(n_variables)
-        
-        # Process the given terms and weights
-        for weight, term in zip(qubo_weights, qubo_terms):
-
-            if len(term) == 2:
-                u, v = term
-
-                if u != v:
-                    ising_terms.append([u, v])
-                    ising_weights.append(weight / 4)
-                else:
-                    constant_term += weight / 4
-                
-                linear_terms[term[0]] -= weight / 4
-                linear_terms[term[1]] -= weight / 4
-                constant_term += weight / 4
-            elif len(term) == 1:
-                linear_terms[term[0]] -= weight / 2
-                constant_term += weight / 2
-            else:
-                constant_term += weight
-        
-        for variable, linear_term in enumerate(linear_terms):
-            ising_terms.append([variable])
-            ising_weights.append(linear_term)
-        
-        ising_terms.append([])
-        ising_weights.append(constant_term)
-
-        return PUBO(n_variables, ising_terms, ising_weights, Encoding.ISING_ENCODING)
-=======
         return Hamiltonian.classical_hamiltonian(self.terms,self.weights,self.constant)
->>>>>>> upstream/dev
 
 class TSP(Problem):
     """
@@ -832,256 +794,189 @@ class MinimumVertexCover(Problem):
         # Extract terms and weights from the problem definition
         terms, weights = self.terms_and_weights()
 
-<<<<<<< HEAD
-        return PUBO(self.G.number_of_nodes(), list(terms), list(weights), encoding=Encoding.ISING_ENCODING)
-    
-class FromDocplex2QUBO:
-    
-    def __init__(self, model):
-        
-        
-        """
-        Creates an instance to translate Docplex models to its QUBO representation
-
-        Parameters
-        ----------
-        model : Docplex model
-            It is an object that has the mathematical expressions (Cost function, Inequality and Equality constraints)
-            of an optimization problem in binary representation.
-
-        """
-        # assign the docplex Model
-        self.model = model.copy()
-        
-        # save the index in a dict
-        self.idx_terms = {}
-        for x in self.model.iter_variables():
-            self.idx_terms[x] = x.index
-
-    def linear_expr(self, expr):
-        """
-        Adds linear expresions to the objective function stored in self.qubo_dict.
-
-        Parameters
-        ----------
-        expr : model.objective_expr
-            A docplex model attribute.
-
-        """
-        for x, weight in expr.get_linear_part().iter_terms():
-            self.qubo_dict[(self.idx_terms[x], )] += self.sense * weight
-                
-
-    def quadratic_expr(self, expr):
-        """
-        Adds quadratic terms to the objective function stored in self.qubo_dict.
-
-        Parameters
-        ----------
-        expr : model.objective_expr
-            A docplex model attribute.
-        """
-
-        #save the terms and coeffs of the quadratic part, 
-        #considering two index i and j 
-        for x, y, weight in expr.iter_quad_triplets():
-            i = self.idx_terms[x]
-            j = self.idx_terms[y]
-            if i == j: # if this is the term is  Z1**2 for example
-                self.qubo_dict[(i, )] += self.sense * weight
-            else:
-                self.qubo_dict[(i, j)] += self.sense * weight
-
-    def Equality2Penalty(self, expression, multiplier:float):
-        """
-        Add equality constraints to the cost function using the penality representation.
-        The constraints should be linear.
-        
-        Parameters
-        ----------
-        expression : docplex.mp.linear.LinearExpr
-            docplex equality constraint "expression == 0".
-        multiplier : float
-            Lagrange multiplier of the penalty
-
-        Returns
-        -------
-        penalty : docplex.mp.quad.QuadExpr
-            Penalty that will be added to the cost function.
-
-        """
-        penalty = multiplier * (expression) ** 2
-        return penalty
-    
-    def bounds(self, linear_expression):
-        
-        l_bound = u_bound = linear_expression.constant # Lower and upper bound of the contraint
-        for term, coeff in linear_expression.iter_terms():
-            l_bound += min(0, coeff)
-            u_bound += max(0, coeff)
-            
-        return l_bound, u_bound
-    
-    def quadratic_bounds(self, iter_exp):
-        l_bound = 0
-        u_bound = 0
-        for z1, z2, coeff in iter_exp:
-            l_bound += min(0, coeff)
-            u_bound += max(0, coeff)
-        return l_bound, u_bound
-        
-    def Inequaility2Equality(self, constraint):
-        """
-        Transform inequality contraints into equality constriants using 
-        slack variables.
-
-        Parameters
-        ----------
-        constraint : docplex.mp.constr.LinearConstraint
-            DESCRIPTION.
-
-        Returns
-        -------
-        new_exp : docplex.mp.linear.LinearExpr
-            The equality constraint representation of the inequality constraint.
-
-        """
-        
-        if constraint.sense_string == "LE":
-            new_exp = constraint.get_right_expr() + -1 * constraint.get_left_expr()
-        elif constraint.sense_string == "GE":
-            new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
-        else:
-            print("Not recognized constraint.")
-            
-        lower_bound , upper_bound = self.bounds(new_exp)
-        slack_lim = upper_bound # Slack var limit
-
-        if slack_lim > 0:
-            sign = - 1
-        else:
-            sign = 1
-
-        n_slack = int(np.ceil(np.log2(abs(slack_lim + 1))))
-        if n_slack > 0:
-            slack_vars = self.model.binary_var_list(n_slack, name=f"slack_{constraint.name}")
-            for x in slack_vars:
-                self.idx_terms[x] = x.index
-            
-            for nn, var in enumerate(slack_vars[:-1]):
-                new_exp += sign * (2 ** nn) * var
-    
-            new_exp += sign * (slack_lim - 2 ** (n_slack - 1) + 1) * slack_vars[-1] # restrict the last term to fit the upper bound
-
-        return new_exp
-
-    def multipliers_generators(self):
-        """
-        Penality term size, this is the Lagrange multiplier for the cost function
-        for every constraint if the multiplier is not indicated by the user. 
-
-        Returns
-        -------
-        float
-            the multiplier resized by the cost function limits.
-
-        """
-        cost_func = self.model.objective_expr
-        l_bound_linear, u_bound_linear = self.bounds(cost_func.get_linear_part())
-        l_bound_quad, u_bound_quad = self.quadratic_bounds(cost_func.iter_quad_triplets())
-        return 1.0 + (u_bound_linear - l_bound_linear) + (u_bound_quad - l_bound_quad)
-
-    def linear_constraint(self, multipliers=None) -> None:
-        """
-        Adds the constraints of the problem to the objective function. 
-
-        Parameters
-        ----------
-        multiplier : List
-            For each constraint a multiplier, if None it automatically is selected.
-
-        Returns
-        -------
-        None.
-
-        """
-
-        constraints_list = list(self.model.iter_linear_constraints())
-        n_constraints = len(constraints_list)
-
-        if multipliers == None:
-            multipliers = n_constraints * [self.multipliers_generators()]
-
-        elif type(multipliers) in [int, float]:
-            multipliers = n_constraints * [multipliers]
-        
-        elif type(multipliers) != list:
-            print(f"{type(multipliers)} is not a accepted format")
-            
-        for cn, constraint in enumerate(constraints_list):
-            if constraint.sense_string  == "EQ": #Equality constraint added as a penalty.
-                left_exp = constraint.get_left_expr()
-                right_exp = constraint.get_right_expr()
-                expression = left_exp + -1 * right_exp
-                penalty = self.Equality2Penalty(expression, multipliers[cn])
-            elif constraint.sense_string in ["LE", "GE"]: # Inequality constraint added as a penalty with additional slack variables.
-                constraint.name = f"C{cn}"
-                ineq2eq = self.Inequaility2Equality(constraint)
-                penalty = self.Equality2Penalty(ineq2eq, multipliers[cn])
-            else:
-                print("Not an accepted constraint!")
-            
-            self.linear_expr(penalty)
-            self.quadratic_expr(penalty)
-            self.constant += penalty.constant
-
-    def get_qubo_problem(self, multipliers: float = None):
-        """
-        Creates a QUBO problem form a Docplex model
-
-        Parameters
-        ----------
-        model : Docplex model
-            It is an object that has the mathematical expressions (Cost function,
-            Inequality and Equality constraints) of an optimization problem.
-
-        Returns
-        -------
-        The PUBO encoding of this problem.
-
-        """
-        # save a dictionary with the qubo information
-        self.qubo_dict = defaultdict(float)
-        #valid the expression is an equation
-        self.objective_expr = self.model.objective_expr
-        # objective sense
-        if self.model.objective_sense.is_minimize():
-            self.sense = 1
-        else:
-            self.sense = -1
-        
-        
-        # Obtain the constant from the model
-        self.constant = self.objective_expr.constant
-        
-        
-        # Save the terms and coeffs form the linear part
-        self.linear_expr(self.objective_expr)
-            
-        # Save the terms and coeffs form the quadratic part
-        self.quadratic_expr(self.objective_expr)
-        
-        # Add the linear constraints into the qubo
-        self.linear_constraint(multipliers=multipliers)
-
-        terms = list(self.qubo_dict.keys()) + [[]] # The right term is for adding the constant part of the QUBO 
-        
-        weights = list(self.qubo_dict.values()) + [self.constant]
-        
-        n_variables = self.model.number_of_variables
-            
-        #convert the docplex terms in a Hamiltonian
-        return  PUBO(n_variables, terms, weights, encoding=Encoding.BINARY_ENCODING)
-=======
         return QUBO(self.G.number_of_nodes(), list(terms), list(weights))
->>>>>>> upstream/dev
+
+class ShortestPath(Problem):
+    """
+    Creates an instance of the Shortest Path problem.
+
+    Parameters
+    ----------
+    G: nx.Graph
+        The input graph as NetworkX graph instance.
+    source: int
+        The index of the source node.
+    dest: int
+        The index of the destination node.
+
+    Returns
+    -------
+        An instance of the Shortest Path problem.
+    """
+    def __init__(self, G, source, dest):
+        
+        # Relabel nodes to integers starting from 0
+        mapping = dict(zip(G, range(G.number_of_nodes())))
+        self.G = nx.relabel_nodes(G, mapping)
+
+        self.source = source
+        self.dest = dest
+
+        assert source in list(G.nodes), f"Source node not within nodes of input graph"
+        assert dest in list(G.nodes), f"Destination node not within nodes of input graph"
+        assert source != dest, "Source and destination nodes cannot be the same"
+
+
+    @staticmethod
+    def random_instance(**kwargs):
+        """
+        Creates a random instance of the Shortest problem, whose graph is
+        random following the Erdos-Renyi model. By default the node and edge 
+        weights are set to 1.0 and the default constraint is taken to be as large.
+
+        Parameters
+        ----------
+        **kwargs:
+            Required keyword arguments are:
+
+            n_nodes: int
+                The number of nodes (vertices) in the graph.
+            edge_probability: float
+                The probability with which an edge is added to the graph.
+
+        Returns
+        -------
+        A random instance of the Shortest Path problem.
+        """
+
+        n_nodes, edge_probability, seed, source, dest = check_kwargs(['n_nodes', 'edge_probability','seed', 'source', 'dest'],
+                                                                    [None, None, 1234, 0, 1], **kwargs)
+        G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
+
+        DEFAULT_WEIGHTS = 1.0
+
+        for (u, v) in G.edges():
+            G.edges[u,v]['weight'] = DEFAULT_WEIGHTS
+        for w in G.nodes():
+            G.nodes[w]['weight'] = DEFAULT_WEIGHTS
+
+        return ShortestPath(G,source,dest)
+
+    def convert_binary_to_ising(self, terms, weights):
+        """
+        Converts the weights from a [0, 1] encoding to an Ising problem [-1, 1] 0 is mapped to +1 and 1 to -1 respectively
+
+        Parameters
+        ----------
+        terms: list[list]
+            terms of the hamiltonian
+        weights: list[float]
+
+        Returns
+        -------
+        terms_weights: tuple(list[list],list[float])
+            Tuple containing the converted list of terms and list of weights
+        """
+        new_terms_weights = []
+        constant = 0
+
+        for i, term in enumerate(terms):
+            if len(term) == 1:
+                new_terms_weights.append((term,-0.5*weights[i]))
+                constant += 0.5*weights[i]
+            elif len(term) == 2:
+                for t in term:
+                    new_terms_weights.append(([t], -0.25*weights[i]))
+                new_terms_weights.append((term, 0.25*weights[i]))
+                constant += 0.25*weights[i]
+
+        new_terms_weights.append(([], constant))
+
+        return tuple(zip(*(new_terms_weights)))
+
+    def terms_and_weights(self):
+        """
+        Creates the terms and weights for the Shortest Path problem
+        
+        Returns
+        -------
+        terms_weights: tuple(list[list],list[float])
+            Tuple containing list of terms and list of weights
+        """
+        s = self.source
+        d = self.dest
+        n_nodes = self.G.number_of_nodes()
+        n_edges = self.G.number_of_edges()
+        
+        # # Linear terms due to node weights
+    #     # For loop version
+    #     node_terms_weights = []
+    #     for i in range(n_nodes):
+    #         if i not in [s, d]:
+    #             shift = int(i>s)+int(i>d)
+    #             node_terms_weights.append(([i-shift], self.G.nodes[i]['weight']))
+        node_terms_weights = [([i-(int(i>s)+int(i>d))], self.G.nodes[i]['weight']) for i in range(n_nodes) if i not in [s, d]]
+        
+        # Linear terms due to edge weights (shift of n_nodes-2 since we removed 2 nodes)
+    #     # For loop version
+    #     edge_terms_weights = []
+    #     for i, (u,v) in enumerate(self.G.edges()):
+    #         edge_terms_weights.append(([i+n_nodes-2], self.G.edges[u,v]['weights']))
+        edge_terms_weights = [([i+n_nodes-2], self.G.edges[u,v]['weight']) for i, (u,v) in enumerate(self.G.edges())]
+        
+        # Source flow constraint
+    #     # For loop version
+    #     start_flow_terms_weights = []
+    #     for i, x in enumerate(self.G.edges()):
+    #         for j, y in enumerate(self.G.edges()):
+    #             if s in x and s in y:
+    #                 if i == j:
+    #                     start_flow_terms_weights.append(([i+n_nodes-2], -1))
+    #                 else:
+    #                     start_flow_terms_weights.append(([i+n_nodes-2,j+n_nodes-2], 1))
+        start_flow_terms_weights = [([i+n_nodes-2], -1) if i==j else ([i+n_nodes-2,j+n_nodes-2], 1) for i,x in enumerate(self.G.edges()) for j,y in enumerate(self.G.edges()) if (s in x and s in y)]
+        
+        # Destination flow constraint
+    #     # For loop version
+    #     dest_flow_terms_weights = []
+    #     for i, x in enumerate(self.G.edges()):
+    #         for j, y in enumerate(self.G.edges()):
+    #             if d in x and d in y:
+    #                 if i == j:
+    #                     dest_flow_terms_weights.append(([i+n_nodes-2], -1))
+    #                 else:
+    #                     dest_flow_terms_weights.append(([i+n_nodes-2,j+n_nodes-2], 1))
+        dest_flow_terms_weights = [([i+n_nodes-2], -1) if i==j else ([i+n_nodes-2,j+n_nodes-2], 1) for i,x in enumerate(self.G.edges()) for j,y in enumerate(self.G.edges()) if (d in x and d in y)]
+        
+        # Path flow constraint
+        path_flow_terms_weights = []
+        for i in range(n_nodes):
+            if i != d and i != s:
+                shift = int(i>s)+int(i>d)
+                path_flow_terms_weights.append(([i-shift], 4))
+                for j, x in enumerate(self.G.edges()):
+                    if i in x:
+                        path_flow_terms_weights.append(([i-shift, j+n_nodes-2], -4))
+                    for k, y in enumerate(self.G.edges()):
+                        if i in x and i in y:
+                            if j == k:
+                                path_flow_terms_weights.append(([j+n_nodes-2], 1))
+                            else:
+                                path_flow_terms_weights.append(([j+n_nodes-2, k+n_nodes-2], 1))
+
+        return tuple(zip(*(node_terms_weights+edge_terms_weights+start_flow_terms_weights+dest_flow_terms_weights+path_flow_terms_weights)))
+
+    def get_qubo_problem(self):
+        """
+        Returns the QUBO encoding of this problem.
+
+        Returns
+        -------
+        The QUBO encoding of this problem.
+        """
+        # Extract terms and weights from the problem definition
+        bin_terms, bin_weights = self.terms_and_weights()
+        terms, weights = self.convert_binary_to_ising(bin_terms, bin_weights)
+        n_variables = self.G.number_of_nodes() + self.G.number_of_edges() - 2
+
+        return QUBO(n_variables, list(terms), list(weights))
