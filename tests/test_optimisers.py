@@ -79,7 +79,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
         optimizer_dicts = []
         for method in MINIMIZE_METHODS:
             optimizer_dicts.append(
-                {'method': method, 'maxiter': niter, 'tol': 10**(-9)})
+                {'tol': 10**(-9), 'method': method, 'options' : {'maxiter': niter}})
 
         for i, optimizer_dict in enumerate(optimizer_dicts):
 
@@ -113,18 +113,18 @@ class TestQAOACostBaseClass(unittest.TestCase):
         stepsize = 0.001
 
         # pre-computed final optimized costs
-        y_precomp = [-2.4212581335011456, -2.4246393953483825, -
-                     2.47312715451289, -2.5031221706241906]
+        y_precomp = [-2.42125813350, -2.424639395348, 
+                     -2.47312715451, -2.503122170624]
 
         optimizer_dicts = []
-        optimizer_dicts.append({'method': 'vgd', 'maxiter': niter,
-                               'stepsize': stepsize, 'tol': 10**(-9), 'jac': 'finite_difference'})
-        optimizer_dicts.append({'method': 'newton', 'maxiter': niter, 'stepsize': stepsize,
-                               'tol': 10**(-9), 'jac': 'finite_difference', 'hess': 'finite_difference'})
-        optimizer_dicts.append({'method': 'natural_grad_descent', 'maxiter': niter,
-                               'stepsize': 0.01, 'tol': 10**(-9), 'jac': 'finite_difference'})
-        optimizer_dicts.append({'method': 'rmsprop', 'maxiter': niter, 'stepsize': stepsize,
-                               'tol': 10**(-9), 'jac': 'finite_difference', 'decay': 0.9, 'eps': 1e-07})
+        optimizer_dicts.append({'method': 'vgd', 'tol': 10**(-9), 'jac': 'finite_difference', 
+                                'options' : {'maxiter': niter, 'stepsize': stepsize}})
+        optimizer_dicts.append({'method': 'newton', 'tol': 10**(-9), 'jac': 'finite_difference', 'hess': 'finite_difference', 
+                                'options' : {'maxiter': niter, 'stepsize': stepsize}})
+        optimizer_dicts.append({'method': 'natural_grad_descent', 'tol': 10**(-9), 'jac': 'finite_difference', 
+                                'options' : {'maxiter': niter, 'stepsize': 0.01}})
+        optimizer_dicts.append({'method': 'rmsprop', 'tol': 10**(-9), 'jac': 'finite_difference', 
+                                'options' : {'maxiter': niter, 'stepsize': stepsize, 'decay': 0.9, 'eps': 1e-07}})
 
         for i, optimizer_dict in enumerate(optimizer_dicts):
 
@@ -137,7 +137,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
             assert np.isclose(y_precomp[i], y_opt[-1], rtol=1e-04,
                               atol=1e-04), f"{optimizer_dict['method']} method failed the test."
-
+        
     def test_gradient_descent_step(self):
         '''
         Check that implemented gradient descent takes the first two steps correctly.
@@ -162,7 +162,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
-                                         'method': 'vgd', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac})
+                                         'method': 'vgd', 'tol': 10**(-9), 'jac': jac, 
+                                         'options' : {'maxiter': niter, 'stepsize': stepsize}})
         vector_optimizer()
         y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
 
@@ -212,7 +213,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
-                                         'method': 'newton', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac, 'hess': hess})
+                                         'method': 'newton', 'tol': 10**(-9), 'jac': jac, 'hess': hess, 
+                                         'options' : {'maxiter': niter, 'stepsize': stepsize}})
         vector_optimizer()
         y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
 
@@ -258,7 +260,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
-                                         'method': 'natural_grad_descent', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac})
+                                         'method': 'natural_grad_descent', 'tol': 10**(-9), 'jac': jac, 
+                                         'options' : {'maxiter': niter, 'stepsize': stepsize}})
         vector_optimizer()
         y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
 
@@ -308,7 +311,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
-                                         'method': 'rmsprop', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac, 'decay': decay, 'eps': eps})
+                                         'method': 'rmsprop', 'tol': 10**(-9), 'jac': jac, 
+                                         'options' : {'maxiter': niter, 'stepsize': stepsize, 'decay': decay, 'eps': eps}})
         vector_optimizer()
         y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
 
