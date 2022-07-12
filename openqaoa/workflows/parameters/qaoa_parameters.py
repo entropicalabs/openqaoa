@@ -204,6 +204,10 @@ class ClassicalOptimizer(Parameters):
         Whether to perform optimization routine on the given QAOA problem
     method: str
         optimization method for QAOA e.g. 'COBYLA'
+    maxiter : Optional[int]
+        Maximum number of iterations.
+    maxfev : Optional[int]
+        Maximum number of function evaluations.
     jac: str
         Method to compute the gradient vector. Choose from:
         `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
@@ -217,9 +221,16 @@ class ClassicalOptimizer(Parameters):
     tol : float
         Tolerance before the optimizer terminates; if `tol` is larger than
         the difference between two steps, terminate optimization.
-    options : dict
-        Dictionary of optimiser-specific arguments. Common inputs are `maxiter`, `stepsize`, etc.
-        Refer to arguments of optimisation methods for possible inputs.
+    optimizer_options : dict
+        Dictionary of optimiser-specific arguments. 
+            stepsize : float
+                Step size of each gradient descent step.
+            decay : float
+                Stepsize decay parameter of RMSProp.
+            eps : float
+                Small number to prevent division by zero for RMSProp.
+            lambd : float
+                Small number to regularize QFIM for Natural Gradient Descent.
     jac_options : dict
         Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
     hess_options : dict
@@ -230,12 +241,14 @@ class ClassicalOptimizer(Parameters):
     def __init__(self,
                  optimize: bool = True,
                  method: str = 'cobyla',
+                 maxiter : int = 100, 
+                 maxfev : int = None,
                  jac: str = None,
                  hess: str = None,
                  constraints=None,
                  bounds=None,
                  tol=None,
-                 options: dict = {'maxiter' : 100},
+                 optimizer_options: dict = None,
                  jac_options: dict = None,
                  hess_options: dict = None,
                  optimization_progress: bool = False,
@@ -245,13 +258,15 @@ class ClassicalOptimizer(Parameters):
                 
         self.optimize = optimize
         self.method = method.lower()
+        self.maxiter = maxiter
+        self.maxfev = maxfev
         self.jac = jac.lower() if type(jac) == str else jac
         self.hess = hess.lower() if type(hess) == str else hess
         self.constraints = constraints
         self.bounds = bounds
         self.tol = tol
         
-        self.options = options
+        self.optimizer_options = optimizer_options
         
         self.jac_options = jac_options
         self.hess_options = hess_options

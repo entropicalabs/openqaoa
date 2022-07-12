@@ -366,8 +366,14 @@ class ScipyOptimizer(OptimizeVQA):
         else:
             raise ValueError(
                 f"Bounds for Scipy optimization should be of type {Bounds}, or a list in the form [[ub1, lb1], [ub2, lb2], ...]")
-
-        self.options = optimizer_dict.get('options', None)
+        
+        self.options = optimizer_dict.get('optimizer_options', {})
+        
+        if optimizer_dict.get("maxiter") is not None:
+            self.options["maxiter"] = optimizer_dict.get('maxiter', None)
+        if optimizer_dict.get("maxfev") is not None:
+            self.options["maxfev"] = optimizer_dict.get('maxfev', None)
+        
         self.tol = optimizer_dict.get('tol', None)
 
         return self
@@ -392,7 +398,7 @@ class ScipyOptimizer(OptimizeVQA):
         : 
             Returns self after the optimization process is completed.
         '''
-        
+        print(self.options)
         try:
             if self.method not in ScipyOptimizer.GRADIENT_FREE:
                 if self.hess == None:
@@ -521,7 +527,13 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             raise ValueError(
                 f"Bounds for Scipy optimization should be of type {Bounds}")
 
-        self.options = optimizer_dict.get('options', None)
+        self.options = optimizer_dict.get('optimizer_options', {})
+        
+        if optimizer_dict.get("maxiter") is not None:
+            self.options["maxiter"] = optimizer_dict.get('maxiter', None)
+        if optimizer_dict.get("maxfev") is not None:
+            self.options["maxfev"] = optimizer_dict.get('maxfev', None)
+        
         self.tol = optimizer_dict.get('tol', None)
 
         return self
