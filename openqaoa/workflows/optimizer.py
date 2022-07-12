@@ -167,13 +167,13 @@ class QAOA(Optimizer):
             trainable_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
         """
+
         for key, value in kwargs.items():
             if hasattr(self.circuit_properties, key):
-                pass
+                setattr(self.circuit_properties, key, value)
             else:
                 raise ValueError(
                     "Specified argument is not supported by the circuit")
-        self.circuit_properties = CircuitProperties(**kwargs)
 
         return None
 
@@ -210,12 +210,11 @@ class QAOA(Optimizer):
 
         for key, value in kwargs.items():
             if hasattr(self.backend_properties, key):
-                pass# setattr(self.backend_properties, key, value)
+                setattr(self.backend_properties, key, value)
             else:
                 raise ValueError(
                     f'Specified argument `{value}` for `{key}` in set_backend_properties is not supported')
 
-        self.backend_properties = BackendProperties(**kwargs)
         return None
 
     def set_classical_optimizer(self, **kwargs):
@@ -229,8 +228,6 @@ class QAOA(Optimizer):
                 ['imfil','bobyqa','snobfit']
                 ['vgd', 'sgd', 'rmsprop'] 
                 ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
-            maxiter : Optional[int]
-                Maximum number of iterations.
             jac: str
                 Method to compute the gradient vector. Choose from:
                 ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
@@ -244,14 +241,8 @@ class QAOA(Optimizer):
             tol : float
                 Tolerance before the optimizer terminates; if `tol` is larger than
                 the difference between two steps, terminate optimization.
-            stepsize : float
-                Step size of each gradient descent step.
-            decay : float
-                Stepsize decay parameter of RMSProp.
-            eps : float
-                Small number to prevent division by zero for RMSProp.
-            lambd : float
-                Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
+            options : dict
+                Dictionary of optimiser-specific arguments. Common inputs are `maxiter`, `stepsize`, etc.
             ramp_time: float
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
             jac_options : dict
@@ -261,12 +252,11 @@ class QAOA(Optimizer):
         """
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
-                pass #setattr(self.classical_optimizer, key, value)
+                setattr(self.classical_optimizer, key, value)
             else:
                 raise ValueError(
-                    'Specified argument is not supported by the Classical Optimizer')
+                    f'Specified argument "{key}" is not supported by the Classical Optimizer')
 
-        self.classical_optimizer = ClassicalOptimizer(**kwargs)
         return None
 
     def compile(self, problem: QUBO = None, verbose: bool = False):
@@ -287,13 +277,13 @@ class QAOA(Optimizer):
         verbose: bool
             Set True to have a summary of QAOA to displayed after compilation
         """
-        self.cost_hamil = Hamiltonian.classical_hamiltonian(
-            terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
-        
-        self.mixer_hamil = get_mixer_hamiltonian(n_qubits=self.cost_hamil.n_qubits,
+        self.mixer_hamil = get_mixer_hamiltonian(n_qubits=problem.n,
                                                  mixer_type=self.circuit_properties.mixer_hamiltonian,
                                                  qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
                                                  coeffs=self.circuit_properties.mixer_coeffs)
+
+        self.cost_hamil = Hamiltonian.classical_hamiltonian(
+            terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
 
         self.circuit_params = QAOACircuitParams(
             self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p)

@@ -21,8 +21,8 @@ from .parameters import Parameters
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
 
-ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
-                       'fourier_extended', 'fourier_w_bias', 'annealing']
+ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias',
+                       'extended', 'fourier', 'fourier_extended', 'fourier_w_bias']
 ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
 ALLOWED_MIXERS = ['x', 'xy']
 ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS
@@ -59,7 +59,7 @@ class CircuitProperties(Parameters):
         self.init_type = init_type
         self.qubit_register = qubit_register
         self.p = p
-        self.q = q if param_type.lower() in ['fourier','fourier_extended', 'fourier_w_bias'] else None
+        self.q = q if param_type.lower() == 'fourier' else None
         self.variational_params_dict = variational_params_dict
         self.annealing_time = annealing_time if annealing_time is not None else 0.7*self.p
         self.linear_ramp_time = linear_ramp_time if linear_ramp_time is not None else 0.7*self.p
@@ -157,8 +157,6 @@ class BackendProperties(Parameters):
         The number of shots to be used for the shot-based computation.
     cvar_alpha: `float`
         The value of the CVaR parameter.
-    noise_model: `NoiseModel`
-        The noise model to be used for the shot-based simulator.
     qubit_layout: `Union[List[int], np.ndarray]`
         Mapping from physical to logical qubit indices, used to eventually 
         construct the quantum circuit.  For example, for a system composed by 3 qubits
@@ -174,7 +172,6 @@ class BackendProperties(Parameters):
                  init_hadamard: bool = True,
                  n_shots: int = 100,
                  cvar_alpha: float = 1,
-                 noise_model = None,
                  qubit_layout: Optional[Union[List[int], np.ndarray]] = None):
         
         self.init_hadamard = init_hadamard
@@ -182,7 +179,6 @@ class BackendProperties(Parameters):
         self.prepend_state = prepend_state
         self.append_state = append_state
         self.cvar_alpha = cvar_alpha
-        self.noise_model = noise_model
         self.qubit_layout = qubit_layout
 
     # @property
@@ -208,8 +204,6 @@ class ClassicalOptimizer(Parameters):
         Whether to perform optimization routine on the given QAOA problem
     method: str
         optimization method for QAOA e.g. 'COBYLA'
-    maxiter : Optional[int]
-        Maximum number of iterations.
     jac: str
         Method to compute the gradient vector. Choose from:
         `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
@@ -223,14 +217,9 @@ class ClassicalOptimizer(Parameters):
     tol : float
         Tolerance before the optimizer terminates; if `tol` is larger than
         the difference between two steps, terminate optimization.
-    stepsize : float
-        Step size of each gradient descent step.
-    decay : float
-        Stepsize decay parameter of RMSProp.
-    eps : float
-        Small number to prevent division by zero for RMSProp.
-    lambd : float
-        Small number to regularize QFIM for Natural Gradient Descent.
+    options : dict
+        Dictionary of optimiser-specific arguments. Common inputs are `maxiter`, `stepsize`, etc.
+        Refer to arguments of optimisation methods for possible inputs.
     jac_options : dict
         Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
     hess_options : dict
@@ -241,34 +230,29 @@ class ClassicalOptimizer(Parameters):
     def __init__(self,
                  optimize: bool = True,
                  method: str = 'cobyla',
-                 maxiter: int = 100,
                  jac: str = None,
                  hess: str = None,
                  constraints=None,
                  bounds=None,
                  tol=None,
-                 stepsize: float = None,
-                 decay: float = None,
-                 eps: float = None,
-                 lambd: float = None,
+                 options: dict = {'maxiter' : 100},
                  jac_options: dict = None,
                  hess_options: dict = None,
                  optimization_progress: bool = False,
                  cost_progress: bool = True,
                  parameter_log: bool = True,
                  top_k_solutions: int = 1):
+                
         self.optimize = optimize
         self.method = method.lower()
-        self.maxiter = maxiter
         self.jac = jac.lower() if type(jac) == str else jac
         self.hess = hess.lower() if type(hess) == str else hess
         self.constraints = constraints
         self.bounds = bounds
         self.tol = tol
-        self.stepsize = stepsize
-        self.decay = decay
-        self.eps = eps
-        self.lambd = lambd
+        
+        self.options = options
+        
         self.jac_options = jac_options
         self.hess_options = hess_options
         self.parameter_log = parameter_log
