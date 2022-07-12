@@ -294,7 +294,11 @@ class ScipyOptimizer(OptimizeVQA):
         
             * sets ``maxiters = 100`` by default if not specified.
             
-        * options
+        * maxfev
+        
+            * sets ``maxfev = 100`` by default if not specified.
+            
+        * optimizer_options
         
             * Dictionary of optimiser-specific arguments, defaults to ``None``
 
@@ -460,7 +464,11 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         
             * sets ``maxiters = 100`` by default if not specified.
             
-        * options
+        * maxfev
+        
+            * sets ``maxfev = 100`` by default if not specified.
+            
+        * optimizer_options
         
             * Dictionary of optimiser-specific arguments, defaults to ``None``
 

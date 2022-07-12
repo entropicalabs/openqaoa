@@ -235,7 +235,12 @@ class ClassicalOptimizer(Parameters):
         Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
     hess_options : dict
         Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
-
+    optimization_progress : bool
+        Returns history of measurement outcomes/wavefunction if `True`. Defaults to `False`.
+    cost_progress : bool
+        Returns history of cost values if `True`. Defaults to `True`. 
+    parameter_log : bool
+        Returns history of angles if `True`. Defaults to `True`.
     """
 
     def __init__(self,
