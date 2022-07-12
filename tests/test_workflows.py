@@ -143,7 +143,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q = QAOA()
         
         for each_param_type in fourier_param_types:
-            q.set_circuit_properties(param_type = "fourier", q = 1)
+            q.set_circuit_properties(param_type = each_param_type, q = 1)
             self.assertEqual(q.circuit_properties.q, 1)
         
         q.set_circuit_properties(param_type = "standard", q = 1)
