@@ -244,7 +244,7 @@ class TSP(Problem):
             
             for each_value in each_entry:
                 if not isinstance(each_value, float) and not isinstance(each_value, int):
-                    raise TypeError("The coordinates must of type float or int")
+                    raise TypeError("The coordinates must be of type float or int")
             
         self._coordinates = np.array(input_coordinates)
 
@@ -270,7 +270,9 @@ class TSP(Problem):
             np.random.seed(seed)
         
         box_size = np.sqrt(n_cities)
-        coordinates = box_size * np.random.rand(n_cities, 2)
+        coordinates = []
+        for i in range(int(box_size)):
+            coordinates.extend(list(map(tuple, np.random.rand(n_cities, 2))))
         return TSP(coordinates)
 
     def get_distance_matrix(self):
@@ -650,7 +652,7 @@ class Knapsack(Problem):
         weight_capacity = np.random.randint(np.min(weights) * n_items, np.max(weights) * n_items)
         penalty = 2 * np.max(values)
 
-        return Knapsack(values, weights, weight_capacity, penalty)
+        return Knapsack(values, weights, weight_capacity, int(penalty))
 
     def terms_and_weights(self):
         n_variables_slack = int(np.ceil(np.log2(self.weight_capacity)))
@@ -788,7 +790,7 @@ class SlackFreeKnapsack(Knapsack):
         weight_capacity = np.random.randint(np.min(weights) * n_items, np.max(weights) * n_items)
         penalty = 2 * np.max(values)
 
-        return SlackFreeKnapsack(values, weights, weight_capacity, penalty)
+        return SlackFreeKnapsack(values, weights, weight_capacity, int(penalty))
     
     def terms_and_weights(self):
         """
