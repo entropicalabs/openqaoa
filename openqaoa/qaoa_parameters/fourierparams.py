@@ -158,7 +158,9 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
         Make a more informed choice of the default value for ``q``. Probably
         depending on ``n_qubits``
         """
-
+        assert q is not None, f"Depth q for {cls.__name__} must be specified"
+        
+        # Set default time
         if time is None:
             time = 0.7 * qaoa_circuit_params.p
 

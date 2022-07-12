@@ -451,7 +451,7 @@ def random_classical_hamiltonian(reg: List[int],
 ################################################################################
 
 
-def ground_state_hamiltonian(hamiltonian: Hamiltonian) -> Tuple[float, list]:
+def ground_state_hamiltonian(hamiltonian: Hamiltonian, bounded = True) -> Tuple[float, list]:
     """
     Computes the exact ground state and ground state energy of a classical Hamiltonian. Uses standard numpy module.
 
@@ -459,6 +459,10 @@ def ground_state_hamiltonian(hamiltonian: Hamiltonian) -> Tuple[float, list]:
     ----------
     hamiltonian: `Hamiltonian`
         Hamiltonian object whose ground state properties are computed.
+    bounded: `bool`, optional
+        If set to True, the function will not perform computations for qubit
+        numbers above 25. If False, the user can specify any number. Defaults
+        to True.
 
     Returns
     -------
@@ -471,6 +475,10 @@ def ground_state_hamiltonian(hamiltonian: Hamiltonian) -> Tuple[float, list]:
     """
     # Extract number of qubits 
     n_qubits = hamiltonian.n_qubits
+    
+    # If number of qubits is too high warn the user
+    if bounded and n_qubits > 25:
+        raise ValueError("The number of qubits is too high, computation could take a long time. If still want to proceed set argument `bounded` to False")
 
     # Generate qubit register
     register = range(n_qubits)
