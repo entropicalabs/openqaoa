@@ -64,7 +64,10 @@ class CircuitProperties(Parameters):
         self.annealing_time = annealing_time if annealing_time is not None else 0.7*self.p
         self.linear_ramp_time = linear_ramp_time if linear_ramp_time is not None else 0.7*self.p
         self.mixer_hamiltonian = mixer_hamiltonian
-        self.mixer_qubit_connectivity = mixer_qubit_connectivity
+        if self.mixer_hamiltonian.lower() == 'xy':
+            self.mixer_qubit_connectivity = mixer_qubit_connectivity if mixer_qubit_connectivity is not None else 'full'
+        else:
+            self.mixer_qubit_connectivity = None
         self.mixer_coeffs = mixer_coeffs
         self.seed = seed
 

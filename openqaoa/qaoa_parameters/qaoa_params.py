@@ -169,11 +169,11 @@ def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
     elif init_type == 'ramp':
         qaoa_variational_params = params_class.linear_ramp_from_hamiltonian(qaoa_circuit_params,
                                                                             *variational_params_args,
-                                                                            linear_ramp_time)
+                                                                            time = linear_ramp_time)
     elif init_type == 'rand':
         qaoa_variational_params = params_class.random(qaoa_circuit_params,
                                                       *variational_params_args,
-                                                      seed)
+                                                      seed = seed)
     else:
         raise ValueError(f"{init_type} Initialisation strategy is not yet supported."
                          f" Please choose from {SUPPORTED_INITIALIZATION_TYPES}")
