@@ -257,6 +257,18 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
             else:
                 raise ValueError('Error : Unsupported prepend_state specified. Not an ndarray.')
+        
+        # Handle append state
+        if self.append_state is not None:
+            
+            if isinstance(self.append_state, np.ndarray) and np.shape(self.append_state) == (2**self.n_qubits, 2**self.n_qubits):
+                
+                # check unitarity of append_state matrix
+                if not np.allclose(np.eye(2**self.n_qubits), self.append_state.dot(self.append_state.conj().T)):
+                    raise ValueError('append_state is not a unitary matrix')
+                    
+            else:
+                raise ValueError('Unsupported append_state specified (Not an ndarray, or not of shape (2**n, 2**n).')
                 
         # Handle init_hadamard
         if self.init_hadamard:
@@ -699,20 +711,10 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # Handle append state
         if self.append_state is not None:
             
-            if isinstance(self.append_state, np.ndarray) and np.shape(self.append_state) == (2**self.n_qubits, 2**self.n_qubits):
-                
-                # check unitarity of append_state matrix
-                if np.allclose(np.eye(2**self.n_qubits), self.append_state.dot(self.append_state.conj().T)):
-                    # Flatten (2,...,2) shaped wfn into a 2**n-dim column vector before multiplying with unitary matrix, ...
-                    self.wavefn = np.matmul(self.append_state, self.wavefn.flatten())
-                    # then re-shape it back to (2,...,2)
-                    self.wavefn = self.wavefn.reshape([2] * self.n_qubits)
-    
-                else:
-                    raise ValueError('append_state is not a unitary matrix')
-                    
-            else:
-                raise ValueError('Unsupported append_state specified (Not an ndarray, or not of shape (2**n, 2**n).')
+            # Flatten (2,...,2) shaped wfn into a 2**n-dim column vector before multiplying with unitary matrix, ...
+            self.wavefn = np.matmul(self.append_state, self.wavefn.flatten())
+            # then re-shape it back to (2,...,2)
+            self.wavefn = self.wavefn.reshape([2] * self.n_qubits)
 
                 
     def wavefunction(self,

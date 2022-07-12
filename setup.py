@@ -6,10 +6,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 requirements = [
+    "sympy>=1.10.1",
     "numpy==1.22.3",
     "networkx==2.8",
     "scipy==1.8",
-    "matplotlib==3.4.3",
+    "matplotlib>=3.4.3",
     "qiskit==0.36.1",
     "pyquil==3.1.0",
     "pytest==7.1.0",
