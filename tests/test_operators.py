@@ -780,19 +780,6 @@ class TestingOperators(unittest.TestCase):
         # Test if string representation was correctly generated
         assert sym_rep == correct_sym_rep, f'Symbolic representation was incorrectly generated'
 
-        # Exception - sympy is not installed
-        import sys
-
-        # Set the sympy module to None locally to test the import error
-        sys.modules['sympy'] = None
-        
-        # Test the exception is raised - Attempt creating an expression from previous hamiltonian
-        with self.assertRaises(ImportError) as context:
-            sym_rep = hamiltonian.expression
-
-        # Check exception message
-        self.assertEqual("Sympy is not installed. Pip install sympy to use this method", str(context.exception))
-
     def test_hamiltonian_add(self):
         """
         Test the function that adds two Hamiltonian objects.

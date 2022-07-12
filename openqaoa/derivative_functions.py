@@ -152,6 +152,8 @@ def derivative(backend_obj: QAOABaseBackend,
 
         if derivative_method == 'finite_difference':
             out = hessian_fd(backend_obj, params, derivative_options, logger)
+        else:
+            raise ValueError('Only support hessian derivative method is finite_difference. Your choice: {}'.format(derivative_method))
 
     return out
 
