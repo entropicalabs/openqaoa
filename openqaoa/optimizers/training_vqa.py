@@ -293,6 +293,10 @@ class ScipyOptimizer(OptimizeVQA):
         * maxiters
         
             * sets ``maxiters = 100`` by default if not specified.
+            
+        * options
+        
+            * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
     GRADIENT_FREE = ['cobyla', 'nelder-mead', 'powell', 'slsqp']
@@ -363,9 +367,7 @@ class ScipyOptimizer(OptimizeVQA):
             raise ValueError(
                 f"Bounds for Scipy optimization should be of type {Bounds}, or a list in the form [[ub1, lb1], [ub2, lb2], ...]")
 
-        maxiter = optimizer_dict.get('maxiter', 100)
-        self.options = {'maxiter': maxiter}
-
+        self.options = optimizer_dict.get('options', None)
         self.tol = optimizer_dict.get('tol', None)
 
         return self
@@ -451,6 +453,10 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         * maxiters
         
             * sets ``maxiters = 100`` by default if not specified.
+            
+        * options
+        
+            * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
     CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
@@ -474,7 +480,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         if self.method not in CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS:
             raise ValueError(
                 f"Please choose from the supported methods: {CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS}")
-
+        
         jac = optimizer_dict.get('jac', None)
         hess = optimizer_dict.get('hess', None)
         jac_options = optimizer_dict.get('jac_options', None)
@@ -515,12 +521,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             raise ValueError(
                 f"Bounds for Scipy optimization should be of type {Bounds}")
 
-        self.options = optimizer_dict
-
-        # Remove redundant keys (because self.jac and self.hess already exist)
-        optimizer_dict.pop('jac', None)
-        optimizer_dict.pop('hess', None)
-
+        self.options = optimizer_dict.get('options', None)
         self.tol = optimizer_dict.get('tol', None)
 
         return self
@@ -545,6 +546,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         : 
             The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
         '''
+        
         if self.method == 'vgd':
             method = om.grad_descent
         elif self.method == 'newton':
