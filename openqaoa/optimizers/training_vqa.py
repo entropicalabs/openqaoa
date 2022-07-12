@@ -404,7 +404,7 @@ class ScipyOptimizer(OptimizeVQA):
             else:
                 result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
                                   tol=self.tol, constraints=self.constraints, options=self.options, bounds=self.bounds)
-        except Exception as e:
+        except ConnectionError as e:
             print(e, '\n')
             print("The optimization has been terminated early. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
