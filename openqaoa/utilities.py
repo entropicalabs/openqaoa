@@ -294,8 +294,7 @@ def random_k_regular_graph(degree: int,
 
     return G
 
-
-def plot_graph(G: nx.Graph, ax=None) -> None:
+def plot_graph(G: nx.Graph, ax=None, colormap='seismic') -> None:
     """
     Plots a networkx graph.
 
@@ -305,6 +304,8 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
         The networkx graph of interest.
     ax: `Matplotlib axes object`, optional
         Matplotlib axes to plot on. Defaults to None.
+    colormap: `str`, optional
+        Colormap to use for plotting. Defaults to 'seismic'.
     """
     
     # Create plot figure
@@ -318,20 +319,20 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
 
     # extract minimum and maximum weights for side bar limits
     weights = list(edges_and_weights.values())
+    # Define color map
+    cmap = plt.cm.get_cmap(colormap)
     
-    if weights != []:
+    if len(set(weights)) != 1:
         edge_vmin = min(weights)
         edge_vmax = max(weights)
 
-        # Define color map
-        cmap = plt.cm.seismic
 
         # Define normalized color map
         sm = plt.cm.ScalarMappable(cmap=cmap,
                                 norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
         # Add colormap to plot
-        cbar = plt.colorbar(sm)
-        cbar.ax.set_ylabel('Edge Weights', rotation=270)
+        cbar = plt.colorbar(sm,pad=0.08)
+        cbar.ax.set_ylabel('Edge Weights', rotation=270,labelpad=15)
     else:
         weights = [1] * len(G.edges())
         edge_vmin = None
@@ -339,29 +340,31 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
         cmap = None    
     
     # If biases are present define reference values and color map for side bar
-    if biases != []:
+    if len(set(biases)) != 1:
+        cmap = plt.cm.get_cmap(colormap)
         vmin = min(biases)
         vmax = max(biases)
+        cmap = plt.cm.get_cmap('RdBu')
         sm2 = plt.cm.ScalarMappable(cmap=cmap,
                                     norm=plt.Normalize(vmin=vmin, vmax=vmax))
         cbar2 = plt.colorbar(sm2, location='left')
         cbar2.ax.set_ylabel('Single Qubit Biases', rotation=90)
 
         # Draw graph
-        nx.draw(G, pos, node_color=biases, edge_color=weights, width=1.5, cmap=cmap,
+        nx.draw(G, pos, node_size=500, node_color=biases, edge_color=weights, width=2.5, cmap=cmap,
                 edge_cmap=cmap, vmin=vmin, vmax=vmax, edge_vmin=edge_vmin,
                 edge_vmax=edge_vmax, with_labels=True)
 
     else:
         # Draw graph
-        nx.draw(G, pos, edge_color=weights, width=1.5,
+        nx.draw(G, pos, node_size=500, edge_color=weights, width=2.5,
                 edge_cmap=cmap, edge_vmin=edge_vmin,
                 edge_vmax=edge_vmax, with_labels=True)
     
     # Show plot
+    
     plt.show
     return None
-
 
 def random_classical_hamiltonian(reg: List[int],
                                  seed: int = None,
