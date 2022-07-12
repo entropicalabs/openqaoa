@@ -67,7 +67,7 @@ class QUBO:
 
     Returns
     -------
-        An instance of the Polynomial Unconstrained Binary Optimization 
+        An instance of the Quadratic Unconstrained Binary Optimization 
         (QUBO) class.
     """
     # Maximum number of terms allowed to enable the cleaning procedure
@@ -98,6 +98,46 @@ class QUBO:
 
         self.constant = constant
         self.n = n
+        
+    @property
+    def n(self):
+        return self._n
+    
+    @n.setter
+    def n(self, input_n):
+        
+        if not isinstance(input_n, int):
+            raise TypeError("The input parameter, n, has to be of type int")
+        
+        self._n = input_n
+        
+    @property
+    def weights(self):
+        return self._weights
+    
+    @weights.setter
+    def weights(self, input_weights):
+        
+        if not isinstance(input_weights, list):
+            raise TypeError("The input parameter, weights, has to be a list")
+
+        for each_entry in input_weights:
+            if not isinstance(each_entry, float) and not isinstance(each_entry, int):
+                raise TypeError("The elements in weights list must be of type float or int.")
+        
+        self._weights = input_weights
+        
+    @property
+    def terms(self):
+        return self._terms
+    
+    @terms.setter
+    def terms(self, input_terms):
+        
+        if not isinstance(input_terms, list):
+            raise TypeError("The input parameter, terms, has to be a list")
+        
+        self._terms = input_terms
 
     @property
     def hamiltonian(self):
@@ -144,7 +184,7 @@ class QUBO:
         return [list(term) for term in unique_terms], list(new_weights_for_terms.values())
 
     @staticmethod
-    def random_qubo(n, density=0.5, format_m='coo', max_abs_value=100):
+    def random_instance(n, density=0.5, format_m='coo', max_abs_value=100):
         # Generate a random matrix (elements in [0, 1]) of type sparse
         random_matrix = scipy.sparse.rand(n,
                                           n,
@@ -185,8 +225,28 @@ class TSP(Problem):
     """
     def __init__(self, coordinates=None):
         
-        self.coordinates = np.array(coordinates)
+        self.coordinates = coordinates
         self.n_cities = self.coordinates.shape[0]
+    
+    @property
+    def coordinates(self):
+        return self._coordinates
+    
+    @coordinates.setter
+    def coordinates(self, input_coordinates):
+        
+        if not isinstance(input_coordinates, list):
+            raise TypeError("The input parameter, coordinates, has to be a list")
+
+        for each_entry in input_coordinates:
+            if not isinstance(each_entry, tuple):
+                raise TypeError("The coordinates should be contained in a tuple.")
+            
+            for each_value in each_entry:
+                if not isinstance(each_value, float) and not isinstance(each_value, int):
+                    raise TypeError("The coordinates must of type float or int")
+            
+        self._coordinates = np.array(input_coordinates)
 
     @staticmethod
     def random_instance(**kwargs):
@@ -317,6 +377,22 @@ class NumberPartition(Problem):
         # Set the numbers to be partitioned. If not given, generate a random list with integers
         self.numbers = numbers
         self.n_numbers = None if numbers==None else len(self.numbers)
+    
+    @property
+    def numbers(self):
+        return self._numbers
+    
+    @numbers.setter
+    def numbers(self, input_numbers):
+        
+        if not isinstance(input_numbers, list):
+            raise TypeError("The input parameter, numbers, has to be a list")
+
+        for each_entry in input_numbers:
+            if not isinstance(each_entry, int):
+                raise TypeError("The elements in numbers list must be of type int.")
+            
+        self._numbers = input_numbers
 
     @staticmethod
     def random_instance(**kwargs):
@@ -397,10 +473,22 @@ class MaximumCut(Problem):
     DEFAULT_EDGE_WEIGHT = 1.0
 
     def __init__(self, G):
-
+        
+        self.G = G
+    
+    @property
+    def G(self):
+        return self._G
+    
+    @G.setter
+    def G(self, input_networkx_graph):
+        
+        if not isinstance(input_networkx_graph, nx.Graph):
+            raise TypeError("Input problem graph must be a networkx Graph.")
+        
         # Relabel nodes to integers starting from 0
-        mapping = dict(zip(G, range(G.number_of_nodes())))
-        self.G = nx.relabel_nodes(G, mapping)
+        mapping = dict(zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes())))
+        self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 
     @staticmethod
     def random_instance(**kwargs):
@@ -474,14 +562,71 @@ class Knapsack(Problem):
         if len(values) != len(weights):
             raise ValueError('Number of items does not match given value and weights')
 
-        self.n_items = len(weights)
         self.values = values
         self.weights = weights
         self.weight_capacity = weight_capacity
         self.penalty = penalty
+        self.n_items = len(weights)
+        
+    @property
+    def values(self):
+        return self._values
+    
+    @values.setter
+    def values(self, input_values):
+        
+        if not isinstance(input_values, list):
+            raise TypeError("The input parameter, values, has to be a list")
 
-    @classmethod
-    def random_instance(cls, **kwargs):
+        for each_entry in input_values:
+            if not isinstance(each_entry, int):
+                raise TypeError("The elements in values list must be of type int.")
+        
+        self._values = input_values
+        
+    @property
+    def weights(self):
+        return self._weights
+    
+    @weights.setter
+    def weights(self, input_weights):
+        
+        if not isinstance(input_weights, list):
+            raise TypeError("The input parameter, weights, has to be a list")
+
+        for each_entry in input_weights:
+            if not isinstance(each_entry, int):
+                raise TypeError("The elements in weights list must be of type int.")
+        
+        self._weights = input_weights
+        
+    @property
+    def weight_capacity(self):
+        return self._weight_capacity
+    
+    @weight_capacity.setter
+    def weight_capacity(self, input_weight_capacity):
+        
+        if not isinstance(input_weight_capacity, int):
+            raise TypeError("The input parameter, weight_capacity, has to be of type int")
+        
+        self._weight_capacity = input_weight_capacity
+        
+    @property
+    def penalty(self):
+        return self._penalty
+    
+    @penalty.setter
+    def penalty(self, input_penalty):
+        
+        if not isinstance(input_penalty, int) and not isinstance(input_penalty, float):
+            raise TypeError("The input parameter, penalty, has to be of type float or int")
+        
+        self._penalty = input_penalty
+            
+
+    @staticmethod
+    def random_instance(**kwargs):
         """
         Creates a random instance of the Knapsack problem.
 
@@ -505,7 +650,7 @@ class Knapsack(Problem):
         weight_capacity = np.random.randint(np.min(weights) * n_items, np.max(weights) * n_items)
         penalty = 2 * np.max(values)
 
-        return cls(values, weights, weight_capacity, penalty)
+        return Knapsack(values, weights, weight_capacity, penalty)
 
     def terms_and_weights(self):
         n_variables_slack = int(np.ceil(np.log2(self.weight_capacity)))
@@ -617,6 +762,33 @@ class SlackFreeKnapsack(Knapsack):
     def __init__(self, values, weights, weight_capacity, penalty):
 
         super().__init__(values, weights, weight_capacity, penalty)
+        
+    @staticmethod
+    def random_instance(**kwargs):
+        """
+        Creates a random instance of the Knapsack problem.
+
+        Parameters
+        ----------
+        n_items: int
+            The number of items that can be placed in the knapsack.
+        
+        Returns
+        -------
+            A random instance of the Knapsack problem.
+        """
+        n_items = check_kwargs(['n_items'], [None], **kwargs)[0]
+        seed = kwargs.get('seed')
+
+        if isinstance(seed, int):
+            np.random.seed(seed)
+
+        values = list(map(int, np.random.randint(1, n_items, size=n_items)))
+        weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
+        weight_capacity = np.random.randint(np.min(weights) * n_items, np.max(weights) * n_items)
+        penalty = 2 * np.max(values)
+
+        return SlackFreeKnapsack(values, weights, weight_capacity, penalty)
     
     def terms_and_weights(self):
         """
@@ -708,12 +880,47 @@ class MinimumVertexCover(Problem):
     """
     def __init__(self,G,field,penalty):
 
-        # Relabel nodes to integers starting from 0
-        mapping = dict(zip(G, range(G.number_of_nodes())))
-        self.G = nx.relabel_nodes(G, mapping)
-
+        self.G = G
         self.field = field
         self.penalty = penalty
+        
+    @property
+    def G(self):
+        return self._G
+    
+    @G.setter
+    def G(self, input_networkx_graph):
+        
+        if not isinstance(input_networkx_graph, nx.Graph):
+            raise TypeError("Input problem graph must be a networkx Graph.")
+        
+        # Relabel nodes to integers starting from 0
+        mapping = dict(zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes())))
+        self._G = nx.relabel_nodes(input_networkx_graph, mapping)
+        
+    @property
+    def field(self):
+        return self._field
+    
+    @field.setter
+    def field(self, input_field):
+        
+        if not isinstance(input_field, int) and not isinstance(input_field, float):
+            raise TypeError("The input parameter, field, has to be of type float or int")
+        
+        self._field = input_field
+        
+    @property
+    def penalty(self):
+        return self._penalty
+    
+    @penalty.setter
+    def penalty(self, input_penalty):
+        
+        if not isinstance(input_penalty, int) and not isinstance(input_penalty, float):
+            raise TypeError("The input parameter, penalty, has to be of type float or int")
+        
+        self._penalty = input_penalty
 
     @staticmethod
     def random_instance(**kwargs):
