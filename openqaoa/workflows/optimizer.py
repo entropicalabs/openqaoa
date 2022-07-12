@@ -290,6 +290,9 @@ class QAOA(Optimizer):
         verbose: bool
             Set True to have a summary of QAOA to displayed after compilation
         """
+
+        assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
+        
         self.cost_hamil = Hamiltonian.classical_hamiltonian(
             terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
         
