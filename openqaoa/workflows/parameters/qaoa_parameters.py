@@ -275,7 +275,6 @@ class ClassicalOptimizer(Parameters):
         
         self.jac_options = jac_options
         self.hess_options = hess_options
-        self.parameter_log = parameter_log
         self.optimization_progress = optimization_progress
         self.cost_progress = cost_progress
         self.parameter_log = parameter_log
