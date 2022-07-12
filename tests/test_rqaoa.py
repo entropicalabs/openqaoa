@@ -13,47 +13,18 @@
 #   limitations under the License.
 
 import numpy as np
+import networkx as nx
 import unittest
 
 from openqaoa.qaoa_parameters import Hamiltonian
 from openqaoa.rqaoa import *
-from openqaoa.devices import DeviceLocal
+from openqaoa.problems.problem  import MinimumVertexCover
 
 """
 Unittest based testing of current implementation of the RQAOA Algorithm
 """
 
 class TestingRQAOA(unittest.TestCase):
-
-    def test_classical_exact_solution(self):
-        """
-        Test of the classical solver function which computes the solution of the problem when 
-        the number of qubits reaches the cutoff value.
-
-        The test consists in obtaining the solution for an unweighted ring graph.
-        """
-        ## Problem definition
-
-        # Number of variables/qubits
-        n_qubits = 10 
-
-        # Terms and weights of the graph
-        terms = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] # Ring structure
-        weights = [1 for _ in range(len(terms))] # All weights equal to 1
-
-        # Define Hamiltonian
-        hamiltonian = Hamiltonian.classical_hamiltonian(terms, weights, constant = 0) 
-
-        ## Testing
-
-        # Exact solution to the problem
-        solutions = [np.array([1,0,1,0,1,0,1,0,1,0]),np.array([0,1,0,1,0,1,0,1,0,1])]
-
-        # Obtain solution from function
-        _, comp_solutions = classical_exact_solution(hamiltonian)
-
-        # Test function result
-        assert np.allclose(solutions,comp_solutions), f'Computed solutions are incorrect'
 
     def test_find_parent(self):
         """
@@ -99,41 +70,36 @@ class TestingRQAOA(unittest.TestCase):
         ## Problem definition
 
         # Number of qubits
-        n_qubits = 10
+        n_qubits = 20
 
         # Terms and weights of the graph
-        terms = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] # Ring structure
-        weights = [1 for _ in range(len(terms))] # All weights equal to 1
+        edges = [(i,j) for j in range(n_qubits) for i in range(j)]
+        weights = [1 for _ in range(len(edges))] 
 
         # Hyperparameters
-        hamiltonian = Hamiltonian.classical_hamiltonian(terms, weights, constant = 0) 
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0) 
 
         ## Testing
 
         # Example case of the maximal terms and values extracted from the expectation values
-        max_terms_and_stats = dict({(0, 1): -0.5, (0, 9): 0.32, (7,): -0.89, (2,4):0.73, (4,5):0.9})
+        max_terms_and_stats = dict({(4,):0.99,(0, 1): -0.89, (0, 9): 0.77, (1,9):-0.73,\
+             (17,): -0.5, (2,4):0.32, (5,4):0.29,(16,):-0.8, (10,):0.81, (16,10):0.4, (19,14):-0.47})
 
         # Exact solution to the problem
-        spin_map = dict({(0,(1,0)),(1,(-1,0)),(2,(1,2)),(3,(1,3)),(4,(1,2)),\
-                (5,(1,2)),(6,(1,6)),(7,(-1,None)),(8,(1,8)),(9,(1,0))})
-
-        new_max_tc = dict({(0, 1): -1, (2,4):1, (2,5): 1, (None,7):-1, (0, 9): 1}) # The function also returns final constraints
+        correct_spin_map = dict({(0,(1,0)),(1,(-1,0)),(2,(1,None)),(3,(1,3)),(4,(1,None)),\
+                (5,(1,None)),(6,(1,6)),(7,(1,7)),(8,(1,8)),(9,(1,0)),(10,(1,None)),(11,(1,11)),(12,(1,12)),\
+                (13,(1,13)),(14,(1,14)),(15,(1,15)),(16,(-1,None)),(17,(-1,None)),(18,(1,18)),(19,(-1,14))})
 
         # Compute the spin_map and final constraints from the function
-        comp_spin_map, comp_new_max_tc = spin_mapping(hamiltonian,max_terms_and_stats)
+        spin_map = spin_mapping(hamiltonian,max_terms_and_stats)
 
         # Check both outputs contain the same number of keys as the correct solution
-        assert len(spin_map) == len(comp_spin_map), f'Computed spin_map has incorrect length'
-        assert len(new_max_tc) == len(comp_new_max_tc), f'Output max_terms_and_stats dictionary has incorrect length '
+        assert len(correct_spin_map) == len(spin_map), f'Computed spin_map has incorrect length'
         
         # Test the spin_map matches the correct solution
-        for key in spin_map.keys():
-            assert spin_map[key][0] == comp_spin_map[key][0], f'Computed spin_map contains incorrect factor'
-            assert spin_map[key][1] == comp_spin_map[key][1], f'Computed spin_map contains incorrect parent spin'
-        
-        # Test the final constraints match the correct solution
-        for key in new_max_tc.keys():
-            assert new_max_tc[key] == comp_new_max_tc[key], f'Output max_terms_and_stats contains incorrect factor'
+        for key in correct_spin_map.keys():
+            assert correct_spin_map[key][0] == spin_map[key][0], f'Computed spin_map contains incorrect factor'
+            assert correct_spin_map[key][1] == spin_map[key][1], f'Computed spin_map contains incorrect parent spin'
 
     def test_max_terms(self):
         """
@@ -204,138 +170,7 @@ class TestingRQAOA(unittest.TestCase):
         for key in max_tc.keys():
             assert max_tc[key] == comp_max_tc[key], f'Computed set of singlets/correlations contains incorrect values'
 
-    def test_expectation_values_analytical(self):
-        """
-        Test of the function that computes singlet expectation values and correlations terms
-        analytically for p = 1 and the function computing the full set of expectation values
-        when analytical results can be obtained (p=1).
-
-        NOTE: Correlations in the term_corr_analytical() and term_corr() functions are computed 
-        as average value <Z_{i}Z_{j}>, meaning it includes the <Z_{i}><Z_{j}> contribution. 
-        This is subtracted by default in the expectation_values() function.
-
-        The tests consist in: computing expectation values for some example cases for the 
-        first function, and a full set of expectation values for a given example. 
-        """
-
-        ## Problem definition
-
-        # Number of qubits
-        n_qubits = 4
-
-        # Edges and weights of the graph
-        pair_edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] 
-        self_edges = [(i,) for i in range(n_qubits)]
-        pair_weights = [1 for _ in range(len(pair_edges))] # All weights equal to 1
-        self_weights = [(-1)**j for j in range(len(self_edges))]
-
-        edges = pair_edges + self_edges
-        weights = pair_weights + self_weights
-
-        # Hamiltonian
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-
-        ## Testing
-
-        # Spin and pair whose expectation values are computed
-        spin = 0
-        pair = (0,1)
-        
-        # Correct solution
-        qaoa_angles_cases = {(0,0):(0,0),(np.pi,0):(0,0),(np.pi/4,np.pi/4):(0,0),\
-            (np.pi/4,np.pi/8):(-np.sqrt(2)/4,-0.25),(np.pi/8,0):(0,0)} # (beta,gamma):(exp_val,corr)
-
-        # Compute singlet expectation values and correlations for each set of angles
-        for qaoa_angles in qaoa_angles_cases.keys():
-            
-            # Extract correct solution
-            exp_val = np.round(qaoa_angles_cases[qaoa_angles][0],16)
-            corr = np.round(qaoa_angles_cases[qaoa_angles][1],16)
-            
-            # Compute expectation values and correlations
-            comp_exp_val = np.round(exp_val_single_spin_analytical(spin,hamiltonian,qaoa_angles),16)
-            comp_corr = np.round(term_corr_analytical(pair,hamiltonian,qaoa_angles),16)
-
-            # Test if computed results are correct
-            assert np.allclose(exp_val,comp_exp_val), f'Incorrectly computed singlet expectation value'
-            assert np.allclose(corr,comp_corr), f'Incorrectly computed correlation term'
-
-        # Fix a set of angles for testing full set of expectation values and correlations
-        fixed_angles = (np.pi/4,np.pi/8)
-
-        # Correct solutions
-        exp_val_list = np.array([-np.sqrt(2)/4,np.sqrt(2)/4,-np.sqrt(2)/4,np.sqrt(2)/4])
-        corr_matrix = np.array([[0.0,-1/4,0,-1/4],\
-                              [0.0,0.0,-1/4,0],\
-                              [0.0,0.0,0.0,-1/4],\
-                              [0.0,0.0,0.0,0.0]])
-
-        corr_matrix -= np.outer(exp_val_list,exp_val_list)
-
-        # Compute list of expectation values and correlation matrix
-        comp_exp_val_list, comp_corr_matrix = expectation_values(variational_params = None,
-                                                                 qaoa_results = {'best param' : [fixed_angles]},\
-                                                                 qaoa_backend = None,\
-                                                                 hamiltonian = hamiltonian,
-                                                                 p = 1)
-
-        # Test if computed results are correct
-        assert np.allclose(exp_val_list,comp_exp_val_list), f'Computed set of singlet expectation values is incorrect'
-
-        for j in range(len(comp_corr_matrix)):
-            assert np.allclose(corr_matrix[j],comp_corr_matrix[j]), f'Computed correlation matrix is incorrect'
-    
-    def test_expectation_values(self):
-        """
-        Test of the function that computes singlet expectation values and correlations numerically through
-        the QAOA output distribution of states.
-
-        The test consist of computing the singlet expectation values and correlations for a given problem.
-        The result is constrasted with the analytical result, whose implementation is tested in 
-        test_expectation_values_analytical().
-        """
-
-        ## Problem definition
-
-        # Number of qubits
-        n_qubits = 10
-
-        # Number of QAOA layers - necessary only for the definition of circuit parameters
-        p = 1
-
-        # Terms and weights of the graph
-        edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
-        weights = [10 for _ in range(len(edges))]
-
-        # Hyperparameters
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-
-        # Mixer Hamiltonian
-        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-
-        # Define circuit and variational parameters
-        circuit_params = QAOACircuitParams(hamiltonian,mixer_hamiltonian, p = p)
-        variational_params = create_qaoa_variational_params(circuit_params, params_type = 'standard', init_type = 'ramp')
-
-        ## Testing
-
-        # Perform QAOA and obtain expectation values numerically
-
-        qaoa_backend = qaoa_cost_backend(circuit_params, device = DeviceLocal('vectorized'), shots = None, qpu_params = None)
-        qaoa_results = optimize_qaoa(qaoa_backend,variational_params,optimizer_dict = {'method':'cobyla','maxiter':200})
-        
-        num_exp_vals_z,num_corr_matrix = expectation_values(variational_params,qaoa_results, qaoa_backend, hamiltonian, p = p, analytical = False)
-
-        # Analytical expectation values
-        exp_vals_z, corr_matrix = expectation_values(variational_params,qaoa_results, qaoa_backend, hamiltonian, p = p)
-
-        # Test if computed results are correct
-        assert np.allclose(exp_vals_z,num_exp_vals_z), f'Computed singlet expectation values are incorrect'
-
-        for j in range(len(num_corr_matrix)):
-            assert np.allclose(corr_matrix[j],num_corr_matrix[j]), f'Computed correlation matrix is incorrect'
-
-    def test_hamiltonian_from_graph(self):
+    def test_hamiltonian_from_dict(self):
         """
         Test the function that computes a calssical Hamiltonian from a given graph, accounting for approriate
         labelling of the nodes and edges.
@@ -344,23 +179,20 @@ class TestingRQAOA(unittest.TestCase):
         """
         
         # Trial graph
-        input_graph = dict({(1,2):1,(2,5):2,(10,14):3,(6,9):4,(6,14):5,(5,6):6})
-
+        input_dict = dict({():10,(1,):1,(2,):-1,(6,):4,(1,2):1,(2,5):2,(10,14):3,(6,9):4,(6,14):5,(5,6):6})
+        
         # Correct hamiltonian
-        correct_graph = dict({(0,1):1,(1,2):2,(2,3):6,(3,4):4,(3,6):5,(5,6):3})
-        hamiltonian = Hamiltonian.classical_hamiltonian(list(correct_graph.keys()),list(correct_graph.values()), constant = 0)
+        correct_dict = dict({(0,):1,(1,):-1,(3,):4,(0,1):1,(1,2):2,(2,3):6,(3,4):4,(3,6):5,(5,6):3})
+        hamiltonian = Hamiltonian.classical_hamiltonian(list(correct_dict.keys()),list(correct_dict.values()), constant = 10)
         hamiltonian_dict = {term.qubit_indices:coeff for term,coeff in zip(hamiltonian.terms,hamiltonian.coeffs)}
 
         # Compute hamiltonian from input graph
-        comp_hamiltonian = hamiltonian_from_graph(input_graph)
+        comp_hamiltonian = hamiltonian_from_dict(input_dict)
         comp_hamiltonian_dict = {term.qubit_indices:coeff for term,coeff in zip(comp_hamiltonian.terms,comp_hamiltonian.coeffs)}
 
 
         # Test computed Hamiltonian contains the correct terms
         assert hamiltonian_dict == comp_hamiltonian_dict, f'Terms and coefficients in the computed Hamiltonian are incorrect'
-
-        # Test computed Hamiltonian contains the correct terms
-        # assert np.allclose(hamiltonian.coeffs,comp_hamiltonian.coeffs), f'Coefficients in the computed Hamiltonian are incorrect'
 
         # Test computed Hamiltonian contains the correct terms
         assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
@@ -398,7 +230,7 @@ class TestingRQAOA(unittest.TestCase):
         hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
 
         # Compute new hamiltonian
-        comp_hamiltonian = redefine_hamiltonian(input_hamiltonian, spin_map)
+        comp_hamiltonian,comp_spin_map = redefine_hamiltonian(input_hamiltonian, spin_map)
 
         # Test computed Hamiltonian contains the correct terms
         assert hamiltonian.terms == comp_hamiltonian.terms, f'Terms in the computed Hamiltonian are incorrect'
@@ -409,34 +241,13 @@ class TestingRQAOA(unittest.TestCase):
         # Test computed Hamiltonian contains the correct terms
         assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
 
-    def test_final_opt_strings(self):
+    def test_final_solution(self):
         """
-        Test the function that reconstructs the final output state by backtracking the
-        elimination history.
+        Test the function that reconstructs the final solution by backtracking the
+        elimination history and computing the energy of the final states.
 
-        The test consists in reconstructing a state for a given elimination history.
-        """
-
-        # Trial elimination history and ouput of classical solver
-        max_terms_and_stats_list = [{(0, 1): -1.0, (0, 9): -1.0}, {(0, 1): 1.0, (0, 7): 1.0}, 
-                                        {(0, 1): -1.0, (0, 5): -1.0}, {(0, 1): 1.0}]
-
-        classical_results = {'cost min': 0, 'opt strings': [np.array([0, 1, 0]), np.array([1, 0, 1])]}
-
-        # Correct solutions
-        solutions = [[0,1,0,1,0,1,0,1,0,1],[1,0,1,0,1,0,1,0,1,0]]
-
-        # Compute solutions
-        comp_solutions = final_opt_strings(max_terms_and_stats_list, classical_results)
-
-        # Test the computed solutions
-        assert np.allclose(solutions,comp_solutions), f'Solution backtracking process is incorrect'
-
-    def test_final_energy(self):
-        """
-        Testing of the function which computes the energy of the states.
-
-        The test consist in computing the energy of two given states for a ring-like geometry.
+        The test consists in reconstructing a set of states for a given elimination history 
+        amnd computing their energies.
         """
 
         ## Problem definition
@@ -453,29 +264,39 @@ class TestingRQAOA(unittest.TestCase):
 
         ## Testing
 
-        # Trial states
-        states = [[0,1,0,1,0,1,0,1,0,1],[1,0,1,0,1,0,1,0,1,0]]
+        # Trial elimination history and ouput of classical solver
+        max_terms_and_stats_list = [{(0, 1): -1.0, (0, 9): -1.0}, {(0, 1): 1.0, (0, 7): 1.0}, 
+                                        {(0, 1): -1.0, (0, 5): -1.0}, {(0, 1): 1.0}]
 
-        # Correct solution
+        classical_states = [[0, 1, 0],[1, 0, 1]]
+
+        # Correct solutions
+        states = ['0101010101','1010101010']
         energies = [-10, -10]
+        correct_full_solution = dict(zip(states,energies))
 
-        # Compute energies for the given trial states
-        full_solution = final_energy(states,hamiltonian)
-        comp_energies = list(full_solution.values())
-        
-        # Test if computed solution is correcrt
-        assert np.allclose(energies,comp_energies), f'Computed energy is incorrect'
+        # Compute solutions
+        full_solution = final_solution(max_terms_and_stats_list, classical_states, hamiltonian)
+
+        # Test the computed solutions
+        assert correct_full_solution == full_solution, f'Solution was not computed correctly'
 
     def test_adaptive_rqaoa(self):
         """
         Test the overall wrapper of the Adaptive RQAOA algorithm.
 
-        The test consists in solving an unweighted Ising ring problem in the presence of a very weak
+        The test consists in solving four examples. We consider a standard X mixer as a mixing Hamiltonian 
+        for all cases. First, an unweighted Ising ring problem in the presence of a very weak
         external field, such that the ground state solution remains the same as without it but we 
-        ensure the system works in general. This is done for different elimination schemes, varying 
-        the maximum number of allowed eliminations from 1 to 4. We consider a standard X mixer as a
-        mixing Hamiltonian.
+        ensure the system works in general. Second, a Minimum Vertex Cover problem on a ring,
+        which requires handling both types of eliminations and the consideration of isolated nodes 
+        resulting from cancellation. Third and fourth, a Minimum Vertex Cover problem and an unweighted
+        Ising Hamiltonian on a fully-connected graph to test the handling of isolated nodes and high
+        degeneracies.
+
+        The unsupported custom mixer connectivities exception is also tested.
         """
+        # EXAMPLE 1
 
         ## Problem definition
 
@@ -484,6 +305,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Elimination schemes
         Nmax = [1,2,3,4]
+        n_cutoff = 5
 
         # Number of QAOA layers
         p = 1
@@ -499,7 +321,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Cost and mixer Hamiltonians
         hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
+        mixer = {'type':'x'}
 
         ## Testing
 
@@ -510,26 +332,165 @@ class TestingRQAOA(unittest.TestCase):
         for nmax in Nmax:
             
             # Compute Ada-RQAOA solution
-            result = adaptive_rqaoa(hamiltonian, mixer_hamiltonian, p = p, n_max = nmax)
+            result = adaptive_rqaoa(hamiltonian, mixer, p = p, n_max = nmax, n_cutoff = n_cutoff)
             full_sol = result['solution']
-
-            # Test the number of solution states is correct
-            assert len(exact_sol) == len(full_sol), f'The number of computed solutions is incorrect for nmax = {nmax}'
 
             # Test the assigned energy to each solution is correct
             for key in full_sol.keys():
                 assert full_sol[key] == exact_sol[key], f'The computed energy of the state is incorrect'
+
+
+        # EXAMPLE 2
+
+        ## Problem definition
+        n_qubits = 10
+
+        # Elimination schemes
+        n_max = 1
+        n_cutoff = 3
+
+        # Number of QAOA layers
+        p = 1
+
+        # Ring graph
+        G = nx.circulant_graph(n_qubits,[1])
+
+        # Minimum vertex cover parameters
+        field = 1.0
+        penalty = 10
+
+        # Define problem instance
+        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_qubo_problem()
+
+        # Cost and mixer Hamiltonians
+        hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
+        mixer = {'type':'x'}
+
+        # Correct solution
+        exact_sol = {'1010101010': 5, '0101010101': 5}
+
+        # Compute Ada-RQAOA solution
+        result = adaptive_rqaoa(hamiltonian, mixer, p = p, n_max = n_max, n_cutoff = n_cutoff)
+        full_sol = result['solution']
+
+        # Test the assigned energy to each solution is correct
+        for key in full_sol.keys():
+            assert full_sol[key] == exact_sol[key], f'The computed energy of the state is incorrect'
+
+        # EXAMPLE 3
+
+        ## Problem definition
+        n_qubits = 10
+
+        # Elimination schemes
+        n_max = 4
+        n_cutoff = 3
+
+        # Number of QAOA layers
+        p = 1
+
+        # Ring graph
+        G = nx.complete_graph(n_qubits)
+
+        # Minimum vertex cover parameters
+        field = 1.0
+        penalty = 10
+
+        # Define problem instance
+        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_qubo_problem()
+
+        # Cost and mixer Hamiltonians
+        hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
+        mixer = {'type':'x'}
+
+        # Correct solution
+        exact_sol = {'0111111111': 9, '1011111111': 9, '1101111111': 9, '1110111111': 9, '1111011111': 9,
+        '1111101111': 9, '1111110111': 9,'1111111011': 9, '1111111101': 9,'1111111110': 9}
+
+        # Compute Ada-RQAOA solution
+        result = adaptive_rqaoa(hamiltonian, mixer, p = p, n_max = n_max, n_cutoff = n_cutoff)
+        full_sol = result['solution']
+
+        # Test the assigned energy to each solution is correct
+        for key in full_sol.keys():
+            assert full_sol[key] == exact_sol[key], f'The computed energy of the state is incorrect'
+
+        # EXAMPLE 4
+
+        ## Problem definition
+
+        # Number of qubits
+        n_qubits = 10
+
+        # Elimination schemes
+        Nmax = [1,2,3,4]
+        n_cutoff = 3
+
+        # Number of QAOA layers
+        p = 1
+
+        # Edges and weights of the graph
+        edges = [(i,j) for j in range(n_qubits) for i in range(j)]
+        weights = [1 for _ in range(len(edges))]
+
+        # Cost and mixer Hamiltonians
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+        mixer = {'type':'x'}
+
+        ## Testing
+
+        # Correct solution
+        exact_states = ['1111100000', '1111010000', '1110110000', '1101110000', '1011110000', '0111110000', '1111001000', '1110101000', '1101101000', '1011101000', '0111101000', '1110011000', '1101011000', '1011011000', '0111011000', '1100111000', '1010111000', '0110111000', '1001111000', '0101111000', '0011111000', '1111000100', '1110100100', '1101100100', '1011100100', '0111100100', '1110010100', '1101010100', '1011010100', '0111010100', '1100110100', '1010110100', '0110110100', '1001110100', '0101110100', '0011110100', '1110001100', '1101001100', '1011001100', '0111001100', '1100101100', '1010101100', '0110101100', '1001101100', '0101101100', '0011101100', '1100011100', '1010011100', '0110011100', '1001011100', '0101011100', '0011011100', '1000111100', '0100111100', '0010111100', '0001111100', '1111000010', '1110100010', '1101100010', '1011100010', '0111100010', '1110010010', '1101010010', '1011010010', '0111010010', '1100110010', '1010110010', '0110110010', '1001110010', '0101110010', '0011110010', '1110001010', '1101001010', '1011001010', '0111001010', '1100101010', '1010101010', '0110101010', '1001101010', '0101101010', '0011101010', '1100011010', '1010011010', '0110011010', '1001011010', '0101011010', '0011011010', '1000111010', '0100111010', '0010111010', '0001111010', '1110000110', '1101000110', '1011000110', '0111000110', '1100100110', '1010100110', '0110100110', '1001100110', '0101100110', '0011100110', '1100010110', '1010010110', '0110010110', '1001010110', '0101010110', '0011010110', '1000110110', '0100110110', '0010110110', '0001110110', '1100001110', '1010001110', '0110001110', '1001001110', '0101001110', '0011001110', '1000101110', '0100101110', '0010101110', '0001101110', '1000011110', '0100011110', '0010011110', '0001011110', '0000111110', '1111000001', '1110100001', '1101100001', '1011100001', '0111100001', '1110010001', '1101010001', '1011010001', '0111010001', '1100110001', '1010110001', '0110110001', '1001110001', '0101110001', '0011110001', '1110001001', '1101001001', '1011001001', '0111001001', '1100101001', '1010101001', '0110101001', '1001101001', '0101101001', '0011101001', '1100011001', '1010011001', '0110011001', '1001011001', '0101011001', '0011011001', '1000111001', '0100111001', '0010111001', '0001111001', '1110000101', '1101000101', '1011000101', '0111000101', '1100100101', '1010100101', '0110100101', '1001100101', '0101100101', '0011100101', '1100010101', '1010010101', '0110010101', '1001010101', '0101010101', '0011010101', '1000110101', '0100110101', '0010110101', '0001110101', '1100001101', '1010001101', '0110001101', '1001001101', '0101001101', '0011001101', '1000101101', '0100101101', '0010101101', '0001101101', '1000011101', '0100011101', '0010011101', '0001011101', '0000111101', '1110000011', '1101000011', '1011000011', '0111000011', '1100100011', '1010100011', '0110100011', '1001100011', '0101100011', '0011100011', '1100010011', '1010010011', '0110010011', '1001010011', '0101010011', '0011010011', '1000110011', '0100110011', '0010110011', '0001110011', '1100001011', '1010001011', '0110001011', '1001001011', '0101001011', '0011001011', '1000101011', '0100101011', '0010101011', '0001101011', '1000011011', '0100011011', '0010011011', '0001011011', '0000111011', '1100000111', '1010000111', '0110000111', '1001000111', '0101000111', '0011000111', '1000100111', '0100100111', '0010100111', '0001100111', '1000010111', '0100010111', '0010010111', '0001010111', '0000110111', '1000001111', '0100001111', '0010001111', '0001001111', '0000101111', '0000011111']
+
+        exact_sol = {state:-5 for state in exact_states}
+
+        # Compute the solution for each elimination scheme
+        for nmax in Nmax:
+            
+            # Compute Ada-RQAOA solution
+            result = adaptive_rqaoa(hamiltonian, mixer, p = p, n_max = nmax, n_cutoff = n_cutoff)
+            full_sol = result['solution']
+
+            # Test the assigned energy to each solution is correct
+            for key in full_sol.keys():
+                assert full_sol[key] == exact_sol[key], f'The computed energy of the state is incorrect'
+
+
+        ## Exception case - custom connectivity fed into adaptive RQAOA
+        n_qubits = 7
+        edges = [(i,j) for j in range(n_qubits) for i in range(j)]
+        weights = [1 for _ in range(len(edges))]
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+
+        # Generate custom mixer
+        connectivity = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
+        mixer = {'type':'xy','connectivity': connectivity}
+
+        # Attempt running custom RQAOA
+        with self.assertRaises(NotImplementedError) as context:
+            result = adaptive_rqaoa(hamiltonian, mixer)
+            
+        # Check exception message
+        self.assertEqual("Custom mixer connectivities are not currently supported", str(context.exception))
+
+
     
     def test_custom_rqaoa(self):
         """
         Test the overall wrapper of the Custom RQAOA algorithm.
 
-        The test consists in solving an unweighted Ising ring problem in the presence of a very weak
+        The test consists in solving four examples. We consider a standard X mixer as a mixing Hamiltonian 
+        for all cases. First, an unweighted Ising ring problem in the presence of a very weak
         external field, such that the ground state solution remains the same as without it but we 
-        ensure the system works in general. This is done for different elimination schemes, for fixed
-        elimination and for an input schedule. We consider a standard X mixer as a
-        mixing Hamiltonian.
+        ensure the system works in general. Second, a Minimum Vertex Cover problem on a ring,
+        which requires handling both types of eliminations and the consideration of isolated nodes 
+        resulting from cancellation. Third and fourth, a Minimum Vertex Cover problem and an unweighted
+        Ising Hamiltonian on a fully-connected graph to test the handling of isolated nodes and high
+        degeneracies.
+
+        The unsupported custom mixer connectivities exception is also tested.
         """
+        # EXAMPLE 1
 
         ## Problem definition
 
@@ -537,7 +498,7 @@ class TestingRQAOA(unittest.TestCase):
         n_qubits = 12
 
         # Elimination schemes
-        schedules = [1,[1,2,1,2,1]]
+        schedules = [1,[1,2,1,2,7]]
 
         # Number of QAOA layers
         p = 1
@@ -553,7 +514,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Cost and mixer Hamiltonians
         hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits = n_qubits)
+        mixer = {'type':'x'}
 
         ## Testing
 
@@ -564,17 +525,164 @@ class TestingRQAOA(unittest.TestCase):
         for schedule in schedules:
             
             # Compute RQAOA solution
-            result = custom_rqaoa(hamiltonian, mixer_hamiltonian, p = p, steps = schedule)
+            result = custom_rqaoa(hamiltonian, mixer, p = p, steps = schedule)
             full_sol = result['solution']
-
-            # Test the number of solution states is correct
-            assert len(exact_sol) == len(full_sol), f'The number of computed solutions is incorrect'
 
             # Test the assigned energy to each solution is correct
             for key in full_sol.keys():
                 assert full_sol[key] == exact_sol[key], f'The computed energy of the state is incorrect'
 
+
+        # EXAMPLE 2
+
+        ## Problem definition
+        n_qubits = 10
+
+        # Elimination scheme
+        step = 1
+        n_cutoff = 3
+
+        # Number of QAOA layers
+        p = 1
+
+        # Ring graph
+        G = nx.circulant_graph(n_qubits,[1])
+
+        # Minimum vertex cover parameters
+        field = 1.0
+        penalty = 10
+
+        # Define problem instance
+        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_qubo_problem()
+
+        # Cost and mixer Hamiltonians
+        hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
+        mixer = {'type':'x'}
+
+        # Correct solution
+        exact_sol = {'1010101010': 5, '0101010101': 5}
+
+        # Compute Ada-RQAOA solution
+        result = custom_rqaoa(hamiltonian, mixer, p = p, steps = step, n_cutoff = n_cutoff)
+        full_sol = result['solution']
+
+        # Test the assigned energy to each solution is correct
+        for key in full_sol.keys():
+            assert full_sol[key] == exact_sol[key], f'The computed energy of the state is incorrect'
+
+        # EXAMPLE 3
+
+        ## Problem definition
+        n_qubits = 10
+
+        # Elimination scheme
+        step = 2
+        n_cutoff = 3
+
+        # Number of QAOA layers
+        p = 1
+
+        # Ring graph
+        G = nx.complete_graph(n_qubits)
+
+        # Minimum vertex cover parameters
+        field = 1.0
+        penalty = 10
+
+        # Define problem instance
+        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_qubo_problem()
+
+        # Cost and mixer Hamiltonians
+        hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
+        mixer = {'type':'x'}
+
+        # Correct solution
+        exact_sol = {'0111111111': 9, '1011111111': 9, '1101111111': 9, '1110111111': 9, '1111011111': 9,
+        '1111101111': 9, '1111110111': 9,'1111111011': 9, '1111111101': 9,'1111111110': 9}
+
+        # Compute Ada-RQAOA solution
+        result = custom_rqaoa(hamiltonian, mixer, p = p, steps = step, n_cutoff = n_cutoff)
+        full_sol = result['solution']
+
+        # Test the assigned energy to each solution is correct
+        for key in full_sol.keys():
+            assert full_sol[key] == exact_sol[key], f'The computed energy of the state is incorrect'
+
+
+        # EXAMPLE 4
+
+        ## Problem definition
+
+        # Number of qubits
+        n_qubits = 10
+
+        # Elimination schemes
+        schedules = [1,2,3]
+
+        # Number of QAOA layers
+        p = 1
+
+        # Edges and weights of the graph
+        edges = [(i,j) for j in range(n_qubits) for i in range(j)]
+        weights = [1 for _ in range(len(edges))]
+
+        # Cost and mixer Hamiltonians
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+        mixer = {'type':'x'}
+
+        ## Testing
+
+        # Correct solution
+        exact_states = ['1111100000', '1111010000', '1110110000', '1101110000', '1011110000', '0111110000', '1111001000', '1110101000', '1101101000', '1011101000', '0111101000', '1110011000', '1101011000', '1011011000', '0111011000', '1100111000', '1010111000', '0110111000', '1001111000', '0101111000', '0011111000', '1111000100', '1110100100', '1101100100', '1011100100', '0111100100', '1110010100', '1101010100', '1011010100', '0111010100', '1100110100', '1010110100', '0110110100', '1001110100', '0101110100', '0011110100', '1110001100', '1101001100', '1011001100', '0111001100', '1100101100', '1010101100', '0110101100', '1001101100', '0101101100', '0011101100', '1100011100', '1010011100', '0110011100', '1001011100', '0101011100', '0011011100', '1000111100', '0100111100', '0010111100', '0001111100', '1111000010', '1110100010', '1101100010', '1011100010', '0111100010', '1110010010', '1101010010', '1011010010', '0111010010', '1100110010', '1010110010', '0110110010', '1001110010', '0101110010', '0011110010', '1110001010', '1101001010', '1011001010', '0111001010', '1100101010', '1010101010', '0110101010', '1001101010', '0101101010', '0011101010', '1100011010', '1010011010', '0110011010', '1001011010', '0101011010', '0011011010', '1000111010', '0100111010', '0010111010', '0001111010', '1110000110', '1101000110', '1011000110', '0111000110', '1100100110', '1010100110', '0110100110', '1001100110', '0101100110', '0011100110', '1100010110', '1010010110', '0110010110', '1001010110', '0101010110', '0011010110', '1000110110', '0100110110', '0010110110', '0001110110', '1100001110', '1010001110', '0110001110', '1001001110', '0101001110', '0011001110', '1000101110', '0100101110', '0010101110', '0001101110', '1000011110', '0100011110', '0010011110', '0001011110', '0000111110', '1111000001', '1110100001', '1101100001', '1011100001', '0111100001', '1110010001', '1101010001', '1011010001', '0111010001', '1100110001', '1010110001', '0110110001', '1001110001', '0101110001', '0011110001', '1110001001', '1101001001', '1011001001', '0111001001', '1100101001', '1010101001', '0110101001', '1001101001', '0101101001', '0011101001', '1100011001', '1010011001', '0110011001', '1001011001', '0101011001', '0011011001', '1000111001', '0100111001', '0010111001', '0001111001', '1110000101', '1101000101', '1011000101', '0111000101', '1100100101', '1010100101', '0110100101', '1001100101', '0101100101', '0011100101', '1100010101', '1010010101', '0110010101', '1001010101', '0101010101', '0011010101', '1000110101', '0100110101', '0010110101', '0001110101', '1100001101', '1010001101', '0110001101', '1001001101', '0101001101', '0011001101', '1000101101', '0100101101', '0010101101', '0001101101', '1000011101', '0100011101', '0010011101', '0001011101', '0000111101', '1110000011', '1101000011', '1011000011', '0111000011', '1100100011', '1010100011', '0110100011', '1001100011', '0101100011', '0011100011', '1100010011', '1010010011', '0110010011', '1001010011', '0101010011', '0011010011', '1000110011', '0100110011', '0010110011', '0001110011', '1100001011', '1010001011', '0110001011', '1001001011', '0101001011', '0011001011', '1000101011', '0100101011', '0010101011', '0001101011', '1000011011', '0100011011', '0010011011', '0001011011', '0000111011', '1100000111', '1010000111', '0110000111', '1001000111', '0101000111', '0011000111', '1000100111', '0100100111', '0010100111', '0001100111', '1000010111', '0100010111', '0010010111', '0001010111', '0000110111', '1000001111', '0100001111', '0010001111', '0001001111', '0000101111', '0000011111']
+
+        exact_sol = {state:-5 for state in exact_states}
+
+        for schedule in schedules:
+            
+            # Compute RQAOA solution
+            result = custom_rqaoa(hamiltonian, mixer, p = p, steps = schedule)
+            full_sol = result['solution']
+
+            # Test the assigned energy to each solution is correct
+            for key in full_sol.keys():
+                assert full_sol[key] == exact_sol[key], f'The computed energy of the state is incorrect'
+
+        ## Exception case - insufficient elimination steps fed into custom RQAOA
+        n_qubits = 10
+        edges = [(i,j) for j in range(n_qubits) for i in range(j)]
+        weights = [1 for _ in range(len(edges))]
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+        mixer = {'type':'x'}
+        n_cutoff = 5
+
+        # Generate custom mixer
+        steps = [1,2]
+
+        # Attempt running custom RQAOA
+        with self.assertRaises(AssertionError) as context:
+            result = custom_rqaoa(hamiltonian, mixer, steps = steps, n_cutoff = n_cutoff)
+            
+        # Check exception message
+        self.assertEqual(f"Schedule is incomplete, add {np.abs(n_qubits - n_cutoff) - sum(steps)} more eliminations", str(context.exception))
+
+
+        ## Exception case - custom connectivity fed into custom RQAOA
+        n_qubits = 7
+        edges = [(i,j) for j in range(n_qubits) for i in range(j)]
+        weights = [1 for _ in range(len(edges))]
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+
+        # Generate custom mixer
+        connectivity = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
+        mixer = {'type':'xy','connectivity': connectivity}
+
+        # Attempt running custom RQAOA
+        with self.assertRaises(NotImplementedError) as context:
+            result = custom_rqaoa(hamiltonian, mixer)
+            
+        # Check exception message
+        self.assertEqual("Custom mixer connectivities are not currently supported", str(context.exception))
+
 if __name__ == "__main__":
 	unittest.main()
-
-
+ 

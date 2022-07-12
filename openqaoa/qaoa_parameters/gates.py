@@ -25,7 +25,7 @@ from pyquil.quilatom import QubitPlaceholder as quilQubitPlaceholder
 from .rotationangle import RotationAngle
 
 
-class LowLevelGate(ABC):
+class Gate(ABC):
 
     def __init__(self, ibm_gate, pyquil_gate, braket_gate, vector_gate):
         self.ibm_gate = ibm_gate
@@ -50,7 +50,7 @@ class LowLevelGate(ABC):
         pass
     
     
-class OneQubitGate(LowLevelGate):
+class OneQubitGate(Gate):
 
     def apply_ibm_gate(self, 
                        qubit_idx: int,
@@ -132,7 +132,7 @@ class RZ(OneQubitGate):
 
         
         
-class TwoQubitGate(LowLevelGate):
+class TwoQubitGate(Gate):
     
     def apply_ibm_gate(self, 
                        qubit_indices: List[int],
@@ -190,7 +190,7 @@ class CX(TwoQubitGate):
                          braket_gate=braket_gate, vector_gate=vector_gate)
         self.mode = mode
         
-    def _in_XY(self,qubit_indices) -> List[Tuple[LowLevelGate, List]]:
+    def _in_XY(self,qubit_indices) -> List[Tuple[Gate, List]]:
         qubit_1 = qubit_indices[0]
         qubit_2 = qubit_indices[1]
         return [(RX, [qubit_2, RotationAngle(lambda x: x, [], np.pi/2)]), 
@@ -201,7 +201,7 @@ class CX(TwoQubitGate):
                 (RiSWAP, [[qubit_1, qubit_2, RotationAngle(lambda x: x, [], np.pi)]]), 
                 (RZ, [qubit_2, RotationAngle(lambda x: x, [], np.pi/2)])]
     
-    def _in_CZ(self, qubit_indices) -> List[Tuple[LowLevelGate, List]]:
+    def _in_CZ(self, qubit_indices) -> List[Tuple[Gate, List]]:
         qubit_1 = qubit_indices[0]
         qubit_2 = qubit_indices[1]
         return [(RY, [qubit_2, RotationAngle(lambda x: x, [], np.pi/2)]), 
@@ -319,7 +319,7 @@ class RXY(TwoQubitGateWithAngle):
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
         input_obj.apply_rxy(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
     
-class RXZ(TwoQubitGateWithAngle):
+class RZX(TwoQubitGateWithAngle):
     
     def __init__(self):
 
@@ -337,12 +337,12 @@ class RXZ(TwoQubitGateWithAngle):
                        circuit: qkQuantumCircuit):                       
         
         circuit.rzx(rotation_angle_obj.rotation_angle,
-                    qubit_indices[1],
-                    qubit_indices[0])
+                    qubit_indices[0],
+                    qubit_indices[1])
         return circuit
     
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
-        input_obj.apply_rxz(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
+        input_obj.apply_rzx(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
 
     
 class RYZ(TwoQubitGateWithAngle):

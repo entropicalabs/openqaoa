@@ -1,8 +1,3 @@
-.. OpenQAOA documentation master file, created by
-   sphinx-quickstart on Fri Apr 29 05:09:06 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to OpenQAOA's documentation!
 ====================================
 
@@ -15,7 +10,7 @@ Features
 Key features of OpenQAOA:
 
 * Simple yet customisable workflows for QAOA and RQAOA deployable on
-   * IMBQ devices
+   * IBMQ devices
    * Rigettis' Quantum Clound Services
    * AWS's Braket
    * Local simulators (including Rigettis' QVM, IBM's Qiskit, and Entropica Labs' vectorized simulator)
@@ -56,7 +51,9 @@ Your first QAOA workflow
 Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
 
 First, create a problem instance. For example, an instance of vertex cover:
+
 .. code-block:: python
+
    from openqaoa.problems.problem import MinimumVertexCover
    import networkx
    g = networkx.circulant_graph(6, [1])
@@ -109,7 +106,7 @@ Currently, the available devices are:
    * - `local`
      - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`
    * - `IBMQ`
-     - Please check the IMBQ backends available to your account
+     - Please check the IBMQ backends available to your account
    * - `Rigetti's QCS`
      - `[nq-qvm, Aspen-11, Aspen-M-1]`
 
@@ -159,7 +156,8 @@ then, specify terms and weights in order to define the cost hamiltonian
 
    cost_hamil = Hamiltonian.classical_hamiltonian(terms=terms,coeffs=coeffs,constant=0)
    mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
-   After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
+   
+After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
 
 .. code-block:: python
 
@@ -169,6 +167,7 @@ then, specify terms and weights in order to define the cost hamiltonian
 Then proceed by instantiating the backend device
 
 .. code-block:: python
+   
    backend_obj = QAOAvectorizedBackendSimulator(circuit_params = qaoa_circuit_params, append_state = None, prepend_state = None, init_hadamard = True)
 
 And finally, create the classical optimizer and minimize the objective function
@@ -197,34 +196,45 @@ Contents
 
 .. toctree::
    :maxdepth: 3
-   :caption: Workflows
+   :caption: About Entropica Labs
+
+   about
+
+.. toctree::
+   :maxdepth: 3
+   :caption: General reference
+
+   faq
+   changelog
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Tutorials
+
+   notebooks/1_workflows_example.ipynb
+   notebooks/2_simulators_comparison.ipynb
+   notebooks/3_qaoa_on_qpus.ipynb
+   notebooks/4_qaoa_variational_parameters.ipynb
+   notebooks/5_advanced_parameterization.ipynb
+   notebooks/6_fast_qaoa_simulator.ipynb
+   notebooks/7_cost_landscapes_w_manual_mode.ipynb
+   notebooks/8_results_example.ipynb
+   notebooks/9_RQAOA_example.ipynb
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API reference
 
    workflows
-
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Inputs
-
+   rqaoa
    problems
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Parametrisation
-
    qaoaparameters
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Backend and devices
-
    backends
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Classical Optimisers
-
+   logger_and_results
    optimizers
+   utilities
+
 
 Indices and tables
 ==================

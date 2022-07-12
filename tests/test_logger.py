@@ -216,9 +216,12 @@ class TestingLoggerClass(unittest.TestCase):
                                 'best_update_string': 'Replace'
                             }
                             }, 
-                            {'best_update_structure': 
-                             ([['attribute_1'], 
-                               ['attribute_2', 'attribute_3']])})
+                            {
+                                'root_nodes': ['attribute_1'],
+                                'best_update_structure': 
+                                (['attribute_1', 'attribute_2'], 
+                                 ['attribute_1', 'attribute_3'])
+                            })
         
         logger_obj.log_variables({'attribute_1': 10, 
                                   'attribute_2': 3, 
@@ -290,8 +293,10 @@ class TestingLoggerClass(unittest.TestCase):
                                 'best_update_string': 'Replace'
                             }
                             }, 
-                            {'best_update_structure': 
-                             ([['attribute_1', 'attribute_2', 'attribute_3']])})
+                            {
+                                'root_nodes': ['attribute_1', 'attribute_2', 'attribute_3'],
+                                'best_update_structure': ([])
+                            })
         
         logger_obj.log_variables({'attribute_1': 10, 
                                   'attribute_2': 3, 
@@ -363,10 +368,12 @@ class TestingLoggerClass(unittest.TestCase):
                                 'best_update_string': 'Replace'
                             }
                             }, 
-                            {'best_update_structure': 
-                             ([['attribute_1'], 
-                               ['attribute_2'], 
-                               ['attribute_3']])})
+                            {
+                                'root_nodes': ['attribute_1'],
+                                'best_update_structure': 
+                                (['attribute_1', 'attribute_2'], 
+                                 ['attribute_2', 'attribute_3'])
+                            })
         
         logger_obj.log_variables({'attribute_1': 10, 
                                   'attribute_2': 3, 

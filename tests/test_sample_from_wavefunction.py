@@ -76,7 +76,7 @@ class TestGetSamplesMethod(unittest.TestCase):
               ``decimal`` argument in `np.testing.assert_array_almost_equal` to something lower!
         """
         # testing a large number of shots!
-        nshots = 100000
+        nshots = 500000
 
         # random 6-qubit Hamiltonian with betas, gammas = 0,0 => only hadamards
         reg = [0, 1, 2, 3, 4, 5]

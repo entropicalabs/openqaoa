@@ -57,8 +57,8 @@ def cvar_expectation_value_classical(alpha: float, counts: Dict, hamiltonian: Ha
 
     # sort the dictionary by descending energy of measurement outcomes
     OrderedDict(sorted(counts.items(), key=lambda x: bitstring_energy(
-        hamiltonian, x), reverse=False))
-    K = (shots-1)*alpha+1
+        hamiltonian, x[0]), reverse=False))
+    K = int((shots-1)*alpha+1)
 
     truncated_counts = {key: counts[key] for key in list(counts.keys())[:K]}
     cost = expectation_value_classical(truncated_counts, hamiltonian)

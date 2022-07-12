@@ -13,7 +13,8 @@
 #   limitations under the License.
 
 import numpy as np
-from scipy.sparse import diags, kron
+from scipy.linalg import expm
+from scipy.sparse import csc_matrix, kron, diags
 import unittest
 
 # RX and CHPHASE are never used
@@ -54,6 +55,37 @@ def Disagrees_SetUp(n_qubits):
 
     return register, cost_hamil, qaoa_circuit_params, variational_params_std
 
+def pauli_matrix_SetUp():
+    """
+    Helper function for apply_gate tests.
+    """
+    
+    constI = csc_matrix(np.eye(2)).toarray()
+    constX = csc_matrix(np.array([[0,1], [1,0]])).toarray()
+    constY = csc_matrix(np.array([[0, -1j], [1j, 0]])).toarray()
+    constZ = csc_matrix(np.array([[1,0], [0,-1]])).toarray()
+    
+    return constI, constX, constY, constZ
+
+def apply_gate_problem_SetUp():
+    """
+    Helper function for apply_gate tests.
+    """
+    
+    cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('Z', (2,))], [1,1], 0)
+    mixer_hamil = Hamiltonian([PauliOp('X', (0,)), PauliOp('X', (1,)), 
+                              PauliOp('X', (2,))], [1,1,1], 0)
+    theta = 0 # Don't apply mixer and driver unitaries
+    circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+    variate_params = QAOAVariationalStandardParams(circuit_params, 
+                                                   theta, 
+                                                   theta)
+    vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
+                                                               None, 
+                                                               None, 
+                                                               True)
+    return cost_hamil.n_qubits, vector_backend
+
 
 class TestingQAOAvectorizedBackend(unittest.TestCase):
     """
@@ -92,6 +124,7 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         assert np.array_equal(perm2, perm2_expected)
         assert np.array_equal(perminv2, perminv2_expected)
 
+        
     ##########################################################
     # TESTS OF BASIC CIRCUIT OPERATIONS (SAME AS FOR PROJECTQ)
     ##########################################################
@@ -190,13 +223,13 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         # time of pi (pi-pulse) on the Bloch sphere
 
         input_wf = np.ones(2**nqubits)/np.sqrt(2**nqubits)
-        direct_wf = mixer @ cost_op3 @ cost_op2 @ cost_op1 @ input_wf
-
-        expected_wf = 1j*np.array([-1, 1, 1, -1, 1, -1, -1, 1])/(2*np.sqrt(2))
-
+        direct_wf = -mixer @ cost_op3 @ cost_op2 @ cost_op1 @ input_wf
+        
+        expected_wf = -1j*np.array([-1, 1, 1, -1, 1, -1, -1, 1])/(2*np.sqrt(2))
+        
         assert np.allclose(wf, direct_wf)
         assert np.allclose(wf, expected_wf)
-
+            
     def test_execute_exp_val(self):
 
         n_qubits = 8
@@ -263,38 +296,40 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         exp_vec = backend_vectorized.expectation(variational_params_std)
 
         assert np.isclose(exp_vec, -6)
-
+  
     def test_get_wavefunction(self):
-
+        
         n_qubits = 3
         terms = [[0, 1], [0, 2], [0]]
         weights = [1, 1, -0.5]
         p = 1
-
-        betas_singles = [np.pi, 0, 0]
+        
+        betas_singles = [np.pi,0,0]
         betas_pairs = []
         gammas_singles = [np.pi]
         gammas_pairs = [[1/2*np.pi]*2]
-
-        cost_hamiltonian = Hamiltonian.classical_hamiltonian(
-            terms=terms, coeffs=weights, constant=0)
+        
+        cost_hamiltonian = Hamiltonian.classical_hamiltonian(terms=terms, coeffs=weights, constant=0)
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-        qaoa_circuit_params = QAOACircuitParams(
-            cost_hamiltonian, mixer_hamiltonian, p)
+        qaoa_circuit_params = QAOACircuitParams(cost_hamiltonian, mixer_hamiltonian, p)
         variational_params_std = QAOAVariationalExtendedParams(qaoa_circuit_params,
                                                                betas_singles=betas_singles,
                                                                betas_pairs=betas_pairs,
                                                                gammas_singles=gammas_singles,
-                                                               gammas_pairs=gammas_pairs)
+                                                               gammas_pairs=gammas_pairs) 
 
-        backend_vectorized = QAOAvectorizedBackendSimulator(qaoa_circuit_params, prepend_state=None,
-                                                            append_state=None, init_hadamard=True)
+        backend_vectorised_statevec = QAOAvectorizedBackendSimulator(qaoa_circuit_params,prepend_state=None,
+                                                            append_state=None,init_hadamard=True)
 
-        wf_vec = backend_vectorized.wavefunction(variational_params_std)
-        expected_wf = 1j*np.array([-1, 1, 1, -1, 1, -1, -1, 1])/(2*np.sqrt(2))
-
-        assert np.allclose(wf_vec, expected_wf)
-
+        wf_vectorised_statevec = backend_vectorised_statevec.wavefunction((variational_params_std))
+        expected_wf = 1j*np.array([-1,1,1,-1,1,-1,-1,1])/(2*np.sqrt(2))
+        
+        try:
+            assert np.allclose(wf_vectorised_statevec, expected_wf)
+        except AssertionError:
+            assert np.allclose(np.real(np.conjugate(wf_vectorised_statevec)*wf_vectorised_statevec),
+                                   np.conjugate(expected_wf)*expected_wf)
+            
     def test_exact_solution(self):
         """
         NOTE:Since the implementation of exact solution is backend agnostic
@@ -333,6 +368,242 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         config_vec = [config.tolist() for config in config_vec]
 
         assert correct_config in config_vec
+    
+    def test_afunction_throws_exception(self):
+        # Make sure that exception is raised when Hamiltonian contains nonclassical (non-Z or ZZ terms)
+        
+        def test_nonclassical_hamiltonian_error():
+
+            cost_hamil = Hamiltonian(
+                [PauliOp('Y', (0,)), PauliOp('Z', (1,))], [1, 1], 1)
+            mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
+            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+            variate_params = create_qaoa_variational_params(
+                circuit_params, 'standard', 'ramp')
+            backend_obj = QAOAvectorizedBackendSimulator(
+                circuit_params, None, None, True)
+        
+        self.assertRaises(Exception, test_nonclassical_hamiltonian_error)
+    
+    ##########################################################
+    # TESTS OF APPLY GATE METHODS
+    ##########################################################
+
+    def test_apply_rx(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_rx method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_rx(0, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constI, constX)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+                
+    def test_apply_ry(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_ry method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_ry(0, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constI, constY)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+    
+    def test_apply_rz(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_rz method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_rz(0, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constI, constZ)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+    
+    def test_apply_rxx(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_rxx method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_rxx(0, 1, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constX, constX)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+    
+    def test_apply_ryy(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_ryy method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_ryy(0, 1, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constY, constY)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+    
+    def test_apply_rzz(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_rzz method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_rzz(0, 1, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constZ, constZ)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+            
+    def test_apply_rzx(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_rzx method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_rzx(0, 1, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constX, constZ)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+            
+    def test_apply_rxz(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_rxz method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_rzx(1, 0, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constZ, constX)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+            
+    def test_apply_rxy(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_rxy method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_rxy(0, 1, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constY, constX)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+    
+    def test_apply_ryx(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_ryx method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_rxy(1, 0, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constX, constY)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+            
+    def test_apply_ryz(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_ryz method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_ryz(0, 1, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constZ, constY)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
+            
+    def test_apply_rzy(self):
+        
+        constI, constX, constY, constZ = pauli_matrix_SetUp()
+
+        # Result from apply_ryz method
+        angles = [0.1, np.pi/2, np.pi/4]
+        
+        for angle in angles:
+            n_qubits, vector_backend = apply_gate_problem_SetUp()
+            vector_backend.apply_ryz(1, 0, angle)
+
+            # Result from matrix multiply exponentiated gate
+            wavefn = np.ones((2**n_qubits,),dtype=complex)/np.sqrt(2**n_qubits)
+            unitary = expm(-kron(constI, kron(constY, constZ)).toarray()*angle*1j/2)
+            res_wfn = np.matmul(unitary, wavefn).reshape([2] * n_qubits)
+
+            assert np.allclose(vector_backend.wavefn, res_wfn), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     # ADD TESTS FOR PREPEND AND APPEND STATES BELOW
     # def test_with_init_prog_A(self):

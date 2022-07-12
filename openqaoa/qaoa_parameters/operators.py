@@ -16,6 +16,7 @@
 Construct Pauli operators and Hamiltonians.
 """
 from collections import Counter
+from sympy import Symbol
 import numpy as np
 from typing import List, Union, Tuple
 
@@ -472,8 +473,6 @@ class Hamiltonian:
             elif len(term) == 2:
                 self.qubits_pairs.append(term)
                 self.pair_qubit_coeffs.append(coeff)
-            elif set(term.pauli_str) == {'I'}:
-                self.constant += coeff
             else:
                 raise NotImplementedError(
                     "Hamiltonian only supports Linear and Quadratic terms")
@@ -504,12 +503,6 @@ class Hamiltonian:
         hamiltonian_expression: `Symbol`
             Symbolic expression for the Hamiltonian.
         """
-        # Ensure sympy is installed
-        try:
-            from sympy import Symbol
-        except ImportError:
-            raise ImportError(
-                "Sympy is not installed. Pip install sympy to use this method")
                 
         # Generate expression
         hamiltonian_expression = Symbol(str(self.constant))
@@ -595,19 +588,26 @@ class Hamiltonian:
         : `Hamiltonian`
             Classical Hamiltonian.
         """
-        for coeff in coeffs:
-            if not isinstance(coeff, int) and not isinstance(coeff, float):
-                raise ValueError(
-                    "Classical Hamiltonians only support Integer or Float coefficients")
-
         pauli_ops = []
-        for term in terms:
+        pauli_coeffs = []
+
+        for term,coeff in zip(terms,coeffs):
+
+            # Check coeffcient type
+            if not isinstance(coeff, int) and not isinstance(coeff, float):
+                raise ValueError("Classical Hamiltonians only support Integer or Float coefficients")
+            
+            # Construct Hamiltonian terms from Pauli operators
             if len(term) == 2:
                 pauli_ops.append(PauliOp('ZZ', term))
+                pauli_coeffs.append(coeff)
             elif len(term) == 1:
                 pauli_ops.append(PauliOp('Z', term))
+                pauli_coeffs.append(coeff)
+            elif len(term) == 0:
+                constant += coeff
             else:
                 raise ValueError(
                     "Hamiltonian only supports Linear and Quadratic terms")
-
-        return cls(pauli_ops, coeffs, constant)
+        
+        return cls(pauli_ops, pauli_coeffs, constant)

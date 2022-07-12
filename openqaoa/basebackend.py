@@ -29,13 +29,10 @@ import numpy as np
 from copy import deepcopy
 
 from .devices import DeviceBase
-from .qaoa_parameters.pauligate import PauliGate, TwoPauliGate
+from .qaoa_parameters.gatemap import RotationGateMap, TwoQubitRotationGateMap
 from .qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
-from .derivative_functions import derivative
 from .utilities import qaoa_probabilities
 from .cost_function import cost_function
-
 
 class QuantumCircuitBase:
     """
@@ -136,12 +133,12 @@ class QAOABaseBackend(VQABaseBackend):
         self.init_hadamard = init_hadamard
         self.cvar_alpha = cvar_alpha
 
-        self.pseudo_circuit = deepcopy(self.circuit_params.pseudo_circuit)
+        self.abstract_circuit = deepcopy(self.circuit_params.abstract_circuit)
 
-    def assign_angles(self, params: QAOAVariationalBaseParams) -> List[PauliGate]:
+    def assign_angles(self, params: QAOAVariationalBaseParams) -> List[RotationGateMap]:
         """
         Assigns the angle values of the variational parameters to the circuit gates
-        specified as a list of gates in the ``pseudo_circuit``.
+        specified as a list of gates in the ``abstract_circuit``.
 
         Parameters
         ----------
@@ -149,18 +146,18 @@ class QAOABaseBackend(VQABaseBackend):
             The variational parameters(angles) to be assigned to the circuit gates
         """
         # if circuit is non-parameterised, then assign the angle values to the circuit
-        pseudo_pauli_circuit = self.pseudo_circuit
+        abstract_pauli_circuit = self.abstract_circuit
 
-        for each_pauli in pseudo_pauli_circuit:
+        for each_pauli in abstract_pauli_circuit:
             pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoPauliGate):
+            if isinstance(each_pauli, TwoQubitRotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle = params.mixer_2q_angles[pauli_label_index[0],
                                                    pauli_label_index[1]]
                 elif each_pauli.pauli_label[1] == 'cost':
                     angle = params.cost_2q_angles[pauli_label_index[0],
                                                   pauli_label_index[1]]
-            elif isinstance(each_pauli, PauliGate):
+            elif isinstance(each_pauli, RotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle = params.mixer_1q_angles[pauli_label_index[0],
                                                    pauli_label_index[1]]
@@ -168,40 +165,40 @@ class QAOABaseBackend(VQABaseBackend):
                     angle = params.cost_1q_angles[pauli_label_index[0],
                                                   pauli_label_index[1]]
             each_pauli.rotation_angle = angle
-        self.pseudo_circuit = pseudo_pauli_circuit
+        self.abstract_circuit = abstract_pauli_circuit
 
     def obtain_angles_for_pauli_list(self,
-                                     input_pauli_list: List[PauliGate],
+                                     input_pauli_list: List[RotationGateMap],
                                      params: QAOAVariationalBaseParams) -> List[float]:
         """
         This method uses the pauli gate list information to obtain the pauli angles
         from the VariationalBaseParams object. The floats in the list are in the order
-        of the input PauliGates list.
+        of the input RotationGateMaps list.
 
         Parameters
         ----------
-        input_pauli_list: `List[PauliGate]`
-            The PauliGates list
+        input_pauli_list: `List[RotationGateMap]`
+            The RotationGateMaps list
         params: `QAOAVariationalBaseParams`
             The variational parameters(angles) to be assigned to the circuit gates
 
         Returns
         -------
         angles_list: `List[float]`
-            The list of angles in the order of gates in the `PauliGate` list
+            The list of angles in the order of gates in the `RotationGateMap` list
         """
         angle_list = []
 
         for each_pauli in input_pauli_list:
             pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoPauliGate):
+            if isinstance(each_pauli, TwoQubitRotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle_list.append(params.mixer_2q_angles[pauli_label_index[0],
                                                              pauli_label_index[1]])
                 elif each_pauli.pauli_label[1] == 'cost':
                     angle_list.append(params.cost_2q_angles[pauli_label_index[0],
                                                             pauli_label_index[1]])
-            elif isinstance(each_pauli, PauliGate):
+            elif isinstance(each_pauli, RotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle_list.append(params.mixer_1q_angles[pauli_label_index[0],
                                                              pauli_label_index[1]])
@@ -286,74 +283,6 @@ class QAOABaseBackend(VQABaseBackend):
         uncertainty = np.sqrt(cost_sq - cost**2)
 
         return (cost, uncertainty)
-
-    @abstractmethod
-    def qfim(self,
-             params: QAOAVariationalBaseParams,
-             eta: float = 0.00000001):
-        """
-        Computes the quantum fisher information matrix at `params` according to :
-        $$[QFI]_{ij} = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>$$.
-
-        Parameters
-        ----------
-        params: `QAOAVariationalBaseParams`
-            The QAOA parameters as a 1D array (derived from an object of one of the
-            parameter classes, containing hyperparameters and variable parameters).
-        eta: `float`
-            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative
-            of the wavefunction w.r.t a parameter. 
-        Returns
-        -------
-        qfim_array: `np.ndarray`
-            The quantum fisher information matrix, a 2p*2p symmetric square matrix 
-            with elements [QFI]_ij = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>.
-        """
-        pass
-
-    def derivative_function(self,
-                            params: QAOAVariationalBaseParams,
-                            derivative_type: Type[str] = None,
-                            derivative_method: Type[str] = None,
-                            derivative_options: dict = None) -> callable:
-        """
-        Returns a callable function that calculates the gradient according to 
-        the specified `gradient_method`.
-
-        Parameters
-        ----------
-        derivative_type: 
-            Gradient or Hessian. Choose from `['gradient', 'hessian']`
-
-        derivative_method:
-            Method that specifies method to compute gradient. 
-            Refer to `derivative_functions.py` for arguments.
-
-        derivative_options:
-            Dictionary containing options specific to different gradient computation methods.
-            Refer to `derivative_functions.py` for arguments.
-
-        Returns
-        -------
-        out:
-            The callable derivative function of the cost function, generated based on the
-            `derivative_type`, `derivative_method`, and `derivative_options` specified.
-        """
-        # Extended parametrisation cost vector is created for parameter shift and natural gradient computation.
-        params_ext = QAOAVariationalExtendedParams.empty(self.circuit_params)
-
-        derivative_dict = {"derivative_type": derivative_type,
-                           "derivative_method": derivative_method,
-                           "derivative_options": derivative_options,
-                           "backend_obj": self,
-                           "params": deepcopy(params),
-                           "params_ext": params_ext}
-
-        out = derivative(derivative_dict)
-
-        self.reset_circuit()
-
-        return out
 
     @abstractmethod
     def reset_circuit(self):
@@ -467,71 +396,6 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
         """
         pass
 
-    def qfim(self,
-             params: QAOAVariationalBaseParams,
-             eta: float = 0.00000001):
-        """
-        Returns a callable qfim_fun(args) that computes the quantum fisher information matrix at `args` according to :
-        $$[QFI]_{ij} = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>$$.
-
-        Parameters
-        ----------
-        params: `QAOAVariationalBaseParams`
-            The QAOA parameters as a 1D array (derived from an object of one of
-            the parameter classes, containing hyperparameters and variable parameters).
-
-        eta: `float`
-            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative 
-            of the wavefunction w.r.t a parameter. 
-
-        Returns
-        -------
-        qfim_array:
-            The quantum fisher information matrix, a 2p*2p symmetric square matrix 
-            with elements [QFI]_ij = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>.
-        """
-        psi = self.wavefunction(params)
-        qfim_array = np.zeros((len(params), len(params)))
-
-        copied_params = deepcopy(params)
-
-        def qfim_fun(args):
-
-            for i in range(len(args)):
-                for j in range(i+1):
-                    vi, vj = np.zeros(len(args)), np.zeros(len(args))
-                    vi[i] = eta
-                    vj[j] = eta
-
-                    copied_params.update_from_raw(args + vi)
-                    wavefunction_plus_i = np.array(
-                        self.wavefunction(copied_params))
-
-                    copied_params.update_from_raw(args - vi)
-                    wavefunction_minus_i = np.array(
-                        self.wavefunction(copied_params))
-
-                    copied_params.update_from_raw(args + vj)
-                    wavefunction_plus_j = np.array(
-                        self.wavefunction(copied_params))
-
-                    copied_params.update_from_raw(args - vj)
-                    wavefunction_minus_j = np.array(
-                        self.wavefunction(copied_params))
-
-                    di_psi = (wavefunction_plus_i - wavefunction_minus_i)/eta
-                    dj_psi = (wavefunction_plus_j - wavefunction_minus_j)/eta
-
-                    qfim_array[i][j] = np.real(
-                        np.vdot(di_psi, dj_psi)) - np.vdot(di_psi, psi)*np.vdot(psi, dj_psi)
-
-                    if i != j:
-                        qfim_array[j][i] = qfim_array[i][j]
-
-            return qfim_array
-
-        return qfim_fun
-
     def sample_from_wavefunction(self,
                                  params: QAOAVariationalBaseParams,
                                  n_samples: int) -> np.ndarray:
@@ -602,8 +466,6 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
         samples = self.sample_from_wavefunction(params, n_shots)
 
         unique_nums, frequency = np.unique(samples, return_counts=True)
-        # unique_shots = [np.binary_repr(num, self.n_qubits)[
-        #     ::-1] for num in unique_nums]
         counts = dict(zip(unique_nums, frequency))
 
         return counts
@@ -630,32 +492,6 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
         # assert self.n_qubits >= len(append_state.qubits), \
         # "Cannot attach a bigger circuit to the QAOA routine"
         self.n_shots = n_shots
-
-    def qfim(self,
-             params: QAOAVariationalBaseParams,
-             eta: float = 0.00000001):
-        """
-        Computes the quantum fisher information matrix at `params` according to :
-        $$[QFI]_{ij} = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>$$.
-
-        Parameters
-        ----------
-        params: `QAOAVariationalBaseParams`
-            The QAOA parameters as a 1D array (derived from an object of one of the
-            parameter classes, containing hyperparameters and variable parameters).
-
-        eta: `float`
-            The infinitesimal shift used to compute `|∂jφ>`, the partial derivative
-            of the wavefunction w.r.t a parameter. 
-
-        Returns
-        -------
-        qfim_array:
-            The quantum fisher information matrix, a 2p*2p symmetric square matrix
-            with elements [QFI]_ij = Re(<∂iφ|∂jφ>) − <∂iφ|φ><φ|∂jφ>.
-        """
-        raise NotImplementedError("QFIM computation is not currently available on shot-based"
-                                  "backends. This feature will be implemented in future")
 
     @abstractmethod
     def get_counts(self, params: QAOAVariationalBaseParams) -> dict:

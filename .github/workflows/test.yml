@@ -55,10 +55,21 @@ jobs:
           cd ..
           
       - name: Run tests
+        env:
+          IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }}
+          IBMQ_HUB: ibm-q
+          IBMQ_GROUP: open
+          IBMQ_PROJECT: main
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          python -m pytest --junitxml=report.xml 
+          python -m pytest --cov --cov-report=xml:coverage.xml
+          
+      - name: Upload coverage reports to Codecov with GitHub Action
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./coverage.xml
 
   docs:
     runs-on: ubuntu-latest
@@ -94,6 +105,7 @@ jobs:
       
       - name: Build and test Sphinx docs
         run: |
+          sudo apt-get install pandoc
           cd docs/
           make html
-          
+  

@@ -21,8 +21,8 @@ from .parameters import Parameters
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
 
-ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias',
-                       'extended', 'fourier', 'fourier_extended', 'fourier_w_bias']
+ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
+                       'fourier_extended', 'fourier_w_bias', 'annealing']
 ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
 ALLOWED_MIXERS = ['x', 'xy']
 ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS
@@ -59,7 +59,7 @@ class CircuitProperties(Parameters):
         self.init_type = init_type
         self.qubit_register = qubit_register
         self.p = p
-        self.q = q if param_type.lower() == 'fourier' else None
+        self.q = q if param_type.lower() in ['fourier','fourier_extended', 'fourier_w_bias'] else None
         self.variational_params_dict = variational_params_dict
         self.annealing_time = annealing_time if annealing_time is not None else 0.7*self.p
         self.linear_ramp_time = linear_ramp_time if linear_ramp_time is not None else 0.7*self.p
@@ -112,6 +112,31 @@ class CircuitProperties(Parameters):
                 f"Number of layers `p` cannot be smaller or equal to zero. Value {value} was provided")
         self._p = value
 
+    @property
+    def annealing_time(self):
+        return self._annealing_time
+
+    @annealing_time.setter
+    def annealing_time(self, value):
+        if value <= 0:
+            raise ValueError(
+                f"The annealing time `annealing_time` cannot be smaller or equal to zero. Value {value} was provided")
+        self._annealing_time = value
+
+
+    # @property
+    # def mixer_qubit_connectivity(self):
+    #     return self._mixer_qubit_connectivity
+
+    # @annealing_time.setter
+    # def mixer_qubit_connectivity(self, value):
+    #     print(value)
+    #     if (self.mixer_hamiltonian != 'xy') and (value != None):
+    #         self._mixer_qubit_connectivity = None
+    #         raise ValueError(f"mixer_qubit_connectivity can be used if and only if `mixer_hamiltonian` is set to `xy`")
+    #     else:
+    #         print(value)
+    #         self._mixer_qubit_connectivity = value
 
 class BackendProperties(Parameters):
     """
@@ -132,6 +157,13 @@ class BackendProperties(Parameters):
         The number of shots to be used for the shot-based computation.
     cvar_alpha: `float`
         The value of the CVaR parameter.
+    noise_model: `NoiseModel`
+        The noise model to be used for the shot-based simulator.
+    qubit_layout: `Union[List[int], np.ndarray]`
+        Mapping from physical to logical qubit indices, used to eventually 
+        construct the quantum circuit.  For example, for a system composed by 3 qubits
+       `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
+        and the right hand side is the logical qubits
     """
 
     def __init__(self,
@@ -141,13 +173,17 @@ class BackendProperties(Parameters):
                                               np.ndarray]] = None,
                  init_hadamard: bool = True,
                  n_shots: int = 100,
-                 cvar_alpha: float = 1):
+                 cvar_alpha: float = 1,
+                 noise_model = None,
+                 qubit_layout: Optional[Union[List[int], np.ndarray]] = None):
         
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state
         self.append_state = append_state
         self.cvar_alpha = cvar_alpha
+        self.noise_model = noise_model
+        self.qubit_layout = qubit_layout
 
     # @property
     # def cvar_alpha(self):
@@ -176,11 +212,11 @@ class ClassicalOptimizer(Parameters):
         Maximum number of iterations.
     jac: str
         Method to compute the gradient vector. Choose from:
-        `['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']        
+        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
     hess:
         Method to compute the hessian. Choose from:
-        `['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']
-    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
+        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
+    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints 
         Scipy-based constraints on parameters of optimization 
     bounds: scipy.scipy.optimize.Bounds
         Scipy-based bounds on parameters of optimization 

@@ -17,8 +17,12 @@ import numpy as np
 import itertools
 import unittest
 
+from openqaoa.devices import DeviceLocal
 from openqaoa.utilities import *
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian
+from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
+from openqaoa.backends.qaoa_backend import get_qaoa_backend
+from openqaoa.optimizers.qaoa_optimizer import get_optimizer
+from openqaoa.problems.problem import MinimumVertexCover
 
 """
 Unit test based testing of the utility functions
@@ -159,29 +163,29 @@ class TestingUtilities(unittest.TestCase):
             if connectivity == 'full':
                 terms_indices = list(itertools.combinations(range(n_qubits),2))
                 input_coefficients = 2*[1 for _ in range(len(terms_indices))]
-                label = 'xy'
+                mixer_type = 'xy'
 
             elif connectivity == 'chain':
                 terms_indices = [(i,i+1) for i in range(n_qubits-1)]
                 input_coefficients = 2*[1 for _ in range(len(terms_indices))]
-                label = 'xy'
+                mixer_type = 'xy'
 
             elif connectivity == 'star':
                 terms_indices = [(0,i) for i in range(1,n_qubits)]
                 input_coefficients = 2*[1 for _ in range(len(terms_indices))]
-                label = 'xy'
+                mixer_type = 'xy'
 
             else:
                 input_coefficients = [1 for _ in range(n_qubits)]
-                label = 'x'
+                mixer_type = 'x'
 
             # Retrieve Hamiltonian and attributes
-            mixer_hamiltonian = get_mixer_hamiltonian(n_qubits,connectivity,input_coefficients)
+            mixer_hamiltonian = get_mixer_hamiltonian(n_qubits,mixer_type,connectivity,input_coefficients)
             terms = mixer_hamiltonian.terms
             coefficients = mixer_hamiltonian.coeffs
 
             # Generate correct Hamiltonian and attributes
-            if label == 'xy':
+            if mixer_type == 'xy':
                 correct_mixer_hamiltonian = XY_mixer_hamiltonian(n_qubits,connectivity,input_coefficients)
 
             else:
@@ -544,6 +548,188 @@ class TestingUtilities(unittest.TestCase):
             assert rod_terms == correct_rod_terms, f'The terms in the uniform ROD Hamiltonian were not generated correctly'
             assert np.allclose(rod_coefficients,correct_rod_coefficients), f'The coefficients in the uniform ROD Hamiltonian were not generated correctly'
             assert np.allclose(rod_constant,correct_rod_constant), f'The constant in the uniform ROD Hamiltonian was not generated correctly'
+
+    def test_exp_val_hamiltonian_termwise_analytical(self):
+        """
+        Test of the function that computes singlet expectation values and correlations terms
+        analytically for p = 1 and the function computing the full set of expectation values
+        when analytical results can be obtained (p=1).
+
+        NOTE: Correlations in the exp_val_pair_analytical() and exp_val_pair() functions are computed 
+        as average value <Z_{i}Z_{j}>, meaning it includes the <Z_{i}><Z_{j}> contribution. 
+        This is subtracted by default in the exp_val_hamiltonian_termwise() function.
+
+        The tests consist in: computing expectation values for some example cases for the 
+        first function, and a full set of expectation values for a given example. 
+        """
+
+        ## Problem definition
+
+        # Number of qubits
+        n_qubits = 4
+
+        # Edges and weights of the graph
+        pair_edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] 
+        self_edges = [(i,) for i in range(n_qubits)]
+        pair_weights = [1 for _ in range(len(pair_edges))] # All weights equal to 1
+        self_weights = [(-1)**j for j in range(len(self_edges))]
+
+        edges = pair_edges + self_edges
+        weights = pair_weights + self_weights
+
+        # Hamiltonian
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+
+        ## Testing
+
+        # Spin and pair whose expectation values are computed
+        spin = 0
+        pair = (0,1)
+        
+        # Correct solution
+        qaoa_angles_cases = {(0,0):(0,0),(np.pi,0):(0,0),(np.pi/4,np.pi/4):(0,0),\
+            (np.pi/4,np.pi/8):(-np.sqrt(2)/4,-0.25),(np.pi/8,0):(0,0)} # (beta,gamma):(exp_val,corr)
+
+        # Compute singlet expectation values and correlations for each set of angles
+        for qaoa_angles in qaoa_angles_cases.keys():
+            
+            # Extract correct solution
+            exp_val = np.round(qaoa_angles_cases[qaoa_angles][0],16)
+            corr = np.round(qaoa_angles_cases[qaoa_angles][1],16)
+            
+            # Compute expectation values and correlations
+            comp_exp_val = np.round(exp_val_single_analytical(spin,hamiltonian,qaoa_angles),16)
+            comp_corr = np.round(exp_val_pair_analytical(pair,hamiltonian,qaoa_angles),16)
+
+            # Test if computed results are correct
+            assert np.allclose(exp_val,comp_exp_val), f'Incorrectly computed singlet expectation value'
+            assert np.allclose(corr,comp_corr), f'Incorrectly computed correlation term'
+
+        # Fix a set of angles for testing full set of expectation values and correlations
+        fixed_angles = [np.pi/4,np.pi/8]
+
+        # Correct solutions
+        exp_val_list = np.array([-np.sqrt(2)/4,np.sqrt(2)/4,-np.sqrt(2)/4,np.sqrt(2)/4])
+        corr_matrix = np.array([[0.0,-1/4,0,-1/4],\
+                              [0.0,0.0,-1/4,0],\
+                              [0.0,0.0,0.0,-1/4],\
+                              [0.0,0.0,0.0,0.0]])
+
+        corr_matrix -= np.outer(exp_val_list,exp_val_list)
+
+        # Compute list of expectation values and correlation matrix
+        comp_exp_val_list, comp_corr_matrix = exp_val_hamiltonian_termwise(variational_params = None,
+                                                                        qaoa_backend = None,
+                                                                        hamiltonian = hamiltonian,
+                                                                        p = 1, 
+                                                                        mixer_type='x',
+                                                                        qaoa_optimized_angles = fixed_angles,
+                                                                        analytical=True)
+
+        # Test if computed results are correct
+        assert np.allclose(exp_val_list,comp_exp_val_list), f'Computed set of singlet expectation values is incorrect'
+
+        for j in range(len(comp_corr_matrix)):
+            assert np.allclose(corr_matrix[j],comp_corr_matrix[j]), f'Computed correlation matrix is incorrect'
+    
+    def test_exp_val_hamiltonian_termwise(self):
+        """
+        Test of the function that computes singlet expectation values and correlations numerically through
+        the QAOA output distribution of states.
+
+        The test consist of computing the singlet expectation values and correlations for a given problem.
+        The result is constrasted with the analytical result, whose implementation is tested in 
+        test_exp_val_hamiltonian_termwise_analytical().
+        """
+
+        ## Problem definition
+
+        # Number of qubits
+        n_qubits = 10
+
+        # Number of QAOA layers - necessary only for the definition of circuit parameters
+        p = 1
+
+        # Terms and weights of the graph
+        edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
+        weights = [10 for _ in range(len(edges))]
+
+        # Hyperparameters
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 10)
+
+        # Mixer Hamiltonian
+        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
+
+        # Define circuit and variational parameters
+        circuit_params = QAOACircuitParams(hamiltonian,mixer_hamiltonian, p = p)
+        variational_params = create_qaoa_variational_params(circuit_params, params_type = 'standard', init_type = 'ramp')
+
+        ## Testing
+
+        # Perform QAOA and obtain expectation values numerically
+        qaoa_backend = get_qaoa_backend(circuit_params, device = DeviceLocal('vectorized'))
+        optimizer = get_optimizer(qaoa_backend, variational_params, optimizer_dict = {'method':'cobyla','maxiter':200})
+        optimizer()
+        qaoa_results = optimizer.qaoa_result
+        
+        qaoa_results_optimized = qaoa_results.optimized 
+        qaoa_optimized_angles = qaoa_results_optimized['optimized angles']
+        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
+        num_exp_vals_z, num_corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
+            qaoa_backend, hamiltonian, 'x', p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=False)
+
+        # Analytical expectation values
+        exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
+            qaoa_backend, hamiltonian, 'x', p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=True)
+
+
+        # Test if computed results are correct
+        assert np.allclose(exp_vals_z,num_exp_vals_z), f'Computed singlet expectation values are incorrect'
+
+        for j in range(len(num_corr_matrix)):
+            assert np.allclose(corr_matrix[j],num_corr_matrix[j]), f'Computed correlation matrix is incorrect'
+
+    def test_energy_expectation_analytical(self):
+        """
+        Tests the function that computed the expectation value of the Hamiltonian from an
+        analytical function valid for a single layer QAOA Ansatz with the X mixer.
+
+        The test consists in computing the expectation value of an example Hamiltonian for different angles.
+        """
+        ## Problem definition - Minimum Vertex Cover on a Ring
+
+        # Number of qubits
+        n_qubits = 6
+
+        # Edges of the graph
+        edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
+
+        # Define graph and add edges
+        G = nx.Graph()
+        G.add_edges_from(edges)
+
+        # QUBO instance of the problem
+        field = 1.0
+        penalty = 10.0
+        mvc = MinimumVertexCover(G, field=field, penalty=penalty).get_qubo_problem()
+
+        # Minimum Vertex Cover Hamiltonian
+        hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
+
+        # Set of angles on which to compute the energy
+        angle_set = [(0,0),(np.pi/4,0),(2*np.pi,np.pi),(np.pi/8,np.pi/2)]
+
+        # Test correct and computed energies
+        for angles in angle_set:
+            b,g = angles
+
+            correct_energy = n_qubits*(-np.sin(2*b)*np.sin(2*g*field)*np.cos(g*penalty/2) + \
+            (1/2)*np.sin(2*b)**2*np.cos(g*penalty/2)**2*(1 - np.cos(2*g*field)) - \
+                np.sin(4*b)*np.cos(g*field)*np.sin(g*penalty/2)*np.cos(g*penalty/2) ) + mvc.constant
+
+            energy = energy_expectation_analytical(angles,hamiltonian)
+            
+            assert energy == correct_energy, f'Computed energy {energy} is not equal to correct value {correct_energy} for (beta,gamma) = {(b,g)}'
 
     def test_flip_counts(self):
         """

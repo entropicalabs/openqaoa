@@ -21,8 +21,7 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-
-from .qaoa_parameters.operators import Hamiltonian, PauliOp
+from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 
 
 def X_mixer_hamiltonian(n_qubits: int,
@@ -68,7 +67,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
     ----------
     n_qubits: `int`
         The number of qubits in the system.
-    qubit_connectivity: `list` or `str`, optional
+    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
         The connectivity of the qubits in the mixer Hamiltonian.
     coeffs: `list`, optional
         The coefficients of the XY terms in the Hamiltonian.
@@ -80,7 +79,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
 
     Notes
     -----
-    The XY mixer is not implemented with $$RXY$$ Pauli Gates, but $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
+        The XY mixer is not implemented with $$RXY$$ Gates, but with $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
@@ -106,7 +105,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
             1, 'Qubit index in connectivity list is out of range'
         assert min(indices) >= 0, 'Qubit index should be a positive integer'
 
-    # If no coefficients provided, set all to the nnumber of terms
+    # If no coefficients provided, set all to the number of terms
     coeffs = [0.5]*2*len(qubit_connectivity) if coeffs is None else coeffs
 
     # Initialize list of terms
@@ -124,37 +123,33 @@ def XY_mixer_hamiltonian(n_qubits: int,
     return hamiltonian
 
 
-def get_mixer_hamiltonian(n_qubits: int,
-                          qubit_connectivity: Union[List[list],
-                                                    List[tuple], str] = None,
-                          coeffs: List[float] = None) -> Hamiltonian:
+def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None):
     """
-    Fetches a specific mixer Hamiltonian, constructed according to inputs.
-
-    Parameters:
-    -----------
+    Parameters
+    ----------
     n_qubits: `int`
-        Number of qubits in the system.
+        Number of qubits in the Hamiltonian.
+    mixer_type: `str`, optional
+        Name of the mixer Hamiltonian. Choose from `x` or `xy`.
     qubit_connectivity: `list` or `str`, optional
         The connectivity of the qubits in the mixer Hamiltonian.
     coeffs: `list`, optional
         The coefficients of the terms in the Hamiltonian.
-
 
     Returns:
     --------
     mixer: `Hamiltonian`
         Hamiltonian object containing the specificied mixer.
     """
-    # If no connectivity is provided, the X mixer is returned
-    if type(qubit_connectivity) == type(None):
-        mixer = X_mixer_hamiltonian(n_qubits, coeffs)
 
-    # If a connectivity is provided, the corresponding XY mixer is returned
+    # Return mixer Hamiltonian according to specified type
+    if mixer_type == 'x':
+        mixer = X_mixer_hamiltonian(n_qubits, coeffs)
     else:
         mixer = XY_mixer_hamiltonian(n_qubits, qubit_connectivity, coeffs)
 
     return mixer
+
 
 ################################################################################
 # METHODS FOR PRINTING HAMILTONIANS AND GRAPHS, AND PRINTING ONE FROM EACH OTHER
@@ -312,29 +307,36 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
         Matplotlib axes to plot on. Defaults to None.
     """
     
+    # Create plot figure
+    fig = plt.figure(figsize=(10, 6))
+        
     # Extract all graph attributes
     biases_and_nodes = nx.get_node_attributes(G, 'weight')
     biases = list(biases_and_nodes.values())
     edges_and_weights = nx.get_edge_attributes(G, 'weight')
-    weights = list(edges_and_weights.values())
     pos = nx.shell_layout(G)
 
     # extract minimum and maximum weights for side bar limits
-    edge_vmin = min(weights)
-    edge_vmax = max(weights)
-
-    # Define color map
-    cmap = plt.cm.seismic
-
-    # Create plot figure
-    fig = plt.figure(figsize=(10, 6))
+    weights = list(edges_and_weights.values())
     
-    # Define normalized color map
-    sm = plt.cm.ScalarMappable(cmap=cmap,
-                               norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
-    # Add colormap to plot
-    cbar = plt.colorbar(sm)
-    cbar.ax.set_ylabel('Edge Weights', rotation=270)
+    if weights != []:
+        edge_vmin = min(weights)
+        edge_vmax = max(weights)
+
+        # Define color map
+        cmap = plt.cm.seismic
+
+        # Define normalized color map
+        sm = plt.cm.ScalarMappable(cmap=cmap,
+                                norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
+        # Add colormap to plot
+        cbar = plt.colorbar(sm)
+        cbar.ax.set_ylabel('Edge Weights', rotation=270)
+    else:
+        weights = [1] * len(G.edges())
+        edge_vmin = None
+        edge_vmax = None
+        cmap = None    
     
     # If biases are present define reference values and color map for side bar
     if biases != []:
@@ -352,8 +354,8 @@ def plot_graph(G: nx.Graph, ax=None) -> None:
 
     else:
         # Draw graph
-        nx.draw(G, pos, node_color=biases, edge_color=weights, width=1.5,
-                edge_cmap=cmap, cmap=cmap, edge_vmin=edge_vmin,
+        nx.draw(G, pos, edge_color=weights, width=1.5,
+                edge_cmap=cmap, edge_vmin=edge_vmin,
                 edge_vmax=edge_vmax, with_labels=True)
     
     # Show plot
@@ -442,6 +444,7 @@ def random_classical_hamiltonian(reg: List[int],
         terms, weights, constant=constant)
 
     return hamiltonian
+
 
 ################################################################################
 # HAMILTONIANS AND DATA
@@ -787,9 +790,381 @@ def low_energy_states_overlap(hamiltonian: Hamiltonian,
 
     return total_overlap
 
+
+def exp_val_single(spin: int, prob_dict: dict):
+    """
+    Computes expectation value <Z> of a given spin.
+
+    Parameters
+    ----------
+    spin: `int`
+        Spin whose expectation value we compute.
+    prob_dict: `dict`
+        Dictionary containing the configuration probabilities of each spin.
+
+    Returns
+    -------
+    exp_val: `float`
+        Expectation value of the spin
+    """
+
+    # Initialize expectation value
+    exp_val = 0
+
+    # Compute correlation
+    for bitstring, prob in prob_dict.items():
+
+        # If 0, spin is pointing up, else it is pointing down
+        Z = int(bitstring[spin])
+
+        # Add contribution if spin points up or subtract if points down
+        exp_val += -prob if Z > 0 else prob
+
+    return exp_val
+
+
+def exp_val_pair(spins: tuple, prob_dict: dict):
+    """
+    Computes the correlation Mij = <Z_{i}Z_{j}> between qubits i,j using the QAOA optimized 
+    wavefunction.
+
+    NOTE: In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be
+    subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a 
+    wrapper for this function. 
+
+    Parameters
+    ----------
+    spins: `tuple`
+        Tuple containing the spins whose correlation is computed.
+    prob_dict: `dict`
+        The dictionary containing the configuration probabilities of each spin.
+
+    Returns
+    -------
+    corr: `float`
+        Correlation between the two spins in the term.
+
+    """
+
+    # Initialize correlation
+    corr = 0
+
+    # Compute correlation
+    for bitstring, prob in prob_dict.items():
+
+        # If 0 or 2, spins are aligned, else they are anti-aligned
+        num_ones = sum([int(bitstring[i]) for i in spins])
+
+        # Add contribution if spins aligned or subtract if anti-aligned
+        corr += prob if num_ones % 2 == 0 else -prob
+
+    return corr
+
+
+def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
+                                qaoa_backend,
+                                hamiltonian: Hamiltonian, 
+                                mixer_type:str, 
+                                p: int,
+                                qaoa_optimized_angles: Optional[list] = None,
+                                qaoa_optimized_counts: Optional[dict] = None,
+                                analytical: bool = True):
+    """
+    Computes the single spin expectation values <Z_{i}> and the correlation matrix Mij = <Z_{i}Z_{j}>,
+    using the optimization results obtained from QAOA tranining the specified QAOA cost backend.
+
+    Parameters
+    ----------
+    variational_params: `QAOAVariationalBaseParams`
+        Set of variational parameters in the QAOA ansatz.
+    qaoa_backend: `QAOABaseBackend`
+        Chosen backend on which QAOA is performed.
+    hamiltonian: `Hamiltonian`
+        Hamiltonian object containing the problem statement.
+    p: `int`
+        Number of layers in QAOA ansatz.
+    qaoa_optimized_angles: `list`
+        Optimized angles of the underlying QAOA.
+    qaoa_optimized_counts: `dict`
+        Dictionary containing the measurement counts of optimized QAOA circuit.
+    analytical: `bool`
+        Boolean that indicates whether to use analytical or numerical expectation
+        calculation methods.
+
+    Returns
+    -------
+    exp_vals_z: `np.array`
+        Single spin expectation values as a numpy array.
+    corr_matrix: `np.array`
+        Correlation matrix as a numpy Matrix object.
+    """
+
+    # Define number of qubits, problem hamiltonian and QAOA parameters
+    n_qubits = hamiltonian.n_qubits
+
+    # Extract Hamiltonian terms
+    terms = list(hamiltonian.terms)
+    
+    # Initialize the z expectation values and correlation matrix with 0s
+    exp_vals_z = np.zeros(n_qubits)
+    corr_matrix = np.zeros((n_qubits, n_qubits))
+
+    # If single layer ansatz use analytical results
+    if (analytical == True and p == 1 and mixer_type == 'x' and
+        isinstance(qaoa_optimized_angles, list)):
+
+        # Compute expectation values and correlations of terms present in the Hamiltonian
+        for term in terms:
+
+            # If bias term compute expectation value
+            if len(term) == 1:
+                i = term.qubit_indices[0]
+                exp_vals_z[i] = exp_val_single_analytical(
+                    i, hamiltonian, qaoa_optimized_angles)
+
+            # If two-body term compute correlation
+            elif len(term) == 2:
+                i, j = term.qubit_indices
+                corr_matrix[i][j] = exp_val_pair_analytical(
+                    (i, j), hamiltonian, qaoa_optimized_angles)
+
+            # If constant term, ignore
+            else:
+                continue
+
+    # If multilayer ansatz, perform numerical computation
+    else:
+
+        if isinstance(qaoa_optimized_counts, dict):
+            counts_dict = qaoa_optimized_counts
+        else:
+            raise ValueError("Please specify optimized counts to compute expectation values.")
+
+        # Compute expectation values and correlations of terms present in the Hamiltonian
+        for term in terms:
+
+            # If bias term compute expectation value
+            if len(term) == 1:
+                i = term.qubit_indices[0]
+                exp_vals_z[i] = exp_val_single(i, counts_dict)
+
+            # If two-body term compute correlation
+            elif len(term) == 2:
+                i, j = term.qubit_indices
+                corr_matrix[i][j] = exp_val_pair((i, j), counts_dict)
+
+            # If constant term, ignore
+            if len(term) == 0:
+                continue
+
+    # Remove expectation value contribution from the correlations
+    corr_matrix -= np.outer(exp_vals_z, exp_vals_z)
+
+    return exp_vals_z, corr_matrix
+
+
 ################################################################################
 # ANALYTIC & KNOWN FORMULAE
 ################################################################################
+
+
+def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: tuple):
+    """
+    Computes the single spin expectation value <Z> from an analytically
+    derived expression for a single layer QAOA Ansatz. 
+    
+    NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
+
+    Parameters
+    ----------
+    spin: `int`
+        The spin whose expectation value we compute.
+
+    hamiltonian: `Hamiltonian`
+        Hamiltonian object containing the problem statement.
+
+    qaoa_angles: `tuple`
+        Pair of (gamma,beta) angles defined from QAOA ansatz and
+        obtained in the QAOA process.
+
+    Returns:
+    -------
+    exp_val: `float`
+        Spin expectation value <Z>.
+    """
+
+    # Number of qubits in the system
+    n_qubits = hamiltonian.n_qubits
+
+    # Extract graph properties of the Hamiltonian
+    terms = list(hamiltonian.terms)
+    edges = [terms[j].qubit_indices for j in range(len(terms))]
+    weights = hamiltonian.coeffs
+
+    # Hamiltonian from graph definitions
+    hamil_graph = dict(zip(edges, weights))
+
+    # Spin biases
+    h_u = hamil_graph[(spin,)] if hamil_graph.get((spin,)) is not None else 0
+
+    # QAOA angles
+    beta, gamma = qaoa_angles
+
+    # Spin register as a list without the spin we focus on
+    iter_qubits = [j for j in range(0, spin)] + \
+        [j for j in range(spin+1, n_qubits)]
+
+    # Initialize products
+    exp_val = -np.sin(2*beta) * np.sin(2*gamma*h_u)
+
+    # Loop over edges connecting u and v to other spins
+    for n in iter_qubits:
+
+        # Edges between the spin and others in the register
+        edge = tuple([min(spin, n), max(spin, n)])
+
+        # If edge not present in the graph the associated weight is set to 0
+        J_un = 0 if hamil_graph.get(edge) is None else hamil_graph[edge]
+
+        # Add factor to the products
+        exp_val *= np.cos(2*gamma*J_un)
+
+    return exp_val
+
+
+def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles: tuple):
+    """
+    Computes <Z_{i}Z_{j}> correlation between apair of spins analytically. It is an extension from the 
+    expression derived by Bravyi et al. in arXiv:1910.08980 which includes the effect of biases. 
+
+    NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
+
+    NOTE: In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be
+    subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a 
+    wrapper for this function. 
+
+    NOTE: OpenQAOA uses a different sign convention for the QAOA Ansatz than Bravy et al. - there is 
+    a relative minus sign between the cost function and the mixer in OpenQAOA, which 
+    is accounted for in this implementation. Additionally, the result below is valid 
+    for a Hadamard state initialization and in the absence of bias terms in the Hamiltonian.
+
+    Parameters
+    ----------
+    spins: `tuple`
+        Pair of spins whose correlation we compute.
+
+    hamiltonian: `Hamiltonian`
+        Hamiltonian object containing the problem statement.
+
+    qaoa_angles: `tuple`
+        Pair of (gamma,beta) angles defined from QAOA ansatz and
+        obtained in the QAOA process.
+
+    Returns
+    -------
+    corr:
+        Correlation <ZZ> between the specified spin pair.
+    """
+
+    # Number of qubits in the system
+    n_qubits = hamiltonian.n_qubits
+
+    # Extract graph properties of the Hamiltonian
+    terms = list(hamiltonian.terms)
+    edges = [terms[j].qubit_indices for j in range(len(terms))]
+    weights = hamiltonian.coeffs
+
+    # Hamiltonian from graph definitions
+    hamil_graph = dict(zip(edges, weights))
+
+    # Spins whose correlation we compute
+    u, v = spins
+
+    # Coupling between the spins
+    J_uv = hamil_graph[spins] if hamil_graph.get(spins) is not None else 0
+
+    # Spin biases
+    h_u = hamil_graph[(u,)] if hamil_graph.get((u,)) is not None else 0
+    h_v = hamil_graph[(v,)] if hamil_graph.get((v,)) is not None else 0
+
+    # QAOA angles
+    beta, gamma = qaoa_angles
+
+    # Factors in the expression
+    s = np.sin(2*beta)
+    c = np.cos(2*beta)
+
+    # Spin register as a list without u,v spins
+    iter_qubits = [j for j in range(0, min(u, v))] + [j for j in range(
+        min(u, v)+1, max(u, v))] + [j for j in range(max(u, v)+1, n_qubits)]
+
+    # Initialize products
+    prod1 = s**2/2 * np.cos(2*gamma*(h_u - h_v))
+    prod2 = -s**2/2 * np.cos(2*gamma*(h_u + h_v))
+    prod3 = -c*s*np.sin(2*gamma*J_uv) * np.cos(2*gamma*h_u)
+    prod4 = -c*s*np.sin(2*gamma*J_uv) * np.cos(2*gamma*h_v)
+
+    # Loop over edges connecting u and v to other spins
+    for n in iter_qubits:
+
+        # Edges between u,v and another spin in the register
+        edge1 = tuple([min(u, n), max(u, n)])
+        edge2 = tuple([min(v, n), max(v, n)])
+
+        # If edge not present in the graph the associated weight is set to 0
+        J_un = 0 if hamil_graph.get(edge1) is None else hamil_graph[edge1]
+        J_vn = 0 if hamil_graph.get(edge2) is None else hamil_graph[edge2]
+
+        # Add factor to the products
+        prod1 *= np.cos(2*gamma*(J_un - J_vn))
+        prod2 *= np.cos(2*gamma*(J_un + J_vn))
+        prod3 *= np.cos(2*gamma*J_un)
+        prod4 *= np.cos(2*gamma*J_vn)
+
+    # Add the contribution from each product term
+    corr = prod1 + prod2 + prod3 + prod4
+
+    return corr
+
+
+def energy_expectation_analytical(angles:Union[list,tuple],hamiltonian:Hamiltonian):
+    """
+    Computes the expectation value of the Hamiltonian for an analytical expression.
+
+    NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian and classical
+    Hamiltonians with up to quadratic terms.
+
+    Parameters
+    ----------
+    angles: `list` or `tuple`
+        QAOA angles at which the Hamiltonian expectation value is computed
+    hamiltonian: `Hamiltonian`
+        Classical Hamiltonian from which the expectation value is computed.
+    """
+    
+    # Extract terms and coefficients from the Hamiltonian
+    terms = [pauli_term.qubit_indices for pauli_term in hamiltonian.terms]
+    coeffs = hamiltonian.coeffs
+    
+    energy = 0
+    
+    # Compute the expectation value of each term and add its local energy contribution
+    for coeff,term in zip(coeffs,terms):
+        
+        if len(term) == 2:
+        
+            local_energy = exp_val_pair_analytical(term,hamiltonian,angles)
+            
+        else:
+            
+            local_energy = exp_val_single_analytical(term[0],hamiltonian,angles)
+        
+        energy += coeff * local_energy
+    
+    # Add constant shift contribution
+    energy += hamiltonian.constant
+    
+    return energy
 
 
 def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
@@ -799,7 +1174,7 @@ def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
     Parameters
     ----------
     reg: `list`
-    Rregister of qubits in the system.
+        register of qubits in the system.
 
     Returns
     -------
@@ -827,6 +1202,7 @@ def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
     ring_hamil = Hamiltonian.classical_hamiltonian(terms, coeffs,
                                                    constant=constant)
     return ring_hamil
+
 
 ################################################################################
 # OTHER MISCELLANEOUS
@@ -856,7 +1232,6 @@ def flip_counts(counts_dictionary: dict) -> dict:
         output_counts_dictionary[key[::-1]] = value
 
     return output_counts_dictionary
-
 
 def qaoa_probabilities(statevector) -> dict:
     """
