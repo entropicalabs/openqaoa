@@ -131,11 +131,11 @@ class Result():
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         
-        ax.plot(range(self.evals['number of evals']),
-                self.intermediate['intermediate cost'],
-                label=label,
-                linestyle=linestyle,
-                color=color)
+        ax.plot(range(self.evals['number of evals'] - self.evals['jac evals'] - self.evals['qfim evals']),
+                    self.intermediate['intermediate cost'],
+                    label=label,
+                    linestyle=linestyle,
+                    color=color)
 
         ax.set_ylabel('Cost')
         ax.set_xlabel('Number of function evaluations')

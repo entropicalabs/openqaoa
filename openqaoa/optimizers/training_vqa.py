@@ -404,7 +404,7 @@ class ScipyOptimizer(OptimizeVQA):
             else:
                 result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
                                   tol=self.tol, constraints=self.constraints, options=self.options, bounds=self.bounds)
-        except Exception as e:
+        except ConnectionError as e:
             print(e, '\n')
             print("The optimization has been terminated early. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
@@ -568,7 +568,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 result = minimize(self.optimize_this, x0=self.initial_params, method=method,
                                   jac=self.jac, hess=self.hess, tol=self.tol, constraints=self.constraints,
                                   options=self.options, bounds=self.bounds)
-        except Exception:
+        except ConnectionError as e:
             print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
             self.results_dictionary()
