@@ -537,7 +537,8 @@ class TestingVanillaQAOA(unittest.TestCase):
                             'constraints': None, 'bounds': None, 'tol': None, 
                             'optimizer_options': None, 'jac_options': None, 
                             'hess_options': None, 'optimization_progress': False, 
-                            'cost_progress': True, 'parameter_log': True}
+                            'cost_progress': True, 'parameter_log': True, 
+                            'top_k_solutions': 1}
         
         q = QAOA()
         
