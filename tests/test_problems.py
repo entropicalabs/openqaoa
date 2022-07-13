@@ -503,7 +503,7 @@ class TestProblem(unittest.TestCase):
                              str(e.exception))
             
         coordinates_list = [[('oh', 'num'), ('num', 'oh')], 
-                            [tuple(np.array([1, .2])), tuple(np.array([2, .1]))]]
+                            [(np.array(1), np.array(2)), (np.array(2), np.array(1))]]
         for each_coordinates in coordinates_list:
             with self.assertRaises(TypeError) as e:
                 TSP(each_coordinates)
