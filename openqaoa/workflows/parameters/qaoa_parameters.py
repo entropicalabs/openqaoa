@@ -263,8 +263,7 @@ class ClassicalOptimizer(Parameters):
                  hess_options: dict = None,
                  optimization_progress: bool = False,
                  cost_progress: bool = True,
-                 parameter_log: bool = True,
-                 top_k_solutions: int = 1):
+                 parameter_log: bool = True):
         self.optimize = optimize
         self.method = method.lower()
         self.maxiter = maxiter
@@ -281,7 +280,6 @@ class ClassicalOptimizer(Parameters):
         self.optimization_progress = optimization_progress
         self.cost_progress = cost_progress
         self.parameter_log = parameter_log
-        self.top_k_solutions = top_k_solutions
 
     # @property
     # def method(self):
@@ -294,18 +292,3 @@ class ClassicalOptimizer(Parameters):
     #             f"method `{value}` is not supported. Please choose between {ALLOWED_MINIMIZATION_METHODS}")
     #     self._method = value
 
-
-class ExtraResults(Parameters):
-    """
-    The classical optimizer for the QAOA optimization routine 
-    of the QAOA circuit parameters.
-
-    Parameters
-    ----------
-    extra_results: int
-        Whether to perform optimization routine on the given QAOA problem
-    """
-
-    def __init__(self,
-                 top_k_solutions: int = 1):
-        self.top_k_solutions = top_k_solutions
