@@ -322,7 +322,7 @@ def plot_graph(G: nx.Graph, ax=None, colormap='seismic') -> None:
     # Define color map
     cmap = plt.cm.get_cmap(colormap)
     
-    if len(set(weights)) != 1:
+    if len(set(weights)) != 1 or weights != []:
         edge_vmin = min(weights)
         edge_vmax = max(weights)
 
@@ -340,11 +340,10 @@ def plot_graph(G: nx.Graph, ax=None, colormap='seismic') -> None:
         cmap = None    
     
     # If biases are present define reference values and color map for side bar
-    if len(set(biases)) != 1:
+    if len(set(biases)) != 1 or biases != []:
         cmap = plt.cm.get_cmap(colormap)
         vmin = min(biases)
         vmax = max(biases)
-        cmap = plt.cm.get_cmap('RdBu')
         sm2 = plt.cm.ScalarMappable(cmap=cmap,
                                     norm=plt.Normalize(vmin=vmin, vmax=vmax))
         cbar2 = plt.colorbar(sm2, location='left')
