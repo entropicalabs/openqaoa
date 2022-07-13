@@ -19,7 +19,7 @@ from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.rqaoa.rqaoa import custom_rqaoa
 from openqaoa.problems.problem import QUBO
 from openqaoa.problems.helper_functions import convert2serialize
-from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer, ExtraResults
+from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.utilities import get_mixer_hamiltonian
