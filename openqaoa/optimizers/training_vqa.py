@@ -293,6 +293,14 @@ class ScipyOptimizer(OptimizeVQA):
         * maxiters
         
             * sets ``maxiters = 100`` by default if not specified.
+            
+        * maxfev
+        
+            * sets ``maxfev = 100`` by default if not specified.
+            
+        * optimizer_options
+        
+            * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
     GRADIENT_FREE = ['cobyla', 'nelder-mead', 'powell', 'slsqp']
@@ -362,9 +370,11 @@ class ScipyOptimizer(OptimizeVQA):
         else:
             raise ValueError(
                 f"Bounds for Scipy optimization should be of type {Bounds}, or a list in the form [[ub1, lb1], [ub2, lb2], ...]")
-
-        maxiter = optimizer_dict.get('maxiter', 100)
-        self.options = {'maxiter': maxiter}
+        
+        self.options = optimizer_dict.get('optimizer_options', {})
+        self.options["maxiter"] = optimizer_dict.get('maxiter', None)
+        if optimizer_dict.get('maxfev') is not None:
+            self.options["maxfev"] = optimizer_dict.get('maxfev', None)
 
         self.tol = optimizer_dict.get('tol', None)
 
@@ -451,6 +461,14 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         * maxiters
         
             * sets ``maxiters = 100`` by default if not specified.
+            
+        * maxfev
+        
+            * sets ``maxfev = 100`` by default if not specified.
+            
+        * optimizer_options
+        
+            * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
     CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
@@ -515,11 +533,10 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             raise ValueError(
                 f"Bounds for Scipy optimization should be of type {Bounds}")
 
-        self.options = optimizer_dict
-
-        # Remove redundant keys (because self.jac and self.hess already exist)
-        optimizer_dict.pop('jac', None)
-        optimizer_dict.pop('hess', None)
+        self.options = optimizer_dict.get('optimizer_options', {})
+        self.options["maxiter"] = optimizer_dict.get('maxiter', None)
+        if optimizer_dict.get('maxfev') is not None:
+            self.options["maxfev"] = optimizer_dict.get('maxfev', None)
 
         self.tol = optimizer_dict.get('tol', None)
 
