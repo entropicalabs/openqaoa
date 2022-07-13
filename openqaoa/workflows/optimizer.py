@@ -231,6 +231,8 @@ class QAOA(Optimizer):
                 ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
             maxiter : Optional[int]
                 Maximum number of iterations.
+            maxfev : Optional[int]
+                Maximum number of function evaluations.
             jac: str
                 Method to compute the gradient vector. Choose from:
                 ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
@@ -244,14 +246,16 @@ class QAOA(Optimizer):
             tol : float
                 Tolerance before the optimizer terminates; if `tol` is larger than
                 the difference between two steps, terminate optimization.
-            stepsize : float
-                Step size of each gradient descent step.
-            decay : float
-                Stepsize decay parameter of RMSProp.
-            eps : float
-                Small number to prevent division by zero for RMSProp.
-            lambd : float
-                Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
+            optimizer_options : dict
+                Dictionary of optimiser-specific arguments.
+                stepsize : float
+                    Step size of each gradient descent step.
+                decay : float
+                    Stepsize decay parameter of RMSProp.
+                eps : float
+                    Small number to prevent division by zero for RMSProp.
+                lambd : float
+                    Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
             ramp_time: float
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
             jac_options : dict

@@ -117,14 +117,14 @@ class TestQAOACostBaseClass(unittest.TestCase):
                      2.47312715451289, -2.5031221706241906]
 
         optimizer_dicts = []
-        optimizer_dicts.append({'method': 'vgd', 'maxiter': niter,
-                               'stepsize': stepsize, 'tol': 10**(-9), 'jac': 'finite_difference'})
-        optimizer_dicts.append({'method': 'newton', 'maxiter': niter, 'stepsize': stepsize,
-                               'tol': 10**(-9), 'jac': 'finite_difference', 'hess': 'finite_difference'})
-        optimizer_dicts.append({'method': 'natural_grad_descent', 'maxiter': niter,
-                               'stepsize': 0.01, 'tol': 10**(-9), 'jac': 'finite_difference'})
-        optimizer_dicts.append({'method': 'rmsprop', 'maxiter': niter, 'stepsize': stepsize,
-                               'tol': 10**(-9), 'jac': 'finite_difference', 'decay': 0.9, 'eps': 1e-07})
+        optimizer_dicts.append({'method': 'vgd', 'tol': 10**(-9), 'jac': 'finite_difference', 'maxiter': niter,
+                                'optimizer_options' : {'stepsize': stepsize}})
+        optimizer_dicts.append({'method': 'newton', 'tol': 10**(-9), 'jac': 'finite_difference', 'hess': 'finite_difference', 'maxiter': niter, 
+                                'optimizer_options' : {'stepsize': stepsize}})
+        optimizer_dicts.append({'method': 'natural_grad_descent', 'tol': 10**(-9), 'jac': 'finite_difference', 'maxiter': niter, 
+                                'optimizer_options' : {'stepsize': 0.01}})
+        optimizer_dicts.append({'method': 'rmsprop', 'tol': 10**(-9), 'jac': 'finite_difference', 'maxiter': niter,
+                                'optimizer_options' : {'stepsize': stepsize, 'decay': 0.9, 'eps': 1e-07}})
 
         for i, optimizer_dict in enumerate(optimizer_dicts):
 
@@ -162,7 +162,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
-                                         'method': 'vgd', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac})
+                                         'method': 'vgd', 'tol': 10**(-9), 'jac': jac, 'maxiter': niter,
+                                         'optimizer_options' : {'stepsize': stepsize}})
         vector_optimizer()
         y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
 
@@ -212,7 +213,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
-                                         'method': 'newton', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac, 'hess': hess})
+                                         'method': 'newton', 'tol': 10**(-9), 'jac': jac, 'hess': hess, 'maxiter': niter,
+                                         'optimizer_options' : {'stepsize': stepsize}})
         vector_optimizer()
         y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
 
@@ -258,7 +260,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
-                                         'method': 'natural_grad_descent', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac})
+                                         'method': 'natural_grad_descent', 'tol': 10**(-9), 'jac': jac, 'maxiter': niter,
+                                         'optimizer_options' : {'stepsize': stepsize}})
         vector_optimizer()
         y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
 
@@ -308,7 +311,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict={
-                                         'method': 'rmsprop', 'maxiter': niter, 'stepsize': stepsize, 'tol': 10**(-9), 'jac': jac, 'decay': decay, 'eps': eps})
+                                         'method': 'rmsprop', 'tol': 10**(-9), 'jac': jac, 'maxiter': niter,
+                                         'optimizer_options' : {'stepsize': stepsize, 'decay': decay, 'eps': eps}})
+                                         
         vector_optimizer()
         y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
 
