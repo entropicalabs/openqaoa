@@ -13,7 +13,7 @@ community include:
 * Demonstrating empathy and kindness toward other people
 * Being respectful of differing opinions, viewpoints, and experiences
 * Giving and gracefully accepting constructive feedback and criticism
-* Focusing on what is best for our community and contributors
+* Focusing on what is best for the community and contributors
 * Valuing the contributions of all participants
 * Fostering and engaging in collaboration
 
