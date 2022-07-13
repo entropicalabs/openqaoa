@@ -14,22 +14,22 @@
 
 import numpy as np
 from collections import defaultdict
+from ..problems.problem import QUBO
 
-
-
-class FromDocplex2QUBO:
+class FromDocplex2IsingModel:
     
     def __init__(self, model):
         
         
         """
-        Creates an instance to translate Docplex models to its QUBO representation
+        Creates an instance to translate Docplex models to its Ising Model representation
 
         Parameters
         ----------
         model : Docplex model
-            It is an object that has the mathematical expressions (Cost function, Inequality and Equality constraints)
-            of an optimization problem in binary representation.
+            It is an object that has the mathematical expressions (Cost function,
+            Inequality and Equality constraints) of an optimization problem in
+            binary representation.
 
         """
         # assign the docplex Model
@@ -51,7 +51,7 @@ class FromDocplex2QUBO:
 
         """
         for x, weight in expr.get_linear_part().iter_terms():
-            self.qubo_dict[(self.idx_terms[x], )] += self.sense * weight
+            self.qubo_dict[(self.idx_terms[x], )] += weight
                 
 
     def quadratic_expr(self, expr):
@@ -70,9 +70,9 @@ class FromDocplex2QUBO:
             i = self.idx_terms[x]
             j = self.idx_terms[y]
             if i == j: # if this is the term is  Z1**2 for example
-                self.qubo_dict[(i, )] += self.sense * weight
+                self.qubo_dict[(i, )] += weight
             else:
-                self.qubo_dict[(i, j)] += self.sense * weight
+                self.qubo_dict[(i, j)] += weight
 
     def Equality2Penalty(self, expression, multiplier:float):
         """
@@ -96,6 +96,21 @@ class FromDocplex2QUBO:
         return penalty
     
     def bounds(self, linear_expression):
+        """
+        Generates the limits of a linear term
+
+        Parameters
+        ----------
+        linear_exp : generator
+            Iterable term with the quadratic terms of the cost function.
+
+        Returns
+        -------
+        l_bound : float
+            Lower bound of the quadratic term.
+        u_bound : float
+            Upper bound of the quadratic term
+        """
         
         l_bound = u_bound = linear_expression.constant # Lower and upper bound of the contraint
         for term, coeff in linear_expression.iter_terms():
@@ -105,6 +120,22 @@ class FromDocplex2QUBO:
         return l_bound, u_bound
     
     def quadratic_bounds(self, iter_exp):
+        """
+        Generates the limits of the quadratic terms
+
+        Parameters
+        ----------
+        iter_exp : generator
+            Iterable term with the quadratic terms of the cost function.
+
+        Returns
+        -------
+        l_bound : float
+            Lower bound of the quadratic term.
+        u_bound : float
+            Upper bound of the quadratic term
+
+        """
         l_bound = 0
         u_bound = 0
         for z1, z2, coeff in iter_exp:
@@ -159,8 +190,9 @@ class FromDocplex2QUBO:
 
     def multipliers_generators(self):
         """
-        Penality term size, this is the Lagrange multiplier for the cost function
-        for every constraint if the multiplier is not indicated by the user. 
+        Penality term size adapter, this is the Lagrange multiplier of the cost
+        function penalties for every constraint if the multiplier is not indicated
+        by the user. 
 
         Returns
         -------
@@ -173,7 +205,7 @@ class FromDocplex2QUBO:
         l_bound_quad, u_bound_quad = self.quadratic_bounds(cost_func.iter_quad_triplets())
         return 1.0 + (u_bound_linear - l_bound_linear) + (u_bound_quad - l_bound_quad)
 
-    def linear_constraint(self, multipliers=None) -> None:
+    def linear_constraints(self, multipliers=None) -> None:
         """
         Adds the constraints of the problem to the objective function. 
 
@@ -217,9 +249,66 @@ class FromDocplex2QUBO:
             self.quadratic_expr(penalty)
             self.constant += penalty.constant
 
-    def get_qubo_problem(self, multipliers: float = None):
+
+    def qubo_to_ising(self, n_variables, qubo_terms, qubo_weights):
         """
-        Creates a QUBO problem form a Docplex model
+        Converts the terms and weights in QUBO representation ([0,1])
+        to the Ising representation ([-1, 1]). 
+
+        Parameters
+        ----------
+        n_variables : int
+            number of variables.
+        qubo_terms : List
+            List of QUBO variables.
+        qubo_weights : List
+            coefficients of the variables
+            
+
+        Returns
+        -------
+        Ising Model stored on QUBO class
+
+        """
+        ising_terms, ising_weights = [], []
+        linear_terms = np.zeros(n_variables)
+        
+        constant_term = 0
+        # Process the given terms and weights
+        for weight, term in zip(qubo_weights, qubo_terms):
+
+            if len(term) == 2:
+                u, v = term
+
+                if u != v:
+                    ising_terms.append([u, v])
+                    ising_weights.append(weight / 4)
+                else:
+                    constant_term += weight / 4
+                
+                linear_terms[term[0]] -= weight / 4
+                linear_terms[term[1]] -= weight / 4
+                constant_term += weight / 4
+            elif len(term) == 1:
+                linear_terms[term[0]] -= weight / 2
+                constant_term += weight / 2
+            elif len(term) == 0:
+                constant_term += weight
+            else:
+                print(f"Term {term} is not recognized!")
+        
+        for variable, linear_term in enumerate(linear_terms):
+            ising_terms.append([variable])
+            ising_weights.append(linear_term)
+        
+        ising_terms.append([])
+        ising_weights.append(constant_term)
+
+        return QUBO(n_variables, ising_terms, ising_weights)
+
+    def get_ising_model(self, multipliers: float = None):
+        """
+        Creates a Ising Model form a Docplex model
 
         Parameters
         ----------
@@ -229,23 +318,23 @@ class FromDocplex2QUBO:
 
         Returns
         -------
-        The PUBO encoding of this problem.
+        The Ising encoding of this problem.
 
         """
         # save a dictionary with the qubo information
         self.qubo_dict = defaultdict(float)
-        #valid the expression is an equation
-        self.objective_expr = self.model.objective_expr
+        
         # objective sense
         if self.model.objective_sense.is_minimize():
-            self.sense = 1
+            #valid the expression is an equation
+            self.objective_expr = self.model.objective_expr
         else:
-            self.sense = -1
+            #valid the expression is an equation
+            self.objective_expr = -1 * self.model.objective_expr
         
         
         # Obtain the constant from the model
         self.constant = self.objective_expr.constant
-        
         
         # Save the terms and coeffs form the linear part
         self.linear_expr(self.objective_expr)
@@ -254,7 +343,7 @@ class FromDocplex2QUBO:
         self.quadratic_expr(self.objective_expr)
         
         # Add the linear constraints into the qubo
-        self.linear_constraint(multipliers=multipliers)
+        self.linear_constraints(multipliers=multipliers)
 
         terms = list(self.qubo_dict.keys()) + [[]] # The right term is for adding the constant part of the QUBO 
         
@@ -263,4 +352,4 @@ class FromDocplex2QUBO:
         n_variables = self.model.number_of_variables
             
         #convert the docplex terms in a Hamiltonian
-        return  PUBO(n_variables, terms, weights, encoding=Encoding.BINARY_ENCODING)
+        return  self.qubo_to_ising(n_variables, terms, weights)

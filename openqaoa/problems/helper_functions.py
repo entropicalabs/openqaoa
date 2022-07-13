@@ -69,7 +69,7 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
     return tuple(params)
 
 
-def docplex2qubo(model):
+def docplex_to_ising_model(model):
     """
     Translates an optimization problem encoded in Docplex to an QUBO problem.
 
@@ -80,7 +80,7 @@ def docplex2qubo(model):
         The QUBO that corresponds to the model.
 
     """
-    from ..problems.problem import FromDocplex2QUBO
+    from ..problems.problem import FromDocplex2IsingModel
     # We have to check that the model is in a quadratic form and does not include
     # any integer variable or restrictions that there are not supported
-    return FromDocplex2QUBO(model).get_qubo_problem()
+    return FromDocplex2IsingModel(model).get_ising_model()
