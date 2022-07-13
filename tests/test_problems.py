@@ -54,6 +54,58 @@ class TestProblem(unittest.TestCase):
 
         cleaned_weights = [1, 3, -3]
         self.assertEqual(QUBO.clean_terms_and_weights(terms, weights)[1], cleaned_weights)
+        
+    def test_qubo_type_checking(self):
+        
+        """
+        Checks if the type-checking returns the right error.
+        """
+        
+        # n type-check
+        n_list = [1.5, 'test', [], (), {}, np.array(1)]
+        terms = [[0], []]
+        weights = [1, 2]
+        
+        with self.assertRaises(TypeError) as e:
+            for each_n in n_list:
+                QUBO(each_n, terms, weights)
+            self.assertEqual("The input parameter, n, has to be of type int",
+                             str(e.exception))
+        
+        n_list = [-1, 0]
+        with self.assertRaises(TypeError) as e:
+            for each_n in n_list:
+                QUBO(each_n, terms, weights)
+            self.assertEqual("The input parameter, n, must be a positive integer greater than 0",
+                             str(e.exception))
+
+        # weights type-check
+        n = 1
+        terms = [[0], []]
+        weights_list = [{'test': 'oh', 'test1': 'oh'}, np.array([1, 2])]
+        
+        for each_weights in weights_list:
+            with self.assertRaises(TypeError) as e:
+                QUBO(n, terms, each_weights)
+            self.assertEqual("The input parameter weights must be of type of list or tuple",
+                             str(e.exception))
+
+        weights_list = [['test', 'oh'], [np.array(1), np.array(2)]]
+        for each_weights in weights_list:
+            with self.assertRaises(TypeError) as e:
+                QUBO(n, terms, each_weights)
+            self.assertEqual("The elements in weights list must be of type float or int.",
+                             str(e.exception))
+
+        # terms type-check
+        n = 1
+        terms_list = [{'test': [0], 'test1': []}]
+        weights = [1, 2]
+        for each_terms in terms_list:
+            with self.assertRaises(TypeError) as e:
+                QUBO(n, each_terms, weights)
+            self.assertEqual("The input parameter terms must be of type of list or tuple",
+                             str(e.exception))
 
 
     ## TESTING NUMBER PARITION CLASS
@@ -84,6 +136,29 @@ class TestProblem(unittest.TestCase):
         self.assertTrue(terms_list_equality(np_prob_random.terms,manual_np_prob.terms))
         self.assertEqual(np_prob_random.weights,manual_np_prob.weights)
         self.assertEqual(np_prob_random.constant,manual_np_prob.constant)
+        
+    def test_num_part_type_checking(self):
+        
+        """
+        Checks if the type-checking returns the right error.
+        """
+        
+        # numbers type-check
+        numbers_list = [(1, 2), {'test': 1, 'test1': 2}, np.array([1, 2])]
+        
+        for each_number in numbers_list:
+            with self.assertRaises(TypeError) as e:
+                NumberPartition(numbers = each_number)
+            self.assertEqual("The input parameter, numbers, has to be a list",
+                             str(e.exception))
+            
+        numbers_list = [[0.1, 1], [np.array(1), np.array(2)]]
+        
+        for each_number in numbers_list:
+            with self.assertRaises(TypeError) as e:
+                NumberPartition(numbers = each_number)
+            self.assertEqual("The elements in numbers list must be of type int.",
+                             str(e.exception))
 
 
     ## TESTING MAXIMUMCUT CLASS
@@ -114,6 +189,21 @@ class TestProblem(unittest.TestCase):
         self.assertTrue(terms_list_equality(maxcut_manual_prob.terms,maxcut_random_prob.terms))
         self.assertEqual(maxcut_manual_prob.weights,maxcut_random_prob.weights)
         self.assertEqual(maxcut_manual_prob.constant, maxcut_random_prob.constant)
+        
+    def test_maximumcut_type_checking(self):
+        
+        """
+        Checks if the type-checking returns the right error.
+        """
+        
+        # graph type-check
+        graph_list = [(1, 2), {'node1': 1, 'node2': 2}, np.array([1, 2])]
+        
+        for each_graph in graph_list:
+            with self.assertRaises(TypeError) as e:
+                MaximumCut(G = each_graph)
+            self.assertEqual("Input problem graph must be a networkx Graph.",
+                             str(e.exception))
 
 
     ## TESTING KNAPSACK CLASS
@@ -160,6 +250,79 @@ class TestProblem(unittest.TestCase):
         self.assertEqual(knap_manual.weights,knap_random_instance.weights)
         self.assertEqual(knap_manual.constant,knap_random_instance.constant)
         self.assertEqual(knap_manual.n,knap_random_instance.n)
+        
+    def test_knapsack_type_checking(self):
+        
+        """
+        Checks if the type-checking returns the right error.
+        """
+        
+        # values type-check
+        weights = [1, 2]
+        weight_capacity = 5
+        penalty = .1
+        values_list = [(1, 2), {'test': 'oh', 'test1': 'oh'}, np.array([1, 2])]
+        
+        for each_values in values_list:
+            with self.assertRaises(TypeError) as e:
+                Knapsack(each_values, weights, weight_capacity, penalty)
+            self.assertEqual("The input parameter, values, has to be a list",
+                             str(e.exception))
+
+        values_list = [['test', 'oh'], [np.array(1), np.array(2)], [.1, .5]]
+        for each_values in values_list:
+            with self.assertRaises(TypeError) as e:
+                Knapsack(each_values, weights, weight_capacity, penalty)
+            self.assertEqual("The elements in values list must be of type int.",
+                             str(e.exception))
+            
+        # weights type-check
+        values = [1, 2]
+        weight_capacity = 5
+        penalty = .1
+        weights_list = [(1, 2), {'test': 'oh', 'test1': 'oh'}, np.array([1, 2])]
+        
+        for each_weights in weights_list:
+            with self.assertRaises(TypeError) as e:
+                Knapsack(values, each_weights, weight_capacity, penalty)
+            self.assertEqual("The input parameter, weights, has to be a list",
+                             str(e.exception))
+
+        weights_list = [['test', 'oh'], [np.array(1), np.array(2)], [.1, .5]]
+        for each_weights in weights_list:
+            with self.assertRaises(TypeError) as e:
+                Knapsack(values, each_weights, weight_capacity, penalty)
+            self.assertEqual("The elements in weights list must be of type int.",
+                             str(e.exception))
+            
+        # weight capacity type-check
+        values = [1, 2]
+        weights = [1, 2]
+        weight_capacity_list = [.5, np.array(1), np.array(.5), 'oh']
+        penalty = .1
+        
+        for each_weight_capacity in weight_capacity_list:
+            with self.assertRaises(TypeError) as e:
+                Knapsack(values, weights, each_weight_capacity, penalty)
+            self.assertEqual("The input parameter, weight_capacity, has to be of type int",
+                             str(e.exception))
+            
+        with self.assertRaises(TypeError) as e:
+            Knapsack(values, weights, -1, penalty)
+        self.assertEqual("The input parameter, weight_capacity, must be a positive integer greater than 0",
+                         str(e.exception))
+            
+        # penalty capacity type-check
+        values = [1, 2]
+        weights = [1, 2]
+        penalty_list = [np.array(1), np.array(.5), 'oh']
+        weight_capacity = 5
+        
+        for each_penalty in penalty_list:
+            with self.assertRaises(TypeError) as e:
+                Knapsack(values, weights, weight_capacity, each_penalty)
+            self.assertEqual("The input parameter, penalty, has to be of type float or int",
+                             str(e.exception))
 
 
     ##TESTING SLACKFREEKNAPSACK CLASS
@@ -230,6 +393,45 @@ class TestProblem(unittest.TestCase):
         self.assertTrue(terms_list_equality(mvc_terms,mvc_prob_random.terms))
         self.assertEqual(mvc_weights,mvc_prob_random.weights)
         self.assertEqual(mvc_constant,mvc_prob_random.constant)
+        
+    def test_mvc_type_checking(self):
+        
+        """
+        Checks if the type-checking returns the right error.
+        """
+        
+        # graph type-check
+        graph_list = [(1, 2), {'node1': 1, 'node2': 2}, np.array([1, 2])]
+        field = .1
+        penalty = .1
+        
+        for each_graph in graph_list:
+            with self.assertRaises(TypeError) as e:
+                MinimumVertexCover(each_graph, field, penalty)
+            self.assertEqual("Input problem graph must be a networkx Graph.",
+                             str(e.exception))
+            
+        # field capacity type-check
+        graph = nx.circulant_graph(6, [1])
+        field_list = [np.array(1), np.array(.5), 'oh']
+        penalty = .1
+        
+        for each_field in field_list:
+            with self.assertRaises(TypeError) as e:
+                MinimumVertexCover(graph, each_field, penalty)
+            self.assertEqual("The input parameter, field, has to be of type float or int",
+                             str(e.exception))
+            
+        # penalty capacity type-check
+        graph = nx.circulant_graph(6, [1])
+        field = .1
+        penalty_list = [np.array(1), np.array(.5), 'oh']
+        
+        for each_penalty in penalty_list:
+            with self.assertRaises(TypeError) as e:
+                MinimumVertexCover(graph, field, each_penalty)
+            self.assertEqual("The input parameter, penalty, has to be of type float or int",
+                             str(e.exception))
 
 
     # TESTING TSP PROBLEM CLASS
@@ -277,6 +479,36 @@ class TestProblem(unittest.TestCase):
         self.assertTrue(terms_list_equality(tsp_prob_random.terms,tsp_prob.terms))
         self.assertEqual(tsp_prob_random.weights,tsp_prob.weights)
         self.assertEqual(tsp_prob_random.constant,tsp_prob.constant)
+        
+    def test_tsp_type_checking(self):
+        
+        """
+        Checks if the type-checking returns the right error.
+        """
+        
+        # coordinates type-check
+        coordinates_list = [(1, 2), {'test': 'oh', 'test1': 'oh'}, np.array([1, 2])]
+        
+        for each_coordinates in coordinates_list:
+            with self.assertRaises(TypeError) as e:
+                TSP(each_coordinates)
+            self.assertEqual("The input parameter, coordinates, has to be a list",
+                             str(e.exception))
+
+        coordinates_list = [[[1, 2], [2, 1]], [np.array([1, 2]), np.array([2, 1])]]
+        for each_coordinates in coordinates_list:
+            with self.assertRaises(TypeError) as e:
+                TSP(each_coordinates)
+            self.assertEqual("The coordinates should be contained in a tuple.",
+                             str(e.exception))
+            
+        coordinates_list = [[('oh', 'num'), ('num', 'oh')], 
+                            [tuple(np.array([1, .2])), tuple(np.array([2, .1]))]]
+        for each_coordinates in coordinates_list:
+            with self.assertRaises(TypeError) as e:
+                TSP(each_coordinates)
+            self.assertEqual("The coordinates must be of type float or int",
+                             str(e.exception))
 
 
     # TESTING SHORTESTPATH PROBLEM CLASS

@@ -74,6 +74,18 @@ class QUBO:
     TERMS_CLEANING_LIMIT = 5000
 
     def __init__(self, n, terms, weights, clean_terms_and_weights=False):
+        
+        # check-type for terms and weights
+        if not isinstance(terms, list) and not isinstance(terms, tuple):
+            raise TypeError("The input parameter terms must be of type of list or tuple")
+            
+        if not isinstance(weights, list) and not isinstance(weights, tuple):
+            raise TypeError("The input parameter weights must be of type of list or tuple")
+            
+        for each_entry in weights:
+            if not isinstance(each_entry, float) and not isinstance(each_entry, int):
+                raise TypeError("The elements in weights list must be of type float or int.")
+        
         terms = list(terms)
         weights = list(weights)
 
@@ -109,35 +121,10 @@ class QUBO:
         if not isinstance(input_n, int):
             raise TypeError("The input parameter, n, has to be of type int")
         
+        if input_n <= 0:
+            raise TypeError("The input parameter, n, must be a positive integer greater than 0")
+        
         self._n = input_n
-        
-    @property
-    def weights(self):
-        return self._weights
-    
-    @weights.setter
-    def weights(self, input_weights):
-        
-        if not isinstance(input_weights, list):
-            raise TypeError("The input parameter, weights, has to be a list")
-
-        for each_entry in input_weights:
-            if not isinstance(each_entry, float) and not isinstance(each_entry, int):
-                raise TypeError("The elements in weights list must be of type float or int.")
-        
-        self._weights = input_weights
-        
-    @property
-    def terms(self):
-        return self._terms
-    
-    @terms.setter
-    def terms(self, input_terms):
-        
-        if not isinstance(input_terms, list):
-            raise TypeError("The input parameter, terms, has to be a list")
-        
-        self._terms = input_terms
 
     @property
     def hamiltonian(self):
@@ -611,6 +598,9 @@ class Knapsack(Problem):
         
         if not isinstance(input_weight_capacity, int):
             raise TypeError("The input parameter, weight_capacity, has to be of type int")
+            
+        if input_weight_capacity <= 0:
+            raise TypeError("The input parameter, weight_capacity, must be a positive integer greater than 0")
         
         self._weight_capacity = input_weight_capacity
         
