@@ -16,7 +16,9 @@
 
 A multi-backend python library for quantum optimization using QAOA on Quantum computers and Quantum computer simulators.
 
-OpenQAOA is currently in OpenBeta.
+OpenQAOA is currently in OpenBeta. 
+
+Please, consider [joining our discord](https://discord.gg/ana76wkKBd) if you want to be part of our community and take part of the OpenQAOA's development. 
 
 ## Installation instructions
 
@@ -26,7 +28,7 @@ OpenQAOA is currently in OpenBeta.
 git clone git@github.com:entropicalabs/openqaoa.git
 ```
 
-2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8.8** for the environment.
+2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** for the environment.
 
 3. After cloning the repository `cd openqaoa` and pip install in edit mode. Use the following command for a vanilla install with the `scipy` optimizers:
 
@@ -34,18 +36,28 @@ git clone git@github.com:entropicalabs/openqaoa.git
 pip install -e .
 ```
 
+Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
+
 ## Getting started
 
-The documentation for OpenQAOA ca be found [here](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/)
+The documentation for OpenQAOA ca be found [here](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/).
+
+We also provide a set of tutorials to get you started. Among the many, perhaps you can gest started with the following ones:
+
+- [Run your first OpenQAOA workflow](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/notebooks/1_workflows_example.html)
+- [How about trying some RQAOA for a change?](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/notebooks/9_RQAOA_example.html)
+- [Introducing EL's fast QAOA simulator](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/notebooks/6_fast_qaoa_simulator.html)
+- [Discover OpenQAOA's custom parametrizations](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/notebooks/5_advanced_parameterization.html)
+
 
 
 ### Key Features
 
-- *Build advanced QAOAs*. Create complex QAOAs by specifying custom _parametrisation_, _mixer hamiltonians_, _classical optimisers_ and execute the algorithm on either simulators or QPUs.
+- **Build advanced QAOAs**. Create complex QAOAs by specifying custom _parametrisation_, _mixer hamiltonians_, _classical optimisers_ and execute the algorithm on either simulators or QPUs.
 
-- *Recursive QAOA*. Run RQAOA with fully customisable schedules on simulators and QPUs alike. 
+- **Recursive QAOA**. Run RQAOA with fully customisable schedules on simulators and QPUs alike. 
 
-- *QPU access*. Built in access for `IBMQ`, `Rigeti QCS`, and `AWS`.
+- **QPU access**. Built in access for `IBMQ`, `Rigetti QCS`, and `AWS`.
 
 
 ### Available backend 
