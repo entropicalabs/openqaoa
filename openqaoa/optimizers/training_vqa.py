@@ -373,7 +373,7 @@ class ScipyOptimizer(OptimizeVQA):
         
         self.options = optimizer_dict.get('optimizer_options', {})
         self.options["maxiter"] = optimizer_dict.get('maxiter', None)
-        if optimizer_dict['maxfev'] is not None:
+        if optimizer_dict.get('maxfev') is not None:
             self.options["maxfev"] = optimizer_dict.get('maxfev', None)
 
         self.tol = optimizer_dict.get('tol', None)
@@ -535,7 +535,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
 
         self.options = optimizer_dict.get('optimizer_options', {})
         self.options["maxiter"] = optimizer_dict.get('maxiter', None)
-        if optimizer_dict['maxfev'] is not None:
+        if optimizer_dict.get('maxfev') is not None:
             self.options["maxfev"] = optimizer_dict.get('maxfev', None)
 
         self.tol = optimizer_dict.get('tol', None)
