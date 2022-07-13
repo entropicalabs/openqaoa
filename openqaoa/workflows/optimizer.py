@@ -165,9 +165,9 @@ class QAOA(Optimizer):
                 The coefficients of the mixer Hamiltonian. By default all set to -1
             annealing_time: `float`
                 Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
-            ramp_time: `float`
+            linear_ramp_time: `float`
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
-            trainable_params_dict: `dict`
+            variational_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
         """
         for key, value in kwargs.items():

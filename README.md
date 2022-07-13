@@ -112,7 +112,7 @@ Currently, the available devices are:
 
 | Device location  | Device Name |
 | ------------- | ------------- |
-| `local`  | `['qiskit.shot_simulator', 'qiskit.statevec_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
+| `local`  | `['qiskit.shot_simulator', 'qiskit.statevector_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
 | `ibmq`    | Please check the IMBQ backends available to your account |
 | `qcs`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
 

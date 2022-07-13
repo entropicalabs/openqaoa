@@ -167,6 +167,7 @@ def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
             raise ValueError(f"For the selected {params_type} parameterisation, please specify a"
                              f" dictionary with correct {VARIATIONAL_PARAMS_DICT_KEYS[params_type]} keys")
     elif init_type == 'ramp':
+        assert linear_ramp_time > 0, "Please specify the linear ramp time. Only positive values are allowed."
         qaoa_variational_params = params_class.linear_ramp_from_hamiltonian(qaoa_circuit_params,
                                                                             *variational_params_args,
                                                                             time = linear_ramp_time)
