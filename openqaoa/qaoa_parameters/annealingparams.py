@@ -109,7 +109,8 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
                                      qaoa_circuit_params: QAOACircuitParams,
-                                     total_annealing_time: float = None):
+                                     total_annealing_time: float = None,
+                                     time: float = None):
         """
         Returns
         -------

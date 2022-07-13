@@ -172,6 +172,36 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
         ax.plot(self.gammas, label="gammas", marker="^", ls="", **kwargs)
         ax.set_xlabel("timestep", fontsize=12)
         ax.legend()
+        
+    def convert_to_ext(self, args_std):
+        """
+        Method that converts a list of parameters in the standard parametrisation form (args_std) to an equivalent list of parameters in the extended parametrisation form.
+        
+        PARAMETERS
+        ----------
+        args_std : 
+            Parameters (a list of float) in the standard parametrisation form. 
+
+        RETURNS
+        -------
+        args_ext:
+            Parameters (a list of float) in the extended parametrisation form. 
+        
+        """
+
+        terms_lst = [len(self.mixer_1q_coeffs), len(self.mixer_2q_coeffs), len(self.cost_1q_coeffs), len(self.cost_2q_coeffs)]
+        terms_lst_p = np.repeat(terms_lst, [self.p]*len(terms_lst))
+        args_ext = []
+        for i in range(4):  # 4 types of terms
+            for j in range(self.p):
+                for k in range(terms_lst_p[i*self.p + j]):
+                    if i < 2:
+                        args_ext.append(args_std[j])
+                    else:
+                        args_ext.append(
+                            args_std[j + int(len(args_std)/2)])
+
+        return args_ext
 
 
 class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):

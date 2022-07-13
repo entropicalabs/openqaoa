@@ -18,22 +18,37 @@ from pyquil import Program, gates, quilbase
 
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...backends.qpus.qpu_auth import AccessObjectPyQuil
-from ...qaoa_parameters.pauligate import RZZPauliGate, SWAPGate
+from ...devices import DevicePyquil
+from ...qaoa_parameters.gatemap import RZZGateMap, SWAPGateMap
 
-def check_edge_connectivity(executable: Program, access_object: AccessObjectPyQuil):
+
+def check_edge_connectivity(executable: Program, device: DevicePyquil):
+
     '''
     Check that the program does not contain 2-qubit terms that is not present in the QPU's topology (to prevent quilc from crashing).
+    
+    Parameters
+    ----------
+    executable: `Program`
+        pyQuil executable program.
+    device: `DevicePyquil`
+        An object of the class ``DevicePyquil`` which contains information on pyQuil's `QuantumComputer` object, used to extract the selected QPU's topology.
+    
+    Returns
+    -------
+        None
+    """
     '''
 
-    qpu_graph = access_object.quantum_computer.qubit_topology()
+    qpu_graph = device.quantum_computer.qubit_topology()
     
     instrs = [instr for instr in executable if type(instr) == quilbase.Gate]
     pair_instrs = [list(instr.get_qubits()) for instr in instrs if len(instr.get_qubits()) == 2]
 
     for term in pair_instrs:
         if len(term) == 2:
-            assert term in qpu_graph.edges(), f"Term {term} is not an edge on the QPU graph of {access_object.name}."   
+
+            assert term in qpu_graph.edges(), f"Term {term} is not an edge on the QPU graph of {device.device_name}."
     
     
 
@@ -43,8 +58,8 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
     Parameters
     ----------
-    access_object: `AccessObjectPyquil`
-        An access object for the Rigetti QPUs.
+    device: `DevicePyquil`
+        The device object to access pyquil devices with credentials.
     circuit_params: `QAOACircuitParams`
         An object of the class ``QAOACircuitParams`` which contains information on 
         circuit construction and depth of the circuit.
@@ -71,7 +86,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
     """
 
     def __init__(self,
-                 access_object: AccessObjectPyQuil,
+                 device: DevicePyquil,
                  circuit_params: QAOACircuitParams,
                  n_shots: int,
                  prepend_state: Program,
@@ -90,29 +105,31 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                                           append_state,
                                           init_hadamard,
                                           cvar_alpha)
-        QAOABaseBackendCloud.__init__(self, access_object)
+        QAOABaseBackendCloud.__init__(self, device)
 
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.qureg = self.circuit_params.qureg
+
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
         self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout
         self.qubit_mapping = dict(zip(self.qureg, self.qubit_layout))
-
         
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.get_qubits()), "Cannot attach a bigger circuit " \
                                                                 "to the QAOA routine"
-        # TODO: access_object implementation for PyQuil
+
         self.parametric_circuit = self.parametric_qaoa_circuit
-        native_prog = self.access_object.quantum_computer.compiler.quil_to_native_quil(
+        native_prog = self.device.quantum_computer.compiler.quil_to_native_quil(
             self.parametric_circuit)
-        self.prog_exe = self.access_object.quantum_computer.compiler.native_quil_to_executable(
+        self.prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
             native_prog)
         
         # Check program connectivity against QPU connectivity
         # TODO: reconcile with PRAGMA PRESERVE
-        # check_edge_connectivity(self.prog_exe, access_object)
+
+        # check_edge_connectivity(self.prog_exe, device)
+
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
         """
@@ -128,7 +145,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             A pyquil.Program (executable) object.
         """
         angles_list = np.array(self.obtain_angles_for_pauli_list(
-            self.pseudo_circuit, params), dtype=float)
+            self.abstract_circuit, params), dtype=float)
         angle_declarations = list(self.prog_exe.declarations.keys())
         angle_declarations.remove('ro')
         for i, param_name in enumerate(angle_declarations):
@@ -173,15 +190,18 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         # Initial state is all |+>
         if self.init_hadamard:
             for i in self.qureg:
-                parametric_circuit += gates.H(self.qubit_mapping[i])
+                parametric_circuit += gates.RZ(np.pi, self.qubit_mapping[i]) 
+                parametric_circuit += gates.RX(np.pi/2, self.qubit_mapping[i]) 
+                parametric_circuit += gates.RZ(np.pi/2, self.qubit_mapping[i]) 
+                parametric_circuit += gates.RX(-np.pi/2, self.qubit_mapping[i]) 
 
         # create a list of gates in order of application on quantum circuit
-        for each_gate in self.pseudo_circuit:
+        for each_gate in self.abstract_circuit:
             gate_label = ''.join(str(label) for label in each_gate.pauli_label)
             angle_param = parametric_circuit.declare(
                 f'pauli{gate_label}', 'REAL', 1)
             each_gate.rotation_angle = angle_param
-            if isinstance(each_gate, RZZPauliGate) or isinstance(each_gate, SWAPGate):
+            if isinstance(each_gate, RZZGateMap) or isinstance(each_gate, SWAPGateMap):
                 decomposition = each_gate.decomposition('standard2')
             else:
                 decomposition = each_gate.decomposition('standard')
@@ -224,12 +244,15 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         """
         executable_program = self.qaoa_circuit(params)
 
-        result = self.access_object.quantum_computer.run(executable_program)
+        result = self.device.quantum_computer.run(executable_program)
 
         # TODO: check the endian (big or little) ordering of measurement outcomes
         meas_list = [''.join(str(bit) for bit in bitstring)
                      for bitstring in result.readout_data['ro']]
+        
+        # Expose counts
         counts = Counter(list(meas_list))
+        self.measurement_outcomes = counts
         return counts
 
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
@@ -237,7 +260,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         A method to convert the pyQuil program to a OpenQASM string.
         """
         raise NotImplementedError()
-        # qasm_program = self.access_object.quantum_computer.compiler.quil_to_qasm(self.qaoa_circuit(params))
+        # qasm_program = self.device.quantum_computer.compiler.quil_to_qasm(self.qaoa_circuit(params))
         # return qasm_program
 
     def reset_circuit(self):

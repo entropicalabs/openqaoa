@@ -27,8 +27,6 @@ Currently Supported:
 	vectorized:
 		Fast numpy native Statevector Simulator
 """
-from .qpus.qpu_auth import *
-
 from .qpus.qaoa_qiskit_qpu import *
 from .qpus.qaoa_pyquil_qpu import *
 

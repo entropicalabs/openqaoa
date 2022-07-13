@@ -68,7 +68,7 @@ def grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
         niter += 1
 
         # compute gradient descent step
-        testx -= stepsize*jac(testx)
+        testx = testx - stepsize*jac(testx)
         testy = np.real(fun(testx, *args))
 
         if np.abs(besty-testy) < tol:
@@ -143,7 +143,7 @@ def rmsprop(fun, x0, args=(), maxfev=None, stepsize=0.01,
 
         # compute gradient descent step, scaled with adaptive RMS learning rate
         sqgrad = decay*sqgrad + (1-decay)*jac(testx)**2
-        testx -= stepsize*jac(testx)/(np.sqrt(sqgrad) + eps)
+        testx = testx - stepsize*jac(testx)/(np.sqrt(sqgrad) + eps)
         testy = np.real(fun(testx, *args))
 
         if np.abs(besty-testy) < tol:
@@ -217,7 +217,7 @@ def newton_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
         scaled_gradient = np.linalg.solve(hess(testx), jac(testx))
 
         # compute Newton descent step
-        testx -= stepsize*scaled_gradient
+        testx = testx - stepsize*scaled_gradient
         testy = np.real(fun(testx, *args))
 
         if np.abs(besty-testy) < tol:
@@ -294,7 +294,7 @@ def natural_grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
             qfim(testx) + lambd*(np.identity(n_params)), jac(testx))
 
         # compute natural gradient descent step
-        testx -= stepsize*scaled_gradient
+        testx = testx - stepsize*scaled_gradient
         testy = np.real(fun(testx, *args))
 
         if np.abs(besty-testy) < tol:
@@ -384,7 +384,7 @@ def SPSA(fun, x0, args=(), maxfev=None, a0=0.01, c0=0.01, A=1, alpha=0.602, gamm
         c = c/(niter+1)**gamma
 
         # compute gradient descent step
-        testx -= a*grad_SPSA(testx, c)
+        testx = testx - a*grad_SPSA(testx, c)
         testy = np.real(fun(testx, *args))
 
         if np.abs(besty-testy) < tol:

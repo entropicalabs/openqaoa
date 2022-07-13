@@ -28,12 +28,17 @@ from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
 
 from .logger_vqa import Logger
+from .result import Result
+
+from ..derivative_functions import derivative
+from ..qfim import qfim
 
 
 class OptimizeVQA(ABC):
     '''    
-    Training Class for optimizing VQA algorithm based on VQABaseBackend.
-    This function utilizes the exepectation method of the backend class.
+    Training Class for optimizing VQA algorithm that wraps around VQABaseBackend and QAOAVariationalBaseParams objects.
+    This function utilizes the `update_from_raw` of the QAOAVariationalBaseParams class and `expectation` method of 
+    the VQABaseBackend class to create a wrapper callable which is passed into scipy.optimize.minimize for minimization.
     Only the trainable parameters should be passed instead of the complete
     AbstractParams object. The construction is completely backend and type 
     of VQA agnostic. 
@@ -48,16 +53,23 @@ class OptimizeVQA(ABC):
 
     Parameters
     ----------
-    vqa_object: 
-        An object of class basebackend which is responsible for constructing and 
-        executing the quantum circuit on the specified backend
-
-    variational_params: 
-        An object that keeps track of the varying parameters of a problem for a 
-        specific parameterisation.
+    vqa_object:
+        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
+    
+    variational_params:
+        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
+    
+    method: 
+        which method to use for optimization. Choose a method from the list
+        of supported methods by scipy optimize, or from the list of custom gradient optimisers.
 
     optimizer_dict:
-        All extra parameters needed for customising the optimising, as a dictionary
+        All extra parameters needed for customising the optimising, as a dictionary.
+
+    #Optimizers that usually work the best for quantum optimization problems:
+        1) Gradient free optimizer: BOBYQA, ImFil, Cobyla
+        2) Gradient based optimizer: L-BFGS, ADAM (With parameter shift gradients)
+        Note: Adam is not a part of scipy, it will added in a future version
     '''
 
     def __init__(self,
@@ -75,19 +87,45 @@ class OptimizeVQA(ABC):
         self.initial_params = variational_params.raw()
         self.method = optimizer_dict['method'].lower()
         
-        self.func_evals = 0
-        self.log = Logger({'cost': {'history_update_bool': optimizer_dict.get('cost_progress',True), 
-                                    'best_update_string': 'LowestOnly'}, 
-                           'counts': {'history_update_bool': optimizer_dict.get('optimization_progress',False), 
-                                      'best_update_string': 'Replace'}, 
-                           'probability': {'history_update_bool': optimizer_dict.get('optimization_progress',False), 
-                                           'best_update_string': 'Replace'},
-                           'param_log': {'history_update_bool': optimizer_dict.get('parameter_log',True), 
-                                         'best_update_string': 'Replace'}, 
-                           'func_evals': {'history_update_bool': False, 'best_update_string': 'HighestOnly'}}, 
-                          {'best_update_structure': (['cost', 'func_evals'], ['param_log', 
-                                                                'counts', 
-                                                                'probability'])})
+        self.log = Logger({'cost': 
+                           {
+                               'history_update_bool': optimizer_dict.get('cost_progress',True), 
+                               'best_update_string': 'LowestOnly'
+                           }, 
+                           'measurement_outcomes': 
+                           {
+                               'history_update_bool': optimizer_dict.get('optimization_progress',False), 
+                               'best_update_string': 'Replace'
+                           },
+                           'param_log': 
+                           {
+                               'history_update_bool': optimizer_dict.get('parameter_log',True), 
+                               'best_update_string': 'Replace'
+                           }, 
+                           'func_evals': 
+                           {
+                               'history_update_bool': False, 
+                               'best_update_string': 'HighestOnly'
+                           },
+                           'jac_func_evals': 
+                           {
+                               'history_update_bool': False, 
+                               'best_update_string': 'HighestOnly'
+                           },
+                           'qfim_func_evals': 
+                           {
+                               'history_update_bool': False, 
+                               'best_update_string': 'HighestOnly'
+                           }
+                          }, 
+                          {
+                              'root_nodes': ['cost', 'func_evals', 'jac_func_evals', 
+                                             'qfim_func_evals'],
+                              'best_update_structure': (['cost', 'param_log'], 
+                                                        ['cost', 'measurement_outcomes'])
+                          })
+        
+        self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
 
     @abstractmethod
     def __repr__(self):
@@ -112,20 +150,17 @@ class OptimizeVQA(ABC):
     def optimize_this(self, x):
         '''
         A function wrapper to execute the circuit in the backend. This function 
-        will be passed as argument to be optimized by scipy optimize. There are
-        that log the outputs from the backend object depending on whether the 
-        user requests for it.
-        
-        .. Important::
-            #. Appends all intermediate parameters in ``self.param_log`` list
-            #. Appends the cost value after each iteration in the optimization process to ``self.cost_progress`` list
-            #. Checks if ``self.vqa`` has the ``self.counts`` attribute. If it exists, appends the counts of each state for that circuit evaluation to ``self.count_progress`` list.
-            #. Checks if ``self.vqa`` has the ``self.probability`` attribute. If it exists, appends the probability of each state for that circuit evaluation to ``self.count_progress`` list.
+        will be passed as argument to be optimized by scipy optimize.
 
         Parameters
         ----------
         x: 
-            parameters over which optimization is performed
+            Parameters (a list of floats) over which optimization is performed.
+
+        Returns 
+        -------
+        cost value: 
+            Cost value which is evaluated on the declared backend.
 
         Returns
         -------
@@ -139,13 +174,11 @@ class OptimizeVQA(ABC):
         callback_cost = self.vqa.expectation(self.variational_params)
         
         log_dict.update({'cost': callback_cost})
-        self.func_evals += 1
-        log_dict.update({'func_evals': self.func_evals})
+        current_eval = self.log.func_evals.best[0]
+        current_eval += 1
+        log_dict.update({'func_evals': current_eval})
         
-        if hasattr(self.vqa, 'counts'):
-            log_dict.update({'counts': self.vqa.counts})
-        elif hasattr(self.vqa, 'probability'):
-            log_dict.update({'probability': self.vqa.probability})
+        log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
             
         self.log.log_variables(log_dict)
 
@@ -195,40 +228,32 @@ class OptimizeVQA(ABC):
         :
             Dictionary with the following keys
                 
+                #. "solution"
+                    #. "bitstring"
+                    #. "degeneracy"
                 #. "number of evals"
+                #. "jac evals"
+                #. "qfim evals"
                 #. "parameter log"
-                #. "best param"
-                #. "cost progress list"
-                #. "best cost"
-                #. "count progress list"
-                #. "best count"
-                #. "probability progress list"
-                #. "best probability"
+                #. "optimized param"
+                #. "intermediate cost"
+                #. "optimized cost"
+                #. "intermediate measurement outcomes"
+                #. "optimized measurement outcomes"
                 #. "optimization method"
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
         
-        result_dict = {
-            'number of evals': self.log.func_evals.best[0],
-            'parameter log': np.array(self.log.param_log.history).tolist(),
-            'best param': np.array(self.log.param_log.best).tolist(),
-            'cost progress list': np.array(self.log.cost.history).tolist(), 
-            'best cost': np.array(self.log.cost.best).tolist(), 
-            'count progress list': np.array(self.log.counts.history).tolist(),
-            'best count': np.array(self.log.counts.best).tolist(), 
-            'probability progress list': np.array(self.log.probability.history).tolist(),
-            'best probability': np.array(self.log.probability.best).tolist(),
-            'optimization method': self.method
-        }
-
+        self.qaoa_result = Result(self.log, self.method, self.vqa.cost_hamiltonian)
+        
         if(file_path and os.path.isdir(file_path)):
             print('Saving results locally')
             pickled_file = open(f'{file_path}/{file_name}.pcl', 'wb')
-            pickle.dump(result_dict, pickled_file)
+            pickle.dump(self.qaoa_result, pickled_file)
             pickled_file.close()
 
-        return result_dict
+        return  # result_dict
 
 
 class ScipyOptimizer(OptimizeVQA):
@@ -240,22 +265,18 @@ class ScipyOptimizer(OptimizeVQA):
 
     Parameters
     ----------
-    vqa_object: 
-        An object of class basebackend which is responsible for constructing and 
-        executing the quantum circuit on the specified backend
-
-    variational_params: 
-        An object that keeps track of the varying parameters for a specific 
-        parameterisation.
+    vqa_object:
+        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
+    
+    variational_params:
+        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
-        * jac
-        
-            * gradient as ``Callable``, if defined else ``None``
+        jac: 
+            gradient as `Callable` if defined. else None
 
-        * hess
-        
-            * hessian as ``Callable``, if defined else ``None``
+        hess: 
+            hessian as `Callable` if defined. else None
 
         * bounds
         
@@ -272,6 +293,14 @@ class ScipyOptimizer(OptimizeVQA):
         * maxiters
         
             * sets ``maxiters = 100`` by default if not specified.
+            
+        * maxfev
+        
+            * sets ``maxfev = 100`` by default if not specified.
+            
+        * optimizer_options
+        
+            * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
     GRADIENT_FREE = ['cobyla', 'nelder-mead', 'powell', 'slsqp']
@@ -306,8 +335,9 @@ class ScipyOptimizer(OptimizeVQA):
                 "Please specify either a string or provide callable gradient in order to use gradient based methods")
         else:
             if isinstance(jac, str):
-                self.jac = self.vqa_object.derivative_function(
-                    self.variational_params, 'gradient', jac, jac_options)
+                self.jac = derivative(
+                    self.vqa_object, self.variational_params, self.log, 'gradient', 
+                    jac, jac_options)
             else:
                 self.jac = jac
 
@@ -316,8 +346,9 @@ class ScipyOptimizer(OptimizeVQA):
             raise ValueError("Hessian needs to be of type Callable or str")
         else:
             if isinstance(hess, str):
-                self.hess = self.vqa_object.derivative_function(
-                    self.variational_params, 'hessian', hess, hess_options)
+                self.hess = derivative(
+                    self.vqa_object, self.variational_params, self.log, 'hessian', 
+                    hess, hess_options)
             else:
                 self.hess = hess
 
@@ -339,9 +370,11 @@ class ScipyOptimizer(OptimizeVQA):
         else:
             raise ValueError(
                 f"Bounds for Scipy optimization should be of type {Bounds}, or a list in the form [[ub1, lb1], [ub2, lb2], ...]")
-
-        maxiter = optimizer_dict.get('maxiter', 100)
-        self.options = {'maxiter': maxiter}
+        
+        self.options = optimizer_dict.get('optimizer_options', {})
+        self.options["maxiter"] = optimizer_dict.get('maxiter', None)
+        if optimizer_dict.get('maxfev') is not None:
+            self.options["maxfev"] = optimizer_dict.get('maxfev', None)
 
         self.tol = optimizer_dict.get('tol', None)
 
@@ -381,45 +414,12 @@ class ScipyOptimizer(OptimizeVQA):
             else:
                 result = minimize(self.optimize_this, x0=self.initial_params, method=self.method,
                                   tol=self.tol, constraints=self.constraints, options=self.options, bounds=self.bounds)
-        except Exception as e:
+        except ConnectionError as e:
             print(e, '\n')
             print("The optimization has been terminated early. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
+            self.results_dictionary()
             return self
-
-    def results_information(self, file_path: str = None, file_name: str = None):
-        '''
-        This method returns a dictionary of all results of optimization.
-        The results can also be saved by providing the path to save the pickled file.
-
-        Parameters
-        ----------
-        file_path: 
-            To save the results locally on the machine in pickle format,
-            specify the entire file path to save the ``result_dictionary``.
-
-        file_name: 
-            Custom name for to save the data; a generic name with the time of 
-            optimization is used if not specified
-
-        Returns
-        -------
-        :
-            Dictionary with the following keys
-        
-                #. "number of evals"
-                #. "parameter log"
-                #. "best param"
-                #. "cost progress list"
-                #. "best cost"
-                #. "count progress list"
-                #. "best count"
-                #. "probability progress list"
-                #. "best probability"
-                #. "optimization method"
-        '''
-        results = self.results_dictionary(file_path, file_name)
-        return results
 
 
 class CustomScipyGradientOptimizer(OptimizeVQA):
@@ -431,13 +431,11 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
 
     Parameters
     ----------
-    vqa_object: 
-        An object of class basebackend which is responsible for constructing and 
-        executing the quantum circuit on the specified backend
-
-    variational_params: 
-        An object that keeps track of the varying parameters for a specific 
-        parameterisation.
+    vqa_object:
+        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
+    
+    variational_params:
+        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
         * jac
@@ -463,6 +461,14 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         * maxiters
         
             * sets ``maxiters = 100`` by default if not specified.
+            
+        * maxfev
+        
+            * sets ``maxfev = 100`` by default if not specified.
+            
+        * optimizer_options
+        
+            * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
     CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
@@ -497,8 +503,9 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 "Please specify either a string or provide callable gradient in order to use gradient based methods")
         else:
             if isinstance(jac, str):
-                self.jac = self.vqa_object.derivative_function(
-                    self.variational_params, 'gradient', jac, jac_options)
+                self.jac = derivative(
+                    self.vqa_object, self.variational_params, self.log, 
+                    'gradient', jac, jac_options)
             else:
                 self.jac = jac
 
@@ -506,8 +513,9 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             raise ValueError("Hessian needs to be of type Callable or str")
         else:
             if isinstance(hess, str):
-                self.hess = self.vqa_object.derivative_function(
-                    self.variational_params, 'hessian', hess, hess_options)
+                self.hess = derivative(
+                    self.vqa_object, self.variational_params, self.log, 
+                    'hessian', hess, hess_options)
             else:
                 self.hess = hess
 
@@ -525,11 +533,10 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             raise ValueError(
                 f"Bounds for Scipy optimization should be of type {Bounds}")
 
-        self.options = optimizer_dict
-
-        # Remove redundant keys (because self.jac and self.hess already exist)
-        optimizer_dict.pop('jac', None)
-        optimizer_dict.pop('hess', None)
+        self.options = optimizer_dict.get('optimizer_options', {})
+        self.options["maxiter"] = optimizer_dict.get('maxiter', None)
+        if optimizer_dict.get('maxfev') is not None:
+            self.options["maxfev"] = optimizer_dict.get('maxfev', None)
 
         self.tol = optimizer_dict.get('tol', None)
 
@@ -563,8 +570,8 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             method = om.rmsprop
         elif self.method == 'natural_grad_descent':
             method = om.natural_grad_descent
-            self.options['qfim'] = self.vqa_object.qfim(
-                self.variational_params)
+            self.options['qfim'] = qfim(self.vqa_object,
+                self.variational_params, self.log)
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
             method = om.SPSA
@@ -578,41 +585,8 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 result = minimize(self.optimize_this, x0=self.initial_params, method=method,
                                   jac=self.jac, hess=self.hess, tol=self.tol, constraints=self.constraints,
                                   options=self.options, bounds=self.bounds)
-        except Exception:
+        except ConnectionError as e:
             print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
         finally:
+            self.results_dictionary()
             return self
-
-    def results_information(self, file_path: str = None, file_name: str = None):
-        '''
-        This method returns a dictionary of all results of optimization.
-        The results can also be saved by providing the path to save the pickled file.
-
-        Parameters
-        ----------
-        file_path: 
-            To save the results locally on the machine in pickle format,
-            specify the entire file path to save the ``result_dictionary``.
-
-        file_name: 
-            Custom name for to save the data; a generic name with the time of 
-            optimization is used if not specified
-
-        Returns
-        -------
-        :
-            Dictionary with the following keys
-        
-                #. "number of evals"
-                #. "parameter log"
-                #. "best param"
-                #. "cost progress list"
-                #. "best cost"
-                #. "count progress list"
-                #. "best count"
-                #. "probability progress list"
-                #. "best probability"
-                #. "optimization method"
-        '''
-        results = self.results_dictionary(file_path, file_name)
-        return results

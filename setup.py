@@ -6,19 +6,22 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 requirements = [
+    "sympy>=1.10.1",
     "numpy==1.22.3",
     "networkx==2.8",
     "scipy==1.8",
-    "matplotlib==3.4.3",
+    "matplotlib>=3.4.3",
     "qiskit==0.36.1",
     "pyquil==3.1.0",
     "pytest==7.1.0",
     "sphinx==4.5.0",
     "sphinx-autodoc-typehints==1.18.1",
     "sphinx-rtd-theme==1.0.0",
+    "nbsphinx==0.8.9",
     "ipython==8.2.0" ,
-    "nbconvert==6.5.0"
-]
+    "nbconvert==6.5.0",
+    "pytest-cov==3.0.0"
+    ]
 
 setup(
     name='openqaoa',
