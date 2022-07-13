@@ -167,13 +167,21 @@ def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
             raise ValueError(f"For the selected {params_type} parameterisation, please specify a"
                              f" dictionary with correct {VARIATIONAL_PARAMS_DICT_KEYS[params_type]} keys")
     elif init_type == 'ramp':
+
+        if isinstance(linear_ramp_time, float) or isinstance(linear_ramp_time, int):
+            assert linear_ramp_time > 0, "Please specify the linear ramp time. Only positive values are allowed."
+        elif linear_ramp_time is None:
+            pass
+        else:
+            raise ValueError(f"Please specify a numeric value for linear_ramp_time.")
+            
         qaoa_variational_params = params_class.linear_ramp_from_hamiltonian(qaoa_circuit_params,
                                                                             *variational_params_args,
-                                                                            linear_ramp_time)
+                                                                            time = linear_ramp_time)
     elif init_type == 'rand':
         qaoa_variational_params = params_class.random(qaoa_circuit_params,
                                                       *variational_params_args,
-                                                      seed)
+                                                      seed = seed)
     else:
         raise ValueError(f"{init_type} Initialisation strategy is not yet supported."
                          f" Please choose from {SUPPORTED_INITIALIZATION_TYPES}")

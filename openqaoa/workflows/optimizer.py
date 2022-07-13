@@ -159,12 +159,15 @@ class QAOA(Optimizer):
                 `'x'`: Randomly initialise circuit parameters
                 `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
             mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
-                The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`.
+                The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`. The user can specify the 
+                connectivity as a list of lists, a list of tuples, or a string chosen from ['full', 'chain', 'star'].
+            mixer_coeffs: `list`
+                The coefficients of the mixer Hamiltonian. By default all set to -1
             annealing_time: `float`
                 Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
-            ramp_time: `float`
+            linear_ramp_time: `float`
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
-            trainable_params_dict: `dict`
+            variational_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
         """
         for key, value in kwargs.items():
@@ -287,6 +290,9 @@ class QAOA(Optimizer):
         verbose: bool
             Set True to have a summary of QAOA to displayed after compilation
         """
+
+        assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
+        
         self.cost_hamil = Hamiltonian.classical_hamiltonian(
             terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
         
@@ -303,7 +309,8 @@ class QAOA(Optimizer):
                                                              variational_params_dict=self.circuit_properties.variational_params_dict,
                                                              linear_ramp_time=self.circuit_properties.linear_ramp_time, 
                                                              q=self.circuit_properties.q, 
-                                                             seed=self.circuit_properties.seed)
+                                                             seed=self.circuit_properties.seed,
+                                                             total_annealing_time=self.circuit_properties.annealing_time)
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,
