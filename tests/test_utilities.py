@@ -366,6 +366,25 @@ class TestingUtilities(unittest.TestCase):
         # Test function result
         assert np.allclose(energy,correct_energy), f'Computed solutions are incorrect'
         assert states == correct_states , f'Computed solutions are incorrect'
+        
+        # Exception case - Insert a number that is too high 
+
+        # Number of variables/qubits
+        n_qubits = 30 
+
+        # Terms and weights of the graph
+        edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] # Ring structure
+        weights = [1 for _ in range(len(edges))] # All weights equal to 1
+
+        # Define Hamiltonian
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0) 
+
+        # Attempt solving the system
+        with self.assertRaises(ValueError) as context:
+            energy, states = ground_state_hamiltonian(hamiltonian)
+
+        # Check exception message
+        self.assertEqual("The number of qubits is too high, computation could take a long time. If still want to proceed set argument `bounded` to False",str(context.exception))
 
     def test_bitstring_energy(self):
         """
