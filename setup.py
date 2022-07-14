@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 requirements = [
-    "sympy>=1.10.1",
+    "sympy>=1.9",
     "numpy==1.22.3",
     "networkx==2.8",
     "scipy==1.8",
