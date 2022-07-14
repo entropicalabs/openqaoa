@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 requirements = [
     "sympy>=1.9",
-    "numpy==1.22.3",
+    "numpy>=1.19",
     "networkx==2.8",
     "scipy==1.8",
     "matplotlib>=3.4.3",
