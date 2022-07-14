@@ -6,7 +6,6 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 requirements = [
-    "amazon-braket-sdk>=1.23",
     "sympy>=1.9",
     "numpy>=1.19",
     "networkx>=2.8",
