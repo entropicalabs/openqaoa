@@ -314,6 +314,9 @@ class DeviceAWS(DeviceBase):
         self.aws_region = aws_region
         self.s3_bucket_name = s3_bucket_name
         self.folder_name = folder_name
+        
+        self.provider_connected = None
+        self.qpu_connected = None
     
     def check_connection(self) -> bool:
         
