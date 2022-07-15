@@ -13,14 +13,8 @@ requirements = [
     "scipy>=1.7.1",
     "matplotlib>=3.0.3",
     "qiskit>=0.36.1",
-    "pyquil>=3.1.0",
-    "pytest>=7.1.0",
-    "sphinx>=4.5.0",
-    "sphinx-autodoc-typehints>=1.18.1",
-    "sphinx-rtd-theme>=1.0.0",
-    "nbsphinx>=0.8.9",
-    "pytest-cov==3.0.0"
-    ]
+    "pyquil>=3.1.0"
+]
 
 setup(
     name='openqaoa',
