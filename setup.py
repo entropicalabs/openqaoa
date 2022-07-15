@@ -19,8 +19,6 @@ requirements = [
     "sphinx-autodoc-typehints>=1.18.1",
     "sphinx-rtd-theme>=1.0.0",
     "nbsphinx>=0.8.9",
-    "ipython>=8.2.0" ,
-    "nbconvert>=6.5.0",
     "pytest-cov==3.0.0"
     ]
 
@@ -35,7 +33,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
-        "Programming Language :: Python :: 3.8+",
+        "Programming Language :: Python :: 3.7+",
         "Operating System :: OS Independent"
     ],
     install_requires=requirements,
