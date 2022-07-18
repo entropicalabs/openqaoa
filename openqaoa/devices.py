@@ -428,6 +428,8 @@ def create_device(location: str, name: str, **kwargs):
         device_class = DeviceQiskit
     elif location == 'qcs':
         device_class = DevicePyquil
+    elif location == 'aws':
+        device_class = DeviceAWS
     elif location == 'local':
         device_class = DeviceLocal
     else:

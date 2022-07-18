@@ -59,8 +59,9 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                  prepend_state: Optional[Circuit],
                  append_state: Optional[Circuit],
                  init_hadamard: bool,
-                 qubit_layout: List[int] = [],
-                 cvar_alpha: float = 1):
+                 cvar_alpha: float,
+                 qubit_layout: List[int] = [], 
+                 disable_qubit_rewiring: bool = False):
 
         QAOABaseBackendShotBased.__init__(self,
                                           circuit_params,
@@ -73,6 +74,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
 
         self.qureg = Circuit()
         self.qubit_layout = self.circuit_params.qureg if qubit_layout == [] else qubit_layout
+        self.disable_qubit_rewiring = disable_qubit_rewiring
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit" \
@@ -169,7 +171,8 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
             job = self.backend_qpu.run(circuit, 
                                        (self.device.s3_bucket_name, 
                                         self.device.folder_name), 
-                                       shots = self.n_shots)
+                                       shots = self.n_shots, 
+                                       disable_qubit_rewiring = self.disable_qubit_rewiring)
 
             try:
                 counts = job.result().measurement_counts
@@ -181,7 +184,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
 
             if no_of_job_retries >= max_job_retries:
                 raise ConnectionError(
-                    "An Error Occurred with the Job(s) sent to IBMQ.")
+                    "An Error Occurred with the Task(s) sent to AWS.")
 
         # Expose counts
 #         counts_flipped = flip_counts(counts)
