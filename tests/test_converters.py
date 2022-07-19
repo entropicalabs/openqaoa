@@ -17,7 +17,6 @@ import unittest
 from openqaoa.problems.problem import QUBO, MaximumCut
 from openqaoa.problems.converters import FromDocplex2IsingModel
 from docplex.mp.model import Model
-from qiskit_optimization.applications.max_cut import Maxcut
 import networkx as nx
 
 
