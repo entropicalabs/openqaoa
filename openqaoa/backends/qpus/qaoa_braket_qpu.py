@@ -173,21 +173,22 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                                         self.device.folder_name), 
                                        shots = self.n_shots, 
                                        disable_qubit_rewiring = self.disable_qubit_rewiring)
-
-            try:
-                counts = job.result().measurement_counts
-                job_state = True
-            except AttributeError:
+            
+            self.job_id = job.id
+            
+            job_result = job.result()
+            if job.state() in ['FAILED', 'CANCELLED']:
                 print("The task did not complete successfully or the connection timed out. Resending Task.")
                 no_of_job_retries += 1
-                break
+            else:
+                counts = job_result.measurement_counts
+                job_state = True
 
             if no_of_job_retries >= max_job_retries:
                 raise ConnectionError(
                     "An Error Occurred with the Task(s) sent to AWS.")
 
         # Expose counts
-#         counts_flipped = flip_counts(counts)
         self.measurement_outcomes = counts
         return counts
 

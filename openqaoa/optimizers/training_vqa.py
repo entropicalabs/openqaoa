@@ -116,13 +116,19 @@ class OptimizeVQA(ABC):
                            {
                                'history_update_bool': False, 
                                'best_update_string': 'HighestOnly'
+                           }, 
+                           'job_ids':
+                           {
+                               'history_update_bool': True,
+                               'best_update_string': 'Replace'
                            }
                           }, 
                           {
                               'root_nodes': ['cost', 'func_evals', 'jac_func_evals', 
                                              'qfim_func_evals'],
                               'best_update_structure': (['cost', 'param_log'], 
-                                                        ['cost', 'measurement_outcomes'])
+                                                        ['cost', 'measurement_outcomes'], 
+                                                        ['cost', 'job_ids'])
                           })
         
         self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
@@ -179,6 +185,9 @@ class OptimizeVQA(ABC):
         log_dict.update({'func_evals': current_eval})
         
         log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
+        
+        if hasattr(self.vqa, 'job_id'):
+            log_dict.update({'job_ids': self.vqa.job_id})
             
         self.log.log_variables(log_dict)
 

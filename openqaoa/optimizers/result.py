@@ -64,7 +64,8 @@ class Result():
             'angles log': np.array(log.param_log.history).tolist(),
             'intermediate cost': log.cost.history,
             'intermediate measurement outcomes':
-                log.measurement_outcomes.history
+                log.measurement_outcomes.history,
+            'intermediate runs job id': log.job_ids.history
         }
 
         self.optimized = {
@@ -72,10 +73,13 @@ class Result():
             'optimized cost': log.cost.best[0],
             'optimized measurement outcomes':
                 log.measurement_outcomes.best[0]
-                if log.measurement_outcomes.best != [] else {}
+                if log.measurement_outcomes.best != [] else {},
+            'optimized run job id': 
+                log.job_ids.best[0] 
+                if len(log.job_ids.best) != 0 else []
         }
 
-        self.most_probable_states = most_probable_bitstring(cost_hamiltonian,
+        self.most_probable_states = most_probable_bitstring(cost_hamiltonian, 
                                                             self.get_counts(log.measurement_outcomes.best[0]))
 
 
