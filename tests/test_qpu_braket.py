@@ -88,7 +88,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                   self.S3_BUCKET_NAME)
 
         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
-                                        shots, None, None, False)
+                                        shots, None, None, False, 1.)
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
 
         # Standard Decomposition
@@ -145,7 +145,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                   self.S3_BUCKET_NAME)
 
         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
-                                        shots, None, None, True)
+                                        shots, None, None, True, 1.)
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
 
         # Standard Decomposition
@@ -211,7 +211,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                   self.S3_BUCKET_NAME)
 
         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
-                                        shots, prepend_circuit, None, True)
+                                        shots, prepend_circuit, None, True, 1.)
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
 
         # Standard Decomposition
@@ -269,7 +269,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                   self.S3_BUCKET_NAME)
 
         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
-                                        shots, None, append_circuit, True)
+                                        shots, None, append_circuit, True, 1.)
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
 
         # Standard Decomposition
@@ -320,7 +320,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         
         try:
             QAOAAWSQPUBackend(circuit_params, aws_device, 
-                                 shots, None, None, True)
+                                 shots, None, None, True, 1.)
         except Exception as e:
             self.assertEqual(str(e), 'Error connecting to AWS.')
         
@@ -328,7 +328,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         self.assertRaises(Exception, QAOAAWSQPUBackend, (circuit_params, 
                                                             aws_device, 
                                                             shots, None, None, 
-                                                            True))
+                                                            True, 1.))
         
         aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
                                self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
@@ -336,7 +336,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         
         try:
             QAOAAWSQPUBackend(circuit_params, aws_device, 
-                                 shots, None, None, True)
+                                 shots, None, None, True, 1.)
         except Exception as e:
             self.assertEqual(str(e), 'Connection to AWS was made. Error connecting to the specified backend.')
         
@@ -344,7 +344,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         self.assertRaises(Exception, QAOAAWSQPUBackend, (circuit_params, 
                                                             aws_device, 
                                                             shots, None, None, 
-                                                            True))
+                                                            True, 1.))
         
 #     def test_remote_integration_qpu_run(self):
 #         """
