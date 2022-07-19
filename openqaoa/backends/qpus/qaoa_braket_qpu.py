@@ -176,17 +176,30 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
             
             self.job_id = job.id
             
-            job_result = job.result()
-            if job.state() in ['FAILED', 'CANCELLED']:
-                print("The task did not complete successfully or the connection timed out. Resending Task.")
-                no_of_job_retries += 1
-            else:
+            try:
+                job_result = job.result()
+                
+                # If there was an issue with the job sent, send again.
+                if job.state() in ['FAILED', 'CANCELLED'] or job_result == None:
+                    raise ValueError
+                    
                 counts = job_result.measurement_counts
+                    
+            except ValueError:
+                print('The task has failed or was cancelled by AWS. Resending task.')
+                no_of_job_retries += 1
+                    
+            except Exception:
+                print("An unknown error occurred while trying to retrieve task results. Resending task.")
+                no_of_job_retries += 1
+                
+            else:
                 job_state = True
-
-            if no_of_job_retries >= max_job_retries:
-                raise ConnectionError(
-                    "An Error Occurred with the Task(s) sent to AWS.")
+                
+            finally:
+                if no_of_job_retries >= max_job_retries:
+                    raise ConnectionError(
+                        "An Error Occurred with the Task(s) sent to AWS.")
 
         # Expose counts
         self.measurement_outcomes = counts
