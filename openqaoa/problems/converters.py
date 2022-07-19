@@ -15,6 +15,7 @@
 import numpy as np
 from collections import defaultdict
 from .problem import QUBO
+from ..optimizers.result import Result
 
 
 class FromDocplex2IsingModel:
@@ -38,6 +39,8 @@ class FromDocplex2IsingModel:
         self.idx_terms = {}
         for x in self.model.iter_variables():
             self.idx_terms[x] = x.index
+            if x.vartype.short_name != "binary":
+                TypeError(f"Variable {x.vartype.short_name} is not allowed.")
         # get doclex qubo and ising model
         self.qubo_docplex, self.ising_model = self.get_models(multipliers)
 
@@ -167,7 +170,7 @@ class FromDocplex2IsingModel:
         elif constraint.sense_string == "GE":  # Great or equal inequality constriant
             new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
         else:
-            print("Not recognized constraint.")
+            AttributeError(f"It is not possible to implement constraint {constraint.sense_string}.")
 
         lower_bound, upper_bound = self.bounds(new_exp)
         slack_lim = upper_bound  # Slack var limit
@@ -310,7 +313,7 @@ class FromDocplex2IsingModel:
             elif len(term) == 0:
                 constant_term += weight
             else:
-                print(f"Term {term} is not recognized!")
+                TypeError(f"Term {term} is not recognized!")
 
         for variable, linear_term in enumerate(linear_terms):
             ising_terms.append([variable])
