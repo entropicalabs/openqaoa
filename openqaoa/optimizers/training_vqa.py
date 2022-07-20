@@ -177,12 +177,6 @@ class OptimizeVQA(ABC):
         '''
 
         log_metric(
-            metric_name="measurement_outcomes",
-            value=self.vqa.measurement_outcomes,
-            iteration_number=self.log.func_evals.best[0],
-        )
-
-        log_metric(
             metric_name="variational_params",
             value=self.variational_params,
             iteration_number=self.log.func_evals.best[0],
@@ -200,7 +194,11 @@ class OptimizeVQA(ABC):
         
         log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
 
-
+        log_metric(
+            metric_name="measurement_outcomes",
+            value=self.vqa.measurement_outcomes,
+            iteration_number=self.log.func_evals.best[0],
+        )
             
         self.log.log_variables(log_dict)
 
