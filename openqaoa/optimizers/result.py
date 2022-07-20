@@ -34,7 +34,7 @@ def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
     return {'solutions_bitstrings': solutions_bitstrings,
             'bitstring_energy': bitstring_energy(cost_hamiltonian, solutions_bitstrings[0])}
 
-def lowest_cost_bitstring(cost_hamiltonian:Hamiltonian, measurement_outcomes:dict) -> dict:
+def lowest_cost_bitstrings(cost_hamiltonian:Hamiltonian, measurement_outcomes:dict, n_bitstrings:int = 1) -> dict:
     """
     Find the minimium energy from cost_hamilonian given a set of measurement
     outcoms
@@ -46,22 +46,26 @@ def lowest_cost_bitstring(cost_hamiltonian:Hamiltonian, measurement_outcomes:dic
     measurement_outcomes : dict
         Dictionary with keys and values equals to the bitstring the probability,
         repectively of a quantum circuit.
+    n_bitstrings : int
+        Number of the lowest energies bistrings to get
 
     Returns
     -------
-    dict
-        Returns the bitstring with the lowest value of the cost Hamiltonian.
+    best_results : dict
+        Returns a list of bitstring with the lowest values of the cost Hamiltonian.
 
     """
-    min_energy = np.inf
-    solution_bitstring = None
-    for bitstring in measurement_outcomes.keys():
-        energy = bitstring_energy(cost_hamiltonian, bitstring)
-        if energy <  min_energy:
-            min_energy = energy
-            solution_bitstring = bitstring
-    return {'solutions_bitstrings': solution_bitstring,
-            'bitstring_energy': energy}
+    solution_bitstring = list(measurement_outcomes.keys())
+    energies = [bitstring_energy(cost_hamiltonian, bitstring) for bitstring in solution_bitstring]
+    args_sorted = np.argsort(energies)
+    if n_bitstrings < len(energies):
+        best_results = {'solutions_bitstrings': [solution_bitstring[args_sorted[ii]] for ii in range(n_bitstrings)],
+            'bitstring_energy': [energies[args_sorted[ii]] for ii in range(n_bitstrings)]}
+    else:
+        best_results = {'solutions_bitstrings': solution_bitstring,
+            'bitstring_energy': energies}
+    return best_results
+    
 
 class Result():
     '''
@@ -78,7 +82,8 @@ class Result():
     def __init__(self,
                  log: Type[Logger],
                  method: Type[str],
-                 cost_hamiltonian: Type[Hamiltonian]):
+                 cost_hamiltonian: Type[Hamiltonian],
+                 n_bitstrings: Type[int] = 1):
 
         self.method = method
 
@@ -106,7 +111,9 @@ class Result():
         self.most_probable_states = most_probable_bitstring(cost_hamiltonian,
                                                             self.get_counts(log.measurement_outcomes.best[0]))
         
-        self.lowest_energy_state = lowest_cost_bitstring(cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0]))
+        self.lowest_energy_state = lowest_cost_bitstrings(cost_hamiltonian,
+                                                         self.get_counts(log.measurement_outcomes.best[0]),
+                                                         n_bitstrings=n_bitstrings)
 
 
     # def __repr__(self):
