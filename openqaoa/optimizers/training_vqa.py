@@ -23,6 +23,8 @@ from datetime import datetime
 from scipy.optimize._minimize import minimize, MINIMIZE_METHODS
 from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 
+from braket.jobs.metrics import log_metric
+
 from ..basebackend import VQABaseBackend
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
@@ -173,6 +175,18 @@ class OptimizeVQA(ABC):
         :
             Cost Value evaluated on the declared backed or on the Wavefunction Simulator if specified so
         '''
+
+        log_metric(
+            metric_name="measurement_outcomes",
+            value=self.vqa.measurement_outcomes,
+            iteration_number=self.log.func_evals.best[0],
+        )
+
+        log_metric(
+            metric_name="variational_params",
+            value=self.variational_params,
+            iteration_number=self.log.func_evals.best[0],
+        )
         
         log_dict = {}
         log_dict.update({'param_log': deepcopy(x)})
@@ -185,9 +199,8 @@ class OptimizeVQA(ABC):
         log_dict.update({'func_evals': current_eval})
         
         log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
-        
-        if hasattr(self.vqa, 'job_id'):
-            log_dict.update({'job_ids': self.vqa.job_id})
+
+
             
         self.log.log_variables(log_dict)
 
