@@ -87,7 +87,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         used are correct, check_connection should return True.
         The provider_connected attribute should be updated to True.
         """
-        print(self.API_TOKEN)
+        raise ValueError(f"The API_TOKEN: {self.API_TOKEN}")
         device_obj = DeviceQiskit(device_name='', 
                                   api_token=self.API_TOKEN,
                                   hub=self.HUB, group=self.GROUP,
