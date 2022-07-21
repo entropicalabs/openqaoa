@@ -170,6 +170,7 @@ class QAOA(Optimizer):
             variational_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
         """
+
         for key, value in kwargs.items():
             if hasattr(self.circuit_properties, key):
                 pass
