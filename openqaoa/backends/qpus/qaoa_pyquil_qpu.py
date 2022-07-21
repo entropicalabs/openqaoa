@@ -129,8 +129,6 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         # check_edge_connectivity(self.prog_exe, device)
 
-        # check_edge_connectivity(self.prog_exe, device)
-
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
         """
