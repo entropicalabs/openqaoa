@@ -19,7 +19,7 @@ from pyquil import Program, gates, quilbase
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...devices import DevicePyquil
-
+from ...qaoa_parameters.gatemap import RZZGateMap, SWAPGateMap
 
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
