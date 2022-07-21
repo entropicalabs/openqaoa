@@ -50,6 +50,9 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         QAOA part of the circuit.
     cvar_alpha: `float`
         The value of alpha for the CVaR method.
+    disable_qubit_rewiring: `bool`
+        A boolean that determines whether qubit routing on the provider's end is 
+        used. This is False by default. Not all providers provide this feature.
     """
 
     def __init__(self,

@@ -35,6 +35,33 @@ from .result import Result
 from ..derivative_functions import derivative
 from ..qfim import qfim
 
+###
+# TODO: Find better place for this
+
+import pandas as pd
+from typing import Any
+
+def save_parameter(parameter_name: str, parameter_value: Any):
+    
+    filename = 'oq_saved_info_' + parameter_name
+    
+    try:
+        opened_csv = pd.read_csv(filename + '.csv')
+    except Exception:
+        opened_csv = pd.DataFrame(columns = [parameter_name])
+    
+    if type(parameter_value) not in [str, float, int]:
+        parameter_value = str(parameter_value)
+        
+    update_df = pd.DataFrame(data = {parameter_name: parameter_value}, index = [0])
+    new_df = pd.concat([opened_csv, update_df], ignore_index = True)
+    
+    new_df.to_csv(filename + '.csv', index = False)
+    
+    print('Parameter Saving Successful')
+    
+###
+
 
 class OptimizeVQA(ABC):
     '''    
@@ -184,6 +211,9 @@ class OptimizeVQA(ABC):
         
         log_dict = {}
         log_dict.update({'param_log': deepcopy(x)})
+        
+        save_parameter('param_log', deepcopy(x))
+        
         self.variational_params.update_from_raw(deepcopy(x))
         callback_cost = self.vqa.expectation(self.variational_params)
         
@@ -199,6 +229,10 @@ class OptimizeVQA(ABC):
             value=self.vqa.measurement_outcomes,
             iteration_number=self.log.func_evals.best[0],
         )
+        
+        if hasattr(self.vqa, 'job_id'):
+            log_dict.update({'job_ids': self.vqa.job_id})
+            save_parameter('job_ids', self.vqa.job_id)
             
         self.log.log_variables(log_dict)
 
