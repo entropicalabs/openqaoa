@@ -642,7 +642,8 @@ class Knapsack(Problem):
 
         min_weights = np.min(weights)
         max_weights = np.max(weights)
-        if min_weights * n_items + 1 < max_weights * n_items :
+
+        if min_weights != max_weights:
             weight_capacity = np.random.randint(min_weights * n_items, max_weights * n_items)
         else:
             weight_capacity = np.random.randint(max_weights, max_weights * n_items)
@@ -786,7 +787,7 @@ class SlackFreeKnapsack(Knapsack):
 
         min_weights = np.min(weights)
         max_weights = np.max(weights)
-        if min_weights * n_items + 1 < max_weights * n_items :
+        if min_weights != max_weights:
             weight_capacity = np.random.randint(min_weights * n_items, max_weights * n_items)
         else:
             weight_capacity = np.random.randint(max_weights, max_weights * n_items)
