@@ -250,6 +250,26 @@ class TestProblem(unittest.TestCase):
         self.assertEqual(knap_manual.weights,knap_random_instance.weights)
         self.assertEqual(knap_manual.constant,knap_random_instance.constant)
         self.assertEqual(knap_manual.n,knap_random_instance.n)
+
+    def test_knapsack_random_problem_smallsize(self):
+        """Test random instance method of Knapsack problem class"""
+
+        np.random.seed(1234)
+        n_items = 3
+        values = list(map(int, np.random.randint(1, n_items, size=n_items)))
+        weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
+        weight_capacity = np.random.randint(np.min(weights) * n_items, np.max(weights) * n_items)
+        penalty = 2*np.max(values)
+
+        knap_manual = Knapsack(values,weights,weight_capacity,int(penalty)).get_qubo_problem()
+
+        np.random.seed(1234)
+        knap_random_instance = Knapsack.random_instance(n_items=n_items).get_qubo_problem()
+
+        self.assertTrue(terms_list_equality(knap_manual.terms,knap_random_instance.terms))
+        self.assertEqual(knap_manual.weights,knap_random_instance.weights)
+        self.assertEqual(knap_manual.constant,knap_random_instance.constant)
+        self.assertEqual(knap_manual.n,knap_random_instance.n)
         
     def test_knapsack_type_checking(self):
         
