@@ -115,6 +115,7 @@ class OptimizeVQA(ABC):
         self.variational_params = variational_params
         self.initial_params = variational_params.raw()
         self.method = optimizer_dict['method'].lower()
+        self.save_to_csv = optimizer_dict.get('save_intermediate', False)
         
         self.log = Logger({'cost': 
                            {
@@ -203,17 +204,19 @@ class OptimizeVQA(ABC):
             Cost Value evaluated on the declared backed or on the Wavefunction Simulator if specified so
         '''
         
+        log_dict = {}
+        log_dict.update({'param_log': deepcopy(x)})
+        
+        self.variational_params.update_from_raw(deepcopy(x))
+        
         if hasattr(self.vqa, 'log_with_backend') and callable(getattr(self.vqa, 'log_with_backend')):
             self.vqa.log_with_backend(metric_name="variational_params",
                                       value=self.variational_params,
                                       iteration_number=self.log.func_evals.best[0])
         
-        log_dict = {}
-        log_dict.update({'param_log': deepcopy(x)})
+        if self.save_to_csv:
+            save_parameter('param_log', deepcopy(x))
         
-        save_parameter('param_log', deepcopy(x))
-        
-        self.variational_params.update_from_raw(deepcopy(x))
         callback_cost = self.vqa.expectation(self.variational_params)
         
         log_dict.update({'cost': callback_cost})
@@ -230,6 +233,8 @@ class OptimizeVQA(ABC):
         
         if hasattr(self.vqa, 'job_id'):
             log_dict.update({'job_ids': self.vqa.job_id})
+            
+        if self.save_to_csv:
             save_parameter('job_ids', self.vqa.job_id)
             
         self.log.log_variables(log_dict)

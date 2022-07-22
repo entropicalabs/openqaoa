@@ -11,6 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+import os
 import numpy as np
 from time import time
 from typing import Optional, List
@@ -209,7 +210,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         self.measurement_outcomes = counts
         return counts
     
-    def log_with_backend(metric_name: str, value, iteration_number) -> None:
+    def log_with_backend(self, metric_name: str, value, iteration_number) -> None:
         
         """
         If using AWS Jobs, these values will be logged.
