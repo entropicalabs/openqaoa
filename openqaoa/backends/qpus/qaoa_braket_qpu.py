@@ -177,9 +177,9 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                                        shots = self.n_shots, 
                                        disable_qubit_rewiring = self.disable_qubit_rewiring)
             
-            self.job_id = job.id
-            
             try:
+                self.job_id = job.id
+                
                 job_result = job.result()
                 
                 # If there was an issue with the job sent, send again.
@@ -192,7 +192,8 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                 print('The task has failed or was cancelled by AWS. Resending task.')
                 no_of_job_retries += 1
                     
-            except Exception:
+            except Exception as e:
+                print(e, '\n')
                 print("An unknown error occurred while trying to retrieve task results. Resending task.")
                 no_of_job_retries += 1
                 
@@ -207,6 +208,25 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         # Expose counts
         self.measurement_outcomes = counts
         return counts
+    
+    def log_with_backend(metric_name: str, value, iteration_number) -> None:
+        
+        """
+        If using AWS Jobs, these values will be logged.
+        """
+        
+        try:
+            if os.environ["AMZN_BRAKET_JOB_NAME"] is not None:
+                in_jobs = True
+        except KeyError:
+            in_jobs = False
+        
+        if in_jobs:
+            log_metric(
+                metric_name=metric_name,
+                value=value,
+                iteration_number=iteration_number,
+            )
 
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
         """

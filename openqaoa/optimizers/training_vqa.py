@@ -202,12 +202,11 @@ class OptimizeVQA(ABC):
         :
             Cost Value evaluated on the declared backed or on the Wavefunction Simulator if specified so
         '''
-
-        log_metric(
-            metric_name="variational_params",
-            value=self.variational_params,
-            iteration_number=self.log.func_evals.best[0],
-        )
+        
+        if hasattr(self.vqa, 'log_with_backend') and callable(getattr(self.vqa, 'log_with_backend')):
+            self.vqa.log_with_backend(metric_name="variational_params",
+                                      value=self.variational_params,
+                                      iteration_number=self.log.func_evals.best[0])
         
         log_dict = {}
         log_dict.update({'param_log': deepcopy(x)})
@@ -223,12 +222,11 @@ class OptimizeVQA(ABC):
         log_dict.update({'func_evals': current_eval})
         
         log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
-
-        log_metric(
-            metric_name="measurement_outcomes",
-            value=self.vqa.measurement_outcomes,
-            iteration_number=self.log.func_evals.best[0],
-        )
+        
+        if hasattr(self.vqa, 'log_with_backend') and callable(getattr(self.vqa, 'log_with_backend')):
+            self.vqa.log_with_backend(metric_name="measurement_outcomes",
+                                      value=self.vqa.measurement_outcomes,
+                                      iteration_number=self.log.func_evals.best[0])
         
         if hasattr(self.vqa, 'job_id'):
             log_dict.update({'job_ids': self.vqa.job_id})
