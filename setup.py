@@ -13,7 +13,8 @@ requirements = [
     "scipy>=1.7.1",
     "matplotlib>=3.0.3",
     "qiskit>=0.36.1",
-    "pyquil>=3.1.0"
+    "pyquil>=3.1.0",
+    "pandas>=1.3.5"
 ]
 
 setup(
