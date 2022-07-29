@@ -15,7 +15,6 @@
 import numpy as np
 from collections import defaultdict
 from .problem import QUBO
-from ..optimizers.result import Result
 
 
 class FromDocplex2IsingModel:
@@ -76,8 +75,9 @@ class FromDocplex2IsingModel:
                 self.qubo_dict[(i,)] += weight
             else:
                 self.qubo_dict[(i, j)] += weight
-
-    def Equality2Penalty(self, expression, multiplier: float):
+    
+    @staticmethod
+    def equality_to_penalty(expression, multiplier: float):
         """
         Add equality constraints to the cost function using the penality representation.
         The constraints should be linear.
@@ -97,8 +97,9 @@ class FromDocplex2IsingModel:
         """
         penalty = multiplier * (expression) ** 2
         return penalty
-
-    def bounds(self, linear_expression):
+    
+    @staticmethod
+    def bounds(linear_expression):
         """
         Generates the limits of a linear term
 
@@ -117,14 +118,15 @@ class FromDocplex2IsingModel:
 
         l_bound = (
             u_bound
-        ) = linear_expression.constant  # Lower and upper bound of the contraint
+        ) = linear_expression.constant  # Lower and upper bound of the constraint
         for term, coeff in linear_expression.iter_terms():
             l_bound += min(0, coeff)
             u_bound += max(0, coeff)
 
         return l_bound, u_bound
-
-    def quadratic_bounds(self, iter_exp):
+    
+    @staticmethod
+    def quadratic_bounds(iter_exp):
         """
         Generates the limits of the quadratic terms
 
@@ -148,7 +150,7 @@ class FromDocplex2IsingModel:
             u_bound += max(0, coeff)
         return l_bound, u_bound
 
-    def Inequaility2Equality(self, constraint):
+    def inequality_to_equality(self, constraint):
         """
         Transform inequality contraints into equality constriants using 
         slack variables.
@@ -252,14 +254,14 @@ class FromDocplex2IsingModel:
                 left_exp = constraint.get_left_expr()
                 right_exp = constraint.get_right_expr()
                 expression = left_exp + -1 * right_exp
-                penalty = self.Equality2Penalty(expression, multipliers[cn])
+                penalty = self.equality_to_penalty(expression, multipliers[cn])
             elif constraint.sense_string in [
                 "LE",
                 "GE",
             ]:  # Inequality constraint added as a penalty with additional slack variables.
                 constraint.name = f"C{cn}"
-                ineq2eq = self.Inequaility2Equality(constraint)
-                penalty = self.Equality2Penalty(ineq2eq, multipliers[cn])
+                ineq2eq = self.inequality_to_equality(constraint)
+                penalty = self.equality_to_penalty(ineq2eq, multipliers[cn])
             else:
                 print("Not an accepted constraint!")
 
@@ -267,8 +269,9 @@ class FromDocplex2IsingModel:
             self.quadratic_expr(penalty)
             self.constant += penalty.constant
             self.objective_qubo += penalty
-
-    def qubo_to_ising(self, n_variables, qubo_terms, qubo_weights):
+    
+    @staticmethod
+    def qubo_to_ising(n_variables, qubo_terms, qubo_weights):
         """
         Converts the terms and weights in QUBO representation ([0,1])
         to the Ising representation ([-1, 1]). 
