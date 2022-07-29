@@ -339,13 +339,13 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
             for k in range(n):
                 if k not in self.allowed_jump_qubits:
                     continue
-                current_op = self.insert_op(Qobj([[0,0],[0,1]]), k, n) #Qobj([[0,0],[0,1]])
+                current_op = self.insert_op(sigmaz(), k, n) #Qobj([[0,0],[0,1]])
                 dephasing_ops.append(np.array(current_op)) #*float(1/(np.sqrt(T2))) 
             
         t_start = 0
         for k in range(len(hamiltonian_list)):
             #c_ops = list(decay_ops + dephasing_ops)
-            c_ops = list([x*np.sqrt((1-np.exp(-time_list[k]/T1))/time_list[k]) for x in decay_ops] + [x*np.sqrt((1-np.exp(-time_list[k]/T2))/time_list[k]) for x in dephasing_ops])
+            c_ops = list([x*np.sqrt((1-np.exp(-time_list[k]/T1))/time_list[k]) for x in decay_ops] + [x*np.sqrt((1-np.exp(-time_list[k]/(2*T2)))/time_list[k]) for x in dephasing_ops])
             for key in gate_list[k].keys():
                 if key not in self.allowed_jump_qubits:
                     continue
