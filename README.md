@@ -44,12 +44,10 @@ The documentation for OpenQAOA can be found [here](https://entropica-labs-openqa
 
 We also provide a set of tutorials to get you started. Among the many, perhaps you can gest started with the following ones:
 
-- [Run your first OpenQAOA workflow](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/notebooks/1_workflows_example.html)
-- [How about trying some RQAOA for a change?](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/notebooks/9_RQAOA_example.html)
-- [Introducing EL's fast QAOA simulator](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/notebooks/6_fast_qaoa_simulator.html)
-- [Discover OpenQAOA's custom parametrizations](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/notebooks/5_advanced_parameterization.html)
-
-
+- [Run your first OpenQAOA workflow](https://el-openqaoa.readthedocs.io/en/latest/notebooks/1_workflows_example.html)
+- [How about trying some RQAOA for a change?](https://el-openqaoa.readthedocs.io/en/latest/notebooks/9_RQAOA_example.html)
+- [Introducing EL's fast QAOA simulator](https://el-openqaoa.readthedocs.io/en/latest/notebooks/6_fast_qaoa_simulator.html)
+- [Discover OpenQAOA's custom parametrizations](https://el-openqaoa.readthedocs.io/en/latest/notebooks/5_advanced_parameterization.html)
 
 ### Key Features
 
@@ -67,7 +65,7 @@ Currently, the available devices are:
 | Device location  | Device Name |
 | ------------- | ------------- |
 | `local`  | `['qiskit.shot_simulator', 'qiskit.statevector_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
-| `ibmq`    | Please check the IMBQ backends available to your account |
+| `ibmq`    | Please check the IBMQ backends available to your account |
 | `qcs`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
 
 
