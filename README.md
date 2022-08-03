@@ -6,7 +6,7 @@
 #
 
   [![build test](https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml/badge.svg)](https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml)<!-- Tests (GitHub actions) -->
-  [![Documentation Status](https://readthedocs.com/projects/entropica-labs-openqaoa/badge/?version=latest&token=bdaaa98247ceb7e8e4bbd257d664fa3cc42ab6f4588ddabbe5afa6a3d20a1008)](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/?badge=latest) <!-- Readthedocs -->
+  [![Documentation Status](https://readthedocs.org/projects/el-openqaoa/badge/?version=latest)](https://el-openqaoa.readthedocs.io/en/latest/?badge=latest) <!-- Readthedocs -->
    [![License](https://img.shields.io/badge/%F0%9F%AA%AA%20license-Apache%20License%202.0-lightgrey)](LICENSE.md)<!-- License -->
  [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)<!-- Covenant Code of conduct -->
  [![codecov](https://codecov.io/gh/entropicalabs/openqaoa/branch/dev/graph/badge.svg?token=ZXD77KM5OR)](https://codecov.io/gh/entropicalabs/openqaoa) <!-- Code coverage -->
