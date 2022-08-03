@@ -199,6 +199,8 @@ class QAOA(Optimizer):
             n_shots: int
             Optional argument to specify the number of shots required to run QAOA computations
                 on shot-based simulators and QPUs. Defaults to 100.
+            seed_simulator: int
+                Optional argument to initialize a pseudorandom solution. Default None
             cvar_alpha: float
                 The value of alpha for the CVaR cost function
             qiskit_simulation_method: str, optional
