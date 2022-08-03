@@ -18,7 +18,7 @@ from .problem import QUBO
 
 
 class FromDocplex2IsingModel:
-    def __init__(self, model, multipliers: float = None):
+    def __init__(self, model, multipliers: [float, list] = None):
 
         """
         Creates an instance to translate Docplex models to its Ising Model representation
@@ -75,7 +75,7 @@ class FromDocplex2IsingModel:
                 self.qubo_dict[(i,)] += weight
             else:
                 self.qubo_dict[(i, j)] += weight
-    
+
     @staticmethod
     def equality_to_penalty(expression, multiplier: float):
         """
@@ -97,7 +97,7 @@ class FromDocplex2IsingModel:
         """
         penalty = multiplier * (expression) ** 2
         return penalty
-    
+
     @staticmethod
     def bounds(linear_expression):
         """
@@ -124,7 +124,7 @@ class FromDocplex2IsingModel:
             u_bound += max(0, coeff)
 
         return l_bound, u_bound
-    
+
     @staticmethod
     def quadratic_bounds(iter_exp):
         """
@@ -172,7 +172,9 @@ class FromDocplex2IsingModel:
         elif constraint.sense_string == "GE":  # Great or equal inequality constriant
             new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
         else:
-            AttributeError(f"It is not possible to implement constraint {constraint.sense_string}.")
+            AttributeError(
+                f"It is not possible to implement constraint {constraint.sense_string}."
+            )
 
         lower_bound, upper_bound = self.bounds(new_exp)
         slack_lim = upper_bound  # Slack var limit
@@ -237,15 +239,16 @@ class FromDocplex2IsingModel:
         n_constraints = len(constraints_list)
 
         if (
-            multipliers == None
+            multipliers is None
+
         ):  # Default penalties are choosen from the bounds of the objective func.
             multipliers = n_constraints * [self.multipliers_generators()]
 
-        elif type(multipliers) in [int, float]:
+        elif np.isscalar(multipliers):
             multipliers = n_constraints * [multipliers]
 
-        elif type(multipliers) != list:
-            print(f"{type(multipliers)} is not a accepted format")
+        elif type(multipliers) not in [list, np.ndarray]:
+            TypeError(f"{type(multipliers)} is not a accepted format")
 
         for cn, constraint in enumerate(constraints_list):
             if (
@@ -269,7 +272,7 @@ class FromDocplex2IsingModel:
             self.quadratic_expr(penalty)
             self.constant += penalty.constant
             self.objective_qubo += penalty
-    
+
     @staticmethod
     def qubo_to_ising(n_variables, qubo_terms, qubo_weights):
         """
@@ -327,7 +330,7 @@ class FromDocplex2IsingModel:
 
         return QUBO(n_variables, ising_terms, ising_weights)
 
-    def get_models(self, multipliers: float = None):
+    def get_models(self, multipliers: [float, list] = None):
         """
         Creates a QUBO docplex model, QUBO dict OQ model, and an Ising Model form
         a Docplex quadratic program.
@@ -360,10 +363,10 @@ class FromDocplex2IsingModel:
         # Obtain the constant from the model
         self.constant = self.objective_expr.constant
 
-        # Save the terms and coeffs form the linear part
+        # Save the terms and coeffs from the linear part
         self.linear_expr(self.objective_expr)
 
-        # Save the terms and coeffs form the quadratic part
+        # Save the terms and coeffs from the quadratic part
         self.quadratic_expr(self.objective_expr)
 
         # Add the linear constraints into the qubo
@@ -378,6 +381,7 @@ class FromDocplex2IsingModel:
         n_variables = self.model.number_of_variables
         # QUBO docplex
         qubo_docplex = self.model.copy()
+        qubo_docplex.clear_constraints()
         qubo_docplex.remove_objective()
         qubo_docplex.minimize(self.objective_qubo)
 
