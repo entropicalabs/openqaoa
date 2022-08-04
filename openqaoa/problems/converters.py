@@ -359,7 +359,7 @@ class FromDocplex2IsingModel:
             self.objective_expr = -1 * self.model.objective_expr
 
         # Objective QUBO
-        self.objective_qubo = self.model.objective_expr
+        self.objective_qubo = self.objective_expr
         # Obtain the constant from the model
         self.constant = self.objective_expr.constant
 
@@ -383,11 +383,8 @@ class FromDocplex2IsingModel:
         qubo_docplex = self.model.copy()
         qubo_docplex.clear_constraints()
         qubo_docplex.remove_objective()
-        if self.model.objective_sense.is_minimize():
-            qubo_docplex.minimize(self.objective_qubo)
-        else:
-            qubo_docplex.minimize(-1 * self.objective_qubo)
-        # convert the docplex terms in an Ising Model
+        qubo_docplex.minimize(self.objective_qubo)
+        # Ising Hamiltonian of the QUBO
         ising_model = self.qubo_to_ising(n_variables, terms, weights)
 
         return qubo_docplex, ising_model
