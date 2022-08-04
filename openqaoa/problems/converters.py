@@ -383,8 +383,10 @@ class FromDocplex2IsingModel:
         qubo_docplex = self.model.copy()
         qubo_docplex.clear_constraints()
         qubo_docplex.remove_objective()
-        qubo_docplex.minimize(self.objective_qubo)
-
+        if self.model.objective_sense.is_minimize():
+            qubo_docplex.minimize(self.objective_qubo)
+        else:
+            qubo_docplex.minimize(-1 * self.objective_qubo)
         # convert the docplex terms in an Ising Model
         ising_model = self.qubo_to_ising(n_variables, terms, weights)
 
