@@ -167,6 +167,21 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         return parametric_circuit
     
     def build_mastereq(self, H, c_ops=None):
+        """
+        Parameters
+        ----------
+        H: `np.array`
+            Hamiltonian (in matrix form) to be used in the master equation
+        
+        c_ops: `list`
+            List of collapse operators (in matrix form) to be used in the master equation
+
+        
+        Returns
+        -------
+        get_rhs: `np.array`
+            The (parametrized) right hand side of the master equation describing the temporal change of the density matrix
+        """
     
         def get_rhs(t, rho):
             rho = rho.reshape([len(H),len(H)])
@@ -180,8 +195,23 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
             return np.ndarray.flatten(me_rhs)
         return get_rhs
 
-    #Customiseable target_basis something that could be added later. What gates should be included?
     def get_circuit_list(self, params: QAOAVariationalBaseParams, target_basis=['id', 'x', 'sx', 'rz', 'cx']):
+        """
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+        
+        target_basis: `list`
+            List of gates (encoded in strings) representing the native basis of the hardware platform. Available gates can be extended
+            in the future to allow for the simulation of different hardware platforms (currently IBM superconducting circuits).
+
+        Returns
+        -------
+        circuit_list: `list`
+            List containing qiskit circuits, whereby each circuit corresponds to a layer of the original circuit (in the correct order). 
+            We choose the layers such that there are as few layers as possible and that in any given layer, each qubit is involved in at 
+            most one (single qubit or two qubit) gate.
+        """
         circuit_list = list()
         circuit = self.qaoa_circuit(params)
         qc_qaoa = transpile(circuit, basis_gates=target_basis, optimization_level=0)
@@ -204,6 +234,22 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         return circuit_list
 
     def hamiltonian_from_list(self, params: QAOAVariationalBaseParams):
+        """
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+    
+        Returns
+        -------
+        hamiltonian_list: `list`
+            List of scaled Hamiltonians (np.array), each entry corresponds to the Hamiltonian of a layer
+        
+        time_list: `list`
+            List of times, each entry corresponds to the time of a layer
+        
+        gate_list: `list`
+            List of dictionaries (corresponding to the layers) containing the names of gates acting on specific qubits             
+        """
         rz_type = "<class 'qiskit.circuit.library.standard_gates.rz.RZGate'>"
         sx_type = "<class 'qiskit.circuit.library.standard_gates.sx.SXGate'>"
         cx_type = "<class 'qiskit.circuit.library.standard_gates.x.CXGate'>"
@@ -288,6 +334,21 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         return hamiltonian_list, time_list, gate_list  
 
     def insert_op(self, op, k, n):
+        """
+        Parameters
+        ----------
+        op: `qutip.qobj.Qobj`
+            Qutip quantum operator (single qubit quantum operator) to be positioned at a position k in a list of length n 
+        
+        k: `int`
+            Position at which the operator op should be placed
+    
+        Returns
+        -------
+        current_op: `qutip.qobj.Qobj`
+            Qutip object that is constructed by tensor products of n Qutip objects, namely of the operator op at position k and the single qubit
+            identity operator at all other positions
+        """
         if k==0:
             current_op = op
         else:
@@ -300,6 +361,22 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         return current_op
 
     def run_circuit_mastereqn(self, params: QAOAVariationalBaseParams): 
+        """
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+    
+        Returns
+        -------
+        states: `list`
+            List containing the states of the circuit at times indicated in next list
+        
+        times: `list`
+            List containing the times of the states indicated in the above list
+
+        jumps: `list`
+            List of dicts specifying which jumps happened at what times and on which qubits
+        """
         hamiltonian_list, time_list, gate_list = self.hamiltonian_from_list(params)
         width = len(hamiltonian_list[0])
         n = int(np.log2(width))
@@ -456,7 +533,6 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
         return results
 
-    #change such that sampled from distribution instead of scaled, and return probability dict in separate function
     def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
         """
         Returns n_shots trajectories of the final QAOA circuit after binding angles from variational parameters.
@@ -491,14 +567,19 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
         return counts
 
-
     #expected cost given probability distribution from density matrix, there is already a function that essentially does that somewhere else
     def expectation(self, params: QAOAVariationalBaseParams):
+        """
+        expected cost given probability distribution from density matrix
+        """
         exp = cost_function(self.probability_dict(params), self.cost_hamiltonian)
         return np.real(exp)
 
     #dictionary {string: probability} with probabilities of outcomes
     def probability_dict(self, params: QAOAVariationalBaseParams): 
+        """
+        Dictionary {string: probability} with probabilities of outcomes
+        """
         probs = dict()
         results = self.get_results(params)
         rho_sum = np.array(results[0][0][-1]*results[0][0][-1].dag())
