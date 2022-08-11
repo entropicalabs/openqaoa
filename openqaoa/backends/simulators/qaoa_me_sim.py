@@ -440,7 +440,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                                     
             if spam and k==len(hamiltonian_list)-1:
                 for m in range(n):
-                    if k not in self.allowed_jump_qubits:
+                    if m not in self.allowed_jump_qubits:
                         continue
                     c_ops.append(np.array(self.insert_op(sigmax()*np.sqrt(spam_error_prob/time_list[k]), m, n)))
 
