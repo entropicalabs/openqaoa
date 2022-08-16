@@ -40,7 +40,7 @@ Should you face any issue during the installation, please drop us an email at op
 
 ## Getting started
 
-The documentation for OpenQAOA can be found [here](https://entropica-labs-openqaoa.readthedocs-hosted.com/en/latest/).
+The documentation for OpenQAOA can be found [here](https://el-openqaoa.readthedocs.io/en/latest/).
 
 We also provide a set of tutorials to get you started. Among the many, perhaps you can gest started with the following ones:
 
