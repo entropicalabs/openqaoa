@@ -57,6 +57,17 @@ class Result:
         self.method = method
 
         self.cost_hamilonian = cost_hamiltonian
+        
+        self.log = log
+        
+        if log.param_log.best != []:
+            p = len(log.param_log.best[0]) // 2
+            angles_best = np.array(log.param_log.best[0])
+        if log.param_log.history != []:
+            angles_log = np.array(log.param_log.history)
+            p = angles_log.shape[1] // 2
+
+        
 
         self.evals = {
             "number of evals": log.func_evals.best[0],
@@ -65,22 +76,25 @@ class Result:
         }
 
         self.intermediate = {
-            "angles log": np.array(log.param_log.history).tolist(),
+            "angles log": {"betas":angles_log[:,p:].tolist(),"gammas":angles_log[:,:p].tolist()}
+                            if log.param_log.history != [] else {"betas":[], "gammas":[]},
             "intermediate cost": log.cost.history,
             "intermediate measurement outcomes": log.measurement_outcomes.history,
         }
 
         self.optimized = {
-            "optimized angles": np.array(log.param_log.best[0]).tolist(),
-            "optimized cost": log.cost.best[0],
+            "optimized angles": {"betas":angles_best[p:].tolist(),"gammas":angles_best[:p].tolist()}
+                                if log.param_log.best != [] else {"betas":[], "gammas":[]},
+            "optimized cost": log.cost.best[0] if log.cost.best != [] else np.nan,
             "optimized measurement outcomes": log.measurement_outcomes.best[0]
             if log.measurement_outcomes.best != []
             else {},
         }
 
-        self.most_probable_states = most_probable_bitstring(
-            cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-        )
+        if log.measurement_outcomes.best != []:
+            self.most_probable_states = most_probable_bitstring(
+                cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
+            )
 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters

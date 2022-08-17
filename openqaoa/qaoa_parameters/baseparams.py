@@ -281,7 +281,8 @@ class QAOAVariationalBaseParams(ABC):
 
     def update_from_raw(self, new_values: Union[list, np.array]):
         """
-        Update all the parameters from a 1D array.
+        Update all the parameters from a 1D array. For QAOA, the angles are 
+        organized in the as new_values = [beta0, beta_1, ..., gamma0, gamma1, ...]
 
         The input has the same format as the output of ``self.raw()``.
         This is useful for ``scipy.optimize.minimize`` which expects
