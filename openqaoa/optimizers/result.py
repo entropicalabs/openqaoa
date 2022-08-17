@@ -76,14 +76,14 @@ class Result:
         }
 
         self.intermediate = {
-            "angles log": {"betas":angles_log[:,p:].tolist(),"gammas":angles_log[:,:p].tolist()}
+            "angles log": {"betas":angles_log[:,:p].tolist(),"gammas":angles_log[:,p:].tolist()}
                             if log.param_log.history != [] else {"betas":[], "gammas":[]},
             "intermediate cost": log.cost.history,
             "intermediate measurement outcomes": log.measurement_outcomes.history,
         }
 
         self.optimized = {
-            "optimized angles": {"betas":angles_best[p:].tolist(),"gammas":angles_best[:p].tolist()}
+            "optimized angles": {"betas":angles_best[:p].tolist(),"gammas":angles_best[p:].tolist()}
                                 if log.param_log.best != [] else {"betas":[], "gammas":[]},
             "optimized cost": log.cost.best[0] if log.cost.best != [] else np.nan,
             "optimized measurement outcomes": log.measurement_outcomes.best[0]
