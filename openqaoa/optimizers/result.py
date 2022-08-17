@@ -57,9 +57,7 @@ class Result:
         self.method = method
 
         self.cost_hamilonian = cost_hamiltonian
-        
-        self.log = log
-        
+
         if log.param_log.best != []:
             p = len(log.param_log.best[0]) // 2
             angles_best = np.array(log.param_log.best[0])
