@@ -63,7 +63,7 @@ class TestingResultOutputs(unittest.TestCase):
                 q.set_device(device)
                 q.compile(vc)
                 q.optimize()
-                print(device_name)
+
                 self.assertEqual(recorded_evals[each_choice[0]], len(q.results.intermediate['angles log']["betas"]))
                 self.assertEqual(recorded_evals[each_choice[0]], len(q.results.intermediate['angles log']["gammas"]))
                 self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['intermediate cost']))
