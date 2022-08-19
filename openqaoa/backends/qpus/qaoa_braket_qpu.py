@@ -21,6 +21,7 @@ from braket.circuits import Circuit
 from braket.circuits.gates import H
 from braket.circuits.result_types import Probability
 from braket.circuits.free_parameter import FreeParameter
+from braket.jobs.metrics import log_metric
 
 from ...devices import DeviceAWS
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
