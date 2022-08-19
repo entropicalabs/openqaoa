@@ -23,8 +23,6 @@ from datetime import datetime
 from scipy.optimize._minimize import minimize, MINIMIZE_METHODS
 from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 
-from braket.jobs.metrics import log_metric
-
 from ..basebackend import VQABaseBackend
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
