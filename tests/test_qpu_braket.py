@@ -346,6 +346,33 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                                             shots, None, None, 
                                                             True, 1.))
         
+    def test_correct_device_creation(self):
+        
+        device_map = {'us-east-1': 
+                      {'IonQ Device': 'arn:aws:braket:::device/qpu/ionq/ionQdevice'}, 
+                      'eu-west-2': 
+                      {'Lucy': 'arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy'}, 
+                      'us-west-1': 
+                      {'SV1': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1',
+                       'Aspen-M-2': 'arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2'}
+                     }
+        
+        for each_region, devices_dict in device_map.items():
+        
+            for each_key, each_value in devices_dict.items():
+
+                aws_device = DeviceAWS(each_key, self.AWS_ACCESS_KEY_ID, 
+                                       self.AWS_SECRET_ACCESS_KEY, each_region, 
+                                       self.S3_BUCKET_NAME)
+
+                aws_device.check_connection()
+                
+                print(each_key, aws_device.device_arn, '/n')
+
+                self.assertEqual(aws_device.device_arn, each_value)
+        
+        
+        
 #     def test_remote_integration_qpu_run(self):
 #         """
 #         Test Actual QPU Workflow. Checks if the expectation value is returned
