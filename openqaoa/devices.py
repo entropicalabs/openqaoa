@@ -349,6 +349,8 @@ class DeviceAWS(DeviceBase):
     def _check_backend_connection(self) -> bool:
         
         if self.device_name in self.available_qpus:
+            # Assumes that there is only 1/ the first device arn is correct
+            # TODO: Make this line more general to account for possibility of 2 or more arns returned
             self.device_arn = [each_device['deviceArn'] for each_device in self.aws_session.search_devices() if each_device['deviceName'] == self.device_name][0]
             self.backend_device = AwsDevice(self.device_arn, self.aws_session)
             return True
