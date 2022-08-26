@@ -48,7 +48,8 @@ setup(
     keywords="quantum optimisation SDK",
     extras_require = {
         "docs":requirements_docs,
-        "tests":requirements_docs,
+        "tests":requirement_tets,
+        "all": requirements_docs + requirement_tets
     },
 
 )
