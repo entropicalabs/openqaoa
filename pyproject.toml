@@ -1,0 +1,22 @@
+[project]
+name = "openqaoa"
+version = "0.0.1"
+authors = [
+  { name="Entropica Labs", email="openqaoa@entropicalabs.com" },
+]
+description = "Multi-backend SDK for quantum optimisation"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/entropicalabs/openqaoa"
+"Bug Tracker" = "https://github.com/entropicalabs/openqaoa/issues"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
