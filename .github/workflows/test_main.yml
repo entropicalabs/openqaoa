@@ -16,17 +16,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
-        python: ['3.10']
+        os: [ubuntu-latest]
+        python: ['3.8', '3.9', '3.10']
     # The type of runner that the job will run on
     runs-on:  ${{ matrix.os }}
     
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v3
-      - uses: docker://rigetti/forest:latest
-      - name: run the docker
-        run: docker run --rm -it rigetti/forest
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -41,24 +38,23 @@ jobs:
           pip install .[tests]
           pip install ipykernel
              
-      # - name: QVM on ubuntu
-      #   if: ${{ matrix.os=='ubuntu-latest' }} 
-      #   run: |  
-      #     run: |
-      #     find /usr/lib -name "libffi.so*"
-      #     sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
-      #     wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
-      #     tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
-      #     cd forest-sdk-2.23.0-linux-deb/
-      #     sudo apt-get update
-      #     sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
-      #     sudo ./forest-sdk-2.23.0-linux-deb.run
-      #     qvm --version
-      #     quilc --version
-      #     echo "Starting qvm and quilc"
-      #     screen -d -m qvm -S
-      #     screen -d -m quilc -S
-      #     cd ..
+      - name: QVM on ubuntu
+        if: ${{ matrix.os=='ubuntu-latest' }} 
+        run: |
+          find /usr/lib -name "libffi.so*"
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
+          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
+          tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
+          cd forest-sdk-2.23.0-linux-deb/
+          sudo apt-get update
+          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
+          sudo ./forest-sdk-2.23.0-linux-deb.run
+          qvm --version
+          quilc --version
+          echo "Starting qvm and quilc"
+          screen -d -m qvm -S
+          screen -d -m quilc -S
+          cd ..
           
       - name: Run tests
         env:
