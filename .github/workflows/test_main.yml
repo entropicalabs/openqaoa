@@ -44,9 +44,9 @@ jobs:
           brew install --cask docker 
           open /Applications/Docker.app
           export PATH="/usr/local/bin:$PATH"
-          hdiutil attach Docker.dmg
-          /Volumes/Docker/Docker.app/Contents/MacOS/install
-          hdiutil detach /Volumes/Docker
+          sudo hdiutil attach Docker.dmg
+          sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
+          sudo hdiutil detach /Volumes/Docker
           docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
           docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
       
