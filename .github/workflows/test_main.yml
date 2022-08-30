@@ -41,11 +41,7 @@ jobs:
       - name: QVM on macos
         if: ${{ matrix.os=='macos-latest' }} 
         run: |
-          brew install wget
-          wget https://desktop.docker.com/mac/main/amd64/Docker.dmg
-          hdiutil attach Docker.dmg
-          /Volumes/Docker/Docker.app/Contents/MacOS/install
-          hdiutil detach /Volumes/Docker
+          brew cask install docker
           
           docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
           docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
