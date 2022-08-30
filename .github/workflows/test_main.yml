@@ -40,8 +40,13 @@ jobs:
               
       - name: Install qvm
         run: |
-          docker run --rm -it -p 5555:5555 rigetti/quilc -R -p 5555 -P
-          docker run --rm -it -p 5000:5000 rigetti/qvm -p 5000 -S
+          if: ${{ matrix.os=='macos-latest' }} 
+            run: |
+              sudo hdiutil attach Docker.dmg
+              sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
+              sudo hdiutil detach /Volumes/Docker
+          docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
+          docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
           
       - name: Run tests
         env:
