@@ -43,8 +43,8 @@ jobs:
         run: |
           brew install --cask docker 
           open /Applications/Docker.app
-          docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
-          docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
+          # docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
+          # docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
       
       - name: QVM on ubuntu
         if: ${{ matrix.os=='ubuntu-latest' }} 
