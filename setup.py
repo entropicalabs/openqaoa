@@ -27,7 +27,9 @@ requirements_docs = [
 
 requirement_tets = [
     "pytest==7.1.0",
-    "pytest-cov==3.0.0"
+    "pytest-cov==3.0.0",
+    "ipython==8.2.0",
+    "nbconvert>=6.5.1"
 ]
 
 setup(
