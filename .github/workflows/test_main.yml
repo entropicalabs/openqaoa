@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
         python: [3.8, 3.9, '3.10']
     # The type of runner that the job will run on
     runs-on:  ${{ matrix.os }}
@@ -42,20 +42,11 @@ jobs:
               
       - name: Install qvm
         run: |
-          find /usr/lib -name "libffi.so*"
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
-          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
-          tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
-          cd forest-sdk-2.23.0-linux-deb/
-          sudo apt-get update
-          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
-          sudo ./forest-sdk-2.23.0-linux-deb.run
-          qvm --version
-          quilc --version
-          echo "Starting qvm and quilc"
-          screen -d -m qvm -S
-          screen -d -m quilc -S
-          cd ..
+          docker pull rigetti/quilc
+          docker run --rm -it -p 5555:5555 rigetti/quilc -R -p 5555 -P
+          
+          docker pull rigetti/qvm
+          docker run --rm -it -p 5000:5000 rigetti/qvm -p 5000 -S
           
       - name: Run tests
         env:
