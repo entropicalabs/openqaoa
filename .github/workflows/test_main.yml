@@ -16,8 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
-        python: [3.8, 3.9, '3.10']
+        os: [macos-latest]
+        python: ['3.10']
     # The type of runner that the job will run on
     runs-on:  ${{ matrix.os }}
 
@@ -43,8 +43,12 @@ jobs:
         run: |
           brew install --cask docker 
           open /Applications/Docker.app
-          # docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
-          # docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
+          export PATH="/usr/local/bin:$PATH"
+          hdiutil attach Docker.dmg
+          /Volumes/Docker/Docker.app/Contents/MacOS/install
+          hdiutil detach /Volumes/Docker
+          docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
+          docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
       
       - name: QVM on ubuntu
         if: ${{ matrix.os=='ubuntu-latest' }} 
