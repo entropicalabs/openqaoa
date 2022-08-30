@@ -38,13 +38,15 @@ jobs:
           pip install .[tests]
           pip install ipykernel
               
-      - name: Install qvm
+      - name: Install docker if on macos
+        if: ${{ matrix.os=='macos-latest' }} 
         run: |
-          if: ${{ matrix.os=='macos-latest' }} 
-            run: |
-              sudo hdiutil attach Docker.dmg
-              sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
-              sudo hdiutil detach /Volumes/Docker
+          sudo hdiutil attach Docker.dmg
+          sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
+          sudo hdiutil detach /Volumes/Docker
+
+      - name: Start Rigetti
+        run: |  
           docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
           docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
           
