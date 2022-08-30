@@ -25,7 +25,7 @@ requirements_docs = [
     "nbconvert>=6.5.1"    
 ]
 
-requirement_tets = [
+requirements_test = [
     "pytest==7.1.0",
     "pytest-cov==3.0.0",
     "ipython==8.2.0",
@@ -50,8 +50,8 @@ setup(
     keywords="quantum optimisation SDK",
     extras_require = {
         "docs":requirements_docs,
-        "tests":requirement_tets,
-        "all": requirements_docs + requirement_tets
+        "tests":requirements_test,
+        "all": requirements_docs + requirements_test
     },
 
 )
