@@ -41,8 +41,7 @@ jobs:
       - name: QVM on macos
         if: ${{ matrix.os=='macos-latest' }} 
         run: |
-          brew cask install docker
-          
+          brew install --cask docker 
           docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
           docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
       
