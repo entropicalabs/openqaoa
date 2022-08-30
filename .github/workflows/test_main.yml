@@ -29,10 +29,13 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - uses: addnab/docker-run-action@v3
-          run: |
-            docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
-            docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
+      container: rigetti/quilc
+      steps:
+        - run: quilc -S
+
+      container: rigetti/qvm
+      steps:
+        - run: qvm -S
         
       - name: Install OpenQAOA
         run: |
