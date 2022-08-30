@@ -28,9 +28,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
+       
 
       - name: Run the quilc & qvm Docker images
         run: |
+          docker --version
           docker run --rm -idt -p 5000:5000 rigetti/qvm -S
           docker run --rm -idt -p 5555:5555 rigetti/quilc -R
         
