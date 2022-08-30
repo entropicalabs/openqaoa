@@ -20,7 +20,6 @@ jobs:
         python: ['3.10']
     # The type of runner that the job will run on
     runs-on:  ${{ matrix.os }}
-    container: rigetti/forest:latest
     
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -29,6 +28,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
+      - uses: docker://rigetti/forest:latest
       # - uses: docker-practice/actions-setup-docker@master
 
       # - name: Run the quilc & qvm Docker images
