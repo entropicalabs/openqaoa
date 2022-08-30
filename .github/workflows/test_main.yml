@@ -23,11 +23,9 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
         
@@ -42,10 +40,7 @@ jobs:
               
       - name: Install qvm
         run: |
-          docker pull rigetti/quilc
           docker run --rm -it -p 5555:5555 rigetti/quilc -R -p 5555 -P
-          
-          docker pull rigetti/qvm
           docker run --rm -it -p 5000:5000 rigetti/qvm -p 5000 -S
           
       - name: Run tests
