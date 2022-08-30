@@ -12,123 +12,123 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-strategy:
-  fail-fast: false
-  matrix:
-    os: [macos-latest]
-    python: ['3.10']
-  # The type of runner that the job will run on
-  runs-on:  ${{ matrix.os }}
-  container: 
-    image: rigetti/forest:latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python: ['3.10']
+    # The type of runner that the job will run on
+    runs-on:  ${{ matrix.os }}
+    container: rigetti/forest:latest
+    
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: docker-practice/actions-setup-docker@master
 
-  # Steps represent a sequence of tasks that will be executed as part of the job
-  steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python }}
-    - uses: docker-practice/actions-setup-docker@master
-
-    - name: Run the quilc & qvm Docker images
-      run: |
-        docker --version
-        docker run --rm -idt -p 5000:5000 rigetti/qvm -S
-        docker run --rm -idt -p 5555:5555 rigetti/quilc -R
-
-    - name: Install OpenQAOA
-      run: |
-        python -m pip install --user virtualenv
-        python -m venv env
-        source env/bin/activate
-        python -m pip install --upgrade pip
-        pip install .[tests]
-        pip install ipykernel
-
-    # - name: QVM on macos
-    #   if: ${{ matrix.os=='macos-latest' }} 
-    #   run: |
-    #     # brew install --cask docker 
-    #     # open /Applications/Docker.app
-    #     # export PATH="/usr/local/bin:$PATH"
-    #     # sudo hdiutil attach Docker.dmg
-    #     # sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
-    #     # sudo hdiutil detach /Volumes/Docker
-    #     # docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
-    #     # docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
-
-    - name: QVM on ubuntu
-      if: ${{ matrix.os=='ubuntu-latest' }} 
-      run: |  
+      - name: Run the quilc & qvm Docker images
         run: |
-        find /usr/lib -name "libffi.so*"
-        sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
-        wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
-        tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
-        cd forest-sdk-2.23.0-linux-deb/
-        sudo apt-get update
-        sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
-        sudo ./forest-sdk-2.23.0-linux-deb.run
-        qvm --version
-        quilc --version
-        echo "Starting qvm and quilc"
-        screen -d -m qvm -S
-        screen -d -m quilc -S
-        cd ..
-
-    - name: Run tests
-      env:
-        IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }}
-        IBMQ_HUB: ibm-q
-        IBMQ_GROUP: open
-        IBMQ_PROJECT: main
-      run: |
-        source env/bin/activate
-        ipython kernel install --name "env" --user
-        python -m pytest --cov --cov-report=xml:coverage.xml
-
-    - name: Upload coverage reports to Codecov with GitHub Action
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: ./coverage.xml
+          docker --version
+          docker run --rm -idt -p 5000:5000 rigetti/qvm -S
+          docker run --rm -idt -p 5555:5555 rigetti/quilc -R
+        
+      - name: Install OpenQAOA
+        run: |
+          python -m pip install --user virtualenv
+          python -m venv env
+          source env/bin/activate
+          python -m pip install --upgrade pip
+          pip install .[tests]
+          pip install ipykernel
+              
+      # - name: QVM on macos
+      #   if: ${{ matrix.os=='macos-latest' }} 
+      #   run: |
+      #     # brew install --cask docker 
+      #     # open /Applications/Docker.app
+      #     # export PATH="/usr/local/bin:$PATH"
+      #     # sudo hdiutil attach Docker.dmg
+      #     # sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
+      #     # sudo hdiutil detach /Volumes/Docker
+      #     # docker run --rm -p 5555:5555 rigetti/quilc -R -p 5555 -P
+      #     # docker run --rm -p 5000:5000 rigetti/qvm -p 5000 -S
+      
+      - name: QVM on ubuntu
+        if: ${{ matrix.os=='ubuntu-latest' }} 
+        run: |  
+          run: |
+          find /usr/lib -name "libffi.so*"
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
+          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
+          tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
+          cd forest-sdk-2.23.0-linux-deb/
+          sudo apt-get update
+          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
+          sudo ./forest-sdk-2.23.0-linux-deb.run
+          qvm --version
+          quilc --version
+          echo "Starting qvm and quilc"
+          screen -d -m qvm -S
+          screen -d -m quilc -S
+          cd ..
+          
+      - name: Run tests
+        env:
+          IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }}
+          IBMQ_HUB: ibm-q
+          IBMQ_GROUP: open
+          IBMQ_PROJECT: main
+        run: |
+          source env/bin/activate
+          ipython kernel install --name "env" --user
+          python -m pytest --cov --cov-report=xml:coverage.xml
+          
+      - name: Upload coverage reports to Codecov with GitHub Action
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./coverage.xml
 
   docs:
-  runs-on: ubuntu-latest
-  steps:
-    - name: Check out openqaoa
-      uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: 3.8
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out openqaoa
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
 
-    - name: Install OpenQAOA
-      run: |
-        python -m pip install --upgrade pip
-        pip install .[docs]
-
-    - name: Install qvm
-      run: |
-        find /usr/lib -name "libffi.so*"
-        sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
-        wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
-        tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
-        cd forest-sdk-2.23.0-linux-deb/
-        sudo apt-get update
-        sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
-        sudo ./forest-sdk-2.23.0-linux-deb.run
-        qvm --version
-        quilc --version
-        echo "Starting qvm and quilc"
-        screen -d -m qvm -S
-        screen -d -m quilc -S
-        cd ..
-
-    - name: Build and test Sphinx docs
-      run: |
-        sudo apt-get install pandoc
-        cd docs/
-        make html
-
+      - name: Install OpenQAOA
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[docs]
+              
+      - name: Install qvm
+        run: |
+          find /usr/lib -name "libffi.so*"
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
+          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
+          tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
+          cd forest-sdk-2.23.0-linux-deb/
+          sudo apt-get update
+          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
+          sudo ./forest-sdk-2.23.0-linux-deb.run
+          qvm --version
+          quilc --version
+          echo "Starting qvm and quilc"
+          screen -d -m qvm -S
+          screen -d -m quilc -S
+          cd ..
+      
+      - name: Build and test Sphinx docs
+        run: |
+          sudo apt-get install pandoc
+          cd docs/
+          make html
+  
