@@ -25,6 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: docker://rigetti/forest:latest
+      - name: run the docker
+        run: docker run --rm -it rigetti/forest
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
