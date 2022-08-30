@@ -71,8 +71,9 @@ class Result:
         }
 
         self.optimized = {
-            "optimized angles": np.array(log.param_log.best[0]).tolist(),
-            "optimized cost": log.cost.best[0],
+            "optimized angles": np.array(log.param_log.best[0]).tolist() 
+            if log.param_log.best != [] else [],
+            "optimized cost": log.cost.best[0] if log.cost.best != [] else None,
             "optimized measurement outcomes": log.measurement_outcomes.best[0]
             if log.measurement_outcomes.best != []
             else {},
@@ -80,7 +81,7 @@ class Result:
 
         self.most_probable_states = most_probable_bitstring(
             cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-        )
+        ) if log.measurement_outcomes.best != [] else []
 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters

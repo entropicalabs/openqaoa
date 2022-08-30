@@ -15,10 +15,11 @@
 import numpy as np
 from collections import defaultdict
 from .problem import QUBO
+from typing import Union
 
 
 class FromDocplex2IsingModel:
-    def __init__(self, model, multipliers: [float, list] = None):
+    def __init__(self, model, multipliers: Union[float, list] = None):
 
         """
         Creates an instance to translate Docplex models to its Ising Model representation
@@ -77,7 +78,7 @@ class FromDocplex2IsingModel:
                 self.qubo_dict[(i, j)] += weight
 
     @staticmethod
-    def equality_to_penalty(expression, multiplier: float):
+    def equality_to_penalty(expression, multiplier: Union[int, float]):
         """
         Add equality constraints to the cost function using the penality representation.
         The constraints should be linear.
@@ -330,7 +331,7 @@ class FromDocplex2IsingModel:
 
         return QUBO(n_variables, ising_terms, ising_weights)
 
-    def get_models(self, multipliers: [float, list] = None):
+    def get_models(self, multipliers: Union[float, list] = None):
         """
         Creates a QUBO docplex model, QUBO dict OQ model, and an Ising Model form
         a Docplex quadratic program.
