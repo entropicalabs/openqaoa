@@ -73,6 +73,10 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
     times: `list`
         The times for single qubit gates, two qubit gates and readout, defaults to [20e-9, 200e-9, 5800e-9]
 
+    target_basis: `list`
+        The basis into which the circuit is to be decomposed, representing the native basis of a certain hardware platform, defaults to 
+        ['id', 'x', 'sx', 'rz', 'cx'], the native basis of IBM's superconducting circuits. This is currently the only supported basis.
+
     allowed_jump_qubits: `list` 
         The indices of the qubits on which jumps are allowed to occur, None means there are no restrictions
         """   
@@ -89,6 +93,7 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                  cvar_alpha: float,
                  noise_model: Optional[dict] = {'decay': 5e-5, 'dephasing': 1e-4, 'overrot': 2, 'spam': 5e-2, 'readout01': 4e-2, 'readout10': 1e-2, 'depol1': 12e-4, 'depol2': 3e-2},
                  times: Optional[list] = [20e-9, 200e-9, 5800e-9],
+                 target_basis: Optional[list] = ['id', 'x', 'sx', 'rz', 'cx'],
                  allowed_jump_qubits: Optional[list] = None):
         
         QAOABaseBackend.__init__(self,
@@ -100,6 +105,7 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
         self.noise_model = noise_model
         self.times = times
+        self.target_basis = target_basis
         self.allowed_jump_qubits = allowed_jump_qubits
         self.n_shots = n_shots
         self.qureg = QuantumRegister(self.n_qubits)
@@ -195,7 +201,7 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
             return np.ndarray.flatten(me_rhs)
         return get_rhs
 
-    def get_circuit_list(self, params: QAOAVariationalBaseParams, target_basis=['id', 'x', 'sx', 'rz', 'cx']):
+    def get_circuit_list(self, params: QAOAVariationalBaseParams):
         """
         Parameters
         ----------
@@ -214,6 +220,7 @@ class QAOAMCBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         """
         circuit_list = list()
         circuit = self.qaoa_circuit(params)
+        target_basis = self.target_basis
         qc_qaoa = transpile(circuit, basis_gates=target_basis, optimization_level=0)
         dag = circuit_to_dag(qc_qaoa)
         layers = list(dag.multigraph_layers())

@@ -46,6 +46,7 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
                         rewiring = None,
                         qubit_layout = None,
                         allowed_jump_qubits = None,
+                        target_basis = None,
                         times = None):
 
     BACKEND_ARGS_MAPPER = {
@@ -64,10 +65,12 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
         QAOAMEBackendSimulator: {'n_shots': n_shots,
                                 'noise_model': noise_model,
                                 'times': times,
+                                'target_basis': target_basis,
                                 'allowed_jump_qubits': allowed_jump_qubits},
         QAOAMCBackendSimulator: {'n_shots': n_shots,
                                 'noise_model': noise_model,
                                 'times': times,
+                                'target_basis': target_basis,
                                 'allowed_jump_qubits': allowed_jump_qubits}
     }
 
