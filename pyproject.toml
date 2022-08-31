@@ -1,6 +1,6 @@
 [project]
 name = "openqaoa"
-version = "0.0.1"
+version = "0.0.1beta"
 authors = [
   { name="Entropica Labs", email="openqaoa@entropicalabs.com" },
 ]
