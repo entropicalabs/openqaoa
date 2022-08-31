@@ -1,12 +1,10 @@
-name: Nightly Upload to Test PyPI
+name: Upload Release Package to PyPITest
 
 on:
-  push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs: {}
 
 jobs:
   deploy:
@@ -15,6 +13,8 @@ jobs:
     steps:
     - name: Check out opeqaoa
       uses: actions/checkout@v3
+      with:
+        ref: ${{ github.ref }}
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -28,5 +28,5 @@ jobs:
         TWINE_USERNAME: ${{ secrets.TESTPYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TESTPYPI_PASSWORD }}
       run: |
-        python -m build
+        python setup.py sdist
         python -m twine upload --repository testpypi dist/*
