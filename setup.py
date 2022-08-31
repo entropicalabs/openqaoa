@@ -6,6 +6,9 @@ current_path = getcwd()
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("openqaoa/_version.py") as f:
+    version = f.readlines()[-1].split()[-1].strip("\"'")
+
 requirements = [
     "sympy>=1.10.1",
     "numpy>=1.22.3",
@@ -34,12 +37,13 @@ requirements_test = [
 
 setup(
     name="openqaoa",
-    version="0.0.1",
+    version= version,
     author="Entropica Labs",
-    packages=find_packages(),
+    packages=find_packages(where="."),
     url="https://github.com/entropicalabs/openqaoa",
-    description="A python SDK for Quantum Optimisation",
+    install_requires= requirements,
     license="Apache 2.0",
+    description= "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators",
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
@@ -48,7 +52,6 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent",
     ],
-    install_requires=requirements,
     keywords="quantum optimisation SDK",
     extras_require = {
         "docs":requirements_docs,
