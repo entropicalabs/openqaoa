@@ -1,8 +1,9 @@
 name: Nightly Upload to Test PyPI
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  push:
+    branches:
+    - main
 
 jobs:
   deploy:
@@ -17,13 +18,12 @@ jobs:
         python-version: 3.8
     - name: Install Python dependencies
       run: |
-        python -m pip install --upgrade pip
-        make install requirements
+        python -m pip install --upgrade pip build twine
         pip install setuptools wheel twine
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.TESTPYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TESTPYPI_PASSWORD }}
       run: |
-        python setup.py sdist bdist_wheel
-        twine upload --repository testpypi dist/*
+        python -m build
+        python -m twine upload --repository testpypi dist/*
