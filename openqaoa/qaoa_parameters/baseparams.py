@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from __future__ import annotations
+
 from abc import ABC
 from typing import List, Union, Tuple, Any, Callable, Iterable, Type
 import numpy as np
@@ -19,6 +21,7 @@ import numpy as np
 from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
 
+from .gatemap import GateMap
 
 
 def _is_iterable_empty(in_iterable):
@@ -111,6 +114,139 @@ class VQACircuitParams(ABC):
     def __init__(self,
                  algorithm: str):
         self.algorithm = algorithm
+
+        
+class AACircuitParams(VQACircuitParams):
+    
+    def __init__(self, 
+                 cost_block: Hamiltonian, 
+                 mixer_block: Union[List[RotationGateMap], Hamiltonian], 
+                 p: int,
+                 mixer_coeffs: List[float] = []):
+        
+        """
+        Parameters
+        ----------
+        
+        mixer_coeffs: List[float]
+            The order of the coefficients should follow the order of the GateMaps provided in the relevant gate blocks.
+        """
+        
+        super().__init__(algorithm = "QAOA")
+        
+        self.p = p
+        
+        self.qureg = cost_block.qureg
+        self.cost_block_coeffs = cost_block.coeffs
+        
+        try:
+            self.mixer_block_coeffs = mixer_block.coeffs
+        except AttributeError:
+            self.mixer_block_coeffs = mixer_coeffs
+        
+        # Needed in the BaseBackend to compute exact_solution, cost_funtion method
+        # and bitstring_energy
+        self.cost_hamiltonian = cost_block
+        self.cost_block = cost_block
+        self.mixer_block = mixer_block
+        
+        (self.cost_single_qubit_coeffs, self.cost_pair_qubit_coeffs, self.cost_qubits_singles, self.cost_qubits_pairs) = self._assign_coefficients(self.cost_block[0], self.cost_block_coeffs)
+        
+        (self.mixer_single_qubit_coeffs, self.mixer_pair_qubit_coeffs, self.mixer_qubits_singles, self.mixer_qubits_pairs) = self._assign_coefficients(self.mixer_block[0], self.mixer_block_coeffs)
+            
+    def _assign_coefficients(self, 
+                             input_block: List[RotationGateMap], 
+                             input_coeffs: List[float]) -> None:
+        
+        """
+        Splits the coefficients and gatemaps into qubit singles and qubit pairs.
+        """
+        
+        single_qubit_coeffs = []
+        pair_qubit_coeffs = []
+        qubit_singles = []
+        qubit_pairs = []
+        
+        if len(input_block) != len(input_coeffs):
+            
+            raise ValueError('The number of terms/gatemaps must match the number of coefficients provided.')
+
+        for each_gatemap, each_coeff in zip(input_block, input_coeffs):
+
+            if each_gatemap.pauli_label[0] == '1q':
+                single_qubit_coeffs.append(each_coeff)
+                # Giving a string name to each gatemap (?)
+                qubit_singles.append(type(each_gatemap).__name__)
+            elif each_gatemap.pauli_label[0] == '2q':
+                pair_qubit_coeffs.append(each_coeff)
+                qubit_pairs.append(type(each_gatemap).__name__)
+
+        return (single_qubit_coeffs, pair_qubit_coeffs, qubit_singles, qubit_pairs)
+            
+    @property
+    def cost_block(self):
+        
+        return self._cost_block
+    
+    @cost_block.setter
+    def cost_block(self, input_object: Hamiltonian) -> None:
+
+        self._cost_block = HamiltonianMapper.repeat_gate_maps(input_object, 'cost', self.p)
+    
+    @property
+    def mixer_block(self):
+        
+        return self._mixer_block
+    
+    @mixer_block.setter
+    def mixer_block(self, input_object: Union[List[RotationGateMap], Hamiltonian]) -> None:
+        
+        if type(input_object) == Hamiltonian:
+            
+            self._mixer_block = HamiltonianMapper.repeat_gate_maps(input_object, 'mixer', self.p)
+
+        else:
+            
+            self._mixer_block = HamiltonianMapper.repeat_gate_maps_from_gate_map_list(
+                input_object, 'mixer', self.p)
+        
+    def __repr__(self):
+        
+        string = "Circuit Parameters:\n"
+        string += "\tp: " + str(self.p) + "\n"
+        string += "\tregister: " + str(self.qureg) + "\n" + "\n"
+
+        string += "Cost Hamiltonian:\n"
+        string += "\tcost_qubits_singles: " + \
+            str(self.cost_qubits_singles) + "\n"
+        string += "\tcost_single_qubit_coeffs: " + \
+            str(self.cost_single_qubit_coeffs) + "\n"
+        string += "\tcost_qubits_pairs: " + \
+            str(self.cost_qubits_pairs) + "\n"
+        string += "\tcost_pair_qubit_coeffs: " + \
+            str(self.cost_pair_qubit_coeffs) + "\n" + "\n"
+
+        string += "Mixer Hamiltonian:\n"
+        string += "\tmixer_qubits_singles: " + \
+            str(self.mixer_qubits_singles) + "\n"
+        string += "\tmixer_single_qubit_coeffs: " + \
+            str(self.mixer_single_qubit_coeffs) + "\n"
+        string += "\tmixer_qubits_pairs: " + \
+            str(self.mixer_qubits_pairs) + "\n"
+        string += "\tmixer_pair_qubit_coeffs: " + \
+            str(self.mixer_pair_qubit_coeffs) + "\n"
+
+        return string
+        
+    @property
+    def abstract_circuit(self) -> List[RotationGateMap]:
+        
+        _abstract_circuit = []
+        for each_p in range(self.p):
+            _abstract_circuit.extend(self.cost_block[each_p])
+            _abstract_circuit.extend(self.mixer_block[each_p])
+
+        return _abstract_circuit
 
 
 class QAOACircuitParams(VQACircuitParams):
@@ -220,10 +356,17 @@ class QAOAVariationalBaseParams(ABC):
 
         self.qaoa_circuit_params = qaoa_circuit_params
         self.p = self.qaoa_circuit_params.p
-        self.cost_1q_coeffs = qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs
-        self.cost_2q_coeffs = qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs
-        self.mixer_1q_coeffs = qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs
-        self.mixer_2q_coeffs = qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs
+        
+        try:
+            self.cost_1q_coeffs = qaoa_circuit_params.cost_single_qubit_coeffs
+            self.cost_2q_coeffs = qaoa_circuit_params.cost_pair_qubit_coeffs
+            self.mixer_1q_coeffs = qaoa_circuit_params.mixer_single_qubit_coeffs
+            self.mixer_2q_coeffs = qaoa_circuit_params.mixer_pair_qubit_coeffs
+        except AttributeError:
+            self.cost_1q_coeffs = qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs
+            self.cost_2q_coeffs = qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs
+            self.mixer_1q_coeffs = qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs
+            self.mixer_2q_coeffs = qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs
 
     def __len__(self):
         """

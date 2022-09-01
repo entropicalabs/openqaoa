@@ -17,6 +17,10 @@ from .operators import Hamiltonian
 from typing import List
 
 
+# Plausible Class Names
+# IntermediateMapper
+# Mapper
+
 class HamiltonianMapper(object):
 
     def get_gate_maps(hamil_obj: Hamiltonian, input_label: List = []) -> List[RotationGateMap]:
@@ -57,4 +61,20 @@ class HamiltonianMapper(object):
             output_gate_list.append(HamiltonianMapper.get_gate_maps(
                 hamil_obj, [tag.lower(), each_repetition]))
 
+        return output_gate_list
+    
+    def remap_gate_map_labels(gatemap_list: List[RotationGateMap], input_label: List = []) -> List[RotationGateMap]:
+        
+        assert type(input_label) is list, 'input_label must be of type list'
+
+        return RotationGateMapFactory.remap_gate_map_labels(gatemap_list, input_label)
+    
+    def repeat_gate_maps_from_gate_map_list(gatemap_list: List[RotationGateMap], tag: str, n_repetitions: int) -> List[List[RotationGateMap]]:
+        
+        output_gate_list = []
+        
+        for each_repetition in range(n_repetitions):
+            output_gate_list.append(HamiltonianMapper.remap_gate_map_labels(
+                gatemap_list, [tag.lower(), each_repetition]))
+            
         return output_gate_list
