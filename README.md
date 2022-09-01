@@ -18,9 +18,17 @@ A multi-backend python library for quantum optimization using QAOA on Quantum co
 
 OpenQAOA is currently in OpenBeta. 
 
-Please, consider [joining our discord](https://discord.gg/ana76wkKBd) if you want to be part of our community and take part of the OpenQAOA's development. 
+Please, consider [joining our discord](https://discord.gg/ana76wkKBd) if you want to be part of our community and participate in the OpenQAOA's development. 
 
 ## Installation instructions
+
+You can install the latest version of OpenQAOA directly from PyPi. First, create a virtual environment with python3.8+ and then simply pip install openqaoa with the following command
+
+```bash
+pip install openqaoa
+```
+
+Alternatively, you can install manually directly from the GitHub repository by
 
 1. Clone the git repository:
 
@@ -42,7 +50,7 @@ Should you face any issue during the installation, please drop us an email at op
 
 The documentation for OpenQAOA can be found [here](https://el-openqaoa.readthedocs.io/en/latest/).
 
-We also provide a set of tutorials to get you started. Among the many, perhaps you can gest started with the following ones:
+We also provide a set of tutorials to get you started. Among the many, perhaps you can get started with the following ones:
 
 - [Run your first OpenQAOA workflow](https://el-openqaoa.readthedocs.io/en/latest/notebooks/1_workflows_example.html)
 - [How about trying some RQAOA for a change?](https://el-openqaoa.readthedocs.io/en/latest/notebooks/9_RQAOA_example.html)
@@ -71,10 +79,10 @@ Currently, the available devices are:
 
 ## Running the tests
 
-To run the test just type `pytest tests/.` from the project's root folder. Bear in mind that `test_pyquil_qvm.py` requires an active `qvm` (see righetti's documentation [here](https://pyquil-docs.rigetti.com/en/v3.1.0/qvm.html)), and `test_qpu_qiskit.py` and `test_qpu_auth.py` require a valid IBMQ token in the file `tests/credentials.json`
+To run the test, first, make sure to have installed all the optional testing dependencies by running `pip install .[tests]` (note, the braket must to be escaped if you are using the popular zsh shell), and then just type `pytest tests/.` from the project's root folder. Bear in mind that `test_pyquil_qvm.py` requires an active `qvm` (see Rigetti's documentation [here](https://pyquil-docs.rigetti.com/en/v3.1.0/qvm.html)), and `test_qpu_qiskit.py` and `test_qpu_auth.py` require a valid IBMQ token in the file `tests/credentials.json`.
 
 ## Contributing and feedback
 
 If you find any bugs or errors, have feature requests, or code you would like to contribute, feel free to open an issue or send us a pull request on GitHub.
 
-We are always interested to hear about projects built with EntropicaQAOA. If you have an application you’d like to tell us about, drop us an email at openqaoa@entropicalabs.com.
+We are always interested to hear about projects built with EntropicaQAOA. If you have an application you'd like to tell us about, drop us an email at openqaoa@entropicalabs.com.
