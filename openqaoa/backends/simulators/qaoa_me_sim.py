@@ -74,7 +74,7 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
 
     target_basis: `list`
         The basis into which the circuit is to be decomposed, representing the native basis of a certain hardware platform, defaults to 
-        ['id', 'x', 'sx', 'rz', 'cx'], the native basis of IBM's superconducting circuits. This is currently the only supported basis.
+        ['id', 'x', 'sx', 'rz', 'cx'], the native basis of IBM's superconducting circuits.
 
     allowed_jump_qubits: `list` 
         The indices of the qubits on which jumps are allowed to occur, None means there are no restrictions
@@ -261,6 +261,16 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         sx_type = "<class 'qiskit.circuit.library.standard_gates.sx.SXGate'>"
         cx_type = "<class 'qiskit.circuit.library.standard_gates.x.CXGate'>"
         x_type = "<class 'qiskit.circuit.library.standard_gates.x.XGate'>"
+
+        zz_type = "<class 'qiskit.circuit.library.standard_gates.rzz.RZZGate'>"
+        cp_type = "<class 'qiskit.circuit.library.standard_gates.p.CPhaseGate'>"
+        z_type = "<class 'qiskit.circuit.library.standard_gates.z.ZGate'>"
+        y_type = "<class 'qiskit.circuit.library.standard_gates.y.YGate'>"
+        h_type = "<class 'qiskit.circuit.library.standard_gates.h.HGate'>"
+        t_type = "<class 'qiskit.circuit.library.standard_gates.t.TGate'>"
+        s_type = "<class 'qiskit.circuit.library.standard_gates.s.SGate'>"
+        rx_type = "<class 'qiskit.circuit.library.standard_gates.rx.RXGate'>"
+        ry_type = "<class 'qiskit.circuit.library.standard_gates.ry.RYGate'>"
                 
         circuit_list = self.get_circuit_list(params)
         t_gate_list = self.times[:2]
@@ -272,7 +282,20 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         cx_c_h = Qobj(np.array([[0, 0], [0, 1]]))
         x_h = Qobj(np.pi*0.5*np.array([[1, -1], [-1, 1]]))
         id_h = qeye(2)
+
+        #check hamiltonians
+
+        zz_1_h = Qobj(0.5*np.array([[1, 0], [0, -1]]))
+        zz_2_h = Qobj(np.array([[1, 0], [0, -1]]))
+        cp_1_h = Qobj(np.array([[0, 0], [0, 1]]))
+        cp_2_h = Qobj(np.array([[0, 0], [0, 1]]))
+        z_h = Qobj(np.array([[0, 0], [0, 1j*3.1416]]))
+        y_h = Qobj(np.array([[1j*np.pi/2, -np.pi/2], [np.pi/2, 1j*np.pi/2]]))
+        h_h = Qobj(np.array([[0.4601,-1.1107],[-1.1107,2.6815]]))
+        t_h = Qobj(np.array([[0, 0], [0, 1j*np.pi/4]]))
+        s_h = Qobj(np.array([[0, 0], [0, 1j*np.pi/2]]))
         
+        #check prefactors
         def get_gate(gate_type):
             if gate_type==rz_type:
                 return rz_h*float(gate[0].params[0])
@@ -282,12 +305,33 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
                 return x_h
             elif gate_type==cx_type:
                 return [cx_t_h, cx_c_h]
+            elif gate_type==zz_type:
+                return [zz_1_h*float(gate[0].params[0]), zz_2_h]
+            elif gate_type==cp_type:
+                theta = float(gate[0].params[0])
+                return [cp_1_h, cp_2_h*theta*(-1)]
+            elif gate_type==z_type:
+                return z_h*1j
+            elif gate_type==y_type:
+                return y_h*1j
+            elif gate_type==h_type:
+                return h_h*(-1)
+            elif gate_type==t_type:
+                return t_h*1j
+            elif gate_type==s_type:
+                return s_h*1j
+            elif gate_type==rx_type:
+                theta = float(gate[0].params[0])
+                return Qobj(np.array([[-(np.log(np.cos(theta/2) - np.sin(theta/2)*1j)*((np.cos(theta/2)*1j)/np.sin(theta/2) - ((np.cos(theta/2) - np.sin(theta/2)*1j)*1j)/np.sin(theta/2)))/2 + (np.log(np.cos(theta/2) + np.sin(theta/2)*1j)*((np.cos(theta/2)*1j)/np.sin(theta/2) - ((np.cos(theta/2) + np.sin(theta/2)*1j)*1j)/np.sin(theta/2)))/2, - (np.log(np.cos(theta/2) - np.sin(theta/2)*1j)*((np.cos(theta/2)*1j)/np.sin(theta/2) - ((np.cos(theta/2) - np.sin(theta/2)*1j)*1j)/np.sin(theta/2)))/2 - (np.log(np.cos(theta/2) + np.sin(theta/2)*1j)*((np.cos(theta/2)*1j)/np.sin(theta/2) - ((np.cos(theta/2) + np.sin(theta/2)*1j)*1j)/np.sin(theta/2)))/2],[np.log(np.cos(theta/2) - np.sin(theta/2)*1j)/2 - np.log(np.cos(theta/2) + np.sin(theta/2)*1j)/2, np.log(np.cos(theta/2) - np.sin(theta/2)*1j)/2 + np.log(np.cos(theta/2) + np.sin(theta/2)*1j)/2]]))*1j
+            elif gate_type==ry_type:
+                theta = float(gate[0].params[0])
+                return Qobj(np.array([[-(np.log(np.cos(theta/2) - np.sin(theta/2)*1j)*(np.cos(theta/2)/np.sin(theta/2) - (np.cos(theta/2) - np.sin(theta/2)*1j)/np.sin(theta/2))*1j)/2 + (np.log(np.cos(theta/2) + np.sin(theta/2)*1j)*(np.cos(theta/2)/np.sin(theta/2) - (np.cos(theta/2) + np.sin(theta/2)*1j)/np.sin(theta/2))*1j)/2, - (np.log(np.cos(theta/2) - np.sin(theta/2)*1j)*(np.cos(theta/2)/np.sin(theta/2) - (np.cos(theta/2) - np.sin(theta/2)*1j)/np.sin(theta/2)))/2 - (np.log(np.cos(theta/2) + np.sin(theta/2)*1j)*(np.cos(theta/2)/np.sin(theta/2) - (np.cos(theta/2) + np.sin(theta/2)*1j)/np.sin(theta/2)))/2],[(np.log(np.cos(theta/2) - np.sin(theta/2)*1j)*1j)/2 - (np.log(np.cos(theta/2) + np.sin(theta/2)*1j)*1j)/2, np.log(np.cos(theta/2) - np.sin(theta/2)*1j)/2 + np.log(np.cos(theta/2) + np.sin(theta/2)*1j)/2]]))*1j
             else:
                 raise ValueError(f'Gate type is {gate_type}')
         
         def get_tensorprod(gate_type, position):
             matrices = [id_h]*width
-            if gate_type==cx_type:
+            if gate_type==cx_type or gate_type==zz_type or gate_type==cp_type:
                 matrices[position[0]] = get_gate(gate_type)[0]  
                 matrices[position[1]] = get_gate(gate_type)[1] 
             else:
@@ -306,30 +350,25 @@ class QAOAMEBackendSimulator(QAOABaseBackend, QAOABaseBackendParametric):
         time_list = list()
         gate_list = list()
         
+        #include new types
+        
         for layer in circuit_list:
             layer_dict = dict()
             current_hamiltonian = 0
             two_qubit_gate = 0
             for g,gate in enumerate(layer):
                 gate_type=str(type(gate[0]))
-                if gate_type==cx_type:
+                if gate_type==cx_type or gate_type==zz_type or gate_type==cp_type:
                     two_qubit_gate = 1
                     control_qubit=gate[1][0].index
                     target_qubit=gate[1][1].index
-                    layer_dict[control_qubit] = 'cx_c'
-                    layer_dict[target_qubit] = 'cx_t'
+                    layer_dict[control_qubit] = gate_type.split(".")[-1].replace("Gate'>", '') + '_c'
+                    layer_dict[target_qubit] = gate_type.split(".")[-1].replace("Gate'>", '') + '_t'
                     current_hamiltonian += get_tensorprod(gate_type, [target_qubit, control_qubit])
-                elif gate_type==rz_type or gate_type==sx_type or gate_type==x_type:
-                    target_qubit=gate[1][0].index
-                    if gate_type==x_type:
-                        layer_dict[target_qubit] = 'x'
-                    elif gate_type==sx_type:
-                        layer_dict[target_qubit] = 'sx'
-                    elif gate_type==rz_type:
-                        layer_dict[target_qubit] = 'rz'
-                    current_hamiltonian += get_tensorprod(gate_type, target_qubit)
                 else:
-                    raise ValueError(f'Gate type is {gate_type}')
+                    target_qubit=gate[1][0].index
+                    layer_dict[target_qubit] = gate_type.split(".")[-1].replace("Gate'>", '')
+                    current_hamiltonian += get_tensorprod(gate_type, target_qubit)
             gate_list.append(layer_dict)
             if two_qubit_gate==0:
                 time_list.append(t_gate_list[0])
