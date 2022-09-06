@@ -1,7 +1,7 @@
 Welcome to OpenQAOA's documentation!
 ====================================
 
-OpenQAOA is an advanced multi-backend SDK for quantum optimization designed to ease research efforts within the VQA enviorement while ensuring reliability and reproducibility of results
+OpenQAOA is an advanced multi-backend SDK for quantum optimization designed to ease research efforts within the VQA environment while ensuring the reliability and reproducibility of results.
 
 
 Features
@@ -9,41 +9,57 @@ Features
 
 Key features of OpenQAOA:
 
-* Simple yet customisable workflows for QAOA and RQAOA deployable on
+* Simple yet customizable workflows for QAOA and RQAOA deployable on
    * IBMQ devices
-   * Rigettis' Quantum Clound Services
+   * Rigettis' Quantum Cloud Services
    * AWS's Braket
    * Local simulators (including Rigettis' QVM, IBM's Qiskit, and Entropica Labs' vectorized simulator)
-* Multiple parametriation strategies:
+* Multiple parametrization strategies:
    * Standard, Fourier, and Annealing
-   * Each class can further controlled by selecting standard or extended parameter configurations
+   * Each class can be further controlled by selecting standard or extended parameter configurations
 * Multiple Initliaisation strategies:
    * Linear ramp, random, and custom
 * Multiple Mixer Hamiltonians:
    * `x` and `xy`
-* The optimisation loop includes:
+* The optimization loop includes:
    * SciPy Optimisers
-   * Custom gradient scypy optimisers
+   * Custom gradient SciPy optimizers
 
 Getting started
 ================
 
 Installing
 ------------
-Clone the git repository:
 
-.. code-block:: bash
-   
-   git clone git@github.com:entropicalabs/openqaoa.git
+You can install the latest version of OpenQAOA directly from PyPi. First, create a virtual environment with *python3.8+* and then simply pip install openqaoa with the following command
 
-Creating a python `virtual enviorement` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). 
-Make sure to use **python 3.8** for the environment.
+```bash
+pip install openqaoa
+```
 
-After cloning the repository `cd openqaoa` and pip install in edit mode:
+Alternatively, you can install manually directly from the GitHub repository by
 
-.. code-block:: bash
+1. Clone the git repository:
 
-   pip install -e .
+```bash
+git clone git@github.com:entropicalabs/openqaoa.git
+```
+
+2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** for the environment.
+
+3. After cloning the repository `cd openqaoa` and pip install the package. Use the following command for a vanilla install with the `scipy` optimizers:
+
+```bash
+pip install .
+```
+If you are interested in running the tests or the docs you can do so my using the installment modifiers `[docs]` and `[tests]`. For example,
+
+```bash
+pip install .[tests]
+```
+
+Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
+
 
 
 Your first QAOA workflow
@@ -58,7 +74,7 @@ First, create a problem instance. For example, an instance of vertex cover:
    import networkx
    g = networkx.circulant_graph(6, [1])
    vc = MinimumVertexCover(g, field =1.0, penalty=10)
-   pubo_problem = vc.get_pubo_problem()
+   qubo_problem = vc.get_qubo_problem()
 
 
 Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
@@ -69,7 +85,7 @@ Once the binary problem is defined, the simplest workflow can be defined as
    
    from openqaoa.workflows.optimizer import QAOA  
    q = QAOA()
-   q.compile(pubo_problem)
+   q.compile(qubo_problem)
    q.optimize()
 
 
@@ -87,13 +103,19 @@ Then, the QAOA parameters can be set as follow
 
 .. code-block:: python
 
-   q_custom = QAOA()
-   q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
-   q_custom.set_device(device)
-   q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
-   q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
-   q_custom.compile(pubo_problem)
-   q_custom.optimize()
+   # Create the device 
+   qiskit_device = create_device(location='local', name='qiskit.statevector_simulator')
+   q.set_device(qiskit_device)
+
+   # circuit properties
+   q.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='xy')
+
+   # backend properties (already set by default)
+   q.set_backend_properties(prepend_state=None, append_state=None)
+
+   # classical optimizer properties
+   q.set_classical_optimizer(method='nelder-mead', maxiter=10,
+                           optimization_progress=True, cost_progress=True, parameter_log=True)
 
 Currently, the available devices are:
 
@@ -118,9 +140,9 @@ Your first RQAOA workflow
 .. code-block:: python
 
    from openqaoa.workflows.optimizer import RQAOA
-   r = RQAOA(rqaoa_type='adaptive')
+   r = RQAOA(qaoa = QAOA(), rqaoa_type='adaptive')
    r.set_rqaoa_parameters(n_max=5, n_cutoff = 5)
-   r.compile(pubo_problem)
+   r.compile(qubo_problem)
    r.optimize()
 
 rqaoa_type can take two values which select elimination strategies. The user can choose between `adaptive` or `custom`.
