@@ -15,7 +15,7 @@
 from .gatemap import RotationGateMap, RotationGateMapFactory
 from .operators import Hamiltonian
 from typing import List
-
+from copy import deepcopy
 
 # Plausible Class Names
 # IntermediateMapper
@@ -74,7 +74,7 @@ class HamiltonianMapper(object):
         output_gate_list = []
         
         for each_repetition in range(n_repetitions):
-            output_gate_list.append(HamiltonianMapper.remap_gate_map_labels(
-                gatemap_list, [tag.lower(), each_repetition]))
+            output_gate_list.append(deepcopy(HamiltonianMapper.remap_gate_map_labels(
+                gatemap_list, [tag.lower(), each_repetition])))
             
         return output_gate_list
