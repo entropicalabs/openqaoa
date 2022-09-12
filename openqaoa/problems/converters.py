@@ -19,7 +19,8 @@ from typing import Union
 
 
 class FromDocplex2IsingModel:
-    def __init__(self, model, multipliers: Union[float, list] = None):
+    def __init__(self, model, multipliers: Union[float, list] = None, unbalanced_const: bool = False,
+                 strength_ine:list = [0.1, 0.5]):
 
         """
         Creates an instance to translate Docplex models to its Ising Model representation
@@ -27,9 +28,20 @@ class FromDocplex2IsingModel:
         Parameters
         ----------
         model : Docplex model
-            It is an object that has the mathematical expressions (Cost function,
-            Inequality and Equality constraints) of an optimization problem in
-            binary representation.
+            It is an object that has the mathematical expressions (cost function and
+            inequality and Equality constraints) of an optimization problem in
+            a binary representation.
+        multipliters: [float, integer, list]
+            The strength of the penalties of the cost function
+        heuristic: bool
+            If the method for the inequality constraints is used. This method 
+            implement a novel approach that do not required slack variables.
+        strength_ine: List[float, float]
+            For the unbalanced constrained method the terms of the penalty
+            For the penalty => \lambda_2 * \zeta**2 - \lambda_1 * \zeta  || strength_ine = [a, b]
+            Usually lambda_2 < lambda_1. Please refere to the paper:
+                Unbalanced penalizations: A novel approach of inequality constraints
+                codification in quantum optimization problems.
 
         """
         # assign the docplex Model
@@ -41,6 +53,11 @@ class FromDocplex2IsingModel:
             self.idx_terms[x] = x.index
             if x.vartype.short_name != "binary":
                 TypeError(f"Variable {x.vartype.short_name} is not allowed.")
+        # if unbalanced constraint  approach
+        self.unbalanced = unbalanced_const
+        self.strength_ine = strength_ine
+        # get doclex qubo and ising model
+        self.qubo_docplex, self.ising_model = self.get_models(multipliers)
         # get doclex qubo and ising model
         self.qubo_docplex, self.ising_model = self.get_models(multipliers)
 
@@ -201,6 +218,36 @@ class FromDocplex2IsingModel:
             )  # restrict the last term to fit the upper bound
 
         return new_exp
+    
+    def inequality_to_unbalanced_penalty(self, constraint):
+        """
+        Inequality constraint based on an unbalanced penality function described in
+        detail in the paper:
+            "Unbalanced penalizations: A novel approach of inequality constraints
+            codification in quantum optimization problems""
+
+        Parameters
+        ----------
+        constraint : DOcplex inequality constraint 
+            Inequality constraints in a DOcplex format.
+
+        Returns
+        -------
+        penalty : DOcplex term
+            Quadratic programing penalization term.
+
+        """
+        if constraint.sense_string == "LE":  # Less or equal inequality constraint
+            new_exp = constraint.get_right_expr() + -1 * constraint.get_left_expr()
+        elif constraint.sense_string == "GE":  # Great or equal inequality constriant
+            new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
+        else:
+            AttributeError(
+                f"It is not possible to implement constraint {constraint.sense_string}."
+            )
+        strength = self.strength_ine
+        penalty = strength[0] * new_exp ** 2 - strength[1] * new_exp
+        return penalty
 
     def multipliers_generators(self):
         """
@@ -264,10 +311,13 @@ class FromDocplex2IsingModel:
                 "GE",
             ]:  # Inequality constraint added as a penalty with additional slack variables.
                 constraint.name = f"C{cn}"
-                ineq2eq = self.inequality_to_equality(constraint)
-                penalty = self.equality_to_penalty(ineq2eq, multipliers[cn])
+                if self.unbalanced:
+                    penalty = multipliers[cn] * self.inequality_to_unbalanced_penalty(constraint)
+                else:
+                    ineq2eq = self.inequality_to_equality(constraint)
+                    penalty = self.equality_to_penalty(ineq2eq, multipliers[cn])
             else:
-                print("Not an accepted constraint!")
+                TypeError("This is not a valid constraint.")
 
             self.linear_expr(penalty)
             self.quadratic_expr(penalty)
