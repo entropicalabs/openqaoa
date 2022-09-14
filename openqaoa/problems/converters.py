@@ -58,8 +58,7 @@ class FromDocplex2IsingModel:
         self.strength_ine = strength_ine
         # get doclex qubo and ising model
         self.qubo_docplex, self.ising_model = self.get_models(multipliers)
-        # get doclex qubo and ising model
-        self.qubo_docplex, self.ising_model = self.get_models(multipliers)
+
 
     def linear_expr(self, expr):
         """
