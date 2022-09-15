@@ -22,16 +22,20 @@ from qiskit.circuit.library import (RXGate, RYGate, RZGate, CXGate, CZGate,
 from pyquil import Program as quilProgram
 from pyquil import gates as quilgates
 from pyquil.quilatom import QubitPlaceholder as quilQubitPlaceholder
+
+from pytket.circuit import OpType, Circuit as tketCircuit
+
 from .rotationangle import RotationAngle
 
 
 class Gate(ABC):
 
-    def __init__(self, ibm_gate, pyquil_gate, braket_gate, vector_gate):
+    def __init__(self, ibm_gate, pyquil_gate, braket_gate, vector_gate, pytket_gate):
         self.ibm_gate = ibm_gate
         self.pyquil_gate = pyquil_gate
         self.braket_gate = braket_gate
         self.vector_gate = vector_gate
+        self.pytket_gate = pytket_gate
     
     @abstractmethod
     def apply_ibm_gate(self,circuit):
@@ -47,6 +51,10 @@ class Gate(ABC):
         
     @abstractmethod
     def apply_vector_gate(self,circuit): 
+        pass
+
+    @abstractmethod
+    def apply_pytket_gate(self,circuit):
         pass
     
     
@@ -81,6 +89,16 @@ class OneQubitGate(Gate):
     def apply_vector_gate(self, qubit_idx, rotation_angle_obj, input_obj):
         return NotImplementedError('Implement this method for each supporting gate class')
             
+    def apply_pytket_gate(self,
+                          qubit_idx: int,
+                          rotation_angle_obj: RotationAngle,
+                          circuit: tketCircuit):
+
+        pytket_angle = rotation_angle_obj.rotation_angle
+        if self.pytket_gate is not None:
+            circuit.add_gate(self.pytket_gate, pytket_angle, [qubit_idx])
+        else:
+            raise NotImplementedError()
         
 class RY(OneQubitGate):
 
@@ -90,9 +108,11 @@ class RY(OneQubitGate):
         pyquil_gate = quilgates.RY
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.Ry
 
         super().__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
+                         braket_gate=braket_gate, vector_gate=vector_gate,
+                         pytket_gate=pytket_gate)
             
     def apply_vector_gate(self, qubit_idx, rotation_angle_obj, input_obj):
         input_obj.apply_ry(qubit_idx, rotation_angle_obj.rotation_angle)
@@ -106,10 +126,12 @@ class RX(OneQubitGate):
         pyquil_gate = quilgates.RX
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.Rx
 
         super().__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
-        
+                         braket_gate=braket_gate, vector_gate=vector_gate,
+                         pytket_gate=pytket_gate)
+
     def apply_vector_gate(self, qubit_idx, rotation_angle_obj, input_obj):
         input_obj.apply_rx(qubit_idx, rotation_angle_obj.rotation_angle)
 
@@ -123,10 +145,12 @@ class RZ(OneQubitGate):
         pyquil_gate = quilgates.RZ
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.Rz
 
         super().__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
-        
+                         braket_gate=braket_gate, vector_gate=vector_gate,
+                         pytket_gate=pytket_gate)
+
     def apply_vector_gate(self, qubit_idx, rotation_angle_obj, input_obj):
         input_obj.apply_rz(qubit_idx, rotation_angle_obj.rotation_angle)
 
@@ -159,6 +183,14 @@ class TwoQubitGate(Gate):
     def apply_vector_gate(self,qubit_indices,input_obj):
         return NotImplementedError('Implement this method for each supporting gate class')
 
+    def apply_pytket_gate(self,
+                          qubit_indices: List[int],
+                          circuit: tketCircuit):
+        if self.pytket_gate is not None:
+            circuit.add_gate(self.pytket_gate, qubit_indices)
+        else:
+            raise NotImplementedError()
+
 
 class CZ(TwoQubitGate):
 
@@ -168,10 +200,12 @@ class CZ(TwoQubitGate):
         pyquil_gate = quilgates.CZ
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.CZ
 
         super().__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
-        
+                         braket_gate=braket_gate, vector_gate=vector_gate,
+                         pytket_gate=pytket_gate)
+
     def apply_vector_gate(self):
         
         raise NotImplementedError('This gate is not yet supported')
@@ -185,9 +219,11 @@ class CX(TwoQubitGate):
         pyquil_gate = quilgates.CNOT
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.CX
 
         super().__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
+                         braket_gate=braket_gate, vector_gate=vector_gate,
+                         pytket_gate=pytket_gate)
         self.mode = mode
         
     def _in_XY(self,qubit_indices) -> List[Tuple[Gate, List]]:
@@ -225,7 +261,7 @@ class CX(TwoQubitGate):
     def apply_vector_gate(self, input_obj):
         
         raise NotImplementedError('This gate is not yet supported')
-    
+
 
 class TwoQubitGateWithAngle(TwoQubitGate):
     
@@ -255,6 +291,16 @@ class TwoQubitGateWithAngle(TwoQubitGate):
 
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
         return NotImplementedError('Implement this method for each supporting gate class')
+
+    def apply_pytket_gate(self,
+                          qubit_indices: List[int],
+                          rotation_angle_obj: RotationAngle,
+                          circuit: tketCircuit):
+        pytket_angle = rotation_angle_obj.rotation_angle
+        if self.pytket_gate is not None:
+            circuit.add_gate(self.pytket_gate, pytket_angle, qubit_indices)
+        else:
+            raise NotImplementedError()
          
         
 class RXX(TwoQubitGateWithAngle):
@@ -265,9 +311,11 @@ class RXX(TwoQubitGateWithAngle):
         pyquil_gate = None
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.XXPhase
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                                          braket_gate=braket_gate, vector_gate=vector_gate)
+                                          braket_gate=braket_gate, vector_gate=vector_gate,
+                                          pytket_gate=pytket_gate)
     
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
         input_obj.apply_rxx(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
@@ -281,10 +329,12 @@ class RYY(TwoQubitGateWithAngle):
         pyquil_gate = None
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.YYPhase
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
-        
+                                          braket_gate=braket_gate, vector_gate=vector_gate,
+                                          pytket_gate=pytket_gate)
+    
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
         input_obj.apply_ryy(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
     
@@ -297,9 +347,11 @@ class RZZ(TwoQubitGateWithAngle):
         pyquil_gate = None
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.ZZPhase
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
+                                          braket_gate=braket_gate, vector_gate=vector_gate,
+                                          pytket_gate=pytket_gate)
         
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
         input_obj.apply_rzz(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
@@ -312,9 +364,11 @@ class RXY(TwoQubitGateWithAngle):
         pyquil_gate = None
         braket_gate = None
         vector_gate = None
+        pytket_gate = None
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
+                                          braket_gate=braket_gate, vector_gate=vector_gate,
+                                          pytket_gate=pytket_gate)
         
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
         input_obj.apply_rxy(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
@@ -327,9 +381,11 @@ class RZX(TwoQubitGateWithAngle):
         pyquil_gate = None
         braket_gate = None
         vector_gate = None
+        pytket_gate = None
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
+                                          braket_gate=braket_gate, vector_gate=vector_gate,
+                                          pytket_gate=pytket_gate)
 
     def apply_ibm_gate(self, 
                        qubit_indices: List[int],
@@ -353,9 +409,11 @@ class RYZ(TwoQubitGateWithAngle):
         pyquil_gate = None
         braket_gate = None
         vector_gate = None
+        pytket_gate = None
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
+                                          braket_gate=braket_gate, vector_gate=vector_gate,
+                                          pytket_gate=pytket_gate)
         
     def apply_vector_gate(self, qubit_indices, rotation_angle_obj, input_obj):
         input_obj.apply_ryz(qubit_indices[0], qubit_indices[1], rotation_angle_obj.rotation_angle)
@@ -369,9 +427,11 @@ class CPHASE(TwoQubitGateWithAngle):
         pyquil_gate = quilgates.CPHASE
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.CRz
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
+                                          braket_gate=braket_gate, vector_gate=vector_gate,
+                                          pytket_gate=pytket_gate)
             
     def _vector_gate(self):
         
@@ -386,9 +446,11 @@ class RiSWAP(TwoQubitGateWithAngle):
         pyquil_gate = quilgates.XY
         braket_gate = None
         vector_gate = None
+        pytket_gate = OpType.PhasedISWAP
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
-                         braket_gate=braket_gate, vector_gate=vector_gate)
+                                          braket_gate=braket_gate, vector_gate=vector_gate,
+                                          pytket_gate=pytket_gate)
         
     def _vector_gate(self):
         

@@ -16,9 +16,9 @@ import numpy as np
 
 from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAPyQuilWavefunctionSimulatorBackend,
                         QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
-                        QAOAvectorizedBackendSimulator)
+                        QAOAvectorizedBackendSimulator, QAOAPyTketBackend)
 
-from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit
+from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DevicePyTket
 from ..qaoa_parameters.baseparams import QAOACircuitParams
 from ..basebackend import QuantumCircuitBase, QAOABaseBackend
 
@@ -32,7 +32,8 @@ DEVICE_NAME_TO_OBJECT_MAPPER = {
 
 DEVICE_ACCESS_OBJECT_MAPPER = {
     DeviceQiskit: QAOAQiskitQPUBackend,
-    DevicePyquil: QAOAPyQuilQPUBackend
+    DevicePyquil: QAOAPyQuilQPUBackend,
+    DevicePyTket: QAOAPyTketBackend
 }
 
 

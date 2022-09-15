@@ -17,6 +17,8 @@ from qiskit import IBMQ
 from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
+from typing import Callable
+
 
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
@@ -44,6 +46,20 @@ class DeviceBase(metaclass=abc.ABCMeta):
             providers without exiting the program.)
         """
         pass
+
+class DevicePyTket(DeviceBase):
+    """
+    PyTket backend that acts as a wrapper for backends accessible through 
+    pytket.extensions.
+    """
+    def __init__(self, input_device: DeviceBase):
+
+        self.input_device = input_device
+        self.backend_device = self.input_device.pytket_wrapped_backend
+    
+    def check_connection(self) -> bool:
+        #connection tested before backend initialization
+        return True
 
 class DeviceLocal(DeviceBase):
     """
@@ -170,6 +186,20 @@ class DeviceQiskit(DeviceBase):
             provider: {}'.format(e))
             return False
 
+    @property
+    def pytket_wrapped_backend(self):
+        """
+        Get the Qiskit backend wrapped as a PyTket backend to be used for circuit
+        compilation using the PyTket library.
+        """
+        #need to check connection to provider and backend before wrapping backend
+        self.check_connection()
+
+        from pytket.extensions.qiskit import IBMQBackend
+        tket_qiskit_device = IBMQBackend(backend_name= self.device_name,
+                                         account_provider = self.provider)
+
+        return tket_qiskit_device
 
 class DevicePyquil(DeviceBase):
     """
@@ -257,6 +287,17 @@ class DevicePyquil(DeviceBase):
 
         return True
 
+    @property
+    def pytket_wrapped_backend(self):
+        """
+        Get the Pyquil backend wrapped as a PyTket backend to be used for circuit
+        compilation using the PyTket library.
+        """
+        from pytket.extensions.pyquil import ForestBackend
+        tk_pyquil_device = ForestBackend(self.quantum_computer)
+
+        return tk_pyquil_device
+
 
 def device_class_arg_mapper(device_class:DeviceBase,
                             api_token: str = None,
@@ -318,5 +359,6 @@ def create_device(location: str, name: str, **kwargs):
         device_class = DeviceLocal
     else:
         raise ValueError(f'Invalid device location, Choose from: {location}')
-
-    return device_class(device_name=name, **kwargs)
+    
+    device = device_class(device_name=name, **kwargs)
+    return device
