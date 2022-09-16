@@ -8,6 +8,7 @@ from openqaoa.optimizers.result import Result
 from openqaoa.optimizers.result import most_probable_bitstring
 from openqaoa.utilities import qaoa_probabilities
 from openqaoa.workflows.optimizer import QAOA  
+from openqaoa.devices import create_device
 
 class TestingLoggerClass(unittest.TestCase):
 
@@ -83,6 +84,34 @@ class TestingLoggerClass(unittest.TestCase):
         q.optimize()
 
         q.results.plot_cost()
+
+    def test_plot_probabilities(self):
+
+        # Create the problem
+        g = nx.circulant_graph(6, [1])
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+
+        # first for state-vector based simulator:
+        q_sv = QAOA()
+        q_sv.set_circuit_properties(p=3, init_type='ramp')
+        q_sv.compile(vc)
+
+        q_sv.optimize()
+
+        q_sv.results.plot_probabilities()
+
+        # then for shot based simulator:
+        q_shot = QAOA()
+        q_shot_dev = create_device(location='local',name='qiskit.shot_simulator')
+        q_shot.set_device(q_shot_dev)
+
+        q_shot.compile(vc)
+        q_shot.optimize()
+
+        q_shot.results.plot_probabilities()
+
+
+
 
     def test_get_counts(self):
 
