@@ -143,3 +143,54 @@ class Result():
         ax.set_title('Cost history')
 
         return
+
+    def plot_probabilities(self, figsize = (10,8),label='Probability distribution',color='tab:blue', ax=None):
+
+        """
+        Helper function to plot the probabilities corresponding to each basis states (with prob != 0) obtained from the optimized result
+
+        Parameters
+        ----------
+        figsize: `tuple`
+            The size of the figure to be plotted. Defaults to (10,8).
+        label: `str`
+            The label of the cost line, defaults to 'Probability distribution'.
+        color: `str`
+            The color of the line. Defaults to 'tab:blue'.
+        ax: 'matplotlib.axes._subplots.AxesSubplot'
+            Axis on which to plot the graph. Deafults to None
+        """
+
+        outcome = self.optimized['optimized measurement outcomes']
+
+        # converting to counts dictionary if outcome is statevector
+        if type(outcome) == type(np.array([])):
+            outcome = self.get_counts(outcome)
+            # setting norm to 1 since it might differ slightly for statevectors due to numerical preicision
+            norm = np.float64(1)
+        else: 
+            # needed to be able to divide the tuple by 'norm'
+            norm = np.float64(sum(outcome.values())) 
+
+        # sorting dictionary by increasing binary value (i.e. keys) and unzipping the states and counts
+        outcome_list = sorted(outcome.items())
+        states, counts = zip(*outcome_list)
+
+        # normalizing to obtain probabilities
+        probs = counts/norm
+
+        # formatting labels
+        labels = [r'$\left|{}\right>$'.format(state) for state in states]
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        ax.bar(labels,probs, color=color)
+        ax.set_xlabel('Eigen-State')
+        ax.set_ylabel('Probability')
+        ax.set_title(label)
+        plt.xticks(rotation=70)
+        plt.grid(True, axis='y', linestyle='--')
+        plt.show
+
+        return
