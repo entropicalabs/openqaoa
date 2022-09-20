@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
     - dev
-    workflow_dispatch:
 
 jobs:
   build:
@@ -15,7 +14,7 @@ jobs:
         python: [3.8]  
         forest-sdk-version: [2.23.0]
 
-    # Run on a windows machine
+    # Run on a Windows machine
     runs-on:  windows-latest
 
     steps:
@@ -47,8 +46,8 @@ jobs:
           echo "Installing Rigetti Forest SDK"
           Start-Process -Wait -FilePath "./forest-sdk-${{matrix.forest-sdk-version}}.msi" -ArgumentList "/passive","/log log.txt","/qn","License=YES" -PassThru
           echo "Starting QUILC and QVM"
-          Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\quilc.exe" -PassThru
-          Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\qvm.exe" -PassThru
+          Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\quilc.exe" -ArgumentList "-S" -PassThru
+          Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\qvm.exe" -ArgumentList "-S" -PassThru
 
       # Run all tests and compute coverage reports
       - name: Run tests
