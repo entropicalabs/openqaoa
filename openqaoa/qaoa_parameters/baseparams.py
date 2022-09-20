@@ -116,28 +116,64 @@ class VQACircuitParams(ABC):
         self.algorithm = algorithm
 
         
-class AACircuitParams(VQACircuitParams):
+class QAOACircuitParams(VQACircuitParams):
+
+    """
+    Create the problem attributes consisting of the Hamiltonian, QAOA 'p' value and other specific parameters.
+
+    Parameters
+    ----------    
+    cost_hamiltonian: `Hamiltonian`
+        The cost hamiltonian of the problem the user is trying to solve.
+
+    mixer_block: `Union[List[RotationGateMap], Hamiltonian]`
+        The mixer hamiltonian or a list of initialised RotationGateMap objects that defines the gates to be used within the "mixer part" of the circuit. 
+
+    p: `int`
+        Number of QAOA layers; defaults to 1 if not specified
+        
+    mixer_coeffs: `List[float]`
+        A list containing coefficients for each mixer GateMap. The order of the coefficients should follow the order of the GateMaps provided in the relevant gate block. This input isnt required if the input mixer block is of type Hamiltonian.
+
+    Attributes
+    ----------
+    cost_hamiltonian: `Hamiltonian`
+        
+    qureg: `List[int]`
+    
+    cost_block_coeffs: `List[float]`
+    
+    cost_single_qubit_coeffs: `List[float]`
+    
+    cost_qubits_singles: `List[str]`
+    
+    cost_pair_qubit_coeffs: `List[float]`
+    
+    cost_qubits_pairs: `List[str]`
+    
+    mixer_block_coeffs: `List[float]`
+    
+    Properties
+    ----------
+    cost_block: `List[RotationGateMap]`
+    
+    mixer_block: `List[RotationGateMap]`
+    
+    abstract_circuit: `List[RotationGateMap]`
+    """
     
     def __init__(self, 
-                 cost_block: Hamiltonian, 
+                 cost_hamiltonian: Hamiltonian, 
                  mixer_block: Union[List[RotationGateMap], Hamiltonian], 
                  p: int,
                  mixer_coeffs: List[float] = []):
-        
-        """
-        Parameters
-        ----------
-        
-        mixer_coeffs: List[float]
-            The order of the coefficients should follow the order of the GateMaps provided in the relevant gate blocks.
-        """
         
         super().__init__(algorithm = "QAOA")
         
         self.p = p
         
-        self.qureg = cost_block.qureg
-        self.cost_block_coeffs = cost_block.coeffs
+        self.qureg = cost_hamiltonian.qureg
+        self.cost_block_coeffs = cost_hamiltonian.coeffs
         
         try:
             self.mixer_block_coeffs = mixer_block.coeffs
@@ -146,8 +182,8 @@ class AACircuitParams(VQACircuitParams):
         
         # Needed in the BaseBackend to compute exact_solution, cost_funtion method
         # and bitstring_energy
-        self.cost_hamiltonian = cost_block
-        self.cost_block = cost_block
+        self.cost_hamiltonian = cost_hamiltonian
+        self.cost_block = cost_hamiltonian
         self.mixer_block = mixer_block
         
         (self.cost_single_qubit_coeffs, self.cost_pair_qubit_coeffs, self.cost_qubits_singles, self.cost_qubits_pairs) = self._assign_coefficients(self.cost_block[0], self.cost_block_coeffs)
@@ -212,6 +248,14 @@ class AACircuitParams(VQACircuitParams):
         
     def __repr__(self):
         
+        """Return an overview over the parameters and hyperparameters
+
+        Todo
+        ----
+        Split this into ``__repr__`` and ``__str__`` with a more verbose
+        output in ``__repr__``.
+        """
+        
         string = "Circuit Parameters:\n"
         string += "\tp: " + str(self.p) + "\n"
         string += "\tregister: " + str(self.qureg) + "\n" + "\n"
@@ -249,91 +293,91 @@ class AACircuitParams(VQACircuitParams):
         return _abstract_circuit
 
 
-class QAOACircuitParams(VQACircuitParams):
-    """
-    Create the problem attributes consisting of the Hamiltonian and Hamiltonian
-    squared as dictionaries, QAOA 'p' value and other specific parameters.
+# class QAOACircuitParams(VQACircuitParams):
+#     """
+#     Create the problem attributes consisting of the Hamiltonian and Hamiltonian
+#     squared as dictionaries, QAOA 'p' value and other specific parameters.
 
-    Parameters
-    ----------    
-    cost_hamiltonian: `Hamiltonian` 
+#     Parameters
+#     ----------    
+#     cost_hamiltonian: `Hamiltonian` 
 
-    mixer_hamiltonian: `Hamiltonian`
+#     mixer_hamiltonian: `Hamiltonian`
 
-    p: 
-        Number of QAOA layers; defaults to 1 if not specified
+#     p: 
+#         Number of QAOA layers; defaults to 1 if not specified
 
-    Attributes
-    ----------
-        All the parameters specified above are initialised as attributes in __init__
+#     Attributes
+#     ----------
+#         All the parameters specified above are initialised as attributes in __init__
 
-    Properties
-    ----------
-    hamiltonian: 
-        Returns the problem Hamiltonian as a dictionary
-    hamiltonian_squared: 
-        Returns the problem Hamiltonian Squared as a dictionary
-    """
+#     Properties
+#     ----------
+#     hamiltonian: 
+#         Returns the problem Hamiltonian as a dictionary
+#     hamiltonian_squared: 
+#         Returns the problem Hamiltonian Squared as a dictionary
+#     """
 
-    def __init__(self,
-                 cost_hamiltonian: Hamiltonian,
-                 mixer_hamiltonian: Hamiltonian,
-                 p: int):
+#     def __init__(self,
+#                  cost_hamiltonian: Hamiltonian,
+#                  mixer_hamiltonian: Hamiltonian,
+#                  p: int):
 
-        super().__init__(algorithm='QAOA')
-        self.cost_hamiltonian = cost_hamiltonian
-        self.mixer_hamiltonian = mixer_hamiltonian
-        self.qureg = cost_hamiltonian.qureg
-        self.p = p
+#         super().__init__(algorithm='QAOA')
+#         self.cost_hamiltonian = cost_hamiltonian
+#         self.mixer_hamiltonian = mixer_hamiltonian
+#         self.qureg = cost_hamiltonian.qureg
+#         self.p = p
 
-    def __repr__(self):
-        """Return an overview over the parameters and hyperparameters
+#     def __repr__(self):
+#         """Return an overview over the parameters and hyperparameters
 
-        Todo
-        ----
-        Split this into ``__repr__`` and ``__str__`` with a more verbose
-        output in ``__repr__``.
-        """
-        string = "Circuit Parameters:\n"
-        string += "\tp: " + str(self.p) + "\n"
-        string += "\tregister: " + str(self.qureg) + "\n" + "\n"
+#         Todo
+#         ----
+#         Split this into ``__repr__`` and ``__str__`` with a more verbose
+#         output in ``__repr__``.
+#         """
+#         string = "Circuit Parameters:\n"
+#         string += "\tp: " + str(self.p) + "\n"
+#         string += "\tregister: " + str(self.qureg) + "\n" + "\n"
 
-        string += "Cost Hamiltonian:\n"
-        string += "\tcost_qubits_singles: " + \
-            str(self.cost_hamiltonian.qubits_singles) + "\n"
-        string += "\tcost_single_qubit_coeffs: " + \
-            str(self.cost_hamiltonian.single_qubit_coeffs) + "\n"
-        string += "\tcost_qubits_pairs: " + \
-            str(self.cost_hamiltonian.qubits_pairs) + "\n"
-        string += "\tcost_pair_qubit_coeffs: " + \
-            str(self.cost_hamiltonian.pair_qubit_coeffs) + "\n" + "\n"
+#         string += "Cost Hamiltonian:\n"
+#         string += "\tcost_qubits_singles: " + \
+#             str(self.cost_hamiltonian.qubits_singles) + "\n"
+#         string += "\tcost_single_qubit_coeffs: " + \
+#             str(self.cost_hamiltonian.single_qubit_coeffs) + "\n"
+#         string += "\tcost_qubits_pairs: " + \
+#             str(self.cost_hamiltonian.qubits_pairs) + "\n"
+#         string += "\tcost_pair_qubit_coeffs: " + \
+#             str(self.cost_hamiltonian.pair_qubit_coeffs) + "\n" + "\n"
 
-        string += "Mixer Hamiltonian:\n"
-        string += "\tmixer_qubits_singles: " + \
-            str(self.mixer_hamiltonian.qubits_singles) + "\n"
-        string += "\tmixer_single_qubit_coeffs: " + \
-            str(self.mixer_hamiltonian.single_qubit_coeffs) + "\n"
-        string += "\tmixer_qubits_pairs: " + \
-            str(self.mixer_hamiltonian.qubits_pairs) + "\n"
-        string += "\tmixer_pair_qubit_coeffs: " + \
-            str(self.mixer_hamiltonian.pair_qubit_coeffs) + "\n"
+#         string += "Mixer Hamiltonian:\n"
+#         string += "\tmixer_qubits_singles: " + \
+#             str(self.mixer_hamiltonian.qubits_singles) + "\n"
+#         string += "\tmixer_single_qubit_coeffs: " + \
+#             str(self.mixer_hamiltonian.single_qubit_coeffs) + "\n"
+#         string += "\tmixer_qubits_pairs: " + \
+#             str(self.mixer_hamiltonian.qubits_pairs) + "\n"
+#         string += "\tmixer_pair_qubit_coeffs: " + \
+#             str(self.mixer_hamiltonian.pair_qubit_coeffs) + "\n"
 
-        return string
+#         return string
 
-    @property
-    def abstract_circuit(self) -> List:
+#     @property
+#     def abstract_circuit(self) -> List:
 
-        cost_gate_map_list = HamiltonianMapper.repeat_gate_maps(
-            self.cost_hamiltonian, 'cost', self.p)
-        mixer_gate_map_list = HamiltonianMapper.repeat_gate_maps(
-            self.mixer_hamiltonian, 'mixer', self.p)
+#         cost_gate_map_list = HamiltonianMapper.repeat_gate_maps(
+#             self.cost_hamiltonian, 'cost', self.p)
+#         mixer_gate_map_list = HamiltonianMapper.repeat_gate_maps(
+#             self.mixer_hamiltonian, 'mixer', self.p)
 
-        _abstract_circuit = []
-        for each_p in range(self.p):
-            _abstract_circuit.extend(cost_gate_map_list[each_p])
-            _abstract_circuit.extend(mixer_gate_map_list[each_p])
+#         _abstract_circuit = []
+#         for each_p in range(self.p):
+#             _abstract_circuit.extend(cost_gate_map_list[each_p])
+#             _abstract_circuit.extend(mixer_gate_map_list[each_p])
 
-        return _abstract_circuit
+#         return _abstract_circuit
 
 
 class QAOAVariationalBaseParams(ABC):
