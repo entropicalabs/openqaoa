@@ -3,6 +3,12 @@ name: test_windows
 # This workflow is manually triggered
 on: workflow_dispatch
 
+on:
+  pull_request:
+    branches:
+    - dev
+    workflow_dispatch:
+
 jobs:
   build:
     # Execution strategy
