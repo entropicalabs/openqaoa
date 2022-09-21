@@ -16,7 +16,8 @@ requirements = [
     "scipy==1.8",
     "matplotlib>=3.4.3",
     "qiskit>=0.36.1",
-    "pyquil>=3.1.0"
+    "pyquil>=3.1.0",
+    "docplex>=2.23.1"
 ]
 
 requirements_docs = [
