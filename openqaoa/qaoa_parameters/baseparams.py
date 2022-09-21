@@ -165,7 +165,7 @@ class QAOACircuitParams(VQACircuitParams):
     def __init__(self, 
                  cost_hamiltonian: Hamiltonian, 
                  mixer_block: Union[List[RotationGateMap], Hamiltonian], 
-                 p: int,
+                 p: int, 
                  mixer_coeffs: List[float] = []):
         
         super().__init__(algorithm = "QAOA")

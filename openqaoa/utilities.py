@@ -16,12 +16,16 @@
 Utility and convenience functions for a number of QAOA applications.
 """
 
+from __future__ import annotations
+
 from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
+
+from .qaoa_parameters.gatemap import *
 
 
 def X_mixer_hamiltonian(n_qubits: int,
@@ -121,6 +125,78 @@ def XY_mixer_hamiltonian(n_qubits: int,
     hamiltonian = Hamiltonian(pauli_terms=terms, coeffs=coeffs, constant=0)
 
     return hamiltonian
+
+def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap, 
+                       n_qubits: int, 
+                       qubit_connectivity: Union[List[list],List[tuple], str] = 'full', 
+                       coeffs: List[float] = None) -> Tuple[List[TwoQubitRotationGateMap], List[float]]:
+    
+    """
+    Quickly generates a gatemap list and coeffs for a specific topology.
+    Can only be used with 2-Qubit Gates.
+    
+    Parameters
+    ----------
+    
+    
+    Returns
+    -------
+    """
+    
+    # Set of topologies supported by default
+    connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
+                                  'chain': [(i, i+1) for i in range(n_qubits-1)],
+                                  'star': [(0, i+1) for i in range(n_qubits-1)]}
+
+    # Check if input connectivity is a default value
+    if isinstance(qubit_connectivity, str):
+        try:
+            # Define qubit connectivity from default value
+            qubit_connectivity = connectivity_topology_dict[qubit_connectivity]
+        except KeyError:
+            raise ValueError(
+                f'Please choose connection topology from {list(connectivity_topology_dict.keys())}')
+
+    # Define connectivty according to user input
+    else:
+        # Extract indices from connectivity
+        indices = set([qubit for term in qubit_connectivity for qubit in term])
+
+        # Ensure all indices are defined within the range of number of qubits
+        assert max(indices) <= n_qubits - \
+            1, 'Qubit index in connectivity list is out of range'
+        assert min(indices) >= 0, 'Qubit index should be a positive integer'
+
+    # If no coefficients provided, set all to the number of terms
+    coeffs = [1.0]*len(qubit_connectivity) if coeffs is None else coeffs
+
+    # Initialize list of terms
+    gatemaps = []
+
+    # Generate terms in the 2Q mixer
+    for pair in qubit_connectivity:
+        i, j = pair
+        gatemaps.append(input_gatemap(i, j))
+
+    return gatemaps, coeffs
+
+def get_mixer_gatemap(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None):
+    
+    available_gatemaps = {'xx': RXXGateMap, 
+                          'yy': RYYGateMap, 
+                          'zz': RZZGateMap, 
+                          'zx': RZXGateMap}
+    
+    if mixer_type not in available_gatemaps.keys():
+        raise 'The selected mixer_type is not supported.'
+    
+    try:
+        gatemaps, coeffs = quick_create_mixer_for_topology(available_gatemaps[mixer_type], n_qubits, qubit_connectivity, coeffs)
+    except KeyError:
+        raise 'The selected gatemap does not exist'
+    
+    return gatemaps, coeffs
+        
 
 
 def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None):
