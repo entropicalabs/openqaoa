@@ -12,7 +12,7 @@ sys.path.insert(0, myPath + '/../')
 
 def notebook_test_function(name):
 
-    with open(name) as f:
+    with open(name, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
 
     ep = ExecutePreprocessor(timeout=600, kernel_name='env')
