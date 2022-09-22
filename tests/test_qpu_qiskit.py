@@ -16,6 +16,7 @@ import unittest
 import json
 import numpy as np
 from qiskit import QuantumCircuit
+import pytest
 
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
 from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
@@ -35,7 +36,8 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
     credentials. If unsure about to correctness of the current input credentials
     , please run test_qpu_auth.py. 
     """
-
+    
+    @pytest.mark.qpu
     def setUp(self):
 
         with open('./tests/credentials.json', 'r') as f:
@@ -57,7 +59,8 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         elif self.PROJECT == "None":
             raise ValueError(
                 "Please provide an appropriate IBMQ Project name in crendentials.json.")
-
+    
+    @pytest.mark.qpu
     def test_circuit_angle_assignment_qpu_backend(self):
         """
         A tests that checks if the circuit created by the Qiskit Backend
@@ -118,6 +121,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         self.assertEqual(main_circuit.to_instruction().definition,
                          qpu_circuit.to_instruction().definition)
 
+    @pytest.mark.qpu
     def test_circuit_angle_assignment_qpu_backend_w_hadamard(self):
         """
         Checks for consistent if init_hadamard is set to True.
@@ -177,6 +181,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         self.assertEqual(main_circuit.to_instruction().definition,
                          qpu_circuit.to_instruction().definition)
 
+    @pytest.mark.qpu
     def test_prepend_circuit(self):
         """
         Checks if prepended circuit has been prepended correctly.
@@ -229,6 +234,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         self.assertEqual(main_circuit.to_instruction().definition,
                          qpu_circuit.to_instruction().definition)
 
+    @pytest.mark.qpu
     def test_append_circuit(self):
         """
         Checks if appended circuit is appropriately appended to the back of the
@@ -281,7 +287,8 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit.to_instruction().definition,
                          qpu_circuit.to_instruction().definition)
-        
+
+    @pytest.mark.qpu
     def test_expectations_in_init(self):
         
         """
@@ -332,7 +339,8 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
                                                             qiskit_device, 
                                                             shots, None, None, 
                                                             True))
-            
+
+    @pytest.mark.qpu
     def test_remote_integration_sim_run(self):
         """
         Checks if Remote IBM QASM Simulator is similar/close to Local IBM 

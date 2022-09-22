@@ -6,16 +6,21 @@ import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
 import sys, os
+import subprocess
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath + '/../')
 
 
 def notebook_test_function(name):
 
+    env_name = str(subprocess.run("which python", shell=True,capture_output=True).stdout)
+    env_name = env_name.split('envs')[1]
+    env_name = env_name.split(os.sep)[1]
+    
     with open(name, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
 
-    ep = ExecutePreprocessor(timeout=600, kernel_name='env')
+    ep = ExecutePreprocessor(timeout=600, kernel_name=env_name)
 
     ep.preprocess(nb)
 
