@@ -30,9 +30,9 @@ requirements_docs = [
 ]
 
 requirements_test = [
-    "pytest==7.1.0",
-    "pytest-cov==3.0.0",
-    "ipython==8.2.0",
+    "pytest>=7.1.0",
+    "pytest-cov>=3.0.0",
+    "ipython>=8.2.0",
     "nbconvert>=6.5.1"
 ]
 
