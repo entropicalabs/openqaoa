@@ -17,7 +17,7 @@ from typing import Dict
 from collections import OrderedDict
 from .qaoa_parameters.operators import Hamiltonian
 from .utilities import bitstring_energy
-
+import numpy as np
 
 def expectation_value_classical(counts: Dict, hamiltonian: Hamiltonian):
     """
@@ -27,9 +27,9 @@ def expectation_value_classical(counts: Dict, hamiltonian: Hamiltonian):
     Parameters
     ----------
     counts: dict
-            The counts of the measurements.
+		The counts of the measurements.
     hamiltonian: Hamiltonian	
-            The Cost Hamiltonian defined for the optimization problem
+		The Cost Hamiltonian defined for the optimization problem
     """
     shots = sum(counts.values())
     cost = 0
@@ -38,47 +38,52 @@ def expectation_value_classical(counts: Dict, hamiltonian: Hamiltonian):
     return cost
 
 
-def cvar_expectation_value_classical(alpha: float, counts: Dict, hamiltonian: Hamiltonian):
-    """
-    CVaR computation of cost function. For the definition of the cost function, refer
-    to https://arxiv.org/abs/1907.04769.
+def cvar_expectation_value_classical(counts: Dict, hamiltonian: Hamiltonian, alpha: float):
+	"""
+	CVaR computation of cost function. For the definition of the cost function, refer
+	to https://arxiv.org/abs/1907.04769.
 
-    Parameters
-    ----------
-    alpha: `float`
-            The CVaR parameter.
-    counts: `dict`
-            The counts of the measurements.
-    hamiltonian: `Hamiltonian`
-            The Cost Hamiltonian defined for the optimization problem
-    """
-    assert alpha > 0 and alpha < 1, "Please specify a valid alpha value between 0 and 1"
-    shots = sum(counts.values())
+	Parameters
+	----------
+	counts: `dict`
+		The counts of the measurements.
+	hamiltonian: `Hamiltonian`
+		The Cost Hamiltonian defined for the optimization problem
+	alpha: `float`
+		The CVaR parameter.
+	"""
+	assert alpha > 0 and alpha < 1, "Please specify a valid alpha value between 0 and 1"
+	shots = sum(counts.values())
 
-    # sort the dictionary by descending energy of measurement outcomes
-    OrderedDict(sorted(counts.items(), key=lambda x: bitstring_energy(
-        hamiltonian, x[0]), reverse=False))
-    K = int((shots-1)*alpha+1)
+	cost_list = []
 
-    truncated_counts = {key: counts[key] for key in list(counts.keys())[:K]}
-    cost = expectation_value_classical(truncated_counts, hamiltonian)
-    return cost
+	#eigen-energy computation of each basis state in counts
+	for basis_state, count in counts.items():
+		cost_list.append(count*(bitstring_energy(hamiltonian, basis_state) / shots))
+
+	#sort costs in ascending order
+	sorted_cost_list = np.sort(np.array(cost_list))
+
+	K = max([int(len(cost_list)*alpha),1])
+	cost = sum(sorted_cost_list[:K])
+
+	return cost
 
 
 def cost_function(counts: Dict, hamiltonian: Hamiltonian, alpha: float = 1):
-    """
-    The cost function to be used for QAOA training.
+	"""
+	The cost function to be used for QAOA training.
 
-    Parameters
-    ----------
-    counts: `dict`
-            The counts of the measurements.
-    hamiltonian: `Hamiltonian`
-            The Cost Hamiltonian defined for the optimization problem
-    alpha: `float`
-            The CVaR parameter.
-    """
-    if alpha == 1:
-        return expectation_value_classical(counts, hamiltonian)
-    else:
-        return cvar_expectation_value_classical(alpha, counts, hamiltonian)
+	Parameters
+	----------
+	counts: `dict`
+		The counts of the measurements.
+	hamiltonian: `Hamiltonian`
+		The Cost Hamiltonian defined for the optimization problem
+	alpha: `float`
+		The CVaR parameter.
+	"""
+	if alpha == 1:
+		return expectation_value_classical(counts, hamiltonian)
+	else:
+		return cvar_expectation_value_classical(counts, hamiltonian, alpha)

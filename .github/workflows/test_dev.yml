@@ -106,4 +106,3 @@ jobs:
           sudo apt-get install pandoc
           cd docs/
           make html
-  
