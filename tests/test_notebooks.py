@@ -15,7 +15,7 @@ def notebook_test_function(name):
 
     env_name = str(subprocess.run("which python", shell=True,capture_output=True).stdout)
     env_name = env_name.split('env')[1]
-    env_name = env_name.split(os.sep)[1]
+    env_name = env_name.split(os.sep)[1][:-3]
     
     with open(name, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
