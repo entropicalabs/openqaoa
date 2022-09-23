@@ -296,7 +296,6 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
             
             else:
                 n_terms = values.shape[1]
-                print(name)
                 plt1 = axes.pcolor(np.arange(p), np.arange(n_terms) , values.T, vmin=0, vmax=2*np.pi, cmap="seismic")
                 axes.set_aspect(p/n_terms)
                 axes.xaxis.set_major_locator(MaxNLocator(integer=True))
