@@ -6,9 +6,6 @@ current_path = getcwd()
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("openqaoa/_version.py") as f:
-    version = f.readlines()[-1].split()[-1].strip("\"'")
-
 requirements = [
     "sympy>=1.10.1",
     "numpy>=1.22.3",
@@ -38,7 +35,7 @@ requirements_test = [
 
 setup(
     name="openqaoa",
-    version= version,
+    version= '',
     author="Entropica Labs",
     packages=find_packages(where="."),
     url="https://github.com/entropicalabs/openqaoa",
