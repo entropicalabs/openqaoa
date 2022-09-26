@@ -6,13 +6,15 @@ import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
 import sys, os
+import subprocess
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath + '/../')
 
 
 def notebook_test_function(name):
 
-    with open(name) as f:
+    
+    with open(name, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
 
     ep = ExecutePreprocessor(timeout=600, kernel_name='env')
@@ -56,4 +58,3 @@ def test_8_results_example():
 # @pytest.mark.notebook
 def test_9_RQAOA_example():
     notebook_test_function("./examples/9_RQAOA_example.ipynb")
-

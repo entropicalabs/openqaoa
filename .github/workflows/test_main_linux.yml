@@ -1,0 +1,107 @@
+name: test_main
+
+# Controls when the workflow will run
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ['3.8', '3.9', '3.10']
+    # The type of runner that the job will run on
+    runs-on:  ${{ matrix.os }}
+    
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+        
+      - name: Install OpenQAOA
+        run: |
+          python -m pip install --user virtualenv
+          python -m venv env
+          source env/bin/activate
+          python -m pip install --upgrade pip
+          pip install .[tests]
+          pip install ipykernel
+             
+      - name: QVM on ubuntu
+        if: ${{ matrix.os=='ubuntu-latest' }} 
+        run: |
+          find /usr/lib -name "libffi.so*"
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
+          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
+          tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
+          cd forest-sdk-2.23.0-linux-deb/
+          sudo apt-get update
+          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
+          sudo ./forest-sdk-2.23.0-linux-deb.run
+          qvm --version
+          quilc --version
+          echo "Starting qvm and quilc"
+          screen -d -m qvm -S
+          screen -d -m quilc -S
+          cd ..
+          
+      - name: Run tests
+        run: |
+          source env/bin/activate
+          ipython kernel install --name "env" --user
+          python -m pytest -v -m 'not (qpu or api)'
+          
+      - name: Upload coverage reports to Codecov with GitHub Action
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./coverage.xml
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out openqaoa
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version:  3.8
+
+      - name: Install OpenQAOA
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[docs]
+              
+      - name: Install qvm
+        run: |
+          find /usr/lib -name "libffi.so*"
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
+          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
+          tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
+          cd forest-sdk-2.23.0-linux-deb/
+          sudo apt-get update
+          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
+          sudo ./forest-sdk-2.23.0-linux-deb.run
+          qvm --version
+          quilc --version
+          echo "Starting qvm and quilc"
+          screen -d -m qvm -S
+          screen -d -m quilc -S
+          cd ..
+      
+      - name: Build and test Sphinx docs
+        run: |
+          sudo apt-get install pandoc
+          cd docs/
+          make html
