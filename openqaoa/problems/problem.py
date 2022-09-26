@@ -53,15 +53,15 @@ class QUBO:
 
     Parameters
     ----------
-    n: `int`
+    n: int
         The number of variables in the representation.
-    terms: `List[Tuple[int, ...],List]`
+    terms: List[Tuple[int, ...],List]
         The different terms in the QUBO encoding, indicating the different
         interactions between variables.
-    weights: `List[float]`
+    weights: List[float]
         The list of weights (or coefficients) corresponding to each
         interaction defined in `terms`.
-    clean_terms_and_weights: `bool`
+    clean_terms_and_weights: bool
         Boolean indicating whether terms and weights can be cleaned by
         combining similar terms.
 
@@ -321,12 +321,23 @@ class TSP(Problem):
         return self._G
 
     @staticmethod
-    def validate_coordinates(input_coordinates):
+    def validate_coordinates(city_coordinates):
+        """
+        Makes the necessary check given some city coordinates.
 
-        if not isinstance(input_coordinates, list):
+        Parameters
+        ----------
+        input_coordinates : List[Tuple[float, float]]
+            List containing the coordinates of each city.
+
+        Returns
+        -------
+            None
+        """
+        if not isinstance(city_coordinates, list):
             raise TypeError("The coordinates should be a list")
 
-        for each_entry in input_coordinates:
+        for each_entry in city_coordinates:
             if not isinstance(each_entry, tuple):
                 raise TypeError(
                     "The coordinates should be contained in a tuple")
@@ -340,6 +351,18 @@ class TSP(Problem):
 
     @staticmethod
     def validate_distance_matrix(distance_matrix):
+        """
+        Makes the necessary check given some distance matrix.
+
+        Parameters
+        ----------
+        distance_matrix : List[List[float]]
+            Distance between cities given as list of list representing a matrix
+
+        Returns
+        -------
+            None
+        """
         if not isinstance(distance_matrix, list):
             raise TypeError("The distance matrix should be a list")
 
@@ -360,6 +383,18 @@ class TSP(Problem):
 
     @staticmethod
     def validate_graph(G):
+        """
+        Makes the necessary check given some (weighted) graph.
+
+        Parameters
+        ----------
+        G: nx.Graph
+            Graph encoding the connectivity between cities (can be directed)
+
+        Returns
+        -------
+            None
+        """
         # Set edge weights to be the distances between corresponding cities
         for (u, v, weight) in G.edges(data='weight'):
             print(weight)
@@ -404,10 +439,9 @@ class TSP(Problem):
     def terms_and_weights(self):
         """
         Returns the terms and weights used in the QUBO formulation of this TSP instance.
-        The quadratic penalty coefficient can be given optionally.
         The QUBO formulation used is the one presented in Section 7.2 in 
-        https://arxiv.org/pdf/1302.5843.pdf, and fixes the first city to be visited in
-        order to reduce the number of variables.
+        https://arxiv.org/pdf/1302.5843.pdf, and sets the first city to be visited to be
+        the first city in order to reduce the number of variables.
 
         Returns
         -------
@@ -415,11 +449,13 @@ class TSP(Problem):
             Tuple containing a list with the terms and a list with the corresponding weights.
         """
         def get_variable_index(v, j):
-            """Returns the actual configuration index given the two indices v (city) and j (step), 
+            """
+            Returns the actual configuration index given the two indices v (city) and j (step), 
             to mirror the formulation given in https://arxiv.org/pdf/1302.5843.pdf. Whenever the 
             city or step probed is the first one, it can also return a flag saying whether the 
             variable is 0 (flag=-2) or 1 (flag=-1), since the first city is fixed to reduce the
-            number of variables)."""
+            number of variables).
+            """
             if j > self.n_cities+1 or v > self.n_cities:
                 raise ValueError('Index out of bounds')
 
@@ -527,7 +563,7 @@ class NumberPartition(Problem):
 
     Parameters
     ----------
-    numbers: `List[int]`
+    numbers: List[int]
         The list of numbers to be partitioned.
 
     Returns
@@ -564,7 +600,7 @@ class NumberPartition(Problem):
 
         Parameters
         ----------
-        n_numbers: `int`
+        n_numbers: int
             The number of numbers to be partitioned. This is a required 
             keyword argument.
 
@@ -627,7 +663,7 @@ class MaximumCut(Problem):
 
     Parameters
     ----------
-    G: `nx.Graph`
+    G: nx.Graph
         The input graph as NetworkX graph instance.
 
     Returns
@@ -718,13 +754,13 @@ class Knapsack(Problem):
 
     Parameters
     ----------
-    values: `List[int]`
+    values: List[int]
         The values of the items that can be placed in the kanpsack.
-    weights: `List[int]`
+    weights: List[int]
         The weight of the items that can be placed in the knapsack.
-    weight_capacity: `int`
+    weight_capacity: int
         The maximum weight the knapsack can hold.
-    penalty: `float`
+    penalty: float
         Penalty for the weight constraint.
 
     Returns
