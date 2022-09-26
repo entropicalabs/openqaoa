@@ -308,9 +308,11 @@ class TSP(Problem):
             for (u, v) in G.edges():
                 G[u][v]['weight'] = distance_matrix[u, v]
 
-        # Set attributes
+        # Set number of cities
         self.n_cities = n_cities
-        self._G = G
+
+        # Set the graph, making sure it is directed (useful when looping over edges during QUBO creation)
+        self._G = nx.DiGraph(G)
 
         # Set penalty coefficients if given, otherwise give default value
         self.A = A if A else 2 * distance_matrix.max()
@@ -509,16 +511,12 @@ class TSP(Problem):
             for j in range(1, self.n_cities + 1):
                 interaction_terms.append(
                     ([get_variable_index(u+1, j), get_variable_index(v+1, j+1)], self.A))
-                interaction_terms.append(
-                    ([get_variable_index(v+1, j), get_variable_index(u+1, j+1)], self.A))
 
         # Terms to account for the path cost
         for (u, v) in self.graph.edges():
             for j in range(1, self.n_cities + 1):
                 interaction_terms.append(([get_variable_index(
                     u+1, j), get_variable_index(v+1, j+1)], self.B * self.graph[u][v]['weight']))
-                interaction_terms.append(([get_variable_index(
-                    v+1, j), get_variable_index(u+1, j+1)], self.B * self.graph[u][v]['weight']))
 
         # Filtering linear and quadratic terms such that variables which are fixed (and have been flagged)
         # can be processed accordingly

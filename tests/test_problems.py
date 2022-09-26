@@ -575,14 +575,14 @@ class TestProblem(unittest.TestCase):
                             3.905124837953327,
                             0.3535533905932738,
                             0.3535533905932738,
+                            0.7603453162872774,
+                            0.7603453162872774,
                             0.3535533905932738,
                             0.3535533905932738,
-                            0.7603453162872774,
-                            0.7603453162872774,
-                            0.7603453162872774,
-                            0.7603453162872774,
                             0.5153882032022076,
                             0.5153882032022076,
+                            0.7603453162872774,
+                            0.7603453162872774,
                             0.5153882032022076,
                             0.5153882032022076,
                             -10.424148382787205,
@@ -596,7 +596,6 @@ class TestProblem(unittest.TestCase):
                             -11.038545614372802]
         expected_constant = 62.51983851122417
         tsp_qubo = TSP(city_coordinates).get_qubo_problem()
-        print(tsp_qubo.terms)
         print(tsp_qubo.weights)
         self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
         self.assertEqual(expected_weights, tsp_qubo.weights)
