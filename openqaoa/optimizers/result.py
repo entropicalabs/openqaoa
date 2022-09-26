@@ -189,8 +189,7 @@ class Result():
         ax.set_xlabel('Eigen-State')
         ax.set_ylabel('Probability')
         ax.set_title(label)
-        plt.xticks(rotation=70)
-        plt.grid(True, axis='y', linestyle='--')
-        plt.show
+        ax.tick_params(axis='x', labelrotation = 70)
+        ax.grid(True, axis='y', linestyle='--')
 
         return
