@@ -450,6 +450,11 @@ class TSP(Problem):
         Tuple[List[List[int]], List[float]]
             Tuple containing a list with the terms and a list with the corresponding weights.
         """
+
+        # Constants (flags) useful for the helper function below
+        ZERO_VALUED_VARIABLE = -2
+        ONE_VALUED_VARIABLE = -1
+
         def get_variable_index(v, j):
             """
             Returns the actual configuration index given the two indices v (city) and j (step), 
@@ -465,16 +470,16 @@ class TSP(Problem):
             if j == 1 or j == self.n_cities + 1:
                 # If the city is the first one, we have x_{1, 1} = 1
                 if v == 1:
-                    variable_index = -1
+                    variable_index = ONE_VALUED_VARIABLE
                 # Else we have x_{v, 1} = 0
                 else:
-                    variable_index = -2
+                    variable_index = ZERO_VALUED_VARIABLE
 
             # When step j>1 is given
             else:
                 # If first node, then x_{1, j} = 0
                 if v == 1:
-                    variable_index = -2
+                    variable_index = ZERO_VALUED_VARIABLE
                 # Else return the index corresponding to variable x_{v, j}
                 else:
                     variable_index = (j - 2) * (self.n_cities - 1) + (v - 2)
@@ -523,14 +528,15 @@ class TSP(Problem):
         filtered_interaction_terms = []
         for interaction, weight in single_terms + interaction_terms:
             # If the term is non-zero (so no flag=-2 is present), we should consider it
-            if -2 not in interaction:
+            if ZERO_VALUED_VARIABLE not in interaction:
                 # If the same variable appears in a quadratic term, it becomes a linear term
                 if len(interaction) == 2 and interaction[0] == interaction[1]:
                     interaction.pop()
 
                 # Update interaction to reduce the degree of a term if some variables are set to 1
                 # (that is remove all flag=-1)
-                interaction = list(filter(lambda a: a != -1, interaction))
+                interaction = list(
+                    filter(lambda a: a != ONE_VALUED_VARIABLE, interaction))
 
                 # Add the updated term
                 filtered_interaction_terms.append((interaction, weight))
