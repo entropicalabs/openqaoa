@@ -1,12 +1,9 @@
 
 name: Upload to PyPi
 
-on:  
-  push:
-    branches:    
-      - main
-    tags:
-      - '*'
+on:
+  release:
+    types: [created]
 
 jobs:  
   pypi_update:
@@ -42,6 +39,16 @@ jobs:
         user: __token__
         password: ${{ secrets.TESTPYPI_PASSWORD }}
         repository_url: https://test.pypi.org/legacy/
+
+    # Wait a couple of minutes to make sure that the published test is deployed on "test.pypi.org" (Linux/OSX version)
+    - name: Waiting for 2 minutes for test.pypi.org to be ready
+      run: sleep 120
+      shell: bash
+
+    # Wait a couple of minutes to make sure that the published test is deployed on "test.pypi.org" (Windows version)
+    #- name: Waiting for 2 minutes for test.pypi.org to be ready
+    #  run: Start-Sleep -s 120
+    #  shell: powershell
 
     - name: Test install from TestPyPI
       run: |
