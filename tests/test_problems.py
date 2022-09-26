@@ -59,6 +59,35 @@ class TestProblem(unittest.TestCase):
         self.assertEqual(QUBO.clean_terms_and_weights(
             terms, weights)[1], cleaned_weights)
 
+    def test_qubo_ising_conversion(self):
+        """Test that conversion to Ising formulation works for a QUBO problem"""
+        # Small instance
+        n = 2
+        terms = [[1, 1], [0, 0]]
+        weights = [3, 4]
+
+        expected_ising_terms = [[0], [1], []]
+        expected_ising_weights = [-2, -1.5, 3.5]
+
+        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
+            n, terms, weights)
+        self.assertEqual(expected_ising_terms, ising_terms)
+        self.assertEqual(expected_ising_weights, ising_weights)
+
+        # Larger instance
+        n = 4
+        terms = [[1, 2], [0], [2, 3], [2, 1], [0]]
+        weights = [3, 4, -3, -2, -1]
+
+        expected_ising_terms = [[1, 2], [2, 3], [2, 1], [0], [1], [2], [3], []]
+        expected_ising_weights = [
+            0.75, -0.75, -0.5, -1.5, -0.25, 0.5, 0.75, 1.0]
+
+        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
+            n, terms, weights)
+        self.assertEqual(expected_ising_terms, ising_terms)
+        self.assertEqual(expected_ising_weights, ising_weights)
+
     def test_qubo_type_checking(self):
         """
         Checks if the type-checking returns the right error.
