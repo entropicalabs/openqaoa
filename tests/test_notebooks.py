@@ -13,10 +13,6 @@ sys.path.insert(0, myPath + '/../')
 
 def notebook_test_function(name):
 
-    env_name = str(subprocess.run("which python", shell=True,capture_output=True).stdout)
-    # env_name = env_name.split('env')[1]
-    # env_name = env_name.split(os.sep)[1][:-3]
-    print(env_name)
     
     with open(name, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
@@ -62,4 +58,3 @@ def test_8_results_example():
 # @pytest.mark.notebook
 def test_9_RQAOA_example():
     notebook_test_function("./examples/9_RQAOA_example.ipynb")
-
