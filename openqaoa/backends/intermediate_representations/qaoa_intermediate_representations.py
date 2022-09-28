@@ -147,6 +147,7 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
 										num_qubits=self.n_qubits,
 										num_results=self.n_qubits)
 		self.qureg = self.qaoa_module.qubits
+		self.creg = self.qaoa_module.results
 		self.qis_builder = BasicQisBuilder(self.qaoa_module.builder)
 
 	@property
@@ -208,6 +209,9 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
 		#TODO: Apply append state if provided by user
 		# if isinstance(self.append_state, SimpleModule):
 			#append the circuit
+		
+		for qi, ci in zip(self.qureg,self.creg):
+			self.qis_builder.m(qi,ci)
 	
 		return None
 
