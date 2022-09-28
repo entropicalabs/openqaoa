@@ -20,7 +20,7 @@ from typing import Union
 
 class FromDocplex2IsingModel:
     def __init__(self, model, multipliers: Union[float, list] = None, unbalanced_const: bool = False,
-                 strength_ine:list = [0.1, 0.5]):
+                 strength_ineq:list = [0.1, 0.5]):
 
         """
         Creates an instance to translate Docplex models to its Ising Model representation
@@ -36,9 +36,10 @@ class FromDocplex2IsingModel:
         heuristic: bool
             If the method for the inequality constraints is used. This method 
             implement a novel approach that do not required slack variables.
-        strength_ine: List[float, float]
-            For the unbalanced constrained method the terms of the penalty
-            For the penalty => \lambda_2 * \zeta**2 - \lambda_1 * \zeta  || strength_ine = [a, b]
+        strength_ineq: List[float, float]
+            Lagrange multipliers of the penalization term using the unbalanced 
+            constrained method.
+            For the penalty => \lambda_2 * \zeta**2 - \lambda_1 * \zeta  || strength_ineq = [a, b]
             Usually lambda_2 < lambda_1. Please refere to the paper:
                 Unbalanced penalizations: A novel approach of inequality constraints
                 codification in quantum optimization problems.
@@ -55,7 +56,7 @@ class FromDocplex2IsingModel:
                 TypeError(f"Variable {x.vartype.short_name} is not allowed.")
         # if unbalanced constraint  approach
         self.unbalanced = unbalanced_const
-        self.strength_ine = strength_ine
+        self.strength_ineq = strength_ineq
         # get doclex qubo and ising model
         self.qubo_docplex, self.ising_model = self.get_models(multipliers)
 
@@ -244,7 +245,7 @@ class FromDocplex2IsingModel:
             AttributeError(
                 f"It is not possible to implement constraint {constraint.sense_string}."
             )
-        strength = self.strength_ine
+        strength = self.strength_ineq
         penalty = strength[0] * new_exp ** 2 - strength[1] * new_exp
         return penalty
 
