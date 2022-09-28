@@ -19,8 +19,13 @@ from typing import Union
 
 
 class FromDocplex2IsingModel:
-    def __init__(self, model, multipliers: Union[float, list] = None, unbalanced_const: bool = False,
-                 strength_ineq:list = [0.1, 0.5]):
+    def __init__(
+        self,
+        model,
+        multipliers: Union[float, list] = None,
+        unbalanced_const: bool = False,
+        strength_ineq: list = [0.1, 0.5],
+    ):
 
         """
         Creates an instance to translate Docplex models to its Ising Model representation
@@ -59,7 +64,6 @@ class FromDocplex2IsingModel:
         self.strength_ineq = strength_ineq
         # get doclex qubo and ising model
         self.qubo_docplex, self.ising_model = self.get_models(multipliers)
-
 
     def linear_expr(self, expr):
         """
@@ -218,7 +222,7 @@ class FromDocplex2IsingModel:
             )  # restrict the last term to fit the upper bound
 
         return new_exp
-    
+
     def inequality_to_unbalanced_penalty(self, constraint):
         """
         Inequality constraint based on an unbalanced penality function described in
@@ -288,7 +292,6 @@ class FromDocplex2IsingModel:
 
         if (
             multipliers is None
-
         ):  # Default penalties are choosen from the bounds of the objective func.
             multipliers = n_constraints * [self.multipliers_generators()]
 
@@ -312,7 +315,9 @@ class FromDocplex2IsingModel:
             ]:  # Inequality constraint added as a penalty with additional slack variables.
                 constraint.name = f"C{cn}"
                 if self.unbalanced:
-                    penalty = multipliers[cn] * self.inequality_to_unbalanced_penalty(constraint)
+                    penalty = multipliers[cn] * self.inequality_to_unbalanced_penalty(
+                        constraint
+                    )
                 else:
                     ineq2eq = self.inequality_to_equality(constraint)
                     penalty = self.equality_to_penalty(ineq2eq, multipliers[cn])
