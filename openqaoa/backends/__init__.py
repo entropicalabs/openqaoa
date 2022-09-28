@@ -33,3 +33,4 @@ from .qpus.qaoa_pyquil_qpu import *
 from .simulators.qaoa_qiskit_sim import *
 from .simulators.qaoa_pyquil_sim import *
 from .simulators.qaoa_vectorized import *
+from .intermediate_representations.qaoa_intermediate_representations import *

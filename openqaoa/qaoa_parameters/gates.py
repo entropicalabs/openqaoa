@@ -27,7 +27,8 @@ from .rotationangle import RotationAngle
 
 class Gate(ABC):
 
-    def __init__(self, ibm_gate, pyquil_gate, braket_gate, vector_gate):
+    def __init__(self, ibm_gate, pyquil_gate, braket_gate,
+                 vector_gate):
         self.ibm_gate = ibm_gate
         self.pyquil_gate = pyquil_gate
         self.braket_gate = braket_gate
@@ -48,7 +49,7 @@ class Gate(ABC):
     @abstractmethod
     def apply_vector_gate(self,circuit): 
         pass
-    
+
     
 class OneQubitGate(Gate):
 
@@ -80,8 +81,8 @@ class OneQubitGate(Gate):
 
     def apply_vector_gate(self, qubit_idx, rotation_angle_obj, input_obj):
         return NotImplementedError('Implement this method for each supporting gate class')
-            
-        
+
+
 class RY(OneQubitGate):
 
     def __init__(self):
