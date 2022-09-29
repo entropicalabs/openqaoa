@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from functools import update_wrapper
 from logging.config import dictConfig
 from re import I
 import matplotlib.pyplot as plt
@@ -144,13 +145,15 @@ class Result():
 
         return
 
-    def plot_probabilities(self, figsize = (10,8),label='Probability distribution',color='tab:blue', ax=None):
+    def plot_probabilities(self, states_to_keep = None, figsize = (10,8),label='Probability distribution',color='tab:blue', ax=None):
 
         """
         Helper function to plot the probabilities corresponding to each basis states (with prob != 0) obtained from the optimized result
 
         Parameters
         ----------
+        states_to_keep: 'int
+            If the user passes a value, the plot will compile with the given value of states. Else, a max of 
         figsize: `tuple`
             The size of the figure to be plotted. Defaults to (10,8).
         label: `str`
@@ -172,24 +175,55 @@ class Result():
             # needed to be able to divide the tuple by 'norm'
             norm = np.float64(sum(outcome.values())) 
 
-        # sorting dictionary by increasing binary value (i.e. keys) and unzipping the states and counts
-        outcome_list = sorted(outcome.items())
+        # sorting dictionary. adding a callback function to sort by values instead of keys
+        # setting reverse = True to be able to obtain the states with highest counts
+        outcome_list = sorted(outcome.items(), key=lambda item: item[1], reverse=True)
         states, counts = zip(*outcome_list)
 
         # normalizing to obtain probabilities
         probs = counts/norm
 
+        # total number of states / number of states with != 0 counts for shot simulators
+        total = len(states)
+
+        # number of states that fit without distortion in figure
+        upper_bound = 40
+        # default fontsize
+        font = 'medium'
+
+        if states_to_keep:
+            if states_to_keep > total:
+                raise TypeError('states_to_keep must be smaller than the total number of states')
+            else:
+                if states_to_keep>upper_bound:
+                    print('number of states_to_keep exceeds the recommended value')
+                    font = 'small'
+
+        # if states_to_keep is not given
+        else:
+            if total > upper_bound:
+                states_to_keep = upper_bound
+            else:
+                states_to_keep = total
+        
         # formatting labels
-        labels = [r'$\left|{}\right>$'.format(state) for state in states]
+        labels = [r'$\left|{}\right>$'.format(state) for state in states[:states_to_keep]]
+        labels.append('rest')
+
+        # represent the bar with the addition of all the remaining probabilites
+        rest = sum(probs[states_to_keep:])
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        ax.bar(labels,probs, color=color)
+        colors = [color for _ in range(states_to_keep)] + ['xkcd:magenta']
+
+        ax.bar(labels,np.append(probs[:states_to_keep],rest), color=colors)
         ax.set_xlabel('Eigen-State')
         ax.set_ylabel('Probability')
         ax.set_title(label)
-        ax.tick_params(axis='x', labelrotation = 70)
+        ax.tick_params(axis='x', labelrotation = 75, labelsize=font)
         ax.grid(True, axis='y', linestyle='--')
 
+        print('states kept:', states_to_keep)
         return
