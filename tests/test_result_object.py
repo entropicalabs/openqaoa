@@ -10,7 +10,7 @@ from openqaoa.optimizers.result import most_probable_bitstring
 from openqaoa.utilities import qaoa_probabilities
 from openqaoa.workflows.optimizer import QAOA
 from openqaoa.problems.converters import FromDocplex2IsingModel
-
+from openqaoa.devices import create_device
 
 class TestingLoggerClass(unittest.TestCase):
     def test_attribute_existence(self):
