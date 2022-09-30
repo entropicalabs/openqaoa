@@ -33,7 +33,7 @@ Where does the factor ``0.7 * n_steps`` in the ``linear_ramp_from_hamiltonian()`
     For larger systems or smaller energy gaps, it might be necessary to choose smaller values of :math:`\Delta t`.
     The implementation of this method can be found in the subclasses of ``QAOAVariationalBaseParams``.
 
-Discrete sine and cosine transform for the ``QAOAVariationalFourierParams`` class
+Discrete sine and cosine transformations for the ``QAOAVariationalFourierParams`` class
     In converting between the :math:`\beta` and :math:`\gamma` parameters of the ``QAOAVariationalStandardParams`` class, and the `u` and `v` parameters of the 
     ``QAOAVariationalFourierParams`` class, we use the type II versions of the discrete sine and cosine transformations. These are included in Scipy's fast Fourier 
     transforms module `fftpack <https://docs.scipy.org/doc/scipy-0.14.0/reference/fftpack.html>`_. With the conventions used therein, in OpenQAOA the transformations are then given by:
