@@ -49,6 +49,9 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
     
     n_shots: `int`
         The number of shots to be taken for each circuit.
+    
+    seed_simulator: `int`
+        Pseudorandom list of numbers of a seed
 
     prepend_state: `QuantumCircuit`
         The state prepended to the circuit.
@@ -81,6 +84,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
                  init_hadamard: bool,
                  cvar_alpha: float,
                  qiskit_simulation_method: str = 'automatic',
+                 seed_simulator: Optional[int] = None,
                  noise_model: Optional[NoiseModel] = None):
         
         QAOABaseBackendShotBased.__init__(self,circuit_params,
@@ -96,8 +100,9 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit " \
                                                                 "to the QAOA routine"
+        # options = {"seed_simulator":1}
         self.backend_simulator = AerSimulator(method=qiskit_simulation_method.lower(),
-                                              noise_model = noise_model)
+                                              noise_model = noise_model, seed_simulator=seed_simulator)
         # For parametric circuits
         self.parametric_circuit = self.parametric_qaoa_circuit
 

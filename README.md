@@ -1,7 +1,7 @@
  <div align="center">
 
   <!-- OpenQAOA logo -->
-  <a href="https://github.com/entropicalabs/openqaoa"><img src=".github/images/openqaoa_logo.png?raw=true" alt="OpenQAOA logo" width="300"/></a>
+  <a href="https://github.com/entropicalabs/openqaoa"><img src="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png?raw=true" alt="OpenQAOA logo" width="300"/></a>
 
 #
 
@@ -22,7 +22,7 @@ Please, consider [joining our discord](https://discord.gg/ana76wkKBd) if you wan
 
 ## Installation instructions
 
-You can install the latest version of OpenQAOA directly from PyPi. First, create a virtual environment with python3.8+ and then simply pip install openqaoa with the following command
+You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8 (currently, OpenQAOA is compatible with python 3.9 and 3.10) and then pip install openqaoa with the following command
 
 ```bash
 pip install openqaoa
@@ -38,13 +38,19 @@ git clone git@github.com:entropicalabs/openqaoa.git
 
 2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** for the environment.
 
-3. After cloning the repository `cd openqaoa` and pip install in edit mode. Use the following command for a vanilla install with the `scipy` optimizers:
+3. After cloning the repository `cd openqaoa` and pip install the package. Use the following command for a vanilla install with the `scipy` optimizers:
 
 ```bash
-pip install -e .
+pip install .
+```
+If you are interested in running the tests or the docs you can do so my using the installment modifiers `[docs]` and `[tests]`. For example,
+
+```bash
+pip install .[tests]
 ```
 
 Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
+
 
 ## Getting started
 

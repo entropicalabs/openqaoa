@@ -14,9 +14,10 @@ requirements = [
     "numpy>=1.22.3",
     "networkx>=2.8",
     "scipy==1.8",
-    "matplotlib>=3.4.3",
+    "matplotlib>=3.4.3, <3.5.0",
     "qiskit>=0.36.1",
-    "pyquil>=3.1.0"
+    "pyquil>=3.1.0",
+    "docplex>=2.23.1"
 ]
 
 requirements_docs = [
@@ -29,9 +30,9 @@ requirements_docs = [
 ]
 
 requirements_test = [
-    "pytest==7.1.0",
-    "pytest-cov==3.0.0",
-    "ipython==8.2.0",
+    "pytest>=7.1.0",
+    "pytest-cov>=3.0.0",
+    "ipython>=8.2.0",
     "nbconvert>=6.5.1"
 ]
 
