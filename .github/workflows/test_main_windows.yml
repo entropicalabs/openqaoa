@@ -34,6 +34,7 @@ jobs:
           python -m venv env
           .\env\Scripts\Activate.ps1
           python -m pip install --upgrade pip
+          pip install wheel
           pip install .[tests]
           pip install ipykernel
 
@@ -57,7 +58,6 @@ jobs:
           IBMQ_GROUP: open
           IBMQ_PROJECT: main
         run: |
-          .\env\Scripts\Activate.ps1
           ipython kernel install --name "env" --user
           python -m pytest -v -m 'not (qpu or api)'
   
