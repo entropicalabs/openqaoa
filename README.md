@@ -22,8 +22,7 @@ Please, consider [joining our discord](https://discord.gg/ana76wkKBd) if you wan
 
 ## Installation instructions
 
-
-You can install the latest version of OpenQAOA directly from PyPi. First, create a virtual environment with python3.8+ and then simply pip install openqaoa with the following command
+You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8 (currently, OpenQAOA is compatible with python 3.9 and 3.10) and then pip install openqaoa with the following command
 
 ```bash
 pip install openqaoa
