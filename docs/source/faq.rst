@@ -17,7 +17,7 @@ Implementation of circuit rotation angles
     :math:`\exp(i\beta X)`, which can be achieved using the RX(:math:`\theta`) operator if we set :math:`\theta = -2\beta`. 
 
     Similarly, the cost Hamiltonian operator :math:`\exp(-i\gamma hZ)` can be implemented via an RZ(:math:`\theta`) rotation, setting
-    :math:`\theta = 2\gamma h`. In the methods that relate to the creation of these angles in ``openqaoa.qaoa_parameters.standardparams.QAOAVariationalStandardParams``, you can verify these details.
+    :math:`\theta = 2\gamma h`. You can verify these details in the methods that relate to the creation of these angles in ``openqaoa.qaoa_parameters.standardparams.QAOAVariationalStandardParams``.
 
 Where does the factor ``0.7 * n_steps`` in the ``linear_ramp_from_hamiltonian()`` method come from?
     The ``.linear_ramp_from_hamiltonian()`` parameters are inspired by analogy between
@@ -30,10 +30,10 @@ Where does the factor ``0.7 * n_steps`` in the ``linear_ramp_from_hamiltonian()`
     :math:`\Delta t = \frac{\tau}{n_{\textrm{steps}}}`. We have found in numerical
     experiments that :math:`\Delta t = 0.7 = \frac{\tau}{n_{\textrm{steps}}}` strikes a reasonably good balance
     for many problem classes and instances, at least for the small system sizes one can feasibly simulate.
-    For larger systems or smaller energy gaps, it might be neccesary to choose smaller values of :math:`\Delta t`.
+    For larger systems or smaller energy gaps, it might be necessary to choose smaller values of :math:`\Delta t`.
     The implementation of this method can be found in the subclasses of ``QAOAVariationalBaseParams``.
 
-Discrete sine and cosine transforms for the ``QAOAVariationalFourierParams`` class
+Discrete sine and cosine transform for the ``QAOAVariationalFourierParams`` class
     In converting between the :math:`\beta` and :math:`\gamma` parameters of the ``QAOAVariationalStandardParams`` class, and the `u` and `v` parameters of the 
     ``QAOAVariationalFourierParams`` class, we use the type II versions of the discrete sine and cosine transformations. These are included in Scipy's fast Fourier 
     transforms module `fftpack <https://docs.scipy.org/doc/scipy-0.14.0/reference/fftpack.html>`_. With the conventions used therein, in OpenQAOA the transformations are then given by:
