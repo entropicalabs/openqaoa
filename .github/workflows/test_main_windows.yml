@@ -27,6 +27,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      # Install MSBUILD ( Required to compile matplotlib )
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+
       # Install OpenQAOA        
       - name: Install OpenQAOA
         shell: pwsh
