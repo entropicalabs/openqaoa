@@ -34,6 +34,7 @@ jobs:
           python -m venv env
           .\env\Scripts\Activate.ps1
           python -m pip install --upgrade pip
+          pip install --upgrade setuptools
           pip install wheel
           pip install .[tests]
           pip install ipykernel
