@@ -65,5 +65,6 @@ jobs:
         shell: pwsh
         run: |
           .\env\Scripts\ipython.exe kernel install --name "env" --user
+          pip install pytest
           python -m pytest -v -m 'not (qpu or api)'
   
