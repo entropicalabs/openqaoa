@@ -62,7 +62,8 @@ jobs:
           IBMQ_HUB: ibm-q
           IBMQ_GROUP: open
           IBMQ_PROJECT: main
+        shell: pwsh
         run: |
-          ipython kernel install --name "env" --user
+          .\env\Scripts\ipython.exe kernel install --name "env" --user
           python -m pytest -v -m 'not (qpu or api)'
   
