@@ -241,7 +241,7 @@ class Result:
         return
 
 
-  def lowest_cost_bitstrings(self, n_bitstrings: int = 1) -> dict:
+    def lowest_cost_bitstrings(self, n_bitstrings: int = 1) -> dict:
         """
         Find the minimium energy from cost_hamilonian given a set of measurement
         outcoms
