@@ -107,7 +107,7 @@ class RotationGateMap(GateMap):
     @pauli_label.setter
     def pauli_label(self, input_label: List) -> None:
 
-        gate_type = ['1q']
+        gate_type = ['OneQ']
         gate_type.extend(input_label)
         self._pauli_label = gate_type
     
@@ -158,7 +158,7 @@ class TwoQubitRotationGateMap(RotationGateMap):
     @pauli_label.setter
     def pauli_label(self, input_label: List) -> None:
 
-        gate_type = ['2q']
+        gate_type = ['TwoQ']
         gate_type.extend(input_label)
         self._pauli_label = gate_type
 

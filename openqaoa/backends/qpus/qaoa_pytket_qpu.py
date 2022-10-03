@@ -15,6 +15,7 @@
 from collections import Counter
 import numpy as np
 from sympy import Symbol
+from copy import deepcopy
 from pytket.circuit import Circuit, OpType
 
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
@@ -46,6 +47,9 @@ class QAOAPyTketBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         Conditional Value-at-Risk (CVaR) – a measure that takes into account only the tail of the
         probability distribution arising from the circut's count dictionary. Must be between 0 and 1. Check
         https://arxiv.org/abs/1907.04769 for further details.
+    circuit_optimization_lvl: `int`
+        Specify an integer in the range [0,2] to select the strength of the circuit optimization performed
+        on the logical circuit to map it to physical chip topology.
     """
 
     def __init__(self,
@@ -55,7 +59,8 @@ class QAOAPyTketBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                  prepend_state: Circuit,
                  append_state: Circuit,
                  init_hadamard: bool,
-                 cvar_alpha: float
+                 cvar_alpha: float, 
+                 circuit_optimization_lvl: int = 1
                  ):
 
         QAOABaseBackendShotBased.__init__(self,
@@ -69,8 +74,10 @@ class QAOAPyTketBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         #wrap the user-selected device as PyTket Device
         device = DevicePyTket(device)
         QAOABaseBackendCloud.__init__(self, device)
-
+        
+        self.tket_backend = self.device.backend_device
         self.qureg = self.circuit_params.qureg
+        self.circuit_optimization_lvl = circuit_optimization_lvl
 
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
         # self.qubit_mapping = dict(zip(self.qureg, self.qubit_layout))
@@ -80,16 +87,7 @@ class QAOAPyTketBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                                                                 "to the QAOA routine"
 
         self.parametric_circuit = self.parametric_qaoa_circuit
-        # native_prog = self.device.quantum_computer.compiler.quil_to_native_quil(
-        #     self.parametric_circuit)
-        # self.prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
-        #     native_prog)
-        
-        # Check program connectivity against QPU connectivity
-        # TODO: reconcile with PRAGMA PRESERVE
-
-        # check_edge_connectivity(self.prog_exe, device)
-
+        self.optimized_circuit = self.optimized_parametric_circuit
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Circuit:
         """
@@ -104,20 +102,39 @@ class QAOAPyTketBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         `pyquil.Program`
             A pyquil.Program (executable) object.
         """
-
         #NOTE: While appending angles to the circuit parameters, divide by pi for
         #conversion to units of pi for PyTket
 
-        
-        # angles_list = np.array(self.obtain_angles_for_pauli_list(
-        #     self.abstract_circuit, params), dtype=float)
-        # angle_declarations = list(self.prog_exe.declarations.keys())
-        # angle_declarations.remove('ro')
-        # for i, param_name in enumerate(angle_declarations):
-        #     self.prog_exe.write_memory(
-        #         region_name=param_name, value=angles_list[i])
+        angles_list = np.array(self.obtain_angles_for_pauli_list(
+            self.abstract_circuit, params), dtype=float)
+        angles_symbols = self.optimized_circuit.free_symbols()
 
-        # return self.prog_exe
+        angles_map = {symbol:angle/np.pi for symbol,angle in zip(angles_symbols,angles_list)}
+
+        angle_assigned_circuit = deepcopy(self.optimized_circuit)
+        angle_assigned_circuit.symbol_substitution(angles_map)
+
+        assert not angle_assigned_circuit.is_symbolic(), ValueError("Angle assignment is incomplete")
+
+        return angle_assigned_circuit
+
+    @property
+    def optimized_parametric_circuit(self) -> Circuit:
+        """
+        Perform circuit optimization on the parametric circuit created using 
+        circuit instructions derived from the problem statement
+
+        Returns
+        -------
+        `pytket.circuit.Circuit`
+            The optimized Pyktet circuit object
+        """
+        
+        optimized_ckt = self.tket_backend.get_compiled_circuit(
+                                                self.parametric_circuit, 
+                                                optimisation_level = self.circuit_optimization_lvl
+                                            )
+        return optimized_ckt
 
     @property
     def parametric_qaoa_circuit(self) -> Circuit:
@@ -125,10 +142,6 @@ class QAOAPyTketBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         Creates a parametric QAOA circuit (pytket.circuit.Circuit object), given the qubit pairs, single qubits with biases,
         and a set of circuit angles. Note that this function does not actually run
         the circuit. 
-
-        Parameters
-        ----------
-        params: `QAOAVariationalBaseParams`
         
         Returns
         -------
@@ -190,16 +203,17 @@ class QAOAPyTketBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         counts : dictionary
             A dictionary with the bitstring as the key and the number of counts as its value.
         """
-        executable_program = self.qaoa_circuit(params)
 
-        result = self.device.quantum_computer.run(executable_program)
+        #before execution on the selected hardware, make sure all the Predicates are satisfied
+        circuit_to_execute = self.qaoa_circuit(params)
+        assert self.tket_backend.valid_circuit(circuit_to_execute), "The compiled Circuit cannot run on selected hardware"
+
+        meas_handle = self.tket_backend.process_circuit(circuit_to_execute, n_shots = self.n_shots)
+        meas_outcomes = self.tket_backend.get_result(meas_handle).get_counts()
 
         # TODO: check the endian (big or little) ordering of measurement outcomes
-        meas_list = [''.join(str(bit) for bit in bitstring)
-                     for bitstring in result.readout_data['ro']]
-        
         # Expose counts
-        counts = Counter(list(meas_list))
+        counts = {''.join(str(i) for i in basis):prob for basis,prob in meas_outcomes.items()}
         self.measurement_outcomes = counts
         return counts
 
@@ -208,9 +222,7 @@ class QAOAPyTketBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         A method to convert the pyQuil program to a OpenQASM string.
         """
         raise NotImplementedError()
-        # qasm_program = self.device.quantum_computer.compiler.quil_to_qasm(self.qaoa_circuit(params))
-        # return qasm_program
-
+    
     def reset_circuit(self):
         """
         Reset self.program after performing a computation. Also handle active reset and rewirings.
