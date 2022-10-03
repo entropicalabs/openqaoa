@@ -157,15 +157,16 @@ class Result:
 
         return
 
-    def plot_probabilities(self, states_to_keep = None, figsize = (10,8),label='Probability distribution',color='tab:blue', ax=None):
+    def plot_probabilities(self, n_states_to_keep = None, figsize = (10,8),label='Probability distribution',color='tab:blue', ax=None):
 
         """
         Helper function to plot the probabilities corresponding to each basis states (with prob != 0) obtained from the optimized result
 
         Parameters
         ----------
-        states_to_keep: 'int
-            If the user passes a value, the plot will compile with the given value of states. Else, a max of 
+        n_states_to_keep: 'int
+            If the user passes a value, the plot will compile with the given value of states. 
+            Else,  an upper bound will be calculated depending on the total size of the measurement outcomes.
         figsize: `tuple`
             The size of the figure to be plotted. Defaults to (10,8).
         label: `str`
@@ -203,41 +204,41 @@ class Result:
         # default fontsize
         font = 'medium'
 
-        if states_to_keep:
-            if states_to_keep > total:
-                raise TypeError('states_to_keep must be smaller than the total number of states')
+        if n_states_to_keep:
+            if n_states_to_keep > total:
+                raise ValueError(f"n_states_to_keep must be smaller or equal than the total number of states in measurement outcome: {total}")
             else:
-                if states_to_keep>upper_bound:
+                if n_states_to_keep>upper_bound:
                     print('number of states_to_keep exceeds the recommended value')
                     font = 'small'
 
         # if states_to_keep is not given
         else:
             if total > upper_bound:
-                states_to_keep = upper_bound
+                n_states_to_keep = upper_bound
             else:
-                states_to_keep = total
+                n_states_to_keep = total
         
         # formatting labels
-        labels = [r'$\left|{}\right>$'.format(state) for state in states[:states_to_keep]]
+        labels = [r'$\left|{}\right>$'.format(state) for state in states[:n_states_to_keep]]
         labels.append('rest')
 
         # represent the bar with the addition of all the remaining probabilites
-        rest = sum(probs[states_to_keep:])
+        rest = sum(probs[n_states_to_keep:])
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        colors = [color for _ in range(states_to_keep)] + ['xkcd:magenta']
+        colors = [color for _ in range(n_states_to_keep)] + ['xkcd:magenta']
 
-        ax.bar(labels,np.append(probs[:states_to_keep],rest), color=colors)
+        ax.bar(labels,np.append(probs[:n_states_to_keep],rest), color=colors)
         ax.set_xlabel('Eigen-State')
         ax.set_ylabel('Probability')
         ax.set_title(label)
         ax.tick_params(axis='x', labelrotation = 75, labelsize=font)
         ax.grid(True, axis='y', linestyle='--')
 
-        print('states kept:', states_to_keep)
+        print('states kept:', n_states_to_keep)
         return
 
 
