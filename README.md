@@ -22,8 +22,7 @@ Please, consider [joining our discord](https://discord.gg/ana76wkKBd) if you wan
 
 ## Installation instructions
 
-
-You can install the latest version of OpenQAOA directly from PyPi. First, create a virtual environment with python3.8+ and then simply pip install openqaoa with the following command
+You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8, 3.9, 3.10 and then pip install openqaoa with the following command
 
 ```bash
 pip install openqaoa
@@ -37,7 +36,7 @@ Alternatively, you can install manually directly from the GitHub repository by
 git clone git@github.com:entropicalabs/openqaoa.git
 ```
 
-2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** for the environment.
+2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use one between **python 3.8, 3.9, 3.10** for the environment.
 
 3. After cloning the repository `cd openqaoa` and pip install the package. Use the following command for a vanilla install with the `scipy` optimizers:
 
