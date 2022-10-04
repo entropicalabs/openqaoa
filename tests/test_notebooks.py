@@ -28,8 +28,8 @@ def test_1_workflows_example():
     
     
 # @pytest.mark.notebook
-def test_0_tutorial_quantum_approximate_optimization_algorithm():
-    notebook_test_function("./examples/0_tutorial_quantum_approximate_optimization_algorithm.ipynb")
+def test_01_tutorial_quantum_approximate_optimization_algorithm():
+    notebook_test_function("./examples/01_tutorial_quantum_approximate_optimization_algorithm.ipynb")
 
 # @pytest.mark.notebook
 def test_2_simulators_comparison():
