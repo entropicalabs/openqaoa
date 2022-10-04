@@ -325,7 +325,7 @@ class RXY(TwoQubitGateWithAngle):
 
         ibm_gate = None
         pyquil_gate = None
-        braket_gate = braketgates.XY.xy
+        braket_gate = None
         vector_gate = None
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
@@ -399,7 +399,7 @@ class RiSWAP(TwoQubitGateWithAngle):
 
         ibm_gate = None
         pyquil_gate = quilgates.XY
-        braket_gate = None
+        braket_gate = braketgates.XY.xy
         vector_gate = None
 
         super(TwoQubitGate,self).__init__(ibm_gate=ibm_gate, pyquil_gate=pyquil_gate,
