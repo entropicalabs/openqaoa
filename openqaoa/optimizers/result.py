@@ -56,7 +56,7 @@ class Result:
 
         self.method = method
 
-        self.cost_hamilonian = cost_hamiltonian
+        self.cost_hamiltonian = cost_hamiltonian
 
         self.evals = {
             "number of evals": log.func_evals.best[0],
@@ -71,8 +71,9 @@ class Result:
         }
 
         self.optimized = {
-            "optimized angles": np.array(log.param_log.best[0]).tolist(),
-            "optimized cost": log.cost.best[0],
+            "optimized angles": np.array(log.param_log.best[0]).tolist() 
+            if log.param_log.best != [] else [],
+            "optimized cost": log.cost.best[0] if log.cost.best != [] else None,
             "optimized measurement outcomes": log.measurement_outcomes.best[0]
             if log.measurement_outcomes.best != []
             else {},
@@ -80,7 +81,7 @@ class Result:
 
         self.most_probable_states = most_probable_bitstring(
             cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-        )
+        ) if log.measurement_outcomes.best != [] else []
 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
@@ -172,25 +173,37 @@ class Result:
             Returns a list of bitstring with the lowest values of the cost Hamiltonian.
 
         """
-        measurement_outcomes = self.optimized["optimized measurement outcomes"]
-        solution_bitstring = list(measurement_outcomes.keys())
+
+        if isinstance(self.optimized["optimized measurement outcomes"], dict):
+            measurement_outcomes = self.optimized["optimized measurement outcomes"]
+            solution_bitstring = list(measurement_outcomes.keys())
+        elif isinstance(self.optimized["optimized measurement outcomes"], np.ndarray):
+            measurement_outcomes = self.get_counts(
+                self.optimized["optimized measurement outcomes"]
+            )
+            solution_bitstring = list(measurement_outcomes.keys())
+        else:
+            raise TypeError(
+                f"The measurement outcome {type(self.optimized['optimized measurement outcomes'])} is not valid."
+            )
         energies = [
             bitstring_energy(self.cost_hamiltonian, bitstring)
             for bitstring in solution_bitstring
         ]
         args_sorted = np.argsort(energies)
-        if n_bitstrings < len(energies):
-            best_results = {
-                "solutions_bitstrings": [
-                    solution_bitstring[args_sorted[ii]] for ii in range(n_bitstrings)
-                ],
-                "bitstring_energy": [
-                    energies[args_sorted[ii]] for ii in range(n_bitstrings)
-                ],
-            }
-        else:
-            best_results = {
-                "solutions_bitstrings": solution_bitstring,
-                "bitstring_energy": energies,
-            }
+        if n_bitstrings > len(energies):
+            n_bitstrings = len(energies)
+        
+        total_shots = sum(measurement_outcomes.values())
+        best_results = {
+            "solutions_bitstrings": [
+                solution_bitstring[args_sorted[ii]] for ii in range(n_bitstrings)
+            ],
+            "bitstrings_energies": [
+                energies[args_sorted[ii]] for ii in range(n_bitstrings)
+            ],
+            "probabilities": [
+                measurement_outcomes[solution_bitstring[args_sorted[ii]]]/total_shots for ii in range(n_bitstrings)
+            ]
+        }
         return best_results

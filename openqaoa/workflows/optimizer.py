@@ -169,6 +169,7 @@ class QAOA(Optimizer):
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
             variational_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
+                For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
 
         for key, value in kwargs.items():
@@ -198,6 +199,8 @@ class QAOA(Optimizer):
             n_shots: int
             Optional argument to specify the number of shots required to run QAOA computations
                 on shot-based simulators and QPUs. Defaults to 100.
+            seed_simulator: int
+                Optional argument to initialize a pseudorandom solution. Default None
             cvar_alpha: float
                 The value of alpha for the CVaR cost function
             qiskit_simulation_method: str, optional

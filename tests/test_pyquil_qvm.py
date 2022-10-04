@@ -22,6 +22,7 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.devices import DevicePyquil
 from openqaoa.backends import QAOAPyQuilQPUBackend
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
+import pytest
 
 class TestingQAOACostPyquilQVM(unittest.TestCase):
     
@@ -31,7 +32,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
     
     For all of these tests, qvm and quilc must be running.
     """
-    
+    @pytest.mark.qvm
     def test_connection(self):
         
         """
@@ -48,6 +49,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         pass
     
+    @pytest.mark.qvm
     def test_active_reset(self):
         
         """
@@ -66,6 +68,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, active_reset = False)
         assert 'RESET' not in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
         
+    @pytest.mark.qvm
     def test_rewiring(self):
         
         """
@@ -89,7 +92,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'PRAGMA INITIAL_REWIRING "PARTIAL"')
         assert 'PRAGMA INITIAL_REWIRING "PARTIAL"' in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
         
-        
+    @pytest.mark.qvm
     def test_qaoa_pyquil_expectation(self):
     
         """
@@ -111,7 +114,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         backend_obj_pyquil.expectation(variate_params)
 
         assert np.isclose(backend_obj_pyquil.expectation(variate_params), -1)
-        
+
+    @pytest.mark.qvm
     def test_qaoa_pyquil_gate_names(self):
     
         """
@@ -144,6 +148,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         measurement_gate_no = len([instr for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Measurement])
         assert measurement_gate_no == 2
 
+    @pytest.mark.qvm
     def test_circuit_init_hadamard(self):
 
         """
@@ -172,6 +177,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         assert ['RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX'] == [instr.name for instr in pyquil_backend.parametric_circuit if type(instr) == quilbase.Gate]
 
+    @pytest.mark.qvm
     def test_circuit_append_state(self):
 
         """
@@ -194,6 +200,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         assert ['RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX', 'RX', 'RY', 'RZ'] == [instr.name for instr in pyquil_backend.parametric_circuit if type(instr) == quilbase.Gate]
 
+    @pytest.mark.qvm
     def test_circuit_prepend_state(self):
 
         """
@@ -219,7 +226,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         # Test if error is raised correctly
         prepend_circuit = Program().inst(RX(np.pi, 0), RY(np.pi/2, 1), RZ(np.pi, 2))
         self.assertRaises(AssertionError, lambda : QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = prepend_circuit, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)) 
-        
+
+    @pytest.mark.qvm
     def test_pyquil_vectorized_agreement(self):
 
         """
@@ -244,7 +252,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         expt_vec, std_dev_vec = backend_obj_vectorized.expectation_w_uncertainty(variate_params)
 
         self.assertAlmostEqual(expt_vec, expt_pyquil, delta = std_dev_vec)
-    
+   
 
 if __name__ == '__main__':
     unittest.main()

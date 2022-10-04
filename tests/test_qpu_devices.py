@@ -15,6 +15,7 @@
 import unittest
 import json
 import os
+import pytest
 
 from openqaoa.devices import DeviceQiskit, DeviceLocal, SUPPORTED_LOCAL_SIMULATORS
 
@@ -29,7 +30,7 @@ class TestingDeviceQiskit(unittest.TestCase):
     crendentials.json are correct.
     All of these can be found in your IBMQ Account Page.
     """
-
+    @pytest.mark.api
     def setUp(self):
 
         try:
@@ -63,7 +64,8 @@ class TestingDeviceQiskit(unittest.TestCase):
         elif self.PROJECT == "IBMQ_PROJECT":
             raise ValueError(
                 "Please provide an appropriate IBMQ Project name in crendentials.json.")
-
+    
+    @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_credentials(self):
         
         """
@@ -80,6 +82,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, False)
         self.assertEqual(device_obj.qpu_connected, None)
 
+    @pytest.mark.api
     def test_check_connection_provider_no_backend_provided_credentials(self):
         
         """
@@ -97,6 +100,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, None)
 
+    @pytest.mark.api
     def test_check_connection_provider_right_backend_provided_credentials(self):
         
         """
@@ -123,6 +127,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, True)
 
+    @pytest.mark.api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
         
         """
