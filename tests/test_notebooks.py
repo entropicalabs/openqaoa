@@ -23,6 +23,11 @@ def notebook_test_function(name):
 # @pytest.mark.notebook
 def test_1_workflows_example():
     notebook_test_function("./examples/1_workflows_example.ipynb")
+    
+    
+# @pytest.mark.notebook
+def test_0_tutorial_quantum_approximate_optimization_algorithm():
+    notebook_test_function("./examples/0_tutorial_quantum_approximate_optimization_algorithm.ipynb")
 
 # @pytest.mark.notebook
 def test_2_simulators_comparison():
@@ -57,3 +62,18 @@ def test_8_results_example():
 def test_9_RQAOA_example():
     notebook_test_function("./examples/9_RQAOA_example.ipynb")
 
+# @pytest.mark.notebook
+def test_10_docplex_example():
+    notebook_test_function("./examples/10_docplex_example.ipynb")
+    
+# @pytest.mark.notebook
+def test_10_docplex_example():
+    notebook_test_function("./examples/10_docplex_example.ipynb")
+    
+# @pytest.mark.notebook
+def test_11_portfolio_optimization():
+    notebook_test_function("./examples/11_portfolio_optimization.ipynb")
+    
+# @pytest.mark.notebook
+def test_12_binpacking():
+    notebook_test_function("./examples/12_binpacking.ipynb")
