@@ -19,7 +19,8 @@ requirements = [
     "pyquil>=3.1.0",
     "docplex>=2.23.1",
     "pandas>=1.4.3",
-    "plotly>=5.9.0"
+    "plotly>=5.9.0",
+    "cplex>=22.1.0.0"
     
 ]
 
