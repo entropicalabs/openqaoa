@@ -21,7 +21,6 @@ from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBase
 from ...devices import DevicePyquil
 from ...qaoa_parameters.gatemap import RZZGateMap, SWAPGateMap
 
-
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
     '''

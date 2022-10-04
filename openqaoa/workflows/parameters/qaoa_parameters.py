@@ -176,12 +176,14 @@ class BackendProperties(Parameters):
                                               np.ndarray]] = None,
                  init_hadamard: bool = True,
                  n_shots: int = 100,
+                 seed_simulator: int = None,
                  cvar_alpha: float = 1,
                  noise_model = None,
                  qubit_layout: Optional[Union[List[int], np.ndarray]] = None):
         
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
+        self.seed_simulator = seed_simulator
         self.prepend_state = prepend_state
         self.append_state = append_state
         self.cvar_alpha = cvar_alpha
