@@ -26,6 +26,7 @@ from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 from ..basebackend import VQABaseBackend
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
+from . import optimization_methods_pennylane as ompl
 
 from .logger_vqa import Logger
 from .result import Result
@@ -472,7 +473,12 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
 
     """
     CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
-                                  'rmsprop', 'natural_grad_descent', 'spsa']
+                                  'rmsprop', 'natural_grad_descent', 'spsa', 
+                                  'pennylane',
+                                  'pennylane adagrad', 'pennylane adam', 'pennylane vgd', 
+                                  'pennylane momentum', 'pennylane nesterov_momentum',
+                                  'pennylane natural_grad_descent', 'pennylane rmsprop', 
+                                  'pennylane rotosolve', 'pennylane spsa']
 
     def __init__(self,
                  vqa_object: Type[VQABaseBackend],
@@ -562,6 +568,8 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         : 
             The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
         '''
+        #pennylane_methods = {'pl_adagrad': ompl.adagrad, 'pl_adam': ompl.adam, 'pl_vgd': ompl.grad_descent, 'pl_momentum': ompl.momentum}
+
         if self.method == 'vgd':
             method = om.grad_descent
         elif self.method == 'newton':
@@ -575,6 +583,18 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
             method = om.SPSA
+        elif self.method.lower().split()[0] == 'pennylane':
+            print("Warning : PennyLane")
+            method = ompl.pennylane_optimizer
+
+            if len(self.method.split()) > 1:
+                self.options['method'] = self.method.lower().split()[1]
+
+                if self.options['method'] == 'natural_grad_descent': 
+                    self.options['qfim'] = qfim(self.vqa_object, self.variational_params, self.log)
+                elif self.options['method'] in ['spsa', 'rotosolve']:    
+                    self.jac = None 
+            #method = pennylane_methods[self.method]
         
         try:
             if self.hess == None:
