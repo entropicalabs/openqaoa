@@ -169,27 +169,6 @@ class TestingDeviceLocal(unittest.TestCase):
         self.assertEqual(device_obj.check_connection(), False)
 
 
-class TestingDeviceLocal(unittest.TestCase):
-    
-    """
-    This tests check that the Device Object created for local devices have the
-    appropriate behaviour.
-    """
-    
-    def test_supported_device_names(self):
-        
-        for each_device_name in SUPPORTED_LOCAL_SIMULATORS:
-            device_obj = DeviceLocal(each_device_name)
-            
-            self.assertEqual(device_obj.check_connection(), True)
-    
-    def test_unsupported_device_names(self):
-        
-        device_obj = DeviceLocal('unsupported_device')
-        
-        self.assertEqual(device_obj.check_connection(), False)
-
-
 class TestingDeviceAWS(unittest.TestCase):
     
     """These tests check the Object used to access AWS Braket and their 
@@ -201,9 +180,9 @@ class TestingDeviceAWS(unittest.TestCase):
     Please ensure that the provided access keys, aws region and s3 bucket names in the 
     crendentials.json are correct.
     """
-    
-    def setUp(self):
 
+    @pytest.mark.api    
+    def setUp(self):
         try:
             opened_f = open('./tests/credentials.json', 'r')
         except FileNotFoundError:
@@ -228,7 +207,9 @@ class TestingDeviceAWS(unittest.TestCase):
         elif self.S3_BUCKET_NAME == "YOUR_S3_BUCKET":
             raise ValueError(
                 "Please provide an appropriate S3 bucket name in crendentials.json.")
-            
+
+
+    @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_credentials(self):
         
         """
@@ -243,7 +224,9 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, False)
         self.assertEqual(device_obj.qpu_connected, None)
-        
+
+
+    @pytest.mark.api      
     def test_check_connection_provider_no_backend_provided_credentials(self):
         
         """
@@ -262,6 +245,8 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, None)
 
+
+    @pytest.mark.api
     def test_check_connection_provider_right_backend_provided_credentials(self):
         
         """
@@ -290,6 +275,8 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, True)
 
+
+    @pytest.mark.api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
         
         """

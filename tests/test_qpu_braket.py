@@ -16,6 +16,7 @@ import unittest
 import json
 import numpy as np
 from braket.circuits import Circuit
+import pytest
 
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
 from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
@@ -35,6 +36,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
     , please run test_qpu_auth.py. 
     """
 
+
+    @pytest.mark.qpu
     def setUp(self):
         
         try:
@@ -62,6 +65,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
             raise ValueError(
                 "Please provide an appropriate S3 BUCKET NAME name in crendentials.json.")
 
+
+    @pytest.mark.qpu
     def test_circuit_angle_assignment_qpu_backend(self):
         """
         A tests that checks if the circuit created by the AWS Backend
@@ -121,6 +126,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit, qpu_circuit)
 
+
+    @pytest.mark.qpu
     def test_circuit_angle_assignment_qpu_backend_w_hadamard(self):
         """
         Checks for consistent if init_hadamard is set to True.
@@ -181,6 +188,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit, qpu_circuit)
 
+
+    @pytest.mark.qpu
     def test_prepend_circuit(self):
         """
         Checks if prepended circuit has been prepended correctly.
@@ -238,6 +247,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit, qpu_circuit)
 
+
+    @pytest.mark.qpu
     def test_append_circuit(self):
         """
         Checks if appended circuit is appropriately appended to the back of the
@@ -295,7 +306,9 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         main_circuit.probability()
 
         self.assertEqual(main_circuit, qpu_circuit)
-        
+
+
+    @pytest.mark.qpu
     def test_exceptions_in_init(self):
         
         """
@@ -345,7 +358,9 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                                             aws_device, 
                                                             shots, None, None, 
                                                             True, 1.))
-        
+
+
+    @pytest.mark.qpu
     def test_correct_device_creation(self):
         
         device_map = {'us-east-1': 
@@ -370,8 +385,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                 print(each_key, aws_device.device_arn, '/n')
 
                 self.assertEqual(aws_device.device_arn, each_value)
-        
-        
+     
         
 #     def test_remote_integration_qpu_run(self):
 #         """
