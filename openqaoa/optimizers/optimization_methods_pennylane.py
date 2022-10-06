@@ -7,6 +7,8 @@ import inspect
 from scipy.optimize import OptimizeResult
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 def pennylane_optimizer(fun, x0, args=(), maxfev=None, method = 'vgd', qfim=None,
                  nums_frequency=None, spectra=None, shifts=None, 
                  maxiter=100, tol=10**(-6), jac=None, callback=None, **options):
@@ -23,7 +25,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method = 'vgd', qfim=None
                                 'natural_grad_descent': pl.QNGOptimizer,
                                 'rmsprop': pl.RMSPropOptimizer,
                                 'rotosolve': pl.RotosolveOptimizer, 
-                                'spsa': pl.QNSPSAOptimizer,
+                                'spsa': pl.SPSAOptimizer,
                              }
 
     optimizer = available_methods_dict[method]
@@ -34,10 +36,10 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method = 'vgd', qfim=None
 
     for key in options_keys:
         if key not in arguments: options.pop(key) 
+        if 'maxiter' in arguments: options['maxiter'] = maxiter
 
     optimizer = optimizer(**options)
     print(options, optimizer)
-
     
     bestx = pl.numpy.array(x0, requires_grad=True)
     besty = cost(x0)
@@ -66,7 +68,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method = 'vgd', qfim=None
                                                     shifts=shifts,
                                                     full_output=False,
                                                   )
-        else:      #spsa 
+        else:       #spsa  
             testx, testy = optimizer.step_and_cost(cost, bestx)
 
         # check if stable
@@ -83,7 +85,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method = 'vgd', qfim=None
         if maxfev is not None and funcalls >= maxfev:
             stop = True
             break
-
+        
     return OptimizeResult(fun=besty, x=np.array(bestx), nit=niter,
                           nfev=funcalls, success=(niter > 1))
 
