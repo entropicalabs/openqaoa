@@ -14,7 +14,9 @@
 
 from collections import Counter
 import numpy as np
+from copy import deepcopy
 from pyquil import Program, gates, quilbase
+from pyquil.quil import Pragma
 
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
@@ -49,7 +51,6 @@ def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
             assert term in qpu_graph.edges(), f"Term {term} is not an edge on the QPU graph of {device.device_name}."
     
-    
 
 class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
     """
@@ -82,6 +83,13 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         If None, pyquil defaults according to:
         NAIVE: The qubits used in all instructions in the program satisfy the topological constraints of the device.
         PARTIAL: Otherwise.
+    unfence:
+        Whether to allow 2Q gates to be executed in parallel by removing global fence statements (which are by 
+        default enabled). Only works when `device` has `as_qvm = False`.
+    trivial_parallelization:
+        Whether to re-order pyQuil program according to 'trivial' commutation rules, i.e. re-arranging order of
+        gates that act on independent sets of qubits.
+    
     """
 
     def __init__(self,
@@ -94,7 +102,9 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  cvar_alpha: float,
                  active_reset: bool = False,
                  rewiring: str = '',
-                 qubit_layout: list = []
+                 qubit_layout: list = [],
+                 unfence: bool = False,
+                 trivial_parallelization: bool = True,
                  ):
 
         QAOABaseBackendShotBased.__init__(self,
@@ -108,6 +118,8 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         self.active_reset = active_reset
         self.rewiring = rewiring
+        self.unfence = unfence
+        self.trivial_parallelization = trivial_parallelization
         self.qureg = self.circuit_params.qureg
 
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
@@ -117,10 +129,22 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.get_qubits()), "Cannot attach a bigger circuit " \
                                                                 "to the QAOA routine"
-
         self.parametric_circuit = self.parametric_qaoa_circuit
+        
+        # 'trivial' parallelization pass
+        if trivial_parallelization:
+            self.parametric_circuit = parallelize_pyquil_prog(self.parametric_circuit)
+            
         native_prog = self.device.quantum_computer.compiler.quil_to_native_quil(
             self.parametric_circuit)
+        
+        # Unfencing pass
+        if self.unfence == True:
+            if self.device.as_qvm == False:
+                native_prog += unfence_2q_gates(self.device.quantum_computer.compiler.get_calibration_program())
+            else:
+                print('Unfencing pass ignored : self.device.as_qvm was True')
+        
         self.prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
             native_prog)
         
@@ -267,3 +291,192 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         Reset self.program after performing a computation. Also handle active reset and rewirings.
         """
         pass
+
+    
+##### PyQuil specific parallelization functions ######################### 
+    
+def unfence_2q_gates(calibration_program: Program) -> Program:
+    
+    """
+    Remove the global fence statements from all 2Q gates, allowing them to be executed in parallel.
+
+    >>> calibration_program = device.get_calibration_program()
+    >>> unfenced_cal_program = unfence_2q_gates(calibration_program)
+    >>> program = Program()
+    >>> program += unfenced_cal_program
+
+    :param calibration_program: The quilT calibration program.
+    :returns: A modified copy of the quilT calibration program.
+    """
+    
+    modified_calibration_program = calibration_program.copy_everything_except_instructions()
+    unfenced_calibrations = []
+    for calibration in calibration_program.calibrations:
+        if isinstance(calibration, DefCalibration):
+            if calibration.name in {"CPHASE", "CZ", "XY"}:
+                updated_instrs = []
+                for instr in calibration.instrs:
+                    if isinstance(instr, FenceAll):  # replace FenceAll
+                        updated_instrs.append(Fence(calibration.qubits))
+                    else:
+                        updated_instrs.append(instr)
+                unfenced_calibrations.append(
+                    DefCalibration(calibration.name, calibration.parameters, calibration.qubits, updated_instrs)
+                )
+            else:
+                unfenced_calibrations.append(calibration)
+        else:
+            unfenced_calibrations.append(calibration)
+
+    modified_calibration_program._calibrations = unfenced_calibrations
+    return modified_calibration_program
+
+def parallelize_sequence(gate_sequence):
+    
+    '''
+    Separates and reorders `gate_sequence` into blocks where gates in each block can be simultaneously 
+    applied, without changing the circuit structure. That is, re-orders the pyQuil program according 
+    to 'trivial' commutation rules, i.e. re-arranging order of gates that act on independent sets of qubits.
+    Also returns the original position of the gates in the parallelized blocks as `ordering_block_lst`.
+    
+    Warning : This pass incurs some computation time.
+    
+    Parameters
+    ----------
+    gate_sequence: list
+        a list of singles/tuples representing physical indices on which 1Q/2Q gates are acting on.
+    
+    Returns
+    -------
+    remapped_block_lst : 
+        Blocks where gates in each block can be simultaneously applied, without changing the circuit structure.
+    
+    ordering_block_lst : 
+        Original position of the gates in the parallelized blocks.
+    '''
+    
+    for gate in gate_sequence:
+        assert len(gate) <= 2, f"Error in specified gate_sequence: length of term {gate} is {len(gate)} > 2"
+    
+    # Re-map gate sequence so that indices range from 0 to n (so that binary_marker is indexed correctly)
+    zeroed_terms = list(range(len(set([item for sublist in gate_sequence for item in sublist]))))
+    original_terms = list(set([item for sublist in gate_sequence for item in sublist]))
+    zeroed_mapping = dict((original_terms[i], i) for i in range(len(zeroed_terms)))
+    rezeroed_gate_sequence = [[zeroed_mapping[gate_ind] for gate_ind in gate] for gate in gate_sequence]
+
+    # Original ordering of the gates; Will be modified according to this later.
+    original_order = [[i] for i in list(range(len(gate_sequence) + 1))]
+
+    n_qubits = len(original_terms)
+    parallelizable_block_lst, ordering_block_lst = [], []
+
+    while len(rezeroed_gate_sequence) != 0:
+        
+        binary_marker = np.zeros(n_qubits) # used to mark the qubit index whenever a non-parallel gate is encountered
+
+        commuting_block = [rezeroed_gate_sequence[0]]
+        ordering_block = [original_order[0]]
+
+        rezeroed_gate_sequence.pop(0)
+        original_order.pop(0)
+
+        n_popped = 0
+        ref_original_order = deepcopy(original_order)
+        for i, gate in enumerate(deepcopy(rezeroed_gate_sequence)):
+
+            if np.array_equal(binary_marker, np.ones(n_qubits)) == True:
+                break
+
+            # If gate commutes with everything in commuting_block, add into commuting_block.
+            # else, if it does not commute with one of the gates, update binary marker for indices at the gate's qubits.
+            encountered_noncommuting = False
+
+            for commuting_gate in commuting_block:
+                if len(set(gate).intersection(set(commuting_gate))) != 0 :
+                    encountered_noncommuting = True
+                    break
+
+            # If this gate is not blocked by gates before it, and does not share qubits with `commuting_gate`, 
+            # add this to the block, and pop() it from `rezeroed_gate_sequence`. (same for original_order)
+            if encountered_noncommuting == False and all([binary_marker[gate_ind] == 0 for gate_ind in gate]):
+
+                commuting_block.append(gate)
+                rezeroed_gate_sequence.pop(i-n_popped)
+
+                ordering_block.append(ref_original_order[i])
+                original_order.pop(i-n_popped)
+
+                n_popped += 1
+                
+            for commuting_gate in commuting_block:
+                for index in gate:
+                    binary_marker[index] = 1
+
+        parallelizable_block_lst.append(commuting_block)
+        ordering_block_lst.append(ordering_block)
+        
+    # Map the re-zeroed gate sequence back to the original sequence
+    remapped_block_lst = []
+    for block in parallelizable_block_lst:
+        remapped_block_lst.append([[original_terms[term_ind] for term_ind in term] for term in block])
+        
+    return remapped_block_lst, ordering_block_lst
+
+def parallelize_pyquil_prog(prog):
+    
+    '''
+    Uses `ordering_block_lst` output of `parallelize_sequence` to re-order a pyQuil program.
+    
+    Parameters
+    ----------
+    prog: Program
+        pyQuil Program to be operated on.
+    
+    Returns
+    -------
+    final_prog : 
+        pyQuil Program with order of gates modified for parallelization.
+        
+    '''
+    
+    gate_list, gate_indices_list = [], []
+    measure_list = []
+    initial_decl_list = []
+
+    for instruction in prog:
+        if str(instruction)[:2] in ['RX', 'RY', 'RZ', 'CP', 'CZ', 'XY']:
+            gate_list.append(deepcopy(instruction))
+            gate_indices_list.append([qubits.index for qubits in instruction.qubits])
+
+        elif str(instruction)[:2] in ['ME']:
+            measure_list.append(deepcopy(instruction))
+        else:
+            initial_decl_list.append(deepcopy(instruction))
+
+    # re-order gate_list based on parallelized blocks
+    remapped_block_lst, ordering_block_lst = parallelize_sequence(gate_indices_list)
+    
+    '''
+    # Calculate single/two-qubit layer depths
+    depth_1q, depth_2q = 0, 0
+    for blk in remapped_block_lst:
+        if max([len(term) for term in blk]) == 2:
+            depth_2q += 1
+        else:
+            depth_1q += 1
+    print(f"Parallelized... final 1q-depth = {depth_1q}, 2q-depth = {depth_2q}, total = {len(remapped_block_lst)}")
+    '''
+    
+    re_ordered_gate_list = []
+    for blocks in ordering_block_lst:
+        for prog_ind in blocks:
+            re_ordered_gate_list.append(gate_list[prog_ind[0]])
+
+    # Re-construct pyQuil program
+    final_prog_list = initial_decl_list + [Pragma('PRESERVE_BLOCK')] + re_ordered_gate_list + [Pragma('END_PRESERVE_BLOCK')] + measure_list
+    final_prog = Program()
+
+    for instruction in final_prog_list:
+        final_prog += instruction
+        
+    return final_prog

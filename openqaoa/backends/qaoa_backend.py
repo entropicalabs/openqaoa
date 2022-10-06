@@ -43,7 +43,9 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
                         noise_model = None,
                         active_reset: Optional[bool] = None,
                         rewiring = None,
-                        qubit_layout = None):
+                        qubit_layout = None,
+                        unfence: Optional[bool] = None,
+                        trivial_parallelization: Optional[bool] = None):
 
     BACKEND_ARGS_MAPPER = {
         QAOAvectorizedBackendSimulator: {},
@@ -58,7 +60,9 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
         QAOAPyQuilQPUBackend: {'n_shots': n_shots,
                                'active_reset': active_reset,
                                'rewiring': rewiring,
-                               'qubit_layout':qubit_layout}
+                               'qubit_layout':qubit_layout,
+                               'unfence':unfence,
+                               'trivial_parallelization':trivial_parallelization}
     }
 
     final_backend_kwargs = {key: value for key, value in BACKEND_ARGS_MAPPER[backend_obj].items()
