@@ -25,7 +25,6 @@ from pyquil.quilatom import QubitPlaceholder as quilQubitPlaceholder
 from .rotationangle import RotationAngle
 from braket.circuits import gates as braketgates
 from braket.circuits import Circuit
-from braket.circuits.free_parameter import FreeParameter
 
 class Gate(ABC):
 
@@ -75,7 +74,7 @@ class OneQubitGate(Gate):
         return program
     
     def apply_braket_gate(self, qubit_idx: int, 
-                          rotation_angle_obj: FreeParameter, 
+                          rotation_angle_obj: RotationAngle, 
                           circuit: Circuit):
         if self.braket_gate is not None:
             circuit += self.braket_gate(qubit_idx, rotation_angle_obj.rotation_angle)
