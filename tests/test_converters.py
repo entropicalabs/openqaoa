@@ -21,7 +21,7 @@ import networkx as nx
 
 
 class TestDocplex2IsingClass(unittest.TestCase):
-    
+
     """
     Test the converter from docplex models
     
@@ -52,15 +52,39 @@ class TestDocplex2IsingClass(unittest.TestCase):
         model.
 
         """
+        weights = [
+            18.25,
+            -4.0,
+            -8.0,
+            -4.0,
+            -6.0,
+            -12.0,
+            -6.0,
+            4.0,
+            2.0,
+            4.0,
+            2.0,
+            2.0,
+            4.0,
+            4.0,
+            2.0,
+            2.25,
+            1.25,
+            -2.0,
+            -4.0,
+            -2.0,
+            -2.0,
+            -2.0,
+        ]
         # Creating a basic docplex model
         mdl = Model("Test inequal")  # Docplex model
-        num_z = 3  # Number of variables
+        num_z = 2  # Number of variables
         z = mdl.binary_var_list(num_z, name="Z")  # docplex variables
-        objective = mdl.sum(z) - 2 * z[0] + z[1] * z[2] + 5  # objective function
+        objective = mdl.sum(z) - 2 * z[0] + z[1] * z[0] + 5  # objective function
         # Adding constraints
         mdl.add_constraint(mdl.sum(z[i] for i in range(num_z)) == 1)
         mdl.add_constraint(2 * z[0] + 3 * z[1] >= 1)
-        mdl.add_constraint(2 * z[1] + 5 * z[2] <= 1)
+        mdl.add_constraint(2 * z[1] + z[0] <= 2)
         mdl.minimize(objective)  # Optimization
 
         ising_problem = FromDocplex2IsingModel(
@@ -68,6 +92,7 @@ class TestDocplex2IsingClass(unittest.TestCase):
         ).ising_model  # Ising model of the Docplex model
 
         self.assertIsInstance(ising_problem, QUBO)
+        self.assertEqual(ising_problem.weights, weights)
 
     def test_model_maxcut(self):
         """
