@@ -30,7 +30,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
     """This Object tests the QAOA Qiskit Simulator Backend objects, which is 
     tasked with the creation and execution of a QAOA circuit for the qiskit 
     library and its local backends.
-    """     
+    """  
             
     def test_circuit_angle_assignment_statevec_backend(self):
         
@@ -673,6 +673,45 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         shot_result = qiskit_shot_backend.get_counts(variate_params)
         
         self.assertEqual(type(shot_result), dict)
+        
+    def test_cvar_alpha_expectation(self):
+        
+        """
+        Test computing the expectation value by changing the alpha of the cvar.
+        """
+        
+        nqubits = 3
+        p = 1
+        weights = [1, -1, 1]
+        gammas = [1/8*np.pi]
+        betas = [1/8*np.pi]
+        shots = 10000
+        
+        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
+                                  PauliOp('ZZ', (0, 2))], weights, 1)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(circuit_params, 
+                                                       betas, gammas)
+        
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(circuit_params,
+                                                                  shots,
+                                                                  None, 
+                                                                  None, 
+                                                                  True, 1.0, 
+                                                                  seed_simulator=1234)
+        
+        expectation_value_100 = qiskit_shot_backend.expectation(variate_params)
+        self.assertEqual(type(float(expectation_value_100)), float)
+        
+        # cvar_alpha = 0.5, 0.75
+        qiskit_shot_backend.cvar_alpha = 0.5
+        expectation_value_05 = qiskit_shot_backend.expectation(variate_params)
+        qiskit_shot_backend.cvar_alpha = 0.75
+        expectation_value_075 = qiskit_shot_backend.expectation(variate_params)
+        self.assertNotEqual(expectation_value_05, expectation_value_075)
+        self.assertEqual(type(float(expectation_value_05)), float)
+        self.assertEqual(type(float(expectation_value_075)), float)
         
     def test_standard_decomposition_branch_in_circuit_construction(self):
         
