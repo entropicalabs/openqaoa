@@ -12,8 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 import os
-import numpy as np
-from time import time
 from typing import Optional, List
 # AWS Braket imports
 
@@ -26,8 +24,6 @@ from braket.jobs.metrics import log_metric
 from ...devices import DeviceAWS
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts
-
 
 class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
     """
@@ -77,8 +73,8 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                                           cvar_alpha)
         QAOABaseBackendCloud.__init__(self, device)
 
-        self.qureg = Circuit()
-        self.qubit_layout = self.circuit_params.qureg if qubit_layout == [] else qubit_layout
+        self.qureg = self.circuit_params.qureg
+        self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout
         self.disable_qubit_rewiring = disable_qubit_rewiring
 
         if self.prepend_state:
