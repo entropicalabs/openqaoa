@@ -78,7 +78,7 @@ class Result:
                 if log.param_log.best != [] else [],
             'optimized cost':
                 log.cost.best[0]
-                if log.cost.best != [] else [],
+                if log.cost.best != [] else None,
             'optimized measurement outcomes':
                 log.measurement_outcomes.best[0]
                 if log.measurement_outcomes.best != [] else {},
