@@ -66,18 +66,26 @@ class Result:
         }
 
         self.intermediate = {
-            "angles log": np.array(log.param_log.history).tolist(),
-            "intermediate cost": log.cost.history,
-            "intermediate measurement outcomes": log.measurement_outcomes.history,
+            'angles log': np.array(log.param_log.history).tolist(),
+            'intermediate cost': log.cost.history,
+            'intermediate measurement outcomes':
+                log.measurement_outcomes.history,
+            'intermediate runs job id': log.job_ids.history
         }
 
         self.optimized = {
-            "optimized angles": np.array(log.param_log.best[0]).tolist() 
-            if log.param_log.best != [] else [],
-            "optimized cost": log.cost.best[0] if log.cost.best != [] else None,
-            "optimized measurement outcomes": log.measurement_outcomes.best[0]
-            if log.measurement_outcomes.best != []
-            else {},
+            'optimized angles':
+                np.array(log.param_log.best[0]).tolist()
+                if log.param_log.best != [] else [],
+            'optimized cost':
+                log.cost.best[0]
+                if log.cost.best != [] else None,
+            'optimized measurement outcomes':
+                log.measurement_outcomes.best[0]
+                if log.measurement_outcomes.best != [] else {},
+            'optimized run job id': 
+                log.job_ids.best[0] 
+                if len(log.job_ids.best) != 0 else []
         }
 
         self.most_probable_states = most_probable_bitstring(
