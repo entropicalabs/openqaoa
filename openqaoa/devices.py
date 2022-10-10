@@ -385,7 +385,13 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             execution_timeout: float = None,
                             client_configuration: QCSClientConfiguration = None,
                             endpoint_id: str = None,
-                            engagement_manager: EngagementManager = None) -> dict:
+                            engagement_manager: EngagementManager = None,
+                            device_name: str = None,
+                            aws_access_key_id: str = None, 
+                            aws_secret_access_key: str = None,
+                            aws_region: str = None, 
+                            s3_bucket_name: str = None,
+                            folder_name: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
                         'hub': hub,
@@ -398,7 +404,14 @@ def device_class_arg_mapper(device_class:DeviceBase,
                         'execution_timeout': execution_timeout,
                         'client_configuration': client_configuration,
                         'endpoint_id': endpoint_id,
-                        'engagement_manager': engagement_manager}
+                        'engagement_manager': engagement_manager},
+        
+        DeviceAWS: {'device_name':device_name,
+                    'aws_access_key_id':aws_access_key_id,
+                    'aws_secret_access_key':aws_secret_access_key,
+                    'aws_region': aws_region,
+                    's3_bucket_name': s3_bucket_name,
+                    'folder_name': folder_name}
     }
 
     final_device_kwargs = {key: value for key, value in DEVICE_ARGS_MAPPER[device_class].items()
