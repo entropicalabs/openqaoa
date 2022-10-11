@@ -23,6 +23,7 @@ from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
 
 from boto3.session import Session
+from botocore.exceptions import NoRegionError
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
 
@@ -292,7 +293,7 @@ class DeviceAWS(DeviceBase):
         Parameters
         ----------
 		device_name: `str`
-			The name of the QPU device in AWS Braket to be used
+			The ARN string of the braket QPU/simulator to be used
         aws_access_key_id: `str`
             Valid AWS Access Key ID.
         aws_secret_access_key: `str`
@@ -327,13 +328,15 @@ class DeviceAWS(DeviceBase):
         
         # Only QPUs that are available for the specified aws region on Braket 
         # will be shown. We filter out QPUs that do not work with the circuit model
-        device_filter = np.multiply(
-            [each_dict['deviceStatus'] == 'ONLINE' for each_dict in self.aws_session.search_devices()],
-            [each_dict['providerName'] != 'D-Wave Systems' for each_dict in self.aws_session.search_devices()]
-        )
-        active_devices = np.array(self.aws_session.search_devices())[device_filter].tolist()
+        sesh_devices = self.aws_session.search_devices()
         
-        self.available_qpus = [backend_dict['deviceName']
+        device_filter = np.multiply(
+            [each_dict['deviceStatus'] == 'ONLINE' for each_dict in sesh_devices],
+            [each_dict['providerName'] != 'D-Wave Systems' for each_dict in sesh_devices]
+        )
+        active_devices = np.array(sesh_devices)[device_filter].tolist()
+        
+        self.available_qpus = [backend_dict['deviceArn']
                                for backend_dict in active_devices]
 
         if self.device_name == '':
@@ -349,10 +352,7 @@ class DeviceAWS(DeviceBase):
     def _check_backend_connection(self) -> bool:
         
         if self.device_name in self.available_qpus:
-            # Assumes that there is only 1/ the first device arn is correct
-            # TODO: Make this line more general to account for possibility of 2 or more arns returned
-            self.device_arn = [each_device['deviceArn'] for each_device in self.aws_session.search_devices() if each_device['deviceName'] == self.device_name][0]
-            self.backend_device = AwsDevice(self.device_arn, self.aws_session)
+            self.backend_device = AwsDevice(self.device_name, self.aws_session)
             return True
         else:
             print(
@@ -365,8 +365,11 @@ class DeviceAWS(DeviceBase):
             sesh = Session(aws_access_key_id = self.aws_access_key_id, 
                            aws_secret_access_key = self.aws_secret_access_key, 
                            region_name = self.aws_region)
-            self.aws_session = AwsSession(sesh)
-
+            self.aws_session = AwsSession(sesh, default_bucket = self.s3_bucket_name)
+            self.s3_bucket_name = self.aws_session.default_bucket()
+            return True
+        except NoRegionError:
+            self.aws_session = None
             return True
         except Exception as e:
             print('An Exception has occured when trying to connect with the \
