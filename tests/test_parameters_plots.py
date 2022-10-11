@@ -51,7 +51,7 @@ qaoa_circuit_params2 = QAOACircuitParams(cost_hamiltonian = hamiltonian2, mixer_
 
 class TestingQAOAParametersPlots(unittest.TestCase):
 
-    def test_plot(self, qaoa_circuit_params, params_type, init_type = 'rand'):
+    def _plot(self, qaoa_circuit_params, params_type, init_type = 'rand'):
         #generic function to create the plots
         print(f'Example of {params_type} params')
         if params_type in ['fourier', 'fourier_extended', 'fourier_w_bias']:
@@ -61,27 +61,27 @@ class TestingQAOAParametersPlots(unittest.TestCase):
         params.plot()
 
     def test_QAOAVariationalStandardParamsPlots(self):        # standard params
-        self.test_plot(qaoa_circuit_params1, 'standard')
+        self._plot(qaoa_circuit_params1, 'standard')
 
     def test_QAOAVariationalStandardBiasParamsPlots(self):    # standard_w_bias params
-        self.test_plot(qaoa_circuit_params2, 'standard_w_bias')
+        self._plot(qaoa_circuit_params2, 'standard_w_bias')
 
     def test_QAOAVariationalExtendedParamsPlots(self):        # extended params
-        self.test_plot(qaoa_circuit_params1, 'extended')
-        self.test_plot(qaoa_circuit_params2, 'extended')    
+        self._plot(qaoa_circuit_params1, 'extended')
+        self._plot(qaoa_circuit_params2, 'extended')    
         
     def test_QAOAVariationalFourierParamsPlots(self):        # fourier params
-        self.test_plot(qaoa_circuit_params2, 'fourier')    
+        self._plot(qaoa_circuit_params2, 'fourier')    
         
     def test_QAOAVariationalFourierBiasParamsPlots(self):        # fourier_w_bias params
-        self.test_plot(qaoa_circuit_params2, 'fourier_w_bias')  
+        self._plot(qaoa_circuit_params2, 'fourier_w_bias')  
         
     def test_QAOAVariationalFourierExtendedParamsPlots(self):        # fourier_extended params
-        self.test_plot(qaoa_circuit_params1, 'fourier_extended')
-        self.test_plot(qaoa_circuit_params2, 'fourier_extended')   
+        self._plot(qaoa_circuit_params1, 'fourier_extended')
+        self._plot(qaoa_circuit_params2, 'fourier_extended')   
         
     def test_QAOAVariationalAnnealingParamsPlots(self):        # annealing params
-        self.test_plot(qaoa_circuit_params2, 'annealing', init_type = 'ramp')  
+        self._plot(qaoa_circuit_params2, 'annealing', init_type = 'ramp')  
 
 
 
