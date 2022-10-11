@@ -14,6 +14,7 @@
 
 import abc
 import numpy as np
+from typing import Optional
 from qiskit import IBMQ
 from qiskit.providers.ibmq import IBMQAccountError
 from qiskit.providers.ibmq.api.exceptions import RequestsApiError
@@ -283,9 +284,9 @@ class DeviceAWS(DeviceBase):
 		as input to the device_name parameter.
     """
     
-    def __init__(self, device_name: str, aws_access_key_id: str, 
-                 aws_secret_access_key: str, aws_region: str, 
-                 s3_bucket_name: str, folder_name: str = 'oq_runs'):
+    def __init__(self, device_name: str, aws_access_key_id: Optional[str] = None, 
+                 aws_secret_access_key: Optional[str] = None, aws_region: Optional[str] = None, 
+                 s3_bucket_name: Optional[str] = None, folder_name: str = 'oq_runs'):
         
         """A majority of the input parameters required for this can be found in
         the user's AWS Web Services account.
@@ -394,7 +395,7 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             aws_secret_access_key: str = None,
                             aws_region: str = None, 
                             s3_bucket_name: str = None,
-                            folder_name: str = None) -> dict:
+                            folder_name: str = 'oq_runs') -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
                         'hub': hub,
