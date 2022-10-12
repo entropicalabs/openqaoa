@@ -19,6 +19,7 @@ maxcut_qubo = maxcut_prob.get_qubo_problem()
 class TestPennylaneOptimizers(unittest.TestCase):
 
     def _run_method(self, method):
+        " function tu run the test for any method "
         q = QAOA()
         device = create_device(location='local', name='qiskit.statevector_simulator')
         q.set_device(device)
@@ -33,6 +34,7 @@ class TestPennylaneOptimizers(unittest.TestCase):
         q.optimize()
 
     def test_pennylane_optimizers(self):
+        " function to run the tests for pennylane optimizers "
         list_optimizers = CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS
 
         for opt in list_optimizers:
