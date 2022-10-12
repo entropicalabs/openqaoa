@@ -64,6 +64,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          gcov_ignore: ./tests/test_qpu_qiskit.py, tests/test_qpu_braket.py, tests/test_qpu_devices.py 
           files: ./coverage.xml
 
   docs:
