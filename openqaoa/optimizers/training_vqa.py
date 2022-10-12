@@ -470,6 +470,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         * optimizer_options
         
             * Dictionary of optimiser-specific arguments, defaults to ``None``
+            * Used also for the pennylande optimizers (and step function) arguments
 
     """
     CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
@@ -568,7 +569,6 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         : 
             The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
         '''
-        #pennylane_methods = {'pl_adagrad': ompl.adagrad, 'pl_adam': ompl.adam, 'pl_vgd': ompl.grad_descent, 'pl_momentum': ompl.momentum}
 
         if self.method == 'vgd':
             method = om.grad_descent
@@ -583,18 +583,16 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
             method = om.SPSA
-        elif self.method.lower().split()[0] == 'pennylane':
-            print("Warning : PennyLane")
+        elif self.method.lower().split()[0] == 'pennylane': # check if we are using a pennylane optimizer
             method = ompl.pennylane_optimizer
 
-            if len(self.method.split()) > 1:
-                self.options['method'] = self.method.lower().split()[1]
+            if len(self.method.split()) > 1: # check if we are not using the default (vgd)
+                self.options['method'] = self.method.lower().split()[1] 
 
                 if self.options['method'] == 'natural_grad_descent': 
                     self.options['qfim'] = qfim(self.vqa_object, self.variational_params, self.log)
                 elif self.options['method'] in ['spsa', 'rotosolve']:    
                     self.jac = None 
-            #method = pennylane_methods[self.method]
         
         try:
             if self.hess == None:
