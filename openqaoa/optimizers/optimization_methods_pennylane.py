@@ -43,7 +43,9 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
         current parameter vector.
     options : dict, optional
         Dictionary where keys are the arguments for the optimizers object, and
-        the values are the values to pass to these arguments
+        the values are the values to pass to these arguments.
+        To know all the possible argumets read
+        https://docs.pennylane.ai/en/stable/introduction/interfaces.html#optimizers.
 
 
     (read https://docs.pennylane.ai/en/stable/code/api/pennylane.RotosolveOptimizer.html#pennylane.RotosolveOptimizer.step)
