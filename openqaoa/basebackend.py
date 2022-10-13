@@ -237,7 +237,7 @@ class QAOABaseBackend(VQABaseBackend):
         """
         pass
 
-    def expectation(self, params: QAOAVariationalBaseParams) -> float:
+    def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
         """
         Compute the expectation value w.r.t the Cost Hamiltonian
 
@@ -252,7 +252,7 @@ class QAOABaseBackend(VQABaseBackend):
         float:
             Expectation value of cost operator wrt to quantum state produced by QAOA circuit
         """
-        counts = self.get_counts(params)
+        counts = self.get_counts(params, n_shots)
         cost = cost_function(
             counts, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
         return cost

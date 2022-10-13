@@ -56,7 +56,7 @@ def update_and_compute_expectation(backend_obj: QAOABaseBackend,
         A callable that accepts a list/array of parameters, and returns the computed expectation value. 
     """
     
-    def fun(args):
+    def fun(args, n_shots=None):
         current_total_eval = logger.func_evals.best[0]
         current_total_eval += 1
         current_jac_eval = logger.jac_func_evals.best[0]
@@ -64,7 +64,9 @@ def update_and_compute_expectation(backend_obj: QAOABaseBackend,
         logger.log_variables({'func_evals': current_total_eval, 
                               'jac_func_evals': current_jac_eval})
         params.update_from_raw(args)
-        return backend_obj.expectation(params)
+        
+        n_shots_dict = {'n_shots':n_shots} if n_shots else {}
+        return backend_obj.expectation(params, **n_shots_dict)
 
     return fun
 
@@ -181,17 +183,29 @@ def grad_fd(backend_obj, params, gradient_options, logger):
     eta = gradient_options['stepsize']
     fun = update_and_compute_expectation(backend_obj, params, logger)
 
-    def grad_fd_func(args):
+    def grad_fd_func(args, n_shots=None):
+
+        #if n_shots is int or None create a list with len of args 
+        if n_shots == None:
+            n_shots_list = [None for _ in range(len(args))]
+        elif isinstance(n_shots, int):
+            n_shots_list = [n_shots for _ in range(len(args))] 
+        else:
+            n_shots_list = n_shots
+
+        if len(n_shots_list) != len(args):
+            raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
 
         grad = np.zeros(len(args))
 
-        for i in range(len(args)):
+        for i, n_shots in enumerate(n_shots_list):
             vect_eta = np.zeros(len(args))
             vect_eta[i] = 1
 
             # Finite diff. calculation of gradient
-            eval_i = fun(args - (eta/2)*vect_eta)
-            eval_f = fun(args + (eta/2)*vect_eta)
+            eval_i = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
+            eval_f = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
+
             grad[i] = (eval_f-eval_i)/eta
 
         return grad
