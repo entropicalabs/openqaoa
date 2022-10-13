@@ -428,3 +428,56 @@ def stochastic_grad_descent(fun, x0, jac, args=(), stepsize=0.001, mass=0.9, sta
 
     return OptimizeResult(x=x, fun=fun(x), jac=g, nit=i+1, nfev=i+1, success=True)
 '''
+
+
+
+def CANS(fun, x0, args=(), maxfev=None, stepsize=0.01, n_shots_min=10, n_shots_max=None, mu=None, b=None,
+                 maxiter=100, tol=10**(-6), jac_w_uncertenty=None, callback=None, **options):
+
+    chi = np.zeros(len(x0))
+    xi = 0
+    lipschitz = np.sum(x0)
+    n_shots = n_shots_min
+
+    bestx = x0
+    besty, S = np.real(fun(x0, *args))
+    funcalls = 1  # tracks no. of function evals.
+    niter = 0
+    improved = True
+    stop = False
+
+    testx = np.copy(bestx)
+    testy = besty
+    while improved and not stop and niter < maxiter:
+        improved = False
+
+        gradient, S = jac_w_uncertenty(testx, n_shots)
+
+        chi = mu*chi + (1-mu)*gradient
+        xi = mu*xi + (1-mu)*np.sum(S)
+        n_shots = np.floor(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(chi**2+b*mu**niter)))
+        n_shots = max(n_shots, n_shots_min)
+        n_shots = min(n_shots, n_shots_max) if n_shots_max else n_shots
+
+        # compute gradient descent step
+        testx = testx - stepsize*gradient
+        testy = np.real(fun(testx, n_shots, *args))
+
+        if np.abs(besty-testy) < tol:
+            improved = False
+
+        else:
+            besty = testy
+            bestx = np.copy(testx)
+            improved = True
+
+        if callback is not None:
+            callback(bestx)
+        if maxfev is not None and funcalls >= maxfev:
+            stop = True
+            break
+
+        niter += 1
+
+    return OptimizeResult(fun=besty, x=bestx, nit=niter,
+                          nfev=funcalls, success=(niter > 1))

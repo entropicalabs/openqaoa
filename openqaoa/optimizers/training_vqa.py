@@ -181,7 +181,7 @@ class OptimizeVQA(ABC):
 
     # def evaluate_jac(self, x):
 
-    def optimize_this(self, x):
+    def optimize_this(self, x, n_shots=None):
         '''
         A function wrapper to execute the circuit in the backend. This function 
         will be passed as argument to be optimized by scipy optimize.
@@ -215,7 +215,8 @@ class OptimizeVQA(ABC):
         if self.save_to_csv:
             save_parameter('param_log', deepcopy(x))
         
-        callback_cost = self.vqa.expectation(self.variational_params)
+        n_shots_dict = {'n_shots':n_shots} if n_shots else {}
+        callback_cost = self.vqa.expectation(self.variational_params, **n_shots_dict)
         
         log_dict.update({'cost': callback_cost})
         current_eval = self.log.func_evals.best[0]

@@ -186,10 +186,8 @@ def grad_fd(backend_obj, params, gradient_options, logger):
     def grad_fd_func(args, n_shots=None):
 
         #if n_shots is int or None create a list with len of args 
-        if n_shots == None:
-            n_shots_list = [None for _ in range(len(args))]
-        elif isinstance(n_shots, int):
-            n_shots_list = [n_shots for _ in range(len(args))] 
+        if n_shots == None or isinstance(n_shots, int):
+            n_shots_list = [n_shots for _ in range(len(args))]
         else:
             n_shots_list = n_shots
 
@@ -201,7 +199,7 @@ def grad_fd(backend_obj, params, gradient_options, logger):
         for i, n_shots in enumerate(n_shots_list):
             vect_eta = np.zeros(len(args))
             vect_eta[i] = 1
-
+            
             # Finite diff. calculation of gradient
             eval_i = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
             eval_f = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
