@@ -1,0 +1,8 @@
+coverage:
+  status:
+    project:
+      default: # This can be anything, but it needs to exist as the name
+        # basic settings
+        target: 50%
+        threshold: 50%
+        base: 50% 
