@@ -1,9 +1,9 @@
 coverage:
-  precision: 2
-  round: down
-  range: "40...100"
-  status:
-    project:
-      default: # This can be anything, but it needs to exist as the name
-        # basic settings
-        threshold: 0%
+    precision: 2
+    round: down
+    range: "10...100"
+    status:
+        project:
+          default:
+            # basic
+            threshold: 0%
