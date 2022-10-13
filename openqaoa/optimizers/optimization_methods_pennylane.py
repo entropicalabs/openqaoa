@@ -1,13 +1,42 @@
+#   Copyright 2022 Entropica Labs
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 
+"""
+Function to implement pennylane optimization algorithms.
+Read https://docs.pennylane.ai/en/stable/introduction/interfaces.html#optimizers
+Only those that don't require a pennylane backend have been implemented.
+Similarly as with the custom optimization methods Scipy `minimize` is used. Extends available scipy methods.
+"""
 
-from importlib.metadata import requires
-from operator import ne
 import pennylane as pl
 import inspect
 from scipy.optimize import OptimizeResult
 import numpy as np
 
-import matplotlib.pyplot as plt
+AVAILABLE_OPTIMIZERS = {  # optimizers implemented
+                            'adagrad': pl.AdagradOptimizer, 
+                            'adam': pl.AdamOptimizer, 
+                            'vgd': pl.GradientDescentOptimizer, 
+                            'momentum':  pl.MomentumOptimizer,
+                            'nesterov_momentum': pl.NesterovMomentumOptimizer,
+                            'natural_grad_descent': pl.QNGOptimizer,
+                            'rmsprop': pl.RMSPropOptimizer,
+                            'rotosolve': pl.RotosolveOptimizer, 
+                            'spsa': pl.SPSAOptimizer,
+                        }
+
+
 
 def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
                         maxiter=100, tol=10**(-6), jac=None, callback=None,                         
@@ -66,19 +95,8 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
     def cost(params, **k): # define a function to convert the params list from pennylane to numpy
         return fun(np.array(params), *k)
 
-    available_methods_dict = {  # optimizers implemented
-                                'adagrad': pl.AdagradOptimizer, 
-                                'adam': pl.AdamOptimizer, 
-                                'vgd': pl.GradientDescentOptimizer, 
-                                'momentum':  pl.MomentumOptimizer,
-                                'nesterov_momentum': pl.NesterovMomentumOptimizer,
-                                'natural_grad_descent': pl.QNGOptimizer,
-                                'rmsprop': pl.RMSPropOptimizer,
-                                'rotosolve': pl.RotosolveOptimizer, 
-                                'spsa': pl.SPSAOptimizer,
-                             }
 
-    optimizer = available_methods_dict[method] # define the optimizer
+    optimizer = AVAILABLE_OPTIMIZERS[method] # define the optimizer
 
     #get optimizer arguments
     arguments = inspect.signature(optimizer).parameters.keys()
@@ -102,7 +120,6 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
     testy = np.real(besty)
     while improved and not stop and niter < maxiter:
         improved = False
-        niter += 1
 
         # compute step
         if qfim:    #natural_grad_descent
@@ -121,7 +138,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
             testx, testy = optimizer.step_and_cost(cost, bestx, *args)
 
         # check if stable
-        if np.abs(besty-testy) < tol and niter > 2:
+        if np.abs(besty-testy) < tol and niter > 1:
             improved = False
 
         else:
@@ -134,6 +151,8 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
         if maxfev is not None and funcalls >= maxfev:
             stop = True
             break
+
+        niter += 1
         
     return OptimizeResult(fun=besty, x=np.array(bestx), nit=niter,
                           nfev=funcalls, success=(niter > 1))
