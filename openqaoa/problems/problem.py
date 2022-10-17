@@ -14,13 +14,10 @@
 
 from abc import ABC, abstractmethod
 from collections import defaultdict, Counter
-from math import dist
-from random import seed
 
 import networkx as nx
 import numpy as np
 import scipy
-import scipy.spatial
 import itertools
 
 from .helper_functions import convert2serialize, check_kwargs
