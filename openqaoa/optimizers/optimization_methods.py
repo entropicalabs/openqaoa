@@ -66,7 +66,7 @@ def grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
     while improved and not stop and niter < maxiter:
         improved = False
         niter += 1
-
+        
         # compute gradient descent step
         testx = testx - stepsize*jac(testx)
         testy = np.real(fun(testx, *args))
@@ -431,16 +431,17 @@ def stochastic_grad_descent(fun, x0, jac, args=(), stepsize=0.001, mass=0.9, sta
 
 
 
-def CANS(fun, x0, args=(), maxfev=None, stepsize=0.01, n_shots_min=10, n_shots_max=None, mu=None, b=None,
-                 maxiter=100, tol=10**(-6), jac_w_uncertenty=None, callback=None, **options):
+def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, mu=0.99, b=1e-06,
+                 maxiter=100, tol=10**(-6), jac=None, jac_w_variance=None,callback=None, **options): #jac_w_uncertainty=None
+
+    print('hi')
 
     chi = np.zeros(len(x0))
     xi = 0
-    lipschitz = np.sum(x0)
     n_shots = n_shots_min
 
     bestx = x0
-    besty, S = np.real(fun(x0, *args))
+    besty = np.real(fun(bestx, *args))
     funcalls = 1  # tracks no. of function evals.
     niter = 0
     improved = True
@@ -449,19 +450,28 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.01, n_shots_min=10, n_shots_m
     testx = np.copy(bestx)
     testy = besty
     while improved and not stop and niter < maxiter:
-        improved = False
+        lipschitz = np.sum(np.abs(testx)) #TODO there is something wrong with this const
 
-        gradient, S = jac_w_uncertenty(testx, n_shots)
+        if not stepsize < 2/lipschitz:
+            print("Stepsize is bigger than 2/Lipschitz: it should be smaller than {0:.3g}".format(2/lipschitz))
+            break
+        
+        print('a',n_shots,testy)
 
-        chi = mu*chi + (1-mu)*gradient
-        xi = mu*xi + (1-mu)*np.sum(S)
-        n_shots = np.floor(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(chi**2+b*mu**niter)))
-        n_shots = max(n_shots, n_shots_min)
-        n_shots = min(n_shots, n_shots_max) if n_shots_max else n_shots
+        # compute gradient and uncertainty (standar dev)
+        gradient, variance = jac_w_variance(testx, n_shots=n_shots)
 
         # compute gradient descent step
         testx = testx - stepsize*gradient
-        testy = np.real(fun(testx, n_shots, *args))
+        testy = np.real(fun(testx, *args))
+
+        # compute n_shots next step
+        chi = mu*chi + (1-mu)*gradient
+        xi = mu*xi + (1-mu)*np.sum(variance)
+        n_shots = int(np.ceil(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(np.linalg.norm(chi)**2+b*mu**niter))))
+        n_shots = max(n_shots, n_shots_min)
+        n_shots = min(n_shots, n_shots_max) if n_shots_max else n_shots
+     
 
         if np.abs(besty-testy) < tol:
             improved = False

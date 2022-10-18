@@ -258,7 +258,8 @@ class QAOABaseBackend(VQABaseBackend):
         return cost
 
     def expectation_w_uncertainty(self,
-                                  params: QAOAVariationalBaseParams) -> Tuple[float, float]:
+                                  params: QAOAVariationalBaseParams,
+                                  n_shots=None) -> Tuple[float, float]:
         """
         Compute the expectation value w.r.t the Cost Hamiltonian and its uncertainty
 
@@ -274,7 +275,7 @@ class QAOABaseBackend(VQABaseBackend):
             expectation value and its uncertainty of cost operator wrt 
             to quantum state produced by QAOA circuit.
         """
-        counts = self.get_counts(params)
+        counts = self.get_counts(params, n_shots)
         cost = cost_function(
             counts, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
         cost_sq = cost_function(counts,

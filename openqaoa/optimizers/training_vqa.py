@@ -527,7 +527,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
-    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
+    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton', 'cans',
                                   'rmsprop', 'natural_grad_descent', 'spsa']
 
     def __init__(self,
@@ -562,6 +562,10 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 self.jac = derivative(
                     self.vqa_object, self.variational_params, self.log, 
                     'gradient', jac, jac_options)
+                #TODO : check if we want to do it this way
+                self.jac_w_variance = derivative(
+                    self.vqa_object, self.variational_params, self.log, 
+                    'gradient_w_variance', jac, jac_options)
             else:
                 self.jac = jac
 
@@ -631,6 +635,10 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
             method = om.SPSA
+        elif self.method == 'cans':
+            print("Warning : CANS is an experimental feature.")
+            method = om.CANS
+            self.options['jac_w_variance'] = self.jac_w_variance
         
         try:
             if self.hess == None:

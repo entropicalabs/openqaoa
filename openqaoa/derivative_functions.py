@@ -124,7 +124,7 @@ def derivative(backend_obj: QAOABaseBackend,
     # cost_ext = derivative_dict['cost_ext']
     params_ext = QAOAVariationalExtendedParams.empty(backend_obj.circuit_params)
 
-    derivative_types = ['gradient', 'hessian']
+    derivative_types = ['gradient', 'gradient_w_variance', 'hessian']
     assert derivative_type in derivative_types,\
         "Unknown derivative type specified - please choose between " + \
         str(derivative_types)
@@ -150,6 +150,12 @@ def derivative(backend_obj: QAOABaseBackend,
         elif derivative_method == 'grad_spsa':
             out = grad_spsa(backend_obj, params, derivative_options, logger)
 
+    elif derivative_type == 'gradient_w_variance':
+
+        #TODO: complete
+
+        out = grad_w_variance_fd(backend_obj, params, derivative_options, logger)
+
     elif derivative_type == 'hessian':
 
         if derivative_method == 'finite_difference':
@@ -158,6 +164,57 @@ def derivative(backend_obj: QAOABaseBackend,
             raise ValueError('Only support hessian derivative method is finite_difference. Your choice: {}'.format(derivative_method))
 
     return out
+
+def grad_w_variance_fd(backend_obj, params, gradient_options, logger):
+
+    # Set default value of eta
+    eta = gradient_options['stepsize']
+    fun = update_and_compute_expectation(backend_obj, params, logger)
+
+    def _grad_one_shot(args, i):
+        vect_eta = np.zeros(len(args))
+        vect_eta[i] = 1
+
+        eval_i = fun(args - (eta/2)*vect_eta, n_shots=1)
+        eval_f = fun(args + (eta/2)*vect_eta, n_shots=1)
+
+        return (eval_f-eval_i)/eta
+        
+
+    def grad_fd_func(args, n_shots=None):
+
+        #if n_shots is int or None create a list with len of args 
+        if n_shots == None or isinstance(n_shots, int):
+            n_shots_list = [n_shots for _ in range(len(args))]
+        else:
+            n_shots_list = n_shots
+
+
+        if len(n_shots_list) != len(args):
+            raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
+
+        
+        grad = np.zeros(len(args))
+        variance = np.zeros(len(args))
+
+        for i, n_shots in enumerate(n_shots_list):
+
+            gradient_list = np.array([ _grad_one_shot(args, i) for _ in range(n_shots)])
+
+            grad[i]     = np.mean(gradient_list)
+            variance[i] = np.var(gradient_list)
+            
+            # Finite diff. calculation of gradient
+            #eval_i, uncertainty_i = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
+            #eval_f, uncertainty_f = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
+
+            #grad[i] = (eval_f-eval_i)/eta
+            #TODO : check uncertainty
+            #uncertainty[i] = np.sqrt(uncertainty_i**2+uncertainty_f**2)/2
+
+        return grad, variance
+
+    return grad_fd_func
 
 
 def grad_fd(backend_obj, params, gradient_options, logger):

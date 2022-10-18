@@ -175,7 +175,6 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         """
 
         n_shots = self.n_shots if n_shots == None else n_shots 
-        print(n_shots)
 
         qaoa_circuit = self.qaoa_circuit(params)
         counts = self.backend_simulator.run(qaoa_circuit, shots=n_shots).result().get_counts()
