@@ -1,7 +1,10 @@
  <div align="center">
 
-![openqaoa_logo](https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png#gh-light-mode-only)
-![openqaoa_logo](https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo_offW.png#gh-dark-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo_offW.png">
+  <img alt="OpenQAOA." src="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
+</picture>
 
 #
   [![build test](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml/badge.svg)](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml)<!-- Tests (GitHub actions) -->
