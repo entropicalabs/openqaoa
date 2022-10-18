@@ -3,7 +3,6 @@
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo_offW.png">
-  <img alt="OpenQAOA." src="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
 </picture>
 
 #
