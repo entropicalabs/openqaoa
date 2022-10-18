@@ -491,3 +491,73 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
 
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))
+
+
+def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, mu=0.99, b=1e-06,
+                 maxiter=100, tol=10**(-6), jac=None, jac_w_variance=None,callback=None, **options): #jac_w_uncertainty=None
+
+    chi = np.zeros(len(x0))
+    xi = 0
+    n_shots = [n_shots_min for _ in range(len(x0))]
+
+    bestx = x0
+    besty = np.real(fun(bestx, *args))
+    funcalls = 1  # tracks no. of function evals.
+    niter = 0
+    improved = True
+    stop = False
+
+    testx = np.copy(bestx)
+    testy = besty
+    while improved and not stop and niter < maxiter:
+        lipschitz = np.sum(np.abs(testx)) #TODO there is something wrong with this const
+
+        if not stepsize < 2/lipschitz:
+            print("Stepsize is bigger than 2/Lipschitz: it should be smaller than {0:.3g}".format(2/lipschitz))
+            break
+        
+        print('a',n_shots,testy)
+
+        # compute gradient and uncertainty (standar dev)
+        gradient, variance = jac_w_variance(testx, n_shots=list(n_shots))
+        print('hi', gradient, variance)
+
+        # compute gradient descent step
+        testx = testx - stepsize*gradient
+        testy = np.real(fun(testx, *args))
+
+        # NOT WORKING
+        # compute n_shots next step
+        xi  = (mu*xi  + (1-mu)*variance) / (1-mu**(niter+1))
+        print('1')
+        chi = (mu*chi + (1-mu)*gradient) / (1-mu**(niter+1))
+        print('2')
+        n_shots = np.int32(np.ceil(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(chi**2+b*mu**niter))))
+        print('3', n_shots)
+        n_shots = np.fmax(n_shots, n_shots_min)
+        print('4')
+        n_shots = np.fmin(n_shots, n_shots_max) if n_shots_max else n_shots
+
+        print('lo') 
+
+        #falta n_shots_max
+     
+
+        if np.abs(besty-testy) < tol:
+            improved = False
+
+        else:
+            besty = testy
+            bestx = np.copy(testx)
+            improved = True
+
+        if callback is not None:
+            callback(bestx)
+        if maxfev is not None and funcalls >= maxfev:
+            stop = True
+            break
+
+        niter += 1
+
+    return OptimizeResult(fun=besty, x=bestx, nit=niter,
+                          nfev=funcalls, success=(niter > 1))
