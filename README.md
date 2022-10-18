@@ -1,11 +1,9 @@
-%# https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#specifying-the-theme-an-image-is-shown-to
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo_offW.png">
   <img alt="OpenQAOA." src="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
 </picture>
 
-%# Badges
   [![build test](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml/badge.svg)](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml)<!-- Tests (GitHub actions) -->
   [![Documentation Status](https://readthedocs.org/projects/el-openqaoa/badge/?version=latest)](https://el-openqaoa.readthedocs.io/en/latest/?badge=latest) <!-- Readthedocs -->
   [![PyPI version](https://badge.fury.io/py/mitiq.svg)](https://badge.fury.io/py/mitiq) <!-- PyPI -->
