@@ -1,9 +1,10 @@
- <div align="center">
+<div align="center">
 
-![openqaoa_logo](https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png#gh-light-mode-only)
-![openqaoa_logo](https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo_offW.png#gh-dark-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo_offW.png" width="650">
+  <img alt="OpenQAOA" src="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png" width="650">
+</picture>
 
-#
   [![build test](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml/badge.svg)](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml)<!-- Tests (GitHub actions) -->
   [![Documentation Status](https://readthedocs.org/projects/el-openqaoa/badge/?version=latest)](https://el-openqaoa.readthedocs.io/en/latest/?badge=latest) <!-- Readthedocs -->
   [![PyPI version](https://badge.fury.io/py/mitiq.svg)](https://badge.fury.io/py/mitiq) <!-- PyPI -->
