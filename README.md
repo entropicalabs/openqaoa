@@ -1,7 +1,8 @@
+<div align="center">
+
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo_offW.png">
-  <img alt="OpenQAOA." src="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
+  <img alt="OpenQAOA" src="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png">
 </picture>
 
   [![build test](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml/badge.svg)](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml)<!-- Tests (GitHub actions) -->
@@ -12,6 +13,7 @@
   [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)<!-- Covenant Code of conduct -->
   [![codecov](https://codecov.io/gh/entropicalabs/openqaoa/branch/dev/graph/badge.svg?token=ZXD77KM5OR)](https://codecov.io/gh/entropicalabs/openqaoa) <!-- Code coverage -->
   [![Downloads](https://pepy.tech/badge/openqaoa)](https://pepy.tech/project/openqaoa)
+</div>
 
 # OpenQAOA
 
