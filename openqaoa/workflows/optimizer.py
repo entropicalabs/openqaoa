@@ -367,6 +367,20 @@ class QAOA(Optimizer):
 
 
 class RQAOA(Optimizer):
+    def __init__(self, type: str = 'custom', device=DeviceLocal('vectorized')):
+
+        self.device = device
+        self.type = type
+
+        #create the qaoa object
+        self.q = QAOA(self.device)
+        
+
+
+
+
+
+class RQAOA(Optimizer):
     """
     RQAOA optimizer class.
 
