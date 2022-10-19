@@ -169,7 +169,7 @@ class QAOA(Optimizer):
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
             variational_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
-                For example, {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
+                For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
 
         for key, value in kwargs.items():

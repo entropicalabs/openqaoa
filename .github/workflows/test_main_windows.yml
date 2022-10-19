@@ -1,9 +1,9 @@
 name: test_windows
 
 on:
-  push:
-    tags:
-    - '*'
+  pull_request:
+    branches:
+    - main
 
 jobs:
   build:
@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [3.8, 3.9, 3.10]  
+        python: ['3.8', '3.9', '3.10']  
         forest-sdk-version: [2.23.0]
 
     # Run on a Windows machine
@@ -27,6 +27,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      # Install MSBUILD ( Required to compile matplotlib )
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+
       # Install OpenQAOA        
       - name: Install OpenQAOA
         shell: pwsh
@@ -34,6 +38,8 @@ jobs:
           python -m venv env
           .\env\Scripts\Activate.ps1
           python -m pip install --upgrade pip
+          pip install --upgrade setuptools
+          pip install wheel
           pip install .[tests]
           pip install ipykernel
 
@@ -56,8 +62,8 @@ jobs:
           IBMQ_HUB: ibm-q
           IBMQ_GROUP: open
           IBMQ_PROJECT: main
+        shell: pwsh
         run: |
           .\env\Scripts\Activate.ps1
           ipython kernel install --name "env" --user
           python -m pytest -v -m 'not (qpu or api)'
-  

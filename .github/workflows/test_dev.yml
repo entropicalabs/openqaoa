@@ -2,9 +2,6 @@ name: test_dev
 
 # Controls when the workflow will run
 on:
-  push:
-    branches:
-    - dev
   pull_request:
     branches:
     - dev
