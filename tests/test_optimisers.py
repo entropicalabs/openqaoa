@@ -57,6 +57,41 @@ class TestQAOACostBaseClass(unittest.TestCase):
                           })
         
         self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
+        
+    def test_saving_feature(self):
+        
+        """
+        Test save_intermediate in OptimizeVQA
+        """
+        
+        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
+            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
+        device = create_device('local','vectorized')
+        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
+        variate_params = create_qaoa_variational_params(
+            circuit_params, 'standard', 'ramp')
+        niter = 5
+        grad_stepsize = 0.0001
+        stepsize = 0.001
+
+        params_array = variate_params.raw().copy()
+        jac = derivative(backend_obj_vectorized, variate_params, self.log, 
+                         'gradient', 'finite_difference', 
+                         {'stepsize': grad_stepsize})
+
+        # Optimize
+        vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, 
+                                         optimizer_dict = {'method': 'vgd', 
+                                                           'tol': 10**(-9), 
+                                                           'jac': jac, 
+                                                           'maxiter': niter, 
+                                                           'optimizer_options' : 
+                                                           {'stepsize': stepsize}, 
+                                                           'save_intermediate': True
+                                                          })
+        vector_optimizer()
 
     def test_scipy_optimizers_global(self):
         " Check that final value of all scipy MINIMIZE_METHODS optimizers agrees with pre-computed optimized value."

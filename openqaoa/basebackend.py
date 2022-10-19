@@ -59,9 +59,9 @@ class VQABaseBackend(ABC):
 
     Parameters
     ----------
-    prepend_state: `Union[QuantumCircuitBase,List[complex],np.ndarray]`
+    prepend_state: `Union[QuantumCircuitBase, List[complex], np.ndarray]`
         The initial state to start the quantum circuit in the backend.
-    append_state: `Union[QuantumCircuitBase,np.ndarray]`
+    append_state: `Union[QuantumCircuitBase, np.ndarray]`
         The final state to append to the quantum circuit in the backend.
     """
 
@@ -109,12 +109,12 @@ class QAOABaseBackend(VQABaseBackend):
     ----------
     circuit_params: `QAOACircuitParams`
         This object handles the information to design the QAOA circuit ansatz
-    prepend_state: `Union[QuantumCircuitBase,List[complex]]` 
+    prepend_state: `Union[QuantumCircuitBase, List[complex]]` 
         Warm Starting the QAOA problem with some initial state other than the regular
         $|+ \\rangle ^{otimes n}$ 
-    append_state: `Union[QuantumCircuitBase,List[complex]]`
+    append_state: `Union[QuantumCircuitBase, List[complex]]`
         Appending a user-defined circuit/state to the end of the QAOA routine    
-    init_hadamard: ``bool``
+    init_hadamard: `bool`
         Initialises the QAOA circuit with a hadamard when ``True``
     """
 
@@ -135,7 +135,8 @@ class QAOABaseBackend(VQABaseBackend):
 
         self.abstract_circuit = deepcopy(self.circuit_params.abstract_circuit)
 
-    def assign_angles(self, params: QAOAVariationalBaseParams) -> List[RotationGateMap]:
+    def assign_angles(self, params: QAOAVariationalBaseParams) -> None:
+
         """
         Assigns the angle values of the variational parameters to the circuit gates
         specified as a list of gates in the ``abstract_circuit``.
@@ -248,8 +249,8 @@ class QAOABaseBackend(VQABaseBackend):
 
         Returns
         -------
-        `float`
-            expectation value of cost operator wrt to quantum state produced by QAOA circuit
+        float:
+            Expectation value of cost operator wrt to quantum state produced by QAOA circuit
         """
         counts = self.get_counts(params)
         cost = cost_function(
@@ -269,7 +270,7 @@ class QAOABaseBackend(VQABaseBackend):
 
         Returns
         -------
-        `Tuple[float]`
+        Tuple[float]:
             expectation value and its uncertainty of cost operator wrt 
             to quantum state produced by QAOA circuit.
         """
@@ -347,7 +348,7 @@ class QAOABaseBackend(VQABaseBackend):
 
         Returns
         -------
-        energy: `float`
+        float:
             The energy of a given bitstring with respect to the cost Hamiltonian.
         """
         energy = 0
@@ -391,7 +392,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
 
         Returns
         -------
-        wf: `List[complex]`
+        List[complex]:
             A list of the wavefunction amplitudes.
         """
         pass
@@ -413,7 +414,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
 
         Returns
         -------
-        meas_samples: `np.ndarray`
+        np.ndarray:
             A list of measurement outcomes sampled from a statevector
         """
         wf = self.wavefunction(params)
@@ -438,7 +439,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
 
         Returns
         -------
-        prob_dict: `Dict[str, float]`
+        Dict[str, float]:
             A dictionary of all basis states and their corresponding probabilities.
         """
 
@@ -460,7 +461,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
 
         Returns
         -------
-        counts: `Dict[str, float]`
+        Dict[str, float]:
             A dictionary of measurement outcomes vs frequency sampled from a statevector
         """
         samples = self.sample_from_wavefunction(params, n_shots)
@@ -507,7 +508,7 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
 
         Returns
         -------
-        counts: `Dict[str, float]`
+        Dict[str, float]:
             A dictionary of measurement outcomes vs frequency sampled from a statevector
         """
         pass

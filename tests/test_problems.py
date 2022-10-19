@@ -106,7 +106,23 @@ class TestProblem(unittest.TestCase):
                 QUBO(n, each_terms, weights)
             self.assertEqual("The input parameter terms must be of type of list or tuple",
                              str(e.exception))
-
+            
+    def test_qubo_hamiltonian_property(self):
+        """
+        Checks that the hamiltonian property of QUBO class returns a Hamiltonian Object.
+        """
+        
+        qubo_obj = QUBO(1, [[0], []], [0, 1])
+        self.assertEqual(type(qubo_obj.hamiltonian).__name__, 'Hamiltonian')
+        
+    def test_qubo_random_instance(self):
+        """
+        Checks that the random_instance static method in QUBO class returns a QUBO object with randomized weights and terms.
+        """
+        
+        qubo_problem = QUBO.random_instance(5)
+        self.assertEqual(type(qubo_problem).__name__, 'QUBO')
+        self.assertEqual(len(qubo_problem.weights), len(qubo_problem.terms))
 
     ## TESTING NUMBER PARITION CLASS
     def test_number_partitioning_terms_weights_constant(self):
@@ -125,8 +141,7 @@ class TestProblem(unittest.TestCase):
 
     def test_number_partitioning_random_problem(self):
         """Test randomly generated NumberPartition problem"""
-        np.random.seed(1234)
-        np_prob_random = NumberPartition.random_instance(n_numbers=5).get_qubo_problem()
+        np_prob_random = NumberPartition.random_instance(n_numbers=5, seed = 1234).get_qubo_problem()
 
         #regenerate the same numbers randomly
         np.random.seed(1234)
@@ -243,8 +258,26 @@ class TestProblem(unittest.TestCase):
 
         knap_manual = Knapsack(values,weights,weight_capacity,int(penalty)).get_qubo_problem()
 
+        knap_random_instance = Knapsack.random_instance(n_items=n_items, seed=1234).get_qubo_problem()
+
+        self.assertTrue(terms_list_equality(knap_manual.terms,knap_random_instance.terms))
+        self.assertEqual(knap_manual.weights,knap_random_instance.weights)
+        self.assertEqual(knap_manual.constant,knap_random_instance.constant)
+        self.assertEqual(knap_manual.n,knap_random_instance.n)
+
+    def test_knapsack_random_problem_smallsize(self):
+        """Test random instance method of Knapsack problem class"""
+
         np.random.seed(1234)
-        knap_random_instance = Knapsack.random_instance(n_items=n_items).get_qubo_problem()
+        n_items = 3
+        values = list(map(int, np.random.randint(1, n_items, size=n_items)))
+        weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
+        weight_capacity = np.random.randint(np.min(weights) * n_items, np.max(weights) * n_items)
+        penalty = 2*np.max(values)
+
+        knap_manual = Knapsack(values,weights,weight_capacity,int(penalty)).get_qubo_problem()
+
+        knap_random_instance = Knapsack.random_instance(n_items=n_items, seed=1234).get_qubo_problem()
 
         self.assertTrue(terms_list_equality(knap_manual.terms,knap_random_instance.terms))
         self.assertEqual(knap_manual.weights,knap_random_instance.weights)
@@ -357,8 +390,7 @@ class TestProblem(unittest.TestCase):
 
         slknap_manual = SlackFreeKnapsack(values,weights,weight_capacity,int(penalty)).get_qubo_problem()
 
-        np.random.seed(1234)
-        slknap_random_instance = SlackFreeKnapsack.random_instance(n_items=n_items).get_qubo_problem()
+        slknap_random_instance = SlackFreeKnapsack.random_instance(n_items=n_items, seed=1234).get_qubo_problem()
 
         self.assertTrue(terms_list_equality(slknap_manual.terms,slknap_random_instance.terms))
         self.assertEqual(slknap_manual.weights,slknap_random_instance.weights)
@@ -463,7 +495,7 @@ class TestProblem(unittest.TestCase):
 
     def test_tsp_random_instance(self):
         """Testing the random_instance method of the TSP problem class"""
-
+        
         np.random.seed(1234)
         n_cities=4
         box_size = np.sqrt(n_cities)
@@ -473,8 +505,7 @@ class TestProblem(unittest.TestCase):
 
         tsp_prob = TSP(coordinates).get_qubo_problem()
 
-        np.random.seed(1234)
-        tsp_prob_random = TSP.random_instance(n_cities=n_cities).get_qubo_problem()
+        tsp_prob_random = TSP.random_instance(n_cities=n_cities, seed=1234).get_qubo_problem()
 
         self.assertTrue(terms_list_equality(tsp_prob_random.terms,tsp_prob.terms))
         self.assertEqual(tsp_prob_random.weights,tsp_prob.weights)

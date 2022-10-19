@@ -27,7 +27,6 @@ from openqaoa.qaoa_parameters.operators import Hamiltonian
 
 
 class Problem(ABC):
-
     @staticmethod
     @abstractmethod
     def random_instance(**kwargs):
@@ -70,28 +69,35 @@ class QUBO:
         An instance of the Quadratic Unconstrained Binary Optimization 
         (QUBO) class.
     """
+
     # Maximum number of terms allowed to enable the cleaning procedure
     TERMS_CLEANING_LIMIT = 5000
 
     def __init__(self, n, terms, weights, clean_terms_and_weights=False):
-        
+
         # check-type for terms and weights
         if not isinstance(terms, list) and not isinstance(terms, tuple):
-            raise TypeError("The input parameter terms must be of type of list or tuple")
-            
+            raise TypeError(
+                "The input parameter terms must be of type of list or tuple"
+            )
+
         if not isinstance(weights, list) and not isinstance(weights, tuple):
-            raise TypeError("The input parameter weights must be of type of list or tuple")
-            
+            raise TypeError(
+                "The input parameter weights must be of type of list or tuple"
+            )
+
         for each_entry in weights:
             if not isinstance(each_entry, float) and not isinstance(each_entry, int):
-                raise TypeError("The elements in weights list must be of type float or int.")
-        
+                raise TypeError(
+                    "The elements in weights list must be of type float or int."
+                )
+
         terms = list(terms)
         weights = list(weights)
 
         # Check that terms and weights have matching lengths
         if len(terms) != len(weights):
-            raise ValueError('The number of terms and number of weights do not match')
+            raise ValueError("The number of terms and number of weights do not match")
 
         constant = 0
         try:
@@ -100,7 +106,7 @@ class QUBO:
             terms.pop(constant_index)
         except:
             pass
-        
+
         # If the user wants to clean the terms and weights or if the number of
         # terms is not too big, we go through the cleaning process
         if clean_terms_and_weights or len(terms) <= QUBO.TERMS_CLEANING_LIMIT:
@@ -110,28 +116,23 @@ class QUBO:
 
         self.constant = constant
         self.n = n
-        
+
     @property
     def n(self):
         return self._n
-    
+
     @n.setter
     def n(self, input_n):
-        
+
         if not isinstance(input_n, int):
             raise TypeError("The input parameter, n, has to be of type int")
-        
-        if input_n <= 0:
-            raise TypeError("The input parameter, n, must be a positive integer greater than 0")
-        
-        self._n = input_n
 
-    @property
-    def hamiltonian(self):
-        """
-        Returns the Hamiltonian of the problem.
-        """
-        return Hamiltonian.classical_hamiltonian(self.terms,self.weights,self.constant)
+        if input_n <= 0:
+            raise TypeError(
+                "The input parameter, n, must be a positive integer greater than 0"
+            )
+
+        self._n = input_n
 
     def asdict(self):
         return convert2serialize(self)
@@ -168,15 +169,15 @@ class QUBO:
             new_weights_for_terms[term_index] += weight
 
         # Return terms and weights, making sure to convert the terms back to lists
-        return [list(term) for term in unique_terms], list(new_weights_for_terms.values())
+        return (
+            [list(term) for term in unique_terms],
+            list(new_weights_for_terms.values()),
+        )
 
     @staticmethod
-    def random_instance(n, density=0.5, format_m='coo', max_abs_value=100):
+    def random_instance(n, density=0.5, format_m="coo", max_abs_value=100):
         # Generate a random matrix (elements in [0, 1]) of type sparse
-        random_matrix = scipy.sparse.rand(n,
-                                          n,
-                                          density=density,
-                                          format=format_m)
+        random_matrix = scipy.sparse.rand(n, n, density=density, format=format_m)
 
         # Retrieve the indices of non-zero elements of the matrix as list of tuples
         terms = np.transpose(random_matrix.nonzero())
@@ -186,16 +187,17 @@ class QUBO:
         weights = max_abs_value * (random_matrix.data - 0.5)
 
         # Return the terms and weights, taking care of converting to the correct types
-        return QUBO(n, [list(map(int, i)) for i in terms],
-                    [float(i) for i in weights])
-    
+        return QUBO(n, [list(map(int, i)) for i in terms], [float(i) for i in weights])
 
     @property
     def hamiltonian(self):
         """
         Returns the Hamiltonian of the problem.
         """
-        return Hamiltonian.classical_hamiltonian(self.terms,self.weights,self.constant)
+        return Hamiltonian.classical_hamiltonian(
+            self.terms, self.weights, self.constant
+        )
+
 
 class TSP(Problem):
     """
@@ -210,29 +212,32 @@ class TSP(Problem):
     -------
         An instance of the Traveling Salesman problem.
     """
+
     def __init__(self, coordinates=None):
-        
+
         self.coordinates = coordinates
         self.n_cities = self.coordinates.shape[0]
-    
+
     @property
     def coordinates(self):
         return self._coordinates
-    
+
     @coordinates.setter
     def coordinates(self, input_coordinates):
-        
+
         if not isinstance(input_coordinates, list):
             raise TypeError("The input parameter, coordinates, has to be a list")
 
         for each_entry in input_coordinates:
             if not isinstance(each_entry, tuple):
                 raise TypeError("The coordinates should be contained in a tuple.")
-            
+
             for each_value in each_entry:
-                if not isinstance(each_value, float) and not isinstance(each_value, int):
+                if not isinstance(each_value, float) and not isinstance(
+                    each_value, int
+                ):
                     raise TypeError("The coordinates must be of type float or int")
-            
+
         self._coordinates = np.array(input_coordinates)
 
     @staticmethod
@@ -250,12 +255,12 @@ class TSP(Problem):
         -------
             A random instance of the Traveling Salesman problem.
         """
-        n_cities = check_kwargs(['n_cities'], [None], **kwargs)[0]
-        seed = kwargs.get('seed')
-        
+        n_cities = check_kwargs(["n_cities"], [None], **kwargs)[0]
+        seed = kwargs.get("seed")
+
         if isinstance(seed, int):
             np.random.seed(seed)
-        
+
         box_size = np.sqrt(n_cities)
         coordinates = []
         for i in range(int(box_size)):
@@ -264,8 +269,7 @@ class TSP(Problem):
 
     def get_distance_matrix(self):
         # Return distance matrix: it uses Euclidean distance
-        return scipy.spatial.distance_matrix(self.coordinates,
-                                             self.coordinates)
+        return scipy.spatial.distance_matrix(self.coordinates, self.coordinates)
 
     def all_pairs_all_steps(self):
         all_pairs_dict = {}
@@ -274,14 +278,16 @@ class TSP(Problem):
 
                 if i != j:
                     all_pairs_dict[(i, j)] = TSP.city_pair_all_steps(
-                        i, j, self.n_cities)
+                        i, j, self.n_cities
+                    )
 
         return all_pairs_dict
 
     @staticmethod
     def city_pair_all_steps(c1, c2, n_cities):
-        var_pairs = [(c1 + n_cities * j, c2 + n_cities * (j + 1))
-                     for j in range(n_cities)]
+        var_pairs = [
+            (c1 + n_cities * j, c2 + n_cities * (j + 1)) for j in range(n_cities)
+        ]
 
         return var_pairs
 
@@ -315,10 +321,10 @@ class TSP(Problem):
         n = self.n_cities * (self.n_cities + 1)
 
         ising_terms, ising_coeffs = [], []
-        
+
         constant_term = 0
         linear_terms = np.zeros(n)
-        
+
         # Process the given terms and weights
         for weight, term in zip(coeffs, pairs):
 
@@ -330,7 +336,7 @@ class TSP(Problem):
                     ising_coeffs.append(weight / 4)
                 else:
                     constant_term += weight / 4
-                
+
                 linear_terms[term[0]] -= weight / 4
                 linear_terms[term[1]] -= weight / 4
                 constant_term += weight / 4
@@ -339,15 +345,16 @@ class TSP(Problem):
                 constant_term += weight / 2
             else:
                 constant_term += weight
-        
+
         for variable, linear_term in enumerate(linear_terms):
             ising_terms.append([variable])
             ising_coeffs.append(linear_term)
-        
+
         ising_terms.append([])
         ising_coeffs.append(constant_term)
 
-        return QUBO(n,ising_terms,ising_coeffs)
+        return QUBO(n, ising_terms, ising_coeffs)
+
 
 class NumberPartition(Problem):
     """
@@ -362,25 +369,26 @@ class NumberPartition(Problem):
     -------
         An instance of the Number Partitioning problem.
     """
+
     def __init__(self, numbers=None):
         # Set the numbers to be partitioned. If not given, generate a random list with integers
         self.numbers = numbers
-        self.n_numbers = None if numbers==None else len(self.numbers)
-    
+        self.n_numbers = None if numbers == None else len(self.numbers)
+
     @property
     def numbers(self):
         return self._numbers
-    
+
     @numbers.setter
     def numbers(self, input_numbers):
-        
+
         if not isinstance(input_numbers, list):
             raise TypeError("The input parameter, numbers, has to be a list")
 
         for each_entry in input_numbers:
             if not isinstance(each_entry, int):
                 raise TypeError("The elements in numbers list must be of type int.")
-            
+
         self._numbers = input_numbers
 
     @staticmethod
@@ -398,12 +406,12 @@ class NumberPartition(Problem):
         -------
             A random instance of the Number Partitioning problem.
         """
-        n_numbers = check_kwargs(['n_numbers'], [None], **kwargs)
-        seed = kwargs.get('seed')
-        
+        n_numbers = check_kwargs(["n_numbers"], [None], **kwargs)
+        seed = kwargs.get("seed")
+
         if isinstance(seed, int):
             np.random.seed(seed)
-        
+
         numbers = list(map(int, np.random.randint(1, 10, size=n_numbers)))
         return NumberPartition(numbers)
 
@@ -445,6 +453,7 @@ class NumberPartition(Problem):
 
         return QUBO(self.n_numbers, terms, weights)
 
+
 class MaximumCut(Problem):
     """
     Creates an instance of the Maximum Cut problem.
@@ -462,21 +471,23 @@ class MaximumCut(Problem):
     DEFAULT_EDGE_WEIGHT = 1.0
 
     def __init__(self, G):
-        
+
         self.G = G
-    
+
     @property
     def G(self):
         return self._G
-    
+
     @G.setter
     def G(self, input_networkx_graph):
-        
+
         if not isinstance(input_networkx_graph, nx.Graph):
             raise TypeError("Input problem graph must be a networkx Graph.")
-        
+
         # Relabel nodes to integers starting from 0
-        mapping = dict(zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes())))
+        mapping = dict(
+            zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
+        )
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 
     @staticmethod
@@ -499,11 +510,14 @@ class MaximumCut(Problem):
         -------
             A random instance of the Maximum Cut problem.
         """
-        n_nodes, edge_probability = check_kwargs(['n_nodes', 'edge_probability'],
-                                                        [None, None], **kwargs)
-        seed = kwargs.get('seed', None)
+        n_nodes, edge_probability = check_kwargs(
+            ["n_nodes", "edge_probability"], [None, None], **kwargs
+        )
+        seed = kwargs.get("seed", None)
 
-        G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
+        G = nx.generators.random_graphs.fast_gnp_random_graph(
+            n=n_nodes, p=edge_probability, seed=seed
+        )
         return MaximumCut(G)
 
     def get_qubo_problem(self):
@@ -518,14 +532,17 @@ class MaximumCut(Problem):
         terms = []
         weights = []
 
-        for u, v, edge_weight in self.G.edges(data='weight'):
+        for u, v, edge_weight in self.G.edges(data="weight"):
             terms.append([u, v])
 
             # We expect the edge weight to be given in the attribute called
             # "weight". If it is None, assume a weight of 1.0
-            weights.append(edge_weight if edge_weight else MaximumCut.DEFAULT_EDGE_WEIGHT)
+            weights.append(
+                edge_weight if edge_weight else MaximumCut.DEFAULT_EDGE_WEIGHT
+            )
 
         return QUBO(self.G.number_of_nodes(), terms, weights)
+
 
 class Knapsack(Problem):
     """
@@ -546,76 +563,82 @@ class Knapsack(Problem):
     -------
         An instance of the Knapsack problem.
     """
+
     def __init__(self, values, weights, weight_capacity, penalty):
         # Check whether the input is valid. Number of values should match the number of weights.
         if len(values) != len(weights):
-            raise ValueError('Number of items does not match given value and weights')
+            raise ValueError("Number of items does not match given value and weights")
 
         self.values = values
         self.weights = weights
         self.weight_capacity = weight_capacity
         self.penalty = penalty
         self.n_items = len(weights)
-        
+
     @property
     def values(self):
         return self._values
-    
+
     @values.setter
     def values(self, input_values):
-        
+
         if not isinstance(input_values, list):
             raise TypeError("The input parameter, values, has to be a list")
 
         for each_entry in input_values:
             if not isinstance(each_entry, int):
                 raise TypeError("The elements in values list must be of type int.")
-        
+
         self._values = input_values
-        
+
     @property
     def weights(self):
         return self._weights
-    
+
     @weights.setter
     def weights(self, input_weights):
-        
+
         if not isinstance(input_weights, list):
             raise TypeError("The input parameter, weights, has to be a list")
 
         for each_entry in input_weights:
             if not isinstance(each_entry, int):
                 raise TypeError("The elements in weights list must be of type int.")
-        
+
         self._weights = input_weights
-        
+
     @property
     def weight_capacity(self):
         return self._weight_capacity
-    
+
     @weight_capacity.setter
     def weight_capacity(self, input_weight_capacity):
-        
+
         if not isinstance(input_weight_capacity, int):
-            raise TypeError("The input parameter, weight_capacity, has to be of type int")
-            
+            raise TypeError(
+                "The input parameter, weight_capacity, has to be of type int"
+            )
+
         if input_weight_capacity <= 0:
-            raise TypeError("The input parameter, weight_capacity, must be a positive integer greater than 0")
-        
+            raise TypeError(
+                "The input parameter, weight_capacity, must be a positive integer greater than 0"
+            )
+
         self._weight_capacity = input_weight_capacity
-        
+
     @property
     def penalty(self):
         return self._penalty
-    
+
     @penalty.setter
     def penalty(self, input_penalty):
-        
+
         if not isinstance(input_penalty, int) and not isinstance(input_penalty, float):
-            raise TypeError("The input parameter, penalty, has to be of type float or int")
-        
+            raise TypeError(
+                "The input parameter, penalty, has to be of type float or int"
+            )
+
         self._penalty = input_penalty
-            
 
     @staticmethod
     def random_instance(**kwargs):
@@ -631,17 +654,26 @@ class Knapsack(Problem):
         -------
             A random instance of the Knapsack problem.
         """
-        n_items = check_kwargs(['n_items'], [None], **kwargs)[0]
-        seed = kwargs.get('seed')
+        n_items = check_kwargs(["n_items"], [None], **kwargs)[0]
+        seed = kwargs.get("seed")
 
         if isinstance(seed, int):
             np.random.seed(seed)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
-        weight_capacity = np.random.randint(np.min(weights) * n_items, np.max(weights) * n_items)
-        penalty = 2 * np.max(values)
 
+        min_weights = np.min(weights)
+        max_weights = np.max(weights)
+
+        if min_weights != max_weights:
+            weight_capacity = np.random.randint(
+                min_weights * n_items, max_weights * n_items
+            )
+        else:
+            weight_capacity = np.random.randint(max_weights, max_weights * n_items)
+
+        penalty = 2 * np.max(values)
         return Knapsack(values, weights, weight_capacity, int(penalty))
 
     def terms_and_weights(self):
@@ -650,33 +682,74 @@ class Knapsack(Problem):
 
         # Edges between variables to represent slack value (the s_j's)
         edges_slacks = itertools.combinations(range(n_variables_slack), 2)
-        edges_slacks_with_weights = [(list(e), 2 * self.penalty * (2 ** e[0]) * (2 ** e[1])) for e in edges_slacks]
+        edges_slacks_with_weights = [
+            (list(e), 2 * self.penalty * (2 ** e[0]) * (2 ** e[1]))
+            for e in edges_slacks
+        ]
 
         # Edges between decision variables for weights (the x_i's)
-        edges_decision_vars = itertools.combinations(range(n_variables_slack, n_variables), 2)
-        edges_decision_vars_with_weights = [(list(e), 2 * self.penalty * self.weights[e[0] - n_variables_slack] * self.weights[e[1] - n_variables_slack]) for e in edges_decision_vars]
+        edges_decision_vars = itertools.combinations(
+            range(n_variables_slack, n_variables), 2
+        )
+        edges_decision_vars_with_weights = [
+            (
+                list(e),
+                2
+                * self.penalty
+                * self.weights[e[0] - n_variables_slack]
+                * self.weights[e[1] - n_variables_slack],
+            )
+            for e in edges_decision_vars
+        ]
 
         # Edges between decisions and variables to represent slack value (the x_i's and s_j's)
-        edges_slacks_decision_vars = itertools.product(range(n_variables_slack), range(n_variables_slack, n_variables))
-        edges_slacks_decision_vars_with_weights = [(list(e), 2 * self.penalty * (2 ** e[0]) * self.weights[e[1] - n_variables_slack]) for e in edges_slacks_decision_vars]
+        edges_slacks_decision_vars = itertools.product(
+            range(n_variables_slack), range(n_variables_slack, n_variables)
+        )
+        edges_slacks_decision_vars_with_weights = [
+            (
+                list(e),
+                2 * self.penalty * (2 ** e[0]) * self.weights[e[1] - n_variables_slack],
+            )
+            for e in edges_slacks_decision_vars
+        ]
 
         # Linear terms for the variables to represent slack value (s_j's)
-        single_interaction_slacks = [([i], self.penalty * (2 ** (2*i) - 2 * self.weight_capacity * 2 ** i)) for i in range(n_variables_slack)]
+        single_interaction_slacks = [
+            ([i], self.penalty * (2 ** (2 * i) - 2 * self.weight_capacity * 2 ** i))
+            for i in range(n_variables_slack)
+        ]
 
         # Linear terms for the decision variables (the x_i's)
-        single_interaction_decisions_vars = [([i], self.penalty * self.weights[i - n_variables_slack] ** 2 - 2 * self.penalty * self.weight_capacity * self.weights[i - n_variables_slack] - self.values[i - n_variables_slack]) for i in range(n_variables_slack, n_variables)]
+        single_interaction_decisions_vars = [
+            (
+                [i],
+                self.penalty * self.weights[i - n_variables_slack] ** 2
+                - 2
+                * self.penalty
+                * self.weight_capacity
+                * self.weights[i - n_variables_slack]
+                - self.values[i - n_variables_slack],
+            )
+            for i in range(n_variables_slack, n_variables)
+        ]
 
         # The constant term
         constant_term = [([], self.penalty * self.weight_capacity ** 2)]
 
         # Unzip to retrieve terms and weights in separate sequences
-        return tuple(zip(*(edges_slacks_with_weights +
-                           edges_decision_vars_with_weights +
-                           edges_slacks_decision_vars_with_weights +
-                           single_interaction_slacks +
-                           single_interaction_decisions_vars +
-                           constant_term
-                           )))
+        return tuple(
+            zip(
+                *(
+                    edges_slacks_with_weights
+                    + edges_decision_vars_with_weights
+                    + edges_slacks_decision_vars_with_weights
+                    + single_interaction_slacks
+                    + single_interaction_decisions_vars
+                    + constant_term
+                )
+            )
+        )
 
     def get_qubo_problem(self):
         """
@@ -690,12 +763,12 @@ class Knapsack(Problem):
         n_variables = self.n_items + n_variables_slack
         terms, weights = self.terms_and_weights()
 
-#         ising_terms, ising_coeffs = terms,weights
+        #         ising_terms, ising_coeffs = terms,weights
         ising_terms, ising_coeffs = [], []
-        
+
         constant_term = 0
         linear_terms = np.zeros(n_variables)
-        
+
         # Process the given terms and weights
         for weight, term in zip(weights, terms):
 
@@ -707,7 +780,7 @@ class Knapsack(Problem):
                     ising_coeffs.append(weight / 4)
                 else:
                     constant_term += weight / 4
-                
+
                 linear_terms[term[0]] -= weight / 4
                 linear_terms[term[1]] -= weight / 4
                 constant_term += weight / 4
@@ -716,15 +789,15 @@ class Knapsack(Problem):
                 constant_term += weight / 2
             else:
                 constant_term += weight
-        
+
         for variable, linear_term in enumerate(linear_terms):
             ising_terms.append([variable])
             ising_coeffs.append(linear_term)
-        
+
         ising_terms.append([])
         ising_coeffs.append(constant_term)
 
-        return QUBO(n_variables,ising_terms,ising_coeffs)
+        return QUBO(n_variables, ising_terms, ising_coeffs)
 
 
 class SlackFreeKnapsack(Knapsack):
@@ -754,7 +827,7 @@ class SlackFreeKnapsack(Knapsack):
     def __init__(self, values, weights, weight_capacity, penalty):
 
         super().__init__(values, weights, weight_capacity, penalty)
-        
+
     @staticmethod
     def random_instance(**kwargs):
         """
@@ -769,19 +842,27 @@ class SlackFreeKnapsack(Knapsack):
         -------
             A random instance of the Knapsack problem.
         """
-        n_items = check_kwargs(['n_items'], [None], **kwargs)[0]
-        seed = kwargs.get('seed')
+        n_items = check_kwargs(["n_items"], [None], **kwargs)[0]
+        seed = kwargs.get("seed")
 
         if isinstance(seed, int):
             np.random.seed(seed)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
-        weight_capacity = np.random.randint(np.min(weights) * n_items, np.max(weights) * n_items)
-        penalty = 2 * np.max(values)
 
+        min_weights = np.min(weights)
+        max_weights = np.max(weights)
+        if min_weights != max_weights:
+            weight_capacity = np.random.randint(
+                min_weights * n_items, max_weights * n_items
+            )
+        else:
+            weight_capacity = np.random.randint(max_weights, max_weights * n_items)
+
+        penalty = 2 * np.max(values)
         return SlackFreeKnapsack(values, weights, weight_capacity, int(penalty))
-    
+
     def terms_and_weights(self):
         """
         Implementation of single and two-qubit terms in the slack-free Hamiltonian 
@@ -789,22 +870,38 @@ class SlackFreeKnapsack(Knapsack):
         """
 
         n_variables = self.n_items
-                
+
         # Edges between decision variables for weights (the x_i's)
         edges_decision_vars = itertools.combinations(range(n_variables), 2)
-        edges_decision_vars_with_weights = [(list(e), 2 * self.penalty * self.weights[e[0]] * self.weights[e[1]]) for e in edges_decision_vars]
-                
+        edges_decision_vars_with_weights = [
+            (list(e), 2 * self.penalty * self.weights[e[0]] * self.weights[e[1]])
+            for e in edges_decision_vars
+        ]
+
         # Linear terms for the decision variables (the x_i's)
-        single_interaction_decisions_vars = [([i], self.penalty * self.weights[i] ** 2 - 2 * self.penalty * self.weight_capacity * self.weights[i] - self.values[i]) for i in range(n_variables)]
-        
+        single_interaction_decisions_vars = [
+            (
+                [i],
+                self.penalty * self.weights[i] ** 2
+                - 2 * self.penalty * self.weight_capacity * self.weights[i]
+                - self.values[i],
+            )
+            for i in range(n_variables)
+        ]
+
         # The constant term
         constant_term = [([], self.penalty * self.weight_capacity ** 2)]
-        
+
         # Unzip to retrieve terms and weights in separate sequences
-        return tuple(zip(*(edges_decision_vars_with_weights + 
-                           single_interaction_decisions_vars + 
-                           constant_term
-                           )))
+        return tuple(
+            zip(
+                *(
+                    edges_decision_vars_with_weights
+                    + single_interaction_decisions_vars
+                    + constant_term
+                )
+            )
+        )
 
     def get_qubo_problem(self):
         """
@@ -818,10 +915,10 @@ class SlackFreeKnapsack(Knapsack):
         terms, weights = self.terms_and_weights()
 
         ising_terms, ising_coeffs = [], []
-        
+
         constant_term = 0
         linear_terms = np.zeros(n_variables)
-        
+
         # Process the given terms and weights
         for weight, term in zip(weights, terms):
 
@@ -833,7 +930,7 @@ class SlackFreeKnapsack(Knapsack):
                     ising_coeffs.append(weight / 4)
                 else:
                     constant_term += weight / 4
-                
+
                 linear_terms[term[0]] -= weight / 4
                 linear_terms[term[1]] -= weight / 4
                 constant_term += weight / 4
@@ -842,15 +939,15 @@ class SlackFreeKnapsack(Knapsack):
                 constant_term += weight / 2
             else:
                 constant_term += weight
-        
+
         for variable, linear_term in enumerate(linear_terms):
             ising_terms.append([variable])
             ising_coeffs.append(linear_term)
-        
+
         ising_terms.append([])
         ising_coeffs.append(constant_term)
 
-        return QUBO(n_variables,ising_terms,ising_coeffs)
+        return QUBO(n_variables, ising_terms, ising_coeffs)
 
 
 class MinimumVertexCover(Problem):
@@ -870,48 +967,55 @@ class MinimumVertexCover(Problem):
     -------
     An instance of the Minimum Vertex Cover problem.
     """
-    def __init__(self,G,field,penalty):
+
+    def __init__(self, G, field, penalty):
 
         self.G = G
         self.field = field
         self.penalty = penalty
-        
+
     @property
     def G(self):
         return self._G
-    
+
     @G.setter
     def G(self, input_networkx_graph):
-        
+
         if not isinstance(input_networkx_graph, nx.Graph):
             raise TypeError("Input problem graph must be a networkx Graph.")
-        
+
         # Relabel nodes to integers starting from 0
-        mapping = dict(zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes())))
+        mapping = dict(
+            zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
+        )
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
-        
+
     @property
     def field(self):
         return self._field
-    
+
     @field.setter
     def field(self, input_field):
-        
+
         if not isinstance(input_field, int) and not isinstance(input_field, float):
-            raise TypeError("The input parameter, field, has to be of type float or int")
-        
+            raise TypeError(
+                "The input parameter, field, has to be of type float or int"
+            )
+
         self._field = input_field
-        
+
     @property
     def penalty(self):
         return self._penalty
-    
+
     @penalty.setter
     def penalty(self, input_penalty):
-        
+
         if not isinstance(input_penalty, int) and not isinstance(input_penalty, float):
-            raise TypeError("The input parameter, penalty, has to be of type float or int")
-        
+            raise TypeError(
+                "The input parameter, penalty, has to be of type float or int"
+            )
+
         self._penalty = input_penalty
 
     @staticmethod
@@ -936,15 +1040,18 @@ class MinimumVertexCover(Problem):
         A random instance of the Minimum Vertex Cover problem.
         """
 
-        n_nodes, edge_probability = check_kwargs(['n_nodes', 'edge_probability'],
-                                                        [None, None], **kwargs)
-        seed = kwargs.get('seed', None)
-        G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
+        n_nodes, edge_probability = check_kwargs(
+            ["n_nodes", "edge_probability"], [None, None], **kwargs
+        )
+        seed = kwargs.get("seed", None)
+        G = nx.generators.random_graphs.fast_gnp_random_graph(
+            n=n_nodes, p=edge_probability, seed=seed
+        )
 
         DEFAULT_FIELD = 1.0
         DEFAULT_PENALTY = 10
 
-        return MinimumVertexCover(G,DEFAULT_FIELD,DEFAULT_PENALTY)
+        return MinimumVertexCover(G, DEFAULT_FIELD, DEFAULT_PENALTY)
 
     def terms_and_weights(self):
         """
@@ -967,16 +1074,23 @@ class MinimumVertexCover(Problem):
         connectivity = dict(Counter(node_repetition))
 
         # Quadratic interation from penalty term
-        quadratic_interaction = [(list(e),self.penalty/4) for e in edges]
+        quadratic_interaction = [(list(e), self.penalty / 4) for e in edges]
 
         # Linear terms from the artificial field
-        linear_interaction = [([i],-self.field/2+connectivity[i]*self.penalty/4) if connectivity.get(i) is not None else ([i],-self.field/2) for i in range(n_nodes)]
+        linear_interaction = [
+            ([i], -self.field / 2 + connectivity[i] * self.penalty / 4)
+            if connectivity.get(i) is not None
+            else ([i], -self.field / 2)
+            for i in range(n_nodes)
+        ]
 
         # Constant term
-        constant_term = [([],n_nodes*self.field/2 + len(edges)*self.penalty/4)]
+        constant_term = [([], n_nodes * self.field / 2 + len(edges) * self.penalty / 4)]
 
         # Generate tuple containing a list with the terms and a list with the weights
-        terms_weights = tuple(zip(*(quadratic_interaction + linear_interaction + constant_term)))
+        terms_weights = tuple(
+            zip(*(quadratic_interaction + linear_interaction + constant_term))
+        )
 
         # Unzip to retrieve terms and weights in separate sequences
         return terms_weights
@@ -995,6 +1109,7 @@ class MinimumVertexCover(Problem):
 
         return QUBO(self.G.number_of_nodes(), list(terms), list(weights))
 
+
 class ShortestPath(Problem):
     """
     Creates an instance of the Shortest Path problem.
@@ -1012,8 +1127,9 @@ class ShortestPath(Problem):
     -------
         An instance of the Shortest Path problem.
     """
+
     def __init__(self, G, source, dest):
-        
+
         # Relabel nodes to integers starting from 0
         mapping = dict(zip(G, range(G.number_of_nodes())))
         self.G = nx.relabel_nodes(G, mapping)
@@ -1022,9 +1138,10 @@ class ShortestPath(Problem):
         self.dest = dest
 
         assert source in list(G.nodes), f"Source node not within nodes of input graph"
-        assert dest in list(G.nodes), f"Destination node not within nodes of input graph"
+        assert dest in list(
+            G.nodes
+        ), f"Destination node not within nodes of input graph"
         assert source != dest, "Source and destination nodes cannot be the same"
-
 
     @staticmethod
     def random_instance(**kwargs):
@@ -1048,18 +1165,23 @@ class ShortestPath(Problem):
         A random instance of the Shortest Path problem.
         """
 
-        n_nodes, edge_probability, seed, source, dest = check_kwargs(['n_nodes', 'edge_probability','seed', 'source', 'dest'],
-                                                                    [None, None, 1234, 0, 1], **kwargs)
-        G = nx.generators.random_graphs.fast_gnp_random_graph(n=n_nodes, p=edge_probability, seed=seed)
+        n_nodes, edge_probability, seed, source, dest = check_kwargs(
+            ["n_nodes", "edge_probability", "seed", "source", "dest"],
+            [None, None, 1234, 0, 1],
+            **kwargs,
+        )
+        G = nx.generators.random_graphs.fast_gnp_random_graph(
+            n=n_nodes, p=edge_probability, seed=seed
+        )
 
         DEFAULT_WEIGHTS = 1.0
 
         for (u, v) in G.edges():
-            G.edges[u,v]['weight'] = DEFAULT_WEIGHTS
+            G.edges[u, v]["weight"] = DEFAULT_WEIGHTS
         for w in G.nodes():
-            G.nodes[w]['weight'] = DEFAULT_WEIGHTS
+            G.nodes[w]["weight"] = DEFAULT_WEIGHTS
 
-        return ShortestPath(G,source,dest)
+        return ShortestPath(G, source, dest)
 
     def convert_binary_to_ising(self, terms, weights):
         """
@@ -1081,13 +1203,13 @@ class ShortestPath(Problem):
 
         for i, term in enumerate(terms):
             if len(term) == 1:
-                new_terms_weights.append((term,-0.5*weights[i]))
-                constant += 0.5*weights[i]
+                new_terms_weights.append((term, -0.5 * weights[i]))
+                constant += 0.5 * weights[i]
             elif len(term) == 2:
                 for t in term:
-                    new_terms_weights.append(([t], -0.25*weights[i]))
-                new_terms_weights.append((term, 0.25*weights[i]))
-                constant += 0.25*weights[i]
+                    new_terms_weights.append(([t], -0.25 * weights[i]))
+                new_terms_weights.append((term, 0.25 * weights[i]))
+                constant += 0.25 * weights[i]
 
         new_terms_weights.append(([], constant))
 
@@ -1106,64 +1228,99 @@ class ShortestPath(Problem):
         d = self.dest
         n_nodes = self.G.number_of_nodes()
         n_edges = self.G.number_of_edges()
-        
+
         # # Linear terms due to node weights
-    #     # For loop version
-    #     node_terms_weights = []
-    #     for i in range(n_nodes):
-    #         if i not in [s, d]:
-    #             shift = int(i>s)+int(i>d)
-    #             node_terms_weights.append(([i-shift], self.G.nodes[i]['weight']))
-        node_terms_weights = [([i-(int(i>s)+int(i>d))], self.G.nodes[i]['weight']) for i in range(n_nodes) if i not in [s, d]]
-        
+        #     # For loop version
+        #     node_terms_weights = []
+        #     for i in range(n_nodes):
+        #         if i not in [s, d]:
+        #             shift = int(i>s)+int(i>d)
+        #             node_terms_weights.append(([i-shift], self.G.nodes[i]['weight']))
+        node_terms_weights = [
+            ([i - (int(i > s) + int(i > d))], self.G.nodes[i]["weight"])
+            for i in range(n_nodes)
+            if i not in [s, d]
+        ]
+
         # Linear terms due to edge weights (shift of n_nodes-2 since we removed 2 nodes)
-    #     # For loop version
-    #     edge_terms_weights = []
-    #     for i, (u,v) in enumerate(self.G.edges()):
-    #         edge_terms_weights.append(([i+n_nodes-2], self.G.edges[u,v]['weights']))
-        edge_terms_weights = [([i+n_nodes-2], self.G.edges[u,v]['weight']) for i, (u,v) in enumerate(self.G.edges())]
-        
+        #     # For loop version
+        #     edge_terms_weights = []
+        #     for i, (u,v) in enumerate(self.G.edges()):
+        #         edge_terms_weights.append(([i+n_nodes-2], self.G.edges[u,v]['weights']))
+        edge_terms_weights = [
+            ([i + n_nodes - 2], self.G.edges[u, v]["weight"])
+            for i, (u, v) in enumerate(self.G.edges())
+        ]
+
         # Source flow constraint
-    #     # For loop version
-    #     start_flow_terms_weights = []
-    #     for i, x in enumerate(self.G.edges()):
-    #         for j, y in enumerate(self.G.edges()):
-    #             if s in x and s in y:
-    #                 if i == j:
-    #                     start_flow_terms_weights.append(([i+n_nodes-2], -1))
-    #                 else:
-    #                     start_flow_terms_weights.append(([i+n_nodes-2,j+n_nodes-2], 1))
-        start_flow_terms_weights = [([i+n_nodes-2], -1) if i==j else ([i+n_nodes-2,j+n_nodes-2], 1) for i,x in enumerate(self.G.edges()) for j,y in enumerate(self.G.edges()) if (s in x and s in y)]
-        
+        #     # For loop version
+        #     start_flow_terms_weights = []
+        #     for i, x in enumerate(self.G.edges()):
+        #         for j, y in enumerate(self.G.edges()):
+        #             if s in x and s in y:
+        #                 if i == j:
+        #                     start_flow_terms_weights.append(([i+n_nodes-2], -1))
+        #                 else:
+        #                     start_flow_terms_weights.append(([i+n_nodes-2,j+n_nodes-2], 1))
+        start_flow_terms_weights = [
+            ([i + n_nodes - 2], -1)
+            if i == j
+            else ([i + n_nodes - 2, j + n_nodes - 2], 1)
+            for i, x in enumerate(self.G.edges())
+            for j, y in enumerate(self.G.edges())
+            if (s in x and s in y)
+        ]
+
         # Destination flow constraint
-    #     # For loop version
-    #     dest_flow_terms_weights = []
-    #     for i, x in enumerate(self.G.edges()):
-    #         for j, y in enumerate(self.G.edges()):
-    #             if d in x and d in y:
-    #                 if i == j:
-    #                     dest_flow_terms_weights.append(([i+n_nodes-2], -1))
-    #                 else:
-    #                     dest_flow_terms_weights.append(([i+n_nodes-2,j+n_nodes-2], 1))
-        dest_flow_terms_weights = [([i+n_nodes-2], -1) if i==j else ([i+n_nodes-2,j+n_nodes-2], 1) for i,x in enumerate(self.G.edges()) for j,y in enumerate(self.G.edges()) if (d in x and d in y)]
-        
+        #     # For loop version
+        #     dest_flow_terms_weights = []
+        #     for i, x in enumerate(self.G.edges()):
+        #         for j, y in enumerate(self.G.edges()):
+        #             if d in x and d in y:
+        #                 if i == j:
+        #                     dest_flow_terms_weights.append(([i+n_nodes-2], -1))
+        #                 else:
+        #                     dest_flow_terms_weights.append(([i+n_nodes-2,j+n_nodes-2], 1))
+        dest_flow_terms_weights = [
+            ([i + n_nodes - 2], -1)
+            if i == j
+            else ([i + n_nodes - 2, j + n_nodes - 2], 1)
+            for i, x in enumerate(self.G.edges())
+            for j, y in enumerate(self.G.edges())
+            if (d in x and d in y)
+        ]
+
         # Path flow constraint
         path_flow_terms_weights = []
         for i in range(n_nodes):
             if i != d and i != s:
-                shift = int(i>s)+int(i>d)
-                path_flow_terms_weights.append(([i-shift], 4))
+                shift = int(i > s) + int(i > d)
+                path_flow_terms_weights.append(([i - shift], 4))
                 for j, x in enumerate(self.G.edges()):
                     if i in x:
-                        path_flow_terms_weights.append(([i-shift, j+n_nodes-2], -4))
+                        path_flow_terms_weights.append(
+                            ([i - shift, j + n_nodes - 2], -4)
+                        )
                     for k, y in enumerate(self.G.edges()):
                         if i in x and i in y:
                             if j == k:
-                                path_flow_terms_weights.append(([j+n_nodes-2], 1))
+                                path_flow_terms_weights.append(([j + n_nodes - 2], 1))
                             else:
-                                path_flow_terms_weights.append(([j+n_nodes-2, k+n_nodes-2], 1))
+                                path_flow_terms_weights.append(
+                                    ([j + n_nodes - 2, k + n_nodes - 2], 1)
+                                )
 
-        return tuple(zip(*(node_terms_weights+edge_terms_weights+start_flow_terms_weights+dest_flow_terms_weights+path_flow_terms_weights)))
+        return tuple(
+            zip(
+                *(
+                    node_terms_weights
+                    + edge_terms_weights
+                    + start_flow_terms_weights
+                    + dest_flow_terms_weights
+                    + path_flow_terms_weights
+                )
+            )
+        )
 
     def get_qubo_problem(self):
         """

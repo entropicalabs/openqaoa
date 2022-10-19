@@ -14,6 +14,7 @@
 
 from typing import List, Dict, Optional, Union
 import numpy as np
+import qiskit
 
 from openqaoa.basebackend import QuantumCircuitBase
 from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
@@ -161,12 +162,22 @@ class BackendProperties(Parameters):
     cvar_alpha: `float`
         The value of the CVaR parameter.
     noise_model: `NoiseModel`
-        The noise model to be used for the shot-based simulator.
+        The `qiskit` noise model to be used for the shot-based simulator.
     qubit_layout: `Union[List[int], np.ndarray]`
         Mapping from physical to logical qubit indices, used to eventually 
         construct the quantum circuit.  For example, for a system composed by 3 qubits
        `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
         and the right hand side is the logical qubits
+    qiskit_simulation_method: `str`
+        Specify the simulation method to use with the `qiskit.AerSimulator`
+    seed_simulator: `int`
+        Specify a seed for `qiskit` simulators
+    active_reset: `bool`
+        To use the active_reset functionality on Rigetti backends through QCS
+    rewiring: `str`
+        Specify the rewiring strategy for compilation for Rigetti QPUs through QCS
+    disable_qubit_rewiring: `bool`
+        enable/disbale qubit rewiring when accessing QPUs via the AWS `braket`
     """
 
     def __init__(self,
@@ -178,7 +189,13 @@ class BackendProperties(Parameters):
                  n_shots: int = 100,
                  cvar_alpha: float = 1,
                  noise_model = None,
-                 qubit_layout: Optional[Union[List[int], np.ndarray]] = None):
+                 qubit_layout: Optional[Union[List[int], np.ndarray]] = None,
+                 qiskit_simulation_method: Optional[str] = None,
+                 seed_simulator: Optional[int] = None,
+                 active_reset: Optional[bool] = None,
+                 rewiring: Optional[str] = None,
+                 disable_qubit_rewiring: Optional[bool] = None
+                 ):
         
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
@@ -187,7 +204,12 @@ class BackendProperties(Parameters):
         self.cvar_alpha = cvar_alpha
         self.noise_model = noise_model
         self.qubit_layout = qubit_layout
-
+        self.seed_simulator = seed_simulator
+        self.qiskit_simulation_method = qiskit_simulation_method
+        self.active_reset = active_reset
+        self.rewiring = rewiring
+        self.disable_qubit_rewiring = disable_qubit_rewiring
+        
     # @property
     # def cvar_alpha(self):
     #     return self._cvar_alpha

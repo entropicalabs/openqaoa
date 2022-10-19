@@ -66,23 +66,28 @@ We also provide a set of tutorials to get you started. Among the many, perhaps y
 
 - **Recursive QAOA**. Run RQAOA with fully customisable schedules on simulators and QPUs alike. 
 
-- **QPU access**. Built in access for `IBMQ`, `Rigetti QCS`, and `AWS`.
+- **QPU access**. Built in access for `IBM Quantum`, `Rigetti QCS`, and `Amazon Braket`.
 
 
-### Available backend 
+### Available devives 
 
-Currently, the available devices are:
+Devices are serviced both locally and on the cloud. For the IBM Quantum experience, the available devices depend on the specified credentials. For QCS and Amazon Braket, the available devices are listed in the table below:
 
 | Device location  | Device Name |
 | ------------- | ------------- |
 | `local`  | `['qiskit.shot_simulator', 'qiskit.statevector_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
-| `ibmq`    | Please check the IBMQ backends available to your account |
-| `qcs`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
+| `[Amazon Braket]https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html`    | IonQ, Rigetti, OCQ |
+| `[ibmq](https://quantum-computing.ibm.com/)`    | Please check the IBMQ backends available to your account |
+| `[qcs](https://qcs.rigetti.com/sign-in)`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
 
 
 ## Running the tests
 
-To run the test, first, make sure to have installed all the optional testing dependencies by running `pip install .[tests]` (note, the braket must to be escaped if you are using the popular zsh shell), and then just type `pytest tests/.` from the project's root folder. Bear in mind that `test_pyquil_qvm.py` requires an active `qvm` (see Rigetti's documentation [here](https://pyquil-docs.rigetti.com/en/v3.1.0/qvm.html)), and `test_qpu_qiskit.py` and `test_qpu_auth.py` require a valid IBMQ token in the file `tests/credentials.json`.
+To run the test, first, make sure to have installed all the optional testing dependencies by running `pip install .[tests]` (note, the braket must to be escaped if you are using the popular zsh shell), and then just type `pytest tests/.` from the project's root folder.
+
+> :warning: **Some tests require authentication**: all tests flagged `api` or `qpu` require valid qpu crendentials to be specified in `tests/credentials.json`
+
+> :warning: **Some tests require authentication**: Please, note that the PyQuil-Rigetti tests contained in `test_pyquil_qvm.py` requires an active `qvm` (see Rigetti's documentation [here](https://pyquil-docs.rigetti.com/en/v3.1.0/qvm.html))
 
 ## Contributing and feedback
 
