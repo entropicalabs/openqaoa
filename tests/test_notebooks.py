@@ -18,7 +18,7 @@ def notebook_test_function(name):
     with open(name, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
 
-    ep = ExecutePreprocessor(timeout=600, kernel_name='2022_10_19_oq_dev_main')
+    ep = ExecutePreprocessor(timeout=600, kernel_name='env')
 
     ep.preprocess(nb)
 
