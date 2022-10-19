@@ -286,7 +286,7 @@ class DeviceAWS(DeviceBase):
     
     def __init__(self, device_name: str, aws_access_key_id: Optional[str] = None, 
                  aws_secret_access_key: Optional[str] = None, aws_region: Optional[str] = None, 
-                 s3_bucket_name: Optional[str] = None, folder_name: Optional[str] = None):
+                 s3_bucket_name: Optional[str] = None, folder_name: str = 'openqaoa'):
         
         """A majority of the input parameters required for this can be found in
         the user's AWS Web Services account.
@@ -395,7 +395,7 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             aws_secret_access_key: str = None,
                             aws_region: str = None, 
                             s3_bucket_name: str = None,
-                            folder_name: str = 'openqaoa') -> dict:
+                            folder_name: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
                         'hub': hub,
