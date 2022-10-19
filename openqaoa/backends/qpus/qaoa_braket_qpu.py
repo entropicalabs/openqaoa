@@ -27,7 +27,7 @@ from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBase
 
 class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
     """
-    A QAOA simulator as well as for real QPU using AWS as the backend
+    A QAOA simulator as well as for real QPU using Amazon Braket as backend
 
     Parameters
     ----------
