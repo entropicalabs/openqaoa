@@ -286,7 +286,7 @@ class DeviceAWS(DeviceBase):
     
     def __init__(self, device_name: str, aws_access_key_id: Optional[str] = None, 
                  aws_secret_access_key: Optional[str] = None, aws_region: Optional[str] = None, 
-                 s3_bucket_name: Optional[str] = None, folder_name: str = 'oq_runs'):
+                 s3_bucket_name: Optional[str] = None, folder_name: Optional[str] = None):
         
         """A majority of the input parameters required for this can be found in
         the user's AWS Web Services account.
@@ -329,13 +329,13 @@ class DeviceAWS(DeviceBase):
         
         # Only QPUs that are available for the specified aws region on Braket 
         # will be shown. We filter out QPUs that do not work with the circuit model
-        sesh_devices = self.aws_session.search_devices()
+        sess_devices = self.aws_session.search_devices()
         
         device_filter = np.multiply(
-            [each_dict['deviceStatus'] == 'ONLINE' for each_dict in sesh_devices],
-            [each_dict['providerName'] != 'D-Wave Systems' for each_dict in sesh_devices]
+            [each_dict['deviceStatus'] == 'ONLINE' for each_dict in sess_devices],
+            [each_dict['providerName'] != 'D-Wave Systems' for each_dict in sess_devices]
         )
-        active_devices = np.array(sesh_devices)[device_filter].tolist()
+        active_devices = np.array(sess_devices)[device_filter].tolist()
         
         self.available_qpus = [backend_dict['deviceArn']
                                for backend_dict in active_devices]
@@ -363,10 +363,10 @@ class DeviceAWS(DeviceBase):
     def _check_provider_connection(self) -> bool:
         
         try:
-            sesh = Session(aws_access_key_id = self.aws_access_key_id, 
+            sess = Session(aws_access_key_id = self.aws_access_key_id, 
                            aws_secret_access_key = self.aws_secret_access_key, 
                            region_name = self.aws_region)
-            self.aws_session = AwsSession(sesh, default_bucket = self.s3_bucket_name)
+            self.aws_session = AwsSession(sess, default_bucket = self.s3_bucket_name)
             self.s3_bucket_name = self.aws_session.default_bucket()
             return True
         except NoRegionError:
@@ -395,7 +395,7 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             aws_secret_access_key: str = None,
                             aws_region: str = None, 
                             s3_bucket_name: str = None,
-                            folder_name: str = 'oq_runs') -> dict:
+                            folder_name: str = 'openqaoa') -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
                         'hub': hub,
