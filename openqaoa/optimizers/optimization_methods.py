@@ -526,19 +526,20 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
         testx = testx - stepsize*gradient
         testy = np.real(fun(testx, *args))
 
-        # NOT WORKING
         # compute n_shots next step
         xi  = (mu*xi  + (1-mu)*variance) / (1-mu**(niter+1))
-        print('1')
         chi = (mu*chi + (1-mu)*gradient) / (1-mu**(niter+1))
-        print('2')
+
         n_shots = np.int32(np.ceil(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(chi**2+b*mu**niter))))
-        print('3', n_shots)
+        gain = ((gradient-lipschitz*gradient**2/2)*chi**2-lipschitz*gradient**2*xi/(2*n_shots))/n_shots
+
+        print(n_shots[np.argmax(gain)]) #don't know if the gain is working
+
         n_shots = np.fmax(n_shots, n_shots_min)
-        print('4')
+        n_shots = np.fmin(n_shots, n_shots[np.argmax(gain)])
         n_shots = np.fmin(n_shots, n_shots_max) if n_shots_max else n_shots
 
-        print('lo') 
+
 
         #falta n_shots_max
      
