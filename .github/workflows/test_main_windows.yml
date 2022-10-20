@@ -1,0 +1,69 @@
+name: test_windows
+
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    # Execution strategy
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.8', '3.9', '3.10']  
+        forest-sdk-version: [2.23.0]
+
+    # Run on a Windows machine
+    runs-on:  windows-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Python setup
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
+
+      # Install MSBUILD ( Required to compile matplotlib )
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+
+      # Install OpenQAOA        
+      - name: Install OpenQAOA
+        shell: pwsh
+        run: |
+          python -m venv env
+          .\env\Scripts\Activate.ps1
+          python -m pip install --upgrade pip
+          pip install --upgrade setuptools
+          pip install wheel
+          pip install .[tests]
+          pip install ipykernel
+
+      # Install Rigetti Forest SDK and launch QUILC + QVM services
+      - name: Install Rigetti Forest SDK
+        shell: pwsh
+        run: |
+          echo "Downloading Rigetti Forest SDK"
+          Invoke-WebRequest -Uri https://downloads.rigetti.com/qcs-sdk/forest-sdk-${{matrix.forest-sdk-version}}.msi -OutFile forest-sdk-${{matrix.forest-sdk-version}}.msi
+          echo "Installing Rigetti Forest SDK"
+          Start-Process -Wait -FilePath "./forest-sdk-${{matrix.forest-sdk-version}}.msi" -ArgumentList "/passive","/log log.txt","/qn","License=YES" -PassThru
+          echo "Starting QUILC and QVM"
+          Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\quilc.exe" -ArgumentList "-S" -PassThru
+          Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\qvm.exe" -ArgumentList "-S" -PassThru
+
+      # Run all tests and compute coverage reports
+      - name: Run tests
+        env:
+          IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }}
+          IBMQ_HUB: ibm-q
+          IBMQ_GROUP: open
+          IBMQ_PROJECT: main
+        shell: pwsh
+        run: |
+          .\env\Scripts\Activate.ps1
+          ipython kernel install --name "env" --user
+          python -m pytest -v -m 'not (qpu or api)'

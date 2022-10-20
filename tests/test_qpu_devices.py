@@ -15,8 +15,9 @@
 import unittest
 import json
 import os
+import pytest
 
-from openqaoa.devices import DeviceQiskit, DeviceLocal, SUPPORTED_LOCAL_SIMULATORS
+from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS, SUPPORTED_LOCAL_SIMULATORS
 
 
 class TestingDeviceQiskit(unittest.TestCase):
@@ -25,11 +26,12 @@ class TestingDeviceQiskit(unittest.TestCase):
     QPUs can be established.
     For any tests using provided credentials, the tests will only pass if those
     details provided are correct/valid with IBMQ.
+
     Please ensure that the provided api token, hub, group and project in the 
     crendentials.json are correct.
     All of these can be found in your IBMQ Account Page.
     """
-
+    @pytest.mark.api
     def setUp(self):
 
         try:
@@ -63,7 +65,8 @@ class TestingDeviceQiskit(unittest.TestCase):
         elif self.PROJECT == "IBMQ_PROJECT":
             raise ValueError(
                 "Please provide an appropriate IBMQ Project name in crendentials.json.")
-
+    
+    @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_credentials(self):
         
         """
@@ -80,6 +83,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, False)
         self.assertEqual(device_obj.qpu_connected, None)
 
+    @pytest.mark.api
     def test_check_connection_provider_no_backend_provided_credentials(self):
         
         """
@@ -97,6 +101,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, None)
 
+    @pytest.mark.api
     def test_check_connection_provider_right_backend_provided_credentials(self):
         
         """
@@ -123,6 +128,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, True)
 
+    @pytest.mark.api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
         
         """
@@ -140,7 +146,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, False)
-        
+
 
 class TestingDeviceLocal(unittest.TestCase):
     
@@ -162,6 +168,133 @@ class TestingDeviceLocal(unittest.TestCase):
         
         self.assertEqual(device_obj.check_connection(), False)
 
+
+class TestingDeviceAWS(unittest.TestCase):
+    
+    """These tests check the Object used to access AWS Braket and their 
+    available QPUs can be established.
+
+    For any tests using provided credentials, the tests will only pass if those
+    details provided are correct/valid with AWS Braket.
+
+    Please ensure that the provided access keys, aws region and s3 bucket names in the 
+    crendentials.json are correct.
+    """
+
+    @pytest.mark.api    
+    def setUp(self):
+        try:
+            opened_f = open('./tests/credentials.json', 'r')
+        except FileNotFoundError:
+            opened_f = open('credentials.json', 'r')
+                
+        with opened_f as f:
+            json_obj = json.load(f)['AWS']
+            self.AWS_ACCESS_KEY_ID = json_obj['AWS_ACCESS_KEY_ID']
+            self.AWS_SECRET_ACCESS_KEY = json_obj['AWS_SECRET_ACCESS_KEY']
+            self.AWS_REGION = json_obj['AWS_REGION']
+            self.S3_BUCKET_NAME = json_obj['S3_BUCKET_NAME']
+
+        if self.AWS_ACCESS_KEY_ID == "YOUR_ACCESS_KEY_ID":
+            raise ValueError(
+                "Please provide an appropriate AWS access key ID in crendentials.json.")
+        elif self.AWS_SECRET_ACCESS_KEY == "YOUR_SECRET_ACCESS_KEY":
+            raise ValueError(
+                "Please provide an appropriate AWS secret access key in crendentials.json.")
+        elif self.AWS_REGION == "AWS_REGION":
+            raise ValueError(
+                "Please provide an appropriate AWS region name in crendentials.json.")
+        elif self.S3_BUCKET_NAME == "YOUR_S3_BUCKET":
+            raise ValueError(
+                "Please provide an appropriate S3 bucket name in crendentials.json.")
+
+
+    @pytest.mark.api
+    def test_check_connection_provider_no_backend_wrong_credentials(self):
+        
+        """
+        If no information provided, check_connection should return False.
+        The provider_connected attribute should be updated to False.
+        """
+        
+        device_obj = DeviceAWS(device_name = '', aws_access_key_id = '', 
+                               aws_secret_access_key = '', aws_region = '', 
+                               s3_bucket_name = '')
+        
+        self.assertEqual(device_obj.check_connection(), False)
+        self.assertEqual(device_obj.provider_connected, False)
+        self.assertEqual(device_obj.qpu_connected, None)
+
+
+    @pytest.mark.api      
+    def test_check_connection_provider_no_backend_provided_credentials(self):
+        
+        """
+        If no information about the device name, but the credentials
+        used are correct, check_connection should return True.
+        The provider_connected attribute should be updated to True.
+        """
+
+        device_obj = DeviceAWS(device_name='', 
+                               aws_access_key_id=self.AWS_ACCESS_KEY_ID,
+                               aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY, 
+                               aws_region=self.AWS_REGION,
+                               s3_bucket_name=self.S3_BUCKET_NAME)
+
+        self.assertEqual(device_obj.check_connection(), True)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, None)
+
+
+    @pytest.mark.api
+    def test_check_connection_provider_right_backend_provided_credentials(self):
+        
+        """
+        If the correct device name is provided and the credentials
+        used are correct, check_connection should return True.
+        The provider_connected attribute should be updated to True.
+        The qpu_connected attribute should be updated to True.
+        """
+
+        device_obj = DeviceAWS(device_name='', 
+                               aws_access_key_id=self.AWS_ACCESS_KEY_ID,
+                               aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY, 
+                               aws_region=self.AWS_REGION,
+                               s3_bucket_name=self.S3_BUCKET_NAME)
+
+        device_obj.check_connection()
+        valid_qpu_name = device_obj.available_qpus[0]
+
+        device_obj = DeviceAWS(device_name=valid_qpu_name, 
+                               aws_access_key_id=self.AWS_ACCESS_KEY_ID,
+                               aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY, 
+                               aws_region=self.AWS_REGION,
+                               s3_bucket_name=self.S3_BUCKET_NAME)
+
+        self.assertEqual(device_obj.check_connection(), True)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, True)
+
+
+    @pytest.mark.api
+    def test_check_connection_provider_wrong_backend_provided_credentials(self):
+        
+        """
+        If device name provided is incorrect, and not empty, and the credentials
+        used are correct, check_connection should return False.
+        The provider_connected attribute should be updated to True.
+        The qpu_connected attribute should be updated to False.
+        """
+
+        device_obj = DeviceAWS(device_name='random_invalid_backend', 
+                               aws_access_key_id=self.AWS_ACCESS_KEY_ID,
+                               aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY, 
+                               aws_region=self.AWS_REGION,
+                               s3_bucket_name=self.S3_BUCKET_NAME)
+
+        self.assertEqual(device_obj.check_connection(), False)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, False)
 
 if __name__ == '__main__':
     unittest.main()

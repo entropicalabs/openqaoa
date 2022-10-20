@@ -14,11 +14,13 @@
 from typing import Union, Optional, List
 import numpy as np
 
-from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAPyQuilWavefunctionSimulatorBackend,
+from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAAWSQPUBackend, 
+                        QAOAPyQuilWavefunctionSimulatorBackend,
                         QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
                         QAOAvectorizedBackendSimulator, QAOAPyTketBackend)
 
-from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DevicePyTket
+from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS, DevicePyTket
+
 from ..qaoa_parameters.baseparams import QAOACircuitParams
 from ..basebackend import QuantumCircuitBase, QAOABaseBackend
 
@@ -32,7 +34,8 @@ DEVICE_NAME_TO_OBJECT_MAPPER = {
 
 DEVICE_ACCESS_OBJECT_MAPPER = {
     DeviceQiskit: QAOAQiskitQPUBackend,
-    DevicePyquil: QAOAPyQuilQPUBackend,
+    DevicePyquil: QAOAPyQuilQPUBackend, 
+    DeviceAWS: QAOAAWSQPUBackend,
     DevicePyTket: QAOAPyTketBackend
 }
 
@@ -44,7 +47,8 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
                         noise_model = None,
                         active_reset: Optional[bool] = None,
                         rewiring = None,
-                        qubit_layout = None):
+                        qubit_layout = None, 
+                        disable_qubit_rewiring: Optional[bool] = None):
 
     BACKEND_ARGS_MAPPER = {
         QAOAvectorizedBackendSimulator: {},
@@ -59,7 +63,10 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
         QAOAPyQuilQPUBackend: {'n_shots': n_shots,
                                'active_reset': active_reset,
                                'rewiring': rewiring,
-                               'qubit_layout':qubit_layout}
+                               'qubit_layout':qubit_layout},
+        QAOAAWSQPUBackend: {'n_shots': n_shots, 
+                            'qubit_layout': qubit_layout, 
+                            'disable_qubit_rewiring': disable_qubit_rewiring}
     }
 
     final_backend_kwargs = {key: value for key, value in BACKEND_ARGS_MAPPER[backend_obj].items()

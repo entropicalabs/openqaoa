@@ -75,7 +75,7 @@ class PauliOp:
         ----------
         pauli_str: `str`
                 The Pauli operator basis string.
-        qubit_indices: `int`
+        qubit_indices: `Tuple[int]`
                 The qubits on which the Pauli operates.
 
         Attributes
@@ -500,7 +500,7 @@ class Hamiltonian:
 
         Returns
         -------
-        hamiltonian_expression: `Symbol`
+        hamiltonian_expression: `sympy.Symbol`
             Symbolic expression for the Hamiltonian.
         """
                 
@@ -585,7 +585,7 @@ class Hamiltonian:
 
         Returns
         -------
-        : `Hamiltonian`
+        Hamiltonian:
             Classical Hamiltonian.
         """
         pauli_ops = []
