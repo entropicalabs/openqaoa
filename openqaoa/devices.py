@@ -299,6 +299,17 @@ class DevicePyquil(DeviceBase):
 
         return True
     
+    @property
+    def pytket_wrapped_backend(self):
+        """
+        Get the Pyquil backend wrapped as a PyTket backend to be used for circuit
+        compilation using the PyTket library.
+        """
+        from pytket.extensions.pyquil import ForestBackend
+        tk_pyquil_device = ForestBackend(self.quantum_computer)
+
+        return tk_pyquil_device
+    
     
 class DeviceAWS(DeviceBase):
     
@@ -413,10 +424,14 @@ class DeviceAWS(DeviceBase):
         Get the Pyquil backend wrapped as a PyTket backend to be used for circuit
         compilation using the PyTket library.
         """
-        from pytket.extensions.pyquil import ForestBackend
-        tk_pyquil_device = ForestBackend(self.quantum_computer)
-
-        return tk_pyquil_device
+        from pytket.extensions.braket import BraketBackend
+        tk_braket_device = BraketBackend(device = self.backend_device._name,
+                                         region = self.aws_region,
+                                         s3_bucket = self.s3_bucket_name,
+                                         s3_folder = self.folder_name,
+                                         device_type = self.backend_device.type,
+                                         provider = self.backend_device.provider_name)
+        return tk_braket_device
 
 
 def device_class_arg_mapper(device_class:DeviceBase,
