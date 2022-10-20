@@ -104,7 +104,8 @@ class RqaoaParameters(Parameters):
                  n_max: int = 1,
                  steps: Union[list,int] = 1,
                  n_cutoff: int = 5,
-                 original_hamiltonian: Hamiltonian = None):
+                 original_hamiltonian: Hamiltonian = None,
+                 counter: int = 0):
         """
         Initialises RQAOA program parameters.
 
@@ -126,8 +127,10 @@ class RqaoaParameters(Parameters):
         original_hamiltonian: `Hamiltonian`
             Hamiltonian encoding the original problem fed into the RQAOA algorithm. Defaults to None.
         """
+        
         self.rqaoa_type = rqaoa_type
         self.n_max = n_max
         self.steps = steps
         self.n_cutoff = n_cutoff
         self.original_hamiltonian = original_hamiltonian
+        self.counter = counter
