@@ -423,7 +423,7 @@ class RQAOA(Optimizer):
         self.qaoa_steps = []
         self.results = {}
 
-        #? self.rqaoa_type = rqaoa_type
+        #? self.rqaoa_type = rqaoa_type  -> should be able to change rqaoa_type?
 
     def set_circuit_properties(self, **kwargs):  #? mmmm think about it
 
