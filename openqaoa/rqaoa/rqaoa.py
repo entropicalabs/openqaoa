@@ -434,7 +434,7 @@ def redefine_problem(problem: QUBO, spin_map: dict):
         if len(term) == 1:
 
             # Extract spin from the map
-            spin = term.qubit_indices[0]
+            spin = term[0]
 
             # Extract parent spin and associated factor
             parent_spin, factor_spin = spin_map[spin][1], spin_map[spin][0]
@@ -460,7 +460,7 @@ def redefine_problem(problem: QUBO, spin_map: dict):
         else:
 
             # Extract spins from term
-            spin1, spin2 = term.qubit_indices
+            spin1, spin2 = term
 
             # Extract parent spins and associated factors
             factor_spin1, factor_spin2 = spin_map[spin1][0], spin_map[spin2][0]
