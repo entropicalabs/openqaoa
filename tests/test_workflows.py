@@ -32,7 +32,7 @@ import networkx as nw
 import pytest
 import numpy as np
 
-from openqaoa.problems.problem import MinimumVertexCover
+from openqaoa.problems.problem import MinimumVertexCover, QUBO
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']
@@ -633,6 +633,100 @@ class TestingRQAOA(unittest.TestCase):
         # Check computed solutions are among the correct ones
         for sol in sol_states:
             assert sol in exact_sol_states
+
+    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=10):
+
+        r = RQAOA(type)
+        qiskit_device = create_device(location='local', name='qiskit.statevector_simulator')
+        r.set_device(qiskit_device)
+        r.set_rqaoa_parameters(n_cutoff = n_cutoff, n_max=eliminations, steps=eliminations)
+        r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
+        r.set_backend_properties(prepend_state=None, append_state=None)
+        r.set_classical_optimizer(method=method, maxiter=maxiter,
+                                optimization_progress=True, cost_progress=True, parameter_log=True)
+        r.compile(problem)
+        r.optimize()
+
+        return r.results
+
+    def test_example_1_adaptive_custom(self):
+
+        # Number of qubits
+        n_qubits = 12
+
+        # Elimination schemes
+        Nmax = [1,2,3,4]
+        schedules = [1,[1,2,1,2,7]]
+        n_cutoff = 5
+
+        # Edges and weights of the graph
+        pair_edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)] 
+        self_edges = [(i,) for i in range(n_qubits)]
+        pair_weights = [1 for _ in range(len(pair_edges))] # All weights equal to 1
+        self_weights = [10**(-4) for _ in range(len(self_edges))]
+
+        edges = pair_edges + self_edges
+        weights = pair_weights + self_weights
+        problem = QUBO(n_qubits, edges, weights)
+
+        results = []
+
+        for nmax in Nmax:
+            results.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
+
+        for schedule in schedules:
+            results.append(self._run_rqaoa('custom', problem, n_cutoff, schedule))
+
+    def test_example_2_adaptive_custom(self):
+
+        # Elimination scheme
+        n_cutoff = 3
+
+        # Define problem instance (Ring graph 10 qubits)
+        problem = MinimumVertexCover(nw.complete_graph(10, [1]), field=1, penalty=10).get_qubo_problem()
+
+        results = []
+        results.append(self._run_rqaoa('adaptive', problem, n_cutoff))
+        results.append(self._run_rqaoa('custom', problem, n_cutoff))
+
+    def test_example_3_adaptive_custom(self):
+
+        # Elimination scheme
+        step = 2
+        nmax = 4
+        n_cutoff = 3
+
+        # Define problem instance (Ring graph 10 qubits)
+        problem = MinimumVertexCover(nw.complete_graph(10), field=1, penalty=1).get_qubo_problem()
+
+        results = []
+        results.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
+        results.append(self._run_rqaoa('custom', problem, n_cutoff, step))
+
+    def test_example_4_adaptive_custom(self):
+
+        # Number of qubits
+        n_qubits = 10
+
+        # Elimination schemes
+        Nmax = [1,2,3,4]
+        schedules = [1,2,3]
+        n_cutoff = 3
+
+        # Edges and weights of the graph
+        edges = [(i,j) for j in range(n_qubits) for i in range(j)]
+        weights = [1 for _ in range(len(edges))]
+
+        problem = QUBO(n_qubits, edges, weights) 
+
+        results = []
+
+        for nmax in Nmax:
+            results.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
+
+        for schedule in schedules:
+            results.append(self._run_rqaoa('custom', problem, n_cutoff, schedule))
+
 
 if __name__ == '__main__':
     unittest.main()
