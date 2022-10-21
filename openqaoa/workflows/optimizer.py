@@ -17,7 +17,6 @@ import numpy as np
 import copy
 from openqaoa.devices import DeviceLocal, DeviceBase
 
-from openqaoa.rqaoa.rqaoa import custom_rqaoa
 from openqaoa.problems.problem import QUBO
 from openqaoa.problems.helper_functions import convert2serialize
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
@@ -27,7 +26,6 @@ from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
-from openqaoa.rqaoa import adaptive_rqaoa, custom_rqaoa
 from openqaoa import rqaoa
 
 
@@ -405,7 +403,7 @@ class RQAOA(Optimizer):
         information
     """
 
-    def __init__(self, rqaoa_type: str = 'custom', device: DeviceBase=DeviceLocal('vectorized')):
+    def __init__(self, rqaoa_type: str = 'adaptive', device: DeviceBase=DeviceLocal('vectorized')):
         """
         Initializes the RQAOA optimizer class.
 
@@ -420,11 +418,6 @@ class RQAOA(Optimizer):
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
-
-        #? not sure if those here or in optimize             
-        self.elimination_tracker = []
-        self.qaoa_steps = []
-        self.results = {}
 
         #? self.rqaoa_type = rqaoa_type  -> should be able to change rqaoa_type?
 
@@ -452,7 +445,7 @@ class RQAOA(Optimizer):
                 raise ValueError(
                     f'Specified part {key},  {value} is not supported by RQAOA')
 
-        self.rqaoa_parameters = RqaoaParameters(rqaoa_type=self.type, **kwargs) 
+        self.rqaoa_parameters = RqaoaParameters(rqaoa_type=self.rqaoa_parameters.rqaoa_type, **kwargs) 
 
         return None
 
@@ -468,7 +461,6 @@ class RQAOA(Optimizer):
         verbose: bool
             !NotYetImplemented! Set true to have a summary of RQAOA to displayed after compilation
         """
-
 
         # save the original problem
         self.problem = problem 
@@ -512,6 +504,12 @@ class RQAOA(Optimizer):
         Performs optimization using RQAOA with the `custom` method or the `adaptive` method.
         """
 
+        # reset all final variables
+        self.elimination_tracker = []
+        self.qaoa_steps = []
+        self.results = {}
+
+        # get variables
         problem = self.problem  
         n_cutoff = self.rqaoa_parameters.n_cutoff
         n_qubits = problem.n
@@ -523,8 +521,8 @@ class RQAOA(Optimizer):
         else:
             f_max_terms = rqaoa.max_terms #? rqaoa.max_terms -> rqaoa.custom_max_terms ?
 
-        # If not below cutoff, proceed quantumly, else classically
-        while n_qubits <= n_cutoff:
+        # If above cutoff, loop quantumly, else classically
+        while n_qubits > n_cutoff:
 
             # Run QAOA
             self._q.optimize()
@@ -567,7 +565,7 @@ class RQAOA(Optimizer):
         self.results['classical output'] = {'minimum energy': cl_energy,  'optimal states': cl_ground_states}
         self.results['elimination rules'] = self.elimination_tracker
         self.results['schedule'] = [len(max_tc) for max_tc in self.elimination_tracker]
-        self.results['total steps'] = len(self.elimination_tracker)
+        self.results['total steps'] = counter - self.rqaoa_parameters.counter 
 
         return
 
