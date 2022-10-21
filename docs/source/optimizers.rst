@@ -29,6 +29,12 @@ Optimization Methods
     :show-inheritance:
     :inherited-members:
 
+.. automodule:: openqaoa.optimizers.optimization_methods_pennylane
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+
 Derivate functions
 ------------------
 .. automodule:: openqaoa.derivative_functions
