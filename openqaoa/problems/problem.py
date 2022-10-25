@@ -14,35 +14,30 @@
 
 from abc import ABC, abstractmethod
 from collections import defaultdict, Counter
-from random import seed
-
 import networkx as nx
 import numpy as np
 import scipy
 import scipy.spatial
 import itertools
 
-from .helper_functions import convert2serialize, check_kwargs
+from .helper_functions import convert2serialize
 from openqaoa.qaoa_parameters.operators import Hamiltonian
+
+SEED = 42
 
 
 class Problem(ABC):
     @staticmethod
     @abstractmethod
-    def random_instance(**kwargs):
+    def random_instance():
         """
         Creates a random instance of the problem.
-
-        Parameters
-        ----------
-        **kwargs:
-            Required keyword arguments
 
         Returns
         -------
             A random instance of the problem.
         """
-        pass
+        raise NotImplementedError
 
 
 class QUBO:
@@ -66,7 +61,7 @@ class QUBO:
 
     Returns
     -------
-        An instance of the Quadratic Unconstrained Binary Optimization 
+        An instance of the Quadratic Unconstrained Binary Optimization
         (QUBO) class.
     """
 
@@ -234,32 +229,23 @@ class TSP(Problem):
 
             for each_value in each_entry:
                 if not isinstance(each_value, float) and not isinstance(
-                    each_value, int
+                        each_value, int
                 ):
                     raise TypeError("The coordinates must be of type float or int")
 
         self._coordinates = np.array(input_coordinates)
 
     @staticmethod
-    def random_instance(**kwargs):
+    def random_instance():
         """
         Creates a random instance of the Traveling Salesman problem.
-
-        Parameters
-        ----------
-        n_cities: int
-            The number of cities in the TSP instance. This is a required 
-            keyword argument.
 
         Returns
         -------
             A random instance of the Traveling Salesman problem.
         """
-        n_cities = check_kwargs(["n_cities"], [None], **kwargs)[0]
-        seed = kwargs.get("seed")
-
-        if isinstance(seed, int):
-            np.random.seed(seed)
+        np.random.seed(SEED)
+        n_cities = np.random.randint(1, 100)
 
         box_size = np.sqrt(n_cities)
         coordinates = []
@@ -392,25 +378,16 @@ class NumberPartition(Problem):
         self._numbers = input_numbers
 
     @staticmethod
-    def random_instance(**kwargs):
+    def random_instance():
         """
         Creates a random instance of the Number Partitioning problem.
-
-        Parameters
-        ----------
-        n_numbers: `int`
-            The number of numbers to be partitioned. This is a required 
-            keyword argument.
 
         Returns
         -------
             A random instance of the Number Partitioning problem.
         """
-        n_numbers = check_kwargs(["n_numbers"], [None], **kwargs)
-        seed = kwargs.get("seed")
-
-        if isinstance(seed, int):
-            np.random.seed(seed)
+        np.random.seed(SEED)
+        n_numbers = np.random.randint(1, 100)
 
         numbers = list(map(int, np.random.randint(1, 10, size=n_numbers)))
         return NumberPartition(numbers)
@@ -491,32 +468,21 @@ class MaximumCut(Problem):
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 
     @staticmethod
-    def random_instance(**kwargs):
+    def random_instance():
         """
         Creates a random instance of the Maximum Cut problem, whose graph is
         random following the Erdos-Renyi model.
-
-        Parameters
-        ----------
-        **kwargs:
-        Required keyword arguments are:
-
-            n_nodes: int
-                The number of nodes (vertices) in the graph.
-            edge_probability: float
-                The probability with which an edge is added to the graph.
 
         Returns
         -------
             A random instance of the Maximum Cut problem.
         """
-        n_nodes, edge_probability = check_kwargs(
-            ["n_nodes", "edge_probability"], [None, None], **kwargs
-        )
-        seed = kwargs.get("seed", None)
+        np.random.seed(SEED)
+        n_nodes = np.random.randint(1, 100)
+        edge_probability = np.random.uniform(0, 1)
 
         G = nx.generators.random_graphs.fast_gnp_random_graph(
-            n=n_nodes, p=edge_probability, seed=seed
+            n=n_nodes, p=edge_probability, seed=SEED
         )
         return MaximumCut(G)
 
@@ -641,24 +607,17 @@ class Knapsack(Problem):
         self._penalty = input_penalty
 
     @staticmethod
-    def random_instance(**kwargs):
+    def random_instance():
         """
         Creates a random instance of the Knapsack problem.
 
-        Parameters
-        ----------
-        n_items: int
-            The number of items that can be placed in the knapsack.
-        
         Returns
         -------
             A random instance of the Knapsack problem.
         """
-        n_items = check_kwargs(["n_items"], [None], **kwargs)[0]
-        seed = kwargs.get("seed")
 
-        if isinstance(seed, int):
-            np.random.seed(seed)
+        np.random.seed(SEED)
+        n_items = np.random.randint(1, 100)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
@@ -741,12 +700,12 @@ class Knapsack(Problem):
         return tuple(
             zip(
                 *(
-                    edges_slacks_with_weights
-                    + edges_decision_vars_with_weights
-                    + edges_slacks_decision_vars_with_weights
-                    + single_interaction_slacks
-                    + single_interaction_decisions_vars
-                    + constant_term
+                        edges_slacks_with_weights
+                        + edges_decision_vars_with_weights
+                        + edges_slacks_decision_vars_with_weights
+                        + single_interaction_slacks
+                        + single_interaction_decisions_vars
+                        + constant_term
                 )
             )
         )
@@ -802,10 +761,10 @@ class Knapsack(Problem):
 
 class SlackFreeKnapsack(Knapsack):
     """
-    A slack variable free approach to the Knapsack problem Hamiltonian. 
+    A slack variable free approach to the Knapsack problem Hamiltonian.
     The Hamiltonian consists of decision qubits with a quadratic penalty term centred
     on `W`, i.e. the maximum Knapsack Capacity.
-    
+
     Creates an instance of the SlackFreeKanpsack problem.
 
     Parameters
@@ -829,24 +788,17 @@ class SlackFreeKnapsack(Knapsack):
         super().__init__(values, weights, weight_capacity, penalty)
 
     @staticmethod
-    def random_instance(**kwargs):
+    def random_instance():
         """
         Creates a random instance of the Knapsack problem.
 
-        Parameters
-        ----------
-        n_items: int
-            The number of items that can be placed in the knapsack.
-        
+
         Returns
         -------
             A random instance of the Knapsack problem.
         """
-        n_items = check_kwargs(["n_items"], [None], **kwargs)[0]
-        seed = kwargs.get("seed")
-
-        if isinstance(seed, int):
-            np.random.seed(seed)
+        np.random.seed(SEED)
+        n_items = np.random.randint(1, 100)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
@@ -865,8 +817,8 @@ class SlackFreeKnapsack(Knapsack):
 
     def terms_and_weights(self):
         """
-        Implementation of single and two-qubit terms in the slack-free Hamiltonian 
-        for the Knapsack problem. 
+        Implementation of single and two-qubit terms in the slack-free Hamiltonian
+        for the Knapsack problem.
         """
 
         n_variables = self.n_items
@@ -896,9 +848,9 @@ class SlackFreeKnapsack(Knapsack):
         return tuple(
             zip(
                 *(
-                    edges_decision_vars_with_weights
-                    + single_interaction_decisions_vars
-                    + constant_term
+                        edges_decision_vars_with_weights
+                        + single_interaction_decisions_vars
+                        + constant_term
                 )
             )
         )
@@ -1025,27 +977,16 @@ class MinimumVertexCover(Problem):
         random following the Erdos-Renyi model. By default the artificial field is
         set to 1.0 and the default penalty os taken to be 10 times larger.
 
-        Parameters
-        ----------
-        **kwargs:
-            Required keyword arguments are:
-
-            n_nodes: int
-                The number of nodes (vertices) in the graph.
-            edge_probability: float
-                The probability with which an edge is added to the graph.
-
         Returns
         -------
         A random instance of the Minimum Vertex Cover problem.
         """
+        np.random.seed(SEED)
+        n_nodes = np.random.randint(1, 100)
+        edge_probability = np.random.uniform(0.0, 1.0)
 
-        n_nodes, edge_probability = check_kwargs(
-            ["n_nodes", "edge_probability"], [None, None], **kwargs
-        )
-        seed = kwargs.get("seed", None)
         G = nx.generators.random_graphs.fast_gnp_random_graph(
-            n=n_nodes, p=edge_probability, seed=seed
+            n=n_nodes, p=edge_probability, seed=SEED
         )
 
         DEFAULT_FIELD = 1.0
@@ -1056,7 +997,7 @@ class MinimumVertexCover(Problem):
     def terms_and_weights(self):
         """
         Creates the terms and weights for the Minimum Vertex Cover problem
-        
+
         Returns
         -------
         terms_weights: tuple(list[list],list[float])
@@ -1144,34 +1085,24 @@ class ShortestPath(Problem):
         assert source != dest, "Source and destination nodes cannot be the same"
 
     @staticmethod
-    def random_instance(**kwargs):
+    def random_instance():
         """
         Creates a random instance of the Shortest problem, whose graph is
-        random following the Erdos-Renyi model. By default the node and edge 
+        random following the Erdos-Renyi model. By default the node and edge
         weights are set to 1.0 and the default constraint is taken to be as large.
 
-        Parameters
-        ----------
-        **kwargs:
-            Required keyword arguments are:
-
-            n_nodes: int
-                The number of nodes (vertices) in the graph.
-            edge_probability: float
-                The probability with which an edge is added to the graph.
 
         Returns
         -------
         A random instance of the Shortest Path problem.
         """
-
-        n_nodes, edge_probability, seed, source, dest = check_kwargs(
-            ["n_nodes", "edge_probability", "seed", "source", "dest"],
-            [None, None, 1234, 0, 1],
-            **kwargs,
-        )
+        np.random.seed(SEED)
+        n_nodes = np.random.randint(1, 100)
+        edge_probability = np.random.uniform(0, 1)
+        source = np.random.randint(0, n_nodes)
+        dest = np.random.randint(0, n_nodes)
         G = nx.generators.random_graphs.fast_gnp_random_graph(
-            n=n_nodes, p=edge_probability, seed=seed
+            n=n_nodes, p=edge_probability, seed=SEED
         )
 
         DEFAULT_WEIGHTS = 1.0
@@ -1218,7 +1149,7 @@ class ShortestPath(Problem):
     def terms_and_weights(self):
         """
         Creates the terms and weights for the Shortest Path problem
-        
+
         Returns
         -------
         terms_weights: tuple(list[list],list[float])
@@ -1313,11 +1244,11 @@ class ShortestPath(Problem):
         return tuple(
             zip(
                 *(
-                    node_terms_weights
-                    + edge_terms_weights
-                    + start_flow_terms_weights
-                    + dest_flow_terms_weights
-                    + path_flow_terms_weights
+                        node_terms_weights
+                        + edge_terms_weights
+                        + start_flow_terms_weights
+                        + dest_flow_terms_weights
+                        + path_flow_terms_weights
                 )
             )
         )
