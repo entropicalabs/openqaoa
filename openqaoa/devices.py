@@ -153,6 +153,7 @@ class DeviceQiskit(DeviceBase):
 
         if self.device_name in self.available_qpus:
             self.backend_device = self.provider.get_backend(self.device_name)
+            self.n_qubits = self.backend_device.configuration().n_qubits
             return True
         else:
             print(
