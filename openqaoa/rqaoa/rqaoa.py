@@ -12,48 +12,13 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from typing import Union
 import numpy as np
 
-from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.basebackend import QAOABaseBackend, QAOABaseBackendStatevector
-from ..devices import DeviceBase, create_device, DeviceLocal
-from openqaoa.qaoa_parameters import QAOACircuitParams, QAOAVariationalBaseParams, Hamiltonian, create_qaoa_variational_params
-from openqaoa.optimizers.qaoa_optimizer import get_optimizer
-from openqaoa.utilities import bitstring_energy, ground_state_hamiltonian, get_mixer_hamiltonian, exp_val_hamiltonian_termwise
-from openqaoa.optimizers.result import Result
+from openqaoa.qaoa_parameters import Hamiltonian
+from openqaoa.utilities import bitstring_energy
 from openqaoa.problems.problem import QUBO
 
 
-def optimize_qaoa(qaoa_backend: QAOABaseBackend, variational_params: QAOAVariationalBaseParams, optimizer_dict: dict):
-    """
-    Creates an optimizer object with the specified parameters and run the optimization process. 
-    Post which obtain the results and return the ''OptimizeVQA.results_information()''
-
-    Parameters
-    ----------
-    qaoa_backend: `QAOABaseBackend`
-        The backend on which to run the optimization.
-
-    variational_params: `QAOAVariationalBaseParams`
-        Set of variational parameters in the QAOA ansatz.
-
-    optimizer_dict: `dict`
-        Dictionary containing the classical optimizer method and the
-        number of iterations allowed.
-
-    Returns
-    -------
-    opt_results:
-        Results from optimization process.
-    """
-
-    optimizer = get_optimizer(qaoa_backend, variational_params, optimizer_dict)
-
-    # Run optimization
-    optimizer()
-
-    return optimizer.qaoa_result
 
 
 def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):

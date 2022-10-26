@@ -22,7 +22,7 @@ from openqaoa.problems.helper_functions import convert2serialize
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian
+from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
@@ -583,7 +583,7 @@ class RQAOA(Optimizer):
         qaoa_optimized_counts = q.results.get_counts(q.results.optimized['optimized measurement outcomes'])
         analytical = isinstance(qaoa_backend, QAOABaseBackendStatevector)
     
-        return rqaoa.exp_val_hamiltonian_termwise(variational_params, 
+        return exp_val_hamiltonian_termwise(variational_params, 
                 qaoa_backend, cost_hamiltonian, mixer_type, p, qaoa_optimized_angles, 
                 qaoa_optimized_counts, analytical=analytical)
 
