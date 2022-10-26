@@ -633,12 +633,12 @@ class TestingRQAOA(unittest.TestCase):
         Test creation of the qaoa object and its default values
         """
         r = RQAOA()
-        r.complie()
+        r.compile()
 
         self._test_default_values(r._q)
         
 
-    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=10, name_device='qiskit.statevector_simulator'):
+    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
 
         r = RQAOA(type)
         qiskit_device = create_device(location='local', name=name_device)
@@ -646,8 +646,7 @@ class TestingRQAOA(unittest.TestCase):
         r.set_rqaoa_parameters(n_cutoff = n_cutoff, n_max=eliminations, steps=eliminations)
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
-        r.set_classical_optimizer(method=method, maxiter=maxiter,
-                                optimization_progress=True, cost_progress=True, parameter_log=True)
+        r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
         r.compile(problem)
         r.optimize()
 
@@ -697,7 +696,7 @@ class TestingRQAOA(unittest.TestCase):
         n_cutoff = 3
 
         # Define problem instance (Ring graph 10 qubits)
-        graph = nw.complete_graph(10, [1])
+        graph = nw.circulant_graph(10, [1])
         problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
 
         # run RQAOA and append solution in list
