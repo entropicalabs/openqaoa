@@ -14,14 +14,14 @@ The development of this method is associated with an internal research project a
 
 Custom RQAOA
 ------------
-.. autoclass:: openqaoa.rqaoa.custom_rqaoa
+.. autoclass:: openqaoa.workflows.optimizer.RQAOA
     :members:
     :undoc-members:
     :inherited-members:
     
 Adaptive RQAOA
 --------------
-.. autoclass:: openqaoa.rqaoa.adaptive_rqaoa
+.. autoclass:: openqaoa.workflows.optimizer.RQAOA
     :members:
     :undoc-members:
     :inherited-members:
