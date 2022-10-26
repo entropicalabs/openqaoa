@@ -16,6 +16,7 @@
 Construct Pauli operators and Hamiltonians.
 """
 from collections import Counter
+from sympy import Symbol
 import numpy as np
 from typing import List, Union, Tuple
 
@@ -74,7 +75,7 @@ class PauliOp:
         ----------
         pauli_str: `str`
                 The Pauli operator basis string.
-        qubit_indices: `int`
+        qubit_indices: `Tuple[int]`
                 The qubits on which the Pauli operates.
 
         Attributes
@@ -499,15 +500,9 @@ class Hamiltonian:
 
         Returns
         -------
-        hamiltonian_expression: `Symbol`
+        hamiltonian_expression: `sympy.Symbol`
             Symbolic expression for the Hamiltonian.
         """
-        # Ensure sympy is installed
-        try:
-            from sympy import Symbol
-        except ImportError:
-            raise ImportError(
-                "Sympy is not installed. Pip install sympy to use this method")
                 
         # Generate expression
         hamiltonian_expression = Symbol(str(self.constant))
@@ -590,7 +585,7 @@ class Hamiltonian:
 
         Returns
         -------
-        : `Hamiltonian`
+        Hamiltonian:
             Classical Hamiltonian.
         """
         pauli_ops = []

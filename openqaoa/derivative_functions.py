@@ -31,9 +31,31 @@ from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
 def update_and_compute_expectation(backend_obj: QAOABaseBackend, 
                                    params: QAOAVariationalBaseParams, 
                                    logger: Logger):
-    # Helper function that returns a function that takes in a list of raw parameters
-    # This function will handle (1) updating variational parameters with update_from_raw and (2) computing expectation.
-
+    
+    """
+    Helper function that returns a callable that takes in a list/nparray of raw parameters.
+    This function will handle:
+        (1) Updating logger object with `logger.log_variables`
+        (2) Updating variational parameters with `update_from_raw` 
+        (3) Computing expectation with `backend_obj.expectation`
+    
+    PARAMETERS
+    ----------
+    backend_obj: QAOABaseBackend
+        `QAOABaseBackend` object that contains information about the backend that is being used to perform the QAOA circuit
+        
+    params : QAOAVariationalBaseParams
+        `QAOAVariationalBaseParams` object containing variational angles.
+        
+    logger: Logger
+        Logger Class required to log information from the evaluations required for the jacobian/hessian computation.
+    
+    Returns
+    -------
+    out:
+        A callable that accepts a list/array of parameters, and returns the computed expectation value. 
+    """
+    
     def fun(args):
         current_total_eval = logger.func_evals.best[0]
         current_total_eval += 1
@@ -130,6 +152,8 @@ def derivative(backend_obj: QAOABaseBackend,
 
         if derivative_method == 'finite_difference':
             out = hessian_fd(backend_obj, params, derivative_options, logger)
+        else:
+            raise ValueError('Only support hessian derivative method is finite_difference. Your choice: {}'.format(derivative_method))
 
     return out
 

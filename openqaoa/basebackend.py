@@ -29,7 +29,7 @@ import numpy as np
 from copy import deepcopy
 
 from .devices import DeviceBase
-from .qaoa_parameters.pauligate import PauliGate, TwoPauliGate
+from .qaoa_parameters.gatemap import RotationGateMap, TwoQubitRotationGateMap
 from .qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from .utilities import qaoa_probabilities
 from .cost_function import cost_function
@@ -59,9 +59,9 @@ class VQABaseBackend(ABC):
 
     Parameters
     ----------
-    prepend_state: `Union[QuantumCircuitBase,List[complex],np.ndarray]`
+    prepend_state: `Union[QuantumCircuitBase, List[complex], np.ndarray]`
         The initial state to start the quantum circuit in the backend.
-    append_state: `Union[QuantumCircuitBase,np.ndarray]`
+    append_state: `Union[QuantumCircuitBase, np.ndarray]`
         The final state to append to the quantum circuit in the backend.
     """
 
@@ -109,12 +109,12 @@ class QAOABaseBackend(VQABaseBackend):
     ----------
     circuit_params: `QAOACircuitParams`
         This object handles the information to design the QAOA circuit ansatz
-    prepend_state: `Union[QuantumCircuitBase,List[complex]]` 
+    prepend_state: `Union[QuantumCircuitBase, List[complex]]` 
         Warm Starting the QAOA problem with some initial state other than the regular
         $|+ \\rangle ^{otimes n}$ 
-    append_state: `Union[QuantumCircuitBase,List[complex]]`
+    append_state: `Union[QuantumCircuitBase, List[complex]]`
         Appending a user-defined circuit/state to the end of the QAOA routine    
-    init_hadamard: ``bool``
+    init_hadamard: `bool`
         Initialises the QAOA circuit with a hadamard when ``True``
     """
 
@@ -133,12 +133,13 @@ class QAOABaseBackend(VQABaseBackend):
         self.init_hadamard = init_hadamard
         self.cvar_alpha = cvar_alpha
 
-        self.pseudo_circuit = deepcopy(self.circuit_params.pseudo_circuit)
+        self.abstract_circuit = deepcopy(self.circuit_params.abstract_circuit)
 
-    def assign_angles(self, params: QAOAVariationalBaseParams) -> List[PauliGate]:
+    def assign_angles(self, params: QAOAVariationalBaseParams) -> None:
+
         """
         Assigns the angle values of the variational parameters to the circuit gates
-        specified as a list of gates in the ``pseudo_circuit``.
+        specified as a list of gates in the ``abstract_circuit``.
 
         Parameters
         ----------
@@ -146,18 +147,18 @@ class QAOABaseBackend(VQABaseBackend):
             The variational parameters(angles) to be assigned to the circuit gates
         """
         # if circuit is non-parameterised, then assign the angle values to the circuit
-        pseudo_pauli_circuit = self.pseudo_circuit
+        abstract_pauli_circuit = self.abstract_circuit
 
-        for each_pauli in pseudo_pauli_circuit:
+        for each_pauli in abstract_pauli_circuit:
             pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoPauliGate):
+            if isinstance(each_pauli, TwoQubitRotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle = params.mixer_2q_angles[pauli_label_index[0],
                                                    pauli_label_index[1]]
                 elif each_pauli.pauli_label[1] == 'cost':
                     angle = params.cost_2q_angles[pauli_label_index[0],
                                                   pauli_label_index[1]]
-            elif isinstance(each_pauli, PauliGate):
+            elif isinstance(each_pauli, RotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle = params.mixer_1q_angles[pauli_label_index[0],
                                                    pauli_label_index[1]]
@@ -165,40 +166,40 @@ class QAOABaseBackend(VQABaseBackend):
                     angle = params.cost_1q_angles[pauli_label_index[0],
                                                   pauli_label_index[1]]
             each_pauli.rotation_angle = angle
-        self.pseudo_circuit = pseudo_pauli_circuit
+        self.abstract_circuit = abstract_pauli_circuit
 
     def obtain_angles_for_pauli_list(self,
-                                     input_pauli_list: List[PauliGate],
+                                     input_pauli_list: List[RotationGateMap],
                                      params: QAOAVariationalBaseParams) -> List[float]:
         """
         This method uses the pauli gate list information to obtain the pauli angles
         from the VariationalBaseParams object. The floats in the list are in the order
-        of the input PauliGates list.
+        of the input RotationGateMaps list.
 
         Parameters
         ----------
-        input_pauli_list: `List[PauliGate]`
-            The PauliGates list
+        input_pauli_list: `List[RotationGateMap]`
+            The RotationGateMaps list
         params: `QAOAVariationalBaseParams`
             The variational parameters(angles) to be assigned to the circuit gates
 
         Returns
         -------
         angles_list: `List[float]`
-            The list of angles in the order of gates in the `PauliGate` list
+            The list of angles in the order of gates in the `RotationGateMap` list
         """
         angle_list = []
 
         for each_pauli in input_pauli_list:
             pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoPauliGate):
+            if isinstance(each_pauli, TwoQubitRotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle_list.append(params.mixer_2q_angles[pauli_label_index[0],
                                                              pauli_label_index[1]])
                 elif each_pauli.pauli_label[1] == 'cost':
                     angle_list.append(params.cost_2q_angles[pauli_label_index[0],
                                                             pauli_label_index[1]])
-            elif isinstance(each_pauli, PauliGate):
+            elif isinstance(each_pauli, RotationGateMap):
                 if each_pauli.pauli_label[1] == 'mixer':
                     angle_list.append(params.mixer_1q_angles[pauli_label_index[0],
                                                              pauli_label_index[1]])
@@ -248,8 +249,8 @@ class QAOABaseBackend(VQABaseBackend):
 
         Returns
         -------
-        `float`
-            expectation value of cost operator wrt to quantum state produced by QAOA circuit
+        float:
+            Expectation value of cost operator wrt to quantum state produced by QAOA circuit
         """
         counts = self.get_counts(params)
         cost = cost_function(
@@ -269,7 +270,7 @@ class QAOABaseBackend(VQABaseBackend):
 
         Returns
         -------
-        `Tuple[float]`
+        Tuple[float]:
             expectation value and its uncertainty of cost operator wrt 
             to quantum state produced by QAOA circuit.
         """
@@ -347,7 +348,7 @@ class QAOABaseBackend(VQABaseBackend):
 
         Returns
         -------
-        energy: `float`
+        float:
             The energy of a given bitstring with respect to the cost Hamiltonian.
         """
         energy = 0
@@ -391,7 +392,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
 
         Returns
         -------
-        wf: `List[complex]`
+        List[complex]:
             A list of the wavefunction amplitudes.
         """
         pass
@@ -413,7 +414,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
 
         Returns
         -------
-        meas_samples: `np.ndarray`
+        np.ndarray:
             A list of measurement outcomes sampled from a statevector
         """
         wf = self.wavefunction(params)
@@ -438,7 +439,7 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
 
         Returns
         -------
-        prob_dict: `Dict[str, float]`
+        Dict[str, float]:
             A dictionary of all basis states and their corresponding probabilities.
         """
 
@@ -460,14 +461,12 @@ class QAOABaseBackendStatevector(QAOABaseBackend):
 
         Returns
         -------
-        counts: `Dict[str, float]`
+        Dict[str, float]:
             A dictionary of measurement outcomes vs frequency sampled from a statevector
         """
         samples = self.sample_from_wavefunction(params, n_shots)
 
         unique_nums, frequency = np.unique(samples, return_counts=True)
-        # unique_shots = [np.binary_repr(num, self.n_qubits)[
-        #     ::-1] for num in unique_nums]
         counts = dict(zip(unique_nums, frequency))
 
         return counts
@@ -509,7 +508,7 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
 
         Returns
         -------
-        counts: `Dict[str, float]`
+        Dict[str, float]:
             A dictionary of measurement outcomes vs frequency sampled from a statevector
         """
         pass

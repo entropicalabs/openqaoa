@@ -1,12 +1,7 @@
-.. OpenQAOA documentation master file, created by
-   sphinx-quickstart on Fri Apr 29 05:09:06 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to OpenQAOA's documentation!
 ====================================
 
-OpenQAOA is an advanced multi-backend SDK for quantum optimization designed to ease research efforts within the VQA enviorement while ensuring reliability and reproducibility of results
+OpenQAOA is an advanced multi-backend SDK for quantum optimization designed to ease research efforts within the VQA environment while ensuring the reliability and reproducibility of results.
 
 
 Features
@@ -14,41 +9,57 @@ Features
 
 Key features of OpenQAOA:
 
-* Simple yet customisable workflows for QAOA and RQAOA deployable on
-   * IMBQ devices
-   * Rigettis' Quantum Clound Services
-   * AWS's Braket
+* Simple yet customizable workflows for QAOA and RQAOA deployable on
+   * IBMQ devices
+   * Rigettis' Quantum Cloud Services
+   * Amazon Braket
    * Local simulators (including Rigettis' QVM, IBM's Qiskit, and Entropica Labs' vectorized simulator)
-* Multiple parametriation strategies:
+* Multiple parametrization strategies:
    * Standard, Fourier, and Annealing
-   * Each class can further controlled by selecting standard or extended parameter configurations
+   * Each class can be further controlled by selecting standard or extended parameter configurations
 * Multiple Initliaisation strategies:
    * Linear ramp, random, and custom
 * Multiple Mixer Hamiltonians:
    * `x` and `xy`
-* The optimisation loop includes:
+* The optimization loop includes:
    * SciPy Optimisers
-   * Custom gradient scypy optimisers
+   * Custom gradient SciPy optimizers
 
 Getting started
 ================
 
 Installing
 ------------
-Clone the git repository:
 
-.. code-block:: bash
-   
-   git clone git@github.com:entropicalabs/openqaoa.git
+You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8, 3.9, 3.10 and then pip install openqaoa with the following command
 
-Creating a python `virtual enviorement` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). 
-Make sure to use **python 3.8** for the environment.
+```bash
+pip install openqaoa
+```
 
-After cloning the repository `cd openqaoa` and pip install in edit mode:
+Alternatively, you can install manually directly from the GitHub repository by
 
-.. code-block:: bash
+1. Clone the git repository:
 
-   pip install -e .
+```bash
+git clone git@github.com:entropicalabs/openqaoa.git
+```
+
+2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** for the environment.
+
+3. After cloning the repository `cd openqaoa` and pip install the package. Use the following command for a vanilla install with the `scipy` optimizers:
+
+```bash
+pip install .
+```
+If you are interested in running the tests or the docs you can do so my using the installment modifiers `[docs]` and `[tests]`. For example,
+
+```bash
+pip install .[tests]
+```
+
+Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
+
 
 
 Your first QAOA workflow
@@ -56,12 +67,14 @@ Your first QAOA workflow
 Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
 
 First, create a problem instance. For example, an instance of vertex cover:
+
 .. code-block:: python
+
    from openqaoa.problems.problem import MinimumVertexCover
    import networkx
    g = networkx.circulant_graph(6, [1])
    vc = MinimumVertexCover(g, field =1.0, penalty=10)
-   pubo_problem = vc.get_pubo_problem()
+   qubo_problem = vc.get_qubo_problem()
 
 
 Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
@@ -72,7 +85,7 @@ Once the binary problem is defined, the simplest workflow can be defined as
    
    from openqaoa.workflows.optimizer import QAOA  
    q = QAOA()
-   q.compile(pubo_problem)
+   q.compile(qubo_problem)
    q.optimize()
 
 
@@ -82,21 +95,21 @@ Workflows can be customised using some convenient setter functions. First, we ne
 .. code-block:: python
 
    from openqaoa.devices import create_device
-   qcs_credentials = {'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10}
-   device = create_device(location='qcs',name='6q-qvm',**qcs_credentials)
-
+   qiskit_sv = create_device(location='local', name='qiskit.statevector_simulator')
+   q.set_device(qiskit_sv)
 
 Then, the QAOA parameters can be set as follow
 
 .. code-block:: python
+   # circuit properties
+   q.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='xy')
 
-   q_custom = QAOA()
-   q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
-   q_custom.set_device(device)
-   q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
-   q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
-   q_custom.compile(pubo_problem)
-   q_custom.optimize()
+   # backend properties (already set by default)
+   q.set_backend_properties(prepend_state=None, append_state=None)
+
+   # classical optimizer properties
+   q.set_classical_optimizer(method='nelder-mead', maxiter=200,
+                           optimization_progress=True, cost_progress=True, parameter_log=True)
 
 Currently, the available devices are:
 
@@ -108,8 +121,10 @@ Currently, the available devices are:
      - Device Name
    * - `local`
      - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`
+   * - `Amazon Braket`
+     -  ['IonQ', 'Rigetti', 'OCQ']
    * - `IBMQ`
-     - Please check the IMBQ backends available to your account
+     - Please check the IBMQ backends available to your account
    * - `Rigetti's QCS`
      - `[nq-qvm, Aspen-11, Aspen-M-1]`
 
@@ -121,9 +136,9 @@ Your first RQAOA workflow
 .. code-block:: python
 
    from openqaoa.workflows.optimizer import RQAOA
-   r = RQAOA(rqaoa_type='adaptive')
+   r = RQAOA(qaoa = QAOA(), rqaoa_type='adaptive')
    r.set_rqaoa_parameters(n_max=5, n_cutoff = 5)
-   r.compile(pubo_problem)
+   r.compile(qubo_problem)
    r.optimize()
 
 rqaoa_type can take two values which select elimination strategies. The user can choose between `adaptive` or `custom`.
@@ -159,7 +174,8 @@ then, specify terms and weights in order to define the cost hamiltonian
 
    cost_hamil = Hamiltonian.classical_hamiltonian(terms=terms,coeffs=coeffs,constant=0)
    mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
-   After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
+   
+After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
 
 .. code-block:: python
 
@@ -169,13 +185,14 @@ then, specify terms and weights in order to define the cost hamiltonian
 Then proceed by instantiating the backend device
 
 .. code-block:: python
+   
    backend_obj = QAOAvectorizedBackendSimulator(circuit_params = qaoa_circuit_params, append_state = None, prepend_state = None, init_hadamard = True)
 
 And finally, create the classical optimizer and minimize the objective function
 
 .. code-block:: python
 
-   optimizer_dict = {'method': 'cobyla', 'maxiter': 10}
+   optimizer_dict = {'method': 'cobyla', 'maxiter': 200}
    optimizer_obj = ScipyOptimizer(backend_obj, params, optimizer_dict)
    optimizer_obj()
 
@@ -197,34 +214,46 @@ Contents
 
 .. toctree::
    :maxdepth: 3
-   :caption: Workflows
+   :caption: About Entropica Labs
+
+   about
+
+.. toctree::
+   :maxdepth: 3
+   :caption: General reference
+
+   faq
+   changelog
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Tutorials
+
+   notebooks/01_workflows_example.ipynb
+   notebooks/02_simulators_comparison.ipynb
+   notebooks/03_qaoa_on_qpus.ipynb
+   notebooks/04_qaoa_variational_parameters.ipynb
+   notebooks/05_advanced_parameterization.ipynb
+   notebooks/06_fast_qaoa_simulator.ipynb
+   notebooks/07_cost_landscapes_w_manual_mode.ipynb
+   notebooks/08_results_example.ipynb
+   notebooks/09_RQAOA_example.ipynb
+   notebooks/10_workflows_on_Amazon_braket.ipynb
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API reference
 
    workflows
-
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Inputs
-
+   rqaoa
    problems
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Parametrisation
-
    qaoaparameters
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Backend and devices
-
    backends
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Classical Optimisers
-
+   logger_and_results
    optimizers
+   utilities
+
 
 Indices and tables
 ==================

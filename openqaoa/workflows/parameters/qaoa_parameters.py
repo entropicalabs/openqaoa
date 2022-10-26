@@ -14,6 +14,7 @@
 
 from typing import List, Dict, Optional, Union
 import numpy as np
+import qiskit
 
 from openqaoa.basebackend import QuantumCircuitBase
 from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
@@ -21,8 +22,8 @@ from .parameters import Parameters
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
 
-ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias',
-                       'extended', 'fourier', 'fourier_extended', 'fourier_w_bias']
+ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
+                       'fourier_extended', 'fourier_w_bias', 'annealing']
 ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
 ALLOWED_MIXERS = ['x', 'xy']
 ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS
@@ -59,12 +60,15 @@ class CircuitProperties(Parameters):
         self.init_type = init_type
         self.qubit_register = qubit_register
         self.p = p
-        self.q = q if param_type.lower() == 'fourier' else None
+        self.q = q if param_type.lower() in ['fourier','fourier_extended', 'fourier_w_bias'] else None
         self.variational_params_dict = variational_params_dict
         self.annealing_time = annealing_time if annealing_time is not None else 0.7*self.p
         self.linear_ramp_time = linear_ramp_time if linear_ramp_time is not None else 0.7*self.p
         self.mixer_hamiltonian = mixer_hamiltonian
-        self.mixer_qubit_connectivity = mixer_qubit_connectivity
+        if self.mixer_hamiltonian.lower() == 'xy':
+            self.mixer_qubit_connectivity = mixer_qubit_connectivity if mixer_qubit_connectivity is not None else 'full'
+        else:
+            self.mixer_qubit_connectivity = None
         self.mixer_coeffs = mixer_coeffs
         self.seed = seed
 
@@ -112,6 +116,31 @@ class CircuitProperties(Parameters):
                 f"Number of layers `p` cannot be smaller or equal to zero. Value {value} was provided")
         self._p = value
 
+    @property
+    def annealing_time(self):
+        return self._annealing_time
+
+    @annealing_time.setter
+    def annealing_time(self, value):
+        if value <= 0:
+            raise ValueError(
+                f"The annealing time `annealing_time` cannot be smaller or equal to zero. Value {value} was provided")
+        self._annealing_time = value
+
+
+    # @property
+    # def mixer_qubit_connectivity(self):
+    #     return self._mixer_qubit_connectivity
+
+    # @annealing_time.setter
+    # def mixer_qubit_connectivity(self, value):
+    #     print(value)
+    #     if (self.mixer_hamiltonian != 'xy') and (value != None):
+    #         self._mixer_qubit_connectivity = None
+    #         raise ValueError(f"mixer_qubit_connectivity can be used if and only if `mixer_hamiltonian` is set to `xy`")
+    #     else:
+    #         print(value)
+    #         self._mixer_qubit_connectivity = value
 
 class BackendProperties(Parameters):
     """
@@ -132,6 +161,23 @@ class BackendProperties(Parameters):
         The number of shots to be used for the shot-based computation.
     cvar_alpha: `float`
         The value of the CVaR parameter.
+    noise_model: `NoiseModel`
+        The `qiskit` noise model to be used for the shot-based simulator.
+    qubit_layout: `Union[List[int], np.ndarray]`
+        Mapping from physical to logical qubit indices, used to eventually 
+        construct the quantum circuit.  For example, for a system composed by 3 qubits
+       `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
+        and the right hand side is the logical qubits
+    qiskit_simulation_method: `str`
+        Specify the simulation method to use with the `qiskit.AerSimulator`
+    seed_simulator: `int`
+        Specify a seed for `qiskit` simulators
+    active_reset: `bool`
+        To use the active_reset functionality on Rigetti backends through QCS
+    rewiring: `str`
+        Specify the rewiring strategy for compilation for Rigetti QPUs through QCS
+    disable_qubit_rewiring: `bool`
+        enable/disbale qubit rewiring when accessing QPUs via the AWS `braket`
     """
 
     def __init__(self,
@@ -141,14 +187,29 @@ class BackendProperties(Parameters):
                                               np.ndarray]] = None,
                  init_hadamard: bool = True,
                  n_shots: int = 100,
-                 cvar_alpha: float = 1):
+                 cvar_alpha: float = 1,
+                 noise_model = None,
+                 qubit_layout: Optional[Union[List[int], np.ndarray]] = None,
+                 qiskit_simulation_method: Optional[str] = None,
+                 seed_simulator: Optional[int] = None,
+                 active_reset: Optional[bool] = None,
+                 rewiring: Optional[str] = None,
+                 disable_qubit_rewiring: Optional[bool] = None
+                 ):
         
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state
         self.append_state = append_state
         self.cvar_alpha = cvar_alpha
-
+        self.noise_model = noise_model
+        self.qubit_layout = qubit_layout
+        self.seed_simulator = seed_simulator
+        self.qiskit_simulation_method = qiskit_simulation_method
+        self.active_reset = active_reset
+        self.rewiring = rewiring
+        self.disable_qubit_rewiring = disable_qubit_rewiring
+        
     # @property
     # def cvar_alpha(self):
     #     return self._cvar_alpha
@@ -174,31 +235,41 @@ class ClassicalOptimizer(Parameters):
         optimization method for QAOA e.g. 'COBYLA'
     maxiter : Optional[int]
         Maximum number of iterations.
+    maxfev : Optional[int]
+        Maximum number of function evaluations.
     jac: str
         Method to compute the gradient vector. Choose from:
-        `['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']        
+        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
     hess:
         Method to compute the hessian. Choose from:
-        `['finite_difference', 'param-shift', 'stoch_param_shift', 'grad_spsa']
-    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
+        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
+    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints 
         Scipy-based constraints on parameters of optimization 
     bounds: scipy.scipy.optimize.Bounds
         Scipy-based bounds on parameters of optimization 
     tol : float
         Tolerance before the optimizer terminates; if `tol` is larger than
         the difference between two steps, terminate optimization.
-    stepsize : float
-        Step size of each gradient descent step.
-    decay : float
-        Stepsize decay parameter of RMSProp.
-    eps : float
-        Small number to prevent division by zero for RMSProp.
-    lambd : float
-        Small number to regularize QFIM for Natural Gradient Descent.
+    optimizer_options: dict
+        Dictionary of optimiser-specific arguments, defaults to ``None``.
+        stepsize : float
+            Step size of each gradient descent step.
+        decay : float
+            Stepsize decay parameter of RMSProp.
+        eps : float
+            Small number to prevent division by zero for RMSProp.
+        lambd : float
+            Small number to regularize QFIM for Natural Gradient Descent.
     jac_options : dict
         Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
     hess_options : dict
         Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
+    optimization_progress : bool
+        Returns history of measurement outcomes/wavefunction if `True`. Defaults to `False`.
+    cost_progress : bool
+        Returns history of cost values if `True`. Defaults to `True`. 
+    parameter_log : bool
+        Returns history of angles if `True`. Defaults to `True`.
 
     """
 
@@ -206,40 +277,34 @@ class ClassicalOptimizer(Parameters):
                  optimize: bool = True,
                  method: str = 'cobyla',
                  maxiter: int = 100,
+                 maxfev : int = None,
                  jac: str = None,
                  hess: str = None,
                  constraints=None,
                  bounds=None,
                  tol=None,
-                 stepsize: float = None,
-                 decay: float = None,
-                 eps: float = None,
-                 lambd: float = None,
+                 optimizer_options: dict = None,
                  jac_options: dict = None,
                  hess_options: dict = None,
                  optimization_progress: bool = False,
                  cost_progress: bool = True,
-                 parameter_log: bool = True,
-                 top_k_solutions: int = 1):
+                 parameter_log: bool = True):
         self.optimize = optimize
         self.method = method.lower()
         self.maxiter = maxiter
+        self.maxfev = maxfev
         self.jac = jac.lower() if type(jac) == str else jac
         self.hess = hess.lower() if type(hess) == str else hess
         self.constraints = constraints
         self.bounds = bounds
         self.tol = tol
-        self.stepsize = stepsize
-        self.decay = decay
-        self.eps = eps
-        self.lambd = lambd
+        self.optimizer_options = optimizer_options
         self.jac_options = jac_options
         self.hess_options = hess_options
         self.parameter_log = parameter_log
         self.optimization_progress = optimization_progress
         self.cost_progress = cost_progress
         self.parameter_log = parameter_log
-        self.top_k_solutions = top_k_solutions
 
     # @property
     # def method(self):
@@ -252,18 +317,3 @@ class ClassicalOptimizer(Parameters):
     #             f"method `{value}` is not supported. Please choose between {ALLOWED_MINIMIZATION_METHODS}")
     #     self._method = value
 
-
-class ExtraResults(Parameters):
-    """
-    The classical optimizer for the QAOA optimization routine 
-    of the QAOA circuit parameters.
-
-    Parameters
-    ----------
-    extra_results: int
-        Whether to perform optimization routine on the given QAOA problem
-    """
-
-    def __init__(self,
-                 top_k_solutions: int = 1):
-        self.top_k_solutions = top_k_solutions

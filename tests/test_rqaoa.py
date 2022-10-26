@@ -360,7 +360,7 @@ class TestingRQAOA(unittest.TestCase):
         penalty = 10
 
         # Define problem instance
-        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_pubo_problem()
+        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_qubo_problem()
 
         # Cost and mixer Hamiltonians
         hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
@@ -397,7 +397,7 @@ class TestingRQAOA(unittest.TestCase):
         penalty = 10
 
         # Define problem instance
-        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_pubo_problem()
+        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_qubo_problem()
 
         # Cost and mixer Hamiltonians
         hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
@@ -553,7 +553,7 @@ class TestingRQAOA(unittest.TestCase):
         penalty = 10
 
         # Define problem instance
-        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_pubo_problem()
+        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_qubo_problem()
 
         # Cost and mixer Hamiltonians
         hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
@@ -590,7 +590,7 @@ class TestingRQAOA(unittest.TestCase):
         penalty = 10
 
         # Define problem instance
-        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_pubo_problem()
+        mvc = MinimumVertexCover(G,field = field,penalty = penalty).get_qubo_problem()
 
         # Cost and mixer Hamiltonians
         hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
@@ -685,5 +685,4 @@ class TestingRQAOA(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main()
-
-
+ 

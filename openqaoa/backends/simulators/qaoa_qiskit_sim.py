@@ -17,8 +17,8 @@ from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, 
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...utilities import flip_counts
 from ...cost_function import cost_function
-from ...qaoa_parameters.pauligate import (RXPauliGate, RYPauliGate, RZPauliGate, RXXPauliGate,
-                                          RYYPauliGate, RZZPauliGate, RZXPauliGate)
+from ...qaoa_parameters.gatemap import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
+                                          RYYGateMap, RZZGateMap, RZXGateMap)
 
 import numpy as np
 from typing import Union, List, Tuple, Optional
@@ -49,6 +49,9 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
     
     n_shots: `int`
         The number of shots to be taken for each circuit.
+    
+    seed_simulator: `int`
+        Pseudorandom list of numbers of a seed
 
     prepend_state: `QuantumCircuit`
         The state prepended to the circuit.
@@ -69,8 +72,9 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
     noise_model: `NoiseModel`
         The Qiskit noise model to be used for the simulation.
     """    
-    QISKIT_PAULIGATE_LIBRARY = [RXPauliGate, RYPauliGate, RZPauliGate, RXXPauliGate,
-                            RYYPauliGate, RZZPauliGate, RZXPauliGate]
+    QISKIT_GATEMAP_LIBRARY = [RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
+                                RYYGateMap, RZZGateMap, RZXGateMap]
+
 
     def __init__(self,
                  circuit_params: QAOACircuitParams,
@@ -80,6 +84,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
                  init_hadamard: bool,
                  cvar_alpha: float,
                  qiskit_simulation_method: str = 'automatic',
+                 seed_simulator: Optional[int] = None,
                  noise_model: Optional[NoiseModel] = None):
         
         QAOABaseBackendShotBased.__init__(self,circuit_params,
@@ -95,8 +100,9 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit " \
                                                                 "to the QAOA routine"
+        # options = {"seed_simulator":1}
         self.backend_simulator = AerSimulator(method=qiskit_simulation_method.lower(),
-                                              noise_model = noise_model)
+                                              noise_model = noise_model, seed_simulator=seed_simulator)
         # For parametric circuits
         self.parametric_circuit = self.parametric_qaoa_circuit
 
@@ -113,7 +119,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-        angles_list = self.obtain_angles_for_pauli_list(self.pseudo_circuit, params)
+        angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
         return new_parametric_circuit
@@ -135,11 +141,11 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
             parametric_circuit.h(self.qureg)
         
         self.qiskit_parameter_list=[]
-        for each_gate in self.pseudo_circuit:
+        for each_gate in self.abstract_circuit:
             angle_param = Parameter(str(each_gate.pauli_label))
             self.qiskit_parameter_list.append(angle_param)
             each_gate.rotation_angle = angle_param
-            if type(each_gate) in self.QISKIT_PAULIGATE_LIBRARY:
+            if type(each_gate) in self.QISKIT_GATEMAP_LIBRARY:
                 decomposition = each_gate.decomposition('trivial')
             else: 
                 decomposition = each_gate.decomposition('standard')
@@ -170,7 +176,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         qaoa_circuit = self.qaoa_circuit(params)
         counts = self.backend_simulator.run(qaoa_circuit, shots=self.n_shots).result().get_counts()
         flipped_counts = flip_counts(counts)
-        self.counts = flipped_counts
+        self.measurement_outcomes = flipped_counts
         return flipped_counts
 
     def circuit_to_qasm(self):
@@ -211,8 +217,8 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
     cvar_alpha: `float`
         The value of alpha for the CVaR cost function.
     """
-    QISKIT_PAULIGATE_LIBRARY = [RXPauliGate, RYPauliGate, RZPauliGate, RXXPauliGate,
-                            RYYPauliGate, RZZPauliGate, RZXPauliGate]
+    QISKIT_GATEMAP_LIBRARY = [RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
+                                RYYGateMap, RZZGateMap, RZXGateMap]
 
     def __init__(self,
                  circuit_params: QAOACircuitParams,
@@ -278,7 +284,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-        angles_list = self.obtain_angles_for_pauli_list(self.pseudo_circuit, params)
+        angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
         return new_parametric_circuit
@@ -305,11 +311,11 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
             parametric_circuit.h(self.qureg)
         
         self.qiskit_parameter_list=[]
-        for each_gate in self.pseudo_circuit:
+        for each_gate in self.abstract_circuit:
             angle_param = Parameter(str(each_gate.pauli_label))
             self.qiskit_parameter_list.append(angle_param)
             each_gate.rotation_angle = angle_param
-            if type(each_gate) in self.QISKIT_PAULIGATE_LIBRARY:
+            if type(each_gate) in self.QISKIT_GATEMAP_LIBRARY:
                 decomposition = each_gate.decomposition('trivial')
             else: 
                 decomposition = each_gate.decomposition('standard')
@@ -339,6 +345,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
          """
         ckt = self.qaoa_circuit(params)
         wf = Statevector(ckt).data
+        self.measurement_outcomes = wf
         return wf
 
     def expectation(self,
@@ -358,7 +365,9 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
             expectation value of cost operator wrt to quantum state produced by QAOA circuit
         """
         ckt = self.qaoa_circuit(params)
-        cost = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil))
+        output_wf = Statevector(ckt)
+        self.measurement_outcomes = output_wf.data
+        cost = np.real(output_wf.expectation_value(self.qiskit_cost_hamil))
         return cost
 
     def expectation_w_uncertainty(self, 
@@ -379,6 +388,8 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
             to quantum state produced by QAOA circuit.
         """
         ckt = self.qaoa_circuit(params)
+        output_wf = Statevector(ckt)
+        self.measurement_outcomes = output_wf.data
         cost = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil))
         cost_sq = np.real(Statevector(ckt).expectation_value(self.qiskit_cost_hamil_sq))
         

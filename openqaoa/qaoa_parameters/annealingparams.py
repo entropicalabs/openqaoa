@@ -14,6 +14,7 @@
 
 from typing import List, Tuple, Union
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 from ..qaoa_parameters.baseparams import (QAOACircuitParams,
                                           QAOAVariationalBaseParams,
@@ -109,7 +110,8 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
                                      qaoa_circuit_params: QAOACircuitParams,
-                                     total_annealing_time: float = None):
+                                     total_annealing_time: float = None,
+                                     time: float = None):
         """
         Returns
         -------
@@ -152,5 +154,6 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
             fig, ax = plt.subplots()
 
         ax.plot(self.schedule, marker="s", **kwargs)
-        ax.set_xlabel("timestep number", fontsize=14)
+        ax.set_xlabel("p", fontsize=14)
         ax.set_ylabel("s(t)", fontsize=14)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))

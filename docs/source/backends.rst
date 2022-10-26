@@ -40,35 +40,51 @@ Cloud Devices
 =================================
 QCS - Rigetti
 ----------------------------------
-.. autoclass:: openqaoa.backends.QAOAPyQuilQPUBackend
+.. autoclass:: openqaoa.backends.qpus.qaoa_pyquil_qpu.QAOAPyQuilQPUBackend
     :members:
     :undoc-members:
     :inherited-members:
 
-IBMQ - IBM
+IBM Quantum - IBM
 ----------------------------------
-.. autoclass:: openqaoa.backends.QAOAQiskitQPUBackend
+.. autoclass:: openqaoa.backends.qpus.qaoa_qiskit_qpu.QAOAQiskitQPUBackend
     :members:
     :undoc-members:
     :inherited-members:
 
-Device autentication - AccessObjects
-----------------------------------------
-.. autoclass:: openqaoa.backends.qpus.qpu_auth.AccessObjectBase
+Amazon Braket - Amazon
+----------------------------------
+.. autoclass:: openqaoa.backends.qpus.qaoa_braket_qpu.QAOAAWSQPUBackend
     :members:
     :undoc-members:
     :inherited-members:
 
-.. autoclass:: openqaoa.backends.qpus.qpu_auth.AccessObjectQiskit
+Devices
+-------
+.. autoclass:: openqaoa.devices.DeviceBase
     :members:
     :undoc-members:
     :inherited-members:
 
-.. autoclass:: openqaoa.backends.qpus.qpu_auth.AccessObjectPyQuil
+.. autoclass:: openqaoa.devices.DeviceLocal
     :members:
     :undoc-members:
     :inherited-members:
 
+.. autoclass:: openqaoa.devices.DeviceQiskit
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+.. autoclass:: openqaoa.devices.DevicePyquil
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+.. autoclass:: openqaoa.devices.DeviceAWS
+    :members:
+    :undoc-members:
+    :inherited-members:
 
 Local devices --- Simulators
 =================================
@@ -90,7 +106,6 @@ Qiskit
     :members:
     :undoc-members:
     :inherited-members:
-
 
 PyQuil
 ----------------------------------

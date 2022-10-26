@@ -1,21 +1,37 @@
- <div align="center">
+<div align="center">
 
-  <!-- OpenQAOA logo -->
-  <a href="https://github.com/entropicalabs/openqaoa"><img src=".github/images/openqaoa_logo.png?raw=true" alt="OpenQAOA logo" width="300"/></a>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo_offW.png" width="650">
+  <img alt="OpenQAOA" src="https://github.com/entropicalabs/openqaoa/blob/main/.github/images/openqaoa_logo.png" width="650">
+</picture>
 
-#
-
-  [![build test](https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml/badge.svg)](https://github.com/entropicalabs/openqaoa/actions/workflows/test.yml)<!-- Tests (GitHub actions) -->
-   [![License](https://img.shields.io/badge/%F0%9F%AA%AA%20license-Apache%20License%202.0-lightgrey)](LICENSE.md)<!-- License -->
- [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)<!-- Covenant Code of conduct -->
- [![codecov](https://codecov.io/gh/entropicalabs/openqaoa/branch/dev/graph/badge.svg?token=ZXD77KM5OR)](https://codecov.io/gh/entropicalabs/openqaoa) <!-- Code coverage -->
+  [![build test](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml/badge.svg)](https://github.com/entropicalabs/openqaoa/actions/workflows/test_main_linux.yml)<!-- Tests (GitHub actions) -->
+  [![Documentation Status](https://readthedocs.org/projects/el-openqaoa/badge/?version=latest)](https://el-openqaoa.readthedocs.io/en/latest/?badge=latest) <!-- Readthedocs -->
+  [![PyPI version](https://badge.fury.io/py/openqaoa.svg)](https://badge.fury.io/py/openqaoa) <!-- PyPI -->
+  [![arXiv](https://img.shields.io/badge/arXiv-2210.08695-<COLOR>.svg)](https://arxiv.org/abs/2210.08695) <!-- arXiv -->
+  [![License](https://img.shields.io/badge/%F0%9F%AA%AA%20license-Apache%20License%202.0-lightgrey)](LICENSE.md)<!-- License -->
+  [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)<!-- Covenant Code of conduct -->
+  [![codecov](https://codecov.io/gh/entropicalabs/openqaoa/branch/dev/graph/badge.svg?token=ZXD77KM5OR)](https://codecov.io/gh/entropicalabs/openqaoa) <!-- Code coverage -->
+  [![Downloads](https://pepy.tech/badge/openqaoa)](https://pepy.tech/project/openqaoa)
 </div>
 
 # OpenQAOA
 
-A multi-backend python library for quantum optimization usig QAOA on Quantum computers and Quantum computer simulators.
+A multi-backend python library for quantum optimization using QAOA on Quantum computers and Quantum computer simulators.
+
+OpenQAOA is currently in OpenBeta. 
+
+Please, consider [joining our discord](https://discord.gg/ana76wkKBd) if you want to be part of our community and participate in the OpenQAOA's development. 
 
 ## Installation instructions
+
+You can install the latest version of OpenQAOA directly from PyPi. First, create a virtual environment with python3.8+ and then simply pip install openqaoa with the following command
+
+```bash
+pip install openqaoa
+```
+
+Alternatively, you can install manually directly from the GitHub repository by
 
 1. Clone the git repository:
 
@@ -23,7 +39,7 @@ A multi-backend python library for quantum optimization usig QAOA on Quantum com
 git clone git@github.com:entropicalabs/openqaoa.git
 ```
 
-2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8.8** for the environment.
+2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** for the environment.
 
 3. After cloning the repository `cd openqaoa` and pip install in edit mode. Use the following command for a vanilla install with the `scipy` optimizers:
 
@@ -31,166 +47,50 @@ git clone git@github.com:entropicalabs/openqaoa.git
 pip install -e .
 ```
 
-## Building the docs
-
-If you have installed OpenQAOA using the setup file then all the required libraries to build the docs should already be in place. However, if something went wrong they can be easily installed by running the following command
-
-```bash
-pip install sphinx sphinx-autodoc-typehints sphinx-rtd-theme
-```
-
-Then, simply navigate to the `docs` folder by typing `cd docs/` and simply type
-
-```bash
-make html
-```
-
-and the docs should appear in the folder `docs/build/html`, and can be opened by simply opening the `docs/build/html/index.html` file.
+Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
 
 ## Getting started
 
-There are two ways to solve optimizations problems using OpenQAOA.
+The documentation for OpenQAOA can be found [here](https://el-openqaoa.readthedocs.io/en/latest/).
 
-### Workflows
+We also provide a set of tutorials to get you started. Among the many, perhaps you can get started with the following ones:
 
-#### QAOA
+- [Run your first OpenQAOA workflow](https://el-openqaoa.readthedocs.io/en/latest/notebooks/1_workflows_example.html)
+- [How about trying some RQAOA for a change?](https://el-openqaoa.readthedocs.io/en/latest/notebooks/9_RQAOA_example.html)
+- [Introducing EL's fast QAOA simulator](https://el-openqaoa.readthedocs.io/en/latest/notebooks/6_fast_qaoa_simulator.html)
+- [Discover OpenQAOA's custom parametrizations](https://el-openqaoa.readthedocs.io/en/latest/notebooks/5_advanced_parameterization.html)
 
-Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
+### Key Features
 
-A reference jupyter notebook can be found [here](examples/Workflows_example.ipynb)
+- **Build advanced QAOAs**. Create complex QAOAs by specifying custom _parametrisation_, _mixer hamiltonians_, _classical optimisers_ and execute the algorithm on either simulators or QPUs.
 
-First, create a problem instance. For example, an instance of vertex cover:
+- **Recursive QAOA**. Run RQAOA with fully customisable schedules on simulators and QPUs alike. 
 
-```python
-from openqaoa.problems.problem import MinimumVertexCover
-import networkx
-g = networkx.circulant_graph(6, [1])
-vc = MinimumVertexCover(g, field =1.0, penalty=10)
-pubo_problem = vc.get_pubo_problem()
-```
+- **QPU access**. Built in access for `IBM Quantum`, `Rigetti QCS`, and `Amazon Braket`.
 
-Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
 
-```python
-from openqaoa.workflows.optimizer import QAOA  
-q = QAOA()
-q.compile(pubo_problem)
-q.optimize()
-```
+### Available devives 
 
-Once the binary problem is defined, the simplest workflow can be defined as
-
-```  
-from openqaoa.workflows.optimizer import QAOA  
-q = QAOA()
-q.compile(pubo_problem)
-q.optimize() 
-```
-
-Workflows can be customised using some convenient setter functions. First, we need to set the device where we want to execute the workflow
-
-```python
-from openqaoa.devices import create_device
-qcs_credentials = {'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10}
-device = create_device(location='qcs',name='6q-qvm',**qcs_credentials)
-```
-
-Then, the QAOA parameters can be set as follow
-
-```python
-q_custom = QAOA()
-q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
-q_custom.set_device(device)
-q_custom.set_backend_properties(n_shot=200, cvar_alpha=1)
-q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
-q_custom.compile(pubo_problem)
-q_custom.optimize()
-```
-
-Currently, the available devices are:
+Devices are serviced both locally and on the cloud. For the IBM Quantum experience, the available devices depend on the specified credentials. For QCS and Amazon Braket, the available devices are listed in the table below:
 
 | Device location  | Device Name |
 | ------------- | ------------- |
-| `local`  | `['qiskit.shot_simulator', 'qiskit.statevec_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
-| `ibmq`    | Please check the IMBQ backends available to your account |
-| `qcs`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
+| `local`  | `['qiskit.shot_simulator', 'qiskit.statevector_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
+| `[Amazon Braket]https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html`    | IonQ, Rigetti, OCQ |
+| `[ibmq](https://quantum-computing.ibm.com/)`    | Please check the IBMQ backends available to your account |
+| `[qcs](https://qcs.rigetti.com/sign-in)`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
 
-With the notation `nq-qvm` it is intended that `n` is a positive integer. For example, `6q-qvm`.
-
-The `vectorised` backend is developed by Entropica Labs and works by targeting active qubits (on which gates are to be applied in any given Hamiltonian term) by using the numpy slicing operators, and applying the gate operations in place. This allows the operators and their action on the wavefunction to be constructed and performed in a simple and fast way.
-
-Note that in order to use the Rigetti devices you either need to be running your code on Rigetti's [Quantum Cloud Services](https://qcs.rigetti.com/sign-in) or, in case you want to run it locally from your machine, start qvm and quilc. More information on how to start them can be found in https://docs.rigetti.com/qcs/getting-started.
-
-#### Recursive QAOA
-
-A more cohmprensive notebook is [RQAOA_example](examples/RQAOA_example.ipynb)
-
-```python
-from openqaoa.workflows.optimizer import RQAOA
-r = RQAOA(rqaoa_type='adaptive')
-r.set_rqaoa_parameters(n_max=5, n_cutoff = 5)
-r.compile(pubo_problem)
-r.optimize()
-```
-
-rqaoa_type can take two values which select elimination strategies. The user can choose between `adaptive` or `custom`.
-
-### Factory mode
-
-The user is also free to directly access the source code without using the workflow API.
-
-* [comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
-* [Parameter sweep for vectorised](examples/openqaoa_example_vectorised.ipynb)
-
-The basic procedure is the following
-
-First, import all the necessay functions
-
-```python
-from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa.devices import DevicePyquil, create_device
-from openqaoa.optimizers.qaoa_optimizer import ScipyOptimizer
-```
-
-Then specify terms and weights in order to define the cost hamiltonian
-
-```python
-terms = [(1,2),(2,3),(0,3),(4,0),(1,),(3,)]
-coeffs = [1,2,3,4,3,5]
-n_qubits = 5
-cost_hamil = Hamiltonian.classical_hamiltonian(terms=terms,coeffs=coeffs,constant=0)
-mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
-```
-
-After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
-
-```python
-qaoa_circuit_params = QAOACircuitParams(cost_hamil,mixer_hamil,p=1)
-params = create_qaoa_variational_params(qaoa_circuit_params, params_type='fourier',init_type='rand',q=1)
-```
-
-Then proceed by instantiating the backend device
-
-```python
-device_pyquil = create_device('qcs',"Aspen-11", as_qvm=True, execution_timeout = 10, compiler_timeout=10)
-backend_obj_pyquil = get_qaoa_backend(circuit_params, device_pyquil, n_shots=1000)
-```
-
-And finally, create the classical optimizer and minimize the objective function
-
-```python
-optimizer_dict = {'method': 'cobyla', 'maxiter': 10}
-optimizer_obj = ScipyOptimizer(backend_obj, params, optimizer_dict)
-optimizer_obj()
-```
-
-The result of the optimization will the be accessible as
-
-```python
-optimizer_obj.results_information()
-```
 
 ## Running the tests
 
-To run the test just type `pytest tests/.` from the project's root folder. Bear in mind that `test_pyquil_qvm.py` requires an active `qvm`, and `test_qpu_qiskit.py` and `test_qpu_auth.py` require a valid IBMQ token in the file `tests/credentials.json`
+To run the test, first, make sure to have installed all the optional testing dependencies by running `pip install .[tests]` (note, the braket must to be escaped if you are using the popular zsh shell), and then just type `pytest tests/.` from the project's root folder.
+
+> :warning: **Some tests require authentication**: all tests flagged `api` or `qpu` require valid qpu crendentials to be specified in `tests/credentials.json`
+
+> :warning: **Some tests require authentication**: Please, note that the PyQuil-Rigetti tests contained in `test_pyquil_qvm.py` requires an active `qvm` (see Rigetti's documentation [here](https://pyquil-docs.rigetti.com/en/v3.1.0/qvm.html))
+
+## Contributing and feedback
+
+If you find any bugs or errors, have feature requests, or code you would like to contribute, feel free to open an issue or send us a pull request on GitHub.
+
+We are always interested to hear about projects built with EntropicaQAOA. If you have an application you'd like to tell us about, drop us an email at openqaoa@entropicalabs.com.

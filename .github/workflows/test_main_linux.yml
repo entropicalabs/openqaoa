@@ -1,32 +1,30 @@
-name: test
+name: test_main
 
 # Controls when the workflow will run
 on:
-  push:
-    branches:
-    - main
-    - dev
   pull_request:
     branches:
     - main
-    - dev
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ['3.8', '3.9', '3.10']
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
+    runs-on:  ${{ matrix.os }}
+    
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: ${{ matrix.python }}
         
       - name: Install OpenQAOA
         run: |
@@ -34,10 +32,11 @@ jobs:
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          pip install .
+          pip install .[tests]
           pip install ipykernel
-              
-      - name: Install qvm
+             
+      - name: QVM on ubuntu
+        if: ${{ matrix.os=='ubuntu-latest' }} 
         run: |
           find /usr/lib -name "libffi.so*"
           sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
@@ -58,7 +57,7 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          python -m pytest --cov --cov-report=xml:coverage.xml
+          python -m pytest -v -m 'not (qpu or api)'
           
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
@@ -74,12 +73,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version:  3.8
 
       - name: Install OpenQAOA
         run: |
           python -m pip install --upgrade pip
-          pip install .
+          pip install .[docs]
               
       - name: Install qvm
         run: |
@@ -100,6 +99,6 @@ jobs:
       
       - name: Build and test Sphinx docs
         run: |
+          sudo apt-get install pandoc
           cd docs/
           make html
-  

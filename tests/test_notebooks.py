@@ -2,22 +2,20 @@
 Tests to run the notebooks. They work by converting the notebooks
 to a python script via nbconvert and then running the resulting .py file.
 """
-
-import subprocess
-import pytest
-import importlib
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
-from nbconvert.preprocessors import CellExecutionError
+import pytest
 
 import sys, os
+import subprocess
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath + '/../')
 
 
 def notebook_test_function(name):
 
-    with open(name) as f:
+    
+    with open(name, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
 
     ep = ExecutePreprocessor(timeout=600, kernel_name='env')
@@ -26,39 +24,41 @@ def notebook_test_function(name):
 
 
 # @pytest.mark.notebook
-def test_1_Workflows_example():
-    notebook_test_function("./examples/Workflows_example.ipynb")
+def test_01_workflows_example():
+    notebook_test_function("./examples/01_workflows_example.ipynb")
 
 # @pytest.mark.notebook
-def test_2_hamiltonian_tutorial():
-    notebook_test_function("./examples/hamiltonian_tutorial.ipynb")
+def test_02_simulators_comparison():
+    notebook_test_function("./examples/02_simulators_comparison.ipynb")
+
+@pytest.mark.qpu
+def test_03_qaoa_on_qpus():
+    notebook_test_function("./examples/03_qaoa_on_qpus.ipynb")
 
 # @pytest.mark.notebook
-def test_3_openqaoa_example_vectorised():
-    notebook_test_function("./examples/openqaoa_example_vectorised.ipynb")
-
-# # @pytest.mark.notebook
-# def test_4_openqaoa_example():
-#     notebook_test_function("./examples/openqaoa_example.ipynb")
+def test_04_qaoa_variational_parameters():
+    notebook_test_function("./examples/04_qaoa_variational_parameters.ipynb")
 
 # @pytest.mark.notebook
-def test_5_QCS_pyquil_test():
-    notebook_test_function("./examples/QCS_pyquil_test.ipynb")
-
-
-# @pytest.mark.notebook
-def test_6_RQAOA_example():
-    notebook_test_function("./examples/RQAOA_example.ipynb")
-
+def test_05_advanced_parameterization():
+    notebook_test_function("./examples/05_advanced_parameterization.ipynb")
 
 # @pytest.mark.notebook
-def test_7_test_backends_correctness():
-    notebook_test_function("./examples/test_backends_correctness.ipynb")
+def test_06_fast_qaoa_simulator():
+    notebook_test_function("./examples/06_fast_qaoa_simulator.ipynb")
 
 # @pytest.mark.notebook
-def test_8_testing_decompositions():
-    notebook_test_function("./examples/testing_decompositions.ipynb")
+def test_07_cost_landscapes_w_manual_mode():
+    notebook_test_function("./examples/07_cost_landscapes_w_manual_mode.ipynb")
 
 # @pytest.mark.notebook
-def test_9_testing_variate_params():
-    notebook_test_function("./examples/testing_variate_params.ipynb")
+def test_08_results_example():
+    notebook_test_function("./examples/08_results_example.ipynb")
+
+# @pytest.mark.notebook
+def test_09_RQAOA_example():
+    notebook_test_function("./examples/09_RQAOA_example.ipynb")
+
+@pytest.mark.qpu
+def test_10_workflows_on_Amazon_braket():
+    notebook_test_function("./examples/10_workflows_on_Amazon_braket.ipynb")
