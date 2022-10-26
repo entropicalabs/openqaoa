@@ -29,3 +29,34 @@ def convert2serialize(obj):
         return obj
 
 
+def convert_binary_to_ising(terms, weights):
+    """
+    Converts the weights from a [0, 1] encoding to an Ising problem [-1, 1] 0 is mapped to +1 and 1 to -1 respectively
+
+    Parameters
+    ----------
+    terms: list[list]
+        terms of the hamiltonian
+    weights: list[float]
+
+    Returns
+    -------
+    terms_weights: tuple(list[list],list[float])
+        Tuple containing the converted list of terms and list of weights
+    """
+    new_terms_weights = []
+    constant = 0
+
+    for i, term in enumerate(terms):
+        if len(term) == 1:
+            new_terms_weights.append((term, -0.5 * weights[i]))
+            constant += 0.5 * weights[i]
+        elif len(term) == 2:
+            for t in term:
+                new_terms_weights.append(([t], -0.25 * weights[i]))
+            new_terms_weights.append((term, 0.25 * weights[i]))
+            constant += 0.25 * weights[i]
+
+    new_terms_weights.append(([], constant))
+
+    return tuple(zip(*new_terms_weights))

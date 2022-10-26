@@ -20,7 +20,7 @@ import scipy
 import scipy.spatial
 import itertools
 
-from .helper_functions import convert2serialize
+from .helper_functions import convert2serialize, convert_binary_to_ising
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 
 SEED = 1234
@@ -39,6 +39,20 @@ class Problem(ABC):
             A random instance of the problem.
         """
         raise NotImplementedError
+
+    def get_qubo_problem(self):
+        """
+        Returns the QUBO problem.
+
+        Returns
+        -------
+            A tuple containing the QUBO problem.
+        """
+        raise NotImplementedError
+
+
+
+
 
 
 class QUBO:
@@ -723,41 +737,10 @@ class Knapsack(Problem):
         n_variables = self.n_items + n_variables_slack
         terms, weights = self.terms_and_weights()
 
-        #         ising_terms, ising_coeffs = terms,weights
-        ising_terms, ising_coeffs = [], []
+        # ising_terms, ising_weights = terms,weights
+        ising_terms, ising_weights = convert_binary_to_ising(terms, weights)
 
-        constant_term = 0
-        linear_terms = np.zeros(n_variables)
-
-        # Process the given terms and weights
-        for weight, term in zip(weights, terms):
-
-            if len(term) == 2:
-                u, v = term
-
-                if u != v:
-                    ising_terms.append([u, v])
-                    ising_coeffs.append(weight / 4)
-                else:
-                    constant_term += weight / 4
-
-                linear_terms[term[0]] -= weight / 4
-                linear_terms[term[1]] -= weight / 4
-                constant_term += weight / 4
-            elif len(term) == 1:
-                linear_terms[term[0]] -= weight / 2
-                constant_term += weight / 2
-            else:
-                constant_term += weight
-
-        for variable, linear_term in enumerate(linear_terms):
-            ising_terms.append([variable])
-            ising_coeffs.append(linear_term)
-
-        ising_terms.append([])
-        ising_coeffs.append(constant_term)
-
-        return QUBO(n_variables, ising_terms, ising_coeffs)
+        return QUBO(n_variables, ising_terms, weights)
 
 
 class SlackFreeKnapsack(Knapsack):
@@ -867,40 +850,9 @@ class SlackFreeKnapsack(Knapsack):
         n_variables = self.n_items
         terms, weights = self.terms_and_weights()
 
-        ising_terms, ising_coeffs = [], []
+        ising_terms, ising_weights = convert_binary_to_ising(terms, weights)
 
-        constant_term = 0
-        linear_terms = np.zeros(n_variables)
-
-        # Process the given terms and weights
-        for weight, term in zip(weights, terms):
-
-            if len(term) == 2:
-                u, v = term
-
-                if u != v:
-                    ising_terms.append([u, v])
-                    ising_coeffs.append(weight / 4)
-                else:
-                    constant_term += weight / 4
-
-                linear_terms[term[0]] -= weight / 4
-                linear_terms[term[1]] -= weight / 4
-                constant_term += weight / 4
-            elif len(term) == 1:
-                linear_terms[term[0]] -= weight / 2
-                constant_term += weight / 2
-            else:
-                constant_term += weight
-
-        for variable, linear_term in enumerate(linear_terms):
-            ising_terms.append([variable])
-            ising_coeffs.append(linear_term)
-
-        ising_terms.append([])
-        ising_coeffs.append(constant_term)
-
-        return QUBO(n_variables, ising_terms, ising_coeffs)
+        return QUBO(n_variables, ising_terms, ising_weights)
 
 
 class MinimumVertexCover(Problem):
@@ -972,7 +924,7 @@ class MinimumVertexCover(Problem):
         self._penalty = input_penalty
 
     @staticmethod
-    def random_instance(**kwargs):
+    def random_instance():
         """
         Creates a random instance of the Minimum Vertex Cover problem, whose graph is
         random following the Erdos-Renyi model. By default the artificial field is
@@ -1115,37 +1067,7 @@ class ShortestPath(Problem):
 
         return ShortestPath(G, source, dest)
 
-    def convert_binary_to_ising(self, terms, weights):
-        """
-        Converts the weights from a [0, 1] encoding to an Ising problem [-1, 1] 0 is mapped to +1 and 1 to -1 respectively
 
-        Parameters
-        ----------
-        terms: list[list]
-            terms of the hamiltonian
-        weights: list[float]
-
-        Returns
-        -------
-        terms_weights: tuple(list[list],list[float])
-            Tuple containing the converted list of terms and list of weights
-        """
-        new_terms_weights = []
-        constant = 0
-
-        for i, term in enumerate(terms):
-            if len(term) == 1:
-                new_terms_weights.append((term, -0.5 * weights[i]))
-                constant += 0.5 * weights[i]
-            elif len(term) == 2:
-                for t in term:
-                    new_terms_weights.append(([t], -0.25 * weights[i]))
-                new_terms_weights.append((term, 0.25 * weights[i]))
-                constant += 0.25 * weights[i]
-
-        new_terms_weights.append(([], constant))
-
-        return tuple(zip(*(new_terms_weights)))
 
     def terms_and_weights(self):
         """
@@ -1202,16 +1124,6 @@ class ShortestPath(Problem):
             if (s in x and s in y)
         ]
 
-        # Destination flow constraint
-        #     # For loop version
-        #     dest_flow_terms_weights = []
-        #     for i, x in enumerate(self.G.edges()):
-        #         for j, y in enumerate(self.G.edges()):
-        #             if d in x and d in y:
-        #                 if i == j:
-        #                     dest_flow_terms_weights.append(([i+n_nodes-2], -1))
-        #                 else:
-        #                     dest_flow_terms_weights.append(([i+n_nodes-2,j+n_nodes-2], 1))
         dest_flow_terms_weights = [
             ([i + n_nodes - 2], -1)
             if i == j
@@ -1263,7 +1175,7 @@ class ShortestPath(Problem):
         """
         # Extract terms and weights from the problem definition
         bin_terms, bin_weights = self.terms_and_weights()
-        terms, weights = self.convert_binary_to_ising(bin_terms, bin_weights)
+        terms, weights = convert_binary_to_ising(bin_terms, bin_weights)
         n_variables = self.G.number_of_nodes() + self.G.number_of_edges() - 2
 
         return QUBO(n_variables, list(terms), list(weights))
