@@ -633,7 +633,7 @@ class TestingRQAOA(unittest.TestCase):
         Test creation of the qaoa object and its default values
         """
         r = RQAOA()
-        r.compile()
+        r.compile(QUBO.random_instance(n=4))
 
         self._test_default_values(r._q)
         

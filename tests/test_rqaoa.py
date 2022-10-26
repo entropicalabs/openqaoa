@@ -227,7 +227,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Compute hamiltonian from input graph
         comp_problem = problem_from_dict(input_dict)
-        comp_hamiltonian = comp_problem.hamiltonian()
+        comp_hamiltonian = comp_problem.hamiltonian
         comp_hamiltonian_dict = {term.qubit_indices:coeff for term,coeff in zip(comp_hamiltonian.terms,comp_hamiltonian.coeffs)}
 
 
@@ -265,7 +265,7 @@ class TestingRQAOA(unittest.TestCase):
         comp_problem, _ = redefine_problem(input_problem, spin_map)
         
         # Compute the new hamiltonian
-        comp_hamiltonian = comp_problem.hamiltonian()
+        comp_hamiltonian = comp_problem.hamiltonian
 
         ## Testing (Comparing the new hamiltonian with the correct one)
 
