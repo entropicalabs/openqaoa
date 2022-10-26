@@ -697,7 +697,8 @@ class TestingRQAOA(unittest.TestCase):
         n_cutoff = 3
 
         # Define problem instance (Ring graph 10 qubits)
-        problem = MinimumVertexCover(nw.complete_graph(10, [1]), field=1, penalty=10).get_qubo_problem()
+        graph = nw.complete_graph(10, [1])
+        problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
 
         # run RQAOA and append solution in list
         solutions = []
@@ -720,7 +721,8 @@ class TestingRQAOA(unittest.TestCase):
         n_cutoff = 3
 
         # Define problem instance (Ring graph 10 qubits)
-        problem = MinimumVertexCover(nw.complete_graph(10), field=1, penalty=1).get_qubo_problem()
+        graph = nw.complete_graph(10)
+        problem = MinimumVertexCover(graph, field=1, penalty=1).get_qubo_problem()
 
         # run RQAOA and append solution in list
         solutions = []

@@ -75,7 +75,7 @@ class TestingRQAOA(unittest.TestCase):
         weights = [1 for _ in range(len(edges))] 
 
         # Hyperparameters
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0) 
+        problem = QUBO(n= n_qubits, terms=edges, weights=weights)
 
         ## Testing
 
@@ -89,7 +89,7 @@ class TestingRQAOA(unittest.TestCase):
                 (13,(1,13)),(14,(1,14)),(15,(1,15)),(16,(-1,None)),(17,(-1,None)),(18,(1,18)),(19,(-1,14))})
 
         # Compute the spin_map and final constraints from the function
-        spin_map = spin_mapping(hamiltonian,max_terms_and_stats)
+        spin_map = spin_mapping(problem,max_terms_and_stats)
 
         # Check both outputs contain the same number of keys as the correct solution
         assert len(correct_spin_map) == len(spin_map), f'Computed spin_map has incorrect length'
