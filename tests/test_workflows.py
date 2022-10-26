@@ -595,22 +595,47 @@ class TestingRQAOA(unittest.TestCase):
     Unit test based testing of the RQAOA workflow class
     """
 
+    def _test_default_values(self, x):
+        """
+        General function to check default values of rqaoa and qaoa
+        """
+
+        # circuit_properties
+        cp = x.circuit_properties
+        assert cp.param_type == 'standard'
+        assert cp.init_type == 'ramp'
+        assert cp.p == 1
+        assert cp.q == None
+        assert cp.mixer_hamiltonian == 'x'
+
+        # device
+        d = x.device 
+        assert d.device_location == 'local'
+        assert d.device_name == 'vectorized' 
+
     def test_rqaoa_default_values(self):
         """
         Tests all default values are correct
         """
         r = RQAOA()
 
-        assert isinstance(r.qaoa,QAOA)
-        assert r.qaoa.circuit_properties.p == 1
-        assert r.qaoa.circuit_properties.param_type == 'standard'
-        assert r.qaoa.circuit_properties.init_type == 'ramp'
-        assert r.qaoa.device.device_location == 'local'
-        assert r.qaoa.device.device_name == 'vectorized'
         assert r.rqaoa_parameters.rqaoa_type == 'adaptive'
         assert r.rqaoa_parameters.n_cutoff == 5
         assert r.rqaoa_parameters.n_max == 1
         assert r.rqaoa_parameters.steps == 1
+        assert r.rqaoa_parameters.original_hamiltonian == None
+        assert r.rqaoa_parameters.counter == 0
+
+        self._test_default_values(r)
+
+    def test_rqaoa_compile_and_qoao_default_values(self):
+        """
+        Test creation of the qaoa object and its default values
+        """
+        r = RQAOA()
+        r.complie()
+
+        self._test_default_values(r._q)
         
 
     def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=10, name_device='qiskit.statevector_simulator'):
