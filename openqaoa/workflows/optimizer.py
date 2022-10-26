@@ -419,9 +419,7 @@ class RQAOA(Optimizer):
         self.circuit_properties = CircuitProperties()
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
 
-        #? self.rqaoa_type = rqaoa_type  -> should be able to change rqaoa_type?
-
-    def set_circuit_properties(self, **kwargs):  #? mmmm think about it
+    def set_circuit_properties(self, **kwargs): 
 
         for key in kwargs.keys():
             if hasattr(self.circuit_properties, key):
@@ -440,12 +438,10 @@ class RQAOA(Optimizer):
         """
         for key, value in kwargs.items():
             if hasattr(self.rqaoa_parameters, key):
-                pass
+                setattr(self.rqaoa_parameters, key, value)
             else:
                 raise ValueError(
                     f'Specified part {key},  {value} is not supported by RQAOA')
-
-        self.rqaoa_parameters = RqaoaParameters(rqaoa_type=self.rqaoa_parameters.rqaoa_type, **kwargs) 
 
         return None
 
