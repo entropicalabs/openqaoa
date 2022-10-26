@@ -126,6 +126,9 @@ class RqaoaParameters(Parameters):
             Cutoff value at which the RQAOA algorithm obtains the solution classically. Defaults to 5.
         original_hamiltonian: `Hamiltonian`
             Hamiltonian encoding the original problem fed into the RQAOA algorithm. Defaults to None.
+        counter: `int`
+            Variable to count the step in the schedule. If counter = 3 the next step is schedule[3]. 
+            Default is 0, but can be changed to start in the position of the schedule that one wants.
         """
         
         self.rqaoa_type = rqaoa_type
