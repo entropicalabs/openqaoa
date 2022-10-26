@@ -141,7 +141,7 @@ class TestProblem(unittest.TestCase):
 
     def test_number_partitioning_random_problem(self):
         """Test randomly generated NumberPartition problem"""
-        np_prob_random = NumberPartition.random_instance(n_numbers=5, seed = 1234).get_qubo_problem()
+        np_prob_random = NumberPartition.random_instance().get_qubo_problem()
 
         #regenerate the same numbers randomly
         np.random.seed(1234)
@@ -199,7 +199,7 @@ class TestProblem(unittest.TestCase):
         maxcut_manual_prob = MaximumCut(gr).get_qubo_problem()
 
         np.random.seed(1234)
-        maxcut_random_prob = MaximumCut.random_instance(n_nodes=10, edge_probability=0.8, seed=seed).get_qubo_problem()
+        maxcut_random_prob = MaximumCut.random_instance().get_qubo_problem()
 
         self.assertTrue(terms_list_equality(maxcut_manual_prob.terms,maxcut_random_prob.terms))
         self.assertEqual(maxcut_manual_prob.weights,maxcut_random_prob.weights)
@@ -258,7 +258,7 @@ class TestProblem(unittest.TestCase):
 
         knap_manual = Knapsack(values,weights,weight_capacity,int(penalty)).get_qubo_problem()
 
-        knap_random_instance = Knapsack.random_instance(n_items=n_items, seed=1234).get_qubo_problem()
+        knap_random_instance = Knapsack.random_instance().get_qubo_problem()
 
         self.assertTrue(terms_list_equality(knap_manual.terms,knap_random_instance.terms))
         self.assertEqual(knap_manual.weights,knap_random_instance.weights)
@@ -277,7 +277,7 @@ class TestProblem(unittest.TestCase):
 
         knap_manual = Knapsack(values,weights,weight_capacity,int(penalty)).get_qubo_problem()
 
-        knap_random_instance = Knapsack.random_instance(n_items=n_items, seed=1234).get_qubo_problem()
+        knap_random_instance = Knapsack.random_instance().get_qubo_problem()
 
         self.assertTrue(terms_list_equality(knap_manual.terms,knap_random_instance.terms))
         self.assertEqual(knap_manual.weights,knap_random_instance.weights)
@@ -390,7 +390,7 @@ class TestProblem(unittest.TestCase):
 
         slknap_manual = SlackFreeKnapsack(values,weights,weight_capacity,int(penalty)).get_qubo_problem()
 
-        slknap_random_instance = SlackFreeKnapsack.random_instance(n_items=n_items, seed=1234).get_qubo_problem()
+        slknap_random_instance = SlackFreeKnapsack.random_instance().get_qubo_problem()
 
         self.assertTrue(terms_list_equality(slknap_manual.terms,slknap_random_instance.terms))
         self.assertEqual(slknap_manual.weights,slknap_random_instance.weights)
@@ -420,7 +420,7 @@ class TestProblem(unittest.TestCase):
         mvc_weights = [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 4.5, 4.5, 4.5, 7.0, 7.0]
         mvc_constant = 17.5
 
-        mvc_prob_random = MinimumVertexCover.random_instance(n_nodes=5, edge_probability=0.8,seed=1234).get_qubo_problem()
+        mvc_prob_random = MinimumVertexCover.random_instance().get_qubo_problem()
 
         self.assertTrue(terms_list_equality(mvc_terms,mvc_prob_random.terms))
         self.assertEqual(mvc_weights,mvc_prob_random.weights)
@@ -505,7 +505,7 @@ class TestProblem(unittest.TestCase):
 
         tsp_prob = TSP(coordinates).get_qubo_problem()
 
-        tsp_prob_random = TSP.random_instance(n_cities=n_cities, seed=1234).get_qubo_problem()
+        tsp_prob_random = TSP.random_instance().get_qubo_problem()
 
         self.assertTrue(terms_list_equality(tsp_prob_random.terms,tsp_prob.terms))
         self.assertEqual(tsp_prob_random.weights,tsp_prob.weights)
@@ -592,7 +592,7 @@ class TestProblem(unittest.TestCase):
             gr.edges[u,v]['weight'] = 1.0
         for w in gr.nodes():
             gr.nodes[w]['weight'] = 1.0
-        sp_prob = ShortestPath.random_instance(n_nodes=3, edge_probability=1, seed=1234, source=0, dest=2).get_qubo_problem()
+        sp_prob = ShortestPath.random_instance().get_qubo_problem()
 
         self.assertTrue(terms_list_equality(sp_rand_terms,sp_prob.terms))
         self.assertEqual(sp_rand_weights,sp_prob.weights)

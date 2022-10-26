@@ -23,7 +23,8 @@ import itertools
 from .helper_functions import convert2serialize
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 
-SEED = 42
+SEED = 1234
+MAX_PROBLEM_SIZE = 100
 
 
 class Problem(ABC):
@@ -245,7 +246,7 @@ class TSP(Problem):
             A random instance of the Traveling Salesman problem.
         """
         np.random.seed(SEED)
-        n_cities = np.random.randint(1, 100)
+        n_cities = np.random.randint(1, MAX_PROBLEM_SIZE)
 
         box_size = np.sqrt(n_cities)
         coordinates = []
@@ -387,7 +388,7 @@ class NumberPartition(Problem):
             A random instance of the Number Partitioning problem.
         """
         np.random.seed(SEED)
-        n_numbers = np.random.randint(1, 100)
+        n_numbers = np.random.randint(1, MAX_PROBLEM_SIZE)
 
         numbers = list(map(int, np.random.randint(1, 10, size=n_numbers)))
         return NumberPartition(numbers)
@@ -478,7 +479,7 @@ class MaximumCut(Problem):
             A random instance of the Maximum Cut problem.
         """
         np.random.seed(SEED)
-        n_nodes = np.random.randint(1, 100)
+        n_nodes = np.random.randint(1, MAX_PROBLEM_SIZE)
         edge_probability = np.random.uniform(0, 1)
 
         G = nx.generators.random_graphs.fast_gnp_random_graph(
@@ -617,7 +618,7 @@ class Knapsack(Problem):
         """
 
         np.random.seed(SEED)
-        n_items = np.random.randint(1, 100)
+        n_items = np.random.randint(1, MAX_PROBLEM_SIZE)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
@@ -798,7 +799,7 @@ class SlackFreeKnapsack(Knapsack):
             A random instance of the Knapsack problem.
         """
         np.random.seed(SEED)
-        n_items = np.random.randint(1, 100)
+        n_items = np.random.randint(1, MAX_PROBLEM_SIZE)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
@@ -982,7 +983,7 @@ class MinimumVertexCover(Problem):
         A random instance of the Minimum Vertex Cover problem.
         """
         np.random.seed(SEED)
-        n_nodes = np.random.randint(1, 100)
+        n_nodes = np.random.randint(1, MAX_PROBLEM_SIZE)
         edge_probability = np.random.uniform(0.0, 1.0)
 
         G = nx.generators.random_graphs.fast_gnp_random_graph(
@@ -1097,7 +1098,7 @@ class ShortestPath(Problem):
         A random instance of the Shortest Path problem.
         """
         np.random.seed(SEED)
-        n_nodes = np.random.randint(1, 100)
+        n_nodes = np.random.randint(1, MAX_PROBLEM_SIZE)
         edge_probability = np.random.uniform(0, 1)
         source = np.random.randint(0, n_nodes)
         dest = np.random.randint(0, n_nodes)
@@ -1158,7 +1159,6 @@ class ShortestPath(Problem):
         s = self.source
         d = self.dest
         n_nodes = self.G.number_of_nodes()
-        n_edges = self.G.number_of_edges()
 
         # # Linear terms due to node weights
         #     # For loop version
