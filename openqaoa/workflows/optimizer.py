@@ -270,6 +270,8 @@ class QAOA(Optimizer):
                 Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
             hess_options : dict
                 Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
+            save_intermediate: bool
+                If True, the intermediate parameters of the optimization and job ids, if available, are saved throughout the run. This is set to False by default.
         """
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
