@@ -820,7 +820,8 @@ def exp_val_single(spin: int, prob_dict: dict):
 
     # Initialize expectation value
     exp_val = 0
-
+    norm = sum(prob_dict.values())
+    
     # Compute correlation
     for bitstring, prob in prob_dict.items():
 
@@ -828,7 +829,7 @@ def exp_val_single(spin: int, prob_dict: dict):
         Z = int(bitstring[spin])
 
         # Add contribution if spin points up or subtract if points down
-        exp_val += -prob if Z > 0 else prob
+        exp_val += -prob/norm if Z > 0 else prob/norm
 
     return exp_val
 
@@ -858,7 +859,8 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
 
     # Initialize correlation
     corr = 0
-
+    
+    norm = sum(prob_dict.values())
     # Compute correlation
     for bitstring, prob in prob_dict.items():
 
@@ -866,7 +868,7 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
         num_ones = sum([int(bitstring[i]) for i in spins])
 
         # Add contribution if spins aligned or subtract if anti-aligned
-        corr += prob if num_ones % 2 == 0 else -prob
+        corr += prob/norm if num_ones % 2 == 0 else -prob/norm
 
     return corr
 

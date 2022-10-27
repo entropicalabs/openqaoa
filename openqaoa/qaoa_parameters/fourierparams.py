@@ -16,6 +16,7 @@ from typing import List, Union
 import warnings
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 from scipy.fftpack import dct, dst
 
@@ -201,18 +202,28 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
         return cls(qaoa_circuit_params, q, v, u)
 
     def plot(self, ax=None, **kwargs):
-        warnings.warn("Plotting the gammas and x_rotation_angles through DCT "
-                      "and DST. If you are interested in v, u you can access "
-                      "them via params.v, params.u")
-        if ax is None:
-            fig, ax = plt.subplots()
+        # warnings.warn("Plotting the gammas and x_rotation_angles through DCT "
+        #              "and DST. If you are interested in v, u you can access "
+        #              "them via params.v, params.u")
 
-        ax.plot(dct(self.v, n=self.p),
+        if ax is None:        
+            fig, ax = plt.subplots(2, figsize =(7, 9))
+
+        fig.tight_layout(pad=4.0)
+
+        ax[0].plot(self.v, label="v", marker="s", ls="", **kwargs)
+        ax[0].plot(self.u, label="u", marker="^", ls="", **kwargs)
+        ax[0].set_xlabel("q")
+        ax[0].legend()        
+        ax[0].xaxis.set_major_locator(MaxNLocator(integer=True))
+
+        ax[1].plot(dct(self.v, n=self.p),
                 label="betas", marker="s", ls="", **kwargs)
-        ax.plot(dst(self.u, n=self.p),
-                label="gammas", marker="v", ls="", **kwargs)
-        ax.set_xlabel("timestep")
-        ax.legend()
+        ax[1].plot(dst(self.u, n=self.p),
+                label="gammas", marker="^", ls="", **kwargs)
+        ax[1].set_xlabel("p")
+        ax[1].legend()
+        ax[1].xaxis.set_major_locator(MaxNLocator(integer=True))
 
 
 class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
@@ -412,23 +423,33 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
         return cls(qaoa_circuit_params, q, v, u_singles, u_pairs)
 
     def plot(self, ax=None, **kwargs):
-        warnings.warn("Plotting the gammas and x_rotation_angles through DCT "
-                      "and DST. If you are interested in v, u_singles and "
-                      "u_pairs you can access them via params.v, "
-                      "params.u_singles, params.u_pairs")
+        # warnings.warn("Plotting the gammas and x_rotation_angles through DCT "
+        #              "and DST. If you are interested in v, u_singles and "
+        #              "u_pairs you can access them via params.v, "
+        #              "params.u_singles, params.u_pairs")
         if ax is None:
-            fig, ax = plt.subplots()
+            fig, ax = plt.subplots(2, figsize =(7, 9))
 
-        ax.plot(dct(self.v, n=self.p),
+        fig.tight_layout(pad=4.0)
+
+        ax[0].plot(self.v, label="v", marker="s", ls="", **kwargs)
+        ax[0].plot(self.u_singles, label="u_singles", marker="^", ls="", **kwargs)
+        ax[0].plot(self.u_pairs, label="u_pairs", marker="v", ls="", **kwargs)
+        ax[0].set_xlabel("q")
+        ax[0].legend()
+        ax[0].xaxis.set_major_locator(MaxNLocator(integer=True))
+
+        ax[1].plot(dct(self.v, n=self.p),
                 label="betas", marker="s", ls="", **kwargs)
         if not _is_iterable_empty(self.u_singles):
-            ax.plot(dst(self.u_singles, n=self.p),
+            ax[1].plot(dst(self.u_singles, n=self.p),
                     label="gammas_singles", marker="^", ls="", **kwargs)
         if not _is_iterable_empty(self.u_pairs):
-            ax.plot(dst(self.u_pairs, n=self.p),
+            ax[1].plot(dst(self.u_pairs, n=self.p),
                     label="gammas_pairs", marker="v", ls="", **kwargs)
-        ax.set_xlabel("timestep")
-        ax.legend()
+        ax[1].set_xlabel("p")
+        ax[1].legend()
+        ax[1].xaxis.set_major_locator(MaxNLocator(integer=True))
 
 
 class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
@@ -684,16 +705,79 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
                    v_singles, v_pairs, u_singles, u_pairs)
 
     def plot(self, ax=None, **kwargs):
-        if ax is None:
-            fig, ax = plt.subplots()
+        # if ax is None:
+        #     fig, ax = plt.subplots()
 
-        ax.plot(dct(self.v, n=self.p, axis=0),
-                label="betas", marker="s", ls="", **kwargs)
-        if not _is_iterable_empty(self.u_singles):
-            ax.plot(dst(self.u_singles, n=self.p),
-                    label="gammas_singles", marker="^", ls="", **kwargs)
-        if not _is_iterable_empty(self.u_pairs):
-            ax.plot(dst(self.u_pairs, n=self.p),
-                    label="gammas_pairs", marker="v", ls="", **kwargs)
-        ax.set_xlabel("timestep")
-        ax.legend()
+        # ax.plot(dct(self.v, n=self.p, axis=0),
+        #         label="betas", marker="s", ls="", **kwargs)
+        # if not _is_iterable_empty(self.u_singles):
+        #     ax.plot(dst(self.u_singles, n=self.p),
+        #             label="gammas_singles", marker="^", ls="", **kwargs)
+        # if not _is_iterable_empty(self.u_pairs):
+        #     ax.plot(dst(self.u_pairs, n=self.p),
+        #             label="gammas_pairs", marker="v", ls="", **kwargs)
+        # ax.set_xlabel("timestep")
+        # ax.legend()
+
+        betas_singles = dct(self.v_singles, n=self.p, axis=0)
+        betas_pairs = dct(self.v_pairs, n=self.p, axis=0)
+        gammas_singles = dst(self.u_singles, n=self.p, axis=0)
+        gammas_pairs = dst(self.u_pairs, n=self.p, axis=0)
+
+        p = self.p
+        q = self.q
+        list_pq_ = [q, q, q, q, p, p, p, p]
+        list_pq_names_ = ["q", "q", "q", "q", "p", "p", "p", "p"]
+
+        list_names_ = ["v singles", "v pairs", "u singles", "u pairs",
+                        "betas singles", "betas pairs", "gammas singles", "gammas pairs"] 
+        list_values_ = [self.v_singles % (2*(np.pi)) , self.v_pairs % (2*(np.pi)) , 
+                        self.u_singles % (2*(np.pi)) , self.u_pairs % (2*(np.pi)) ,
+                        betas_singles % (2*(np.pi)) , betas_pairs % (2*(np.pi)) , 
+                        gammas_singles % (2*(np.pi)) , gammas_pairs % (2*(np.pi)) ]
+
+        list_names, list_values = list_names_.copy(), list_values_.copy()
+        list_pq, list_pq_names = list_pq_.copy(), list_pq_names_.copy()
+
+        n_pop = 0
+        for i in range(len(list_values_)):
+            if list_values_[i].size == 0: 
+                list_values.pop(i-n_pop)
+                list_names.pop(i-n_pop)
+                list_pq.pop(i-n_pop)
+                list_pq_names.pop(i-n_pop)
+                n_pop += 1
+
+        n = len(list_values)
+
+        if ax is None:
+            fig , ax = plt.subplots((n+1)//2, 2, figsize =(9, 4*(n+1)//2))
+
+        fig.tight_layout(pad=4.0)
+
+        for k, (name, values) in enumerate(zip(list_names, list_values)):
+            i, j = k//2 , k%2
+            pq = list_pq[k]
+            pq_name = list_pq_names[k]
+            axes = ax[i,j] if n>2 else ax[k]
+
+            if values.size == pq:
+                axes.plot(values.T[0], marker="^", color="green", ls="", **kwargs)
+                axes.set_xlabel(pq_name, fontsize=12)
+                axes.set_title(name)
+                axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+            
+            elif values.size > 0:
+                n_terms = values.shape[1]
+                plt1 = axes.pcolor(np.arange(pq), np.arange(n_terms) , values.T, vmin=0, vmax=2*np.pi, cmap="seismic")
+                axes.set_aspect(pq/n_terms)
+                axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+                axes.yaxis.set_major_locator(MaxNLocator(integer=True))
+                axes.set_ylabel("terms")
+                axes.set_xlabel(pq_name)
+                axes.set_title(name)
+
+                plt.colorbar(plt1, **kwargs)
+
+        if j == 0:
+            ax[i,j+1].axis('off')
