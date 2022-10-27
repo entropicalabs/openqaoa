@@ -651,7 +651,7 @@ class RQAOA(Optimizer):
         if verbose:
             print(f'RQAOA optimization completed.')
 
-        return self.results #? do we want to return the results?
+        return 
 
 
     def _exp_val_hamiltonian_termwise(self):
