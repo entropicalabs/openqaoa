@@ -644,7 +644,7 @@ class RQAOA(Optimizer):
         results['elimination rules'] = elimination_tracker
         results['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
         results['qaoa steps'] = qaoa_steps
-        results['total steps'] = counter - self.rqaoa_parameters.counter 
+        results['number steps'] = counter - self.rqaoa_parameters.counter 
 
         self.results = RQAOAResults(results)
 
@@ -748,12 +748,12 @@ class RQAOAResults:
 
         return self.results['schedule']
 
-    def get_total_steps(self):
+    def get_number_steps(self):
         """
-        Returns the total steps of the RQAOA object.
+        Returns the total number of steps of the RQAOA object.
         """
 
-        return self.results['total steps']
+        return self.results['number steps']
 
     def get_qaoa_steps(self):
         """
