@@ -182,10 +182,10 @@ class Optimizer(ABC):
         return None
 
     def compile():
-        pass
+        raise NotImplementedError
 
     def optimize():
-        pass
+        raise NotImplementedError
 
 
     
@@ -562,11 +562,15 @@ class RQAOA(Optimizer):
                     {np.abs(n_qubits - n_cutoff - counter) - sum(self.rqaoa_parameters.steps)} 
                     more eliminations"""
         
+            self.compiled = True
+        
         elif not self.rqaoa_parameters.rqaoa_type.lower() == "adaptive": 
+            
+            self.compiled = False
             
             raise f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom'
         
-        #? verbose -> how we do?
+        #? TODO verbose -> how we do?
 
         return 
 
