@@ -63,6 +63,9 @@ def XY_mixer_hamiltonian(n_qubits: int,
     r"""
     Construct a Hamiltonian object to implement the XY mixer.
 
+    .. Important::
+            The XY mixer is not implemented with :math:`RXY` Gates, but with :math:`H_{XY}=\frac{1}{2}(\sum_{i,j} X_iX_j+Y_iY_j)`
+
     Parameters
     ----------
     n_qubits: `int`
@@ -77,8 +80,7 @@ def XY_mixer_hamiltonian(n_qubits: int,
     hamiltonian: `Hamiltonian`
         The Hamiltonian object corresponding to the XY mixer.
 
-    .. Important::
-        The XY mixer is not implemented with :math:`RXY` Gates, but with :math:`H_{XY}=\frac{1}{2}(\sum_{i,j} X_iX_j+Y_iY_j)`
+    
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
