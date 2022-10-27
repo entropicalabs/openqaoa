@@ -650,7 +650,7 @@ class TestingRQAOA(unittest.TestCase):
         r.compile(problem)
         r.optimize()
 
-        return r.results['solution']
+        return r.results.get_solution()
 
     def test_example_1_adaptive_custom(self):
 

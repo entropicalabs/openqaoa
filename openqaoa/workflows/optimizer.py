@@ -486,13 +486,16 @@ class RQAOA(Optimizer):
     >>> r.set_rqaoa_parameters(n_cutoff = 5, n_max=5)
     >>> r_custom.compile(qubo_problem)
     >>> r_custom.optimize()
-        """
+    """
 
 
     def __init__(self, rqaoa_type: str = 'adaptive', device: DeviceBase=DeviceLocal('vectorized')):
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
+
+        # varaible that will store results object (when optimize is called)
+        self.results = None
 
     def set_circuit_properties(self, **kwargs): 
 
@@ -561,15 +564,15 @@ class RQAOA(Optimizer):
                 f"""Schedule is incomplete, add 
                     {np.abs(n_qubits - n_cutoff - counter) - sum(self.rqaoa_parameters.steps)} 
                     more eliminations"""
-        
+
             self.compiled = True
         
         elif not self.rqaoa_parameters.rqaoa_type.lower() == "adaptive": 
-            
+
             self.compiled = False
             
             raise f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom'
-        
+            
         #? TODO verbose -> how we do?
 
         return 
@@ -579,10 +582,9 @@ class RQAOA(Optimizer):
         Performs optimization using RQAOA with the `custom` method or the `adaptive` method.
         """
 
-        # reset all final variables
-        self.elimination_tracker = []
-        self.qaoa_steps = []
-        self.results = {}
+        # lists to append the eliminations and the qaoa objects
+        elimination_tracker = []
+        qaoa_steps = []
 
         # get variables
         problem = self.problem  
@@ -613,13 +615,13 @@ class RQAOA(Optimizer):
 
             # Extract final set of eliminations with correct dependencies and update tracker
             eliminations = {(spin_map[spin][1],spin):spin_map[spin][0] for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]}
-            self.elimination_tracker.append(eliminations)
+            elimination_tracker.append(eliminations)
 
             # Extract new number of qubits
             n_qubits = new_problem.n
 
             # Save qaoa object
-            self.qaoa_steps.append(copy.deepcopy(self._q))
+            qaoa_steps.append(copy.deepcopy(self._q))
 
             # Compile qaoa with the new problem
             self._q.compile(new_problem, verbose=False)
@@ -633,16 +635,23 @@ class RQAOA(Optimizer):
 
         # Retrieve full solutions including eliminated spins and their energies
         full_solutions = rqaoa.final_solution(
-            self.elimination_tracker, cl_ground_states, self.problem.hamiltonian)
+            elimination_tracker, cl_ground_states, self.problem.hamiltonian)
 
-        # Compute description dictionary containing all the information                
-        self.results['solution'] = full_solutions
-        self.results['classical output'] = {'minimum energy': cl_energy,  'optimal states': cl_ground_states}
-        self.results['elimination rules'] = self.elimination_tracker
-        self.results['schedule'] = [len(max_tc) for max_tc in self.elimination_tracker]
-        self.results['total steps'] = counter - self.rqaoa_parameters.counter 
+        # Compute description dictionary containing all the information    
+        results = {}            
+        results['solution'] = full_solutions
+        results['classical output'] = {'minimum energy': cl_energy,  'optimal states': cl_ground_states}
+        results['elimination rules'] = elimination_tracker
+        results['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
+        results['qaoa steps'] = qaoa_steps
+        results['total steps'] = counter - self.rqaoa_parameters.counter 
 
-        return
+        self.results = RQAOAResults(results)
+
+        if verbose:
+            print(f'RQAOA optimization completed.')
+
+        return self.results #? do we want to return the results?
 
 
     def _exp_val_hamiltonian_termwise(self):
@@ -683,12 +692,97 @@ class RQAOA(Optimizer):
 
         # If the step eliminates more spins than available, reduce step to match cutoff
         return (n_qubits - n_cutoff) if (n_qubits - n_cutoff) < n else n
+
+
+
+
+
+# TODO : move it to a different file
+class RQAOAResults:
+    """
+    A class to handle the results of RQAOA workflows
+
+    TODO :  make it similar to the QAOA results class, some plotting functions could be added too
+            QAQAOAResults class is in optimizers/result.py
+    """
+
+    def __init__(self, results):
+        """
+        Constructor for the RQAOAResults class.
+        """
+
+        self.results = results
+
+    def get_results_as_dict(self):
+        """
+        Returns the results dictionary.
+        """
+
+        return self.results
+
+    def get_solution(self):
+        """
+        Returns the solution of the RQAOA object.
+        """
+
+        return self.results['solution']
+
+    def get_classical_output(self):
+        """
+        Returns the classical output of the RQAOA object.
+        """
+
+        return self.results['classical output']
+
+    def get_elimination_rules(self):
+        """
+        Returns the elimination rules of the RQAOA object.
+        """
+
+        return self.results['elimination rules']
+
+    def get_schedule(self):
+        """
+        Returns the schedule of the RQAOA object.
+        """
+
+        return self.results['schedule']
+
+    def get_total_steps(self):
+        """
+        Returns the total steps of the RQAOA object.
+        """
+
+        return self.results['total steps']
+
+    def get_qaoa_steps(self):
+        """
+        Returns the qaoa steps of the RQAOA object.
+        """
+
+        return self.results['qaoa steps']
+
+    def get_qaoa_step(self, i):
+        """
+        Returns the i-th qaoa step of the RQAOA object.
+        """
+
+        return self.results['qaoa steps'][i]
+
+    def get_qaoa_step_results(self, i):
+        """
+        Returns the results of the i-th qaoa step of the RQAOA object.
+        """
+
+        return self.results['qaoa steps'][i].results
+
+    def get_qaoa_step_optimized_angles(self, i):
+        """
+        Returns the optimized angles of the i-th qaoa step of the RQAOA object.
+        """
+
+        return self.results['qaoa steps'][i].results.optimized['optimized angles']
         
-
-
-
-
-
 
 
 
