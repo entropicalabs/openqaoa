@@ -32,6 +32,28 @@ from openqaoa import rqaoa
 class Optimizer(ABC):
     """
     Abstract class to represent an optimizer
+
+    Basic usage of childs of this class consists of 
+    1. Initialization
+    2. Compilation
+    3. Optimization
+
+    Attributes
+    ----------
+        device: `DeviceBase`
+            Device to be used by the optimizer
+        backend_properties: `BackendProperties`
+            The backend properties of the optimizer workflow. Use to set the backend properties such as the number of shots and the cvar values.
+            For a complete list of its parameters and usage please see the method set_backend_properties
+        classical_optimizer: `ClassicalOptimizer`
+            The classical optimiser properties of the optimizer workflow. Use to set the classical optimiser needed for the classical optimisation part of the optimizer routine.
+            For a complete list of its parameters and usage please see the method set_classical_optimizer
+        local_simulators: `list[str]`
+            A list containing the available local simulators
+        cloud_provider: `list[str]`
+            A list containing the available cloud providers
+        compiled: `Bool`
+            A boolean flag to check whether the optimizer object has been correctly compiled at least once
     """
 
     def __init__(self, device=DeviceLocal('vectorized')):
@@ -190,6 +212,8 @@ class QAOA(Optimizer):
 
     Attributes
     ----------
+        device: `DeviceBase`
+            Device to be used by the optimizer
         circuit_properties: `CircuitProperties`
             The circuit properties of the QAOA workflow. Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
             For a complete list of its parameters and usage please see the method set_circuit_properties
@@ -199,8 +223,10 @@ class QAOA(Optimizer):
         classical_optimizer: `ClassicalOptimizer`
             The classical optimiser properties of the QAOA workflow. Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
             For a complete list of its parameters and usage please see the method set_classical_optimizer
-        local_simulators: list[str]`
+        local_simulators: `list[str]`
             A list containing the available local simulators
+        cloud_provider: `list[str]`
+            A list containing the available cloud providers
         mixer_hamil: Hamiltonian
             The desired mixer hamiltonian
         cost_hamil: Hamiltonian
@@ -386,35 +412,84 @@ class QAOA(Optimizer):
 
 class RQAOA(Optimizer):
     """
-    RQAOA optimizer class.
+    A class implementing a RQAOA workflow end to end.
+
+    It's basic usage consists of 
+    1. Initialization
+    2. Compilation
+    3. Optimization
+
+    .. warning::
+        To all our dear beta testers: the setter functions will most likely change. Bear with us as we figure our the smoother way to create the workflows :-)
+
+
+    .. note::
+        The attributes of the RQAOA class should be initialized using the set methods of QAOA. For example, to set the qaoa circuit's depth to 10 you should run `set_circuit_properties(p=10)`
 
     Attributes
     ----------
-    algorithm: `str`
-        A string contaning the name of the algorithm, here fixed to `rqaoa`
-    qaoa: 'QAOA'
-        QAOA class instance containing all the relevant information for the
-        QAOA runs at each recursive step.
-    rqaoa_parameters: 'RqaoaParameters'
-        Set of parameters containing all the relevant information for the 
-        recursive procedure.
-    result: `dict`
-        Dictionary containing the solution and all of the RQAOA procedure 
-        information
-    """
+        device: `DeviceBase`
+            Device to be used by the optimizer
+        backend_properties: `BackendProperties`
+            The backend properties of the RQAOA workflow. These properties will be used to run QAOA at each RQAOA step.
+            Use to set the backend properties such as the number of shots and the cvar values.
+            For a complete list of its parameters and usage please see the method set_backend_properties
+        classical_optimizer: `ClassicalOptimizer`
+            The classical optimiser properties of the RQAOA workflow. 
+            Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
+            For a complete list of its parameters and usage please see the method set_classical_optimizer
+        local_simulators: `list[str]`
+            A list containing the available local simulators
+        cloud_provider: `list[str]`
+            A list containing the available cloud providers
+        compiled: `Bool`
+            A boolean flag to check whether the optimizer object has been correctly compiled at least once
+        circuit_properties: `CircuitProperties`
+            The circuit properties of the RQAOA workflow. These properties will be used to run QAOA at each RQAOA step.
+            Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
+            For a complete list of its parameters and usage please see the method set_circuit_properties
+        rqaoa_parameters: `RqaoaParameters`
+            Set of parameters containing all the relevant information for the recursive procedure of RQAOA.
+        results: `dict`
+
+
+
+    Examples
+    --------
+    Examples should be written in doctest format, and should illustrate how
+    to use the function.
+
+    >>> r = RQAOA()
+    >>> r.compile(QUBO)
+    >>> r.optimise()
+
+    Where `QUBO` is a an instance of `openqaoa.problems.problem.QUBO`
+
+    If you want to use non-default parameters:
+
+    Custom type:
+    >>> r_custom = QAOA('custom')
+    >>> r_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
+    >>> r_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
+    >>> r_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
+    >>> r_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
+    >>> r.set_rqaoa_parameters(n_cutoff = 5, steps=[1,2,3,4,5])
+    >>> r_custom.compile(qubo_problem)
+    >>> r_custom.optimize()
+
+    Ada-RQAOA:
+    >>> r_custom = QAOA('adaptive')
+    >>> r_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
+    >>> r_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
+    >>> r_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
+    >>> r_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
+    >>> r.set_rqaoa_parameters(n_cutoff = 5, n_max=5)
+    >>> r_custom.compile(qubo_problem)
+    >>> r_custom.optimize()
+        """
+
 
     def __init__(self, rqaoa_type: str = 'adaptive', device: DeviceBase=DeviceLocal('vectorized')):
-        """
-        Initializes the RQAOA optimizer class.
-
-        Parameters
-        ----------
-        rqaoa_type: `str`
-            Recursive scheme for RQAOA algorithm. Choose from `custom` or `adaptive`
-        q: `QAOA`
-            QAOA instance specificying how QAOA is run within RQAOA
-        """
-
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
@@ -567,6 +642,11 @@ class RQAOA(Optimizer):
 
 
     def _exp_val_hamiltonian_termwise(self):
+        """
+        Private method to call the exp_val_hamiltonian_termwise function taking the data from
+        the QAOA object _q. 
+        It eturns what the exp_val_hamiltonian_termwise function returns.
+        """
 
         q = self._q
 
@@ -585,6 +665,10 @@ class RQAOA(Optimizer):
 
 
     def _n_step(self, n_qubits, n_cutoff, counter):
+        """
+        Private method that returns the n_max value in case of adaptive or the number of eliminations according 
+        to the schedule and the counter in case of 
+        """
 
         if self.rqaoa_parameters.rqaoa_type.lower() == "adaptive":
             # Number of spins to eliminate according the schedule
