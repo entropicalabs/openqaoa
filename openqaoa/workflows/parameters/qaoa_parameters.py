@@ -15,11 +15,13 @@
 from typing import List, Dict, Optional, Union
 import numpy as np
 import qiskit
+from scipy.optimize._minimize import MINIMIZE_METHODS
+import scipy
+import numpy
 
 from openqaoa.basebackend import QuantumCircuitBase
 from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
 from .parameters import Parameters
-from scipy.optimize._minimize import MINIMIZE_METHODS
 
 
 ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
@@ -148,35 +150,35 @@ class BackendProperties(Parameters):
 
     Parameters
     ----------
-    device: `DeviceBase`
+    device: DeviceBase
         The device to use for the backend.
-    prepend_state: `Union[QuantumCircuitBase,np.ndarray(complex)]`
+    prepend_state: Union[openqaoa.basebackend.QuantumCircuitBase,numpy.ndarray(complex)]
         The state prepended to the circuit.
-    append_state: `Union[QuantumCircuitBase,np.ndarray(complex)]`
+    append_state: Union[QuantumCircuitBase,numpy.ndarray(complex)]
         The state appended to the circuit.
-    init_hadamard: `bool`
+    init_hadamard: bool
         Whether to apply a Hadamard gate to the beginning of the 
         QAOA part of the circuit.
-    n_shots: `int`
+    n_shots: int
         The number of shots to be used for the shot-based computation.
-    cvar_alpha: `float`
+    cvar_alpha: float
         The value of the CVaR parameter.
-    noise_model: `NoiseModel`
+    noise_model: NoiseModel
         The `qiskit` noise model to be used for the shot-based simulator.
-    qubit_layout: `Union[List[int], np.ndarray]`
+    qubit_layout: Union[List[int], numpy.ndarray]
         Mapping from physical to logical qubit indices, used to eventually 
         construct the quantum circuit.  For example, for a system composed by 3 qubits
        `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
         and the right hand side is the logical qubits
-    qiskit_simulation_method: `str`
+    qiskit_simulation_method: str
         Specify the simulation method to use with the `qiskit.AerSimulator`
-    seed_simulator: `int`
+    seed_simulator: int
         Specify a seed for `qiskit` simulators
-    active_reset: `bool`
+    active_reset: bool
         To use the active_reset functionality on Rigetti backends through QCS
-    rewiring: `str`
+    rewiring: str
         Specify the rewiring strategy for compilation for Rigetti QPUs through QCS
-    disable_qubit_rewiring: `bool`
+    disable_qubit_rewiring: bool
         enable/disbale qubit rewiring when accessing QPUs via the AWS `braket`
     """
 
@@ -239,27 +241,27 @@ class ClassicalOptimizer(Parameters):
         Maximum number of function evaluations.
     jac: str
         Method to compute the gradient vector. Choose from:
-        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
+            - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
     hess:
         Method to compute the hessian. Choose from:
-        `['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
-    constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints 
+            - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
+    constraints: `scipy.optimize.LinearConstraints`, `scipy.optimize.NonlinearConstraints` 
         Scipy-based constraints on parameters of optimization 
-    bounds: scipy.scipy.optimize.Bounds
+    bounds: `scipy.scipy.optimize.Bounds`
         Scipy-based bounds on parameters of optimization 
     tol : float
         Tolerance before the optimizer terminates; if `tol` is larger than
         the difference between two steps, terminate optimization.
     optimizer_options: dict
         Dictionary of optimiser-specific arguments, defaults to ``None``.
-        stepsize : float
-            Step size of each gradient descent step.
-        decay : float
-            Stepsize decay parameter of RMSProp.
-        eps : float
-            Small number to prevent division by zero for RMSProp.
-        lambd : float
-            Small number to regularize QFIM for Natural Gradient Descent.
+            stepsize : float
+                Step size of each gradient descent step.
+            decay : float
+                Stepsize decay parameter of RMSProp.
+            eps : float
+                Small number to prevent division by zero for RMSProp.
+            lambd : float
+                Small number to regularize QFIM for Natural Gradient Descent.
     jac_options : dict
         Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
     hess_options : dict

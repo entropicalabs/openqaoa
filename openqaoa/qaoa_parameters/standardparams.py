@@ -39,7 +39,7 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
     hyperparameters:
         The hyperparameters containing the register, terms, weights, and the number of layers
         ``hyperparameters = (register, terms, weights, p)``
-    parameters:
+    qaoa_circuit_params:
         Tuple containing ``(betas, gammas)`` with dimensions
         ``(p, p)``
 

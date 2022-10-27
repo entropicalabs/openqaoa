@@ -19,10 +19,11 @@
 import os
 import sys
 # sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath("../../"))
+# sys.path.insert(0, os.path.abspath("../../"))
+sys.path.insert(0, os.path.abspath('../..'))
 print(sys.path)
 
-from openqaoa.qaoa_parameters.baseparams import shapedArray
+# from openqaoa.qaoa_parameters.baseparams import shapedArray
 
 
 
@@ -46,7 +47,8 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx.ext.mathjax",
     "IPython.sphinxext.ipython_console_highlighting",
-    "nbsphinx"
+    "nbsphinx",
+    "sphinx.ext.intersphinx"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -56,6 +58,17 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
+
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
+                       'numpy': ('https://numpy.org/doc/1.23', None),
+                       'np': ('https://numpy.org/doc/1.23', None),
+                       'scipy': ('https://docs.scipy.org/doc/scipy-1.8.1', None)}
+
+
+# Exclude broken python docs
+# see https://stackoverflow.com/questions/11417221/sphinx-autodoc-gives-warning-pyclass-reference-target-not-found-type-warning
+nitpick_ignore = [('py:class', 'type')]
+
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -70,7 +83,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 
 # -- More customizations ----------------------------------------------------
