@@ -62,3 +62,6 @@ def test_09_RQAOA_example():
 @pytest.mark.qpu
 def test_10_workflows_on_Amazon_braket():
     notebook_test_function("./examples/10_workflows_on_Amazon_braket.ipynb")
+    
+def test_bipartite_graphs():
+    notebook_test_function("./examples/community_tutorials/mvc_examples/bipartite_graphs.ipynb")
