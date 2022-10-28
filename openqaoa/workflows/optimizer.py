@@ -581,11 +581,12 @@ class RQAOA(Optimizer):
 
             self.compiled = True
         
-        elif not self.rqaoa_parameters.rqaoa_type.lower() == "adaptive": 
+        #check if the rqaoa type is correct
+        if not self.rqaoa_parameters.rqaoa_type.lower() in ['custom', 'adaptive']:
 
             self.compiled = False
             
-            raise f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom'
+            raise Exception(f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom')
             
         #? TODO verbose -> how we do?
 
