@@ -138,23 +138,6 @@ class TestProblem(unittest.TestCase):
                 QUBO(n, each_terms, weights)
             self.assertEqual("The input parameter terms must be of type of list or tuple",
                              str(e.exception))
-            
-    def test_qubo_hamiltonian_property(self):
-        """
-        Checks that the hamiltonian property of QUBO class returns a Hamiltonian Object.
-        """
-        
-        qubo_obj = QUBO(1, [[0], []], [0, 1])
-        self.assertEqual(type(qubo_obj.hamiltonian).__name__, 'Hamiltonian')
-        
-    def test_qubo_random_instance(self):
-        """
-        Checks that the random_instance static method in QUBO class returns a QUBO object with randomized weights and terms.
-        """
-        
-        qubo_problem = QUBO.random_instance(5)
-        self.assertEqual(type(qubo_problem).__name__, 'QUBO')
-        self.assertEqual(len(qubo_problem.weights), len(qubo_problem.terms))
 
     # TESTING NUMBER PARITION CLASS
     
