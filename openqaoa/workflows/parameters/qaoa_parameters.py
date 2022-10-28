@@ -270,7 +270,8 @@ class ClassicalOptimizer(Parameters):
         Returns history of cost values if `True`. Defaults to `True`. 
     parameter_log : bool
         Returns history of angles if `True`. Defaults to `True`.
-
+    save_intermediate: bool
+        Outputs the jobids and parameters used for each circuit into seperate csv files. Defaults to `False`.
     """
 
     def __init__(self,
