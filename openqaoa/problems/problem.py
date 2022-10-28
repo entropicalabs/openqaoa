@@ -227,6 +227,15 @@ class QUBO:
         ising_weights.append(constant_term)
         return ising_terms, ising_weights
 
+    @property
+    def hamiltonian(self):
+        """
+        Returns the Hamiltonian of the problem.
+        """
+        return Hamiltonian.classical_hamiltonian(
+            self.terms, self.weights, self.constant
+        )
+
 
 class TSP(Problem):
     def __init__(self,
