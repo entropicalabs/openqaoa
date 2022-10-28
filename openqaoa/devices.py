@@ -28,6 +28,8 @@ from botocore.exceptions import NoRegionError
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
 
+from azure.quantum.qiskit import AzureQuantumProvider
+
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
     'qiskit.statevector_simulator','vectorized',
@@ -69,28 +71,119 @@ class DeviceLocal(DeviceBase):
         else:
             return False
 
+class DeviceAzure(DeviceBase):
+
+    """
+    Contains the required information and methods needed to access remote 
+    Azure QPUs and Simulators.
+
+    Parameters
+    ----------
+    available_qpus: `list`
+        When connection to a provider is established, this attribute contains a list
+        of backend names which can be used to access the selected backend by reinitialising
+        the Access Object with the name of the available backend as input to the
+        device_name parameter.
+    """
+    
+    def __init__(self, device_name: str, resource_id: str, location: str):
+        """
+        Input parameters required for this can be found in the user's Azure 
+        Quantum Workspace.
+        
+        Parameters
+        ----------
+        device_name: `str`
+            The name of the Azure remote QPU/Simulator to be used
+        resource_id: `str`
+        location: `str`
+        """
+        
+        self.resource_id = resource_id
+        self.location = location
+        self.device_name = device_name
+        self.device_location = 'azure'
+        
+        self.provider_connected = None
+        self.qpu_connected = None
+        
+    def check_connection(self):
+        """
+        """
+        
+        self.provider_connected = self._check_provider_connection()
+
+        if self.provider_connected == False:
+            return self.provider_connected
+
+        self.available_qpus = [backend.name()
+                               for backend in self.provider.backends()]
+
+        if self.device_name == '':
+            return self.provider_connected
+
+        self.qpu_connected = self._check_backend_connection()
+
+        if self.provider_connected and self.qpu_connected:
+            return True
+        else:
+            return False
+        
+    def _check_backend_connection(self) -> bool:
+        """Private method for checking connection with backend(s).
+        """
+
+        if self.device_name in self.available_qpus:
+            self.backend_device = self.provider.get_backend(self.device_name)
+            return True
+        else:
+            print(
+                f"Please choose from {self.available_qpus} for this provider")
+            return False
+
+    def _check_provider_connection(self) -> bool:
+        """
+        Private method for checking connection with provider.
+        """
+
+        try:
+            self.provider = AzureQuantumProvider(resource_id=self.resource_id, 
+                                                 location=self.location)
+
+            return True
+
+        except ValueError as e:
+            print('Either the resource id or location specified was invalid: {}'.format(e))
+            return False
+
+        except Exception as e:
+            print('An Exception has occured when trying to connect with the \
+            provider: {}'.format(e))
+            return False
+
+
 class DeviceQiskit(DeviceBase):
     """Contains the required information and methods needed to access remote
     qiskit QPUs.
 
     Parameters
-	----------
-	available_qpus: `list`
-		When connection to a provider is established, this attribute contains a list
-		of backend names which can be used to access the selected backend by reinitialising
-		the Access Object with the name of the available backend as input to the
-		device_name parameter.
-	"""
+    ----------
+    available_qpus: `list`
+        When connection to a provider is established, this attribute contains a list
+        of backend names which can be used to access the selected backend by reinitialising
+        the Access Object with the name of the available backend as input to the
+        device_name parameter.
+    """
 
     def __init__(self, device_name: str, api_token: str,
-				 hub: str, group: str, project: str):
+                 hub: str, group: str, project: str):
         """A majority of the input parameters required for this can be found in
         the user's IBMQ Experience account.
 
         Parameters
         ----------
-		device_name: `str`
-			The name of the IBMQ device to be used
+        device_name: `str`
+            The name of the IBMQ device to be used
         api_token: `str`
             Valid IBMQ Experience Token.
         hub: `str`
@@ -122,11 +215,11 @@ class DeviceQiskit(DeviceBase):
         can be established.
 
         Returns
-		-------
+        -------
         bool
-			True if successfully connected to IBMQ or IBMQ and the QPU backend
-			if it was specified. False if unable to connect to IBMQ or failure
-			in the attempt to connect to the specified backend.
+            True if successfully connected to IBMQ or IBMQ and the QPU backend
+            if it was specified. False if unable to connect to IBMQ or failure
+            in the attempt to connect to the specified backend.
         """
 
         self.provider_connected = self._check_provider_connection()
@@ -179,11 +272,11 @@ class DeviceQiskit(DeviceBase):
                                                   project=self.project)
 
             return True
-        
+
         except RequestsApiError as e:
             print('The api key used was invalid: {}'.format(e))
             return False
-        
+
         except Exception as e:
             print('An Exception has occured when trying to connect with the \
             provider: {}'.format(e))
@@ -268,33 +361,33 @@ class DevicePyquil(DeviceBase):
         """
 
         return True
-    
-    
+
+
 class DeviceAWS(DeviceBase):
-    
+
     """
     Contains the required information and methods needed to access QPUs hosted
     on AWS Braket.
-    
+
     Attributes:
-	available_qpus: `list`
-		When connection to AWS is established, this attribute contains a list
-		of device names which can be used to access the selected device by
-		reinitialising the Access Object with the name of the available device
-		as input to the device_name parameter.
+    available_qpus: `list`
+        When connection to AWS is established, this attribute contains a list
+        of device names which can be used to access the selected device by
+        reinitialising the Access Object with the name of the available device
+        as input to the device_name parameter.
     """
-    
+
     def __init__(self, device_name: str, aws_access_key_id: Optional[str] = None, 
                  aws_secret_access_key: Optional[str] = None, aws_region: Optional[str] = None, 
                  s3_bucket_name: Optional[str] = None, folder_name: str = 'openqaoa'):
-        
+
         """A majority of the input parameters required for this can be found in
         the user's AWS Web Services account.
 
         Parameters
         ----------
-		device_name: `str`
-			The ARN string of the braket QPU/simulator to be used
+        device_name: `str`
+            The ARN string of the braket QPU/simulator to be used
         aws_access_key_id: `str`
             Valid AWS Access Key ID.
         aws_secret_access_key: `str`
@@ -308,7 +401,7 @@ class DeviceAWS(DeviceBase):
             The name of the folder in the s3 bucket that will contain the results
             from the tasks performed in this run.
         """
-        
+
         self.device_name = device_name
         self.device_location = 'aws'
         self.aws_access_key_id = aws_access_key_id
@@ -316,27 +409,27 @@ class DeviceAWS(DeviceBase):
         self.aws_region = aws_region
         self.s3_bucket_name = s3_bucket_name
         self.folder_name = folder_name
-        
+
         self.provider_connected = None
         self.qpu_connected = None
-    
+
     def check_connection(self) -> bool:
-        
+
         self.provider_connected = self._check_provider_connection()
 
         if self.provider_connected == False:
             return self.provider_connected
-        
+
         # Only QPUs that are available for the specified aws region on Braket 
         # will be shown. We filter out QPUs that do not work with the circuit model
         sess_devices = self.aws_session.search_devices()
-        
+
         device_filter = np.multiply(
             [each_dict['deviceStatus'] == 'ONLINE' for each_dict in sess_devices],
             [each_dict['providerName'] != 'D-Wave Systems' for each_dict in sess_devices]
         )
         active_devices = np.array(sess_devices)[device_filter].tolist()
-        
+
         self.available_qpus = [backend_dict['deviceArn']
                                for backend_dict in active_devices]
 
@@ -349,9 +442,9 @@ class DeviceAWS(DeviceBase):
             return True
         else:
             return False
-        
+
     def _check_backend_connection(self) -> bool:
-        
+
         if self.device_name in self.available_qpus:
             self.backend_device = AwsDevice(self.device_name, self.aws_session)
             return True
@@ -359,9 +452,9 @@ class DeviceAWS(DeviceBase):
             print(
                 f"Please choose from {self.available_qpus} for this provider")
             return False
-    
+
     def _check_provider_connection(self) -> bool:
-        
+
         try:
             sess = Session(aws_access_key_id = self.aws_access_key_id, 
                            aws_secret_access_key = self.aws_secret_access_key, 
@@ -409,7 +502,7 @@ def device_class_arg_mapper(device_class:DeviceBase,
                         'client_configuration': client_configuration,
                         'endpoint_id': endpoint_id,
                         'engagement_manager': engagement_manager},
-        
+
         DeviceAWS: {'device_name':device_name,
                     'aws_access_key_id':aws_access_key_id,
                     'aws_secret_access_key':aws_secret_access_key,

@@ -174,8 +174,10 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         max_job_retries = 5
 
         while job_state == False:
-            job = execute(circuit, backend=self.backend_qpu,
-                          shots=self.n_shots, initial_layout=self.qubit_layout)
+#             job = execute(circuit, backend=self.backend_qpu,
+#                           shots=self.n_shots, initial_layout=self.qubit_layout)
+            job = self.backend_qpu.run(circuit, shots=self.n_shots, 
+                                       initial_layout=self.qubit_layout)
 
             api_contact = False
             no_of_api_retries = 0
