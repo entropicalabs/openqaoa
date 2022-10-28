@@ -86,7 +86,7 @@ class DeviceAzure(DeviceBase):
         device_name parameter.
     """
     
-    def __init__(self, device_name: str, resource_id: str, location: str):
+    def __init__(self, device_name: str, resource_id: str, az_location: str):
         """
         Input parameters required for this can be found in the user's Azure 
         Quantum Workspace.
@@ -96,11 +96,11 @@ class DeviceAzure(DeviceBase):
         device_name: `str`
             The name of the Azure remote QPU/Simulator to be used
         resource_id: `str`
-        location: `str`
+        az_location: `str`
         """
         
         self.resource_id = resource_id
-        self.location = location
+        self.location = az_location
         self.device_name = device_name
         self.device_location = 'azure'
         
@@ -488,7 +488,9 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             aws_secret_access_key: str = None,
                             aws_region: str = None, 
                             s3_bucket_name: str = None,
-                            folder_name: str = None) -> dict:
+                            folder_name: str = None, 
+                            resource_id: str = None, 
+                            az_location: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
                         'hub': hub,
@@ -508,7 +510,11 @@ def device_class_arg_mapper(device_class:DeviceBase,
                     'aws_secret_access_key':aws_secret_access_key,
                     'aws_region': aws_region,
                     's3_bucket_name': s3_bucket_name,
-                    'folder_name': folder_name}
+                    'folder_name': folder_name}, 
+        
+        DeviceAzure: {'device_name': device_name, 
+                      'resource_id': resource_id, 
+                      'location': az_location}
     }
 
     final_device_kwargs = {key: value for key, value in DEVICE_ARGS_MAPPER[device_class].items()
@@ -544,6 +550,8 @@ def create_device(location: str, name: str, **kwargs):
         device_class = DeviceAWS
     elif location == 'local':
         device_class = DeviceLocal
+    elif location == 'azure':
+        device_class = DeviceAzure
     else:
         raise ValueError(f'Invalid device location, Choose from: {location}')
 
