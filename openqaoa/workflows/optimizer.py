@@ -188,12 +188,6 @@ class Optimizer(ABC):
         raise NotImplementedError
 
 
-    
-
-
-    
-
-
 class QAOA(Optimizer):
     """
     A class implementing a QAOA workflow end to end.
@@ -461,7 +455,6 @@ class RQAOA(Optimizer):
             This object (`RQAOAResults`) is a dictionary with some custom methods as RQAOAResults.get_hamiltonian_step(i) 
             which get the hamiltonian of reduced problem of the i-th step. To see the full list of methods please see the
             RQAOAResults class.  
-
 
 
     Examples
