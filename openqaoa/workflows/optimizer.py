@@ -20,7 +20,7 @@ from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
 from openqaoa.problems.helper_functions import convert2serialize
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
-from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
+from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters, ALLOWED_RQAOA_TYPES
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
@@ -56,7 +56,15 @@ class Optimizer(ABC):
             A boolean flag to check whether the optimizer object has been correctly compiled at least once
     """
 
-    def __init__(self, device=DeviceLocal('vectorized')):
+    def __init__(self, device=DeviceLocal('vectorized')):  
+        """
+        Initialize the optimizer class.
+
+        Arguments
+        ----------
+            device: `DeviceBase`
+                Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
+        """
         
         self.device = device
         self.backend_properties = BackendProperties()
@@ -137,6 +145,7 @@ class Optimizer(ABC):
                 ['imfil','bobyqa','snobfit']
                 ['vgd', 'sgd', 'rmsprop'] 
                 ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
+                TODO: Add the missing optimizers
             maxiter : Optional[int]
                 Maximum number of iterations.
             maxfev : Optional[int]
@@ -261,6 +270,14 @@ class QAOA(Optimizer):
     """
 
     def __init__(self, device=DeviceLocal('vectorized')):
+        """
+        Initialize the QAOA class.
+
+        Arguments
+        ----------
+            device: `DeviceBase`
+                Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
+        """
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
 
@@ -493,7 +510,17 @@ class RQAOA(Optimizer):
 
 
     def __init__(self, rqaoa_type: str = 'adaptive', device: DeviceBase=DeviceLocal('vectorized')):
-        super().__init__(device)
+        """
+        Initialize the RQAOA class.
+
+        Arguments
+        ----------
+            rqaoa_type: `str`
+                The type of RQAOA to be used. Can be either 'adaptive' or 'custom'
+            device: `DeviceBase`
+                Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
+        """
+        super().__init__(device) # use the parent class to initialize 
         self.circuit_properties = CircuitProperties()
         self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
 
@@ -502,8 +529,46 @@ class RQAOA(Optimizer):
 
     def set_circuit_properties(self, **kwargs): 
         """
-        Sets the circuit properties of the RQAOA workflow. 
-        These properties will be used to run QAOA at each RQAOA step.
+        Specify the circuit properties to construct the QAOA circuits
+
+        Parameters
+        -------------------
+            qubit_register: `list`
+                Select the desired qubits to run the QAOA program. Meant to be used as a qubit
+                selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
+            p: `int`
+                Depth `p` of the QAOA circuit
+            q: `int`
+                Analogue of `p` of the QAOA circuit in the Fourier parameterisation
+            param_type: `str`
+                Choose the QAOA circuit parameterisation. Currently supported parameterisations include:
+                `'standard'`: Standard QAOA parameterisation
+                `'standard_w_bias'`: Standard QAOA parameterisation with a separate parameter for single-qubit terms.
+                `'extended'`: Individual parameter for each qubit and each term in the Hamiltonian.
+                `'fourier'`: Fourier circuit parameterisation
+                `'fourier_extended'`: Fourier circuit parameterisation with individual parameter for each qubit and term in Hamiltonian.
+                `'fourier_w_bias'`: Fourier circuit parameterisation with aseparate parameter for single-qubit terms
+            init_type: `str`
+                Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
+                `'rand'`: Randomly initialise circuit parameters
+                `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit parameters (inspired from Quantum Annealing)
+                `'custom'`: User specified initial circuit parameters
+            mixer_hamiltonian: `str`
+                Parameterisation of the mixer hamiltonian:
+                `'x'`: Randomly initialise circuit parameters
+                `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
+            mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
+                The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`. The user can specify the 
+                connectivity as a list of lists, a list of tuples, or a string chosen from ['full', 'chain', 'star'].
+            mixer_coeffs: `list`
+                The coefficients of the mixer Hamiltonian. By default all set to -1
+            annealing_time: `float`
+                Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
+            linear_ramp_time: `float`
+                The slope(rate) of linear ramp initialisation of QAOA parameters.
+            variational_params_dict: `dict`
+                Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
+                For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
 
         for key in kwargs.keys():
@@ -519,7 +584,28 @@ class RQAOA(Optimizer):
 
     def set_rqaoa_parameters(self, **kwargs):
         """
-        Sets the parameters for the RQAOA class.
+        Specify the parameters to run a desired RQAOA program.
+
+        Attributes
+        ----------
+        rqaoa_type: `int`
+            String specifying the RQAOA scheme under which eliminations are computed. The two methods are 'custom' and
+            'adaptive'. Defaults to 'adaptive'.
+        n_max: `int`
+            Maximum number of eliminations allowed at each step when using the adaptive method.
+        steps: `Union[list,int]`
+            Elimination schedule for the RQAOA algorithm. If an integer is passed, it sets the number of spins eliminated
+            at each step. If a list is passed, the algorithm will follow the list to select how many spins to eliminate 
+            at each step. Note that the list needs enough elements to specify eliminations from the initial number of qubits
+            up to the cutoff value. If the list contains more, the algorithm will follow instructions until the cutoff value 
+            is reached.
+        n_cutoff: `int`
+            Cutoff value at which the RQAOA algorithm obtains the solution classically.
+        original_hamiltonian: `Hamiltonian`
+            Hamiltonian encoding the original problem fed into the RQAOA algorithm.
+        counter: `int`
+            Variable to count the step in the schedule. If counter = 3 the next step is schedule[3]. 
+            Default is 0, but can be changed to start in the position of the schedule that one wants.
         """
         for key, value in kwargs.items():
             if hasattr(self.rqaoa_parameters, key):
@@ -582,10 +668,9 @@ class RQAOA(Optimizer):
             self.compiled = True
         
         #check if the rqaoa type is correct
-        if not self.rqaoa_parameters.rqaoa_type.lower() in ['custom', 'adaptive']:
+        if not self.rqaoa_parameters.rqaoa_type.lower() in ALLOWED_RQAOA_TYPES:
 
-            self.compiled = False
-            
+            self.compiled = False        
             raise Exception(f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom')
             
         #? TODO verbose -> how we do?
