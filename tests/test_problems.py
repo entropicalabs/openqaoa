@@ -138,9 +138,26 @@ class TestProblem(unittest.TestCase):
                 QUBO(n, each_terms, weights)
             self.assertEqual("The input parameter terms must be of type of list or tuple",
                              str(e.exception))
+            
+    def test_qubo_hamiltonian_property(self):
+        """
+        Checks that the hamiltonian property of QUBO class returns a Hamiltonian Object.
+        """
+        
+        qubo_obj = QUBO(1, [[0], []], [0, 1])
+        self.assertEqual(type(qubo_obj.hamiltonian).__name__, 'Hamiltonian')
+        
+    def test_qubo_random_instance(self):
+        """
+        Checks that the random_instance static method in QUBO class returns a QUBO object with randomized weights and terms.
+        """
+        
+        qubo_problem = QUBO.random_instance(5)
+        self.assertEqual(type(qubo_problem).__name__, 'QUBO')
+        self.assertEqual(len(qubo_problem.weights), len(qubo_problem.terms))
 
     # TESTING NUMBER PARITION CLASS
-
+    
     def test_number_partitioning_terms_weights_constant(self):
         """Test that Number Partitioning creates the correct terms, weights, constant"""
         list_numbers = [1, 2, 3]
@@ -603,9 +620,9 @@ class TestProblem(unittest.TestCase):
 
     def test_tsp_random_instance(self):
         """Testing the random_instance method of the TSP problem class"""
-
         rng = np.random.default_rng(1234)
         n_cities = 4
+
         box_size = np.sqrt(n_cities)
         city_coordinates = list(
             map(tuple, box_size * rng.random(size=(n_cities, 2))))

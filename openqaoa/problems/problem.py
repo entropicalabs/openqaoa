@@ -135,15 +135,6 @@ class QUBO:
 
         self._n = input_n
 
-    @property
-    def hamiltonian(self):
-        """
-        Returns the Hamiltonian of the problem.
-        """
-        return Hamiltonian.classical_hamiltonian(
-            self.terms, self.weights, self.constant
-        )
-
     def asdict(self):
         return convert2serialize(self)
 

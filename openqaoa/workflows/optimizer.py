@@ -13,7 +13,6 @@
 #   limitations under the License.
 
 from abc import ABC
-import numpy as np
 from openqaoa.devices import DeviceLocal, DeviceBase
 
 from openqaoa.rqaoa.rqaoa import custom_rqaoa
@@ -169,7 +168,7 @@ class QAOA(Optimizer):
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
             variational_params_dict: `dict`
                 Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
-                For example, {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
+                For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
 
         for key, value in kwargs.items():
@@ -194,25 +193,27 @@ class QAOA(Optimizer):
             append_state: [Union[QuantumCircuitBase,List[complex], np.ndarray]
                 The state prepended to the circuit.
             init_hadamard: bool
-            Whether to apply a Hadamard gate to the beginning of the 
+                Whether to apply a Hadamard gate to the beginning of the 
                 QAOA part of the circuit.. Defaults to `True`
             n_shots: int
-            Optional argument to specify the number of shots required to run QAOA computations
+                Optional argument to specify the number of shots required to run QAOA computations
                 on shot-based simulators and QPUs. Defaults to 100.
-            seed_simulator: int
-                Optional argument to initialize a pseudorandom solution. Default None
             cvar_alpha: float
                 The value of alpha for the CVaR cost function
+            noise_model: `qiskit.providers.aer.noise.NoiseModel`
+                The Qiskit noise model to be used for the simulation.
             qiskit_simulation_method: str, optional
                 The method to be used for the simulation.
-            noise_model: `qiskit.providers.aer.noise.NoiseModel`
-                    The Qiskit noise model to be used for the simulation.
+            seed_simulator: int
+                Optional argument to initialize a pseudorandom solution. Default None
             active_reset:
                 #TODO
             rewiring:
                 Rewiring scheme to be used for Pyquil. 
                 Either 'PRAGMA INITIAL_REWIRING "NAIVE"' or 
                 'PRAGMA INITIAL_REWIRING "PARTIAL"'. If None, defaults to NAIVE
+            disable_qubit_rewiring: `bool`
+                Disable automatic qubit rewiring on AWS braket backend
         """
 
         for key, value in kwargs.items():

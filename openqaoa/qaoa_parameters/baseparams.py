@@ -37,7 +37,7 @@ class shapedArray:
 
     Parameters
     ----------
-    shape: Callable[[Any], Tuple]:
+    shape: `Callable[[Any], Tuple]`
         Returns the shape for self.values
 
     Example
@@ -124,12 +124,13 @@ class QAOACircuitParams(VQACircuitParams):
 
     mixer_hamiltonian: `Hamiltonian`
 
-    p: 
+    p: `int`
         Number of QAOA layers; defaults to 1 if not specified
 
     Attributes
     ----------
         All the parameters specified above are initialised as attributes in __init__
+    qureg: `List[int]`
 
     Properties
     ----------
@@ -207,16 +208,21 @@ class QAOAVariationalBaseParams(ABC):
 
     Parameters
     ----------
-    qaoa_circuit_params:
+    qaoa_circuit_params: `QAOACircuitParams`
         Specify the circuit parameters to construct circuit angles to be 
         used for training
 
     Attributes
     ----------
-
+    qaoa_circuit_params: `QAOACircuitParams`
+    p: `int`
+    cost_1q_coeffs
+    cost_2q_coeffs
+    mixer_1q_coeffs
+    mixer_2q_coeffs
     """
 
-    def __init__(self, qaoa_circuit_params: Type[QAOACircuitParams]):
+    def __init__(self, qaoa_circuit_params: QAOACircuitParams):
 
         self.qaoa_circuit_params = qaoa_circuit_params
         self.p = self.qaoa_circuit_params.p
@@ -230,8 +236,8 @@ class QAOAVariationalBaseParams(ABC):
         Returns
         -------
         int:
-                the length of the data produced by self.raw() and accepted by
-                self.update_from_raw()
+            the length of the data produced by self.raw() and accepted by 
+            self.update_from_raw()
         """
         raise NotImplementedError()
 
@@ -248,7 +254,7 @@ class QAOAVariationalBaseParams(ABC):
         """2D array with the X-rotation angles.
 
         1st index goes over p and the 2nd index over the qubits to
-        apply X-rotations on. These are needed by ``qaoa.cost_function.make_qaoa_memory_map``
+        apply X-rotations on.
         """
         raise NotImplementedError()
 
@@ -257,7 +263,7 @@ class QAOAVariationalBaseParams(ABC):
         """2D array with the X-rotation angles.
 
         1st index goes over p and the 2nd index over the qubits to
-        apply X-rotations on. These are needed by ``qaoa.cost_function.make_qaoa_memory_map``
+        apply X-rotations on.
         """
         raise NotImplementedError()
 
@@ -266,7 +272,7 @@ class QAOAVariationalBaseParams(ABC):
         """2D array with the ZZ-rotation angles.
 
         1st index goes over the p and the 2nd index over the qubit
-        pairs, to apply ZZ-rotations on. These are needed by ``qaoa.cost_function.make_qaoa_memory_map``
+        pairs, to apply ZZ-rotations on.
         """
         raise NotImplementedError()
 
@@ -289,9 +295,9 @@ class QAOAVariationalBaseParams(ABC):
 
         Parameters
         ----------
-        new_values:
-                A 1D array with the new parameters. Must have length  ``len(self)``
-                and the ordering of the flattend ``parameters`` in ``__init__()``.
+        new_values: `Union[list, np.array]`
+            A 1D array with the new parameters. Must have length  ``len(self)`` 
+            and the ordering of the flattend ``parameters`` in ``__init__()``.
 
         """
         raise NotImplementedError()
@@ -306,9 +312,9 @@ class QAOAVariationalBaseParams(ABC):
         Returns
         -------
         np.array:
-                The parameters in a 1D array. Has the same output
-                format as the expected input of ``self.update_from_raw``. Hence
-                corresponds to the flattened `parameters` in `__init__()`
+            The parameters in a 1D array. Has the same output format as the 
+            expected input of ``self.update_from_raw``. Hence corresponds to 
+            the flattened `parameters` in `__init__()`
 
         """
         raise NotImplementedError()
@@ -320,20 +326,20 @@ class QAOAVariationalBaseParams(ABC):
         """Alternative to ``__init__`` that already fills ``parameters``.
 
         Calculate initial parameters from register, terms, weights (specifiying a Hamiltonian), corresponding to a
-        linear ramp annealing schedule and return a ``QAOAParams`` object.
+        linear ramp annealing schedule and return a ``QAOAVariationalBaseParams`` object.
 
         Parameters
         ----------
-        qaoa_circuit_params:
-                QAOACircuitParams object containing information about terms,weights,register and p
+        qaoa_circuit_params: `QAOACircuitParams`
+            QAOACircuitParams object containing information about terms,weights,register and p
 
-        time:
-                Total annealing time. Defaults to ``0.7*p``.
+        time: `float`
+            Total annealing time. Defaults to ``0.7*p``.
 
         Returns
         -------
-        VariationalBaseParams
-                The initial parameters for a linear ramp for ``hamiltonian``.
+        QAOAVariationalBaseParams: 
+            The initial parameters for a linear ramp for ``hamiltonian``.
 
         """
         raise NotImplementedError()
@@ -345,16 +351,17 @@ class QAOAVariationalBaseParams(ABC):
 
         Parameters
         ----------
-        qaoa_circuit_params:
-                QAOACircuitParams object containing information about terms,weights,register and p
+        qaoa_circuit_params: `QAOACircuitParams`
+            QAOACircuitParams object containing information about terms, 
+            weights, register and p.
 
-        seed:
+        seed: `int`
                 Use a fixed seed for reproducible random numbers
 
         Returns
         -------
-        VariationalBaseParams
-                Randomly initialiased parameters
+        QAOAVariationalBaseParams:
+            Randomly initialiased parameters
         """
         raise NotImplementedError()
 
@@ -366,12 +373,12 @@ class QAOAVariationalBaseParams(ABC):
 
         Parameters
         ----------
-        qaoa_circuit_params:
+        qaoa_circuit_params: `QAOACircuitParams`
             QAOACircuitParams object containing information about terms,weights,register and p
 
         Returns
         -------
-        VariationalBaseParams:
+        QAOAVariationalBaseParams:
             A Parameter object with the parameters filled by ``np.empty``
         """
         raise NotImplementedError()
@@ -380,9 +387,10 @@ class QAOAVariationalBaseParams(ABC):
     def from_other_parameters(cls, params):
         """Alternative to ``__init__`` that takes parameters with less degrees
         of freedom as the input.
+        
         Parameters
         ----------
-        params: QAOAVaritionalBaseParams
+        params: `QAOAVaritionalBaseParams`
             The input parameters object to construct the new parameters object from.
         Returns
         -------
@@ -401,10 +409,10 @@ class QAOAVariationalBaseParams(ABC):
         Returns
         -------
         np.array:
-                Returns all single rotation angles in the ordering
-                ``(x_rotation_angles, gamma_singles, zz_rotation_angles)`` where
-                ``x_rotation_angles = (beta_q0_t0, beta_q1_t0, ... , beta_qn_tp)``
-                and the same for ``z_rotation_angles`` and ``zz_rotation_angles``
+            Returns all single rotation angles in the ordering
+            ``(x_rotation_angles, gamma_singles, zz_rotation_angles)`` where
+            ``x_rotation_angles = (beta_q0_t0, beta_q1_t0, ... , beta_qn_tp)``
+            and the same for ``z_rotation_angles`` and ``zz_rotation_angles``
 
         """
         raw_data = np.concatenate((self.mixer_1q_angles.flatten(),
@@ -419,7 +427,7 @@ class QAOAVariationalBaseParams(ABC):
 
         Parameters
         ----------
-        ax: matplotlib.axes._subplots.AxesSubplot
+        ax: `matplotlib.axes._subplots.AxesSubplot`
                 The canvas to plot itself on
         kwargs:
                 All remaining keyword arguments are passed forward to the plot
@@ -427,22 +435,6 @@ class QAOAVariationalBaseParams(ABC):
 
         """
         raise NotImplementedError()
-
-    # def QAOA_circuit_params(self):
-    # 	"""
-    # 	Returns parameters needed for QAOA circuit in tuple form.
-    # 	"""
-
-    # 	p = self.p
-    # 	x_rotation_angles = self.x_rotation_angles
-    # 	bias_qubits = self.qubits_singles
-    # 	pairs = self.qubits_pairs
-    # 	z_rotation_angles = self.z_rotation_angles
-    # 	zz_rotation_angles = self.zz_rotation_angles
-
-    # 	return (p,x_rotation_angles,bias_qubits,z_rotation_angles,pairs,zz_rotation_angles)
-    # 	return (self.p, self.mixer_1q_angles, self.mixer_2q_angles,
-    # 			self.cost_1q_angles, self.cost_2q_angles)
 
 
 class QAOAParameterIterator:
