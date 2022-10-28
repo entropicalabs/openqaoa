@@ -450,7 +450,17 @@ class RQAOA(Optimizer):
             For a complete list of its parameters and usage please see the method set_circuit_properties
         rqaoa_parameters: `RqaoaParameters`
             Set of parameters containing all the relevant information for the recursive procedure of RQAOA.
-        results: `dict`
+        results: `RQAOAResults`
+            The results of the RQAOA optimization. 
+            Dictionary containing all the information about the RQAOA run: the
+            solution states and energies (key: 'solution'), the output of the classical 
+            solver (key: 'classical_output'), the elimination rules for each step
+            (key: 'elimination_rules'), the number of eliminations at each step (key: 'schedule'), 
+            total number of steps (key: 'number_steps'), the intermediate QUBO problems and the 
+            intermediate QAOA objects that have been optimized in each RQAOA step (key: 'intermediate_problems').
+            This object (`RQAOAResults`) is a dictionary with some custom methods as RQAOAResults.get_hamiltonian_step(i) 
+            which get the hamiltonian of reduced problem of the i-th step. To see the full list of methods please see the
+            RQAOAResults class.  
 
 
 
@@ -498,6 +508,10 @@ class RQAOA(Optimizer):
         self.results = RQAOAResults()
 
     def set_circuit_properties(self, **kwargs): 
+        """
+        Sets the circuit properties of the RQAOA workflow. 
+        These properties will be used to run QAOA at each RQAOA step.
+        """
 
         for key in kwargs.keys():
             if hasattr(self.circuit_properties, key):
@@ -525,15 +539,21 @@ class RQAOA(Optimizer):
 
     def compile(self, problem: QUBO = None, verbose: bool = False):
         """
-        Initialize the trainable parameters for QAOA according to the specified
-        strategies and by passing the problem statement.
+        Create a QAOA object and initialize it with the circuit properties, device, classical optimizer and
+        backend properties specified by the user.
+        This QAOA object will be used to run QAOA changing the problem to sove at each RQAOA step. 
+        Here, the QAOA is compiled passing the problem statement, so to check that the compliation of 
+        QAOA is correct. See the QAOA class.
+
+        .. note::
+            Compilation is necessary because it is the moment where the problem statement and the QAOA instructions are used to build the actual QAOA circuit.
 
         Parameters
         ----------
         problem: `Problem`
             QUBO problem to be solved by RQAOA
         verbose: bool
-            !NotYetImplemented! Set true to have a summary of RQAOA to displayed after compilation
+            !NotYetImplemented! Set true to have a summary of QAOA first step to displayed after compilation
         """
 
         # save the original problem
@@ -555,7 +575,8 @@ class RQAOA(Optimizer):
             n_qubits = problem.n
             counter  = self.rqaoa_parameters.counter
 
-            # If schedule for custom RQAOA is not given, we create a schedule such that one spin is eliminated at a time
+            # If schedule for custom RQAOA is not given, we create a schedule such that 
+            # n = self.rqaoa_parameters.steps spins is eliminated at a time
             if type(self.rqaoa_parameters.steps) is int:
                 self.rqaoa_parameters.steps = [self.rqaoa_parameters.steps]*(n_qubits-n_cutoff)
             
@@ -580,6 +601,11 @@ class RQAOA(Optimizer):
     def optimize(self, verbose=False):
         """
         Performs optimization using RQAOA with the `custom` method or the `adaptive` method.
+        The elimination RQAOA loop will occur until the number of qubits is equal to the number of qubits specified in `n_cutoff`.
+        In each loop, the QAOA will be run, then the eliminations will be computed, a new problem will be redefined
+        and the QAOA will be recompiled with the new problem.
+        Once the loop is complete, the final problem will be solved classically and the final solution will be reconstructed.
+        Results will be stored in the `results` attribute.
         """
 
         # lists to append the eliminations and the qaoa objects
@@ -597,7 +623,7 @@ class RQAOA(Optimizer):
         if self.rqaoa_parameters.rqaoa_type.lower() == "adaptive":
             f_max_terms = rqaoa.ada_max_terms  
         else:
-            f_max_terms = rqaoa.max_terms #? rqaoa.max_terms -> rqaoa.custom_max_terms ?
+            f_max_terms = rqaoa.max_terms 
 
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
