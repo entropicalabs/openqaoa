@@ -19,7 +19,12 @@ requirements = [
     "matplotlib>=3.4.3, <3.5.0",
     "qiskit>=0.36.1",
     "pyquil>=3.1.0",
-    "docplex>=2.23.1"
+    "docplex>=2.23.1",
+    "azure-quantum",
+    "qdk",
+    "qiskit-qir",
+    "qiskit-ionq",
+    "azure-quantum[qiskit]"    
 ]
 
 requirements_docs = [
