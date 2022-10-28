@@ -55,10 +55,29 @@ def test_07_cost_landscapes_w_manual_mode():
 def test_08_results_example():
     notebook_test_function("./examples/08_results_example.ipynb")
 
-# @pytest.mark.notebook
 def test_09_RQAOA_example():
     notebook_test_function("./examples/09_RQAOA_example.ipynb")
 
 @pytest.mark.qpu
 def test_10_workflows_on_Amazon_braket():
     notebook_test_function("./examples/10_workflows_on_Amazon_braket.ipynb")
+       
+### Community Tutorials
+
+# @pytest.mark.notebook
+def test_tutorial_quantum_approximate_optimization_algorithm():
+    notebook_test_function("./examples/community_tutorials/01_tutorial_quantum_approximate_optimization_algorithm.ipynb")
+
+# @pytest.mark.notebook
+def test_docplex_example():
+    notebook_test_function("./examples/community_tutorials/02_docplex_example.ipynb")
+    
+# @pytest.mark.notebook
+def test_portfolio_optimization():
+    notebook_test_function("./examples/community_tutorials/03_portfolio_optimization.ipynb")
+    
+# @pytest.mark.notebook
+def test_binpacking():
+    notebook_test_function("./examples/community_tutorials/04_binpacking.ipynb")
+
+
