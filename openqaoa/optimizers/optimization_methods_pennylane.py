@@ -13,9 +13,9 @@
 #   limitations under the License.
 
 """
-Function to implement pennylane optimization algorithms.
+A set of functions to implement pennylane optimization algorithms.
 Read https://docs.pennylane.ai/en/stable/introduction/interfaces.html#optimizers
-Only those that don't require a pennylane backend have been implemented.
+Optimisers requiring a pennylane backend haven't been implemented yet.
 Similarly as with the custom optimization methods Scipy `minimize` is used. Extends available scipy methods.
 """
 
@@ -73,17 +73,17 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
     options : dict, optional
         Dictionary where keys are the arguments for the optimizers object, and
         the values are the values to pass to these arguments.
-        To know all the possible argumets read
-        https://docs.pennylane.ai/en/stable/introduction/interfaces.html#optimizers.
-
-
-    (read https://docs.pennylane.ai/en/stable/code/api/pennylane.RotosolveOptimizer.html#pennylane.RotosolveOptimizer.step)
-    nums_frequency : dict[dict], required for rotosolve
+        To know all the possible options see https://docs.pennylane.ai/en/stable/introduction/interfaces.html#optimizers.
+    nums_frequency : dict[dict], optional
+        It is required for rotosolve method
         The number of frequencies in the fun per parameter.
-    spectra : dict[dict], required for rotosolve
+    spectra : dict[dict], optional
+        It is required for rotosolve method
         Frequency spectra in the objective_fn per parameter.
-    shifts : dict[dict], required for rotosolve
+    shifts : dict[dict], optional
+        It is required for rotosolve method
         Shift angles for the reconstruction per parameter.
+        Read https://docs.pennylane.ai/en/stable/code/api/pennylane.RotosolveOptimizer.html#pennylane.RotosolveOptimizer.step for more information.
 
 
     RETURNS
