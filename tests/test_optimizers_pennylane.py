@@ -4,16 +4,14 @@ import unittest
 import networkx as nx
 from openqaoa.workflows.optimizer import QAOA
 from openqaoa.devices import create_device
-from openqaoa.problems.problem import MaximumCut
+from openqaoa.problems.problem import MinimumVertexCover
 from openqaoa.optimizers.training_vqa import CustomScipyGradientOptimizer
 
 
 #create a problem
-nodes = 4
-edge_probability = 0.6
-g = nx.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
-maxcut_prob = MaximumCut(g)
-maxcut_qubo = maxcut_prob.get_qubo_problem()
+g = nx.circulant_graph(4, [1])
+problem = MinimumVertexCover(g, field =1.0, penalty=10)
+qubo_problem = problem.get_qubo_problem()
 
 
 class TestPennylaneOptimizers(unittest.TestCase):
@@ -21,25 +19,23 @@ class TestPennylaneOptimizers(unittest.TestCase):
     def _run_method(self, method):
         " function tu run the test for any method "
         q = QAOA()
-        device = create_device(location='local', name='qiskit.statevector_simulator')
-        q.set_device(device)
-
-
-        q.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='x')
-        q.set_backend_properties(prepend_state=None, append_state=None)
-        q.set_classical_optimizer(method=method, maxiter=4, optimizer_options = {'blocking':False, 'resamplings': 0},
-                                optimization_progress=True, cost_progress=True, parameter_log=True, jac='finite_difference')
-
-        q.compile(maxcut_qubo) 
+        q.set_classical_optimizer(method=method, maxiter=3, jac='finite_difference')
+        q.compile(qubo_problem) 
         q.optimize()
+
+        assert len(q.results.most_probable_states['solutions_bitstrings'][0]) > 0
 
     def test_pennylane_optimizers(self):
         " function to run the tests for pennylane optimizers "
         list_optimizers = CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS
 
+        i = 0
         for opt in list_optimizers:
-            if opt.split()[0] == "pennylane":
+            if opt.split('_')[0] == "pennylane":
                 self._run_method(opt)
+                i += 1
+
+        assert i == sum([1 for opt in list_optimizers if  "pennylane" in opt])
 
 
 
