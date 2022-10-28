@@ -24,13 +24,12 @@ from .helper_functions import convert2serialize, convert_binary_to_ising
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 
 SEED = 1234
-MAX_PROBLEM_SIZE = 100
 
 
 class Problem(ABC):
     @staticmethod
     @abstractmethod
-    def random_instance():
+    def random_instance(problem_size):
         """
         Creates a random instance of the problem.
 
@@ -251,7 +250,7 @@ class TSP(Problem):
         self._coordinates = np.array(input_coordinates)
 
     @staticmethod
-    def random_instance():
+    def random_instance(problem_size):
         """
         Creates a random instance of the Traveling Salesman problem.
 
@@ -260,7 +259,7 @@ class TSP(Problem):
             A random instance of the Traveling Salesman problem.
         """
         np.random.seed(SEED)
-        n_cities = np.random.randint(1, MAX_PROBLEM_SIZE)
+        n_cities = np.random.randint(1, problem_size)
 
         box_size = np.sqrt(n_cities)
         coordinates = []
@@ -393,7 +392,7 @@ class NumberPartition(Problem):
         self._numbers = input_numbers
 
     @staticmethod
-    def random_instance():
+    def random_instance(problem_size):
         """
         Creates a random instance of the Number Partitioning problem.
 
@@ -402,7 +401,7 @@ class NumberPartition(Problem):
             A random instance of the Number Partitioning problem.
         """
         np.random.seed(SEED)
-        n_numbers = np.random.randint(1, MAX_PROBLEM_SIZE)
+        n_numbers = np.random.randint(1, problem_size)
 
         numbers = list(map(int, np.random.randint(1, 10, size=n_numbers)))
         return NumberPartition(numbers)
@@ -483,7 +482,7 @@ class MaximumCut(Problem):
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 
     @staticmethod
-    def random_instance():
+    def random_instance(problem_size):
         """
         Creates a random instance of the Maximum Cut problem, whose graph is
         random following the Erdos-Renyi model.
@@ -493,7 +492,7 @@ class MaximumCut(Problem):
             A random instance of the Maximum Cut problem.
         """
         np.random.seed(SEED)
-        n_nodes = np.random.randint(1, MAX_PROBLEM_SIZE)
+        n_nodes = np.random.randint(1, problem_size)
         edge_probability = np.random.uniform(0, 1)
 
         G = nx.generators.random_graphs.fast_gnp_random_graph(
@@ -622,7 +621,7 @@ class Knapsack(Problem):
         self._penalty = input_penalty
 
     @staticmethod
-    def random_instance():
+    def random_instance(problem_size):
         """
         Creates a random instance of the Knapsack problem.
 
@@ -632,7 +631,7 @@ class Knapsack(Problem):
         """
 
         np.random.seed(SEED)
-        n_items = np.random.randint(1, MAX_PROBLEM_SIZE)
+        n_items = np.random.randint(1, problem_size)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
@@ -772,7 +771,7 @@ class SlackFreeKnapsack(Knapsack):
         super().__init__(values, weights, weight_capacity, penalty)
 
     @staticmethod
-    def random_instance():
+    def random_instance(problem_size):
         """
         Creates a random instance of the Knapsack problem.
 
@@ -782,7 +781,7 @@ class SlackFreeKnapsack(Knapsack):
             A random instance of the Knapsack problem.
         """
         np.random.seed(SEED)
-        n_items = np.random.randint(1, MAX_PROBLEM_SIZE)
+        n_items = np.random.randint(1, problem_size)
 
         values = list(map(int, np.random.randint(1, n_items, size=n_items)))
         weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
@@ -924,7 +923,7 @@ class MinimumVertexCover(Problem):
         self._penalty = input_penalty
 
     @staticmethod
-    def random_instance():
+    def random_instance(problem_size):
         """
         Creates a random instance of the Minimum Vertex Cover problem, whose graph is
         random following the Erdos-Renyi model. By default the artificial field is
@@ -935,7 +934,7 @@ class MinimumVertexCover(Problem):
         A random instance of the Minimum Vertex Cover problem.
         """
         np.random.seed(SEED)
-        n_nodes = np.random.randint(1, MAX_PROBLEM_SIZE)
+        n_nodes = np.random.randint(1, problem_size)
         edge_probability = np.random.uniform(0.0, 1.0)
 
         G = nx.generators.random_graphs.fast_gnp_random_graph(
@@ -1038,7 +1037,7 @@ class ShortestPath(Problem):
         assert source != dest, "Source and destination nodes cannot be the same"
 
     @staticmethod
-    def random_instance():
+    def random_instance(problem_size):
         """
         Creates a random instance of the Shortest problem, whose graph is
         random following the Erdos-Renyi model. By default the node and edge
@@ -1050,7 +1049,7 @@ class ShortestPath(Problem):
         A random instance of the Shortest Path problem.
         """
         np.random.seed(SEED)
-        n_nodes = np.random.randint(1, MAX_PROBLEM_SIZE)
+        n_nodes = np.random.randint(1, problem_size)
         edge_probability = np.random.uniform(0, 1)
         source = np.random.randint(0, n_nodes)
         dest = np.random.randint(0, n_nodes)
