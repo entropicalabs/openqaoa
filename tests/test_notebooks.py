@@ -73,14 +73,11 @@ def test_docplex_example():
     notebook_test_function("./examples/community_tutorials/02_docplex_example.ipynb")
     
 # @pytest.mark.notebook
-def test_11_portfolio_optimization():
+def test_portfolio_optimization():
     notebook_test_function("./examples/community_tutorials/03_portfolio_optimization.ipynb")
     
 # @pytest.mark.notebook
-def test_12_binpacking():
+def test_binpacking():
     notebook_test_function("./examples/community_tutorials/04_binpacking.ipynb")
- 
-# @pytest.mark.notebook
-def test_bipartite_graphs():
-    notebook_test_function("./examples/community_tutorials/mvc_examples/bipartite_graphs.ipynb")
+
 
