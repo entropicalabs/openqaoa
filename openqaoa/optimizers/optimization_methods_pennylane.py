@@ -121,12 +121,12 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
     while improved and not stop and niter < maxiter:
         improved = False
 
-        # compute step
-        if qfim:    #natural_grad_descent
+        # compute step (depends on the optimizer)
+        if method in ['natural_grad_descent']: 
             testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac, metric_tensor_fn=qfim) 
-        elif jac:   #adagrad, adam, vgd, momentum, nesterov_momentum, rmsprop
+        if method in ['adagrad', 'adam', 'vgd', 'momentum', 'nesterov_momentum', 'rmsprop']:
             testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac)
-        elif method=='rotosolve': 
+        if method in ['rotosolve']: 
             testx, testy = optimizer.step_and_cost(
                                                     cost, bestx, *args,
                                                     nums_frequency={'params': {(i,):1 for i in range(bestx.size)}} if not nums_frequency else nums_frequency,
@@ -134,7 +134,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
                                                     shifts=shifts,
                                                     full_output=False,
                                                   )
-        else:       #spsa  
+        if method in ['spsa']:       
             testx, testy = optimizer.step_and_cost(cost, bestx, *args)
 
         # check if stable
