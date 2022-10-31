@@ -382,13 +382,12 @@ class QAOA(Optimizer):
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,
                                         **self.backend_properties.__dict__)
-
         self.optimizer = get_optimizer(vqa_object=self.backend,
                                        variational_params=self.variate_params,
                                        optimizer_dict=self.classical_optimizer.asdict())
 
         self.compiled = True
-
+        
         if verbose:
             print('\t \033[1m ### Summary ###\033[0m')
             print(f'OpenQAOA has been compiled with the following properties')
