@@ -108,20 +108,22 @@ class Optimizer(ABC):
             n_shots: int
             Optional argument to specify the number of shots required to run QAOA computations
                 on shot-based simulators and QPUs. Defaults to 100.
-            seed_simulator: int
-                Optional argument to initialize a pseudorandom solution. Default None
             cvar_alpha: float
                 The value of alpha for the CVaR cost function
-            qiskit_simulation_method: str, optional
-                The method to be used for the simulation.
             noise_model: `qiskit.providers.aer.noise.NoiseModel`
                     The Qiskit noise model to be used for the simulation.
+            qiskit_simulation_method: str, optional
+                The method to be used for the simulation.
+            seed_simulator: int
+                Optional argument to initialize a pseudorandom solution. Default None
             active_reset:
                 #TODO
             rewiring:
                 Rewiring scheme to be used for Pyquil. 
                 Either 'PRAGMA INITIAL_REWIRING "NAIVE"' or 
                 'PRAGMA INITIAL_REWIRING "PARTIAL"'. If None, defaults to NAIVE
+            disable_qubit_rewiring: `bool`
+                Disable automatic qubit rewiring on AWS braket backend
         """
 
         for key, value in kwargs.items():
@@ -136,7 +138,7 @@ class Optimizer(ABC):
 
     def set_classical_optimizer(self, **kwargs):
         """
-        Set the parameters for the classical optimizer to be used in the QAOA workflow
+        Set the parameters for the classical optimizer to be used in the optimizers workflow
 
         Parameters
         -------------------
@@ -179,6 +181,8 @@ class Optimizer(ABC):
                 Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
             hess_options : dict
                 Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
+            save_intermediate: bool
+                If True, the intermediate parameters of the optimization and job ids, if available, are saved throughout the run. This is set to False by default.
         """
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
