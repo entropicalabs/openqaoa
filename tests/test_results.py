@@ -93,21 +93,19 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         """
         g = nw.circulant_graph(6, [1])
         vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
-        
-        for device_name in ALLOWED_LOCAL_SIMUALTORS:
             
-            results = self._run_rqaoa(type='custom', problem=vc, name_device=device_name)
-            for key in results['solution'].keys():
-                assert len(key) == 6, 'Number of qubits solution is not correct'
-            assert isinstance(results['classical_output']['minimum_energy'], float)
-            assert isinstance(results['classical_output']['optimal_states'], list)
-            for rule in results['elimination_rules']:
-                assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
-            assert isinstance(results['schedule'], list), 'Schedule is not a list'
-            for step in results['intermediate_steps']:
-                assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
-                assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
-            assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
+        results = self._run_rqaoa(type='custom', problem=vc)
+        for key in results['solution'].keys():
+            assert len(key) == 6, 'Number of qubits solution is not correct'
+        assert isinstance(results['classical_output']['minimum_energy'], float)
+        assert isinstance(results['classical_output']['optimal_states'], list)
+        for rule in results['elimination_rules']:
+            assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
+        assert isinstance(results['schedule'], list), 'Schedule is not a list'
+        for step in results['intermediate_steps']:
+            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
+            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
+        assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
                 
                 
 
