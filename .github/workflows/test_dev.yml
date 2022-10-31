@@ -103,5 +103,5 @@ jobs:
           sudo apt-get install pandoc
           cd docs/
           mkdir ../docs/source/notebooks
-          cp -r ../examples/* ../docs/source/notebooks/
+          cp -r ../examples/ ../docs/source/notebooks/
           make html SPHINXOPTS="-W --keep-going"
