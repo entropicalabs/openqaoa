@@ -806,7 +806,7 @@ class RQAOA(Optimizer):
 class RQAOAResults(dict):
     """
     A class to handle the results of RQAOA workflows
-    It stores the results of the RQAOA optimization as a dictionary. But with some extra methods.
+    It stores the results of the RQAOA optimization as a dictionary. With some custom methods.
 
     TODO :  make it similar to the QAOA results class, some plotting functions could be added too
             QAQAOAResults class is in optimizers/result.py
