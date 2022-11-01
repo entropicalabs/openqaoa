@@ -26,6 +26,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
+          ref: {{ github.event.pull_request.head.sha }}
           python-version: ${{ matrix.python }}
         
       - name: Install OpenQAOA
