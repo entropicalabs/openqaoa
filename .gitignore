@@ -132,4 +132,4 @@ dmypy.json
 /.idea/
 
 # Mac Stuff
-.DS_Store
+*.DS_Store

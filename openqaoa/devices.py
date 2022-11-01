@@ -14,6 +14,7 @@
 
 import abc
 import numpy as np
+from typing import Optional
 from qiskit import IBMQ
 from qiskit.providers.ibmq import IBMQAccountError
 from qiskit.providers.ibmq.api.exceptions import RequestsApiError
@@ -23,6 +24,7 @@ from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
 
 from boto3.session import Session
+from botocore.exceptions import NoRegionError
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
 
@@ -282,9 +284,9 @@ class DeviceAWS(DeviceBase):
 		as input to the device_name parameter.
     """
     
-    def __init__(self, device_name: str, aws_access_key_id: str, 
-                 aws_secret_access_key: str, aws_region: str, 
-                 s3_bucket_name: str, folder_name: str = 'oq_runs'):
+    def __init__(self, device_name: str, aws_access_key_id: Optional[str] = None, 
+                 aws_secret_access_key: Optional[str] = None, aws_region: Optional[str] = None, 
+                 s3_bucket_name: Optional[str] = None, folder_name: str = 'openqaoa'):
         
         """A majority of the input parameters required for this can be found in
         the user's AWS Web Services account.
@@ -292,7 +294,7 @@ class DeviceAWS(DeviceBase):
         Parameters
         ----------
 		device_name: `str`
-			The name of the QPU device in AWS Braket to be used
+			The ARN string of the braket QPU/simulator to be used
         aws_access_key_id: `str`
             Valid AWS Access Key ID.
         aws_secret_access_key: `str`
@@ -327,13 +329,15 @@ class DeviceAWS(DeviceBase):
         
         # Only QPUs that are available for the specified aws region on Braket 
         # will be shown. We filter out QPUs that do not work with the circuit model
-        device_filter = np.multiply(
-            [each_dict['deviceStatus'] == 'ONLINE' for each_dict in self.aws_session.search_devices()],
-            [each_dict['providerName'] != 'D-Wave Systems' for each_dict in self.aws_session.search_devices()]
-        )
-        active_devices = np.array(self.aws_session.search_devices())[device_filter].tolist()
+        sess_devices = self.aws_session.search_devices()
         
-        self.available_qpus = [backend_dict['deviceName']
+        device_filter = np.multiply(
+            [each_dict['deviceStatus'] == 'ONLINE' for each_dict in sess_devices],
+            [each_dict['providerName'] != 'D-Wave Systems' for each_dict in sess_devices]
+        )
+        active_devices = np.array(sess_devices)[device_filter].tolist()
+        
+        self.available_qpus = [backend_dict['deviceArn']
                                for backend_dict in active_devices]
 
         if self.device_name == '':
@@ -349,10 +353,7 @@ class DeviceAWS(DeviceBase):
     def _check_backend_connection(self) -> bool:
         
         if self.device_name in self.available_qpus:
-            # Assumes that there is only 1/ the first device arn is correct
-            # TODO: Make this line more general to account for possibility of 2 or more arns returned
-            self.device_arn = [each_device['deviceArn'] for each_device in self.aws_session.search_devices() if each_device['deviceName'] == self.device_name][0]
-            self.backend_device = AwsDevice(self.device_arn, self.aws_session)
+            self.backend_device = AwsDevice(self.device_name, self.aws_session)
             return True
         else:
             print(
@@ -362,11 +363,14 @@ class DeviceAWS(DeviceBase):
     def _check_provider_connection(self) -> bool:
         
         try:
-            sesh = Session(aws_access_key_id = self.aws_access_key_id, 
+            sess = Session(aws_access_key_id = self.aws_access_key_id, 
                            aws_secret_access_key = self.aws_secret_access_key, 
                            region_name = self.aws_region)
-            self.aws_session = AwsSession(sesh)
-
+            self.aws_session = AwsSession(sess, default_bucket = self.s3_bucket_name)
+            self.s3_bucket_name = self.aws_session.default_bucket()
+            return True
+        except NoRegionError:
+            self.aws_session = None
             return True
         except Exception as e:
             print('An Exception has occured when trying to connect with the \
@@ -385,7 +389,13 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             execution_timeout: float = None,
                             client_configuration: QCSClientConfiguration = None,
                             endpoint_id: str = None,
-                            engagement_manager: EngagementManager = None) -> dict:
+                            engagement_manager: EngagementManager = None,
+                            device_name: str = None,
+                            aws_access_key_id: str = None, 
+                            aws_secret_access_key: str = None,
+                            aws_region: str = None, 
+                            s3_bucket_name: str = None,
+                            folder_name: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
                         'hub': hub,
@@ -398,7 +408,14 @@ def device_class_arg_mapper(device_class:DeviceBase,
                         'execution_timeout': execution_timeout,
                         'client_configuration': client_configuration,
                         'endpoint_id': endpoint_id,
-                        'engagement_manager': engagement_manager}
+                        'engagement_manager': engagement_manager},
+        
+        DeviceAWS: {'device_name':device_name,
+                    'aws_access_key_id':aws_access_key_id,
+                    'aws_secret_access_key':aws_secret_access_key,
+                    'aws_region': aws_region,
+                    's3_bucket_name': s3_bucket_name,
+                    'folder_name': folder_name}
     }
 
     final_device_kwargs = {key: value for key, value in DEVICE_ARGS_MAPPER[device_class].items()

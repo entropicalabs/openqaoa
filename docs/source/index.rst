@@ -229,15 +229,16 @@ Contents
    :maxdepth: 3
    :caption: Tutorials
 
-   notebooks/1_workflows_example.ipynb
-   notebooks/2_simulators_comparison.ipynb
-   notebooks/3_qaoa_on_qpus.ipynb
-   notebooks/4_qaoa_variational_parameters.ipynb
-   notebooks/5_advanced_parameterization.ipynb
-   notebooks/6_fast_qaoa_simulator.ipynb
-   notebooks/7_cost_landscapes_w_manual_mode.ipynb
-   notebooks/8_results_example.ipynb
-   notebooks/9_RQAOA_example.ipynb
+   notebooks/01_workflows_example.ipynb
+   notebooks/02_simulators_comparison.ipynb
+   notebooks/03_qaoa_on_qpus.ipynb
+   notebooks/04_qaoa_variational_parameters.ipynb
+   notebooks/05_advanced_parameterization.ipynb
+   notebooks/06_fast_qaoa_simulator.ipynb
+   notebooks/07_cost_landscapes_w_manual_mode.ipynb
+   notebooks/08_results_example.ipynb
+   notebooks/09_RQAOA_example.ipynb
+   notebooks/10_workflows_on_Amazon_braket.ipynb
 
 
 .. toctree::

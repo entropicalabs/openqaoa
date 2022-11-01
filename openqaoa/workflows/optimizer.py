@@ -13,7 +13,6 @@
 #   limitations under the License.
 
 from abc import ABC
-import numpy as np
 from openqaoa.devices import DeviceLocal, DeviceBase
 
 from openqaoa.rqaoa.rqaoa import custom_rqaoa
@@ -194,25 +193,27 @@ class QAOA(Optimizer):
             append_state: [Union[QuantumCircuitBase,List[complex], np.ndarray]
                 The state prepended to the circuit.
             init_hadamard: bool
-            Whether to apply a Hadamard gate to the beginning of the 
+                Whether to apply a Hadamard gate to the beginning of the 
                 QAOA part of the circuit.. Defaults to `True`
             n_shots: int
-            Optional argument to specify the number of shots required to run QAOA computations
+                Optional argument to specify the number of shots required to run QAOA computations
                 on shot-based simulators and QPUs. Defaults to 100.
-            seed_simulator: int
-                Optional argument to initialize a pseudorandom solution. Default None
             cvar_alpha: float
                 The value of alpha for the CVaR cost function
+            noise_model: `qiskit.providers.aer.noise.NoiseModel`
+                The Qiskit noise model to be used for the simulation.
             qiskit_simulation_method: str, optional
                 The method to be used for the simulation.
-            noise_model: `qiskit.providers.aer.noise.NoiseModel`
-                    The Qiskit noise model to be used for the simulation.
+            seed_simulator: int
+                Optional argument to initialize a pseudorandom solution. Default None
             active_reset:
                 #TODO
             rewiring:
                 Rewiring scheme to be used for Pyquil. 
                 Either 'PRAGMA INITIAL_REWIRING "NAIVE"' or 
                 'PRAGMA INITIAL_REWIRING "PARTIAL"'. If None, defaults to NAIVE
+            disable_qubit_rewiring: `bool`
+                Disable automatic qubit rewiring on AWS braket backend
         """
 
         for key, value in kwargs.items():
@@ -269,6 +270,8 @@ class QAOA(Optimizer):
                 Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
             hess_options : dict
                 Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
+            save_intermediate: bool
+                If True, the intermediate parameters of the optimization and job ids, if available, are saved throughout the run. This is set to False by default.
         """
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
@@ -323,13 +326,12 @@ class QAOA(Optimizer):
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,
                                         **self.backend_properties.__dict__)
-
         self.optimizer = get_optimizer(vqa_object=self.backend,
                                        variational_params=self.variate_params,
                                        optimizer_dict=self.classical_optimizer.asdict())
 
         self.compiled = True
-
+        
         if verbose:
             print('\t \033[1m ### Summary ###\033[0m')
             print(f'OpenQAOA has been compiled with the following properties')
