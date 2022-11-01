@@ -137,7 +137,10 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
     
     Parameters
     ----------
-    
+    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
+        The connectivity of the qubits in the mixer.
+    coeffs: `list`, optional
+        The coefficients of the GateMap in the Mixer Blocks.
     
     Returns
     -------
@@ -178,23 +181,6 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
         i, j = pair
         gatemaps.append(input_gatemap(i, j))
 
-    return gatemaps, coeffs
-
-def get_mixer_gatemap(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None):
-    
-    available_gatemaps = {'xx': RXXGateMap, 
-                          'yy': RYYGateMap, 
-                          'zz': RZZGateMap, 
-                          'zx': RZXGateMap}
-    
-    if mixer_type not in available_gatemaps.keys():
-        raise 'The selected mixer_type is not supported.'
-    
-    try:
-        gatemaps, coeffs = quick_create_mixer_for_topology(available_gatemaps[mixer_type], n_qubits, qubit_connectivity, coeffs)
-    except KeyError:
-        raise 'The selected gatemap does not exist'
-    
     return gatemaps, coeffs
         
 
