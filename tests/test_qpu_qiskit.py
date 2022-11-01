@@ -339,6 +339,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
                                                             shots, None, None, 
                                                             True))
         
+
         qiskit_device = DeviceQiskit(device_name='',
                                     api_token=self.API_TOKEN,
                                     hub=self.HUB, group=self.GROUP,

@@ -535,22 +535,6 @@ class QAOAVariationalBaseParams(ABC):
         """
         raise NotImplementedError()
 
-    # def QAOA_circuit_params(self):
-    # 	"""
-    # 	Returns parameters needed for QAOA circuit in tuple form.
-    # 	"""
-
-    # 	p = self.p
-    # 	x_rotation_angles = self.x_rotation_angles
-    # 	bias_qubits = self.qubits_singles
-    # 	pairs = self.qubits_pairs
-    # 	z_rotation_angles = self.z_rotation_angles
-    # 	zz_rotation_angles = self.zz_rotation_angles
-
-    # 	return (p,x_rotation_angles,bias_qubits,z_rotation_angles,pairs,zz_rotation_angles)
-    # 	return (self.p, self.mixer_1q_angles, self.mixer_2q_angles,
-    # 			self.cost_1q_angles, self.cost_2q_angles)
-
 
 class QAOAParameterIterator:
     """An iterator to sweep one parameter over a range in a QAOAParameter object.

@@ -10,6 +10,8 @@ with open("openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
+    "amazon-braket-sdk==1.23.0",
+    "pandas>=1.3.5"
     "sympy>=1.10.1",
     "numpy>=1.22.3",
     "networkx>=2.8",
@@ -33,7 +35,10 @@ requirements_test = [
     "pytest>=7.1.0",
     "pytest-cov>=3.0.0",
     "ipython>=8.2.0",
-    "nbconvert>=6.5.1"
+    "nbconvert>=6.5.1",
+    "pandas>=1.4.3",
+    "plotly>=5.9.0",
+    "cplex>=22.1.0.0"
 ]
 
 setup(

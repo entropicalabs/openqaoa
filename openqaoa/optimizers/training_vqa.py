@@ -33,6 +33,33 @@ from .result import Result
 from ..derivative_functions import derivative
 from ..qfim import qfim
 
+###
+# TODO: Find better place for this
+
+import pandas as pd
+from typing import Any
+
+def save_parameter(parameter_name: str, parameter_value: Any):
+    
+    filename = 'oq_saved_info_' + parameter_name
+    
+    try:
+        opened_csv = pd.read_csv(filename + '.csv')
+    except Exception:
+        opened_csv = pd.DataFrame(columns = [parameter_name])
+    
+    if type(parameter_value) not in [str, float, int]:
+        parameter_value = str(parameter_value)
+        
+    update_df = pd.DataFrame(data = {parameter_name: parameter_value}, index = [0])
+    new_df = pd.concat([opened_csv, update_df], ignore_index = True)
+    
+    new_df.to_csv(filename + '.csv', index = False)
+    
+    print('Parameter Saving Successful')
+    
+###
+
 
 class OptimizeVQA(ABC):
     '''    
@@ -86,6 +113,7 @@ class OptimizeVQA(ABC):
         self.variational_params = variational_params
         self.initial_params = variational_params.raw()
         self.method = optimizer_dict['method'].lower()
+        self.save_to_csv = optimizer_dict.get('save_intermediate', False)
         
         self.log = Logger({'cost': 
                            {
@@ -116,13 +144,19 @@ class OptimizeVQA(ABC):
                            {
                                'history_update_bool': False, 
                                'best_update_string': 'HighestOnly'
+                           }, 
+                           'job_ids':
+                           {
+                               'history_update_bool': True,
+                               'best_update_string': 'Replace'
                            }
                           }, 
                           {
                               'root_nodes': ['cost', 'func_evals', 'jac_func_evals', 
                                              'qfim_func_evals'],
                               'best_update_structure': (['cost', 'param_log'], 
-                                                        ['cost', 'measurement_outcomes'])
+                                                        ['cost', 'measurement_outcomes'], 
+                                                        ['cost', 'job_ids'])
                           })
         
         self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
@@ -170,7 +204,17 @@ class OptimizeVQA(ABC):
         
         log_dict = {}
         log_dict.update({'param_log': deepcopy(x)})
+        
         self.variational_params.update_from_raw(deepcopy(x))
+        
+        if hasattr(self.vqa, 'log_with_backend') and callable(getattr(self.vqa, 'log_with_backend')):
+            self.vqa.log_with_backend(metric_name="variational_params",
+                                      value=self.variational_params,
+                                      iteration_number=self.log.func_evals.best[0])
+        
+        if self.save_to_csv:
+            save_parameter('param_log', deepcopy(x))
+        
         callback_cost = self.vqa.expectation(self.variational_params)
         
         log_dict.update({'cost': callback_cost})
@@ -179,6 +223,17 @@ class OptimizeVQA(ABC):
         log_dict.update({'func_evals': current_eval})
         
         log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
+        
+        if hasattr(self.vqa, 'log_with_backend') and callable(getattr(self.vqa, 'log_with_backend')):
+            self.vqa.log_with_backend(metric_name="measurement_outcomes",
+                                      value=self.vqa.measurement_outcomes,
+                                      iteration_number=self.log.func_evals.best[0])
+        
+        if hasattr(self.vqa, 'job_id'):
+            log_dict.update({'job_ids': self.vqa.job_id})
+            
+            if self.save_to_csv:
+                save_parameter('job_ids', self.vqa.job_id)
             
         self.log.log_variables(log_dict)
 
