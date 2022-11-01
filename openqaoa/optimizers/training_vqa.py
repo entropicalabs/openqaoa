@@ -233,8 +233,8 @@ class OptimizeVQA(ABC):
         if hasattr(self.vqa, 'job_id'):
             log_dict.update({'job_ids': self.vqa.job_id})
             
-        if self.save_to_csv:
-            save_parameter('job_ids', self.vqa.job_id)
+            if self.save_to_csv:
+                save_parameter('job_ids', self.vqa.job_id)
             
         self.log.log_variables(log_dict)
 

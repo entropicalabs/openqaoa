@@ -270,6 +270,8 @@ class QAOA(Optimizer):
                 Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
             hess_options : dict
                 Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
+            save_intermediate: bool
+                If True, the intermediate parameters of the optimization and job ids, if available, are saved throughout the run. This is set to False by default.
         """
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
@@ -324,13 +326,12 @@ class QAOA(Optimizer):
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,
                                         **self.backend_properties.__dict__)
-
         self.optimizer = get_optimizer(vqa_object=self.backend,
                                        variational_params=self.variate_params,
                                        optimizer_dict=self.classical_optimizer.asdict())
 
         self.compiled = True
-
+        
         if verbose:
             print('\t \033[1m ### Summary ###\033[0m')
             print(f'OpenQAOA has been compiled with the following properties')

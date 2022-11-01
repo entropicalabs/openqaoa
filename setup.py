@@ -36,7 +36,10 @@ requirements_test = [
     "pytest>=7.1.0",
     "pytest-cov>=3.0.0",
     "ipython>=8.2.0",
-    "nbconvert>=6.5.1"
+    "nbconvert>=6.5.1",
+    "pandas>=1.4.3",
+    "plotly>=5.9.0",
+    "cplex>=22.1.0.0"
 ]
 
 setup(
