@@ -33,7 +33,7 @@ class Optimizer(ABC):
     """
     Abstract class to represent an optimizer
 
-    Basic usage of childs of this class consists of 
+    Basic usage of children class consists of 
     1. Initialization
     2. Compilation
     3. Optimization
@@ -210,10 +210,6 @@ class QAOA(Optimizer):
     2. Compilation
     3. Optimization
 
-    .. warning::
-        To all our dear beta testers: the setter functions will most likely change. Bear with us as we figure our the smoother way to create the workflows :-)
-
-
     .. note::
         The attributes of the QAOA class should be initialized using the set methods of QAOA. For example, to set the circuit's depth to 10 you should run `set_circuit_properties(p=10)`
 
@@ -277,7 +273,7 @@ class QAOA(Optimizer):
         """
         Initialize the QAOA class.
 
-        Arguments
+        Parameters
         ----------
             device: `DeviceBase`
                 Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
@@ -433,10 +429,6 @@ class RQAOA(Optimizer):
     2. Compilation
     3. Optimization
 
-    .. warning::
-        To all our dear beta testers: the setter functions will most likely change. Bear with us as we figure our the smoother way to create the workflows :-)
-
-
     .. note::
         The attributes of the RQAOA class should be initialized using the set methods of QAOA. For example, to set the qaoa circuit's depth to 10 you should run `set_circuit_properties(p=10)`
 
@@ -516,7 +508,7 @@ class RQAOA(Optimizer):
         """
         Initialize the RQAOA class.
 
-        Arguments
+        Parameters
         ----------
             rqaoa_type: `str`
                 The type of RQAOA to be used. Can be either 'adaptive' or 'custom'

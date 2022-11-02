@@ -107,6 +107,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
             assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
                 
+        # TODO: test eliminations and with adaptive
                 
 
 if __name__ == '__main__':
