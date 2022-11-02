@@ -238,6 +238,35 @@ class QUBO:
 
 
 class TSP(Problem):
+    """
+    Initializes a TSP object via three different methods:
+    #. Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
+    #. Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
+    #. Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
+
+    Whenever no graph connectivity is specified, it is assumed that all cities are connected.
+
+    Parameters
+    ----------
+    city_coordinates : Optional[List[Tuple[float, float]]]
+        List containing the coordinates of each city.
+
+    distance_matrix : Optional[List[List[float]]]
+        Distance between cities given as list of list representing a matrix
+
+    G: Optional[nx.Graph]
+        Graph encoding the connectivity between cities (can be directed)
+
+    A: Optional[float]
+        Quadratic penalty coefficient to enforce that a path is a Hamiltonian cycle.
+
+    B: Optional[float]
+        Penalty coefficient which accounts for the path cost.
+
+    Returns
+    -------
+    None
+    """
     def __init__(self,
                  city_coordinates=None,
                  distance_matrix=None,
@@ -245,35 +274,6 @@ class TSP(Problem):
                  A=None,
                  B=1,
                  ):
-        """
-        Initializes a TSP object via three different methods:
-        #. Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
-        #. Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
-        #. Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
-
-        Whenever no graph connectivity is specified, it is assumed that all cities are connected.
-
-        Parameters
-        ----------
-        city_coordinates : Optional[List[Tuple[float, float]]]
-            List containing the coordinates of each city.
-
-        distance_matrix : Optional[List[List[float]]]
-            Distance between cities given as list of list representing a matrix
-
-        G: Optional[nx.Graph]
-            Graph encoding the connectivity between cities (can be directed)
-
-        A: Optional[float]
-            Quadratic penalty coefficient to enforce that a path is a Hamiltonian cycle.
-
-        B: Optional[float]
-            Penalty coefficient which accounts for the path cost.
-
-        Returns
-        -------
-        None
-        """
         # Initialization when a weighted graph is given
         if G is not None and nx.is_weighted(G):
             TSP.validate_graph(G)
