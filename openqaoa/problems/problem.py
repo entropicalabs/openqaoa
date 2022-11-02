@@ -247,9 +247,9 @@ class TSP(Problem):
                  ):
         """
         Initializes a TSP object via three different methods:
-        1) Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
-        2) Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
-        3) Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
+        #. Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
+        #. Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
+        #. Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
 
         Whenever no graph connectivity is specified, it is assumed that all cities are connected.
 
