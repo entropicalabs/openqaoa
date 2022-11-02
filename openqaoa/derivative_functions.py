@@ -26,6 +26,7 @@ import random
 
 from copy import deepcopy
 from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
+from .cost_function import cost_function
 
 
 def update_and_compute_expectation(backend_obj: QAOABaseBackend, 
@@ -169,49 +170,45 @@ def grad_w_variance_fd(backend_obj, params, gradient_options, logger):
 
     # Set default value of eta
     eta = gradient_options['stepsize']
-    fun = update_and_compute_expectation(backend_obj, params, logger)
+    fun = update_and_get_counts(backend_obj, params, logger)
+    hamiltonian = backend_obj.circuit_params.cost_hamiltonian
+    alpha = backend_obj.cvar_alpha
 
-    def _grad_one_shot(args, i):
+    def _grad_variance_n_shots(args, i, n_shots):
+    
         vect_eta = np.zeros(len(args))
         vect_eta[i] = 1
 
-        eval_i = fun(args - (eta/2)*vect_eta, n_shots=1)
-        eval_f = fun(args + (eta/2)*vect_eta, n_shots=1)
+        # get counts for f(x+eta/2) and f(x-eta/2)
+        counts_i_dict = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
+        counts_f_dict = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
 
-        return (eval_f-eval_i)/eta
+        # for each count compute the cost and create a list of shot costs
+        eval_i_list = [cost_function({key: 1}, hamiltonian, alpha) for key, value in counts_i_dict.items() for _ in range(value)]
+        eval_f_list = [cost_function({key: 1}, hamiltonian, alpha) for key, value in counts_f_dict.items() for _ in range(value)]
+
+        # compute a list of gradients of one shot cost
+        grad_list =  (np.array(eval_f_list) - np.array(eval_i_list))/eta
+
+        # return average and variance for the gradient for this argument
+        return np.array(np.mean(grad_list), np.var(grad_list))
         
-
     def grad_fd_func(args, n_shots=None):
 
-        #if n_shots is int or None create a list with len of args 
+        # if n_shots is int or None create a list with len of args 
         if n_shots == None or isinstance(n_shots, int):
             n_shots_list = [n_shots for _ in range(len(args))]
         else:
             n_shots_list = n_shots
 
-
+        # check if n_shots_list has the same length as args
         if len(n_shots_list) != len(args):
             raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
 
-        
-        grad = np.zeros(len(args))
-        variance = np.zeros(len(args))
+        # lists of gradients and variances for each argument
+        grad, variance = np.array([_grad_variance_n_shots(args, i, n_shots) for i, n_shots in enumerate(n_shots_list)]).T
 
-        for i, n_shots in enumerate(n_shots_list):
-
-            gradient_list = np.array([ _grad_one_shot(args, i) for _ in range(n_shots)])
-
-            grad[i]     = np.mean(gradient_list)
-            variance[i] = np.var(gradient_list)
-            
-            # Finite diff. calculation of gradient
-            #eval_i, uncertainty_i = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
-            #eval_f, uncertainty_f = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
-
-            #grad[i] = (eval_f-eval_i)/eta
-            #TODO : check uncertainty
-            #uncertainty[i] = np.sqrt(uncertainty_i**2+uncertainty_f**2)/2
-
+        # return lists
         return grad, variance
 
     return grad_fd_func
