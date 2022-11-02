@@ -527,7 +527,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
-    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton', 'icans', 'cans'
+    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton', 'icans', 'cans',
                                   'rmsprop', 'natural_grad_descent', 'spsa']
 
     def __init__(self,
