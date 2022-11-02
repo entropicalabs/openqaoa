@@ -77,7 +77,7 @@ nitpick_ignore = [('py:class', 'type')]
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-html_logo = '.github/images/Entropica_logo.png'
+html_logo = '../../.github/images/Entropica_logo.png'
 # html_favicon ='favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
