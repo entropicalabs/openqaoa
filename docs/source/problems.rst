@@ -21,9 +21,9 @@ Traveling Salesman Problem
 
 The Traveling Salesman Problem (TSP) requires to find, given a list of cities and the distances between each pair of cities (or the cities coordinates), the shortest possible path that visits each city exactly once and returns to the origin city. Additionally, one can also specify how cities are connected together.
 Our implementation accepts three different kind of inputs:
-* A list of the cities' coordinates and, optionally, a (directed) graph specifiying the connectivity between cities
-* A distance matrix encoding distances between each pair of cities and, optionally, a (directed) graph specifiying the connectivity between cities
-* A weighted (directed) graph specifiying the connectivity and the distance between cities
+ * A list of the cities' coordinates and, optionally, a (directed) graph specifiying the connectivity between cities
+ * A distance matrix encoding distances between each pair of cities and, optionally, a (directed) graph specifiying the connectivity between cities
+ * A weighted (directed) graph specifiying the connectivity and the distance between cities
 
 .. autoclass:: openqaoa.problems.problem.TSP
     :members:
