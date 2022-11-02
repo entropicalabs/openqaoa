@@ -57,7 +57,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['.docs/source/notebooks/community_tutorials/*']
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'numpy': ('https://numpy.org/doc/1.23', None),
@@ -77,7 +77,7 @@ nitpick_ignore = [('py:class', 'type')]
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-# html_logo = 'Entropica_logo.png'
+html_logo = '.github/images/Entropica_logo.png'
 # html_favicon ='favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
