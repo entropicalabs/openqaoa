@@ -272,7 +272,8 @@ class ClassicalOptimizer(Parameters):
         Returns history of cost values if `True`. Defaults to `True`. 
     parameter_log : bool
         Returns history of angles if `True`. Defaults to `True`.
-
+    save_intermediate: bool
+        Outputs the jobids and parameters used for each circuit into seperate csv files. Defaults to `False`.
     """
 
     def __init__(self,
@@ -290,7 +291,8 @@ class ClassicalOptimizer(Parameters):
                  hess_options: dict = None,
                  optimization_progress: bool = False,
                  cost_progress: bool = True,
-                 parameter_log: bool = True):
+                 parameter_log: bool = True, 
+                 save_intermediate: bool = False):
         self.optimize = optimize
         self.method = method.lower()
         self.maxiter = maxiter
@@ -307,6 +309,7 @@ class ClassicalOptimizer(Parameters):
         self.optimization_progress = optimization_progress
         self.cost_progress = cost_progress
         self.parameter_log = parameter_log
+        self.save_intermediate = save_intermediate
 
     # @property
     # def method(self):
