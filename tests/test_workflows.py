@@ -619,7 +619,7 @@ class TestingRQAOA(unittest.TestCase):
         """
         r = RQAOA()
 
-        assert r.rqaoa_parameters.rqaoa_type == 'adaptive'
+        assert r.rqaoa_parameters.rqaoa_type == 'custom'
         assert r.rqaoa_parameters.n_cutoff == 5
         assert r.rqaoa_parameters.n_max == 1
         assert r.rqaoa_parameters.steps == 1
@@ -633,17 +633,20 @@ class TestingRQAOA(unittest.TestCase):
         Test creation of the qaoa object and its default values
         """
         r = RQAOA()
-        r.compile(QUBO.random_instance(n=4))
+        r.compile(QUBO.random_instance(n=7))
 
         self._test_default_values(r._q)
         
 
     def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
 
-        r = RQAOA(type)
+        r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)
         r.set_device(qiskit_device)
-        r.set_rqaoa_parameters(n_cutoff = n_cutoff, n_max=eliminations, steps=eliminations)
+        if type == 'adaptive':
+            r.set_rqaoa_parameters(n_cutoff = n_cutoff, n_max=eliminations, rqaoa_type=type)
+        else:
+            r.set_rqaoa_parameters(n_cutoff = n_cutoff, steps=eliminations, rqaoa_type=type)
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)

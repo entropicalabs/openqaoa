@@ -45,7 +45,7 @@ class RqaoaParameters(Parameters):
     """
     
     def __init__(self,
-                 rqaoa_type: str = 'adaptive',
+                 rqaoa_type: str = 'custom',
                  n_max: int = 1,
                  steps: Union[list,int] = 1,
                  n_cutoff: int = 5,
@@ -58,7 +58,7 @@ class RqaoaParameters(Parameters):
         ----------
         rqaoa_type: `int`
             String specifying the RQAOA scheme under which eliminations are computed. The two methods are 'custom' and
-            'adaptive'. Defaults to 'adaptive'.
+            'adaptive'. Defaults to None (custom).
         n_max: `int`
             Maximum number of eliminations allowed at each step when using the adaptive method. Defaults to 1.
         steps: `Union[list,int]`
@@ -75,9 +75,33 @@ class RqaoaParameters(Parameters):
             Variable to count the step in the schedule. If counter = 3 the next step is schedule[3]. 
             Default is 0, but can be changed to start in the position of the schedule that one wants.
         """
-        self.rqaoa_type = rqaoa_type
+        self.rqaoa_type = rqaoa_type.lower()
         self.n_max = n_max
         self.steps = steps
         self.n_cutoff = n_cutoff
         self.original_hamiltonian = original_hamiltonian
         self.counter = counter
+        
+        #check if the rqaoa type is correct
+        if not self.rqaoa_type in ALLOWED_RQAOA_TYPES:
+            self.compiled = False        
+            raise Exception(f'rqaoa_type {self.rqaoa_type} is not supported. Please select "adaptive" or "custom".')
+
+        # check if the parameters given are in accordance with the rqaoa_type
+        if self.rqaoa_type == 'adaptive':
+            if self.steps != 1:
+                raise ValueError(
+                    f'When using the adaptive method, the `steps` parameter is not required.  \
+                    The parameter that specifies the maximum number of eliminations per step is `n_max`.')
+            if self.counter != 0:
+                raise ValueError(
+                    f'When using the adaptive method, the `counter` parameter is not required.')
+        else:
+            if self.n_max != 1:
+                raise ValueError(
+                    f'When using the custom method, the `n_max` parameter is not required.  \
+                    The parameter that specifies the number of eliminations is `steps`, which can be a string or a list.')
+
+        
+
+

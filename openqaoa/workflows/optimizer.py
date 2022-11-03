@@ -27,6 +27,7 @@ from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJE
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
 from openqaoa import rqaoa
+from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 
 
 class Optimizer(ABC):
@@ -482,42 +483,40 @@ class RQAOA(Optimizer):
 
     If you want to use non-default parameters:
 
-    Custom type:
-    >>> r_custom = QAOA('custom')
-    >>> r_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
-    >>> r_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
-    >>> r_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
-    >>> r_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
+    Standard/custom (default) type:
+    >>> r = QAOA()
+    >>> r.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
+    >>> r.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
+    >>> r.set_backend_properties(n_shots=200, cvar_alpha=1)
+    >>> r.set_classical_optimizer(method='nelder-mead', maxiter=2)
     >>> r.set_rqaoa_parameters(n_cutoff = 5, steps=[1,2,3,4,5])
-    >>> r_custom.compile(qubo_problem)
-    >>> r_custom.optimize()
+    >>> r.compile(qubo_problem)
+    >>> r.optimize()
 
     Ada-RQAOA:
-    >>> r_custom = QAOA('adaptive')
-    >>> r_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
-    >>> r_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
-    >>> r_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
-    >>> r_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
-    >>> r.set_rqaoa_parameters(n_cutoff = 5, n_max=5)
-    >>> r_custom.compile(qubo_problem)
-    >>> r_custom.optimize()
+    >>> r_adaptive = QAOA()
+    >>> r_adaptive.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
+    >>> r_adaptive.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
+    >>> r_adaptive.set_backend_properties(n_shots=200, cvar_alpha=1)
+    >>> r_adaptive.set_classical_optimizer(method='nelder-mead', maxiter=2)
+    >>> r_adaptive.set_rqaoa_parameters(rqaoa_type = 'adaptive', n_cutoff = 5, n_max=5)
+    >>> r_adaptive.compile(qubo_problem)
+    >>> r_adaptive.optimize()
     """
 
 
-    def __init__(self, rqaoa_type: str = 'adaptive', device: DeviceBase=DeviceLocal('vectorized')):
+    def __init__(self, device: DeviceBase=DeviceLocal('vectorized')):
         """
         Initialize the RQAOA class.
 
         Parameters
         ----------
-            rqaoa_type: `str`
-                The type of RQAOA to be used. Can be either 'adaptive' or 'custom'
             device: `DeviceBase`
                 Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
         """
         super().__init__(device) # use the parent class to initialize 
         self.circuit_properties = CircuitProperties()
-        self.rqaoa_parameters = RqaoaParameters(rqaoa_type=rqaoa_type)
+        self.rqaoa_parameters = RqaoaParameters()
 
         # varaible that will store results object (when optimize is called)
         self.results = RQAOAResults()
@@ -585,7 +584,7 @@ class RQAOA(Optimizer):
         ----------
         rqaoa_type: `int`
             String specifying the RQAOA scheme under which eliminations are computed. The two methods are 'custom' and
-            'adaptive'. Defaults to 'adaptive'.
+            'adaptive'. Defaults to 'custom'.
         n_max: `int`
             Maximum number of eliminations allowed at each step when using the adaptive method.
         steps: `Union[list,int]`
@@ -602,12 +601,15 @@ class RQAOA(Optimizer):
             Variable to count the step in the schedule. If counter = 3 the next step is schedule[3]. 
             Default is 0, but can be changed to start in the position of the schedule that one wants.
         """
-        for key, value in kwargs.items():
+
+        for key in kwargs.keys():
             if hasattr(self.rqaoa_parameters, key):
-                setattr(self.rqaoa_parameters, key, value)
+                pass
             else:
                 raise ValueError(
-                    f'Specified part {key},  {value} is not supported by RQAOA')
+                    f'Specified argument {key} is not supported by RQAOA')
+
+        self.rqaoa_parameters = RqaoaParameters(**kwargs) 
 
         return None
 
@@ -633,17 +635,8 @@ class RQAOA(Optimizer):
         # save the original problem
         self.problem = problem 
 
-        # Create the qaoa object with the properties
-        self._q = QAOA(self.device)
-        self._q.circuit_properties  = self.circuit_properties
-        self._q.backend_properties  = self.backend_properties
-        self._q.classical_optimizer = self.classical_optimizer
-
-        # compile qaoa object
-        self._q.compile(problem, verbose=verbose)
-
-
-        if self.rqaoa_parameters.rqaoa_type.lower() == "custom":
+        # if type is custom and steps is an int, set steps correctly
+        if self.rqaoa_parameters.rqaoa_type == "custom" and self.rqaoa_parameters.n_cutoff<=problem.n:
 
             n_cutoff = self.rqaoa_parameters.n_cutoff
             n_qubits = problem.n
@@ -654,19 +647,22 @@ class RQAOA(Optimizer):
             if type(self.rqaoa_parameters.steps) is int:
                 self.rqaoa_parameters.steps = [self.rqaoa_parameters.steps]*(n_qubits-n_cutoff)
             
-            # Ensure there are enough steps in the schedule
+            # In case a schedule is given, ensure there are enough steps in the schedule
             assert np.abs(n_qubits - n_cutoff - counter) <= sum(self.rqaoa_parameters.steps),\
-                f"""Schedule is incomplete, add 
-                    {np.abs(n_qubits - n_cutoff - counter) - sum(self.rqaoa_parameters.steps)} 
-                    more eliminations"""
+                f"Schedule is incomplete, add {np.abs(n_qubits - n_cutoff - counter) - sum(self.rqaoa_parameters.steps)} more eliminations"
 
-            self.compiled = True
-        
-        #check if the rqaoa type is correct
-        if not self.rqaoa_parameters.rqaoa_type.lower() in ALLOWED_RQAOA_TYPES:
 
-            self.compiled = False        
-            raise Exception(f'rqaoa_type {self.rqaoa_parameters.rqaoa_type} is not supported. Please selet either "adaptive" or "custom')
+        # Create the qaoa object with the properties
+        self._q = QAOA(self.device)
+        self._q.circuit_properties  = self.circuit_properties
+        self._q.backend_properties  = self.backend_properties
+        self._q.classical_optimizer = self.classical_optimizer
+
+        # compile qaoa object
+        self._q.compile(problem, verbose=verbose)
+
+        self.compiled = True
+
             
         #? TODO verbose -> how we do?
 
@@ -694,7 +690,7 @@ class RQAOA(Optimizer):
         counter = self.rqaoa_parameters.counter 
 
         # create a different max_terms function for each type 
-        if self.rqaoa_parameters.rqaoa_type.lower() == "adaptive":
+        if self.rqaoa_parameters.rqaoa_type == "adaptive":
             f_max_terms = rqaoa.ada_max_terms  
         else:
             f_max_terms = rqaoa.max_terms 
@@ -707,7 +703,7 @@ class RQAOA(Optimizer):
 
             # Obtain statistical results
             exp_vals_z, corr_matrix = self._exp_val_hamiltonian_termwise()
-            # Retrieve highest expectation values according to adaptive method
+            # Retrieve highest expectation values according to adaptive method or schedule in custom method
             max_terms_and_stats = f_max_terms(exp_vals_z, corr_matrix, self._n_step(n_qubits, n_cutoff, counter))
             # Generate spin map
             spin_map = rqaoa.spin_mapping(problem, max_terms_and_stats)
@@ -779,10 +775,10 @@ class RQAOA(Optimizer):
     def _n_step(self, n_qubits, n_cutoff, counter):
         """
         Private method that returns the n_max value in case of adaptive or the number of eliminations according 
-        to the schedule and the counter in case of 
+        to the schedule and the counter in case of custom method.
         """
 
-        if self.rqaoa_parameters.rqaoa_type.lower() == "adaptive":
+        if self.rqaoa_parameters.rqaoa_type == "adaptive":
             # Number of spins to eliminate according the schedule
             n = self.rqaoa_parameters.n_max
         else:
@@ -791,51 +787,3 @@ class RQAOA(Optimizer):
 
         # If the step eliminates more spins than available, reduce step to match cutoff
         return (n_qubits - n_cutoff) if (n_qubits - n_cutoff) < n else n
-
-
-
-
-class RQAOAResults(dict):
-    """
-    A class to handle the results of RQAOA workflows
-    It stores the results of the RQAOA optimization as a dictionary. With some custom methods.
-
-    TODO :  make it similar to the QAOA results class, some plotting functions could be added too
-            QAQAOAResults class is in optimizers/result.py
-    """
-
-    def get_solution(self):
-        """
-        Returns the solution of the optimization.
-        """
-        return self['solution']
-
-    def get_step(self, i):
-        """
-        Returns the QUBO problem and QAOA of the i-th intermidate step of the optimization.
-        """
-        return self['intermediate_steps'][i]
-
-    def get_qaoa_step(self, i):
-        """
-        Returns the i-th qaoa step of the RQAOA.
-        """
-        return self['intermediate_steps'][i]['QAOA']
-
-    def get_qaoa_step_optimized_angles(self, i):
-        """
-        Returns the optimized angles of the i-th qaoa step of the RQAOA.
-        """
-        return self.get_qaoa_step(i).results.optimized['optimized angles']
-
-    def get_problem_step(self, i):
-        """
-        Returns the QUBO problem in the i-th step of the RQAOA.
-        """
-        return self['intermediate_steps'][i]['QUBO']
-
-    def get_hamiltonian_step(self, i):
-        """
-        Returns the Hamiltonian of the i-th step of the RQAOA.
-        """
-        return self.get_problem_step(i).hamiltonian
