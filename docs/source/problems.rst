@@ -1,5 +1,5 @@
 Problems
-=================================
+========
 .. autoclass:: openqaoa.problems.problem.Problem
     :members:
     :undoc-members:
@@ -13,8 +13,7 @@ Problems
 
 
 Built-in problems
-----------------------------------
-----------------------------------
+=================
 
 Traveling Salesman Problem
 ----------------------------------
