@@ -74,7 +74,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
     Test the  Results Output after a full RQAOA loop
     """        
 
-    def _run_rqaoa(self, problem, type=None, n_cutoff=3, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+    def _run_rqaoa(self, problem, type='custom', n_cutoff=3, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
 
         r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)

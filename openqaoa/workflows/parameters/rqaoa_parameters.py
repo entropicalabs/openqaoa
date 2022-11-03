@@ -58,7 +58,7 @@ class RqaoaParameters(Parameters):
         ----------
         rqaoa_type: `int`
             String specifying the RQAOA scheme under which eliminations are computed. The two methods are 'custom' and
-            'adaptive'. Defaults to None (custom).
+            'adaptive'. Defaults to "custom".
         n_max: `int`
             Maximum number of eliminations allowed at each step when using the adaptive method. Defaults to 1.
         steps: `Union[list,int]`
