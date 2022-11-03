@@ -663,9 +663,6 @@ class RQAOA(Optimizer):
 
         self.compiled = True
 
-            
-        #? TODO verbose -> how we do?
-
         return 
 
     def optimize(self, verbose=False):
