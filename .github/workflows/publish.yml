@@ -24,6 +24,7 @@ jobs:
     - name: Check-out repository
       uses: actions/checkout@v3
       with:
+        ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
 
     - name: Install Python dependencies
@@ -33,30 +34,6 @@ jobs:
         pip install .
         python -m build
         
-    # - name: Publish to TestPyPI
-    #   uses: pypa/gh-action-pypi-publish@release/v1
-    #   with:
-    #     user: __token__
-    #     password: ${{ secrets.TESTPYPI_PASSWORD }}
-    #     repository_url: https://test.pypi.org/legacy/
-
-    # # Wait a couple of minutes to make sure that the published test is deployed on "test.pypi.org" (Linux/OSX version)
-    # - name: Waiting for 2 minutes for test.pypi.org to be ready
-    #   run: sleep 120
-    #   shell: bash
-
-    # Wait a couple of minutes to make sure that the published test is deployed on "test.pypi.org" (Windows version)
-    #- name: Waiting for 2 minutes for test.pypi.org to be ready
-    #  run: Start-Sleep -s 120
-    #  shell: powershell
-
-    # - name: Test install from TestPyPI
-    #   run: |
-    #       pip install \
-    #       --index-url https://test.pypi.org/simple/ \
-    #       --extra-index-url https://pypi.org/simple \
-    #       openqaoa
-
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:

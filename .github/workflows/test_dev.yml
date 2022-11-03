@@ -22,7 +22,8 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
@@ -71,6 +72,8 @@ jobs:
     steps:
       - name: Check out openqaoa
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
@@ -102,4 +105,6 @@ jobs:
         run: |
           sudo apt-get install pandoc
           cd docs/
+          mkdir ../docs/source/notebooks
+          cp -r ../examples/* ../docs/source/notebooks/
           make html
