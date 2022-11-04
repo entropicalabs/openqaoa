@@ -42,8 +42,8 @@ help:
 # 	./notebook_converter.sh
 
 clean:
-	rm -r source/notebooks/
 	sphinx-build -M clean source build
+	rm -r source/notebooks/
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

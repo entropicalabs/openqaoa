@@ -34,11 +34,12 @@ class Optimizer(ABC):
     """
     Abstract class to represent an optimizer
 
-    Basic usage of children class consists of 
-    1. Initialization
-    2. Compilation
-    3. Optimization
+    It's basic usage consists of 
 
+     #. Initialization
+     #. Compilation
+     #. Optimization
+    
     Attributes
     ----------
         device: `DeviceBase`
@@ -54,17 +55,17 @@ class Optimizer(ABC):
         cloud_provider: `list[str]`
             A list containing the available cloud providers
         compiled: `Bool`
-            A boolean flag to check whether the optimizer object has been correctly compiled at least once
+            A boolean flag to check whether the optimizer object has been correctly compiled at least once     
     """
 
     def __init__(self, device=DeviceLocal('vectorized')):  
         """
         Initialize the optimizer class.
 
-        Arguments
+        Parameters
         ----------
-            device: `DeviceBase`
-                Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
+        device: `DeviceBase`
+            Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
         """
         
         self.device = device
@@ -142,12 +143,12 @@ class Optimizer(ABC):
         Set the parameters for the classical optimizer to be used in the optimizers workflow
 
         Parameters
-        -------------------
+        ----------
             method: str
                 The classical optimization method. Choose from:
-                ['imfil','bobyqa','snobfit']
-                ['vgd', 'sgd', 'rmsprop'] 
-                ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
+                 - ['imfil','bobyqa','snobfit']
+                 - ['vgd', 'sgd', 'rmsprop'] 
+                 - ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
                 TODO: Add the missing optimizers
             maxiter : Optional[int]
                 Maximum number of iterations.
@@ -155,10 +156,10 @@ class Optimizer(ABC):
                 Maximum number of function evaluations.
             jac: str
                 Method to compute the gradient vector. Choose from:
-                ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
+                    - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
             hess: str
                 Method to compute the hessian. Choose from:
-                ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
+                    - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
             constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
                 Scipy-based constraints on parameters of optimization. Will be available soon
             bounds: scipy.optimize.Bounds
@@ -168,14 +169,14 @@ class Optimizer(ABC):
                 the difference between two steps, terminate optimization.
             optimizer_options : dict
                 Dictionary of optimiser-specific arguments.
-                stepsize : float
-                    Step size of each gradient descent step.
-                decay : float
-                    Stepsize decay parameter of RMSProp.
-                eps : float
-                    Small number to prevent division by zero for RMSProp.
-                lambd : float
-                    Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
+                    stepsize : float
+                        Step size of each gradient descent step.
+                    decay : float
+                        Stepsize decay parameter of RMSProp.
+                    eps : float
+                        Small number to prevent division by zero for RMSProp.
+                    lambd : float
+                        Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
             ramp_time: float
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
             jac_options : dict
@@ -469,7 +470,6 @@ class RQAOA(Optimizer):
             which get the hamiltonian of reduced problem of the i-th step. To see the full list of methods please see the
             RQAOAResults class.  
 
-
     Examples
     --------
     Examples should be written in doctest format, and should illustrate how
@@ -504,7 +504,6 @@ class RQAOA(Optimizer):
     >>> r_adaptive.optimize()
     """
 
-
     def __init__(self, device: DeviceBase=DeviceLocal('vectorized')):
         """
         Initialize the RQAOA class.
@@ -526,7 +525,7 @@ class RQAOA(Optimizer):
         Specify the circuit properties to construct the QAOA circuits
 
         Parameters
-        -------------------
+        ----------
             qubit_register: `list`
                 Select the desired qubits to run the QAOA program. Meant to be used as a qubit
                 selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
@@ -580,7 +579,7 @@ class RQAOA(Optimizer):
         """
         Specify the parameters to run a desired RQAOA program.
 
-        Attributes
+        Parameters
         ----------
         rqaoa_type: `int`
             String specifying the RQAOA scheme under which eliminations are computed. The two methods are 'custom' and

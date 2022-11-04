@@ -1,5 +1,5 @@
-Recrusive QAOA functions
-=========
+Recursive QAOA functions
+========================
 
 A set of helper functions for RQAOA
 
@@ -7,3 +7,4 @@ A set of helper functions for RQAOA
     :members:
     :undoc-members:
     :inherited-members:
+  

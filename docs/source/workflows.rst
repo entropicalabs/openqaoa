@@ -38,10 +38,6 @@ Workflow QAOA Parameters
     :undoc-members:
     :inherited-members:
 
-.. autoclass:: openqaoa.workflows.parameters.qaoa_parameters.ExtraResults
-    :members:
-    :undoc-members:
-    :inherited-members:
 
 
 
