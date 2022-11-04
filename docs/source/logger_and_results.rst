@@ -4,7 +4,7 @@ In more details, the logger is updated every-time the classical optimizer perfor
 The result, on the other hand, formats raw results from the logger in a more human-friendly way.
 
 QAOA Result
-------
+-----------
 .. autoclass:: openqaoa.optimizers.Result
     :members:
     :undoc-members:

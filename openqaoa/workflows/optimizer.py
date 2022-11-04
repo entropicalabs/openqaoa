@@ -146,10 +146,9 @@ class Optimizer(ABC):
         ----------
             method: str
                 The classical optimization method. Choose from:
-                 - ['imfil','bobyqa','snobfit']
-                 - ['vgd', 'sgd', 'rmsprop'] 
-                 - ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
-                TODO: Add the missing optimizers
+                 ['imfil','bobyqa','snobfit']
+                 ['vgd', 'sgd', 'rmsprop'] 
+                 ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
             maxiter : Optional[int]
                 Maximum number of iterations.
             maxfev : Optional[int]
