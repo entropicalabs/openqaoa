@@ -12,7 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from openqaoa.workflows.optimizer import QAOA
+from openqaoa import rqaoa
+from openqaoa.workflows.optimizer import QAOA, RQAOA
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
 from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS
@@ -21,7 +22,7 @@ import networkx as nw
 import numpy as np
 import itertools
 
-from openqaoa.problems.problem import MinimumVertexCover
+from openqaoa.problems.problem import MinimumVertexCover, QUBO
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 
@@ -66,7 +67,66 @@ class TestingResultOutputs(unittest.TestCase):
                 self.assertEqual(recorded_evals[each_choice[0]], len(q.results.intermediate['angles log']))
                 self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['intermediate cost']))
                 self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['intermediate measurement outcomes']))
-                
 
-if __name__ == '__main__':
-    unittest.main()
+
+class TestingRQAOAResultOutputs(unittest.TestCase):
+    """
+    Test the  Results Output after a full RQAOA loop
+    """        
+
+    def _run_rqaoa(self, problem, type='custom', n_cutoff=3, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+
+        r = RQAOA()
+        qiskit_device = create_device(location='local', name=name_device)
+        r.set_device(qiskit_device)
+        if type == 'adaptive':
+            r.set_rqaoa_parameters(n_cutoff = n_cutoff, n_max=eliminations, rqaoa_type=type)
+        else:
+            r.set_rqaoa_parameters(n_cutoff = n_cutoff, steps=eliminations, rqaoa_type=type)
+        r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
+        r.set_backend_properties(prepend_state=None, append_state=None)
+        r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
+        r.compile(problem)
+        r.optimize()
+
+        return r.results
+    
+    def test_rqaoa_result_outputs(self):
+        """
+        Test the result outputs for the RQAOA class
+        """
+        n_qubits = 6
+        n_cutoff = 3
+        g = nw.circulant_graph(n_qubits, [1])
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+
+        # Test for the standard RQAOA
+        results = self._run_rqaoa(problem=vc, n_cutoff=n_cutoff)
+        for key in results['solution'].keys():
+            assert len(key) == n_qubits, 'Number of qubits solution is not correct'
+        assert isinstance(results['classical_output']['minimum_energy'], float)
+        assert isinstance(results['classical_output']['optimal_states'], list)
+        for rule in results['elimination_rules']:
+            assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
+        assert isinstance(results['schedule'], list), 'Schedule is not a list'
+        assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
+        for step in results['intermediate_steps']:
+            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
+            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
+        assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
+
+        # Test for the adaptive RQAOA
+        results = self._run_rqaoa(type='adaptive', problem=vc, n_cutoff=n_cutoff)
+        for key in results['solution'].keys():
+            assert len(key) == n_qubits, 'Number of qubits solution is not correct'
+        assert isinstance(results['classical_output']['minimum_energy'], float)
+        assert isinstance(results['classical_output']['optimal_states'], list)
+        for rule in results['elimination_rules']:
+            assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
+        assert isinstance(results['schedule'], list), 'Schedule is not a list'
+        assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
+        for step in results['intermediate_steps']:
+            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
+            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
+        assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
+
