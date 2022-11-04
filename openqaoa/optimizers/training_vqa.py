@@ -472,6 +472,8 @@ class ScipyOptimizer(OptimizeVQA):
         except ConnectionError as e:
             print(e, '\n')
             print("The optimization has been terminated early. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        except Exception as e:
+            print(e)
         finally:
             self.results_dictionary()
             return self
