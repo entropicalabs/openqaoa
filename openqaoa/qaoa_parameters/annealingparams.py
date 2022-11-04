@@ -36,17 +36,25 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    hyperparameters:
-        The hyperparameters containing the register, terms, weights, the number of layers
-        and the total annealing time ``hyperparameters = (register, terms, weights,
-        p, time)``
-    parameters : Tuple
-        Tuple containing ``(schedule values)`` of length ``p``
-
+    qaoa_circuit_params:
+        QAOACircuitParams object containing circuit instructions
+   total_annealing_time: float
+        Total annealing time for the schedule
+    schedule: list
+        List specifying the annealing schedule
+        
     Attributes
     ----------
     schedule: np.array
         An 1D array holding the values of the schedule function at each timestep.
+    total_annealing_time: float
+        Total annealing time for the schedule
+    dt: float
+        annealing time step
+    mixer_time: np.array
+        schedule for mixer application
+    cost_time: np.array
+        schedule for cost application
     """
 
     def __init__(self,
