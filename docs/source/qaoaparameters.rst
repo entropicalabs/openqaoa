@@ -31,7 +31,7 @@ Except for the ``Annealing`` parameters, each class also comes in three levels o
         AnnealingParams
 
 Parameters
-==========
+----------
 .. autoclass:: openqaoa.qaoa_parameters.baseparams.VQACircuitParams
     :members:
     :undoc-members:
@@ -72,8 +72,8 @@ Fourier Parameters
     :inherited-members:
 
 
-Extended Parameters
--------------------
+Annealing Parameters
+--------------------
 .. autoclass:: openqaoa.qaoa_parameters.annealingparams.QAOAVariationalAnnealingParams
     :members:
     :inherited-members:

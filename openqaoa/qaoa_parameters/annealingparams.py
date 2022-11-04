@@ -33,12 +33,12 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     where the :math:`s(t_i) =: s_i` are the variable parameters and
     :math:`\\Delta t= \\frac{T}{N}`.
     So the schedule is specified by specifying s(t) at evenly spaced timelayers.
-
+    
     Parameters
     ----------
     qaoa_circuit_params:
         QAOACircuitParams object containing circuit instructions
-   total_annealing_time: float
+    total_annealing_time: float
         Total annealing time for the schedule
     schedule: list
         List specifying the annealing schedule
@@ -61,7 +61,6 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
                  qaoa_circuit_params: QAOACircuitParams,
                  total_annealing_time: float,
                  schedule: List[Union[float, int]]):
-
         # setup reg, qubits_singles and qubits_pairs
         super().__init__(qaoa_circuit_params)
         assert total_annealing_time is not None, f"Please specify total_annealing_time to use {type(self).__name__}"
