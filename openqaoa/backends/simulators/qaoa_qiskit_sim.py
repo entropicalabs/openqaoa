@@ -160,7 +160,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
 
         return parametric_circuit
 
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Returns the counts of the final QAOA circuit after binding angles from variational parameters.
 
@@ -173,8 +173,11 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         counts: `dict`
             The counts of the final QAOA circuit after binding angles from variational parameters.
         """
+
+        n_shots = self.n_shots if n_shots == None else n_shots 
+
         qaoa_circuit = self.qaoa_circuit(params)
-        counts = self.backend_simulator.run(qaoa_circuit, shots=self.n_shots).result().get_counts()
+        counts = self.backend_simulator.run(qaoa_circuit, shots=n_shots).result().get_counts()
         flipped_counts = flip_counts(counts)
         self.measurement_outcomes = flipped_counts
         return flipped_counts

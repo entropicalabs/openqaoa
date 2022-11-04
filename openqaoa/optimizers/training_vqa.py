@@ -177,7 +177,7 @@ class OptimizeVQA(ABC):
 
     # def evaluate_jac(self, x):
 
-    def optimize_this(self, x):
+    def optimize_this(self, x, n_shots=None):
         '''
         A function wrapper to execute the circuit in the backend. This function 
         will be passed as argument to be optimized by scipy optimize.
@@ -211,7 +211,8 @@ class OptimizeVQA(ABC):
         if self.save_to_csv:
             save_parameter('param_log', deepcopy(x))
         
-        callback_cost = self.vqa.expectation(self.variational_params)
+        n_shots_dict = {'n_shots':n_shots} if n_shots else {}
+        callback_cost = self.vqa.expectation(self.variational_params, **n_shots_dict)
         
         log_dict.update({'cost': callback_cost})
         current_eval = self.log.func_evals.best[0]
@@ -522,7 +523,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
-    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
+    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton', 'icans', 'cans',
                                   'rmsprop', 'natural_grad_descent', 'spsa']
 
     def __init__(self,
@@ -557,6 +558,10 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 self.jac = derivative(
                     self.vqa_object, self.variational_params, self.log, 
                     'gradient', jac, jac_options)
+                #TODO : check if we want to do it this way
+                self.jac_w_variance = derivative(
+                    self.vqa_object, self.variational_params, self.log, 
+                    'gradient_w_variance', jac, jac_options)
             else:
                 self.jac = jac
 
@@ -626,6 +631,16 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
             method = om.SPSA
+        elif self.method == 'cans':
+            print("Warning : CANS is an experimental feature.")
+            method = om.CANS
+            self.options['jac_w_variance'] = self.jac_w_variance
+            self.options['coeffs'] = self.vqa_object.cost_hamiltonian.coeffs
+        elif self.method == 'icans':
+            print("Warning : iCANS is an experimental feature.")
+            method = om.iCANS
+            self.options['jac_w_variance'] = self.jac_w_variance
+            self.options['coeffs'] = self.vqa_object.cost_hamiltonian.coeffs
         
         try:
             if self.hess == None:
