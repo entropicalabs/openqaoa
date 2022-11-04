@@ -431,10 +431,13 @@ def stochastic_grad_descent(fun, x0, jac, args=(), stepsize=0.001, mass=0.9, sta
 
 
 
-def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, mu=0.99, b=1e-06,
-                 maxiter=100, tol=10**(-6), jac=None, jac_w_variance=None,callback=None, **options): #jac_w_uncertainty=None
+def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=None, n_shots_total_max = None, 
+            mu=0.99, b=1e-06, coeffs=None, maxiter=100, tol=10**(-6), jac_w_variance=None, callback=None, **options): 
 
-    print('hi')
+    # check that the stepsize is small enough
+    lipschitz = np.sum(np.abs(coeffs)) 
+    if not stepsize < 2/lipschitz:
+        raise ValueError("Stepsizec is bigger than 2/Lipschitz: it should be smaller than {0:.3g}".format(2/lipschitz))
 
     chi = np.zeros(len(x0))
     xi = 0
@@ -444,31 +447,32 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
     besty = np.real(fun(bestx, *args))
     funcalls = 1  # tracks no. of function evals.
     niter = 0
+    n_shots_total = 0 # tracks no. of shots taken
     improved = True
     stop = False
 
     testx = np.copy(bestx)
     testy = besty
     while improved and not stop and niter < maxiter:
-        lipschitz = np.sum(np.abs(testx)) #TODO there is something wrong with this const
-
-        if not stepsize < 2/lipschitz:
-            print("Stepsize is bigger than 2/Lipschitz: it should be smaller than {0:.3g}".format(2/lipschitz))
-            break
         
         print('a',n_shots,testy)
 
         # compute gradient and variance
         gradient, variance = jac_w_variance(testx, n_shots=n_shots)
 
+        # add the number of shots to the total
+        n_shots_total += 2*n_shots*testx.size
+
         # compute gradient descent step
         testx = testx - stepsize*gradient
         testy = np.real(fun(testx, *args))
 
-        # compute n_shots next step
+        # compute n_shots for next step
         chi = mu*chi + (1-mu)*gradient
-        xi = mu*xi + (1-mu)*np.sum(variance)
+        xi = mu*xi + (1-mu)*np.sum(variance)        
         n_shots = int(np.ceil(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(np.linalg.norm(chi)**2+b*mu**niter))))
+
+        # clip the number of shots
         n_shots = max(n_shots, n_shots_min)
         n_shots = min(n_shots, n_shots_max) if n_shots_max else n_shots
      
@@ -487,56 +491,68 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
             stop = True
             break
 
+        # if there is a maximum number of shots, check if the remaining shots are enough for next step, otherwise stop
+        if n_shots_total_max != None:
+            if n_shots_total_max - n_shots_total < 2*n_shots*testx.size:
+                stop = True
+                break
+
         niter += 1
 
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))
 
 
-def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, mu=0.99, b=1e-06,
-                 maxiter=100, tol=10**(-6), jac=None, jac_w_variance=None,callback=None, **options): #jac_w_uncertainty=None
+def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, n_shots_total_max=None, 
+            mu=0.99, b=1e-06, coeffs=None, maxiter=100, tol=10**(-6), jac_w_variance=None,callback=None, **options): 
 
-    chi = np.zeros(len(x0))
-    xi = 0
+    # check that the stepsize is small enough
+    lipschitz = np.sum(np.abs(coeffs)) 
+    if not stepsize < 2/lipschitz:
+        raise ValueError("Stepsizec is bigger than 2/Lipschitz: it should be smaller than {0:.3g}".format(2/lipschitz))
+
+    # define the initial values
+    chi_ = np.zeros(len(x0))
+    xi_ = np.zeros(len(x0))
     n_shots = [n_shots_min for _ in range(len(x0))]
 
     bestx = x0
     besty = np.real(fun(bestx, *args))
     funcalls = 1  # tracks no. of function evals.
     niter = 0
+    n_shots_total = 0 # track no. of shots
     improved = True
     stop = False
 
     testx = np.copy(bestx)
     testy = besty
     while improved and not stop and niter < maxiter:
-        lipschitz = np.sum(np.abs(testx)) #TODO there is something wrong with this const
-
-        if not stepsize < 2/lipschitz:
-            print("Stepsize is bigger than 2/Lipschitz: it should be smaller than {0:.3g}".format(2/lipschitz))
-            break
         
         print('a',n_shots,testy)
 
-        # compute gradient and uncertainty (standar dev)
+        # compute gradient and variance
         gradient, variance = jac_w_variance(testx, n_shots=list(n_shots))
-        print('hi', gradient, variance)
+        
+        # add the number of shots to the total
+        n_shots_total += 2 * np.sum(n_shots, dtype=int)
 
         # compute gradient descent step
         testx = testx - stepsize*gradient
         testy = np.real(fun(testx, *args))
 
-        # compute n_shots next step
-        xi  = (mu*xi  + (1-mu)*variance) / (1-mu**(niter+1))
-        chi = (mu*chi + (1-mu)*gradient) / (1-mu**(niter+1))
-        n_shots = np.int32(np.ceil(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(chi**2+b*mu**niter))))
-        gain = ((gradient-lipschitz*gradient**2/2)*chi**2-lipschitz*gradient**2*xi/(2*n_shots))/n_shots
+        # update xi_ and chi_
+        xi_  = (mu*xi_  + (1-mu)*variance) 
+        chi_ = (mu*chi_ + (1-mu)*gradient) 
 
-        print(n_shots[np.argmax(gain)]) #don't know if the gain is working
+        # compute n_shots for next step
+        xi   = xi_  / (1-mu**(niter+1))
+        chi  = chi_ / (1-mu**(niter+1))
+        n_shots = np.int32(np.ceil(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(chi**2+b*mu**niter))))
+        gain = ((stepsize-lipschitz*gradient**2/2)*chi**2-lipschitz*stepsize**2*xi/(2*n_shots))/n_shots
 
         # clip the number of shots
         n_shots = np.fmax(n_shots, n_shots_min)
-        n_shots = np.fmin(n_shots, n_shots[np.argmax(gain)])
+        n_shots = np.fmin(n_shots, n_shots[np.argmax(gain)]) # max of n_shots is the one with the max gain
         n_shots = np.fmin(n_shots, n_shots_max) if n_shots_max else n_shots
 
         if np.abs(besty-testy) < tol:
@@ -552,6 +568,12 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
         if maxfev is not None and funcalls >= maxfev:
             stop = True
             break
+
+        # if there is a maximum number of shots, check if the remaining shots are enough for next step, otherwise stop
+        if n_shots_total_max != None:
+            if n_shots_total_max - n_shots_total < 2*np.sum(n_shots):
+                stop = True
+                break
 
         niter += 1
 

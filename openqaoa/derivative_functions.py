@@ -71,6 +71,48 @@ def update_and_compute_expectation(backend_obj: QAOABaseBackend,
 
     return fun
 
+def update_and_get_counts(  backend_obj: QAOABaseBackend, 
+                            params: QAOAVariationalBaseParams, 
+                            logger: Logger):
+    
+    """
+    Helper function that returns a callable that takes in a list/nparray of raw parameters.
+    This function will handle:
+        (1) Updating logger object with `logger.log_variables`
+        (2) Updating variational parameters with `update_from_raw` 
+        (3) Getting the counts dictonary with `backend_obj.get_counts`
+    
+    PARAMETERS
+    ----------
+    backend_obj: QAOABaseBackend
+        `QAOABaseBackend` object that contains information about the backend that is being used to perform the QAOA circuit
+        
+    params : QAOAVariationalBaseParams
+        `QAOAVariationalBaseParams` object containing variational angles.
+        
+    logger: Logger
+        Logger Class required to log information from the evaluations required for the jacobian/hessian computation.
+    
+    Returns
+    -------
+    out:
+        A callable that accepts a list/array of parameters, and returns the counts dictonary. 
+    """
+    
+    def fun(args, n_shots=None):
+        current_total_eval = logger.func_evals.best[0]
+        current_total_eval += 1
+        current_jac_eval = logger.jac_func_evals.best[0]
+        current_jac_eval += 1
+        logger.log_variables({'func_evals': current_total_eval, 
+                              'jac_func_evals': current_jac_eval})
+        params.update_from_raw(args)
+        
+        n_shots_dict = {'n_shots':n_shots} if n_shots else {}
+        return backend_obj.get_counts(params, **n_shots_dict)
+
+    return fun
+
 def derivative(backend_obj: QAOABaseBackend, 
                params: QAOAVariationalBaseParams, 
                logger: Logger, 
@@ -191,7 +233,7 @@ def grad_w_variance_fd(backend_obj, params, gradient_options, logger):
         grad_list =  (np.array(eval_f_list) - np.array(eval_i_list))/eta
 
         # return average and variance for the gradient for this argument
-        return np.array(np.mean(grad_list), np.var(grad_list))
+        return np.array([np.mean(grad_list), np.var(grad_list)])
         
     def grad_fd_func(args, n_shots=None):
 
@@ -237,27 +279,17 @@ def grad_fd(backend_obj, params, gradient_options, logger):
     eta = gradient_options['stepsize']
     fun = update_and_compute_expectation(backend_obj, params, logger)
 
-    def grad_fd_func(args, n_shots=None):
-
-        #if n_shots is int or None create a list with len of args 
-        if n_shots == None or isinstance(n_shots, int):
-            n_shots_list = [n_shots for _ in range(len(args))]
-        else:
-            n_shots_list = n_shots
-
-        if len(n_shots_list) != len(args):
-            raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
+    def grad_fd_func(args):
 
         grad = np.zeros(len(args))
 
-        for i, n_shots in enumerate(n_shots_list):
+        for i in range(len(args)):
             vect_eta = np.zeros(len(args))
             vect_eta[i] = 1
             
             # Finite diff. calculation of gradient
-            eval_i = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
-            eval_f = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
-
+            eval_i = fun(args - (eta/2)*vect_eta)
+            eval_f = fun(args + (eta/2)*vect_eta)
             grad[i] = (eval_f-eval_i)/eta
 
         return grad
