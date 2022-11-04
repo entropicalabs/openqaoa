@@ -186,8 +186,7 @@ class DeviceQiskit(DeviceBase):
             return False
         
         except Exception as e:
-            print('An Exception has occured when trying to connect with the \
-            provider: {}'.format(e))
+            print('An Exception has occured when trying to connect with the provider: {}'.format(e))
             return False
 
 
@@ -355,11 +354,23 @@ class DeviceAWS(DeviceBase):
         
         if self.device_name in self.available_qpus:
             self.backend_device = AwsDevice(self.device_name, self.aws_session)
-            return True
         else:
             print(
-                f"Please choose from {self.available_qpus} for this provider")
+                '''
+                These are the only available devices for this aws region: 
+                {}. Try a different aws region if the device you are looking 
+                for is not in the list.'
+                '''.format(self.available_qpus))
             return False
+        
+        # Get the maximum number of qubits for that particular AWS Backend
+        try:
+            self.n_qubits = self.backend_device.properties.paradigm.qubitCount
+        except AttributeError:
+            print("OpenQAOA is unable to retrieve the number of qubits available in the selected QPU.")
+            return False
+        else:
+            return True
     
     def _check_provider_connection(self) -> bool:
         
@@ -374,8 +385,7 @@ class DeviceAWS(DeviceBase):
             self.aws_session = None
             return True
         except Exception as e:
-            print('An Exception has occured when trying to connect with the \
-            provider: {}'.format(e))
+            print('An Exception has occured when trying to connect with the provider: {}'.format(e))
             return False
 
 
