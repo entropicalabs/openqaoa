@@ -12,44 +12,37 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-"""
-Collection of functions to return derivative computation functions. Usually called from the `derivative_function` method of a `QAOABaseBackend` object.
-New gradient/higher-order derivative computation methods can be added here. To add new computation methods:
-    1. Write function in the format : new_function(backend_obj, params_std, params_ext, gradient_options), or with less arguments.
-    2. Give this function a string identifier (eg: 'param_shift'), and add this to the list `derivative_methods` of the function `derivative`, and as a possible 'out'.
-
-"""
 from __future__ import annotations
 
 import numpy as np
 import random
 
 from copy import deepcopy
-from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
+from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams 
+from .qaoa_parameters.baseparams import QAOAVariationalBaseParams
+from .basebackend import QAOABaseBackend
+from .optimizers.logger_vqa import Logger
 
 
 def update_and_compute_expectation(backend_obj: QAOABaseBackend, 
                                    params: QAOAVariationalBaseParams, 
                                    logger: Logger):
-    
     """
     Helper function that returns a callable that takes in a list/nparray of raw parameters.
     This function will handle:
-        (1) Updating logger object with `logger.log_variables`
-        (2) Updating variational parameters with `update_from_raw` 
-        (3) Computing expectation with `backend_obj.expectation`
     
-    PARAMETERS
+        #. Updating logger object with `logger.log_variables`
+        #. Updating variational parameters with `update_from_raw` 
+        #. Computing expectation with `backend_obj.expectation`
+    
+    Parameters
     ----------
     backend_obj: QAOABaseBackend
         `QAOABaseBackend` object that contains information about the backend that is being used to perform the QAOA circuit
-        
     params : QAOAVariationalBaseParams
-        `QAOAVariationalBaseParams` object containing variational angles.
-        
+        `QAOAVariationalBaseParams` object containing variational angles. 
     logger: Logger
         Logger Class required to log information from the evaluations required for the jacobian/hessian computation.
-    
     Returns
     -------
     out:
@@ -77,32 +70,24 @@ def derivative(backend_obj: QAOABaseBackend,
     """
     Returns a callable function that calculates the gradient according to the specified `gradient_method`.
 
-    PARAMETERS
+    Parameters
     ----------
     backend_obj: QAOABaseBackend
         `QAOABaseBackend` object that contains information about the backend that is being used to perform the QAOA circuit
-        
     params : QAOAVariationalBaseParams
         `QAOAVariationalBaseParams` object containing variational angles.
-        
     logger: Logger
         Logger Class required to log information from the evaluations required for the jacobian/hessian computation.
-    
     derivative_type : str
         Type of derivative to compute. Either `gradient` or `hessian`.
-
     derivative_method : str
         Computational method of the derivative. Either `finite_difference`, `param_shift`, `stoch_param_shift`, or `grad_spsa`.
-
     derivative_options : dict
         Dictionary containing options specific to each `derivative_method`.
-
     cost_std : QAOACost
         `QAOACost` object that computes expectation values when executed. Standard parametrisation.
-
     cost_ext : QAOACost
         `QAOACost` object that computes expectation values when executed. Extended parametrisation. Mainly used to compute parameter shifts at each individual gate, which is summed to recover the parameter shift for a parametrised layer.
-
     Returns
     -------
     out:

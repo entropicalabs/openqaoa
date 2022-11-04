@@ -33,7 +33,7 @@ Installing
 
 You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8, 3.9, 3.10 and then pip install openqaoa with the following command
 
-```bash
+```
 pip install openqaoa
 ```
 
@@ -41,7 +41,7 @@ Alternatively, you can install manually directly from the GitHub repository by
 
 1. Clone the git repository:
 
-```bash
+```
 git clone git@github.com:entropicalabs/openqaoa.git
 ```
 
@@ -49,12 +49,12 @@ git clone git@github.com:entropicalabs/openqaoa.git
 
 3. After cloning the repository `cd openqaoa` and pip install the package. Use the following command for a vanilla install with the `scipy` optimizers:
 
-```bash
+```
 pip install .
 ```
 If you are interested in running the tests or the docs you can do so my using the installment modifiers `[docs]` and `[tests]`. For example,
 
-```bash
+```
 pip install .[tests]
 ```
 
@@ -101,6 +101,7 @@ Workflows can be customised using some convenient setter functions. First, we ne
 Then, the QAOA parameters can be set as follow
 
 .. code-block:: python
+
    # circuit properties
    q.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='xy')
 

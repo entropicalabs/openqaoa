@@ -104,7 +104,7 @@ jobs:
       - name: Build and test Sphinx docs
         run: |
           sudo apt-get install pandoc
+          mkdir ./docs/source/notebooks
+          cp ./examples/*.ipynb ./docs/source/notebooks/
           cd docs/
-          mkdir ../docs/source/notebooks
-          cp -r ../examples/* ../docs/source/notebooks/
-          make html
+          make html SPHINXOPTS="-W --keep-going"

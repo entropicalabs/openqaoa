@@ -70,11 +70,12 @@ class DeviceLocal(DeviceBase):
             return False
 
 class DeviceQiskit(DeviceBase):
-    """Contains the required information and methods needed to access remote
+    """
+    Contains the required information and methods needed to access remote
     qiskit QPUs.
 
     Parameters
-	----------
+    ----------
 	available_qpus: `list`
 		When connection to a provider is established, this attribute contains a list
 		of backend names which can be used to access the selected backend by reinitialising
@@ -113,7 +114,8 @@ class DeviceQiskit(DeviceBase):
         self.qpu_connected = None
 
     def check_connection(self) -> bool:
-        """This method should allow a user to easily check if the credentials
+        """
+        This method should allow a user to easily check if the credentials
         provided to access the remote QPU is valid.
 
         If no backend was specified in initialisation of object, just runs
@@ -122,7 +124,7 @@ class DeviceQiskit(DeviceBase):
         can be established.
 
         Returns
-		-------
+        -------
         bool
 			True if successfully connected to IBMQ or IBMQ and the QPU backend
 			if it was specified. False if unable to connect to IBMQ or failure

@@ -14,7 +14,7 @@ build:
     pre_build:
       - echo "Creating the notebook folder from .readthedocs.yml"
       - mkdir ./docs/source/notebooks
-      - cp -r ./examples/* ./docs/source/notebooks/
+      - cp ./examples/*.ipynb ./docs/source/notebooks/
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:

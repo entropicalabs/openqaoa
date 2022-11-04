@@ -41,9 +41,10 @@ class QAOA(Optimizer):
     A class implementing a QAOA workflow end to end.
 
     It's basic usage consists of 
-    1. Initialization
-    2. Compilation
-    3. Optimization
+
+    #. Initialization
+    #. Compilation
+    #. Optimization
 
     .. warning::
         To all our dear beta testers: the setter functions will most likely change. Bear with us as we figure our the smoother way to create the workflows :-)
@@ -52,7 +53,28 @@ class QAOA(Optimizer):
     .. note::
         The attributes of the QAOA class should be initialized using the set methods of QAOA. For example, to set the circuit's depth to 10 you should run `set_circuit_properties(p=10)`
 
-    Attributes
+    Examples
+    --------
+        Examples should be written in doctest format, and should illustrate how
+        to use the function.
+
+        >>> q = QAOA()
+        >>> q.compile(QUBO)
+        >>> q.optimise()
+
+        Where `QUBO` is a an instance of `openqaoa.problems.problem.QUBO`
+
+        If you want to use non-default parameters:
+
+        >>> q_custom = QAOA()
+        >>> q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
+        >>> q_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
+        >>> q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
+        >>> q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
+        >>> q_custom.compile(qubo_problem)
+        >>> q_custom.optimize()
+
+    Parameters
     ----------
         circuit_properties: `CircuitProperties`
             The circuit properties of the QAOA workflow. Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
@@ -63,45 +85,24 @@ class QAOA(Optimizer):
         classical_optimizer: `ClassicalOptimizer`
             The classical optimiser properties of the QAOA workflow. Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
             For a complete list of its parameters and usage please see the method set_classical_optimizer
-        local_simulators: list[str]`
+        local_simulators: `list[str]`
             A list containing the available local simulators
-        mixer_hamil: Hamiltonian
+        mixer_hamil: `Hamiltonian`
             The desired mixer hamiltonian
-        cost_hamil: Hamiltonian
+        cost_hamil: `Hamiltonian`
             The desired mixer hamiltonian
-        circuit_params: QAOACircuitParams
+        circuit_params: `QAOACircuitParams`
             the abstract and backend-agnostic representation of the underlying QAOA parameters
-        variate_params: QAOAVariationalBaseParams
+        variate_params: `QAOAVariationalBaseParams`
             The variational parameters. These are the parameters to be optimised by the classical optimiser
-        backend: VQABaseBackend
+        backend: `VQABaseBackend`
             The openQAOA representation of the backend to be used to execute the quantum circuit
-        optimizer: OptimizeVQA
+        optimizer: `OptimizeVQA`
             The classical optimiser
         results: `Result`
             Contains the logs of the optimisation process
         compiled: `Bool`
             A boolean flag to check whether the QAOA object has been correctly compiled at least once
-
-    Examples
-    --------
-    Examples should be written in doctest format, and should illustrate how
-    to use the function.
-
-    >>> q = QAOA()
-    >>> q.compile(QUBO)
-    >>> q.optimise()
-
-    Where `QUBO` is a an instance of `openqaoa.problems.problem.QUBO`
-
-    If you want to use non-default parameters:
-
-    >>> q_custom = QAOA()
-    >>> q_custom.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
-    >>> q_custom.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
-    >>> q_custom.set_backend_properties(n_shots=200, cvar_alpha=1)
-    >>> q_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
-    >>> q_custom.compile(qubo_problem)
-    >>> q_custom.optimize()
     """
 
     def __init__(self, device=DeviceLocal('vectorized')):
@@ -231,22 +232,22 @@ class QAOA(Optimizer):
         Set the parameters for the classical optimizer to be used in the QAOA workflow
 
         Parameters
-        -------------------
+        ----------
             method: str
                 The classical optimization method. Choose from:
-                ['imfil','bobyqa','snobfit']
-                ['vgd', 'sgd', 'rmsprop'] 
-                ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
+                    - ['imfil','bobyqa','snobfit']
+                    - ['vgd', 'sgd', 'rmsprop'] 
+                    - ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
             maxiter : Optional[int]
                 Maximum number of iterations.
             maxfev : Optional[int]
                 Maximum number of function evaluations.
             jac: str
                 Method to compute the gradient vector. Choose from:
-                ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
+                    - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
             hess: str
                 Method to compute the hessian. Choose from:
-                ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
+                    - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
             constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
                 Scipy-based constraints on parameters of optimization. Will be available soon
             bounds: scipy.optimize.Bounds
@@ -256,14 +257,14 @@ class QAOA(Optimizer):
                 the difference between two steps, terminate optimization.
             optimizer_options : dict
                 Dictionary of optimiser-specific arguments.
-                stepsize : float
-                    Step size of each gradient descent step.
-                decay : float
-                    Stepsize decay parameter of RMSProp.
-                eps : float
-                    Small number to prevent division by zero for RMSProp.
-                lambd : float
-                    Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
+                    stepsize : float
+                        Step size of each gradient descent step.
+                    decay : float
+                        Stepsize decay parameter of RMSProp.
+                    eps : float
+                        Small number to prevent division by zero for RMSProp.
+                    lambd : float
+                        Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
             ramp_time: float
                 The slope(rate) of linear ramp initialisation of QAOA parameters.
             jac_options : dict
@@ -376,10 +377,10 @@ class RQAOA(Optimizer):
     ----------
     algorithm: `str`
         A string contaning the name of the algorithm, here fixed to `rqaoa`
-    qaoa: 'QAOA'
+    qaoa: `QAOA`
         QAOA class instance containing all the relevant information for the
         QAOA runs at each recursive step.
-    rqaoa_parameters: 'RqaoaParameters'
+    rqaoa_parameters: `RqaoaParameters`
         Set of parameters containing all the relevant information for the 
         recursive procedure.
     result: `dict`

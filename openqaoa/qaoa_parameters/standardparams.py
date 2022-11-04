@@ -36,12 +36,12 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    hyperparameters:
-        The hyperparameters containing the register, terms, weights, and the number of layers
-        ``hyperparameters = (register, terms, weights, p)``
-    parameters:
-        Tuple containing ``(betas, gammas)`` with dimensions
-        ``(p, p)``
+    qaoa_circuit_params:
+        QAOACircuitParams object containing circuit instructions
+    betas: 
+        List of p betas
+    gammas:
+        List of p gammas
 
     Attributes
     ----------
@@ -226,13 +226,15 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    hyperparameters:
-        The hyperparameters containing the register, terms, weights, and the number of layers
-        ``hyperparameters = (register, terms, weights, p)``
-    parameters:
-        Tuple containing ``(betas, gammas_singles, gammas_pairs)`` with
-        dimensions ``(p, p, p)``
-
+    qaoa_circuit_params:
+        QAOACircuitParams object containing circuit instructions
+    betas: 
+        List of p betas
+    gammas_singles:
+        List of p gammas_singles
+    gammas_pairs: 
+        List of p gammas_pairs
+        
     Attributes
     ----------
     betas: np.array
