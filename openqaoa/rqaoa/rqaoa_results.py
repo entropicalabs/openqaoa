@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from openqaoa.problems.helper_functions import convert2serialize
+
 class RQAOAResults(dict):
     """
     A class to handle the results of RQAOA workflows
@@ -56,3 +58,14 @@ class RQAOAResults(dict):
         Returns the Hamiltonian of the i-th step of the RQAOA.
         """
         return self.get_problem_step(i).hamiltonian
+
+    def dump(self):
+        """
+        Returns the result as json.
+        """
+        full_dict = self
+        full_dict['intermediate_steps'] = [{'QUBO': step['QUBO'], 'QAOA': 'qaoa'} for step in full_dict['intermediate_steps']]
+
+        # TODO : add the QAOA results as dict to the intermediate steps
+
+        return convert2serialize(full_dict)
