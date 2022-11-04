@@ -34,7 +34,7 @@ from openqaoa.problems.problem import MaximumCut
 
 
 # Create a hamiltonian problem on 15 qubits and create Circuit Params Class
-hamiltonian1 = MaximumCut.random_instance(n_nodes=15, edge_probability = 0.9).get_qubo_problem().hamiltonian 
+hamiltonian1 = MaximumCut.random_instance(problem_size=15).get_qubo_problem().hamiltonian
 mixer_hamiltonian1 = X_mixer_hamiltonian(n_qubits = 15)
 qaoa_circuit_params1 = QAOACircuitParams(cost_hamiltonian = hamiltonian1, mixer_hamiltonian = mixer_hamiltonian1, p=4)
 

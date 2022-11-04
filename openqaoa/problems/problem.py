@@ -20,7 +20,7 @@ import scipy
 import scipy.spatial
 import itertools
 
-from .helper_functions import convert2serialize, convert_binary_to_ising
+from .helper_functions import convert2serialize, convert_binary_to_ising, get_knapsack_input
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 
 SEED = 1234
@@ -29,6 +29,7 @@ SEED = 1234
 class Problem(ABC):
     @staticmethod
     @abstractmethod
+
     def random_instance(problem_size):
         """
         Creates a random instance of the problem.
@@ -48,10 +49,6 @@ class Problem(ABC):
             A tuple containing the QUBO problem.
         """
         raise NotImplementedError
-
-
-
-
 
 
 class QUBO:
@@ -114,7 +111,7 @@ class QUBO:
             constant = weights.pop(constant_index)
             terms.pop(constant_index)
         except:
-            pass
+            raise ValueError("The constant term must be included in the QUBO")
 
         # If the user wants to clean the terms and weights or if the number of
         # terms is not too big, we go through the cleaning process
@@ -258,8 +255,7 @@ class TSP(Problem):
         -------
             A random instance of the Traveling Salesman problem.
         """
-        np.random.seed(SEED)
-        n_cities = np.random.randint(1, problem_size)
+        n_cities = problem_size
 
         box_size = np.sqrt(n_cities)
         coordinates = []
@@ -291,7 +287,8 @@ class TSP(Problem):
 
         return var_pairs
 
-    def TSP_instance_dict(self, pairs_dict, dists):
+    @staticmethod
+    def tsp_instance_dict(pairs_dict, dists):
         problem_dict = defaultdict(float)
 
         for city_pair, var_pairs in pairs_dict.items():
@@ -314,46 +311,15 @@ class TSP(Problem):
         distance_matrix = self.get_distance_matrix()
 
         # Basic problem
-        polys_dict = TSP.all_pairs_all_steps(self)
-        problem_dict = TSP.TSP_instance_dict(self, polys_dict, distance_matrix)
-        pairs = [list(pair) for pair in problem_dict.keys()]
-        coeffs = list(problem_dict.values())
+        polys_dict = self.all_pairs_all_steps()
+        problem_dict = self.tsp_instance_dict(polys_dict, distance_matrix)
+        terms = [list(pair) for pair in problem_dict.keys()]
+        weights = list(problem_dict.values())
         n = self.n_cities * (self.n_cities + 1)
 
-        ising_terms, ising_coeffs = [], []
+        ising_terms, ising_weights = convert_binary_to_ising(terms, weights)
 
-        constant_term = 0
-        linear_terms = np.zeros(n)
-
-        # Process the given terms and weights
-        for weight, term in zip(coeffs, pairs):
-
-            if len(term) == 2:
-                u, v = term
-
-                if u != v:
-                    ising_terms.append([u, v])
-                    ising_coeffs.append(weight / 4)
-                else:
-                    constant_term += weight / 4
-
-                linear_terms[term[0]] -= weight / 4
-                linear_terms[term[1]] -= weight / 4
-                constant_term += weight / 4
-            elif len(term) == 1:
-                linear_terms[term[0]] -= weight / 2
-                constant_term += weight / 2
-            else:
-                constant_term += weight
-
-        for variable, linear_term in enumerate(linear_terms):
-            ising_terms.append([variable])
-            ising_coeffs.append(linear_term)
-
-        ising_terms.append([])
-        ising_coeffs.append(constant_term)
-
-        return QUBO(n, ising_terms, ising_coeffs)
+        return QUBO(n, ising_terms, ising_weights)
 
 
 class NumberPartition(Problem):
@@ -373,7 +339,7 @@ class NumberPartition(Problem):
     def __init__(self, numbers=None):
         # Set the numbers to be partitioned. If not given, generate a random list with integers
         self.numbers = numbers
-        self.n_numbers = None if numbers == None else len(self.numbers)
+        self.n_numbers = None if numbers is None else len(self.numbers)
 
     @property
     def numbers(self):
@@ -400,8 +366,7 @@ class NumberPartition(Problem):
         -------
             A random instance of the Number Partitioning problem.
         """
-        np.random.seed(SEED)
-        n_numbers = np.random.randint(1, problem_size)
+        n_numbers = problem_size
 
         numbers = list(map(int, np.random.randint(1, 10, size=n_numbers)))
         return NumberPartition(numbers)
@@ -491,8 +456,7 @@ class MaximumCut(Problem):
         -------
             A random instance of the Maximum Cut problem.
         """
-        np.random.seed(SEED)
-        n_nodes = np.random.randint(1, problem_size)
+        n_nodes = problem_size
         edge_probability = np.random.uniform(0, 1)
 
         G = nx.generators.random_graphs.fast_gnp_random_graph(
@@ -630,23 +594,8 @@ class Knapsack(Problem):
             A random instance of the Knapsack problem.
         """
 
-        np.random.seed(SEED)
-        n_items = np.random.randint(1, problem_size)
+        values, weights, weight_capacity, penalty = get_knapsack_input(problem_size)
 
-        values = list(map(int, np.random.randint(1, n_items, size=n_items)))
-        weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
-
-        min_weights = np.min(weights)
-        max_weights = np.max(weights)
-
-        if min_weights != max_weights:
-            weight_capacity = np.random.randint(
-                min_weights * n_items, max_weights * n_items
-            )
-        else:
-            weight_capacity = np.random.randint(max_weights, max_weights * n_items)
-
-        penalty = 2 * np.max(values)
         return Knapsack(values, weights, weight_capacity, int(penalty))
 
     def terms_and_weights(self):
@@ -739,7 +688,7 @@ class Knapsack(Problem):
         # ising_terms, ising_weights = terms,weights
         ising_terms, ising_weights = convert_binary_to_ising(terms, weights)
 
-        return QUBO(n_variables, ising_terms, weights)
+        return QUBO(n_variables, ising_terms, ising_weights)
 
 
 class SlackFreeKnapsack(Knapsack):
@@ -780,22 +729,7 @@ class SlackFreeKnapsack(Knapsack):
         -------
             A random instance of the Knapsack problem.
         """
-        np.random.seed(SEED)
-        n_items = np.random.randint(1, problem_size)
-
-        values = list(map(int, np.random.randint(1, n_items, size=n_items)))
-        weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
-
-        min_weights = np.min(weights)
-        max_weights = np.max(weights)
-        if min_weights != max_weights:
-            weight_capacity = np.random.randint(
-                min_weights * n_items, max_weights * n_items
-            )
-        else:
-            weight_capacity = np.random.randint(max_weights, max_weights * n_items)
-
-        penalty = 2 * np.max(values)
+        values, weights, weight_capacity, penalty = get_knapsack_input(problem_size)
         return SlackFreeKnapsack(values, weights, weight_capacity, int(penalty))
 
     def terms_and_weights(self):
@@ -933,8 +867,8 @@ class MinimumVertexCover(Problem):
         -------
         A random instance of the Minimum Vertex Cover problem.
         """
-        np.random.seed(SEED)
-        n_nodes = np.random.randint(1, problem_size)
+        n_nodes = problem_size
+
         edge_probability = np.random.uniform(0.0, 1.0)
 
         G = nx.generators.random_graphs.fast_gnp_random_graph(
@@ -1048,11 +982,9 @@ class ShortestPath(Problem):
         -------
         A random instance of the Shortest Path problem.
         """
-        np.random.seed(SEED)
-        n_nodes = np.random.randint(1, problem_size)
+        n_nodes = problem_size
         edge_probability = np.random.uniform(0, 1)
-        source = np.random.randint(0, n_nodes)
-        dest = np.random.randint(0, n_nodes)
+        source, dest = np.random.choice(n_nodes, 2, replace=False)
         G = nx.generators.random_graphs.fast_gnp_random_graph(
             n=n_nodes, p=edge_probability, seed=SEED
         )
@@ -1065,8 +997,6 @@ class ShortestPath(Problem):
             G.nodes[w]["weight"] = DEFAULT_WEIGHTS
 
         return ShortestPath(G, source, dest)
-
-
 
     def terms_and_weights(self):
         """

@@ -12,6 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import numpy as np
+
+
 def convert2serialize(obj):
     if isinstance(obj, dict):
         return {k: convert2serialize(v) for k, v in obj.items() if v is not None}
@@ -31,7 +34,7 @@ def convert2serialize(obj):
 
 def convert_binary_to_ising(terms, weights):
     """
-    Converts the weights from a [0, 1] encoding to an Ising problem [-1, 1] 0 is mapped to +1 and 1 to -1 respectively
+    Converts the weights from a [0, 1] encoding to an Ising problem [-1, 1] 0 is mapped to -1 and 1 to +1 respectively
 
     Parameters
     ----------
@@ -60,3 +63,23 @@ def convert_binary_to_ising(terms, weights):
     new_terms_weights.append(([], constant))
 
     return tuple(zip(*new_terms_weights))
+
+
+def get_knapsack_input(n_items):
+
+    values = list(map(int, np.random.randint(1, n_items, size=n_items)))
+    weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
+
+    min_weights = np.min(weights)
+    max_weights = np.max(weights)
+
+    if min_weights != max_weights:
+        weight_capacity = np.random.randint(
+            min_weights * n_items, max_weights * n_items
+        )
+    else:
+        weight_capacity = np.random.randint(max_weights, max_weights * n_items)
+
+    penalty = 2 * np.max(values)
+
+    return values, weights, weight_capacity, penalty
