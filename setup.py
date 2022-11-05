@@ -15,7 +15,7 @@ requirements = [
     "sympy>=1.10.1",
     "numpy>=1.22.3",
     "networkx>=2.8",
-    "scipy==1.8",
+    "scipy>=1.8",
     "matplotlib>=3.4.3, <3.5.0",
     "qiskit>=0.36.1",
     "pyquil>=3.1.0",
