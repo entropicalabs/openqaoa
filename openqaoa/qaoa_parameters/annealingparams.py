@@ -14,6 +14,7 @@
 
 from typing import List, Tuple, Union
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 from ..qaoa_parameters.baseparams import (QAOACircuitParams,
                                           QAOAVariationalBaseParams,
@@ -32,27 +33,34 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     where the :math:`s(t_i) =: s_i` are the variable parameters and
     :math:`\\Delta t= \\frac{T}{N}`.
     So the schedule is specified by specifying s(t) at evenly spaced timelayers.
-
+    
     Parameters
     ----------
-    hyperparameters:
-        The hyperparameters containing the register, terms, weights, the number of layers
-        and the total annealing time ``hyperparameters = (register, terms, weights,
-        p, time)``
-    parameters : Tuple
-        Tuple containing ``(schedule values)`` of length ``p``
-
+    qaoa_circuit_params:
+        QAOACircuitParams object containing circuit instructions
+    total_annealing_time: float
+        Total annealing time for the schedule
+    schedule: list
+        List specifying the annealing schedule
+        
     Attributes
     ----------
     schedule: np.array
         An 1D array holding the values of the schedule function at each timestep.
+    total_annealing_time: float
+        Total annealing time for the schedule
+    dt: float
+        annealing time step
+    mixer_time: np.array
+        schedule for mixer application
+    cost_time: np.array
+        schedule for cost application
     """
 
     def __init__(self,
                  qaoa_circuit_params: QAOACircuitParams,
                  total_annealing_time: float,
                  schedule: List[Union[float, int]]):
-
         # setup reg, qubits_singles and qubits_pairs
         super().__init__(qaoa_circuit_params)
         assert total_annealing_time is not None, f"Please specify total_annealing_time to use {type(self).__name__}"
@@ -153,5 +161,6 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
             fig, ax = plt.subplots()
 
         ax.plot(self.schedule, marker="s", **kwargs)
-        ax.set_xlabel("timestep number", fontsize=14)
+        ax.set_xlabel("p", fontsize=14)
         ax.set_ylabel("s(t)", fontsize=14)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))

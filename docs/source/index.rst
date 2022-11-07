@@ -12,7 +12,7 @@ Key features of OpenQAOA:
 * Simple yet customizable workflows for QAOA and RQAOA deployable on
    * IBMQ devices
    * Rigettis' Quantum Cloud Services
-   * AWS's Braket
+   * Amazon Braket
    * Local simulators (including Rigettis' QVM, IBM's Qiskit, and Entropica Labs' vectorized simulator)
 * Multiple parametrization strategies:
    * Standard, Fourier, and Annealing
@@ -31,9 +31,9 @@ Getting started
 Installing
 ------------
 
-You can install the latest version of OpenQAOA directly from PyPi. First, create a virtual environment with *python3.8+* and then simply pip install openqaoa with the following command
+You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8, 3.9, 3.10 and then pip install openqaoa with the following command
 
-```bash
+```
 pip install openqaoa
 ```
 
@@ -41,7 +41,7 @@ Alternatively, you can install manually directly from the GitHub repository by
 
 1. Clone the git repository:
 
-```bash
+```
 git clone git@github.com:entropicalabs/openqaoa.git
 ```
 
@@ -49,12 +49,12 @@ git clone git@github.com:entropicalabs/openqaoa.git
 
 3. After cloning the repository `cd openqaoa` and pip install the package. Use the following command for a vanilla install with the `scipy` optimizers:
 
-```bash
+```
 pip install .
 ```
 If you are interested in running the tests or the docs you can do so my using the installment modifiers `[docs]` and `[tests]`. For example,
 
-```bash
+```
 pip install .[tests]
 ```
 
@@ -95,17 +95,12 @@ Workflows can be customised using some convenient setter functions. First, we ne
 .. code-block:: python
 
    from openqaoa.devices import create_device
-   qcs_credentials = {'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10}
-   device = create_device(location='qcs',name='6q-qvm',**qcs_credentials)
-
+   qiskit_sv = create_device(location='local', name='qiskit.statevector_simulator')
+   q.set_device(qiskit_sv)
 
 Then, the QAOA parameters can be set as follow
 
 .. code-block:: python
-
-   # Create the device 
-   qiskit_device = create_device(location='local', name='qiskit.statevector_simulator')
-   q.set_device(qiskit_device)
 
    # circuit properties
    q.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='xy')
@@ -114,7 +109,7 @@ Then, the QAOA parameters can be set as follow
    q.set_backend_properties(prepend_state=None, append_state=None)
 
    # classical optimizer properties
-   q.set_classical_optimizer(method='nelder-mead', maxiter=10,
+   q.set_classical_optimizer(method='nelder-mead', maxiter=200,
                            optimization_progress=True, cost_progress=True, parameter_log=True)
 
 Currently, the available devices are:
@@ -127,6 +122,8 @@ Currently, the available devices are:
      - Device Name
    * - `local`
      - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`
+   * - `Amazon Braket`
+     -  ['IonQ', 'Rigetti', 'OCQ']
    * - `IBMQ`
      - Please check the IBMQ backends available to your account
    * - `Rigetti's QCS`
@@ -196,7 +193,7 @@ And finally, create the classical optimizer and minimize the objective function
 
 .. code-block:: python
 
-   optimizer_dict = {'method': 'cobyla', 'maxiter': 10}
+   optimizer_dict = {'method': 'cobyla', 'maxiter': 200}
    optimizer_obj = ScipyOptimizer(backend_obj, params, optimizer_dict)
    optimizer_obj()
 
@@ -233,15 +230,16 @@ Contents
    :maxdepth: 3
    :caption: Tutorials
 
-   notebooks/1_workflows_example.ipynb
-   notebooks/2_simulators_comparison.ipynb
-   notebooks/3_qaoa_on_qpus.ipynb
-   notebooks/4_qaoa_variational_parameters.ipynb
-   notebooks/5_advanced_parameterization.ipynb
-   notebooks/6_fast_qaoa_simulator.ipynb
-   notebooks/7_cost_landscapes_w_manual_mode.ipynb
-   notebooks/8_results_example.ipynb
-   notebooks/9_RQAOA_example.ipynb
+   notebooks/01_workflows_example.ipynb
+   notebooks/02_simulators_comparison.ipynb
+   notebooks/03_qaoa_on_qpus.ipynb
+   notebooks/04_qaoa_variational_parameters.ipynb
+   notebooks/05_advanced_parameterization.ipynb
+   notebooks/06_fast_qaoa_simulator.ipynb
+   notebooks/07_cost_landscapes_w_manual_mode.ipynb
+   notebooks/08_results_example.ipynb
+   notebooks/09_RQAOA_example.ipynb
+   notebooks/10_workflows_on_Amazon_braket.ipynb
 
 
 .. toctree::

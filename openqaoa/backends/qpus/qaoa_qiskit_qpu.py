@@ -183,6 +183,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
             while api_contact == False:
                 try:
+                    self.job_id = job.job_id()
                     counts = job.result().get_counts()
                     api_contact = True
                     job_state = True

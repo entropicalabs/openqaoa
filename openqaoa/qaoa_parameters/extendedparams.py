@@ -15,6 +15,7 @@
 from typing import Tuple, List, Union
 import math
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 from .baseparams import QAOACircuitParams, QAOAVariationalBaseParams, shapedArray, _is_iterable_empty
 
@@ -261,15 +262,52 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
         return all_constraints
 
     def plot(self, ax=None, **kwargs):
-        if ax is None:
-            fig, ax = plt.subplots()
 
-        ax.plot(self.betas, label="betas", marker="s", ls="", **kwargs)
-        if not _is_iterable_empty(self.gammas_singles):
-            ax.plot(self.gammas_singles,
-                    label="gammas_singles", marker="^", ls="", **kwargs)
-        if not _is_iterable_empty(self.gammas_pairs):
-            ax.plot(self.gammas_pairs,
-                    label="gammas_pairs", marker="v", ls="", **kwargs)
-        ax.set_xlabel("timestep")
-        ax.legend()
+        list_names_ = ["betas singles", "betas pairs", "gammas singles", "gammas pairs"] 
+        list_values_ = [self.betas_singles % (2*(np.pi)), self.betas_pairs % (2*(np.pi)), 
+                        self.gammas_singles % (2*(np.pi)), self.gammas_pairs % (2*(np.pi))] 
+
+        list_names, list_values = list_names_.copy(), list_values_.copy()
+
+        n_pop = 0
+        for i in range(len(list_values_)):
+            if list_values_[i].size == 0: 
+                list_values.pop(i-n_pop)
+                list_names.pop(i-n_pop)
+                n_pop += 1
+
+        n = len(list_values)
+        p = self.p
+
+        if ax is None:
+            fig , ax = plt.subplots((n+1)//2, 2, figsize =(9, 9 if n>2 else 5))
+
+        fig.tight_layout(pad=4.0)
+
+        for k, (name, values) in enumerate(zip(list_names, list_values)):
+            i, j = k//2 , k%2
+            axes = ax[i,j] if n>2 else ax[k]
+
+            if values.size == p:
+                axes.plot(values.T[0], marker="^", color="green", ls="", **kwargs)
+                axes.set_xlabel("p", fontsize=12)
+                axes.set_title(name)
+                axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+            
+            else:
+                n_terms = values.shape[1]
+                plt1 = axes.pcolor(np.arange(p), np.arange(n_terms) , values.T, vmin=0, vmax=2*np.pi, cmap="seismic")
+                axes.set_aspect(p/n_terms)
+                axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+                axes.yaxis.set_major_locator(MaxNLocator(integer=True))
+                axes.set_ylabel("terms")
+                axes.set_xlabel("p")
+                axes.set_title(name)
+
+                plt.colorbar(plt1, **kwargs)
+
+        if k == 0:
+            ax[1].axis('off')
+        elif k == 2:
+            ax[1,1].axis('off')
+

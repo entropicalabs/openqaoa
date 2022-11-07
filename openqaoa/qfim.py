@@ -4,6 +4,10 @@ import numpy as np
 
 from copy import deepcopy
 from .basebackend import QAOABaseBackendShotBased
+from .optimizers.logger_vqa import Logger
+from .basebackend import QAOABaseBackend
+from .qaoa_parameters.baseparams import QAOAVariationalBaseParams
+
 
 def log_qfim_evals(logger: Logger) -> Logger:
     

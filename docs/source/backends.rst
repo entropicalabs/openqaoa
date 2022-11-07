@@ -45,9 +45,16 @@ QCS - Rigetti
     :undoc-members:
     :inherited-members:
 
-IBMQ - IBM
+IBM Quantum - IBM
 ----------------------------------
 .. autoclass:: openqaoa.backends.qpus.qaoa_qiskit_qpu.QAOAQiskitQPUBackend
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+Amazon Braket - Amazon
+----------------------------------
+.. autoclass:: openqaoa.backends.qpus.qaoa_braket_qpu.QAOAAWSQPUBackend
     :members:
     :undoc-members:
     :inherited-members:
@@ -74,6 +81,11 @@ Devices
     :undoc-members:
     :inherited-members:
 
+.. autoclass:: openqaoa.devices.DeviceAWS
+    :members:
+    :undoc-members:
+    :inherited-members:
+
 Local devices --- Simulators
 =================================
 Vectorised
@@ -94,7 +106,6 @@ Qiskit
     :members:
     :undoc-members:
     :inherited-members:
-
 
 PyQuil
 ----------------------------------

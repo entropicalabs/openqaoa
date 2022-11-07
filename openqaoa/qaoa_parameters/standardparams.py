@@ -14,6 +14,7 @@
 
 from typing import List, Union
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 from .baseparams import QAOACircuitParams, QAOAVariationalBaseParams, shapedArray, _is_iterable_empty
 
@@ -35,12 +36,12 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    hyperparameters:
-        The hyperparameters containing the register, terms, weights, and the number of layers
-        ``hyperparameters = (register, terms, weights, p)``
-    parameters:
-        Tuple containing ``(betas, gammas)`` with dimensions
-        ``(p, p)``
+    qaoa_circuit_params:
+        QAOACircuitParams object containing circuit instructions
+    betas: 
+        List of p betas
+    gammas:
+        List of p gammas
 
     Attributes
     ----------
@@ -170,7 +171,8 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
 
         ax.plot(self.betas, label="betas", marker="s", ls="", **kwargs)
         ax.plot(self.gammas, label="gammas", marker="^", ls="", **kwargs)
-        ax.set_xlabel("timestep", fontsize=12)
+        ax.set_xlabel("p", fontsize=12)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.legend()
         
     def convert_to_ext(self, args_std):
@@ -224,13 +226,15 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    hyperparameters:
-        The hyperparameters containing the register, terms, weights, and the number of layers
-        ``hyperparameters = (register, terms, weights, p)``
-    parameters:
-        Tuple containing ``(betas, gammas_singles, gammas_pairs)`` with
-        dimensions ``(p, p, p)``
-
+    qaoa_circuit_params:
+        QAOACircuitParams object containing circuit instructions
+    betas: 
+        List of p betas
+    gammas_singles:
+        List of p gammas_singles
+    gammas_pairs: 
+        List of p gammas_pairs
+        
     Attributes
     ----------
     betas: np.array
@@ -383,6 +387,7 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
         if not _is_iterable_empty(self.gammas_pairs):
             ax.plot(self.gammas_pairs,
                     label="gammas_pairs", marker="v", ls="", **kwargs)
-        ax.set_xlabel("timestep")
+        ax.set_xlabel("p")
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         # ax.grid(linestyle='--')
         ax.legend()
