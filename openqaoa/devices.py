@@ -253,6 +253,7 @@ class DevicePyquil(DeviceBase):
         self.quantum_computer = get_qc(name=self.device_name, as_qvm=self.as_qvm, noisy=self.noisy,
                                        compiler_timeout=self.compiler_timeout, execution_timeout=self.execution_timeout,
                                        client_configuration=self.client_configuration, endpoint_id=self.endpoint_id, engagement_manager=self.engagement_manager)
+        self.n_qubits = len(self.quantum_computer.qubits())
 
     def check_connection(self) -> bool:
         """This method should allow a user to easily check if the credentials

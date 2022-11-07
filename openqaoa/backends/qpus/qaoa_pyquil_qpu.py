@@ -117,6 +117,9 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.get_qubits()), "Cannot attach a bigger circuit " \
                                                                 "to the QAOA routine"
+            
+        if self.device.n_qubits < self.n_qubits:
+            raise Exception('There are lesser qubits on the device than the number of qubits required for the circuit.')
 
         self.parametric_circuit = self.parametric_qaoa_circuit
         native_prog = self.device.quantum_computer.compiler.quil_to_native_quil(
