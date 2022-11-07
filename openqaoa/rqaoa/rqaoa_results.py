@@ -12,16 +12,27 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import copy
+
 from openqaoa.problems.helper_functions import convert2serialize
+from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
+from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 
 class RQAOAResults(dict):
     """
     A class to handle the results of RQAOA workflows
     It stores the results of the RQAOA optimization as a dictionary. With some custom methods.
-
-    TODO :  make it similar to the QAOA results class, some plotting functions could be added too
-            QAQAOAResults class is in optimizers/result.py
     """
+
+    def __init__(self):
+        """
+        Initializes the result class.
+        """
+        self.circuit_properties  = CircuitProperties()
+        self.backend_properties  = BackendProperties()
+        self.classical_optimizer = ClassicalOptimizer()
+        self.rqaoa_parameters    = RqaoaParameters()
+        self.device              = None
 
     def get_solution(self):
         """
@@ -63,9 +74,12 @@ class RQAOAResults(dict):
         """
         Returns the result as json.
         """
-        full_dict = self
-        full_dict['intermediate_steps'] = [{'QUBO': step['QUBO'], 'QAOA': 'qaoa'} for step in full_dict['intermediate_steps']]
-
-        # TODO : add the QAOA results as dict to the intermediate steps
+        full_dict = copy.deepcopy(self)
+        full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results} for step in full_dict['intermediate_steps']]
+        full_dict['device']              = self.device
+        full_dict['circuit_properties']  = self.circuit_properties
+        full_dict['backend_properties']  = self.backend_properties
+        full_dict['classical_optimizer'] = self.classical_optimizer
+        full_dict['rqaoa_parameters']    = self.rqaoa_parameters
 
         return convert2serialize(full_dict)
