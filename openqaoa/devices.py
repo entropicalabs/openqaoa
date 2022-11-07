@@ -73,13 +73,17 @@ class DeviceQiskit(DeviceBase):
     """Contains the required information and methods needed to access remote
     qiskit QPUs.
 
-    Parameters
+    Attributes
 	----------
 	available_qpus: `list`
 		When connection to a provider is established, this attribute contains a list
 		of backend names which can be used to access the selected backend by reinitialising
 		the Access Object with the name of the available backend as input to the
 		device_name parameter.
+    n_qubits: `int`
+        The maximum number of qubits available for the selected backend. Only
+        available if check_connection method is executed and a connection to the
+        qpu and provider is established.
 	"""
 
     def __init__(self, device_name: str, api_token: str,
@@ -194,6 +198,12 @@ class DevicePyquil(DeviceBase):
     """
     Contains the required information and methods needed to access remote
     Rigetti QPUs via Pyquil.
+    
+    Attributes
+    ----------
+    n_qubits: `int`
+        The maximum number of qubits available for the selected backend. 
+        Available upon proper initialisation of the class.
     """
 
     def __init__(self, device_name: str, as_qvm: bool = None, noisy: bool = None,
@@ -277,12 +287,17 @@ class DeviceAWS(DeviceBase):
     Contains the required information and methods needed to access QPUs hosted
     on AWS Braket.
     
-    Attributes:
+    Attributes
+    ----------
 	available_qpus: `list`
 		When connection to AWS is established, this attribute contains a list
 		of device names which can be used to access the selected device by
 		reinitialising the Access Object with the name of the available device
 		as input to the device_name parameter.
+    n_qubits: `int`
+        The maximum number of qubits available for the selected backend. Only
+        available if check_connection method is executed and a connection to the
+        qpu and provider is established.
     """
     
     def __init__(self, device_name: str, aws_access_key_id: Optional[str] = None, 
