@@ -81,24 +81,20 @@ class OptimizeVQA(ABC):
     Parameters
     ----------
     vqa_object:
-        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
-    
+        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.   
     variational_params:
-        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
-    
+        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.   
     method: 
         which method to use for optimization. Choose a method from the list
         of supported methods by scipy optimize, or from the list of custom gradient optimisers.
-
     optimizer_dict:
         All extra parameters needed for customising the optimising, as a dictionary.
-
-    #Optimizers that usually work the best for quantum optimization problems:
-        1) Gradient free optimizer: BOBYQA, ImFil, Cobyla
-        2) Gradient based optimizer: L-BFGS, ADAM (With parameter shift gradients)
+    Optimizers that usually work the best for quantum optimization problems:
+        #. Gradient free optimizer: BOBYQA, ImFil, Cobyla
+        #. Gradient based optimizer: L-BFGS, ADAM (With parameter shift gradients)
+    
         Note: Adam is not a part of scipy, it will added in a future version
     '''
-
     def __init__(self,
                  vqa_object: Type[VQABaseBackend],
                  variational_params: Type[QAOAVariationalBaseParams],
