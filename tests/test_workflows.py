@@ -655,6 +655,17 @@ class TestingRQAOA(unittest.TestCase):
 
         return r.results.get_solution()
 
+    def test_rqaoa_complie_multiple_times(self):
+        """
+        Test that the rqaoa can be compiled multiple times
+        """
+        graph = nw.circulant_graph(10, [1])
+        problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
+
+        r = RQAOA()
+        r.compile(problem)
+        for _ in range(5): r.optimize()
+
     def test_example_1_adaptive_custom(self):
 
         # Number of qubits

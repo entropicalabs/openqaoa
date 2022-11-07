@@ -682,10 +682,7 @@ class RQAOA(Optimizer):
         problem = self.problem  
         n_cutoff = self.rqaoa_parameters.n_cutoff
         n_qubits = problem.n
-        counter = self.rqaoa_parameters.counter 
-
-        # initialize the results object
-        self.results = RQAOAResults()
+        counter = self.rqaoa_parameters.counter
 
         # create a different max_terms function for each type 
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
