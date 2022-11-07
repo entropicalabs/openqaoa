@@ -684,6 +684,9 @@ class RQAOA(Optimizer):
         n_qubits = problem.n
         counter = self.rqaoa_parameters.counter 
 
+        # initialize the results object
+        self.results = RQAOAResults()
+
         # create a different max_terms function for each type 
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
             f_max_terms = rqaoa.ada_max_terms  
@@ -692,6 +695,9 @@ class RQAOA(Optimizer):
 
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
+
+            # Compile qaoa with the problem
+            self._q.compile(problem, verbose=False)
 
             # Run QAOA
             self._q.optimize()
@@ -716,8 +722,7 @@ class RQAOA(Optimizer):
             qaoa_steps.append(copy.deepcopy(self._q))
             problem_steps.append(copy.deepcopy(new_problem))
 
-            # Compile qaoa with the new problem
-            self._q.compile(new_problem, verbose=False)
+            # problem is updated
             problem = new_problem
 
             # Add one step to the counter
