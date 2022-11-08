@@ -640,11 +640,11 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         elif self.method.lower().split('_')[0] == 'pennylane': # check if we are using a pennylane optimizer
             method = ompl.pennylane_optimizer
 
-            self.options['method'] = self.method.lower().replace("pennylane_", "") 
+            self.options['pennylane_method'] = self.method.lower().replace("pennylane_", "") 
 
-            if self.options['method'] == 'natural_grad_descent': 
+            if self.options['pennylane_method'] == 'natural_grad_descent': 
                 self.options['qfim'] = qfim(self.vqa_object, self.variational_params, self.log)
-            if self.options['method'] in ['spsa', 'rotosolve']:    
+            if self.options['pennylane_method'] in ['spsa', 'rotosolve']:    
                 self.jac = None 
         
         try:

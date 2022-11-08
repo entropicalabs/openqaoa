@@ -38,7 +38,7 @@ AVAILABLE_OPTIMIZERS = {  # optimizers implemented
 
 
 
-def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
+def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd', qfim=None,
                         maxiter=100, tol=10**(-6), jac=None, callback=None,                         
                         nums_frequency=None, spectra=None, shifts=None, **options):
 
@@ -57,7 +57,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
         Arguments to pass to `func`.
     maxfev : int, optional
         Maximum number of function evaluations.
-    method : string, optional
+    pennylane_method : string, optional
         Optimizer method to compute the steps.
     qfim : callable, optional (required for natural_grad_descent)
         Callable Fubini-Study metric tensor
@@ -96,7 +96,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
         return fun(np.array(params), *k)
 
 
-    optimizer = AVAILABLE_OPTIMIZERS[method] # define the optimizer
+    optimizer = AVAILABLE_OPTIMIZERS[pennylane_method] # define the optimizer
 
     #get optimizer arguments
     arguments = inspect.signature(optimizer).parameters.keys()
@@ -122,11 +122,11 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
         improved = False
 
         # compute step (depends on the optimizer)
-        if method in ['natural_grad_descent']: 
+        if pennylane_method in ['natural_grad_descent']: 
             testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac, metric_tensor_fn=qfim) 
-        if method in ['adagrad', 'adam', 'vgd', 'momentum', 'nesterov_momentum', 'rmsprop']:
+        if pennylane_method in ['adagrad', 'adam', 'vgd', 'momentum', 'nesterov_momentum', 'rmsprop']:
             testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac)
-        if method in ['rotosolve']: 
+        if pennylane_method in ['rotosolve']: 
             testx, testy = optimizer.step_and_cost(
                                                     cost, bestx, *args,
                                                     nums_frequency={'params': {(i,):1 for i in range(bestx.size)}} if not nums_frequency else nums_frequency,
@@ -134,7 +134,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, method='vgd', qfim=None,
                                                     shifts=shifts,
                                                     full_output=False,
                                                   )
-        if method in ['spsa']:       
+        if pennylane_method in ['spsa']:       
             testx, testy = optimizer.step_and_cost(cost, bestx, *args)
 
         # check if stable
