@@ -36,16 +36,16 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
     Parameters
     ----------
     qaoa_circuit_params:
-        The hyperparameters containing the register, terms, weights, the number of layers
-        and the total annealing time
-        ``hyperparameters = (register, terms, weights, p, q)``.
-        ``q`` is the number of fourier coefficients. For ``q == p`` we
-        have the full expressivity of ``StandardParams``.
-        More are redundant.
-    parameters:
-        Tuple containing ``(v, u)`` with dimensions
-        ``(q, q)``
-
+        QAOACircuitParams object with circuit instructions
+    q : int
+        The number of coefficients for the discrete sine and cosine transforms
+        below
+    u : np.array
+        The discrete sine transform of the ``gammas`` in
+        ``StandardParams``
+    v : np.array
+        The discrete cosine transform of the ``betas`` in
+        ``StandardParams``
     Attributes
     ----------
     q : int
@@ -57,6 +57,10 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
     v : np.array
         The discrete cosine transform of the ``betas`` in
         ``StandardParams``
+    betas: np.array
+        Betas to parameterize the mixer part
+    gammas: np.array
+        Gammas to parameterize the cost part
     """
 
     def __init__(self,
@@ -236,16 +240,20 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
     Parameters
     ----------
     qaoa_circuit_params:
-        The hyperparameters containing the register, terms, weights, the number of layers
-        and the total annealing time
-        ``hyperparameters = (register, terms, weights, p, q)``.
-        ``q`` is the number of fourier coefficients. For ``q == p`` we
-        have the full expressivity of ``StandardWithBiasParams``.
-        More are redundant.
-    parameters:
-        Tuple containing ``(v, u_singles, u_pairs)`` with dimensions
-        ``(q, q, q)``
-
+        QAOACircuitParams object with circuit instructions
+    q : int
+        The number of coefficients for the discrete sine and cosine transforms
+        below
+    u_pairs : np.array
+        The discrete sine transform of the ``gammas_pairs`` in
+        ``StandardWithBiasParams``
+    u_singles : np.array
+        The discrete sine transform of the ``gammas_singles`` in
+        ``StandardWithBiasParams``
+    v : np.array
+        The discrete cosine transform of the betas in
+        ``StandardWithBiasParams``
+    
     Attributes
     ----------
     q : int
@@ -260,6 +268,9 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
     v : np.array
         The discrete cosine transform of the betas in
         ``StandardWithBiasParams``
+    betas: np.array
+    gammas_singles: np.array
+    gammas_pairs: np.array
     """
 
     def __init__(self,
@@ -460,13 +471,16 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
     ----------
     qaoa_circuit_params: ``QAOACircuitParams``
         object containing information about terms,weights,register and p
-
     q: ``int``
         The parameter depth for u and v Fourier params
-
-    parameters:
-        Tuple containing ``(v, u_singles, u_pairs)`` with dimensions
-        ``((q x nqubits), (q x nsingle_terms), (q x npair_terms))``
+    v: np.array
+        The discrete cosine transform of the ``betas`` in ``ExtendedParams``
+    u_singles: np.array
+        The discrete sine transform of the ``gammas_singles`` in
+        ``ExtendedParams``
+    u_pairs: np.array
+        The discrete sine transform of the ``gammas_pairs`` in
+        ``ExtendedParams``
 
     Attributes
     ----------
@@ -481,6 +495,10 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
     u_pairs: np.array
         The discrete sine transform of the ``gammas_pairs`` in
         ``ExtendedParams``
+    betas_singles:
+    betas_pairs:
+    gammas_singles:
+    gammas_pairs:
     """
 
     def __init__(self,
