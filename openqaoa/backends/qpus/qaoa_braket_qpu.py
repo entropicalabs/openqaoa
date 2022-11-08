@@ -83,7 +83,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
 
         if self.device.provider_connected and self.device.qpu_connected:
             self.backend_qpu = self.device.backend_device
-        elif self.device.provider_connected and self.device.qpu_connected in [False, None]:
+        elif self.device.provider_connected is True and self.device.qpu_connected in [False, None]:
             raise Exception(
                 'Connection to AWS was made. Error connecting to the specified backend.')
         else:
