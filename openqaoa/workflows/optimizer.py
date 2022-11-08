@@ -700,7 +700,7 @@ class RQAOA(Optimizer):
             q.optimize()
 
             # Obtain statistical results
-            exp_vals_z, corr_matrix = self._exp_val_hamiltonian_termwise()
+            exp_vals_z, corr_matrix = self._exp_val_hamiltonian_termwise(q)
             # Retrieve highest expectation values according to adaptive method or schedule in custom method
             max_terms_and_stats = f_max_terms(exp_vals_z, corr_matrix, self._n_step(n_qubits, n_cutoff, counter))
             # Generate spin map
@@ -749,14 +749,12 @@ class RQAOA(Optimizer):
         return 
 
 
-    def _exp_val_hamiltonian_termwise(self):
+    def _exp_val_hamiltonian_termwise(self, q):
         """
         Private method to call the exp_val_hamiltonian_termwise function taking the data from
         the QAOA object _q. 
         It eturns what the exp_val_hamiltonian_termwise function returns.
         """
-
-        q = self._q
 
         variational_params = q.variate_params
         qaoa_backend = q.backend
