@@ -655,7 +655,7 @@ class TestingRQAOA(unittest.TestCase):
 
         return r.results.get_solution()
 
-    def test_rqaoa_complie_multiple_times(self):
+    def test_rqaoa_compile_multiple_times(self):
         """
         Test that the rqaoa can be compiled multiple times
         """
