@@ -16,61 +16,7 @@ from typing import Union
 from .parameters import Parameters
 from openqaoa.qaoa_parameters import Hamiltonian
 
-
-class QaoaParameters(Parameters):
-    """
-    Parameter class to initialise parameters to run a desired QAOA program.
-
-
-    Attributes
-    ----------
-    p: `int`
-        Number of QAOA layers.
-    backend: `str`
-        String containing the specific backend in which QAOA is run.
-    params_type: `str`
-        String specificying the parametrization of the QAOA ansatz.
-    init_type: `str`
-        String specifiying the initialization of the QAOA variational parameters.
-    shots: `int`
-        Number of shots considered for statistics.
-    qpu_params: `dict`
-        Dictionary containing further specifications of a hardware backend.
-    """
-    def __init__(self,
-                 p: int = 1,
-                 backend: str = 'vectorized',
-                 params_type: str = 'standard',
-                 init_type: str = 'ramp',
-                 shots: int = None,
-                 optimizer_dict: dict = {'method': 'cobyla', 'maxiter': 200},
-                 qpu_params: dict = None):
-        """
-        Initialises QAOA program parameters.
-
-        Parameters
-        ----------
-        p: `int`
-            Number of QAOA layers. Defaults to 1.
-        backend: `str`
-            String containing the specific backend in which QAOA is run. Defaults to vectorized.
-        params_type: `str`
-            String specificying the parametrization of the QAOA ansatz. Defaults to 'standard'.
-        init_type: `str`
-            String specifiying the initialization of the QAOA variational parameters. Defaults to 'ramp'.
-        shots: `int`
-            Number of shots considered for statistics. Defaults to None.
-        qpu_params: `dict`
-            Dictionary containing further specifications of a hardware backend. Defaults to None.
-        """
-        self.p = p
-        self.backend = backend
-        self.params_type = params_type
-        self.init_type = init_type
-        self.shots = shots
-        self.optimizer_dict = optimizer_dict
-        self.qpu_params = qpu_params
-
+ALLOWED_RQAOA_TYPES = ['adaptive', 'custom']
 
 class RqaoaParameters(Parameters):
     """
@@ -80,7 +26,7 @@ class RqaoaParameters(Parameters):
     ----------
     rqaoa_type: `int`
         String specifying the RQAOA scheme under which eliminations are computed. The two methods are 'custom' and
-        'adaptive'.
+        'adaptive'. Defaults to 'adaptive'.
     n_max: `int`
         Maximum number of eliminations allowed at each step when using the adaptive method.
     steps: `Union[list,int]`
@@ -91,28 +37,28 @@ class RqaoaParameters(Parameters):
         is reached.
     n_cutoff: `int`
         Cutoff value at which the RQAOA algorithm obtains the solution classically.
-    shots: `int`
-        Number of shots considered for statistics.
-    qpu_params: `dict`
-        Dictionary containing further specifications of a hardware backend.
     original_hamiltonian: `Hamiltonian`
         Hamiltonian encoding the original problem fed into the RQAOA algorithm.
+    counter: `int`
+        Variable to count the step in the schedule. If counter = 3 the next step is schedule[3]. 
+        Default is 0, but can be changed to start in the position of the schedule that one wants.
     """
     
     def __init__(self,
-                 rqaoa_type: str = 'adaptive',
+                 rqaoa_type: str = 'custom',
                  n_max: int = 1,
                  steps: Union[list,int] = 1,
                  n_cutoff: int = 5,
-                 original_hamiltonian: Hamiltonian = None):
+                 original_hamiltonian: Hamiltonian = None,
+                 counter: int = 0):
         """
         Initialises RQAOA program parameters.
-
+        
         Parameters
         ----------
         rqaoa_type: `int`
             String specifying the RQAOA scheme under which eliminations are computed. The two methods are 'custom' and
-            'adaptive'. Defaults to 'adaptive'.
+            'adaptive'. Defaults to "custom".
         n_max: `int`
             Maximum number of eliminations allowed at each step when using the adaptive method. Defaults to 1.
         steps: `Union[list,int]`
@@ -125,9 +71,37 @@ class RqaoaParameters(Parameters):
             Cutoff value at which the RQAOA algorithm obtains the solution classically. Defaults to 5.
         original_hamiltonian: `Hamiltonian`
             Hamiltonian encoding the original problem fed into the RQAOA algorithm. Defaults to None.
+        counter: `int`
+            Variable to count the step in the schedule. If counter = 3 the next step is schedule[3]. 
+            Default is 0, but can be changed to start in the position of the schedule that one wants.
         """
-        self.rqaoa_type = rqaoa_type
+        self.rqaoa_type = rqaoa_type.lower()
         self.n_max = n_max
         self.steps = steps
         self.n_cutoff = n_cutoff
         self.original_hamiltonian = original_hamiltonian
+        self.counter = counter
+        
+        #check if the rqaoa type is correct
+        if not self.rqaoa_type in ALLOWED_RQAOA_TYPES:
+            self.compiled = False        
+            raise Exception(f'rqaoa_type {self.rqaoa_type} is not supported. Please select "adaptive" or "custom".')
+
+        # check if the parameters given are in accordance with the rqaoa_type
+        if self.rqaoa_type == 'adaptive':
+            if self.steps != 1:
+                raise ValueError(
+                    f'When using the adaptive method, the `steps` parameter is not required.  \
+                    The parameter that specifies the maximum number of eliminations per step is `n_max`.')
+            if self.counter != 0:
+                raise ValueError(
+                    f'When using the adaptive method, the `counter` parameter is not required.')
+        else:
+            if self.n_max != 1:
+                raise ValueError(
+                    f'When using the custom method, the `n_max` parameter is not required.  \
+                    The parameter that specifies the number of eliminations is `steps`, which can be a string or a list.')
+
+        
+
+

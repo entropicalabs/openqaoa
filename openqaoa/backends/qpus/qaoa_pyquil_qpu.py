@@ -145,7 +145,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         """
         angles_list = np.array(self.obtain_angles_for_pauli_list(
             self.abstract_circuit, params), dtype=float)
-        angle_declarations = list(self.prog_exe.declarations.keys())
+        angle_declarations = list(self.parametric_circuit.declarations.keys())
         angle_declarations.remove('ro')
         for i, param_name in enumerate(angle_declarations):
             self.prog_exe.write_memory(
