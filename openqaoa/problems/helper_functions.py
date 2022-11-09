@@ -66,7 +66,6 @@ def convert_binary_to_ising(terms, weights):
 
 
 def get_knapsack_input(n_items):
-
     values = list(map(int, np.random.randint(1, n_items, size=n_items)))
     weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
 
@@ -83,3 +82,14 @@ def get_knapsack_input(n_items):
     penalty = 2 * np.max(values)
 
     return values, weights, weight_capacity, penalty
+
+
+def set_seed(seed):
+    if seed is not None:
+        np.random.seed(seed)
+        return seed
+    else:
+        seed = np.random.randint(0, 2 ** 32 - 1)
+        np.random.seed(seed)
+        return seed
+
