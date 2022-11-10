@@ -79,13 +79,16 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit" \
-                                                               "to the QAOA routine"
+                                                               " to the QAOA routine"
 
         if self.device.provider_connected and self.device.qpu_connected:
             self.backend_qpu = self.device.backend_device
-        elif self.device.provider_connected and self.device.qpu_connected in [False, None]:
+        elif self.device.provider_connected is True and self.device.qpu_connected is False:
             raise Exception(
                 'Connection to AWS was made. Error connecting to the specified backend.')
+        elif self.device.provider_connected is True and self.device.qpu_connected is None:
+            raise Exception(
+                'Connection to AWS was made. A device name was not specified.')
         else:
             raise Exception('Error connecting to AWS.')
             
