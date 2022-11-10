@@ -50,7 +50,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [0, 1/8*np.pi]
         betas = [1/2*np.pi, 3/8*np.pi]
-        shots = 10000
+        shots = 100
 
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
@@ -107,7 +107,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [0, 1/8*np.pi]
         betas = [1/2*np.pi, 3/8*np.pi]
-        shots = 10000
+        shots = 100
 
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
@@ -167,7 +167,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [1/8*np.pi]
         betas = [1/8*np.pi]
-        shots = 10000
+        shots = 100
 
         # Prepended Circuit
         prepend_circuit = Circuit()
@@ -225,7 +225,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [1/8*np.pi]
         betas = [1/8*np.pi]
-        shots = 10000
+        shots = 100
 
         # Appended Circuit
         append_circuit = Circuit()
@@ -269,7 +269,43 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         main_circuit.probability()
 
         self.assertEqual(main_circuit, qpu_circuit)
+        
+    @pytest.mark.qpu
+    def test_prepend_exception(self):
+        
+        """
+        Test that the error catching for a prepend ciruit larger than the problem
+        circuit is invalid
+        """
 
+        nqubits = 3
+        p = 1
+        weights = [1, 1, 1]
+        gammas = [1/8*np.pi]
+        betas = [1/8*np.pi]
+        shots = 100
+
+        # Prepended Circuit
+        prepend_circuit = Circuit()
+        prepend_circuit.x(0)
+        prepend_circuit.x(1)
+        prepend_circuit.x(2)
+        prepend_circuit.x(3)
+
+        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
+                                  PauliOp('ZZ', (0, 2))], weights, 1)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(circuit_params,
+                                                       betas, gammas)
+
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
+        
+        try:
+            aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+                                            shots, prepend_circuit, None, True, 1.)
+        except Exception as e:
+            self.assertEqual(str(e), "Cannot attach a bigger circuit to the QAOA routine")
 
     @pytest.mark.qpu
     def test_exceptions_in_init(self):
@@ -283,7 +319,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [1/8*np.pi]
         betas = [1/8*np.pi]
-        shots = 10000
+        shots = 100
 
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
@@ -295,22 +331,17 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         # If the user's aws credentials is not correct.
         mock_device = Mock()
         mock_device.configure_mock(**{'check_connection.return_value': False,
-                                      'qpu_connected.return_value': None, 
-                                      'provider_connected.return_value': False}) 
+                                      'provider_connected.return_value': False,
+                                      'qpu_connected.return_value': None})
         
         try:
             QAOAAWSQPUBackend(circuit_params, mock_device, 
                                  shots, None, None, True, 1.)
         except Exception as e:
             self.assertEqual(str(e), 'Error connecting to AWS.')
-        
-        
-        self.assertRaises(Exception, QAOAAWSQPUBackend, (circuit_params, 
-                                                            mock_device, 
-                                                            shots, None, None, 
-                                                            True, 1.))
-        
-        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
+
+        # Wrong arn string name
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/invalid_backend_arn')
         
         try:
             QAOAAWSQPUBackend(circuit_params, aws_device, 
@@ -318,11 +349,19 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         except Exception as e:
             self.assertEqual(str(e), 'Connection to AWS was made. Error connecting to the specified backend.')
         
+        # No device specified
+        aws_device = DeviceAWS('')
         
-        self.assertRaises(Exception, QAOAAWSQPUBackend, (circuit_params, 
-                                                            aws_device, 
-                                                            shots, None, None, 
-                                                            True, 1.))
+        try:
+            QAOAAWSQPUBackend(circuit_params, aws_device, 
+                                 shots, None, None, True, 1.)
+        except Exception as e:
+            self.assertEqual(str(e), 'Connection to AWS was made. A device name was not specified.')
+            
+        # Correct device arn (Errorless)
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
+        
+        QAOAAWSQPUBackend(circuit_params, aws_device, shots, None, None, True, 1.)
      
         
 #     def test_remote_integration_qpu_run(self):
