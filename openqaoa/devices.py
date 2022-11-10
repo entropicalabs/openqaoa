@@ -378,10 +378,6 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             endpoint_id: str = None,
                             engagement_manager: EngagementManager = None,
                             device_name: str = None,
-                            aws_access_key_id: str = None, 
-                            aws_secret_access_key: str = None,
-                            aws_region: str = None, 
-                            s3_bucket_name: str = None,
                             folder_name: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,

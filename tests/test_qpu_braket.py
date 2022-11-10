@@ -31,10 +31,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
     """This Object tests the QAOA Braket QPU Backend objects, which is tasked with the
     creation and execution of a QAOA circuit for the selected QPU provider and
     backend.
-
-    For all of these tests, credentials.json MUST be filled with the appropriate
-    credentials. If unsure about to correctness of the current input credentials
-    , please run test_qpu_auth.py. 
+    
+    These tests require authentication through the AWS CLI.
     """
 
     @pytest.mark.qpu
