@@ -176,9 +176,6 @@ class TestingDeviceAWS(unittest.TestCase):
 
     For any tests using provided credentials, the tests will only pass if those
     details provided are correct/valid with AWS Braket.
-
-    Please ensure that the provided access keys, aws region and s3 bucket names in the 
-    crendentials.json are correct.
     """
 
     @pytest.mark.api      
