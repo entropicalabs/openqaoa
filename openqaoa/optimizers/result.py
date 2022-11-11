@@ -18,10 +18,12 @@ from re import I
 import matplotlib.pyplot as plt
 from typing import Type
 import numpy as np
+import json
 
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy
+from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -301,3 +303,40 @@ class Result:
             ]
         }
         return best_results
+
+
+    def dumps(self, string=False):
+        """
+        Returns the result serialized 
+
+        Parameters
+        ----------
+        string : bool
+            If True, the result is returned as a string. Otherwise, it is returned as a dictionary.
+
+        Returns
+        -------
+        str or dict
+        """
+
+        if string:
+            return json.dumps(convert2serialize_complex(self))
+        else:
+            return convert2serialize(self)
+
+    def dump(self, filename=None):
+        """
+        Saves the result as json file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file to save the result. If None, the result is saved as 'result.json'.
+        """
+
+        if filename is None:
+            filename = 'QAOA_results.json'
+        with open(filename, 'w') as f:
+            f.write(self.dumps(string=True))
+
+        print('Results saved as {}'.format(filename))

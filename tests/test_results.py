@@ -70,6 +70,55 @@ class TestingResultOutputs(unittest.TestCase):
                 self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['intermediate measurement outcomes']))
 
 
+    def _run_qaoa(self):
+        """
+        Run a QAOA algorithm and return the results
+        """
+
+        # Create the problem
+        g = nw.circulant_graph(6, [1])
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+
+        q = QAOA()
+        q.compile(vc, verbose=False)
+        q.optimize()
+
+        return q.results
+
+    #test dumps
+    def test_rqaoa_result_dumps(self):
+        """
+        Test the dumps for the QAOA Result class
+        """
+
+        # Test for .dumps returning a string
+        results = self._run_qaoa()
+        string_dumps = results.dumps(string=True)
+        dictionay_dumps = results.dumps(string=False)
+
+        assert isinstance(string_dumps, str), 'String dump is not correct'
+        assert isinstance(dictionay_dumps, dict), 'Dictionary dump is not a dictionary'
+
+
+    #test dump 
+    def test_rqaoa_result_dump(self):
+        """
+        Test the dump method for the QAOA Result class
+        """
+
+        # name for the file that will be created and deleted
+        name_file = 'results.json'
+
+        #run the algorithm
+        results = self._run_qaoa()
+
+        # Test for .dump creating a file and containing the correct information
+        results.dump(name_file)
+        assert os.path.isfile(name_file), 'Dump file does not exist'
+        assert open(name_file, "r").read() == results.dumps(string=True), 'Dump file does not contain the correct data'
+        os.remove(name_file)
+
+
 class TestingRQAOAResultOutputs(unittest.TestCase):
     """
     Test the  Results Output after a full RQAOA loop
@@ -176,7 +225,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         """
         Test the dumps for the RQAOAResult class
         """
-        
+
         # Test for .dumps returning a string
         results = self._run_rqaoa()
         string_dumps = results.dumps(string=True)
