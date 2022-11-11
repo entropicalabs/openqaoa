@@ -39,11 +39,8 @@ Workflow QAOA Parameters
     :inherited-members:
 
 
-
-
-Recursive QAOA
-===============
-
+RQAOA
+-----
 Recursive QAOA (RQAOA) is an iterative variant of QAOA, first introduced by Bravyi et. al in [1]. It runs QAOA recursively and uses the expectation values of the Hamiltonian terms to impose constraints and eliminate qubits for the problem at each step. Once the reduced problem reaches a preset cutoff size, it is solved exactly solved via classical methods. The final answer is then reconstructed by re-inserting the eliminated qubits in the classical solution in the appropriate order.
 
 We currently offer two flavors of RQAOA, both of which can be found in the ``rqaoa`` module:
@@ -56,9 +53,6 @@ The development of this method is associated with an internal research project a
 
 To choose the strategy, set the parameter ``rqaoa_type`` using the `set_rqaoa_parameters` method. To use the ``Adaptive`` strategy, pass ``rqaoa_type = 'adaptive'``. The default strategy is ``Custom``.
 
-
-RQAOA
------
 .. autoclass:: openqaoa.workflows.optimizer.RQAOA
     :members:
     :undoc-members:
