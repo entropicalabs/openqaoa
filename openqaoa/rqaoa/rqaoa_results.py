@@ -72,7 +72,7 @@ class RQAOAResults(dict):
         """
         return self.get_problem_step(i).hamiltonian
 
-    def dumps(self, human=False, string=False):
+    def dumps(self, human=False, string=False, indent=4):
         """
         Returns the result serialized 
 
@@ -102,11 +102,11 @@ class RQAOAResults(dict):
         full_dict['rqaoa_parameters']    = self.rqaoa_parameters
 
         if string:
-            return json.dumps(convert2serialize_complex(full_dict))
+            return json.dumps(convert2serialize_complex(full_dict), indent=indent)
         else:
             return convert2serialize(full_dict)
 
-    def dump(self, filename=None, human=False):
+    def dump(self, filename=None, human=False, indent=4):
         """
         Saves the result as json file.
 
@@ -121,6 +121,6 @@ class RQAOAResults(dict):
         if filename is None:
             filename = 'RQAOA_results.json'
         with open(filename, 'w') as f:
-            f.write(self.dumps(human=human, string=True))
+            f.write(self.dumps(human=human, string=True, indent=indent))
 
         print('Results saved as {}'.format(filename))

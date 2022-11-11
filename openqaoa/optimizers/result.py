@@ -305,7 +305,7 @@ class Result:
         return best_results
 
 
-    def dumps(self, string=False):
+    def dumps(self, string=False, indent=4):
         """
         Returns the result serialized 
 
@@ -320,11 +320,11 @@ class Result:
         """
 
         if string:
-            return json.dumps(convert2serialize_complex(self))
+            return json.dumps(convert2serialize_complex(self), indent=indent)
         else:
             return convert2serialize(self)
 
-    def dump(self, filename=None):
+    def dump(self, filename=None, indent=4):
         """
         Saves the result as json file.
 
@@ -337,6 +337,6 @@ class Result:
         if filename is None:
             filename = 'QAOA_results.json'
         with open(filename, 'w') as f:
-            f.write(self.dumps(string=True))
+            f.write(self.dumps(string=True, indent=indent))
 
         print('Results saved as {}'.format(filename))
