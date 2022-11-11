@@ -118,8 +118,14 @@ class RQAOAResults(dict):
             If True, the result is serialized in a human readable format.
         """
 
+        # If no filename is given, the result is saved as 'RQAOA_results.json'
         if filename is None:
-            filename = 'RQAOA_results.json'
+            filename = 'RQAOA_results'
+
+        # adding .json extension if not present
+        filename = filename + '.json' if '.json' not in filename else filename
+
+        # saving the result in a json file
         with open(filename, 'w') as f:
             f.write(self.dumps(human=human, string=True, indent=indent))
 

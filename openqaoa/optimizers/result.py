@@ -334,8 +334,14 @@ class Result:
             The name of the file to save the result. If None, the result is saved as 'result.json'.
         """
 
+        # default filename 
         if filename is None:
-            filename = 'QAOA_results.json'
+            filename = 'QAOA_results'
+
+        # adding .json extension if not present
+        filename = filename + '.json' if '.json' not in filename else filename
+
+        # saving the result in a json file
         with open(filename, 'w') as f:
             f.write(self.dumps(string=True, indent=indent))
 
