@@ -14,9 +14,11 @@
 
 import copy
 
-from openqaoa.problems.helper_functions import convert2serialize
+from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
+
+import json
 
 class RQAOAResults(dict):
     """
@@ -70,16 +72,55 @@ class RQAOAResults(dict):
         """
         return self.get_problem_step(i).hamiltonian
 
-    def dump(self):
+    def dumps(self, human=False, string=False):
         """
-        Returns the result as json.
+        Returns the result serialized 
+
+        Parameters
+        ----------
+        human : bool
+            If True, the result is serialized in a human readable format.
+        string : bool
+            If True, the result is returned as a string. Otherwise, it is returned as a dictionary.
+
+        Returns
+        -------
+        str or dict
         """
+
         full_dict = copy.deepcopy(self)
-        full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results} for step in full_dict['intermediate_steps']]
+        if string:
+            full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
+        if human:
+            full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results.most_probable_states} for step in full_dict['intermediate_steps']]
+        else:
+            full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results} for step in full_dict['intermediate_steps']]
         full_dict['device']              = self.device
         full_dict['circuit_properties']  = self.circuit_properties
         full_dict['backend_properties']  = self.backend_properties
         full_dict['classical_optimizer'] = self.classical_optimizer
         full_dict['rqaoa_parameters']    = self.rqaoa_parameters
 
-        return convert2serialize(full_dict)
+        if string:
+            return json.dumps(convert2serialize_complex(full_dict))
+        else:
+            return convert2serialize(full_dict)
+
+    def dump(self, filename=None, human=False):
+        """
+        Saves the result as json file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file to save the result. If None, the result is saved as 'result.json'.
+        human : bool
+            If True, the result is serialized in a human readable format.
+        """
+
+        if filename is None:
+            filename = 'RQAOA_results.json'
+        with open(filename, 'w') as f:
+            f.write(self.dumps(human=human, string=True))
+
+        print('Results saved as {}'.format(filename))
