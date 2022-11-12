@@ -71,7 +71,7 @@ class QUBO:
     # Maximum number of terms allowed to enable the cleaning procedure
     TERMS_CLEANING_LIMIT = 5000
 
-    def __init__(self, n, terms, weights, clean_terms_and_weights=False):
+    def __init__(self, n, terms, weights, clean_terms_and_weights=False, constant=0):
 
         # check-type for terms and weights
         if not isinstance(terms, list) and not isinstance(terms, tuple):
@@ -98,7 +98,6 @@ class QUBO:
             raise ValueError(
                 "The number of terms and number of weights do not match")
 
-        constant = 0
         try:
             constant_index = [i for i, term in enumerate(
                 terms) if len(term) == 0][0]

@@ -286,7 +286,11 @@ class DeviceAWS(DeviceBase):
 		as input to the device_name parameter.
     """
     
-    def __init__(self, device_name: str, folder_name: str = 'openqaoa'):
+    def __init__(self, 
+                device_name: str, 
+                folder_name: str = 'openqaoa',
+                s3_bucket_name: str = None,
+                aws_region: str = 'us-east-1'):
         
         """Input the device arn and the name of the folder in which all the
         results for the QPU runs would be saved on the pre-defined s3 bucket. 
@@ -305,6 +309,8 @@ class DeviceAWS(DeviceBase):
         self.device_name = device_name
         self.device_location = 'aws'
         self.folder_name = folder_name
+        self.s3_bucket_name = s3_bucket_name
+        self.aws_region = aws_region
         
         self.provider_connected = None
         self.qpu_connected = None
@@ -353,8 +359,10 @@ class DeviceAWS(DeviceBase):
         
         try:
             sess = Session()
-            self.aws_session = AwsSession(sess)
-            self.s3_bucket_name = self.aws_session.default_bucket()
+            self.aws_session = AwsSession(sess, 
+                                default_bucket=self.s3_bucket_name)
+            # if self.s3_bucket_name == None:
+            #     self.s3_bucket_name = self.aws_session.default_bucket()
             return True
         except NoRegionError:
             self.aws_session = None
@@ -378,7 +386,9 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             endpoint_id: str = None,
                             engagement_manager: EngagementManager = None,
                             device_name: str = None,
-                            folder_name: str = None) -> dict:
+                            folder_name: str = None,
+                            s3_bucket_name: str = None,
+                            aws_region: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
                         'hub': hub,
@@ -394,7 +404,9 @@ def device_class_arg_mapper(device_class:DeviceBase,
                         'engagement_manager': engagement_manager},
         
         DeviceAWS: {'device_name': device_name,
-                    'folder_name': folder_name}
+                    'folder_name': folder_name,
+                    's3_bucket_name': s3_bucket_name,
+                    'aws_region': aws_region}
     }
 
     final_device_kwargs = {key: value for key, value in DEVICE_ARGS_MAPPER[device_class].items()

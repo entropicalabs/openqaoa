@@ -281,6 +281,7 @@ class QAOA(Optimizer):
         """
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
+        self.algorithm = 'qaoa'
 
     def set_circuit_properties(self, **kwargs):
         """
@@ -515,6 +516,7 @@ class RQAOA(Optimizer):
         super().__init__(device) # use the parent class to initialize 
         self.circuit_properties = CircuitProperties()
         self.rqaoa_parameters = RqaoaParameters()
+        self.algorithm = 'rqaoa'
 
         # varaible that will store results object (when optimize is called)
         self.results = RQAOAResults()
