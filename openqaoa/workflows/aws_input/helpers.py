@@ -30,14 +30,14 @@ def formatter(d):
             r[k] = v
     return r
 
-def create_aws_hyperparameters(workflow : Optimizer, qubo: QUBO):
+def create_aws_input_data(workflow : Optimizer, qubo: QUBO):
         """ 
         helper function to extract all the QAOA parameters from the QAOA object
         """
         rqaoa_parameters = None
         if workflow.algorithm == 'rqaoa': rqaoa_parameters = workflow.rqaoa_parameters.asdict()
         
-        hyperparameters = {
+        input_data = {
             'circuit_properties' : formatter(workflow.circuit_properties.asdict()),
             'backend_properties' :  formatter(workflow.backend_properties.asdict()),
             'classical_optimizer' : formatter(workflow.classical_optimizer.asdict()),
@@ -45,13 +45,13 @@ def create_aws_hyperparameters(workflow : Optimizer, qubo: QUBO):
             'rqaoa_parameters' : rqaoa_parameters
         }
 
-        return hyperparameters
+        return input_data
 
-def save_hyperparameters(hyperparameters: dict, hp_file_path: str):
+def save_input_data(openqaoa_data: dict, openqaoa_data_path: str):
     '''
     Save the hyperparameter as a json file at a desired location
     '''
 
-    with open(hp_file_path, 'w') as f:
-        json.dump(hyperparameters, f)
+    with open(openqaoa_data_path, 'w') as f:
+        json.dump(openqaoa_data, f)
 

@@ -67,4 +67,4 @@ jobs:
         run: |
           .\env\Scripts\Activate.ps1
           ipython kernel install --name "env" --user
-          python -m pytest -v -m 'not (qpu or api)'
+          python -m pytest -v -m 'not (qpu or api or docker_aws)'

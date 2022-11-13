@@ -59,7 +59,9 @@ class Aws_job(Optimizer):
         # the S3 location where the job results would be stored, as specified in CreateJob request’s OutputDataConfig
         self.results_s3_path = os.environ["AMZN_BRAKET_JOB_RESULTS_S3_PATH"]
         # the string that should be passed to CreateQuantumTask’s jobToken parameter for quantum tasks created in the job container
-        self.job_token = os.environ["AMZN_BRAKET_JOB_TOKEN"]
+        # if os.environ["AMZN_BRAKET_JOB_TOKEN"]:
+        #     self.job_token = os.environ["AMZN_BRAKET_JOB_TOKEN"]
+
 
         self.device = DeviceAWS(device_name=self.device_arn, 
                                 folder_name=self.results_dir,
@@ -67,22 +69,24 @@ class Aws_job(Optimizer):
         self.algorithm = algorithm.lower()
         self.completed = False
 
-    def load_hyperparams(self):
+    def load_input_data(self):
+
+        path = os.path.join(self.input_dir, "input_data", "openqaoa_params.json")
         
-        with open(f"{self.input_dir}/hyperparameters/{self.hyperparameter_file_name}", "r") as f:
-            hyperparams = json.load(f)
+        with open(path, "r") as f:
+            input_data = json.load(f)
         
-        self.hyperparams = hyperparams
+        self.input_data = input_data
         
         
 
     def extract_qubo(self):
                
         ### Set up the QUBO problem ###
-        self.qubo = QUBO(terms=self.hyperparams['qubo']['terms'],
-                        weights=self.hyperparams['qubo']['weights'],
-                        n=self.hyperparams['qubo']['n'],
-                        constant=self.hyperparams['qubo']['constant'])
+        self.qubo = QUBO(terms=self.input_data['qubo']['terms'],
+                        weights=self.input_data['qubo']['weights'],
+                        n=self.input_data['qubo']['n'],
+                        constant=self.input_data['qubo']['constant'])
         
 
     def aws_jobs_load_workflow(self):
@@ -95,13 +99,13 @@ class Aws_job(Optimizer):
             workflow = QAOA()    
         elif 'rqaoa' == self.algorithm.lower():
             workflow = RQAOA()
-            workflow.set_rqaoa_parameters(**self.hyperparams['rqaoa_parameters'])
+            workflow.set_rqaoa_parameters(**self.input_data['rqaoa_parameters'])
         else:
             raise ValueError(f'Specified algorithm {self.algorithm} is not supported. Please choose between [QAOA, RQAOA]')
        
-        workflow.set_circuit_properties(**self.hyperparams['circuit_properties'])
-        workflow.set_classical_optimizer(**self.hyperparams['classical_optimizer'])
-        workflow.set_backend_properties(**self.hyperparams['backend_properties'])
+        workflow.set_circuit_properties(**self.input_data['circuit_properties'])
+        workflow.set_classical_optimizer(**self.input_data['classical_optimizer'])
+        workflow.set_backend_properties(**self.input_data['backend_properties'])
         
         # Set the braket device
         workflow.set_device(self.device)
