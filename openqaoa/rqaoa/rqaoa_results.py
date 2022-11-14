@@ -122,7 +122,7 @@ class RQAOAResults(dict):
         """
 
         # adding .json extension if not present
-        file_path = file_path + '.json' if '.json' not in file_path else file_path
+        file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
 
         # saving the result in a json file
         with open(file_path, 'w') as f:
