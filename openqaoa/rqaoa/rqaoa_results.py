@@ -13,12 +13,11 @@
 #   limitations under the License.
 
 import copy
+import json
 
 from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
-
-import json
 
 class RQAOAResults(dict):
     """
@@ -72,7 +71,7 @@ class RQAOAResults(dict):
         """
         return self.get_problem_step(i).hamiltonian
 
-    def dumps(self, human=False, string=False, indent=4):
+    def dumps(self, human:bool=False, as_string:bool=False, indent:int=4):
         """
         Returns the result serialized 
 
@@ -80,8 +79,10 @@ class RQAOAResults(dict):
         ----------
         human : bool
             If True, the result is serialized in a human readable format.
-        string : bool
+        as_string : bool
             If True, the result is returned as a string. Otherwise, it is returned as a dictionary.
+        indent : int
+            The number of spaces to indent the result in the json file. If None, the result is not indented.
 
         Returns
         -------
@@ -89,7 +90,7 @@ class RQAOAResults(dict):
         """
 
         full_dict = copy.deepcopy(self)
-        if string:
+        if as_string:
             full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
         if human:
             full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results.most_probable_states} for step in full_dict['intermediate_steps']]
@@ -101,32 +102,30 @@ class RQAOAResults(dict):
         full_dict['classical_optimizer'] = self.classical_optimizer
         full_dict['rqaoa_parameters']    = self.rqaoa_parameters
 
-        if string:
+        if as_string:
             return json.dumps(convert2serialize_complex(full_dict), indent=indent)
         else:
             return convert2serialize(full_dict)
 
-    def dump(self, filename=None, human=False, indent=4):
+    def dump(self, file_path:str, human:bool=False, indent:int=4):
         """
         Saves the result as json file.
 
         Parameters
         ----------
-        filename : str
+        file_path : str
             The name of the file to save the result. If None, the result is saved as 'result.json'.
         human : bool
             If True, the result is serialized in a human readable format.
+        indent : int
+            The number of spaces to indent the result in the json file. If None, the result is not indented.
         """
 
-        # If no filename is given, the result is saved as 'RQAOA_results.json'
-        if filename is None:
-            filename = 'RQAOA_results'
-
         # adding .json extension if not present
-        filename = filename + '.json' if '.json' not in filename else filename
+        file_path = file_path + '.json' if '.json' not in file_path else file_path
 
         # saving the result in a json file
-        with open(filename, 'w') as f:
-            f.write(self.dumps(human=human, string=True, indent=indent))
+        with open(file_path, 'w') as f:
+            f.write(self.dumps(human=human, as_string=True, indent=indent))
 
-        print('Results saved as {}'.format(filename))
+        print('Results saved as {}'.format(file_path))

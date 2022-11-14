@@ -113,9 +113,9 @@ class TestingResultOutputs(unittest.TestCase):
         results = self._run_qaoa()
 
         # Test for .dump creating a file and containing the correct information
-        results.dump(name_file)
+        results.dump(name_file, indent=None)
         assert os.path.isfile(name_file), 'Dump file does not exist'
-        assert open(name_file, "r").read() == results.dumps(string=True), 'Dump file does not contain the correct data'
+        assert open(name_file, "r").read() == results.dumps(as_string=True, indent=None), 'Dump file does not contain the correct data'
         os.remove(name_file)
 
 
@@ -228,10 +228,10 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # Test for .dumps returning a string
         results = self._run_rqaoa()
-        string_dumps = results.dumps(string=True)
-        string_dumps_human = results.dumps(string=True, human=True)
-        dictionay_dumps = results.dumps(string=False)
-        dictionay_dumps_human = results.dumps(string=False, human=True)
+        string_dumps = results.dumps(as_string=True)
+        string_dumps_human = results.dumps(as_string=True, human=True)
+        dictionay_dumps = results.dumps(as_string=False)
+        dictionay_dumps_human = results.dumps(as_string=False, human=True)
 
         assert isinstance(string_dumps, str), 'String dump is not correct'
         assert isinstance(string_dumps_human, str), 'String dump for humans is not correct'
@@ -253,7 +253,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # Test for .dump creating a file and containing the correct information
         for human in [True, False]:
-            results.dump(name_file, human=human)
+            results.dump(name_file, human=human, indent=None)
             assert os.path.isfile(name_file), 'Dump file does not exist'
-            assert open(name_file, "r").read() == results.dumps(string=True, human=human), 'Dump file does not contain the correct data'
+            assert open(name_file, "r").read() == results.dumps(as_string=True, human=human, indent=None), 'Dump file does not contain the correct data'
             os.remove(name_file)

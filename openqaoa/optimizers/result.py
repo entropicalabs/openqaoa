@@ -305,44 +305,44 @@ class Result:
         return best_results
 
 
-    def dumps(self, string=False, indent=4):
+    def dumps(self, as_string:bool=False, indent:int=4):
         """
         Returns the result serialized 
 
         Parameters
         ----------
-        string : bool
-            If True, the result is returned as a string. Otherwise, it is returned as a dictionary.
+        as_string : bool
+            If True, the result is returned as a as_string. Otherwise, it is returned as a dictionary.
+        indent : int
+            The number of spaces to indent the result in the json file. If None, the result is not indented.
 
         Returns
         -------
         str or dict
         """
 
-        if string:
+        if as_string:
             return json.dumps(convert2serialize_complex(self), indent=indent)
         else:
             return convert2serialize(self)
 
-    def dump(self, filename=None, indent=4):
+    def dump(self, file_path:str, indent:int=4):
         """
         Saves the result as json file.
 
         Parameters
         ----------
-        filename : str
-            The name of the file to save the result. If None, the result is saved as 'result.json'.
+        file_path : str
+            The name of the file to save the result. 
+        indent : int
+            The number of spaces to indent the result in the json file. If None, the result is not indented.
         """
 
-        # default filename 
-        if filename is None:
-            filename = 'QAOA_results'
-
         # adding .json extension if not present
-        filename = filename + '.json' if '.json' not in filename else filename
+        file_path = file_path + '.json' if '.json' not in file_path else file_path
 
         # saving the result in a json file
-        with open(filename, 'w') as f:
-            f.write(self.dumps(string=True, indent=indent))
+        with open(file_path, 'w') as f:
+            f.write(self.dumps(as_string=True, indent=indent))
 
-        print('Results saved as {}'.format(filename))
+        print('Results saved as {}'.format(file_path))
