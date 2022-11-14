@@ -12,8 +12,8 @@ jobs:
         matrix:
           os: [ubuntu-latest]
           python: ['3.8', '3.9', '3.10']
-      # The type of runner that the job will run on
-      runs-on:  ${{ matrix.os }}
+    # The type of runner that the job will run on
+    runs-on:  ${{ matrix.os }}
 
     # Define job steps
     steps:
