@@ -26,7 +26,7 @@ from openqaoa.backends.simulators.qaoa_pyquil_sim import QAOAPyQuilWavefunctionS
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
-from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer
+from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, CustomScipyPennyLaneOptimizer
 import unittest
 import networkx as nw
 import pytest
@@ -580,6 +580,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             
             self.assertEqual(isinstance(q.optimizer, ScipyOptimizer), True)
             self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), False)
+            self.assertEqual(isinstance(q.optimizer, CustomScipyPennyLaneOptimizer), False)
             
         for each_method in available_optimizers()['custom_scipy_gradient']:
             q = QAOA()
@@ -589,6 +590,16 @@ class TestingVanillaQAOA(unittest.TestCase):
             
             self.assertEqual(isinstance(q.optimizer, ScipyOptimizer), False)
             self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), True)
+            self.assertEqual(isinstance(q.optimizer, CustomScipyPennyLaneOptimizer), False)
+            
+        for each_method in available_optimizers()['custom_scipy_pennylane']:
+            q = QAOA()
+            q.set_classical_optimizer(method = each_method, jac='grad_spsa')
+            q.compile(problem = qubo_problem)
+            
+            self.assertEqual(isinstance(q.optimizer, ScipyOptimizer), False)
+            self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), False)
+            self.assertEqual(isinstance(q.optimizer, CustomScipyPennyLaneOptimizer), True)
 
 class TestingRQAOA(unittest.TestCase):
     """
