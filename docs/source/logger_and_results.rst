@@ -3,8 +3,8 @@ Results and loggers are two classes that store the results of a QAOA.
 In more details, the logger is updated every-time the classical optimizer performs the otimistaion.
 The result, on the other hand, formats raw results from the logger in a more human-friendly way.
 
-Result
-------
+QAOA Result
+-----------
 .. autoclass:: openqaoa.optimizers.Result
     :members:
     :undoc-members:

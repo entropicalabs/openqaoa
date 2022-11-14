@@ -10,13 +10,13 @@ with open("openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "amazon-braket-sdk==1.23.0",
-    "pandas>=1.3.5"
+    "amazon-braket-sdk>=1.23.0",
+    "pandas>=1.3.5",
     "sympy>=1.10.1",
     "numpy>=1.22.3",
     "networkx>=2.8",
-    "scipy==1.8",
-    "matplotlib>=3.4.3, <3.5.0",
+    "matplotlib>=3.4.3",
+    "scipy>=1.8",
     "qiskit>=0.36.1",
     "pyquil>=3.1.0",
     "docplex>=2.23.1"
@@ -43,6 +43,7 @@ requirements_test = [
 
 setup(
     name="openqaoa",
+    python_requires='>=3.8, <3.11',
     version= version,
     author="Entropica Labs",
     packages=find_packages(where="."),

@@ -14,12 +14,10 @@
 
 from abc import ABC, abstractmethod
 from collections import defaultdict, Counter
-from random import seed
 
 import networkx as nx
 import numpy as np
 import scipy
-import scipy.spatial
 import itertools
 
 from .helper_functions import convert2serialize, check_kwargs
@@ -52,15 +50,15 @@ class QUBO:
 
     Parameters
     ----------
-    n: `int`
+    n: int
         The number of variables in the representation.
-    terms: `List[Tuple[int, ...],List]`
+    terms: List[Tuple[int, ...],List]
         The different terms in the QUBO encoding, indicating the different
         interactions between variables.
-    weights: `List[float]`
+    weights: List[float]
         The list of weights (or coefficients) corresponding to each
         interaction defined in `terms`.
-    clean_terms_and_weights: `bool`
+    clean_terms_and_weights: bool
         Boolean indicating whether terms and weights can be cleaned by
         combining similar terms.
 
@@ -97,11 +95,13 @@ class QUBO:
 
         # Check that terms and weights have matching lengths
         if len(terms) != len(weights):
-            raise ValueError("The number of terms and number of weights do not match")
+            raise ValueError(
+                "The number of terms and number of weights do not match")
 
         constant = 0
         try:
-            constant_index = [i for i, term in enumerate(terms) if len(term) == 0][0]
+            constant_index = [i for i, term in enumerate(
+                terms) if len(term) == 0][0]
             constant = weights.pop(constant_index)
             terms.pop(constant_index)
         except:
@@ -110,7 +110,8 @@ class QUBO:
         # If the user wants to clean the terms and weights or if the number of
         # terms is not too big, we go through the cleaning process
         if clean_terms_and_weights or len(terms) <= QUBO.TERMS_CLEANING_LIMIT:
-            self.terms, self.weights = QUBO.clean_terms_and_weights(terms, weights)
+            self.terms, self.weights = QUBO.clean_terms_and_weights(
+                terms, weights)
         else:
             self.terms, self.weights = terms, weights
 
@@ -177,7 +178,8 @@ class QUBO:
     @staticmethod
     def random_instance(n, density=0.5, format_m="coo", max_abs_value=100):
         # Generate a random matrix (elements in [0, 1]) of type sparse
-        random_matrix = scipy.sparse.rand(n, n, density=density, format=format_m)
+        random_matrix = scipy.sparse.rand(
+            n, n, density=density, format=format_m)
 
         # Retrieve the indices of non-zero elements of the matrix as list of tuples
         terms = np.transpose(random_matrix.nonzero())
@@ -189,151 +191,22 @@ class QUBO:
         # Return the terms and weights, taking care of converting to the correct types
         return QUBO(n, [list(map(int, i)) for i in terms], [float(i) for i in weights])
 
-    @property
-    def hamiltonian(self):
-        """
-        Returns the Hamiltonian of the problem.
-        """
-        return Hamiltonian.classical_hamiltonian(
-            self.terms, self.weights, self.constant
-        )
-
-
-class TSP(Problem):
-    """
-    Creates an instance of the Traveling Salesman problem.
-
-    Parameters
-    ----------
-    coordinates: List[Tuple[float, float]]
-        The list of coordinates of the different cities.
-
-    Returns
-    -------
-        An instance of the Traveling Salesman problem.
-    """
-
-    def __init__(self, coordinates=None):
-
-        self.coordinates = coordinates
-        self.n_cities = self.coordinates.shape[0]
-
-    @property
-    def coordinates(self):
-        return self._coordinates
-
-    @coordinates.setter
-    def coordinates(self, input_coordinates):
-
-        if not isinstance(input_coordinates, list):
-            raise TypeError("The input parameter, coordinates, has to be a list")
-
-        for each_entry in input_coordinates:
-            if not isinstance(each_entry, tuple):
-                raise TypeError("The coordinates should be contained in a tuple.")
-
-            for each_value in each_entry:
-                if not isinstance(each_value, float) and not isinstance(
-                    each_value, int
-                ):
-                    raise TypeError("The coordinates must be of type float or int")
-
-        self._coordinates = np.array(input_coordinates)
-
     @staticmethod
-    def random_instance(**kwargs):
-        """
-        Creates a random instance of the Traveling Salesman problem.
-
-        Parameters
-        ----------
-        n_cities: int
-            The number of cities in the TSP instance. This is a required 
-            keyword argument.
-
-        Returns
-        -------
-            A random instance of the Traveling Salesman problem.
-        """
-        n_cities = check_kwargs(["n_cities"], [None], **kwargs)[0]
-        seed = kwargs.get("seed")
-
-        if isinstance(seed, int):
-            np.random.seed(seed)
-
-        box_size = np.sqrt(n_cities)
-        coordinates = []
-        for i in range(int(box_size)):
-            coordinates.extend(list(map(tuple, np.random.rand(n_cities, 2))))
-        return TSP(coordinates)
-
-    def get_distance_matrix(self):
-        # Return distance matrix: it uses Euclidean distance
-        return scipy.spatial.distance_matrix(self.coordinates, self.coordinates)
-
-    def all_pairs_all_steps(self):
-        all_pairs_dict = {}
-        for i in range(self.n_cities):
-            for j in range(self.n_cities):
-
-                if i != j:
-                    all_pairs_dict[(i, j)] = TSP.city_pair_all_steps(
-                        i, j, self.n_cities
-                    )
-
-        return all_pairs_dict
-
-    @staticmethod
-    def city_pair_all_steps(c1, c2, n_cities):
-        var_pairs = [
-            (c1 + n_cities * j, c2 + n_cities * (j + 1)) for j in range(n_cities)
-        ]
-
-        return var_pairs
-
-    def TSP_instance_dict(self, pairs_dict, dists):
-        problem_dict = defaultdict(float)
-
-        for city_pair, var_pairs in pairs_dict.items():
-
-            city_dist = dists[city_pair]
-
-            for pair in var_pairs:
-                problem_dict[pair] += city_dist
-
-        return problem_dict
-
-    def get_qubo_problem(self):
-        """
-        Returns the QUBO encoding of this problem.
-
-        Returns
-        -------
-            The QUBO encoding of this problem.
-        """
-        distance_matrix = self.get_distance_matrix()
-
-        # Basic problem
-        polys_dict = TSP.all_pairs_all_steps(self)
-        problem_dict = TSP.TSP_instance_dict(self, polys_dict, distance_matrix)
-        pairs = [list(pair) for pair in problem_dict.keys()]
-        coeffs = list(problem_dict.values())
-        n = self.n_cities * (self.n_cities + 1)
-
-        ising_terms, ising_coeffs = [], []
-
+    def convert_qubo_to_ising(n, qubo_terms, qubo_weights):
+        """Convert QUBO terms and weights to their Ising equivalent"""
+        ising_terms, ising_weights = [], []
         constant_term = 0
         linear_terms = np.zeros(n)
 
         # Process the given terms and weights
-        for weight, term in zip(coeffs, pairs):
+        for term, weight in zip(qubo_terms, qubo_weights):
 
             if len(term) == 2:
                 u, v = term
 
                 if u != v:
                     ising_terms.append([u, v])
-                    ising_coeffs.append(weight / 4)
+                    ising_weights.append(weight / 4)
                 else:
                     constant_term += weight / 4
 
@@ -348,12 +221,347 @@ class TSP(Problem):
 
         for variable, linear_term in enumerate(linear_terms):
             ising_terms.append([variable])
-            ising_coeffs.append(linear_term)
+            ising_weights.append(linear_term)
 
         ising_terms.append([])
-        ising_coeffs.append(constant_term)
+        ising_weights.append(constant_term)
+        return ising_terms, ising_weights
 
-        return QUBO(n, ising_terms, ising_coeffs)
+    @property
+    def hamiltonian(self):
+        """
+        Returns the Hamiltonian of the problem.
+        """
+        return Hamiltonian.classical_hamiltonian(
+            self.terms, self.weights, self.constant
+        )
+
+
+class TSP(Problem):
+    """
+    The Traveling Salesman Problem (TSP) requires to find, given a list of cities and the distances between each pair of cities (or the cities coordinates), the shortest possible path that visits each city exactly once and returns to the origin city. Additionally, one can also specify how cities are connected together.
+    Our implementation accepts three different kind of inputs:
+    #. A list of the cities' coordinates and, optionally, a (directed) graph specifiying the connectivity between cities
+    #. A distance matrix encoding distances between each pair of cities and, optionally, a (directed) graph specifiying the connectivity between cities
+    #. A weighted (directed) graph specifiying the connectivity and the distance between cities
+
+    Initializes a TSP object via three different methods:
+    #. Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
+    #. Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
+    #. Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
+
+    Whenever no graph connectivity is specified, it is assumed that all cities are connected.
+
+    Parameters
+    ----------
+    city_coordinates : Optional[List[Tuple[float, float]]]
+        List containing the coordinates of each city.
+
+    distance_matrix : Optional[List[List[float]]]
+        Distance between cities given as list of list representing a matrix
+
+    G: Optional[nx.Graph]
+        Graph encoding the connectivity between cities (can be directed)
+
+    A: Optional[float]
+        Quadratic penalty coefficient to enforce that a path is a Hamiltonian cycle.
+
+    B: Optional[float]
+        Penalty coefficient which accounts for the path cost.
+
+    Returns
+    -------
+    None
+    """
+    def __init__(self,
+                 city_coordinates=None,
+                 distance_matrix=None,
+                 G=None,
+                 A=None,
+                 B=1,
+                 ):
+        # Initialization when a weighted graph is given
+        if G is not None and nx.is_weighted(G):
+            TSP.validate_graph(G)
+            n_cities = len(G)
+        else:
+            # Initialization when cities coordinates are given
+            if city_coordinates is not None:
+                TSP.validate_coordinates(city_coordinates)
+                n_cities = len(city_coordinates)
+                distance_matrix = scipy.spatial.distance_matrix(
+                    city_coordinates, city_coordinates)
+            # Initialization when a distance matrix is given
+            elif distance_matrix is not None:
+                TSP.validate_distance_matrix(distance_matrix)
+                n_cities = len(distance_matrix)
+                distance_matrix = np.array(distance_matrix)
+            # Raise error if no input is given
+            else:
+                raise ValueError(
+                    'Input missing: city coordinates, distance matrix or (weighted graph) required')
+
+            # Take into account graph connectivity if unweighted graph is given
+            G = G if G else nx.complete_graph(n_cities)
+            if n_cities != len(G):
+                raise ValueError(
+                    'Number of cities does not match the number of nodes in graph')
+
+            # Set edge weights to be the distances between corresponding cities
+            for (u, v) in G.edges():
+                G[u][v]['weight'] = distance_matrix[u, v]
+
+        # Set number of cities
+        self.n_cities = n_cities
+
+        # Set the graph, making sure it is directed (useful when looping over edges during QUBO creation)
+        self._G = nx.DiGraph(G)
+
+        # Set penalty coefficients if given, otherwise give default value
+        self.A = A if A else 2 * distance_matrix.max()
+        self.B = B
+
+    @property
+    def graph(self):
+        return self._G
+
+    @staticmethod
+    def validate_coordinates(city_coordinates):
+        """
+        Makes the necessary check given some city coordinates.
+
+        Parameters
+        ----------
+        input_coordinates : List[Tuple[float, float]]
+            List containing the coordinates of each city.
+
+        Returns
+        -------
+            None
+        """
+        if not isinstance(city_coordinates, list):
+            raise TypeError("The coordinates should be a list")
+
+        for each_entry in city_coordinates:
+            if not isinstance(each_entry, tuple):
+                raise TypeError(
+                    "The coordinates should be contained in a tuple")
+
+            for each_value in each_entry:
+                if not isinstance(each_value, float) and not isinstance(
+                    each_value, int
+                ):
+                    raise TypeError(
+                        "The coordinates must be of type float or int")
+
+    @staticmethod
+    def validate_distance_matrix(distance_matrix):
+        """
+        Makes the necessary check given some distance matrix.
+
+        Parameters
+        ----------
+        distance_matrix : List[List[float]]
+            Distance between cities given as list of list representing a matrix
+
+        Returns
+        -------
+            None
+        """
+        if not isinstance(distance_matrix, list):
+            raise TypeError("The distance matrix should be a list")
+
+        for each_entry in distance_matrix:
+            if not isinstance(each_entry, list):
+                raise TypeError(
+                    "Each row in the distance matrix should be a list")
+
+            for each_value in each_entry:
+                if not isinstance(each_value, float) and not isinstance(
+                    each_value, int
+                ):
+                    raise TypeError(
+                        "The distance matrix entries must be of type float or int")
+
+                if each_value < 0:
+                    raise ValueError("Distances should be positive")
+
+    @staticmethod
+    def validate_graph(G):
+        """
+        Makes the necessary check given some (weighted) graph.
+
+        Parameters
+        ----------
+        G: nx.Graph
+            Graph encoding the connectivity between cities (can be directed)
+
+        Returns
+        -------
+            None
+        """
+        # Set edge weights to be the distances between corresponding cities
+        for (u, v, weight) in G.edges(data='weight'):
+            print(weight)
+            if not isinstance(weight, float) and not isinstance(
+                weight, int
+            ):
+                raise TypeError(
+                    "The edge weights must be of type float or int")
+
+            if weight < 0:
+                raise ValueError("Edge weights should be positive")
+
+    @staticmethod
+    def random_instance(**kwargs):
+        """
+        Creates a random instance of the Traveling Salesman problem with
+        fully connected cities.
+
+        Parameters
+        ----------
+        n_cities: int
+            The number of cities in the TSP instance. This is a required 
+            keyword argument.
+
+        Returns
+        -------
+            A random instance of the Traveling Salesman problem.
+        """
+        n_cities = check_kwargs(["n_cities"], [None], **kwargs)[0]
+
+        # Set a random number generator
+        seed = kwargs.get("seed", None)
+        seed = seed if isinstance(seed, int) else None
+        rng = np.random.default_rng(seed)
+
+        # Generate random coordinates in a box of size sqrt(n_cities) x sqrt(n_cities)
+        box_size = np.sqrt(n_cities)
+        city_coordinates = list(
+            map(tuple, box_size * rng.random(size=(n_cities, 2))))
+        return TSP(city_coordinates=city_coordinates)
+
+    def terms_and_weights(self):
+        """
+        Returns the terms and weights used in the QUBO formulation of this TSP instance.
+        The QUBO formulation used is the one presented in Section 7.2 in 
+        https://arxiv.org/pdf/1302.5843.pdf, and sets the first city to be visited to be
+        the first city in order to reduce the number of variables.
+
+        Returns
+        -------
+        Tuple[List[List[int]], List[float]]
+            Tuple containing a list with the terms and a list with the corresponding weights.
+        """
+
+        # Constants (flags) useful for the helper function below
+        ZERO_VALUED_VARIABLE = -2
+        ONE_VALUED_VARIABLE = -1
+
+        def get_variable_index(v, j):
+            """
+            Returns the actual configuration index given the two indices v (city) and j (step), 
+            to mirror the formulation given in https://arxiv.org/pdf/1302.5843.pdf. Whenever the 
+            city or step probed is the first one, it can also return a flag saying whether the 
+            variable is 0 (flag=-2) or 1 (flag=-1), since the first city is fixed to reduce the
+            number of variables).
+            """
+            if j > self.n_cities+1 or v > self.n_cities:
+                raise ValueError('Index out of bounds')
+
+            # Whenever the step is the first one (or n+1 equivalently)
+            if j == 1 or j == self.n_cities + 1:
+                # If the city is the first one, we have x_{1, 1} = 1
+                if v == 1:
+                    variable_index = ONE_VALUED_VARIABLE
+                # Else we have x_{v, 1} = 0
+                else:
+                    variable_index = ZERO_VALUED_VARIABLE
+
+            # When step j>1 is given
+            else:
+                # If first node, then x_{1, j} = 0
+                if v == 1:
+                    variable_index = ZERO_VALUED_VARIABLE
+                # Else return the index corresponding to variable x_{v, j}
+                else:
+                    variable_index = (j - 2) * (self.n_cities - 1) + (v - 2)
+
+            return variable_index
+
+        # Init the various terms
+        constant_term = 0
+        single_terms = []
+        interaction_terms = []
+
+        # Constraints ensuring that a city only appears once in the cycle, and that there is only one city per step
+        # (note that it was simplified to account that the first city is always city 1)
+        constant_term += 2 * self.A * (self.n_cities-1)
+
+        for v in range(2, self.n_cities + 1):
+            for j in range(2, self.n_cities + 1):
+                single_terms.append(([get_variable_index(v, j)], -4 * self.A))
+
+        for k in range(2, self.n_cities + 1):
+            for l in range(2, self.n_cities + 1):
+                for v in range(2, self.n_cities + 1):
+                    interaction_terms.append(
+                        ([get_variable_index(v, k), get_variable_index(v, l)], self.A))
+
+        for j in range(2, self.n_cities + 1):
+            for u in range(2, self.n_cities + 1):
+                for v in range(2, self.n_cities + 1):
+                    interaction_terms.append(
+                        ([get_variable_index(u, j), get_variable_index(v, j)], self.A))
+
+        # Constraint which penalizes going through edges which are not part of the graph
+        for (u, v) in nx.complement(self.graph).edges():
+            for j in range(1, self.n_cities + 1):
+                interaction_terms.append(
+                    ([get_variable_index(u+1, j), get_variable_index(v+1, j+1)], self.A))
+
+        # Terms to account for the path cost
+        for (u, v) in self.graph.edges():
+            for j in range(1, self.n_cities + 1):
+                interaction_terms.append(([get_variable_index(
+                    u+1, j), get_variable_index(v+1, j+1)], self.B * self.graph[u][v]['weight']))
+
+        # Filtering linear and quadratic terms such that variables which are fixed (and have been flagged)
+        # can be processed accordingly
+        filtered_interaction_terms = []
+        for interaction, weight in single_terms + interaction_terms:
+            # If the term is non-zero (so no flag=-2 is present), we should consider it
+            if ZERO_VALUED_VARIABLE not in interaction:
+                # If the same variable appears in a quadratic term, it becomes a linear term
+                if len(interaction) == 2 and interaction[0] == interaction[1]:
+                    interaction.pop()
+
+                # Update interaction to reduce the degree of a term if some variables are set to 1
+                # (that is remove all flag=-1)
+                interaction = list(
+                    filter(lambda a: a != ONE_VALUED_VARIABLE, interaction))
+
+                # Add the updated term
+                filtered_interaction_terms.append((interaction, weight))
+
+        # Unzip to retrieve terms and weights in separate sequences
+        return tuple(zip(*(filtered_interaction_terms + [([], constant_term)])))
+
+    def get_qubo_problem(self):
+        """
+        Returns the QUBO encoding of this problem.
+
+        Returns
+        -------
+            The QUBO encoding of this problem.
+        """
+        n = (self.n_cities - 1) ** 2
+        terms, weights = self.terms_and_weights()
+
+        # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
+        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
+            n, terms, weights)
+        return QUBO(n, ising_terms, ising_weights)
 
 
 class NumberPartition(Problem):
@@ -362,7 +570,7 @@ class NumberPartition(Problem):
 
     Parameters
     ----------
-    numbers: `List[int]`
+    numbers: List[int]
         The list of numbers to be partitioned.
 
     Returns
@@ -387,7 +595,8 @@ class NumberPartition(Problem):
 
         for each_entry in input_numbers:
             if not isinstance(each_entry, int):
-                raise TypeError("The elements in numbers list must be of type int.")
+                raise TypeError(
+                    "The elements in numbers list must be of type int.")
 
         self._numbers = input_numbers
 
@@ -398,7 +607,7 @@ class NumberPartition(Problem):
 
         Parameters
         ----------
-        n_numbers: `int`
+        n_numbers: int
             The number of numbers to be partitioned. This is a required 
             keyword argument.
 
@@ -407,12 +616,13 @@ class NumberPartition(Problem):
             A random instance of the Number Partitioning problem.
         """
         n_numbers = check_kwargs(["n_numbers"], [None], **kwargs)
-        seed = kwargs.get("seed")
 
-        if isinstance(seed, int):
-            np.random.seed(seed)
+        # Set a random number generator
+        seed = kwargs.get("seed", None)
+        seed = seed if isinstance(seed, int) else None
+        rng = np.random.default_rng(seed)
 
-        numbers = list(map(int, np.random.randint(1, 10, size=n_numbers)))
+        numbers = list(map(int, rng.integers(1, 10, size=n_numbers)))
         return NumberPartition(numbers)
 
     def get_qubo_problem(self):
@@ -460,7 +670,7 @@ class MaximumCut(Problem):
 
     Parameters
     ----------
-    G: `nx.Graph`
+    G: nx.Graph
         The input graph as NetworkX graph instance.
 
     Returns
@@ -486,7 +696,8 @@ class MaximumCut(Problem):
 
         # Relabel nodes to integers starting from 0
         mapping = dict(
-            zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
+            zip(input_networkx_graph, range(
+                input_networkx_graph.number_of_nodes()))
         )
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 
@@ -550,13 +761,13 @@ class Knapsack(Problem):
 
     Parameters
     ----------
-    values: `List[int]`
+    values: List[int]
         The values of the items that can be placed in the kanpsack.
-    weights: `List[int]`
+    weights: List[int]
         The weight of the items that can be placed in the knapsack.
-    weight_capacity: `int`
+    weight_capacity: int
         The maximum weight the knapsack can hold.
-    penalty: `float`
+    penalty: float
         Penalty for the weight constraint.
 
     Returns
@@ -567,7 +778,8 @@ class Knapsack(Problem):
     def __init__(self, values, weights, weight_capacity, penalty):
         # Check whether the input is valid. Number of values should match the number of weights.
         if len(values) != len(weights):
-            raise ValueError("Number of items does not match given value and weights")
+            raise ValueError(
+                "Number of items does not match given value and weights")
 
         self.values = values
         self.weights = weights
@@ -587,7 +799,8 @@ class Knapsack(Problem):
 
         for each_entry in input_values:
             if not isinstance(each_entry, int):
-                raise TypeError("The elements in values list must be of type int.")
+                raise TypeError(
+                    "The elements in values list must be of type int.")
 
         self._values = input_values
 
@@ -603,7 +816,8 @@ class Knapsack(Problem):
 
         for each_entry in input_weights:
             if not isinstance(each_entry, int):
-                raise TypeError("The elements in weights list must be of type int.")
+                raise TypeError(
+                    "The elements in weights list must be of type int.")
 
         self._weights = input_weights
 
@@ -649,29 +863,31 @@ class Knapsack(Problem):
         ----------
         n_items: int
             The number of items that can be placed in the knapsack.
-        
+
         Returns
         -------
             A random instance of the Knapsack problem.
         """
         n_items = check_kwargs(["n_items"], [None], **kwargs)[0]
-        seed = kwargs.get("seed")
 
-        if isinstance(seed, int):
-            np.random.seed(seed)
+        # Set a random number generator
+        seed = kwargs.get("seed", None)
+        seed = seed if isinstance(seed, int) else None
+        rng = np.random.default_rng(seed)
 
-        values = list(map(int, np.random.randint(1, n_items, size=n_items)))
-        weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
+        values = list(map(int, rng.integers(1, n_items, size=n_items)))
+        weights = list(map(int, rng.integers(1, n_items, size=n_items)))
 
         min_weights = np.min(weights)
         max_weights = np.max(weights)
 
         if min_weights != max_weights:
-            weight_capacity = np.random.randint(
+            weight_capacity = int(rng.integers(
                 min_weights * n_items, max_weights * n_items
-            )
+            ))
         else:
-            weight_capacity = np.random.randint(max_weights, max_weights * n_items)
+            weight_capacity = int(rng.integers(
+                max_weights, max_weights * n_items))
 
         penalty = 2 * np.max(values)
         return Knapsack(values, weights, weight_capacity, int(penalty))
@@ -709,7 +925,8 @@ class Knapsack(Problem):
         edges_slacks_decision_vars_with_weights = [
             (
                 list(e),
-                2 * self.penalty * (2 ** e[0]) * self.weights[e[1] - n_variables_slack],
+                2 * self.penalty * (2 ** e[0]) *
+                self.weights[e[1] - n_variables_slack],
             )
             for e in edges_slacks_decision_vars
         ]
@@ -760,44 +977,13 @@ class Knapsack(Problem):
             The QUBO encoding of this problem.
         """
         n_variables_slack = int(np.ceil(np.log2(self.weight_capacity)))
-        n_variables = self.n_items + n_variables_slack
+        n = self.n_items + n_variables_slack
         terms, weights = self.terms_and_weights()
 
-        #         ising_terms, ising_coeffs = terms,weights
-        ising_terms, ising_coeffs = [], []
-
-        constant_term = 0
-        linear_terms = np.zeros(n_variables)
-
-        # Process the given terms and weights
-        for weight, term in zip(weights, terms):
-
-            if len(term) == 2:
-                u, v = term
-
-                if u != v:
-                    ising_terms.append([u, v])
-                    ising_coeffs.append(weight / 4)
-                else:
-                    constant_term += weight / 4
-
-                linear_terms[term[0]] -= weight / 4
-                linear_terms[term[1]] -= weight / 4
-                constant_term += weight / 4
-            elif len(term) == 1:
-                linear_terms[term[0]] -= weight / 2
-                constant_term += weight / 2
-            else:
-                constant_term += weight
-
-        for variable, linear_term in enumerate(linear_terms):
-            ising_terms.append([variable])
-            ising_coeffs.append(linear_term)
-
-        ising_terms.append([])
-        ising_coeffs.append(constant_term)
-
-        return QUBO(n_variables, ising_terms, ising_coeffs)
+        # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
+        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
+            n, terms, weights)
+        return QUBO(n, ising_terms, ising_weights)
 
 
 class SlackFreeKnapsack(Knapsack):
@@ -805,7 +991,7 @@ class SlackFreeKnapsack(Knapsack):
     A slack variable free approach to the Knapsack problem Hamiltonian. 
     The Hamiltonian consists of decision qubits with a quadratic penalty term centred
     on `W`, i.e. the maximum Knapsack Capacity.
-    
+
     Creates an instance of the SlackFreeKanpsack problem.
 
     Parameters
@@ -837,28 +1023,30 @@ class SlackFreeKnapsack(Knapsack):
         ----------
         n_items: int
             The number of items that can be placed in the knapsack.
-        
+
         Returns
         -------
             A random instance of the Knapsack problem.
         """
         n_items = check_kwargs(["n_items"], [None], **kwargs)[0]
-        seed = kwargs.get("seed")
 
-        if isinstance(seed, int):
-            np.random.seed(seed)
+        # Set a random number generator
+        seed = kwargs.get("seed", None)
+        seed = seed if isinstance(seed, int) else None
+        rng = np.random.default_rng(seed)
 
-        values = list(map(int, np.random.randint(1, n_items, size=n_items)))
-        weights = list(map(int, np.random.randint(1, n_items, size=n_items)))
+        values = list(map(int, rng.integers(1, n_items, size=n_items)))
+        weights = list(map(int, rng.integers(1, n_items, size=n_items)))
 
         min_weights = np.min(weights)
         max_weights = np.max(weights)
         if min_weights != max_weights:
-            weight_capacity = np.random.randint(
+            weight_capacity = int(rng.integers(
                 min_weights * n_items, max_weights * n_items
-            )
+            ))
         else:
-            weight_capacity = np.random.randint(max_weights, max_weights * n_items)
+            weight_capacity = int(rng.integers(
+                max_weights, max_weights * n_items))
 
         penalty = 2 * np.max(values)
         return SlackFreeKnapsack(values, weights, weight_capacity, int(penalty))
@@ -874,7 +1062,8 @@ class SlackFreeKnapsack(Knapsack):
         # Edges between decision variables for weights (the x_i's)
         edges_decision_vars = itertools.combinations(range(n_variables), 2)
         edges_decision_vars_with_weights = [
-            (list(e), 2 * self.penalty * self.weights[e[0]] * self.weights[e[1]])
+            (list(e), 2 * self.penalty *
+             self.weights[e[0]] * self.weights[e[1]])
             for e in edges_decision_vars
         ]
 
@@ -911,43 +1100,13 @@ class SlackFreeKnapsack(Knapsack):
         -------
             The QUBO encoding of this problem.
         """
-        n_variables = self.n_items
+        n = self.n_items
         terms, weights = self.terms_and_weights()
 
-        ising_terms, ising_coeffs = [], []
-
-        constant_term = 0
-        linear_terms = np.zeros(n_variables)
-
-        # Process the given terms and weights
-        for weight, term in zip(weights, terms):
-
-            if len(term) == 2:
-                u, v = term
-
-                if u != v:
-                    ising_terms.append([u, v])
-                    ising_coeffs.append(weight / 4)
-                else:
-                    constant_term += weight / 4
-
-                linear_terms[term[0]] -= weight / 4
-                linear_terms[term[1]] -= weight / 4
-                constant_term += weight / 4
-            elif len(term) == 1:
-                linear_terms[term[0]] -= weight / 2
-                constant_term += weight / 2
-            else:
-                constant_term += weight
-
-        for variable, linear_term in enumerate(linear_terms):
-            ising_terms.append([variable])
-            ising_coeffs.append(linear_term)
-
-        ising_terms.append([])
-        ising_coeffs.append(constant_term)
-
-        return QUBO(n_variables, ising_terms, ising_coeffs)
+        # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
+        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
+            n, terms, weights)
+        return QUBO(n, ising_terms, ising_weights)
 
 
 class MinimumVertexCover(Problem):
@@ -986,7 +1145,8 @@ class MinimumVertexCover(Problem):
 
         # Relabel nodes to integers starting from 0
         mapping = dict(
-            zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
+            zip(input_networkx_graph, range(
+                input_networkx_graph.number_of_nodes()))
         )
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 
@@ -1056,7 +1216,7 @@ class MinimumVertexCover(Problem):
     def terms_and_weights(self):
         """
         Creates the terms and weights for the Minimum Vertex Cover problem
-        
+
         Returns
         -------
         terms_weights: tuple(list[list],list[float])
@@ -1085,7 +1245,8 @@ class MinimumVertexCover(Problem):
         ]
 
         # Constant term
-        constant_term = [([], n_nodes * self.field / 2 + len(edges) * self.penalty / 4)]
+        constant_term = [([], n_nodes * self.field / 2 +
+                          len(edges) * self.penalty / 4)]
 
         # Generate tuple containing a list with the terms and a list with the weights
         terms_weights = tuple(
@@ -1137,7 +1298,8 @@ class ShortestPath(Problem):
         self.source = source
         self.dest = dest
 
-        assert source in list(G.nodes), f"Source node not within nodes of input graph"
+        assert source in list(
+            G.nodes), f"Source node not within nodes of input graph"
         assert dest in list(
             G.nodes
         ), f"Destination node not within nodes of input graph"
@@ -1183,42 +1345,10 @@ class ShortestPath(Problem):
 
         return ShortestPath(G, source, dest)
 
-    def convert_binary_to_ising(self, terms, weights):
-        """
-        Converts the weights from a [0, 1] encoding to an Ising problem [-1, 1] 0 is mapped to +1 and 1 to -1 respectively
-
-        Parameters
-        ----------
-        terms: list[list]
-            terms of the hamiltonian
-        weights: list[float]
-
-        Returns
-        -------
-        terms_weights: tuple(list[list],list[float])
-            Tuple containing the converted list of terms and list of weights
-        """
-        new_terms_weights = []
-        constant = 0
-
-        for i, term in enumerate(terms):
-            if len(term) == 1:
-                new_terms_weights.append((term, -0.5 * weights[i]))
-                constant += 0.5 * weights[i]
-            elif len(term) == 2:
-                for t in term:
-                    new_terms_weights.append(([t], -0.25 * weights[i]))
-                new_terms_weights.append((term, 0.25 * weights[i]))
-                constant += 0.25 * weights[i]
-
-        new_terms_weights.append(([], constant))
-
-        return tuple(zip(*(new_terms_weights)))
-
     def terms_and_weights(self):
         """
         Creates the terms and weights for the Shortest Path problem
-        
+
         Returns
         -------
         terms_weights: tuple(list[list],list[float])
@@ -1304,7 +1434,8 @@ class ShortestPath(Problem):
                     for k, y in enumerate(self.G.edges()):
                         if i in x and i in y:
                             if j == k:
-                                path_flow_terms_weights.append(([j + n_nodes - 2], 1))
+                                path_flow_terms_weights.append(
+                                    ([j + n_nodes - 2], 1))
                             else:
                                 path_flow_terms_weights.append(
                                     ([j + n_nodes - 2, k + n_nodes - 2], 1)
@@ -1330,9 +1461,11 @@ class ShortestPath(Problem):
         -------
         The QUBO encoding of this problem.
         """
+        n = self.G.number_of_nodes() + self.G.number_of_edges() - 2
         # Extract terms and weights from the problem definition
-        bin_terms, bin_weights = self.terms_and_weights()
-        terms, weights = self.convert_binary_to_ising(bin_terms, bin_weights)
-        n_variables = self.G.number_of_nodes() + self.G.number_of_edges() - 2
+        terms, weights = self.terms_and_weights()
 
-        return QUBO(n_variables, list(terms), list(weights))
+        # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
+        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
+            n, terms, weights)
+        return QUBO(n, ising_terms, ising_weights)
