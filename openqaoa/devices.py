@@ -294,6 +294,8 @@ class DeviceAWS(DeviceBase):
         results for the QPU runs would be saved on the pre-defined s3 bucket. 
         Note that the user is required to authenticate through the AWS CLI 
         before being able to use this Device object.
+        
+        See: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html for further details.
 
         Parameters
         ----------
@@ -370,7 +372,7 @@ class DeviceAWS(DeviceBase):
             self.aws_session = None
             return True
         except Exception as e:
-            print('An Exception has occured when trying to connect with the provider. You are required to authenticate through the AWS CLI in order to connect to the Braket QPUs. Please check if you have properly set it up. : {}'.format(e))
+            print('An Exception has occured when trying to connect with the provider. You are required to authenticate through the AWS CLI in order to connect to the Braket QPUs. Please check if you have properly set it up. See: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html for further details. : {}'.format(e))
             return False
 
 
