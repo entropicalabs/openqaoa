@@ -363,6 +363,8 @@ class DeviceAWS(DeviceBase):
         try:
             sess = Session(region_name = self.aws_region)
             self.aws_session = AwsSession(sess, default_bucket=self.s3_bucket_name)
+            self.aws_region = self.aws_session.region
+            self.s3_bucket_name = self.aws_session.default_bucket()
             return True
         except NoRegionError:
             self.aws_session = None
