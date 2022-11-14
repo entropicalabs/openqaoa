@@ -370,8 +370,7 @@ class DeviceAWS(DeviceBase):
             self.aws_session = None
             return True
         except Exception as e:
-            print('An Exception has occured when trying to connect with the \
-            provider: {}'.format(e))
+            print('An Exception has occured when trying to connect with the provider. You are required to authenticate through the AWS CLI in order to connect to the Braket QPUs. Please check if you have properly set it up. : {}'.format(e))
             return False
 
 
