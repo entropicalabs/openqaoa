@@ -198,13 +198,6 @@ class TestingDeviceAWS(unittest.TestCase):
     @pytest.mark.api
     def test_changing_s3_bucket_names(self):
         
-        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1')
-        
-        device_obj.check_connection()
-        default_bucket = device_obj.s3_bucket_name
-        
-        self.assertEqual('amazon-braket-us-east-1-733853225053', default_bucket)
-        
         device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1', s3_bucket_name='random_new_name')
         
         device_obj.check_connection()
