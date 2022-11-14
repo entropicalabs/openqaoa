@@ -93,8 +93,8 @@ class TestingResultOutputs(unittest.TestCase):
 
         # Test for .dumps returning a string
         results = self._run_qaoa()
-        string_dumps = results.dumps(string=True)
-        dictionay_dumps = results.dumps(string=False)
+        string_dumps = results.dumps(as_string=True)
+        dictionay_dumps = results.dumps(as_string=False)
 
         assert isinstance(string_dumps, str), 'String dump is not correct'
         assert isinstance(dictionay_dumps, dict), 'Dictionary dump is not a dictionary'
