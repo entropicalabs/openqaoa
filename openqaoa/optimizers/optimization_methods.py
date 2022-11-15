@@ -20,6 +20,8 @@ Collection of custom optimization algorithms to be used by Scipy `minimize`. Ext
 import numpy as np
 from scipy.optimize import OptimizeResult
 
+import time
+
 
 def grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
                  maxiter=100, tol=10**(-6), jac=None, callback=None, **options):
@@ -64,6 +66,7 @@ def grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
     testx = np.copy(bestx)
     testy = np.real(fun(testx, *args))
     while improved and not stop and niter < maxiter:
+        t0 = time.time()
         improved = False
         niter += 1
         
@@ -84,6 +87,8 @@ def grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
         if maxfev is not None and funcalls >= maxfev:
             stop = True
             break
+
+        print('Iteration: ', niter, 'Time: ', time.time()-t0)
 
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))
@@ -454,6 +459,7 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
     testx = np.copy(bestx)
     testy = besty
     while improved and not stop and niter < maxiter:
+        t0 = time.time()
         
         print('a',n_shots,testy)
 
@@ -498,6 +504,7 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
                 break
 
         niter += 1
+        print('iter',niter,'time',time.time()-t0)
 
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))
@@ -527,6 +534,8 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
     testx = np.copy(bestx)
     testy = besty
     while improved and not stop and niter < maxiter:
+
+        t0 = time.time()
         
         print('a',n_shots,testy)
 
@@ -548,6 +557,8 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
         xi   = xi_  / (1-mu**(niter+1))
         chi  = chi_ / (1-mu**(niter+1))
         n_shots = np.int32(np.ceil(2*lipschitz*stepsize*xi/((2-lipschitz*stepsize)*(chi**2+b*mu**niter))))
+
+        n_shots = np.fmax(n_shots, 1) #to compute gain n_shots should be at least 1
         gain = ((stepsize-lipschitz*gradient**2/2)*chi**2-lipschitz*stepsize**2*xi/(2*n_shots))/n_shots
 
         # clip the number of shots
@@ -576,6 +587,7 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
                 break
 
         niter += 1
+        print('iter',niter,'time',time.time()-t0)
 
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))
