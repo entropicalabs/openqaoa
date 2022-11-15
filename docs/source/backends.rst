@@ -1,9 +1,16 @@
-Abstract Backends
+Base Backends and Device
 =================================
-.. .. autoclass:: openqaoa.basebackend.QuantumCircuitBase
-..     :members:
-..     :undoc-members:
-..     :inherited-members:
+
+BaseDevice
+----------
+
+.. autoclass:: openqaoa.devices.DeviceBase
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+BaseBackends
+------------
 
 .. autoclass:: openqaoa.basebackend.VQABaseBackend
     :members:
@@ -36,40 +43,12 @@ Abstract Backends
     :inherited-members:
 
 
-Cloud Devices
+
+Cloud Backends and Devices
 =================================
-QCS - Rigetti
-----------------------------------
-.. autoclass:: openqaoa.backends.qpus.qaoa_pyquil_qpu.QAOAPyQuilQPUBackend
-    :members:
-    :undoc-members:
-    :inherited-members:
 
-IBM Quantum - IBM
-----------------------------------
-.. autoclass:: openqaoa.backends.qpus.qaoa_qiskit_qpu.QAOAQiskitQPUBackend
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-Amazon Braket - Amazon
-----------------------------------
-.. autoclass:: openqaoa.backends.qpus.qaoa_braket_qpu.QAOAAWSQPUBackend
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-Devices
--------
-.. autoclass:: openqaoa.devices.DeviceBase
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-.. autoclass:: openqaoa.devices.DeviceLocal
-    :members:
-    :undoc-members:
-    :inherited-members:
+Cloud Devices
+-------------
 
 .. autoclass:: openqaoa.devices.DeviceQiskit
     :members:
@@ -86,8 +65,39 @@ Devices
     :undoc-members:
     :inherited-members:
 
-Local devices --- Simulators
-=================================
+QCS - Rigetti
+-------------
+.. autoclass:: openqaoa.backends.qpus.qaoa_pyquil_qpu.QAOAPyQuilQPUBackend
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+IBM Quantum - IBM
+-----------------
+.. autoclass:: openqaoa.backends.qpus.qaoa_qiskit_qpu.QAOAQiskitQPUBackend
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+Amazon Braket - Amazon
+----------------------
+.. autoclass:: openqaoa.backends.qpus.qaoa_braket_qpu.QAOAAWSQPUBackend
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+
+Local Backend and Devices --- Simulators
+========================================
+
+Local Device
+------------
+
+.. autoclass:: openqaoa.devices.DeviceLocal
+    :members:
+    :undoc-members:
+    :inherited-members:
+
 Vectorised
 ----------------------------------
 .. autoclass:: openqaoa.backends.simulators.qaoa_vectorized.QAOAvectorizedBackendSimulator
