@@ -304,15 +304,23 @@ class Result:
         }
         return best_results
 
-
-    def dumps(self, as_string:bool=False, indent:int=4):
+    def as_dict(self):
         """
-        Returns the result serialized 
+        Returns a dictionary with the attributes of the class.
+
+        Returns
+        -------
+        dict
+            A dictionary with the attributes of the class.
+        """
+        return convert2serialize(self)
+
+    def dumps(self, indent:int=2):
+        """
+        Returns a json string of the QAOA results.
 
         Parameters
         ----------
-        as_string : bool
-            If True, the result is returned as a as_string. Otherwise, it is returned as a dictionary.
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
 
@@ -321,19 +329,16 @@ class Result:
         str or dict
         """
 
-        if as_string:
-            return json.dumps(convert2serialize_complex(self), indent=indent)
-        else:
-            return convert2serialize(self)
+        return json.dumps(convert2serialize_complex(self), indent=indent)
 
-    def dump(self, file_path:str, indent:int=4):
+    def dump(self, file_path:str, indent:int=2):
         """
-        Saves the result as json file.
+        Saves a json file with the QAOA results.
 
         Parameters
         ----------
         file_path : str
-            The name of the file to save the result. 
+            The name and path of the file to save the result. 
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
         """
@@ -343,6 +348,6 @@ class Result:
 
         # saving the result in a json file
         with open(file_path, 'w') as f:
-            f.write(self.dumps(as_string=True, indent=indent))
+            json.dump(convert2serialize_complex(self), f, indent=indent)
 
         print('Results saved as {}'.format(file_path))

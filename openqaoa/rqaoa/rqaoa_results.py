@@ -71,16 +71,33 @@ class RQAOAResults(dict):
         """
         return self.get_problem_step(i).hamiltonian
 
-    def dumps(self, human:bool=False, as_string:bool=False, indent:int=4):
+    def __full_dict(self):
         """
-        Returns the result serialized 
+        Returns all values and attributes of the result in a dictionary.
+        """
+        full_dict = copy.deepcopy(self)
+        full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
+        full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results} for step in full_dict['intermediate_steps']]
+        full_dict['device']              = self.device
+        full_dict['circuit_properties']  = self.circuit_properties
+        full_dict['backend_properties']  = self.backend_properties
+        full_dict['classical_optimizer'] = self.classical_optimizer
+        full_dict['rqaoa_parameters']    = self.rqaoa_parameters
+
+        return full_dict
+
+    def as_dict(self):
+        """
+        Returns all values and attributes of the result as a dictionary.
+        """
+        return convert2serialize(self.__full_dict())
+
+    def dumps(self, indent:int=2):
+        """
+        Returns a json string of the RQAOA result.
 
         Parameters
         ----------
-        human : bool
-            If True, the result is serialized in a human readable format.
-        as_string : bool
-            If True, the result is returned as a string. Otherwise, it is returned as a dictionary.
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
 
@@ -89,25 +106,9 @@ class RQAOAResults(dict):
         str or dict
         """
 
-        full_dict = copy.deepcopy(self)
-        if as_string:
-            full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
-        if human:
-            full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results.most_probable_states} for step in full_dict['intermediate_steps']]
-        else:
-            full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results} for step in full_dict['intermediate_steps']]
-        full_dict['device']              = self.device
-        full_dict['circuit_properties']  = self.circuit_properties
-        full_dict['backend_properties']  = self.backend_properties
-        full_dict['classical_optimizer'] = self.classical_optimizer
-        full_dict['rqaoa_parameters']    = self.rqaoa_parameters
+        return json.dumps(convert2serialize_complex(self.__full_dict()), indent=indent)
 
-        if as_string:
-            return json.dumps(convert2serialize_complex(full_dict), indent=indent)
-        else:
-            return convert2serialize(full_dict)
-
-    def dump(self, file_path:str, human:bool=False, indent:int=4):
+    def dump(self, file_path:str, indent:int=2):
         """
         Saves the result as json file.
 
@@ -115,8 +116,6 @@ class RQAOAResults(dict):
         ----------
         file_path : str
             The name of the file to save the result. If None, the result is saved as 'result.json'.
-        human : bool
-            If True, the result is serialized in a human readable format.
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
         """
@@ -126,6 +125,6 @@ class RQAOAResults(dict):
 
         # saving the result in a json file
         with open(file_path, 'w') as f:
-            f.write(self.dumps(human=human, as_string=True, indent=indent))
+            json.dump(convert2serialize_complex(self.__full_dict()), f, indent=indent)
 
         print('Results saved as {}'.format(file_path))

@@ -21,6 +21,7 @@ import networkx as nw
 import numpy as np
 import itertools
 import os
+import json
 
 from openqaoa.problems.problem import MinimumVertexCover, QUBO
 from openqaoa.qaoa_parameters.operators import Hamiltonian
@@ -85,25 +86,50 @@ class TestingResultOutputs(unittest.TestCase):
 
         return q.results
 
-    #test dumps
-    def test_rqaoa_result_dumps(self):
+    def _test_results_dict(self, results_dict):
         """
-        Test the dumps for the QAOA Result class
+        private function to test the results dictionary
+        """
+        # test is a dictionary
+        assert isinstance(results_dict, dict), 'Results are not a dictionary'
+        
+        # test the keys
+        expected_keys = ['method', 'cost_hamiltonian', 'evals', 'intermediate', 'optimized', 'most_probable_states']
+        for key in expected_keys:
+            assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
+
+    #test as_dict method
+    def test_qaoa_result_as_dict(self):
+        """
+        Test as_dict method for the QAOA result class
+        """
+
+        # run the QAOA and get the results as a dictionary with the as_dict method
+        results = self._run_qaoa()
+        results_dict = results.as_dict()
+        
+        # test the dictionary
+        self._test_results_dict(results_dict)
+
+    #test dumps
+    def test_qaoa_result_dumps(self):
+        """
+        Test the dumps for the QAOA result class
         """
 
         # Test for .dumps returning a string
         results = self._run_qaoa()
-        string_dumps = results.dumps(as_string=True)
-        dictionay_dumps = results.dumps(as_string=False)
+        json_string = results.dumps()
+        assert isinstance(json_string, str), 'json_string is not a string'
 
-        assert isinstance(string_dumps, str), 'String dump is not correct'
-        assert isinstance(dictionay_dumps, dict), 'Dictionary dump is not a dictionary'
-
+        # read the json string and test the dictionary that is returned
+        results_dict = json.loads(json_string)
+        self._test_results_dict(results_dict)
 
     #test dump 
-    def test_rqaoa_result_dump(self):
+    def test_qaoa_result_dump(self):
         """
-        Test the dump method for the QAOA Result class
+        Test the dump method for the QAOA result class 
         """
 
         # name for the file that will be created and deleted
@@ -115,7 +141,17 @@ class TestingResultOutputs(unittest.TestCase):
         # Test for .dump creating a file and containing the correct information
         results.dump(name_file, indent=None)
         assert os.path.isfile(name_file), 'Dump file does not exist'
-        assert open(name_file, "r").read() == results.dumps(as_string=True, indent=None), 'Dump file does not contain the correct data'
+        with open(name_file, 'r') as file:
+            assert file.read() == results.dumps(indent=None), 'Dump file does not contain the correct data'
+
+        # read the json string 
+        with open(name_file, 'r') as file:
+            results_dict = json.load(file)
+
+        # test the dictionary that is returned
+        self._test_results_dict(results_dict)
+
+        # delete the file
         os.remove(name_file)
 
 
@@ -219,6 +255,32 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
             hamiltonian = results.get_hamiltonian_step(i)
             assert isinstance(hamiltonian, Hamiltonian), 'Hamiltonian is not of type Hamiltonian'
 
+    def _test_results_dict(self, results_dict):
+        """
+        private function to test the results dictionary
+        """
+        # test is a dictionary
+        assert isinstance(results_dict, dict), 'Results are not a dictionary'
+        
+        # test the keys
+        expected_keys = ['solution', 'classical_output', 'elimination_rules', 'schedule', 'intermediate_steps', 
+                         'number_steps', 'device', 'circuit_properties', 'backend_properties', 'classical_optimizer',
+                         'rqaoa_parameters']
+        for key in expected_keys:
+            assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
+
+    #test as_dict method
+    def test_rqaoa_result_as_dict(self):
+        """
+        Test as_dict method for the RQAOAResult class
+        """
+
+        # run the RQAOA and get the results as a dictionary with the as_dict method
+        results = self._run_rqaoa()
+        results_dict = results.as_dict()
+        
+        # test the dictionary
+        self._test_results_dict(results_dict)
 
     #test dumps
     def test_rqaoa_result_dumps(self):
@@ -228,16 +290,12 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # Test for .dumps returning a string
         results = self._run_rqaoa()
-        string_dumps = results.dumps(as_string=True)
-        string_dumps_human = results.dumps(as_string=True, human=True)
-        dictionay_dumps = results.dumps(as_string=False)
-        dictionay_dumps_human = results.dumps(as_string=False, human=True)
+        json_string = results.dumps()
+        assert isinstance(json_string, str), 'json_string is not a string'
 
-        assert isinstance(string_dumps, str), 'String dump is not correct'
-        assert isinstance(string_dumps_human, str), 'String dump for humans is not correct'
-        assert isinstance(dictionay_dumps, dict), 'Dictionary dump is not a dictionary'
-        assert isinstance(dictionay_dumps_human, dict), 'Dictionary dump for humans is not a dictionary'
-
+        # read the json string and test the dictionary that is returned
+        results_dict = json.loads(json_string)
+        self._test_results_dict(results_dict)
 
     #test dump 
     def test_rqaoa_result_dump(self):
@@ -252,8 +310,21 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         results = self._run_rqaoa()
 
         # Test for .dump creating a file and containing the correct information
-        for human in [True, False]:
-            results.dump(name_file, human=human, indent=None)
-            assert os.path.isfile(name_file), 'Dump file does not exist'
-            assert open(name_file, "r").read() == results.dumps(as_string=True, human=human, indent=None), 'Dump file does not contain the correct data'
-            os.remove(name_file)
+        results.dump(name_file, indent=None)
+        assert os.path.isfile(name_file), 'Dump file does not exist'
+        with open(name_file, 'r') as file:
+            assert file.read() == results.dumps(indent=None), 'Dump file does not contain the correct data'
+
+        # read the json string 
+        with open(name_file, 'r') as file:
+            results_dict = json.load(file)
+
+        # test the dictionary that is returned
+        self._test_results_dict(results_dict)
+
+        # delete the file
+        os.remove(name_file)
+
+if __name__ == "__main__":
+	unittest.main()
+ 
