@@ -22,7 +22,7 @@ from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuit
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.devices import create_device
-from openqaoa.optimizers import get_optimizer
+from openqaoa.optimizers import get_optimizer, Result
 from openqaoa.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
 from openqaoa.qfim import qfim
@@ -395,6 +395,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                                           })
         vector_optimizer.vqa.expectation = Mock(side_effect = Exception("Error!"))
         self.assertRaises(Exception, lambda: vector_optimizer.optimize())
+        
+        # Check that QAOA Result exists
+        self.assertEqual(type(vector_optimizer.qaoa_result), Result)
         
 
 if __name__ == "__main__":
