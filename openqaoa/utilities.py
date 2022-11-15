@@ -36,7 +36,7 @@ def X_mixer_hamiltonian(n_qubits: int,
     ----------
     n_qubits: `int`
         The number of qubits in the mixer Hamiltonian.
-    coeffs: `list`, optional
+    coeffs: `list`
         The coefficients of the X terms in the Hamiltonian.
 
     Returns
@@ -64,26 +64,27 @@ def XY_mixer_hamiltonian(n_qubits: int,
                          qubit_connectivity: Union[List[list],
                                                    List[tuple], str] = 'full',
                          coeffs: List[float] = None) -> Hamiltonian:
-    """
+    r"""
     Construct a Hamiltonian object to implement the XY mixer.
+
+    .. Important::
+            The XY mixer is not implemented with :math:`RXY` Gates, but with :math:`H_{XY}=\frac{1}{2}(\sum_{i,j} X_iX_j+Y_iY_j)`
 
     Parameters
     ----------
     n_qubits: `int`
         The number of qubits in the system.
-    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
+    qubit_connectivity: `Union[List[list],List[tuple], str]`
         The connectivity of the qubits in the mixer Hamiltonian.
-    coeffs: `list`, optional
+    coeffs: `list`
         The coefficients of the XY terms in the Hamiltonian.
 
     Returns
     -------
-    hamiltonian: Hamiltonian
+    hamiltonian: `Hamiltonian`
         The Hamiltonian object corresponding to the XY mixer.
 
-    Notes
-    -----
-        The XY mixer is not implemented with $$RXY$$ Gates, but with $$H_{XY} = \\frac{1}{2}(\\sum_{i,j} X_iX_j+Y_iY_j)$$
+    
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
@@ -191,11 +192,11 @@ def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivi
     ----------
     n_qubits: `int`
         Number of qubits in the Hamiltonian.
-    mixer_type: `str`, optional
+    mixer_type: `str`
         Name of the mixer Hamiltonian. Choose from `x` or `xy`.
     qubit_connectivity: `list` or `str`, optional
         The connectivity of the qubits in the mixer Hamiltonian.
-    coeffs: `list`, optional
+    coeffs: `list`
         The coefficients of the terms in the Hamiltonian.
 
     Returns:
@@ -222,6 +223,10 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
     """
     Creates a networkx graph corresponding to a specified problem Hamiltonian.
 
+    .. Important::
+        This function cannot handle non-QUBO terms.
+        Linear terms are stored as nodes with weights.
+
     Parameters
     ----------
     hamiltonian: `Hamiltonian`
@@ -229,15 +234,13 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
 
     Returns
     -------
-    G: `Networkx Graph`
+    G: `networkx.Graph`
         The corresponding networkx graph with the edge weights being the
         two-qubit coupling coefficients,
         and the node weights being the single-qubit bias terms.
 
-    Notes
-    -----
-    This function cannot handle non-QUBO terms.
-    Linear terms are stored as nodes with weights.
+    
+
     """
     # Define graph
     G = nx.Graph()
@@ -270,7 +273,7 @@ def hamiltonian_from_graph(G: nx.Graph) -> Hamiltonian:
 
     Parameters
     ----------
-    G: `Networkx Graph`
+    G: `networkx.Graph`
         The specified networkx graph.
 
     Returns
@@ -459,11 +462,10 @@ def random_classical_hamiltonian(reg: List[int],
         A random hamiltonian with randomly selected terms and coefficients and 
         with the specified constant term.
 
-    Notes
-    -----
-    Randomly selects which qubits that will have a bias term, then assigns them a bias coefficient.
-    Randomly selects which qubit pairs will have a coupling term, then assigns them a coupling coefficient.
-    In both cases, the random coefficient is drawn from the uniform distribution on the interval [0,1).
+    .. Important::
+        Randomly selects which qubits that will have a bias term, then assigns them a bias coefficient.
+        Randomly selects which qubit pairs will have a coupling term, then assigns them a coupling coefficient.
+        In both cases, the random coefficient is drawn from the uniform distribution on the interval [0,1).
     """
     # Set the random seed
     np.random.seed(seed=seed)
@@ -783,10 +785,9 @@ def low_energy_states(hamiltonian: Hamiltonian,
         The list of low energy states that lie below the low
         energy threshold.
 
-    Notes
-    -----
-    The threshold is calculated as `threshols_per` factors away from the
-    ground state of the Hamiltonian.
+    .. Important::
+        The threshold is calculated as `threshols_per` factors away from the
+        ground state of the Hamiltonian.
     """
     # Asserr threshold is bounded between 0 and 1
     assert threshold_per >= 0.0, "Threshold percentage should be above 0"
@@ -833,7 +834,7 @@ def low_energy_states_overlap(hamiltonian: Hamiltonian,
     threshold_per: `float`
         Threshold percentage away from the ground state, defining the energy we window we search
         in for low energy states.
-    prob_dict: `Dict`
+    prob_dict: `dict`
         The measurement outcome dictionary generated from the 
         circuit execution.
 
@@ -842,10 +843,9 @@ def low_energy_states_overlap(hamiltonian: Hamiltonian,
     total_overlap: `float`
         The total overlap with the low-energy states.
 
-    Notes
-    -----
-    The threshold is calculated as `threshold_per` factors away from the ground state of the Hamiltonain.
-    For `threshold_per=0` the function returns the ground state overlap of the QAOA output.
+    .. Important::
+        The threshold is calculated as `threshold_per` factors away from the ground state of the Hamiltonain.
+        For `threshold_per=0` the function returns the ground state overlap of the QAOA output.
     """
     # Extract number of qubits from probability dictionary
     n_qubits = len(list(prob_dict.keys())[0])
@@ -897,13 +897,14 @@ def exp_val_single(spin: int, prob_dict: dict):
 
 
 def exp_val_pair(spins: tuple, prob_dict: dict):
-    """
-    Computes the correlation Mij = <Z_{i}Z_{j}> between qubits i,j using the QAOA optimized 
+    r"""
+    Computes the correlation :math:`Mij = <Z_{i}Z_{j}>` between qubits i,j using the QAOA optimized 
     wavefunction.
 
-    NOTE: In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be
-    subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a 
-    wrapper for this function. 
+    .. Important::
+        In the presence of linear terms the :math:`<Z_{i}><Z_{j}>` contribution needs to be
+        subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a 
+        wrapper for this function. 
 
     Parameters
     ----------
@@ -1044,10 +1045,11 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
 
 def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: tuple):
     """
-    Computes the single spin expectation value <Z> from an analytically
+    Computes the single spin expectation value :math:`<Z>` from an analytically
     derived expression for a single layer QAOA Ansatz. 
     
-    NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
+    .. Important::
+        Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
 
     Parameters
     ----------
@@ -1108,19 +1110,13 @@ def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: 
 
 def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles: tuple):
     """
-    Computes <Z_{i}Z_{j}> correlation between apair of spins analytically. It is an extension from the 
-    expression derived by Bravyi et al. in arXiv:1910.08980 which includes the effect of biases. 
+    Computes :math:`<Z_{i}Z_{j}>` correlation between apair of spins analytically. It is an extension from the 
+    expression derived by Bravyi et al. in https://arxiv.org/abs/1910.08980 which includes the effect of biases. 
 
-    NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
-
-    NOTE: In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be
-    subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a 
-    wrapper for this function. 
-
-    NOTE: OpenQAOA uses a different sign convention for the QAOA Ansatz than Bravy et al. - there is 
-    a relative minus sign between the cost function and the mixer in OpenQAOA, which 
-    is accounted for in this implementation. Additionally, the result below is valid 
-    for a Hadamard state initialization and in the absence of bias terms in the Hamiltonian.
+    .. Important::
+        * Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
+        * In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a wrapper for this function. 
+        * OpenQAOA uses a different sign convention for the QAOA Ansatz than Bravy et al. - there is a relative minus sign between the cost function and the mixer in OpenQAOA, which is accounted for in this implementation. Additionally, the result below is valid for a Hadamard state initialization and in the absence of bias terms in the Hamiltonian.
 
     Parameters
     ----------
@@ -1136,7 +1132,7 @@ def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles:
 
     Returns
     -------
-    corr:
+    corr: `float`
         Correlation <ZZ> between the specified spin pair.
     """
 
@@ -1205,8 +1201,9 @@ def energy_expectation_analytical(angles:Union[list,tuple],hamiltonian:Hamiltoni
     """
     Computes the expectation value of the Hamiltonian for an analytical expression.
 
-    NOTE: Only valid for single layer QAOA Ansatz with X mixer Hamiltonian and classical
-    Hamiltonians with up to quadratic terms.
+    .. Important::
+        Only valid for single layer QAOA Ansatz with X mixer Hamiltonian and classical
+        Hamiltonians with up to quadratic terms.
 
     Parameters
     ----------
@@ -1255,9 +1252,8 @@ def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
     ring_hamil: `Hamiltonian`
         Hamiltonian object containing Ring of Disagrees model.
 
-    Notes
-    -----
-    This model is introduced in https://arxiv.org/abs/1411.4028
+    .. Important::
+        This model is introduced in https://arxiv.org/abs/1411.4028
     """
 
     # Number of qubits from input register

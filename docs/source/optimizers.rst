@@ -31,9 +31,15 @@ Optimization Methods
 
 Derivate functions
 ------------------
+
+Collection of functions to return derivative computation functions. Usually called from the `derivative_function` method of a `QAOABaseBackend` object.
+New gradient/higher-order derivative computation methods can be added here. To add new computation methods:
+#. Write function in the format : new_function(backend_obj, params_std, params_ext, gradient_options), or with less arguments.
+#. Give this function a string identifier (eg: 'param_shift'), and add this to the list `derivative_methods` of the function `derivative`, and as a possible 'out'.
+
+
 .. automodule:: openqaoa.derivative_functions
     :members:
-    :undoc-members:
     :show-inheritance:
     :inherited-members:
 

@@ -12,47 +12,13 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from typing import Union
 import numpy as np
 
-from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.basebackend import QAOABaseBackend, QAOABaseBackendStatevector
-from ..devices import DeviceBase, create_device, DeviceLocal
-from openqaoa.qaoa_parameters import QAOACircuitParams, QAOAVariationalBaseParams, Hamiltonian, create_qaoa_variational_params
-from openqaoa.optimizers.qaoa_optimizer import get_optimizer
-from openqaoa.utilities import bitstring_energy, ground_state_hamiltonian, get_mixer_hamiltonian, exp_val_hamiltonian_termwise
-from openqaoa.optimizers.result import Result
+from openqaoa.qaoa_parameters import Hamiltonian
+from openqaoa.utilities import bitstring_energy
+from openqaoa.problems.problem import QUBO
 
 
-def optimize_qaoa(qaoa_backend: QAOABaseBackend, variational_params: QAOAVariationalBaseParams, optimizer_dict: dict):
-    """
-    Creates an optimizer object with the specified parameters and run the optimization process. 
-    Post which obtain the results and return the ''OptimizeVQA.results_information()''
-
-    Parameters
-    ----------
-    qaoa_backend: `QAOABaseBackend`
-        The backend on which to run the optimization.
-
-    variational_params: `QAOAVariationalBaseParams`
-        Set of variational parameters in the QAOA ansatz.
-
-    optimizer_dict: `dict`
-        Dictionary containing the classical optimizer method and the
-        number of iterations allowed.
-
-    Returns
-    -------
-    opt_results:
-        Results from optimization process.
-    """
-
-    optimizer = get_optimizer(qaoa_backend, variational_params, optimizer_dict)
-
-    # Run optimization
-    optimizer()
-
-    return optimizer.qaoa_result
 
 
 def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
@@ -239,7 +205,7 @@ def find_parent(spin_map: dict, spin: int, factor: int = 1):
     return find_parent(spin_map, spin, factor)
 
 
-def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
+def spin_mapping(problem: QUBO, max_terms_and_stats: dict):
     """
     Generates a map between spins in the original problem graph and in the reduced graph.
     Elimination constraints from correlations define a constrained spin, to be removed, and a 
@@ -252,8 +218,8 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
 
     Parameters
     ----------
-    hamiltonian: `Hamiltonian`
-        Hamiltonian object containing the problem statement.
+    problem: `QUBO`
+        QUBO problem object containing the problem statement.
     max_terms_and_stats: `dict`
         Dictionary containing the terms to be eliminated and their expectation values.
 
@@ -266,7 +232,7 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
         The structure is: { old_spin : (factor, new_spin) }.
     """
 
-    register = hamiltonian.qureg
+    register = list(range(problem.n))
     max_terms = list(max_terms_and_stats.keys())
 
     # Initialize with every spin mapping to itself
@@ -347,27 +313,27 @@ def spin_mapping(hamiltonian: Hamiltonian, max_terms_and_stats: dict):
     return spin_map
 
 
-def hamiltonian_from_dict(hamiltonian_dict: dict):
+def problem_from_dict(problem_dict: dict):
     """
-    Transforms a hamiltonian, input as a dictionary, into a classical Hamiltonian, output as
-    a Hamiltonian object, ensuring proper labelling of the nodes. For example, for a set
+    Transforms a QUBO problem, input as a dictionary, into a QUBO problem, output as
+    a QUBO object, ensuring proper labelling of the nodes. For example, for a set
     of nodes [0,1,4,6] with edges [(0,1),(1,4),(4,6),(0,6)], after the relabelling, the
     Hamiltonian object will be constructed with node labels [0,1,2,3] and edges 
     [(0,1),(1,2),(2,3),(1,3)]. 
 
     Parameters
     ----------
-    hamiltonian_dict: `dict`
-        Hamiltonian as a dictionary containing the edges as keys and weights as values.
+    problem_dict: `dict`
+        QUBO problem as a dictionary containing the edges as keys and weights as values.
 
     Returns
     -------
-    hamiltonian: `Hamiltonian`
-        A Hamiltonian object constructed using the classical_hamiltonian() method.    
+    problem: `QUBO`
+        A QUBO problem object constructed using the classical_hamiltonian() method.    
     """
 
-    edges = list(hamiltonian_dict.keys())
-    weights = list(hamiltonian_dict.values())
+    edges = list(problem_dict.keys())
+    weights = list(problem_dict.values())
 
     # Current indices after elimination
     register = list(set([i for edge in edges for i in edge]))
@@ -398,16 +364,15 @@ def hamiltonian_from_dict(hamiltonian_dict: dict):
     new_edges = list(label_edges_mapping.values())
     
     # New hamiltonian
-    hamiltonian = Hamiltonian.classical_hamiltonian(
-        terms=new_edges, coeffs=weights, constant=0)
+    problem = QUBO(n= len(register), terms=new_edges, weights=weights)
 
-    return hamiltonian
+    return problem
 
 
-def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
+def redefine_problem(problem: QUBO, spin_map: dict):
     """
-    Returns the hamiltonian of the reduced problem. Using the spin map, we construct a  dictionary
-    containing the new set of edges and weights defining the new classical Hamiltonian.
+    Returns the QUBO object of the reduced problem. Using the spin map, we construct a  dictionary
+    containing the new set of edges and weights defining the new problem.
 
     Parameters
     ----------
@@ -418,23 +383,23 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
 
     Returns
     -------
-    new_hamiltonian: `Hamiltonian`
-        Hamiltonian object containing the reduced problem statement after spin eliminations.
+    new_problem: `QUBO`
+        QUBO object containing the reduced problem statement after spin eliminations.
     spin_map: `dict`
         Updated spin_map with sponatenous eliminations from cancellations during spin removal process.
     """
 
-    # Define new Hamiltonian as a dictionary
-    new_hamiltonian_dict = {}
+    # Define new QUBO problem as a dictionary
+    new_problem_dict = {}
 
     # Scan all terms and weights
-    for term, weight in zip(hamiltonian.terms, hamiltonian.coeffs):
+    for term, weight in zip(problem.terms, problem.weights):
 
         # Bias terms
         if len(term) == 1:
 
             # Extract spin from the map
-            spin = term.qubit_indices[0]
+            spin = term[0]
 
             # Extract parent spin and associated factor
             parent_spin, factor_spin = spin_map[spin][1], spin_map[spin][0]
@@ -449,18 +414,18 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
                 new_weight = factor_spin*weight
 
                 # Add new edge if not already present in the dictionary
-                if new_hamiltonian_dict.get(new_edge) is None:
-                    new_hamiltonian_dict.update({new_edge: new_weight})
+                if new_problem_dict.get(new_edge) is None:
+                    new_problem_dict.update({new_edge: new_weight})
 
                 # If new edge already present, add weight
                 else:
-                    new_hamiltonian_dict[new_edge] += new_weight
+                    new_problem_dict[new_edge] += new_weight
 
         # Quadratic terms
         else:
 
             # Extract spins from term
-            spin1, spin2 = term.qubit_indices
+            spin1, spin2 = term
 
             # Extract parent spins and associated factors
             factor_spin1, factor_spin2 = spin_map[spin1][0], spin_map[spin2][0]
@@ -481,12 +446,12 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
                 new_weight = factor_spin1*factor_spin2*weight
 
                 # Add new edge if not already present in the dictionary
-                if new_hamiltonian_dict.get(new_edge) is None:
-                    new_hamiltonian_dict.update({new_edge: new_weight})
+                if new_problem_dict.get(new_edge) is None:
+                    new_problem_dict.update({new_edge: new_weight})
 
                 # If new edge already present, add weight
                 else:
-                    new_hamiltonian_dict[new_edge] += new_weight
+                    new_problem_dict[new_edge] += new_weight
 
             # If only one spin is fixed, quadratic term becomes a bias term
             else:
@@ -497,21 +462,21 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
                 new_weight = factor_spin1*factor_spin2*weight
 
                 # Add new edge if not already present in the dictionary
-                if new_hamiltonian_dict.get(new_edge) is None:
-                    new_hamiltonian_dict.update({new_edge: new_weight})
+                if new_problem_dict.get(new_edge) is None:
+                    new_problem_dict.update({new_edge: new_weight})
 
                 # If new term already present, add weight
                 else:
-                    new_hamiltonian_dict[new_edge] += new_weight
+                    new_problem_dict[new_edge] += new_weight
 
     # New qubit register
-    new_register = set([spin for term in new_hamiltonian_dict.keys() for spin in term])
+    new_register = set([spin for term in new_problem_dict.keys() for spin in term])
     
     # Remove vanishing edges
-    new_hamiltonian_dict = {edge:weight for edge,weight in new_hamiltonian_dict.items() if round(weight,10) != 0}
+    new_problem_dict = {edge:weight for edge,weight in new_problem_dict.items() if round(weight,10) != 0}
 
     # Define quadratic register after removing vanishing terms
-    new_quadratic_register = set([spin for edge in new_hamiltonian_dict.keys() if len(edge) == 2 for spin in edge])
+    new_quadratic_register = set([spin for edge in new_problem_dict.keys() if len(edge) == 2 for spin in edge])
 
     # If lengths do not match, there are isolated nodes
     if len(new_register) != len(new_quadratic_register):
@@ -522,21 +487,21 @@ def redefine_hamiltonian(hamiltonian: Hamiltonian, spin_map: dict):
             singlet = (node,)
 
             # If no linear term acting on the node, fix arbitrarily
-            if new_hamiltonian_dict.get(singlet) is None:
+            if new_problem_dict.get(singlet) is None:
                 spin_map.update({node:(1,None)})
 
             # If linear term present, fix accordingly by anti-aligning
             else:
-                factor = -np.sign(new_hamiltonian_dict.get(singlet))
+                factor = -np.sign(new_problem_dict.get(singlet))
                 spin_map.update({node:(factor,None)})
 
-                # Delete isolated node from new hamiltonian
-                new_hamiltonian_dict.pop((node,))
+                # Delete isolated node from new problem
+                new_problem_dict.pop((node,))
 
-    # Redefine new Hamiltonian from the dictionary
-    new_hamiltonian = hamiltonian_from_dict(new_hamiltonian_dict)
+    # Redefine new QUBO problem from the dictionary
+    new_problem = problem_from_dict(new_problem_dict)
 
-    return new_hamiltonian, spin_map
+    return new_problem, spin_map
 
 
 def final_solution(elimination_tracker: list, cl_states: list, hamiltonian: Hamiltonian):
@@ -608,330 +573,3 @@ def final_solution(elimination_tracker: list, cl_states: list, hamiltonian: Hami
         full_solution.update({"".join(str(i) for i in state):bitstring_energy(hamiltonian, state)})
 
     return full_solution
-
-
-def adaptive_rqaoa(hamiltonian: Hamiltonian,
-                   mixer: dict = {'type':'x','connectivity':None,'coeffs':None},
-                   p: int = 1,
-                   n_max: int = 1,
-                   n_cutoff: int = 5,
-                   device: DeviceBase = DeviceLocal('vectorized'),
-                   params_type: str = 'standard',
-                   init_type: str = 'ramp',
-                   optimizer_dict: dict = {'method': 'cobyla', 'maxiter': 200},
-                   backend_properties: dict = {},
-                   elimination_tracker: list = None,
-                   original_hamiltonian: Hamiltonian = None
-                   ):
-    """
-    Performs the Recursive QAOA algorithm, with the number of spins to be 
-    eliminated at each step given by a statistical criterion. The top 
-    n_max+1 expectation values correlations are considered and an average is performed. The
-    algorithm eliminates all the terms ranking above average. Thus, n_max
-    is the maximum number of possible eliminated spins.
-
-    Parameters
-    ----------
-    hamiltonian: `Hamiltonian`
-        Hamiltonian object containing the problem statement.
-    mixer: `dict`, optional
-        Dictionary containing mixer properties: type, connectivity and coeffs.
-    p: `int`, optional
-        Number of QAOA layers in each run. Defaults to 1.
-    n_max: `int`, optional
-        Maximum number of spins that can be eliminated at each step. Defaults to 1.
-    n_cutoff: `int`, optional
-        Cut-off value of spins at which the system is solved classically. 
-        Defaults to 5.
-    device: `DeviceBase`
-        Device to be used during QAOA run. Defaults to `DeviceLocal('vectorized')`.   
-    params_type: `str`, optional
-        Parametrization to be used during QAOA run. Defaults to 'standard'.   
-    init_type: `str`, optional
-        Parametrization to be used during QAOA run. Defaults to 'ramp'.
-    optimizer_dict: `dict`, optional
-        Specifications on the optimizer to be used during QAOA run.
-        Method defaults to 'cobyla'. Maximum iterations default to 200.
-    backend_properties: `dict`, optional
-        Dictionary containing all information regarding the backend
-        used to run the circuit on. Default is empty.            
-    elimination_tracker: `list`, optional
-        List tracking the set of performed eliminations. Defaults to None.
-    original_hamiltonian: `Hamiltonian`, optional
-        Hamiltonian associated with the original problem. Defaults to None
-        and it is stored in the first step of the process.   
-    Returns
-    -------
-    rqaoa_info: `dict`
-        Dictionary containing all the information about the RQAOA run: the
-        solution states and energies (key: 'solution'), the output of the classical 
-        solver (key: 'classical output'), the elimination rules for each step
-        (key: 'elimination rules'), the number of eliminations at each step (key: 'schedule') 
-        and total number of steps (key: 'total steps').
-    """
-
-    # Define number of spins
-    n_qubits = hamiltonian.n_qubits
-
-    # Define mixer Hamiltonian based on input type
-    if mixer.get('connectivity') is None or type(mixer.get('connectivity')) == str:
-        mixer_hamiltonian = get_mixer_hamiltonian(n_qubits,mixer.get('type'),mixer.get('connectivity'),mixer.get('coeffs'))
-    else:
-        raise NotImplementedError(f'Custom mixer connectivities are not currently supported')
-
-
-    # Store original hamiltonian
-    if original_hamiltonian is None:
-        original_hamiltonian = hamiltonian
-
-    # Initialize tracker
-    if elimination_tracker is None:
-        elimination_tracker = []
-
-    # Ensure we do not eliminate beyond the cutoff
-    if (n_qubits - n_cutoff) < n_max:
-        n_max = n_qubits - n_cutoff
-
-    # If below cutoff, proceed classically
-    if n_qubits <= n_cutoff:
-
-        # Solve the problem classically
-        cl_energy, cl_ground_states = ground_state_hamiltonian(hamiltonian)
-
-        # Extract optimal solutions and their costs
-        classical_sol_dict = {'minimum energy': cl_energy,
-                              'optimal states': cl_ground_states}
-
-        # Retrieve full solutions including eliminated spins and their energies
-        full_solutions = final_solution(
-            elimination_tracker, cl_ground_states, original_hamiltonian)
-
-        # Compute description dictionary containing all the information
-        rqaoa_info = {}
-        rqaoa_info['solution'] = full_solutions
-        rqaoa_info['classical output'] = classical_sol_dict
-        rqaoa_info['elimination rules'] = elimination_tracker
-        rqaoa_info['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
-        rqaoa_info['total steps'] = len(elimination_tracker)
-
-        # Return classical solution
-        return rqaoa_info
-
-    # If above cutoff, proceed quantumly
-    else:
-
-        # Define circuit parameters
-        circuit_params = QAOACircuitParams(hamiltonian, mixer_hamiltonian, p=p)
-
-        # Define variational parameters
-        variational_params = create_qaoa_variational_params(
-            circuit_params, params_type, init_type)
-
-        # Retrieve backend
-        qaoa_backend = get_qaoa_backend(circuit_params,**backend_properties,device=device)
-
-        # Run QAOA
-        qaoa_results = optimize_qaoa(
-            qaoa_backend, variational_params, optimizer_dict)
-
-                # Obtain statistical results
-        qaoa_results_optimized = qaoa_results.optimized 
-        qaoa_optimized_angles = qaoa_results_optimized['optimized angles']
-        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
-        if isinstance(qaoa_backend, QAOABaseBackendStatevector):
-            exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
-                qaoa_backend, hamiltonian, mixer['type'], p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=True)
-        else:
-            exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
-                qaoa_backend, hamiltonian, mixer['type'], p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=False)
-        # Retrieve highest expectation values according to adaptive method
-        max_terms_and_stats = ada_max_terms(exp_vals_z, corr_matrix, n_max)
-
-        # Generate spin map
-        spin_map = spin_mapping(hamiltonian, max_terms_and_stats)
-
-        # Eliminate spins and redefine hamiltonian
-        new_hamiltonian,spin_map = redefine_hamiltonian(hamiltonian, spin_map)
-
-        # Extract final set of eliminations with correct dependencies and update tracker
-        eliminations = {(spin_map[spin][1],spin):spin_map[spin][0] for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]}
-        elimination_tracker.append(eliminations)
-
-        # Restart process with new parameters
-        return adaptive_rqaoa(new_hamiltonian, mixer, p, n_max, n_cutoff, device, params_type, init_type,
-                              optimizer_dict, backend_properties, elimination_tracker, original_hamiltonian)
-
-
-def custom_rqaoa(hamiltonian: Hamiltonian,
-                 mixer: dict = {'type':'x','connectivity':None,'coeffs':None},
-                 p: int = 1,
-                 n_cutoff: int = 5,
-                 steps: Union[list,int] = 1,
-                 device: DeviceBase = DeviceLocal('vectorized'),
-                 params_type: str = 'standard',
-                 init_type: str = 'ramp',
-                 optimizer_dict: dict = {'method': 'cobyla', 'maxiter': 200},
-                 backend_properties: dict = {},
-                 elimination_tracker: list = None,
-                 original_hamiltonian: Hamiltonian = None,
-                 counter=None
-                 ):
-    """
-    Performs the Recursive QAOA algorithm, with the number of spins to be 
-    eliminated at each step given as an input. Is a single value is passed, this
-    value is used as the number of spins to be eliminated at each step.
-
-    Parameters
-    ----------
-    hamiltonian: `Hamiltonian`
-        Hamiltonian object containing the problem statement.
-    mixer: `dict`, optional
-        Dictionary containing mixer properties: type, connectivity and coeffs.
-    p: `int`, optional
-        Number of QAOA layers in each run. Defaults to 1.
-    steps: `list` or `int`, optional
-        The custom list of spin eliminations at each step. If a single
-        value is passed, at every step the same amount of spins will
-        be eliminated.
-    n_cutoff: `int`, optional
-        Cut-off value of spins at which the system is solved classically. 
-        Defaults to 5.
-    device: `DeviceBase`
-        Device to be used during QAOA run. Defaults to `DeviceLocal('vectorized')`.  
-    params_type: `str`, optional
-        Parametrization to be used during QAOA run. Defaults to 'standard'.
-    init_type: `str`, optional
-        Parametrization to be used during QAOA run. Defaults to 'ramp'.
-    optimizer_dict: `dict`, optional
-        Specifications on the optimizer to be used during QAOA run.
-        Method defaults to 'cobyla'. Maximum iterations default to 200.
-    backend_properties: `dict`, optional
-        Dictionary containing all information regarding the backend
-        used to run the circuit on. Defaults is empty.
-    elimination_tracker: `list`, optional
-        List tracking the set of performed eliminations. Defaults to None.
-    original_hamiltonian: `Hamiltonian`, optional
-        Hamiltonian associated with the original problem. Defaults to None
-        and it is stored in the first step of the process.
-    counter: `int`,optional
-        Recursive step counter. Defaults to None.
-
-    Returns
-    -------
-    rqaoa_info: `dict`
-        Dictionary containing all the information about the RQAOA run: the
-        solution states and energies (key: 'solution'), the output of the classical 
-        solver (key: 'classical output'), the elimination rules for each step
-        (key: 'elimination rules'), the number of eliminations at each step (key: 'schedule') 
-        and total number of steps (key: 'total steps').
-    """
-
-    # Define number of spins
-    n_qubits = hamiltonian.n_qubits
-
-    # Define mixer Hamiltonian based on input type
-    if mixer.get('connectivity') is None or type(mixer['connectivity']) == str:
-        mixer_hamiltonian =  get_mixer_hamiltonian(n_qubits,mixer.get('type'),mixer.get('connectivity'),mixer.get('coeffs'))
-    else:
-        raise NotImplementedError(f'Custom mixer connectivities are not currently supported')
-
-    # Store original hamiltonian
-    if original_hamiltonian is None:
-        original_hamiltonian = hamiltonian
-
-    # Initialize tracker
-    if elimination_tracker is None:
-        elimination_tracker = []
-
-    # If schedule is not given one spin is eliminated at a time
-    if type(steps) is int:
-        steps = [steps]*(n_qubits-n_cutoff)
-
-    # Initialize counter check schedule
-    if counter is None:
-        counter = 0
-
-        # Ensure there are enough steps in the schedule
-        assert np.abs(n_qubits - n_cutoff) <= sum(steps),\
-            f"Schedule is incomplete, add {np.abs(n_qubits - n_cutoff) - sum(steps)} more eliminations"
-
-    # If below cutoff, proceed classically
-    if n_qubits <= n_cutoff:
-
-        # Solve the problem classically
-        cl_energy, cl_ground_states = ground_state_hamiltonian(hamiltonian)
-
-        # Extract optimal solutions and their costs
-        classical_sol_dict = {'minimum energy': cl_energy,
-                              'optimal states': cl_ground_states}
-
-        # Retrieve full solutions including eliminated spins and their energies
-        full_solutions = final_solution(
-            elimination_tracker, cl_ground_states, original_hamiltonian)
-
-        # Compute description dictionary containing all the information
-        rqaoa_info = {}
-        rqaoa_info['solution'] = full_solutions
-        rqaoa_info['classical output'] = classical_sol_dict
-        rqaoa_info['elimination rules'] = elimination_tracker
-        rqaoa_info['schedule'] = [len(max_tc)
-                                  for max_tc in elimination_tracker]
-        rqaoa_info['total steps'] = len(elimination_tracker)
-
-        # Return classical solution
-        return rqaoa_info
-
-    # If above cutoff, proceed quantumly
-    else:
-        
-        # Number of spins to eliminate according the schedule
-        n_elim = steps[counter]
-
-        # If the step eliminates more spins than available, reduce step to match cutoff
-        if n_qubits - n_elim <= 0:
-            n_elim = n_qubits - n_cutoff
-
-        # Define circuit parameters
-        circuit_params = QAOACircuitParams(hamiltonian, mixer_hamiltonian, p=p)
-
-        # Define variational parameters
-        variational_params = create_qaoa_variational_params(
-            circuit_params, params_type, init_type)
-
-        # Retrieve backend
-        qaoa_backend = get_qaoa_backend(circuit_params,**backend_properties,device=device)
-
-        # Run QAOA
-        qaoa_results = optimize_qaoa(qaoa_backend, variational_params, optimizer_dict)
-
-        # Obtain statistical results
-        qaoa_results_optimized = qaoa_results.optimized 
-        qaoa_optimized_angles = qaoa_results_optimized['optimized angles']
-        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
-        if isinstance(qaoa_backend, QAOABaseBackendStatevector):
-            exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
-                qaoa_backend, hamiltonian, mixer['type'], p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=True)
-        else:
-            exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
-                qaoa_backend, hamiltonian, mixer['type'], p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=False)
-
-        # Retrieve highest expectation values
-        max_terms_and_stats = max_terms(exp_vals_z, corr_matrix, n_elim)
-
-        # Generate spin map 
-        spin_map = spin_mapping(hamiltonian, max_terms_and_stats)
-
-        # Eliminate spins and redefine hamiltonian
-        new_hamiltonian,spin_map = redefine_hamiltonian(hamiltonian, spin_map)
-
-        # Extract final set of eliminations with correct dependencies and update tracker
-        eliminations = {(spin_map[spin][1],spin):spin_map[spin][0] for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]}
-        elimination_tracker.append(eliminations)
-
-        # Add one step to the counter
-        counter += 1
-
-        # Restart process with new parameters
-        return custom_rqaoa(new_hamiltonian, mixer, p, n_cutoff, steps, device, params_type, init_type,
-                            optimizer_dict, backend_properties, elimination_tracker, original_hamiltonian, counter)
-

@@ -1,5 +1,5 @@
 Problems
-=================================
+========
 .. autoclass:: openqaoa.problems.problem.Problem
     :members:
     :undoc-members:
@@ -12,8 +12,9 @@ Problems
     :inherited-members:
 
 
-Build-in problems
-----------------------------------
+Built-in problems
+=================
+
 .. autoclass:: openqaoa.problems.problem.TSP
     :members:
     :undoc-members:

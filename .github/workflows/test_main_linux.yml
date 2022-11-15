@@ -21,6 +21,8 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -70,6 +72,8 @@ jobs:
     steps:
       - name: Check out openqaoa
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
         uses: actions/setup-python@v3
         with:

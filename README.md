@@ -13,6 +13,7 @@
   [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)<!-- Covenant Code of conduct -->
   [![codecov](https://codecov.io/gh/entropicalabs/openqaoa/branch/dev/graph/badge.svg?token=ZXD77KM5OR)](https://codecov.io/gh/entropicalabs/openqaoa) <!-- Code coverage -->
   [![Downloads](https://pepy.tech/badge/openqaoa)](https://pepy.tech/project/openqaoa)
+  [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/entropicalabs/openqaoa.git/dev?labpath=%2Fexamples)
 </div>
 
 # OpenQAOA
@@ -76,9 +77,9 @@ Devices are serviced both locally and on the cloud. For the IBM Quantum experien
 | Device location  | Device Name |
 | ------------- | ------------- |
 | `local`  | `['qiskit.shot_simulator', 'qiskit.statevector_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
-| `[Amazon Braket]https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html`    | IonQ, Rigetti, OCQ |
-| `[ibmq](https://quantum-computing.ibm.com/)`    | Please check the IBMQ backends available to your account |
-| `[qcs](https://qcs.rigetti.com/sign-in)`     | `[nq-qvm, Aspen-11, Aspen-M-1]`
+| [Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html)    | IonQ, Rigetti, OCQ, and simulators |
+| [IBMQ](https://quantum-computing.ibm.com/)    | Please check the IBMQ backends available to your account |
+| [Rigetti QCS](https://qcs.rigetti.com/sign-in)     | Aspen-11, Aspen-M-1, and QVM simulator |
 
 
 ## Running the tests
