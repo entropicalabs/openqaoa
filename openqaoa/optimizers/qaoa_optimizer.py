@@ -64,8 +64,13 @@ def get_optimizer(vqa_object: VQABaseBackend,
     for opt_class, methods in optimizers.items():
         if method in methods:
             selected_class = opt_class
+        else:
+            raise ValueError(f'Selected method is not supported. Please choose from {available_optimizers()}')
 
-    optimizer = SUPPORTED_OPTIMIZERS[selected_class](vqa_object, variational_params,
+    try:
+        optimizer = SUPPORTED_OPTIMIZERS[selected_class](vqa_object, variational_params,
                                                          optimizer_dict)
+    except Exception as e:
+        raise
    
     return optimizer
