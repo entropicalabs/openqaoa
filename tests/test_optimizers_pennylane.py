@@ -11,7 +11,7 @@ from openqaoa.workflows.optimizer import QAOA
 from openqaoa.devices import create_device
 from openqaoa.problems.problem import MinimumVertexCover
 from openqaoa.optimizers.training_vqa import PennyLaneOptimizer
-from openqaoa.optimizers.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS
+from openqaoa.optimizers.pennylane.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS
 from openqaoa.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
 from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian

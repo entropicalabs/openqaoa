@@ -26,7 +26,7 @@ from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 from ..basebackend import VQABaseBackend
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
-from . import optimization_methods_pennylane as ompl
+from .pennylane import optimization_methods_pennylane as ompl
 
 from .logger_vqa import Logger
 from .result import Result
