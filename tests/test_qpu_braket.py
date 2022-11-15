@@ -331,7 +331,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         mock_device = Mock()
         mock_device.configure_mock(**{'check_connection.return_value': False,
                                       'provider_connected.return_value': False,
-                                      'qpu_connected.return_value': None})
+                                      'qpu_connected.return_value': None, 
+                                      'n_qubits': 3})
         
         try:
             QAOAAWSQPUBackend(circuit_params, mock_device, 
