@@ -682,7 +682,10 @@ class RQAOA(Optimizer):
         problem = self.problem  
         n_cutoff = self.rqaoa_parameters.n_cutoff
         n_qubits = problem.n
-        counter = self.rqaoa_parameters.counter 
+        counter = self.rqaoa_parameters.counter
+
+        # copy the original qaoa object
+        q = copy.deepcopy(self._q)
 
         # create a different max_terms function for each type 
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
@@ -694,10 +697,10 @@ class RQAOA(Optimizer):
         while n_qubits > n_cutoff:
 
             # Run QAOA
-            self._q.optimize()
+            q.optimize()
 
             # Obtain statistical results
-            exp_vals_z, corr_matrix = self._exp_val_hamiltonian_termwise()
+            exp_vals_z, corr_matrix = self._exp_val_hamiltonian_termwise(q)
             # Retrieve highest expectation values according to adaptive method or schedule in custom method
             max_terms_and_stats = f_max_terms(exp_vals_z, corr_matrix, self._n_step(n_qubits, n_cutoff, counter))
             # Generate spin map
@@ -713,12 +716,14 @@ class RQAOA(Optimizer):
             n_qubits = new_problem.n
 
             # Save qaoa object and new problem
-            qaoa_steps.append(copy.deepcopy(self._q))
+            qaoa_steps.append(copy.deepcopy(q))
             problem_steps.append(copy.deepcopy(new_problem))
 
-            # Compile qaoa with the new problem
-            self._q.compile(new_problem, verbose=False)
+            # problem is updated
             problem = new_problem
+            
+            # Compile qaoa with the problem
+            q.compile(problem, verbose=False)
 
             # Add one step to the counter
             counter += 1
@@ -744,14 +749,12 @@ class RQAOA(Optimizer):
         return 
 
 
-    def _exp_val_hamiltonian_termwise(self):
+    def _exp_val_hamiltonian_termwise(self, q):
         """
         Private method to call the exp_val_hamiltonian_termwise function taking the data from
         the QAOA object _q. 
         It eturns what the exp_val_hamiltonian_termwise function returns.
         """
-
-        q = self._q
 
         variational_params = q.variate_params
         qaoa_backend = q.backend

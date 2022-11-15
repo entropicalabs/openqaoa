@@ -12,6 +12,9 @@
 name: "CodeQL"
 
 on:
+  # Check for every push request on main
+  push:
+    branches: [ "main" ]
   # Check for every pull request on main
   pull_request:
     branches: [ "main" ]
