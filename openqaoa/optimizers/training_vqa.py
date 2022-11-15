@@ -645,7 +645,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             return self
 
 
-class CustomScipyPennyLaneOptimizer(OptimizeVQA):
+class PennyLaneOptimizer(OptimizeVQA):
     """
     Python custom scipy optimization with pennylane optimizers for the VQA class.
 
@@ -715,9 +715,9 @@ class CustomScipyPennyLaneOptimizer(OptimizeVQA):
         Verify that the specified arguments are valid for the particular optimizer.
         """
 
-        if self.method not in CustomScipyPennyLaneOptimizer.PENNYLANE_OPTIMIZERS:
+        if self.method not in PennyLaneOptimizer.PENNYLANE_OPTIMIZERS:
             raise ValueError(
-                f"Please choose from the supported methods: {CustomScipyPennyLaneOptimizer.PENNYLANE_OPTIMIZERS}")
+                f"Please choose from the supported methods: {PennyLaneOptimizer.PENNYLANE_OPTIMIZERS}")
 
         jac = optimizer_dict.get('jac', None)
         jac_options = optimizer_dict.get('jac_options', None)

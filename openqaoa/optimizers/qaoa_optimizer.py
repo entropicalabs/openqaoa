@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
-from .training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer,CustomScipyPennyLaneOptimizer
+from .training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
 from ..basebackend import VQABaseBackend
 
 
@@ -25,7 +25,7 @@ def available_optimizers():
     optimizers = {
         'scipy': ScipyOptimizer.SCIPY_METHODS,
         'custom_scipy_gradient': CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS,
-        'custom_scipy_pennylane': CustomScipyPennyLaneOptimizer.PENNYLANE_OPTIMIZERS
+        'custom_scipy_pennylane': PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
     }
 
     return optimizers
@@ -57,7 +57,7 @@ def get_optimizer(vqa_object: VQABaseBackend,
     SUPPORTED_OPTIMIZERS = {
         'scipy': ScipyOptimizer,
         'custom_scipy_gradient': CustomScipyGradientOptimizer,
-        'custom_scipy_pennylane': CustomScipyPennyLaneOptimizer
+        'custom_scipy_pennylane': PennyLaneOptimizer
     }
 
     method = optimizer_dict['method'].lower()
