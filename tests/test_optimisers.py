@@ -15,6 +15,7 @@
 import warnings
 import numpy as np
 import unittest
+from unittest.mock import Mock
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
 from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
@@ -369,7 +370,32 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         for i, yi in enumerate(y):
             assert np.isclose(yi, y_opt[i], rtol=1e-05, atol=1e-05)
+            
+    def test_optimize_loop_crash(self):
+        
+        """
+        This tests that the optimization loop doesnt crash silently.
+        An Exception gets raised.
+        """
+        
+        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
+            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
+        device = create_device('local','vectorized')
+        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
+        variate_params = create_qaoa_variational_params(
+            circuit_params, 'standard', 'ramp')
+        niter = 5
 
+        # Optimize
+        vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, 
+                                         optimizer_dict = {'method': 'cobyla',
+                                                           'maxiter': niter,
+                                                          })
+        vector_optimizer.vqa.expectation = Mock(side_effect = Exception("Error!"))
+        self.assertRaises(Exception, lambda: vector_optimizer.optimize())
+        
 
 if __name__ == "__main__":
     with warnings.catch_warnings():
