@@ -31,9 +31,9 @@ class TestingAwsJobs(unittest.TestCase):
         # the input data directory opt/braket/input/data
         os.environ["AMZN_BRAKET_INPUT_DIR"] = './tests/jobs_test_input/'
         # the output directory opt/braket/model to write ob results to
-        os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"] = 'oq_release_tests'
+        os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"] = '/oq_release_tests/testing_jobs/'
         # the name of the job
-        os.environ["AMZN_BRAKET_JOB_NAME"] = 'oq_test_suite'
+        os.environ["AMZN_BRAKET_JOB_NAME"] = 'oq_release_test'
         # the checkpoint directory
         os.environ["AMZN_BRAKET_CHECKPOINT_DIR"] ='oq_test_suite_checkpoint'
         # the hyperparameter
@@ -93,6 +93,7 @@ class TestingAwsJobs(unittest.TestCase):
         '''
 
         input_data_path = os.path.join(os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data", "openqaoa_params.json")
+        os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"] = '/oq_release_tests/testing_jobs/qaoa_test'
 
         # Create the qubo and the qaoa
         q = QAOA()
@@ -118,6 +119,7 @@ class TestingAwsJobs(unittest.TestCase):
         '''
 
         input_data_path = os.path.join(os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data", "openqaoa_params.json")
+        os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"] = '/oq_release_tests/testing_jobs/rqaoa_test'
 
         # Create the qubo and the qaoa
         r = RQAOA()
@@ -143,6 +145,7 @@ class TestingAwsJobs(unittest.TestCase):
         '''
 
         input_data_path = os.path.join(os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data", "openqaoa_params.json")
+        os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"] = '/oq_release_tests/testing_jobs/EndToEnd'
 
         # Create the qubo and the qaoa
         q = QAOA()
@@ -158,13 +161,14 @@ class TestingAwsJobs(unittest.TestCase):
         job.set_up()
         job.run_workflow()
 
+        assert len(job.workflow.results.optimized['optimized angles']) == 2
         assert job.completed == True
 
     @pytest.mark.docker_aws
     def testLocalJob(self):
 
         input_data_path = os.path.join(os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data", "openqaoa_params.json")
- 
+
         # Create the qubo and the qaoa
         q = QAOA()
         q.set_classical_optimizer(maxiter=2)

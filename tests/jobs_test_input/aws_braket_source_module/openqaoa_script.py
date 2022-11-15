@@ -1,4 +1,5 @@
 from openqaoa.workflows.managed_jobs import Aws_job
+from braket.jobs import save_job_result
 
 def main():
     """
@@ -6,10 +7,16 @@ def main():
     """
    
     job = Aws_job(algorithm='QAOA')
-    job.load_hyperparams()
-
+    job.load_input_data()
     job.set_up()
     job.run_workflow()
+
+
+    save_job_result({"problem_qubo": job.qubo.asdict(),
+                     "qaoa_result_evals": job.workflow.results.evals,
+                     "qaoa_result_intermediate": job.workflow.results.intermediate,
+                     "qaoa_result_optimized": job.workflow.results.optimized,
+                     "qaoa_result_most_probable_states": job.workflow.results.most_probable_states})
     
 
 if __name__ == "__main__":
