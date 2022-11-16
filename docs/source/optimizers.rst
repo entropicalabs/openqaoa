@@ -35,7 +35,7 @@ Optimization Methods
     :show-inheritance:
     :inherited-members:
 
-.. automodule:: openqaoa.optimizers.optimization_methods_pennylane
+.. automodule:: openqaoa.optimizers.pennylane.optimization_methods_pennylane
     :members:
     :undoc-members:
     :show-inheritance:
