@@ -19,7 +19,8 @@ Optimisers requiring a pennylane backend haven't been implemented yet.
 Similarly as with the custom optimization methods Scipy `minimize` is used. Extends available scipy methods.
 """
 
-import pennylane as pl
+from openqaoa.optimizers.pennylane.pennylane_optimizers.gradient_descent import GradientDescentOptimizer
+from openqaoa.optimizers import pennylane as pl
 import inspect
 from scipy.optimize import OptimizeResult
 import numpy as np
@@ -30,7 +31,6 @@ AVAILABLE_OPTIMIZERS = {  # optimizers implemented
                             'vgd': pl.GradientDescentOptimizer, 
                             'momentum':  pl.MomentumOptimizer,
                             'nesterov_momentum': pl.NesterovMomentumOptimizer,
-                            'natural_grad_descent': pl.QNGOptimizer,
                             'rmsprop': pl.RMSPropOptimizer,
                             'rotosolve': pl.RotosolveOptimizer, 
                             'spsa': pl.SPSAOptimizer,
@@ -38,7 +38,7 @@ AVAILABLE_OPTIMIZERS = {  # optimizers implemented
 
 
 
-def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd', qfim=None,
+def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd', 
                         maxiter=100, tol=10**(-6), jac=None, callback=None,                         
                         nums_frequency=None, spectra=None, shifts=None, **options):
 
@@ -59,14 +59,12 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd', q
         Maximum number of function evaluations.
     pennylane_method : string, optional
         Optimizer method to compute the steps.
-    qfim : callable, optional (required for natural_grad_descent)
-        Callable Fubini-Study metric tensor
     maxiter : int, optional
         Maximum number of iterations.
     tol : float
         Tolerance before the optimizer terminates; if `tol` is larger than the difference between two steps, terminate optimization.
-    jac : callable, optinal (required for all methods but rotosolve and spsa)
-        Callable gradient function.
+    jac : callable, optinal
+        Callable gradient function. Required for all methods but rotosolve and spsa.
     callback : callable, optional
         Called after each iteration, as ``callback(xk)``, where ``xk`` is the
         current parameter vector.
@@ -122,11 +120,11 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd', q
         improved = False
 
         # compute step (depends on the optimizer)
-        if pennylane_method in ['natural_grad_descent']: 
-            testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac, metric_tensor_fn=qfim) 
         if pennylane_method in ['adagrad', 'adam', 'vgd', 'momentum', 'nesterov_momentum', 'rmsprop']:
             testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac)
-        if pennylane_method in ['rotosolve']: 
+        elif pennylane_method in ['rotosolve']: 
+            print('Rotosolve')
+            print('s', bestx)
             testx, testy = optimizer.step_and_cost(
                                                     cost, bestx, *args,
                                                     nums_frequency={'params': {(i,):1 for i in range(bestx.size)}} if not nums_frequency else nums_frequency,
@@ -134,7 +132,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd', q
                                                     shifts=shifts,
                                                     full_output=False,
                                                   )
-        if pennylane_method in ['spsa']:       
+        elif pennylane_method in ['spsa']:       
             testx, testy = optimizer.step_and_cost(cost, bestx, *args)
 
         # check if stable

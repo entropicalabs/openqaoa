@@ -13,8 +13,7 @@
 # limitations under the License.
 """Gradient descent optimizer"""
 
-from pennylane._grad import grad as get_gradient
-
+get_gradient = None # changed from the original pennylane code
 
 class GradientDescentOptimizer:
     r"""Basic gradient-descent optimizer.

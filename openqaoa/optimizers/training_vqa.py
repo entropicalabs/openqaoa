@@ -697,8 +697,7 @@ class PennyLaneOptimizer(OptimizeVQA):
     """
     PENNYLANE_OPTIMIZERS = ['pennylane_adagrad', 'pennylane_adam', 'pennylane_vgd', 
                                   'pennylane_momentum', 'pennylane_nesterov_momentum',
-                                  'pennylane_natural_grad_descent', 'pennylane_rmsprop', 
-                                  'pennylane_rotosolve', 'pennylane_spsa']
+                                  'pennylane_rmsprop', 'pennylane_rotosolve', 'pennylane_spsa']
 
     def __init__(self,
                  vqa_object: Type[VQABaseBackend],
@@ -786,13 +785,13 @@ class PennyLaneOptimizer(OptimizeVQA):
         elif self.options['pennylane_method'] in ['spsa', 'rotosolve']:    
             self.jac = None 
         
-        try:
-            result = minimize(self.optimize_this, x0=self.initial_params, method=method,
+        # try:
+        result = minimize(self.optimize_this, x0=self.initial_params, method=method,
                                 jac=self.jac, tol=self.tol, constraints=self.constraints,
                                 options=self.options, bounds=self.bounds)
-        except Exception as e:
-            print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
-            raise e
-        finally:
-            self.results_dictionary()
-            return self
+        # except Exception as e:
+        #     print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        #     print(e)
+        # finally:
+        self.results_dictionary()
+        return self

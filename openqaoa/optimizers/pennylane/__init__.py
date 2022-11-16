@@ -19,4 +19,20 @@ Currently supports:
 	ScipyOptimizers (both gradient-free and gradient-based)
 """
 
-from .optimization_methods_pennylane import *
+# from .optimization_methods_pennylane import *
+from .pennylane_optimizers.adagrad import *
+from .pennylane_optimizers.adam import *
+from .pennylane_optimizers.gradient_descent import *
+from .pennylane_optimizers.momentum import *
+from .pennylane_optimizers.nesterov_momentum import *
+from .pennylane_optimizers.rms_prop import *
+from .pennylane_optimizers.rotosolve import *
+from .pennylane_optimizers.spsa import *
+from . import numpy
+from . import math
+from . import fourier
+
+#empty class to be used as a placeholder for the QNode class from PennyLane
+class QNode:
+	def __init__(self):
+		pass
