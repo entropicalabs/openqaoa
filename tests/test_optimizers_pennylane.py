@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 import networkx as nx
-import pennylane as pl
+import openqaoa.optimizers.pennylane as pl
 import copy
 import inspect
 

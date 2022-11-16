@@ -29,7 +29,6 @@ from openqaoa.optimizers.qaoa_optimizer import available_optimizers
 from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
 import unittest
 import networkx as nw
-import pytest
 import numpy as np
 
 from openqaoa.problems.problem import MinimumVertexCover, QUBO
