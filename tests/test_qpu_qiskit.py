@@ -18,12 +18,13 @@ import numpy as np
 from qiskit import QuantumCircuit
 import pytest
 
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
+from openqaoa.qaoa_parameters import create_qaoa_variational_params, PauliOp, Hamiltonian, QAOACircuitParams
 from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
 from openqaoa.devices import DeviceQiskit
 from openqaoa.backends.qpus.qaoa_qiskit_qpu import QAOAQiskitQPUBackend
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendStatevecSimulator
 from openqaoa.utilities import X_mixer_hamiltonian
+from openqaoa.problems.problem import NumberPartition
 
 
 class TestingQAOAQiskitQPUBackend(unittest.TestCase):
@@ -78,7 +79,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         has the appropriate angles assigned before the circuit is executed.
         Checks the circuit created on both IBM QPU Backends.
         """
-        print(self.API_TOKEN)
+
         nqubits = 3
         p = 2
         weights = [1, 1, 1]
@@ -343,11 +344,8 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         except Exception as e:
             self.assertEqual(str(e), 'Connection to IBMQ was made. Error connecting to the specified backend.')
         
-        
-        self.assertRaises(Exception, QAOAQiskitQPUBackend, (circuit_params, 
-                                                            qiskit_device, 
-                                                            shots, None, None, 
-                                                            True))
+        self.assertRaises(Exception, QAOAQiskitQPUBackend, circuit_params, 
+                          qiskit_device, shots, None, None, True)
 
     @pytest.mark.qpu
     def test_remote_integration_sim_run(self):
@@ -392,6 +390,33 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             acceptable_delta = 0.05*qiskit_statevec_expectation
             self.assertAlmostEqual(
                 qiskit_expectation, qiskit_statevec_expectation, delta=acceptable_delta)
+    
+    @pytest.mark.qpu
+    def test_remote_qubit_overflow(self):
+        
+        """
+        If the user creates a circuit that is larger than the maximum circuit size
+        that is supported by the QPU. An Exception should be raised with the 
+        appropriate error message alerting the user to the error.
+        """
+        
+        shots = 100
+        
+        set_of_numbers = np.random.randint(1, 10, 6).tolist()
+        qubo = NumberPartition(set_of_numbers).get_qubo_problem()
+
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
+        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
+
+        qiskit_device = DeviceQiskit('ibmq_manila', self.API_TOKEN, self.HUB, 
+                                     self.GROUP, self.PROJECT)
+        
+        try:
+            QAOAQiskitQPUBackend(circuit_params, qiskit_device, 
+                                 shots, None, None, True)
+        except Exception as e:
+            self.assertEqual(str(e), 'There are lesser qubits on the device than the number of qubits required for the circuit.')
 
 #     def test_remote_integration_qpu_run(self):
 #         """
