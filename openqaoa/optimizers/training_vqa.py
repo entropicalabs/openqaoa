@@ -797,7 +797,10 @@ class PennyLaneOptimizer(OptimizeVQA):
                                 jac=self.jac, tol=self.tol, constraints=self.constraints,
                                 options=self.options, bounds=self.bounds)
         except ConnectionError as e:
+            print(e, '\n')
             print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        except Exception as e:
+            raise e
         finally:
             self.results_dictionary()
         
