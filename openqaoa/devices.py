@@ -74,14 +74,18 @@ class DeviceQiskit(DeviceBase):
     Contains the required information and methods needed to access remote
     qiskit QPUs.
 
-    Parameters
+    Attributes
     ----------
-	available_qpus: `list`
-		When connection to a provider is established, this attribute contains a list
-		of backend names which can be used to access the selected backend by reinitialising
-		the Access Object with the name of the available backend as input to the
-		device_name parameter.
-	"""
+    available_qpus: `list`
+      When connection to a provider is established, this attribute contains a list
+      of backend names which can be used to access the selected backend by reinitialising
+      the Access Object with the name of the available backend as input to the
+      device_name parameter.
+    n_qubits: `int`
+        The maximum number of qubits available for the selected backend. Only
+        available if check_connection method is executed and a connection to the
+        qpu and provider is established.
+    """
 
     def __init__(self, device_name: str, api_token: str,
 				 hub: str, group: str, project: str):
@@ -155,6 +159,7 @@ class DeviceQiskit(DeviceBase):
 
         if self.device_name in self.available_qpus:
             self.backend_device = self.provider.get_backend(self.device_name)
+            self.n_qubits = self.backend_device.configuration().n_qubits
             return True
         else:
             print(
@@ -187,8 +192,7 @@ class DeviceQiskit(DeviceBase):
             return False
         
         except Exception as e:
-            print('An Exception has occured when trying to connect with the \
-            provider: {}'.format(e))
+            print('An Exception has occured when trying to connect with the provider: {}'.format(e))
             return False
 
 
@@ -196,6 +200,12 @@ class DevicePyquil(DeviceBase):
     """
     Contains the required information and methods needed to access remote
     Rigetti QPUs via Pyquil.
+    
+    Attributes
+    ----------
+    n_qubits: `int`
+        The maximum number of qubits available for the selected backend. 
+        Available upon proper initialisation of the class.
     """
 
     def __init__(self, device_name: str, as_qvm: bool = None, noisy: bool = None,
@@ -255,6 +265,7 @@ class DevicePyquil(DeviceBase):
         self.quantum_computer = get_qc(name=self.device_name, as_qvm=self.as_qvm, noisy=self.noisy,
                                        compiler_timeout=self.compiler_timeout, execution_timeout=self.execution_timeout,
                                        client_configuration=self.client_configuration, endpoint_id=self.endpoint_id, engagement_manager=self.engagement_manager)
+        self.n_qubits = len(self.quantum_computer.qubits())
 
     def check_connection(self) -> bool:
         """This method should allow a user to easily check if the credentials
@@ -278,12 +289,17 @@ class DeviceAWS(DeviceBase):
     Contains the required information and methods needed to access QPUs hosted
     on AWS Braket.
     
-    Attributes:
-	  available_qpus: `list`
-      When connection to AWS is established, this attribute contains a list
-      of device names which can be used to access the selected device by
-      reinitialising the Access Object with the name of the available device
-      as input to the device_name parameter.
+    Attributes
+    ----------
+	available_qpus: `list`
+		When connection to AWS is established, this attribute contains a list
+		of device names which can be used to access the selected device by
+		reinitialising the Access Object with the name of the available device
+		as input to the device_name parameter.
+    n_qubits: `int`
+        The maximum number of qubits available for the selected backend. Only
+        available if check_connection method is executed and a connection to the
+        qpu and provider is established.
     """
     
     def __init__(self, 
@@ -318,8 +334,6 @@ class DeviceAWS(DeviceBase):
         self.s3_bucket_name = s3_bucket_name
         self.aws_region = aws_region
         self.folder_name = folder_name
-        self.s3_bucket_name = s3_bucket_name
-        self.aws_region = aws_region
         
         self.provider_connected = None
         self.qpu_connected = None
@@ -358,11 +372,23 @@ class DeviceAWS(DeviceBase):
         
         if self.device_name in self.available_qpus:
             self.backend_device = AwsDevice(self.device_name, self.aws_session)
-            return True
         else:
             print(
-                f"Please choose from {self.available_qpus} for this provider")
+                '''
+                These are the only available devices for this aws region: 
+                {}. Try a different aws region if the device you are looking 
+                for is not in the list.'
+                '''.format(self.available_qpus))
             return False
+        
+        # Get the maximum number of qubits for that particular AWS Backend
+        try:
+            self.n_qubits = self.backend_device.properties.paradigm.qubitCount
+        except AttributeError:
+            print("OpenQAOA is unable to retrieve the number of qubits available in the selected QPU.")
+            return False
+        else:
+            return True
     
     def _check_provider_connection(self) -> bool:
         

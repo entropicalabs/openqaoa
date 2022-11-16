@@ -22,6 +22,7 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.devices import DevicePyquil
 from openqaoa.backends import QAOAPyQuilQPUBackend
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
+from openqaoa.problems.problem import NumberPartition
 import pytest
 
 class TestingQAOACostPyquilQVM(unittest.TestCase):
@@ -252,6 +253,29 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         expt_vec, std_dev_vec = backend_obj_vectorized.expectation_w_uncertainty(variate_params)
 
         self.assertAlmostEqual(expt_vec, expt_pyquil, delta = std_dev_vec)
+        
+    @pytest.mark.qvm
+    def test_remote_qubit_overflow(self):
+        """
+        If the user creates a circuit that is larger than the maximum circuit size
+        that is supported by the QPU. An Exception should be raised with the 
+        appropriate error message alerting the user to the error.
+        """
+
+        shots = 100
+        set_of_numbers = np.random.randint(1, 10, 6).tolist()
+        qubo = NumberPartition(set_of_numbers).get_qubo_problem()
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
+        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
+        
+        device_qvm = DevicePyquil(device_name = "5q-qvm", as_qvm=True, execution_timeout = 3, compiler_timeout=3)
+        try:
+            qvm_backend = QAOAPyQuilQPUBackend(device_qvm, circuit_params, shots, None, None, True, 1.)
+            qvm_backend.expectation(variate_params)
+        except Exception as e:
+            self.assertEqual(str(e), 'There are lesser qubits on the device than the number of qubits required for the circuit.')
+        
    
 
 if __name__ == '__main__':

@@ -92,7 +92,10 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         else:
             raise Exception('Error connecting to AWS.')
             
-        self.parametric_circuit = self.parametric_qaoa_circuit()
+        if self.device.n_qubits < self.n_qubits:
+            raise Exception('There are lesser qubits on the device than the number of qubits required for the circuit.')
+            
+        self.parametric_circuit = self.parametric_qaoa_circuit
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Circuit:
         """
