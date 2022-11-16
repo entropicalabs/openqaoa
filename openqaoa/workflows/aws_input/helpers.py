@@ -32,12 +32,12 @@ def formatter(d):
 
 def create_aws_input_data(workflow : Optimizer, qubo: QUBO):
         """ 
-        Creates a dictionay containing a JSON-friendly repreentation of the Optimiser and the QUBO problem
+        Creates a dictionary containing a JSON-friendly representation of the Optimiser and the QUBO problem
 
         Parameters
         ----------
             workflow: Optimizer
-                The OpenQAOA workflow to be Parsed. Currently, it is either a QAOA or a RQAOA
+                The OpenQAOA workflow to be parsed. Currently, it is either a QAOA or a RQAOA
             qubo : QUBO
                 A valid QUBO problem 
         Returns

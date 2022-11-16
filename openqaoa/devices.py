@@ -325,8 +325,8 @@ class DeviceAWS(DeviceBase):
             The aws region in which the QPU/simulator is located. Defaults to the
             region set in aws cli config.
           folder_name: `str`
-              The name of the folder in the s3 bucket that will contain the results
-              from the tasks performed in this run.
+            The name of the folder in the s3 bucket that will contain the results
+            from the tasks performed in this run.
         """
         
         self.device_name = device_name
