@@ -71,7 +71,7 @@ class QUBO:
     # Maximum number of terms allowed to enable the cleaning procedure
     TERMS_CLEANING_LIMIT = 5000
 
-    def __init__(self, n, terms, weights, clean_terms_and_weights=False, constant=0):
+    def __init__(self, n, terms, weights, constant=0, clean_terms_and_weights=False):
 
         # check-type for terms and weights
         if not isinstance(terms, list) and not isinstance(terms, tuple):

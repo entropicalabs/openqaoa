@@ -46,14 +46,14 @@ def create_aws_input_data(workflow : Optimizer, qubo: QUBO):
                 A dictionary containing the workflows properties and the qubo 
         """
         rqaoa_parameters = None
-        if workflow.algorithm == 'rqaoa': rqaoa_parameters = workflow.rqaoa_parameters.asdict()
+        if workflow.algorithm == 'rqaoa': rqaoa_parameters = formatter(workflow.rqaoa_parameters.asdict())
         
         input_data = {
             'circuit_properties' : formatter(workflow.circuit_properties.asdict()),
             'backend_properties' :  formatter(workflow.backend_properties.asdict()),
             'classical_optimizer' : formatter(workflow.classical_optimizer.asdict()),
             'qubo' : formatter(qubo.asdict()),
-            'rqaoa_parameters' : formatter(rqaoa_parameters.asdict())
+            'rqaoa_parameters' : rqaoa_parameters
         }
 
         return input_data

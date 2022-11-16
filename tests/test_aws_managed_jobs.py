@@ -21,7 +21,7 @@ from braket.jobs.local import LocalQuantumJob
 from openqaoa.problems.problem import MinimumVertexCover
 from openqaoa.workflows.aws_input.helpers import (create_aws_input_data,
                                                   save_input_data)
-from openqaoa.workflows.managed_jobs import Aws_job
+from openqaoa.workflows.managed_jobs import AWSJobs
 from openqaoa.workflows.optimizer import QAOA, RQAOA
 
 
@@ -59,12 +59,12 @@ class TestingAwsJobs(unittest.TestCase):
 
     def testOsEnvironAssignement(self):
 
-        qaoa_workflow = Aws_job(algorithm='QaoA')
+        qaoa_workflow = AWSJobs(algorithm='QaoA')
         assert qaoa_workflow.algorithm == 'qaoa'
         assert qaoa_workflow.input_dir == './tests/jobs_test_input/'
         assert qaoa_workflow.device.device_name == os.environ['AMZN_BRAKET_DEVICE_ARN']
 
-        rqaoa_workflow = Aws_job(algorithm='rqAoa')
+        rqaoa_workflow = AWSJobs(algorithm='rqAoa')
         assert rqaoa_workflow.algorithm == 'rqaoa'
         assert rqaoa_workflow.device.device_name == os.environ['AMZN_BRAKET_DEVICE_ARN']
 
@@ -82,7 +82,7 @@ class TestingAwsJobs(unittest.TestCase):
         save_input_data(input_data,input_data_path)
 
         # Create an aws workflow and try check that loading the json gives the same params
-        job = Aws_job(algorithm='QAOA')
+        job = AWSJobs(algorithm='QAOA')
         job.load_input_data()
 
         assert job.input_data == input_data
@@ -102,7 +102,7 @@ class TestingAwsJobs(unittest.TestCase):
         save_input_data(input_data,input_data_path)
 
         # Create an aws workflow and try check that loading the json gives the same params
-        job = Aws_job(algorithm='QAOA')
+        job = AWSJobs(algorithm='QAOA')
         job.load_input_data()
 
         job.set_up()
@@ -128,7 +128,7 @@ class TestingAwsJobs(unittest.TestCase):
         save_input_data(input_data,input_data_path)
 
         # Create an aws workflow and try check that loading the json gives the same params
-        job = Aws_job(algorithm='RQAOA')
+        job = AWSJobs(algorithm='RQAOA')
         job.load_input_data()
 
         job.set_up()
@@ -155,7 +155,7 @@ class TestingAwsJobs(unittest.TestCase):
         save_input_data(input_data,input_data_path)
 
         # Create an aws workflow and try check that loading the json gives the same params
-        job = Aws_job(algorithm='QAOA')
+        job = AWSJobs(algorithm='QAOA')
         job.load_input_data()
 
         job.set_up()
@@ -179,7 +179,7 @@ class TestingAwsJobs(unittest.TestCase):
         job = LocalQuantumJob.create(
             device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             source_module="./tests/jobs_test_input/aws_braket_source_module/openqaoa_script.py",
-            image_uri='amazon-braket-oq-test-local:latest',
+            image_uri='amazon-braket-oq-dev',
             input_data={"input_data": input_data_path}
             )
 
