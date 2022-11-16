@@ -20,7 +20,7 @@ from openqaoa.devices import DeviceAWS
 from openqaoa.workflows.optimizer import Optimizer, QAOA, RQAOA
 from openqaoa.problems.problem import QUBO
 
-class Aws_job(Optimizer):
+class AWSJobs(Optimizer):
     """
     This class is meant to be used *only* within the framework of AWS managed hybrid jobs.
     """
@@ -31,8 +31,8 @@ class Aws_job(Optimizer):
 
         Parameters
         ----------
-            device: `DeviceBase`
-                Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
+            algorithm: str
+                The algorithm to be used. Chose between QAOA and RQAOA
         """
         # the input data directory opt/braket/input/data
         self.input_dir = os.environ["AMZN_BRAKET_INPUT_DIR"]
@@ -69,7 +69,14 @@ class Aws_job(Optimizer):
         self.algorithm = algorithm.lower()
         self.completed = False
 
+
     def load_input_data(self):
+        """
+        A helper method to load the parameters. 
+        
+        .. note::
+            Note tha this function is executed within the AWS job-docker
+        """
 
         path = os.path.join(self.input_dir, "input_data", "openqaoa_params.json")
         
@@ -81,6 +88,12 @@ class Aws_job(Optimizer):
         
 
     def extract_qubo(self):
+        """
+        A helper method to load the parameters. 
+        
+        .. note::
+            Note tha this function is executed within the AWS job-docker
+        """
                
         ### Set up the QUBO problem ###
         self.qubo = QUBO(terms=self.input_data['qubo']['terms'],
@@ -93,6 +106,9 @@ class Aws_job(Optimizer):
         """
         Given a input directory and a file name loads the json representing the QAOA workflow and returns a 
         valid OpenQAOA workflow
+       
+        .. note::
+            Note tha this function is executed within the AWS job-docker
         """
 
         if 'qaoa' == self.algorithm.lower():
@@ -109,7 +125,6 @@ class Aws_job(Optimizer):
         
         # Set the braket device
         workflow.set_device(self.device)
-
         self.workflow = workflow
     
 
@@ -117,6 +132,9 @@ class Aws_job(Optimizer):
         """
         The role of this function is to unpack all the raw data incoming from the aws job
         and create the desired workflow
+
+        .. note::
+            Note tha this function is executed within the AWS job-docker
         """
 
         self.extract_qubo()
@@ -125,13 +143,19 @@ class Aws_job(Optimizer):
 
 
     def run_workflow(self):
+        """
+        Function to execute the workflow on the Jobs instance
+
+        .. note::
+            Note tha this function is executed within the AWS job-docker
+        """
         
         # Run the Workflow hybrid loop
         self.workflow.compile(self.qubo)
         try:
             self.workflow.optimize()
             self.completed = True
-            print("Job completed!!!!!")
+            print("Job completed!!!!")
         except Exception as e:
             print('An Exception has occured when to run the workflow: {}'.format(e))
             return False

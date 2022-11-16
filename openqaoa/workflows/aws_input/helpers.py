@@ -14,13 +14,13 @@
 
 import json
 
-from openqaoa.workflows.optimizer import Optimizer, RQAOA
+from openqaoa.workflows.optimizer import Optimizer
 from openqaoa.problems.problem import QUBO
 
 def formatter(d):
     """
     This function is needed to make sure the method asdict() works as expected.
-    It will removed from the final job routine
+    It removes `_` from the attributes names
     """
     r = {}
     for k,v in d.items():
@@ -32,7 +32,18 @@ def formatter(d):
 
 def create_aws_input_data(workflow : Optimizer, qubo: QUBO):
         """ 
-        helper function to extract all the QAOA parameters from the QAOA object
+        Creates a dictionay containing a JSON-friendly repreentation of the Optimiser and the QUBO problem
+
+        Parameters
+        ----------
+            workflow: Optimizer
+                The OpenQAOA workflow to be Parsed. Currently, it is either a QAOA or a RQAOA
+            qubo : QUBO
+                A valid QUBO problem 
+        Returns
+        -------
+            input_data: Dict
+                A dictionary containing the workflows properties and the qubo 
         """
         rqaoa_parameters = None
         if workflow.algorithm == 'rqaoa': rqaoa_parameters = workflow.rqaoa_parameters.asdict()
@@ -42,14 +53,25 @@ def create_aws_input_data(workflow : Optimizer, qubo: QUBO):
             'backend_properties' :  formatter(workflow.backend_properties.asdict()),
             'classical_optimizer' : formatter(workflow.classical_optimizer.asdict()),
             'qubo' : formatter(qubo.asdict()),
-            'rqaoa_parameters' : rqaoa_parameters
+            'rqaoa_parameters' : formatter(rqaoa_parameters.asdict())
         }
 
         return input_data
 
 def save_input_data(openqaoa_data: dict, openqaoa_data_path: str):
     '''
-    Save the hyperparameter as a json file at a desired location
+    A helper function which dump the OpenQAOA data dictionary to a JSON
+
+    Parameters
+    ----------
+        openqaoa_data: dict
+            The OpenQAOA data dictionary, generate through `create_aws_input_data()`
+        openqaoa_data_path : str
+            A path indicating where the file should be saved
+    Returns
+    -------
+        input_data: Dict
+            A dictionary containing the workflows properties and the qubo 
     '''
 
     with open(openqaoa_data_path, 'w') as f:
