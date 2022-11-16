@@ -220,14 +220,19 @@ def hamiltonian_from_graph(G: nx.Graph) -> Hamiltonian:
         The Hamiltonian object constructed from the specified graph.
     """
     # Node bias terms
-    nodes_info = nx.get_node_attributes(G, 'weight')
-    singlet_terms = [(node,) for node in nodes_info.keys()]
-    singlet_coeffs = list(nodes_info.values())
+    nodes_info = dict(G.nodes(data='weight'))
+    singlet_terms = [(node,) for node,weight in nodes_info.items() if weight is not None]
+    singlet_coeffs = [coeff for coeff in nodes_info.values() if coeff is not None]
 
     # Edge terms
-    edges_info = nx.get_edge_attributes(G, 'weight')
-    pair_terms = list(edges_info.keys())
-    pair_coeffs = list(edges_info.values())
+    pair_terms, pair_coeffs = [],[]
+    for u, v, edge_weight in G.edges(data="weight"):
+        pair_terms.append((u, v))
+        # We expect the edge weight to be given in the attribute called
+        # "weight". If it is None, assume a weight of 1.0
+        pair_coeffs.append(
+            edge_weight if edge_weight else 1
+        )
 
     # Collect all terms and coefficients
     terms = singlet_terms + pair_terms
