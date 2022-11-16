@@ -19,11 +19,12 @@ import numpy as np
 from braket.circuits import Circuit
 import pytest
 
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
+from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
 from openqaoa.devices import DeviceAWS
 from openqaoa.backends.qpus.qaoa_braket_qpu import QAOAAWSQPUBackend
 from openqaoa.utilities import X_mixer_hamiltonian
+from openqaoa.problems.problem import NumberPartition
 
 
 class TestingQAOABraketQPUBackend(unittest.TestCase):
@@ -330,7 +331,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         mock_device = Mock()
         mock_device.configure_mock(**{'check_connection.return_value': False,
                                       'provider_connected.return_value': False,
-                                      'qpu_connected.return_value': None})
+                                      'qpu_connected.return_value': None, 
+                                      'n_qubits': 3})
         
         try:
             QAOAAWSQPUBackend(circuit_params, mock_device, 
@@ -360,37 +362,56 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
         
         QAOAAWSQPUBackend(circuit_params, aws_device, shots, None, None, True, 1.)
-     
+    
+    @pytest.mark.qpu            
+    def test_remote_qubit_overflow(self):
         
-#     def test_remote_integration_qpu_run(self):
-#         """
-#         Test Actual QPU Workflow. Checks if the expectation value is returned
-#         after the circuit run.
-#         """
-
-#         nqubits = 3
-#         p = 1
-#         weights = [1, 1, 1]
-#         gammas = [[1/8*np.pi]]
-#         betas = [[1/8*np.pi]]
-#         shots = 10000
-
-#         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
-#                                   PauliOp('ZZ', (0, 2))], weights, 1)
-#         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-#         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-#         variate_params = QAOAVariationalStandardParams(circuit_params,
-#                                                        betas,
-#                                                        gammas)
-#         aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
-#                                self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
-#                                self.S3_BUCKET_NAME)
-
-#         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
-#                                            shots, None, None, False)
-#         aws_expectation = aws_backend.expectation(variate_params)
+        """
+        If the user creates a circuit that is larger than the maximum circuit size
+        that is supported by the QPU. An Exception should be raised with the 
+        appropriate error message alerting the user to the error.
+        """
         
-#         self.assertEqual(type(aws_expectation.item()), float)
+        shots = 100
+        
+        set_of_numbers = np.random.randint(1, 10, 100).tolist()
+        qubo = NumberPartition(set_of_numbers).get_qubo_problem()
+
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
+        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
+
+        aws_device = DeviceAWS("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+        
+        try:
+            braket_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+                                 shots, None, None, True, 1.)
+            braket_backend.expectation(variate_params)
+        except Exception as e:
+            self.assertEqual(str(e), 'There are lesser qubits on the device than the number of qubits required for the circuit.')
+            
+    @pytest.mark.qpu
+    def test_remote_integration_qpu_run(self):
+        
+        """
+        Run a toy example in manual mode to make sure everything works as 
+        expected for a remote backend
+        """
+        
+        shots = 100
+        
+        set_of_numbers = np.random.randint(1, 10, 10).tolist()
+        qubo = NumberPartition(set_of_numbers).get_qubo_problem()
+
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
+        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
+
+        aws_device = DeviceAWS("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+        
+        braket_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+                             shots, None, None, True, 1.)
+        braket_backend.expectation(variate_params)
 
 
 if __name__ == '__main__':
