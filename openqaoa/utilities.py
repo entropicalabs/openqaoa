@@ -222,12 +222,12 @@ def hamiltonian_from_graph(G: nx.Graph) -> Hamiltonian:
     # Node bias terms
     nodes_info = dict(G.nodes(data='weight'))
     singlet_terms = [(node,) for node,weight in nodes_info.items() if weight is not None]
-    singlet_coeffs = [nodes_info[node] for node in singlet_terms]
+    singlet_coeffs = [coeff for coeff in nodes_info.values() if coeff is not None]
 
     # Edge terms
     pair_terms, pair_coeffs = [],[]
     for u, v, edge_weight in G.edges(data="weight"):
-        pair_terms.append([u, v])
+        pair_terms.append((u, v))
         # We expect the edge weight to be given in the attribute called
         # "weight". If it is None, assume a weight of 1.0
         pair_coeffs.append(
