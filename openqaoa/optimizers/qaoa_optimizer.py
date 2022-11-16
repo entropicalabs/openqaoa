@@ -71,6 +71,6 @@ def get_optimizer(vqa_object: VQABaseBackend,
         optimizer = SUPPORTED_OPTIMIZERS[selected_class](vqa_object, variational_params,
                                                          optimizer_dict)
     except Exception as e:
-        raise
+        raise Exception(e)
    
     return optimizer
