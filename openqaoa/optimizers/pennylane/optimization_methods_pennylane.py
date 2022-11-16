@@ -123,8 +123,6 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd',
         if pennylane_method in ['adagrad', 'adam', 'vgd', 'momentum', 'nesterov_momentum', 'rmsprop']:
             testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac)
         elif pennylane_method in ['rotosolve']: 
-            print('Rotosolve')
-            print('s', bestx)
             testx, testy = optimizer.step_and_cost(
                                                     cost, bestx, *args,
                                                     nums_frequency={'params': {(i,):1 for i in range(bestx.size)}} if not nums_frequency else nums_frequency,
