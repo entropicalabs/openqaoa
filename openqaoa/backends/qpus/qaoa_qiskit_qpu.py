@@ -81,7 +81,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit" \
                                                                "to the QAOA routine"
-
+        
         if self.device.provider_connected and self.device.qpu_connected:
             self.backend_qpu = self.device.backend_device
         elif self.device.provider_connected and self.device.qpu_connected in [False, None]:
@@ -89,6 +89,9 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                 'Connection to IBMQ was made. Error connecting to the specified backend.')
         else:
             raise Exception('Error connecting to IBMQ.')
+            
+        if self.device.n_qubits < self.n_qubits:
+            raise Exception('There are lesser qubits on the device than the number of qubits required for the circuit.')
         # For parametric circuits
         self.parametric_circuit = self.parametric_qaoa_circuit
 
