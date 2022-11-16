@@ -177,7 +177,34 @@ class TestingDeviceAWS(unittest.TestCase):
     For any tests using provided credentials, the tests will only pass if those
     details provided are correct/valid with AWS Braket.
     """
-
+    
+    @pytest.mark.api
+    def test_changing_aws_region(self):
+        
+        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1')
+        
+        device_obj.check_connection()
+        default_region = device_obj.aws_region
+        
+        self.assertEqual('us-east-1', default_region)
+        
+        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1', aws_region='us-west-1')
+        
+        device_obj.check_connection()
+        custom_region = device_obj.aws_region
+        
+        self.assertEqual('us-west-1', custom_region)
+        
+    @pytest.mark.api
+    def test_changing_s3_bucket_names(self):
+        
+        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1', s3_bucket_name='random_new_name')
+        
+        device_obj.check_connection()
+        custom_bucket = device_obj.s3_bucket_name
+        
+        self.assertEqual('random_new_name', custom_bucket)
+        
     @pytest.mark.api      
     def test_check_connection_provider_no_backend_provided_credentials(self):
         

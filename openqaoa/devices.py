@@ -279,35 +279,44 @@ class DeviceAWS(DeviceBase):
     on AWS Braket.
     
     Attributes:
-	available_qpus: `list`
-		When connection to AWS is established, this attribute contains a list
-		of device names which can be used to access the selected device by
-		reinitialising the Access Object with the name of the available device
-		as input to the device_name parameter.
+	  available_qpus: `list`
+      When connection to AWS is established, this attribute contains a list
+      of device names which can be used to access the selected device by
+      reinitialising the Access Object with the name of the available device
+      as input to the device_name parameter.
     """
     
     def __init__(self, 
-                device_name: str, 
-                folder_name: str = 'openqaoa',
-                s3_bucket_name: str = None,
-                aws_region: str = 'us-east-1'):
-        
-        """Input the device arn and the name of the folder in which all the
+                 device_name: str, 
+                 s3_bucket_name: str = None, 
+                 aws_region: str = None, 
+                 folder_name: str = 'openqaoa'):       
+        """
+        Input the device arn and the name of the folder in which all the
         results for the QPU runs would be saved on the pre-defined s3 bucket. 
         Note that the user is required to authenticate through the AWS CLI 
         before being able to use this Device object.
+        
+        See: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html for further details.
 
         Parameters
         ----------
-		device_name: `str`
-			The ARN string of the braket QPU/simulator to be used
-        folder_name: `str`
-            The name of the folder in the s3 bucket that will contain the results
-            from the tasks performed in this run.
+          device_name: `str`
+            The ARN string of the braket QPU/simulator to be used
+          s3_bucket_name: `str`
+            The name of S3 Bucket where the Braket run results will be saved.
+          aws_region: `str`
+            The aws region in which the QPU/simulator is located. Defaults to the
+            region set in aws cli config.
+          folder_name: `str`
+              The name of the folder in the s3 bucket that will contain the results
+              from the tasks performed in this run.
         """
         
         self.device_name = device_name
         self.device_location = 'aws'
+        self.s3_bucket_name = s3_bucket_name
+        self.aws_region = aws_region
         self.folder_name = folder_name
         self.s3_bucket_name = s3_bucket_name
         self.aws_region = aws_region
@@ -358,18 +367,16 @@ class DeviceAWS(DeviceBase):
     def _check_provider_connection(self) -> bool:
         
         try:
-            sess = Session()
-            self.aws_session = AwsSession(sess, 
-                                default_bucket=self.s3_bucket_name)
-            # if self.s3_bucket_name == None:
-            #     self.s3_bucket_name = self.aws_session.default_bucket()
+            sess = Session(region_name = self.aws_region)
+            self.aws_session = AwsSession(sess, default_bucket=self.s3_bucket_name)
+            self.aws_region = self.aws_session.region
+            self.s3_bucket_name = self.aws_session.default_bucket()
             return True
         except NoRegionError:
             self.aws_session = None
             return True
         except Exception as e:
-            print('An Exception has occured when trying to connect with the \
-            provider: {}'.format(e))
+            print('An Exception has occured when trying to connect with the provider. You are required to authenticate through the AWS CLI in order to connect to the Braket QPUs. Please check if you have properly set it up. See: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html for further details. : {}'.format(e))
             return False
 
 
@@ -386,8 +393,8 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             endpoint_id: str = None,
                             engagement_manager: EngagementManager = None,
                             device_name: str = None,
-                            folder_name: str = None,
-                            s3_bucket_name: str = None,
+                            folder_name: str = None, 
+                            s3_bucket_name: str = None, 
                             aws_region: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'api_token': api_token,
@@ -404,9 +411,9 @@ def device_class_arg_mapper(device_class:DeviceBase,
                         'engagement_manager': engagement_manager},
         
         DeviceAWS: {'device_name': device_name,
-                    'folder_name': folder_name,
                     's3_bucket_name': s3_bucket_name,
-                    'aws_region': aws_region}
+                    'aws_region': aws_region,
+                    'folder_name': folder_name}
     }
 
     final_device_kwargs = {key: value for key, value in DEVICE_ARGS_MAPPER[device_class].items()
