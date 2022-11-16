@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Some lines of code have been modified from the original PennyLane source code
+
 """Rotosolve gradient free optimizer"""
 # pylint: disable=too-many-branches,cell-var-from-loop
 
@@ -18,7 +21,7 @@ from inspect import signature
 import numpy as np
 from scipy.optimize import brute, shgo
 
-from openqaoa.optimizers import pennylane as qml # changed from the original code
+from openqaoa.optimizers import pennylane as qml # changed from the original PennyLane code
 
 
 def _brute_optimizer(fun, num_steps, bounds=None, **kwargs):
@@ -415,7 +418,7 @@ class RotosolveOptimizer:
         sign_fn = objective_fn.func if isinstance(objective_fn, qml.QNode) else objective_fn
         arg_names = list(signature(sign_fn).parameters.keys())
         requires_grad = {
-            arg_name: True for arg_name, arg in zip(arg_names, args) # changed from the original code
+            arg_name: True for arg_name, arg in zip(arg_names, args) # changed from the original PennyLane code
         }
         nums_frequency = nums_frequency or {}
         spectra = spectra or {}

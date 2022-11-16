@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Some lines of code have been modified from the original PennyLane source code
+
 """This module contains methods to expand the matrix representation of an operator
 to a higher hilbert space with re-ordered wires."""
 import copy
@@ -20,7 +23,7 @@ from typing import Generator, Tuple
 import numpy as np
 from scipy.sparse import csr_matrix, eye, issparse, kron
 
-from openqaoa.optimizers import pennylane as qml # changed from the original code
+from openqaoa.optimizers import pennylane as qml # changed from the original PennyLane code
 Wires = None
 
 

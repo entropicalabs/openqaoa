@@ -11,9 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Some lines of code have been modified from the original PennyLane source code
+
 """SPSA optimizer"""
 
-from openqaoa.optimizers.pennylane import numpy as np # changed from the original pennylane code
+from openqaoa.optimizers.pennylane import numpy as np # changed from the original PennyLane code
 
 
 class SPSAOptimizer:

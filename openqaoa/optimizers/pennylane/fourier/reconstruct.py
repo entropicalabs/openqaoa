@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Some lines of code have been modified from the original PennyLane source code
+
 """Contains a function that computes the fourier series of
 a quantum expectation value."""
 from functools import wraps
@@ -19,7 +22,7 @@ import warnings
 
 import numpy as np
 from autoray import numpy as anp
-from openqaoa.optimizers import pennylane as qml # changed from the original code
+from openqaoa.optimizers import pennylane as qml # changed from the original PennyLane code
 
 
 def _reconstruct_equ(fun, num_frequency, x0=None, f0=None, interface=None):

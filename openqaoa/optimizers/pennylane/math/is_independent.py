@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Some lines of code have been modified from the original PennyLane source code
+
 """
 This file contains the is_independent function that checks if
 a function is independent of its arguments for the interfaces
@@ -26,7 +29,7 @@ import numpy as np
 from autograd.tracer import isbox, new_box, trace_stack
 from autograd.core import VJPNode
 
-from openqaoa.optimizers.pennylane import numpy as np # changed from the original pennylane code
+from openqaoa.optimizers.pennylane import numpy as np # changed from the original PennyLane code
 
 
 def _autograd_is_indep_analytic(func, *args, **kwargs):

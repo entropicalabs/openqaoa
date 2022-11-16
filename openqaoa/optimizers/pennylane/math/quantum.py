@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Some lines of code have been modified from the original PennyLane source code
+
 """Differentiable quantum functions"""
 # pylint: disable=import-outside-toplevel
 import itertools
@@ -20,7 +23,7 @@ from string import ascii_letters as ABC
 from autoray import numpy as np
 from numpy import float64
 
-from openqaoa.optimizers import pennylane as qml #changed fromt the original code
+from openqaoa.optimizers import pennylane as qml # changed from the original PennyLane code
 
 from . import single_dispatch  # pylint:disable=unused-import
 from .multi_dispatch import diag, dot, scatter_element_add, einsum, get_interface

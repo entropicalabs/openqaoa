@@ -11,8 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Some lines of code have been modified from the original PennyLane source code
+
 """Nesterov momentum optimizer"""
-get_gradient = None # changed from the original pennylane code
+get_gradient = None # changed from the original PennyLane code
 from .momentum import MomentumOptimizer
 
 
