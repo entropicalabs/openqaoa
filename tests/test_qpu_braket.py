@@ -13,16 +13,18 @@
 #   limitations under the License.
 
 import unittest
+from unittest.mock import Mock
 import json
 import numpy as np
 from braket.circuits import Circuit
 import pytest
 
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
+from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
 from openqaoa.devices import DeviceAWS
 from openqaoa.backends.qpus.qaoa_braket_qpu import QAOAAWSQPUBackend
 from openqaoa.utilities import X_mixer_hamiltonian
+from openqaoa.problems.problem import NumberPartition
 
 
 class TestingQAOABraketQPUBackend(unittest.TestCase):
@@ -30,41 +32,9 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
     """This Object tests the QAOA Braket QPU Backend objects, which is tasked with the
     creation and execution of a QAOA circuit for the selected QPU provider and
     backend.
-
-    For all of these tests, credentials.json MUST be filled with the appropriate
-    credentials. If unsure about to correctness of the current input credentials
-    , please run test_qpu_auth.py. 
+    
+    These tests require authentication through the AWS CLI.
     """
-
-
-    @pytest.mark.qpu
-    def setUp(self):
-        
-        try:
-            opened_f = open('./tests/credentials.json', 'r')
-        except FileNotFoundError:
-            opened_f = open('credentials.json', 'r')
-                
-        with opened_f as f:
-            json_obj = json.load(f)['AWS']
-            self.AWS_ACCESS_KEY_ID = json_obj['AWS_ACCESS_KEY_ID']
-            self.AWS_SECRET_ACCESS_KEY = json_obj['AWS_SECRET_ACCESS_KEY']
-            self.AWS_REGION = json_obj['AWS_REGION']
-            self.S3_BUCKET_NAME = json_obj['S3_BUCKET_NAME']
-
-        if self.AWS_ACCESS_KEY_ID == "None":
-            raise ValueError(
-                "Please provide an appropriate AWS ACCESS KEY ID in crendentials.json.")
-        elif self.AWS_SECRET_ACCESS_KEY == "None":
-            raise ValueError(
-                "Please provide an appropriate AWS SECRET ACCESS KEY name in crendentials.json.")
-        elif self.AWS_REGION == "None":
-            raise ValueError(
-                "Please provide an appropriate AWS REGION name in crendentials.json.")
-        elif self.S3_BUCKET_NAME == "None":
-            raise ValueError(
-                "Please provide an appropriate S3 BUCKET NAME name in crendentials.json.")
-
 
     @pytest.mark.qpu
     def test_circuit_angle_assignment_qpu_backend(self):
@@ -79,7 +49,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [0, 1/8*np.pi]
         betas = [1/2*np.pi, 3/8*np.pi]
-        shots = 10000
+        shots = 100
 
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
@@ -88,9 +58,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
-                                  self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
-                                  self.S3_BUCKET_NAME)
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
 
         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
                                         shots, None, None, False, 1.)
@@ -138,7 +106,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [0, 1/8*np.pi]
         betas = [1/2*np.pi, 3/8*np.pi]
-        shots = 10000
+        shots = 100
 
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
@@ -147,9 +115,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
-                                  self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
-                                  self.S3_BUCKET_NAME)
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
 
         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
                                         shots, None, None, True, 1.)
@@ -200,7 +166,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [1/8*np.pi]
         betas = [1/8*np.pi]
-        shots = 10000
+        shots = 100
 
         # Prepended Circuit
         prepend_circuit = Circuit()
@@ -215,9 +181,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
-                                  self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
-                                  self.S3_BUCKET_NAME)
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
 
         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
                                         shots, prepend_circuit, None, True, 1.)
@@ -260,7 +224,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [1/8*np.pi]
         betas = [1/8*np.pi]
-        shots = 10000
+        shots = 100
 
         # Appended Circuit
         append_circuit = Circuit()
@@ -275,9 +239,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
-                                  self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
-                                  self.S3_BUCKET_NAME)
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
 
         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
                                         shots, None, append_circuit, True, 1.)
@@ -306,7 +268,43 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         main_circuit.probability()
 
         self.assertEqual(main_circuit, qpu_circuit)
+        
+    @pytest.mark.qpu
+    def test_prepend_exception(self):
+        
+        """
+        Test that the error catching for a prepend ciruit larger than the problem
+        circuit is invalid
+        """
 
+        nqubits = 3
+        p = 1
+        weights = [1, 1, 1]
+        gammas = [1/8*np.pi]
+        betas = [1/8*np.pi]
+        shots = 100
+
+        # Prepended Circuit
+        prepend_circuit = Circuit()
+        prepend_circuit.x(0)
+        prepend_circuit.x(1)
+        prepend_circuit.x(2)
+        prepend_circuit.x(3)
+
+        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
+                                  PauliOp('ZZ', (0, 2))], weights, 1)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(circuit_params,
+                                                       betas, gammas)
+
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
+        
+        try:
+            aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+                                            shots, prepend_circuit, None, True, 1.)
+        except Exception as e:
+            self.assertEqual(str(e), "Cannot attach a bigger circuit to the QAOA routine")
 
     @pytest.mark.qpu
     def test_exceptions_in_init(self):
@@ -320,7 +318,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [1/8*np.pi]
         betas = [1/8*np.pi]
-        shots = 10000
+        shots = 100
 
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
@@ -329,23 +327,21 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        aws_device = DeviceAWS('', '', '', '', '')
+        # If the user's aws credentials is not correct.
+        mock_device = Mock()
+        mock_device.configure_mock(**{'check_connection.return_value': False,
+                                      'provider_connected.return_value': False,
+                                      'qpu_connected.return_value': None, 
+                                      'n_qubits': 3})
         
         try:
-            QAOAAWSQPUBackend(circuit_params, aws_device, 
+            QAOAAWSQPUBackend(circuit_params, mock_device, 
                                  shots, None, None, True, 1.)
         except Exception as e:
             self.assertEqual(str(e), 'Error connecting to AWS.')
-        
-        
-        self.assertRaises(Exception, QAOAAWSQPUBackend, (circuit_params, 
-                                                            aws_device, 
-                                                            shots, None, None, 
-                                                            True, 1.))
-        
-        aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
-                               self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
-                               self.S3_BUCKET_NAME)
+
+        # Wrong arn string name
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/invalid_backend_arn')
         
         try:
             QAOAAWSQPUBackend(circuit_params, aws_device, 
@@ -353,69 +349,69 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         except Exception as e:
             self.assertEqual(str(e), 'Connection to AWS was made. Error connecting to the specified backend.')
         
+        # No device specified
+        aws_device = DeviceAWS('')
         
-        self.assertRaises(Exception, QAOAAWSQPUBackend, (circuit_params, 
-                                                            aws_device, 
-                                                            shots, None, None, 
-                                                            True, 1.))
+        try:
+            QAOAAWSQPUBackend(circuit_params, aws_device, 
+                                 shots, None, None, True, 1.)
+        except Exception as e:
+            self.assertEqual(str(e), 'Connection to AWS was made. A device name was not specified.')
+            
+        # Correct device arn (Errorless)
+        aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
+        
+        QAOAAWSQPUBackend(circuit_params, aws_device, shots, None, None, True, 1.)
+    
+    @pytest.mark.qpu            
+    def test_remote_qubit_overflow(self):
+        
+        """
+        If the user creates a circuit that is larger than the maximum circuit size
+        that is supported by the QPU. An Exception should be raised with the 
+        appropriate error message alerting the user to the error.
+        """
+        
+        shots = 100
+        
+        set_of_numbers = np.random.randint(1, 10, 100).tolist()
+        qubo = NumberPartition(set_of_numbers).get_qubo_problem()
 
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
+        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
 
+        aws_device = DeviceAWS("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+        
+        try:
+            braket_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+                                 shots, None, None, True, 1.)
+            braket_backend.expectation(variate_params)
+        except Exception as e:
+            self.assertEqual(str(e), 'There are lesser qubits on the device than the number of qubits required for the circuit.')
+            
     @pytest.mark.qpu
-    def test_correct_device_creation(self):
+    def test_remote_integration_qpu_run(self):
         
-        device_map = {'us-east-1': 
-                      {'IonQ Device': 'arn:aws:braket:::device/qpu/ionq/ionQdevice'}, 
-                      'eu-west-2': 
-                      {'Lucy': 'arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy'}, 
-                      'us-west-1': 
-                      {'SV1': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1',
-                       'Aspen-M-2': 'arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2'}
-                     }
+        """
+        Run a toy example in manual mode to make sure everything works as 
+        expected for a remote backend
+        """
         
-        for each_region, devices_dict in device_map.items():
+        shots = 100
         
-            for each_key, each_value in devices_dict.items():
+        set_of_numbers = np.random.randint(1, 10, 10).tolist()
+        qubo = NumberPartition(set_of_numbers).get_qubo_problem()
 
-                aws_device = DeviceAWS(each_key, self.AWS_ACCESS_KEY_ID, 
-                                       self.AWS_SECRET_ACCESS_KEY, each_region, 
-                                       self.S3_BUCKET_NAME)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
+        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
 
-                aws_device.check_connection()
-                
-                print(each_key, aws_device.device_arn, '/n')
-
-                self.assertEqual(aws_device.device_arn, each_value)
-     
+        aws_device = DeviceAWS("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
         
-#     def test_remote_integration_qpu_run(self):
-#         """
-#         Test Actual QPU Workflow. Checks if the expectation value is returned
-#         after the circuit run.
-#         """
-
-#         nqubits = 3
-#         p = 1
-#         weights = [1, 1, 1]
-#         gammas = [[1/8*np.pi]]
-#         betas = [[1/8*np.pi]]
-#         shots = 10000
-
-#         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
-#                                   PauliOp('ZZ', (0, 2))], weights, 1)
-#         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-#         circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-#         variate_params = QAOAVariationalStandardParams(circuit_params,
-#                                                        betas,
-#                                                        gammas)
-#         aws_device = DeviceAWS("SV1", self.AWS_ACCESS_KEY_ID, 
-#                                self.AWS_SECRET_ACCESS_KEY, self.AWS_REGION, 
-#                                self.S3_BUCKET_NAME)
-
-#         aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
-#                                            shots, None, None, False)
-#         aws_expectation = aws_backend.expectation(variate_params)
-        
-#         self.assertEqual(type(aws_expectation.item()), float)
+        braket_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+                             shots, None, None, True, 1.)
+        braket_backend.expectation(variate_params)
 
 
 if __name__ == '__main__':

@@ -176,56 +176,35 @@ class TestingDeviceAWS(unittest.TestCase):
 
     For any tests using provided credentials, the tests will only pass if those
     details provided are correct/valid with AWS Braket.
-
-    Please ensure that the provided access keys, aws region and s3 bucket names in the 
-    crendentials.json are correct.
     """
-
-    @pytest.mark.api    
-    def setUp(self):
-        try:
-            opened_f = open('./tests/credentials.json', 'r')
-        except FileNotFoundError:
-            opened_f = open('credentials.json', 'r')
-                
-        with opened_f as f:
-            json_obj = json.load(f)['AWS']
-            self.AWS_ACCESS_KEY_ID = json_obj['AWS_ACCESS_KEY_ID']
-            self.AWS_SECRET_ACCESS_KEY = json_obj['AWS_SECRET_ACCESS_KEY']
-            self.AWS_REGION = json_obj['AWS_REGION']
-            self.S3_BUCKET_NAME = json_obj['S3_BUCKET_NAME']
-
-        if self.AWS_ACCESS_KEY_ID == "YOUR_ACCESS_KEY_ID":
-            raise ValueError(
-                "Please provide an appropriate AWS access key ID in crendentials.json.")
-        elif self.AWS_SECRET_ACCESS_KEY == "YOUR_SECRET_ACCESS_KEY":
-            raise ValueError(
-                "Please provide an appropriate AWS secret access key in crendentials.json.")
-        elif self.AWS_REGION == "AWS_REGION":
-            raise ValueError(
-                "Please provide an appropriate AWS region name in crendentials.json.")
-        elif self.S3_BUCKET_NAME == "YOUR_S3_BUCKET":
-            raise ValueError(
-                "Please provide an appropriate S3 bucket name in crendentials.json.")
-
-
+    
     @pytest.mark.api
-    def test_check_connection_provider_no_backend_wrong_credentials(self):
+    def test_changing_aws_region(self):
         
-        """
-        If no information provided, check_connection should return False.
-        The provider_connected attribute should be updated to False.
-        """
+        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1')
         
-        device_obj = DeviceAWS(device_name = '', aws_access_key_id = '', 
-                               aws_secret_access_key = '', aws_region = '', 
-                               s3_bucket_name = '')
+        device_obj.check_connection()
+        default_region = device_obj.aws_region
         
-        self.assertEqual(device_obj.check_connection(), False)
-        self.assertEqual(device_obj.provider_connected, False)
-        self.assertEqual(device_obj.qpu_connected, None)
-
-
+        self.assertEqual('us-east-1', default_region)
+        
+        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1', aws_region='us-west-1')
+        
+        device_obj.check_connection()
+        custom_region = device_obj.aws_region
+        
+        self.assertEqual('us-west-1', custom_region)
+        
+    @pytest.mark.api
+    def test_changing_s3_bucket_names(self):
+        
+        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1', s3_bucket_name='random_new_name')
+        
+        device_obj.check_connection()
+        custom_bucket = device_obj.s3_bucket_name
+        
+        self.assertEqual('random_new_name', custom_bucket)
+        
     @pytest.mark.api      
     def test_check_connection_provider_no_backend_provided_credentials(self):
         
@@ -235,11 +214,7 @@ class TestingDeviceAWS(unittest.TestCase):
         The provider_connected attribute should be updated to True.
         """
 
-        device_obj = DeviceAWS(device_name='', 
-                               aws_access_key_id=self.AWS_ACCESS_KEY_ID,
-                               aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY, 
-                               aws_region=self.AWS_REGION,
-                               s3_bucket_name=self.S3_BUCKET_NAME)
+        device_obj = DeviceAWS(device_name='')
 
         self.assertEqual(device_obj.check_connection(), True)
         self.assertEqual(device_obj.provider_connected, True)
@@ -256,20 +231,12 @@ class TestingDeviceAWS(unittest.TestCase):
         The qpu_connected attribute should be updated to True.
         """
 
-        device_obj = DeviceAWS(device_name='', 
-                               aws_access_key_id=self.AWS_ACCESS_KEY_ID,
-                               aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY, 
-                               aws_region=self.AWS_REGION,
-                               s3_bucket_name=self.S3_BUCKET_NAME)
+        device_obj = DeviceAWS(device_name='')
 
         device_obj.check_connection()
         valid_qpu_name = device_obj.available_qpus[0]
 
-        device_obj = DeviceAWS(device_name=valid_qpu_name, 
-                               aws_access_key_id=self.AWS_ACCESS_KEY_ID,
-                               aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY, 
-                               aws_region=self.AWS_REGION,
-                               s3_bucket_name=self.S3_BUCKET_NAME)
+        device_obj = DeviceAWS(device_name=valid_qpu_name)
 
         self.assertEqual(device_obj.check_connection(), True)
         self.assertEqual(device_obj.provider_connected, True)
@@ -286,11 +253,7 @@ class TestingDeviceAWS(unittest.TestCase):
         The qpu_connected attribute should be updated to False.
         """
 
-        device_obj = DeviceAWS(device_name='random_invalid_backend', 
-                               aws_access_key_id=self.AWS_ACCESS_KEY_ID,
-                               aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY, 
-                               aws_region=self.AWS_REGION,
-                               s3_bucket_name=self.S3_BUCKET_NAME)
+        device_obj = DeviceAWS(device_name='random_invalid_backend')
 
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, True)

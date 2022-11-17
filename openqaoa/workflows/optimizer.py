@@ -145,12 +145,8 @@ class Optimizer(ABC):
         Parameters
         ----------
             method: str
-                The classical optimization method. Choose from:
-                 ['nelder-mead', 'powell', 'cg', 'bfgs', 'newton-cg', 'l-bfgs-b', 'tnc', 'cobyla', 'slsqp', 
-                  'trust-constr', 'dogleg', 'trust-ncg', 'trust-exact', 'trust-krylov', 'vgd', 'newton', 
-                  'rmsprop', 'natural_grad_descent', 'spsa', 'icans', 'cans', 'pennylane_adagrad', 'pennylane_adam', 
-                  'pennylane_vgd', 'pennylane_momentum', 'pennylane_nesterov_momentum',
-                  'pennylane_rmsprop', 'pennylane_rotosolve', 'pennylane_spsa']
+                The classical optimization method. To see the list of supported optimizers, refer
+                to `available_optimizers` in openqaoa/optimizers/qaoa_optimizer.py
             maxiter : Optional[int]
                 Maximum number of iterations.
             maxfev : Optional[int]
@@ -394,16 +390,15 @@ class QAOA(Optimizer):
                 f'Solving QAOA with \033[1m {self.device.device_name} \033[0m on  \033[1m{self.device.device_location}\033[0m')
             print(f'Using p={self.circuit_properties.p} with {self.circuit_properties.param_type} parameters initialized as {self.circuit_properties.init_type}')
 
-            if self.device.device_name == 'vectorized':
-                print(
-                    f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations')
-
-            else:
+            if hasattr(self.backend,'n_shots'):
                 print(
                     f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations. Each iteration will contain \033[1m{self.backend_properties.n_shots} shots\033[0m')
+                # print(
+                #     f'The total number of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
+            else:
                 print(
-                    f'The total number of shots is set to maxiter*shots = {self.classical_optimizer.maxiter*self.backend_properties.n_shots}')
-
+                    f'OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations')
+                
         return None
 
     def optimize(self, verbose=False):
@@ -684,7 +679,10 @@ class RQAOA(Optimizer):
         problem = self.problem  
         n_cutoff = self.rqaoa_parameters.n_cutoff
         n_qubits = problem.n
-        counter = self.rqaoa_parameters.counter 
+        counter = self.rqaoa_parameters.counter
+
+        # copy the original qaoa object
+        q = copy.deepcopy(self._q)
 
         # create a different max_terms function for each type 
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
@@ -696,10 +694,10 @@ class RQAOA(Optimizer):
         while n_qubits > n_cutoff:
 
             # Run QAOA
-            self._q.optimize()
+            q.optimize()
 
             # Obtain statistical results
-            exp_vals_z, corr_matrix = self._exp_val_hamiltonian_termwise()
+            exp_vals_z, corr_matrix = self._exp_val_hamiltonian_termwise(q)
             # Retrieve highest expectation values according to adaptive method or schedule in custom method
             max_terms_and_stats = f_max_terms(exp_vals_z, corr_matrix, self._n_step(n_qubits, n_cutoff, counter))
             # Generate spin map
@@ -715,12 +713,14 @@ class RQAOA(Optimizer):
             n_qubits = new_problem.n
 
             # Save qaoa object and new problem
-            qaoa_steps.append(copy.deepcopy(self._q))
+            qaoa_steps.append(copy.deepcopy(q))
             problem_steps.append(copy.deepcopy(new_problem))
 
-            # Compile qaoa with the new problem
-            self._q.compile(new_problem, verbose=False)
+            # problem is updated
             problem = new_problem
+            
+            # Compile qaoa with the problem
+            q.compile(problem, verbose=False)
 
             # Add one step to the counter
             counter += 1
@@ -746,14 +746,12 @@ class RQAOA(Optimizer):
         return 
 
 
-    def _exp_val_hamiltonian_termwise(self):
+    def _exp_val_hamiltonian_termwise(self, q):
         """
         Private method to call the exp_val_hamiltonian_termwise function taking the data from
         the QAOA object _q. 
         It eturns what the exp_val_hamiltonian_termwise function returns.
         """
-
-        q = self._q
 
         variational_params = q.variate_params
         qaoa_backend = q.backend

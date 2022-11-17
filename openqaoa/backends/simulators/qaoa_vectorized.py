@@ -20,7 +20,7 @@ from typing import Union, List, Tuple, Type, Optional
 import numpy as np
 from copy import copy
 from scipy.sparse import csc_matrix, kron, diags
-from scipy.linalg import expm
+from scipy.sparse.linalg import expm
 
 from ...basebackend import QAOABaseBackendStatevector, QuantumCircuitBase
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
