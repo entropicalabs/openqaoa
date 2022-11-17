@@ -14,14 +14,14 @@
 
 
 """
-Test the core functionality in parameters.py 
+Test and validate the creation of variational parameters and circuit parameters. 
 """
 import numpy as np
 import unittest
 from scipy.fft import dst, dct
 
 from openqaoa.qaoa_parameters import *
-from openqaoa.utilities import X_mixer_hamiltonian
+from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian
 
 from openqaoa.qaoa_parameters.qaoa_params import create_qaoa_variational_params, PARAMS_CLASSES_MAPPER
 
@@ -40,7 +40,193 @@ cost_hamiltonian_wo_bias = Hamiltonian.classical_hamiltonian(terms_wo_bias,
 mixer_hamiltonian = X_mixer_hamiltonian(len(register))
 
 
-class TestingQAOAParameters(unittest.TestCase):
+class TestingQAOACircuitParams(unittest.TestCase):
+    
+    def setUp(self):
+        
+        self.p = 2
+        self.cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
+                                       PauliOp('ZZ', (0, 2)), PauliOp('Z', (0, ))], 
+                                      [1, 1, 1, 0.5], 1)
+        self.mixer_hamil = X_mixer_hamiltonian(n_qubits = 3)
+        self.mixer_gatemap = [RXGateMap(0), RXGateMap(1), RXGateMap(2)]
+        self.mixer_gatemap_coeffs = self.mixer_hamil.coeffs
+    
+    def test_QAOACircuitParams(self):
+        
+        """
+        QAOACircuitParams accept 2 types of inputs for mixer_block argument on initilisation. This test checks that the same mixer block when presented in Hamiltonian or as a List of RotationGateMap, plus the appropriate mixer coefficients, produces similar internal attributes.
+        """
+        
+        circuit_params = QAOACircuitParams(self.cost_hamil, self.mixer_hamil, p=self.p)
+        
+        circuit_params_gm = QAOACircuitParams(self.cost_hamil, self.mixer_gatemap, p=self.p, 
+                                              mixer_coeffs = self.mixer_gatemap_coeffs)
+        
+        # Check same number of mixer gates
+        self.assertEqual(len(circuit_params.mixer_block), self.p)
+        self.assertEqual(len(circuit_params_gm.mixer_block), self.p)
+        for each_p_value in range(self.p):
+            self.assertEqual(len(circuit_params.mixer_block[each_p_value]), 3)
+            self.assertEqual(len(circuit_params_gm.mixer_block[each_p_value]), 3)
+        # Check similar coefficients and qubit singles/pairs names
+        self.assertEqual(circuit_params.mixer_single_qubit_coeffs, 
+                         circuit_params_gm.mixer_single_qubit_coeffs)
+        self.assertEqual(circuit_params.mixer_pair_qubit_coeffs, 
+                         circuit_params_gm.mixer_pair_qubit_coeffs)
+        self.assertEqual(circuit_params.mixer_qubits_singles, 
+                         circuit_params_gm.mixer_qubits_singles)
+        self.assertEqual(circuit_params.mixer_qubits_pairs, 
+                         circuit_params_gm.mixer_qubits_pairs)
+        
+    def test_QAOACircuitParams_mixer_coeffs_selector_hamiltonian(self):
+        
+        """
+        If a mixer hamiltonian is used for mixer_block, the coefficients will be obtained from it. Even if the user inputs his own mixer coefficient, it will be ignored.
+        """
+        
+        verify_mixer_coeffs = [-1, -1, -1]
+        
+        mixer_hamil = X_mixer_hamiltonian(n_qubits = 3)
+        
+        circuit_params = QAOACircuitParams(self.cost_hamil, self.mixer_hamil, p = self.p)
+        circuit_params_2 = QAOACircuitParams(self.cost_hamil, self.mixer_hamil, p = self.p, 
+                                             mixer_coeffs = [1, 0, 1])
+        
+        self.assertEqual(circuit_params.mixer_block_coeffs, verify_mixer_coeffs)
+        self.assertEqual(circuit_params_2.mixer_block_coeffs, verify_mixer_coeffs)
+    
+    def test_QAOACircuitParams_mixer_coeffs_selector_gatemap(self):
+        
+        """
+        If a mixer gatemap is used for mixer_block, the user is required to input his own mixer coefficients, there should be an error message if the user does not input the appropriate number of mixer coefficients.
+        """
+        
+        verify_mixer_coeffs = [-1, -1, -1]
+        
+        circuit_params = QAOACircuitParams(self.cost_hamil, self.mixer_gatemap, p = self.p, 
+                                           mixer_coeffs = self.mixer_gatemap_coeffs)
+        
+        self.assertEqual(circuit_params.mixer_block_coeffs, verify_mixer_coeffs)
+        
+        with self.assertRaises(ValueError) as cm:
+            QAOACircuitParams(self.cost_hamil, self.mixer_gatemap, self.p, [])
+            self.assertEqual('The number of terms/gatemaps must match the number of coefficients provided.', str(cm.exception))
+    
+    def test_QAOACircuitParams_assign_coefficients(self):
+        
+        """
+        The method should split the coefficients and gatemaps in the proper order. Regardless of their positions within the hamiltonian or gatemap list.
+        """
+        
+        verify_mixer_coeffs = [-1, -1, -1, -0.5]
+        
+        
+        # TestCase 1: GateMap Mixer
+        mixer_gatemap = [RXGateMap(0), RXGateMap(1), RXGateMap(2), RXXGateMap(0, 2)]
+        
+        circuit_params = QAOACircuitParams(self.cost_hamil, mixer_gatemap, p = self.p, 
+                                           mixer_coeffs = [-1, -1, -1, -0.5])
+        
+        self.assertEqual(circuit_params.cost_single_qubit_coeffs, [0.5])
+        self.assertEqual(circuit_params.cost_pair_qubit_coeffs, [1, 1, 1])
+        self.assertEqual(circuit_params.cost_qubits_singles, ['RZGateMap'])
+        self.assertEqual(circuit_params.cost_qubits_pairs, ['RZZGateMap', 'RZZGateMap', 'RZZGateMap'])
+        
+        self.assertEqual(circuit_params.mixer_single_qubit_coeffs, [-1, -1, -1])
+        self.assertEqual(circuit_params.mixer_pair_qubit_coeffs, [-0.5])
+        self.assertEqual(circuit_params.mixer_qubits_singles, ['RXGateMap', 'RXGateMap','RXGateMap'])
+        self.assertEqual(circuit_params.mixer_qubits_pairs, ['RXXGateMap'])
+        
+        # TestCase 2: Hamiltonian Mixer
+        mixer_gatemap = XY_mixer_hamiltonian(n_qubits = 3)
+        
+        circuit_params = QAOACircuitParams(self.cost_hamil, mixer_gatemap, p = self.p)
+        
+        self.assertEqual(circuit_params.cost_single_qubit_coeffs, [0.5])
+        self.assertEqual(circuit_params.cost_pair_qubit_coeffs, [1, 1, 1])
+        self.assertEqual(circuit_params.cost_qubits_singles, ['RZGateMap'])
+        self.assertEqual(circuit_params.cost_qubits_pairs, ['RZZGateMap', 'RZZGateMap', 'RZZGateMap'])
+        
+        self.assertEqual(circuit_params.mixer_single_qubit_coeffs, [])
+        self.assertEqual(circuit_params.mixer_pair_qubit_coeffs, 
+                         [0.5, 0.5, 0.5, 0.5 , 0.5, 0.5])
+        self.assertEqual(circuit_params.mixer_qubits_singles, [])
+        self.assertEqual(circuit_params.mixer_qubits_pairs, 
+                         ['RXXGateMap', 'RYYGateMap', 'RXXGateMap', 'RYYGateMap', 'RXXGateMap', 'RYYGateMap'])
+    
+    def test_QAOACircuitParams_cost_block(self):
+        
+        """
+        cost_block property should always return a list of RotationGateMaps based on the input cost hamiltonian.
+        """
+        
+        mixer_gatemap = [RXGateMap(0), RXGateMap(1), RXGateMap(2), RXXGateMap(0, 2)]
+        
+        circuit_params = QAOACircuitParams(self.cost_hamil, mixer_gatemap, p = self.p, 
+                                           mixer_coeffs = [-1, -1, -1, -0.5])
+        
+        for each_p_block in circuit_params.cost_block:
+            for each_item in each_p_block:
+                self.assertTrue(isinstance(each_item, RotationGateMap))
+    
+    def test_QAOACircuitParams_mixer_block(self):
+        
+        """
+        mixer_block property should always return a list of RotationGateMaps based on the input cost hamiltonian.
+        """
+        
+        mixer_gatemap = [RXGateMap(0), RXGateMap(1), RXGateMap(2), RXXGateMap(0, 2)]
+        
+        circuit_params = QAOACircuitParams(self.cost_hamil, mixer_gatemap, p = self.p, 
+                                           mixer_coeffs = [-1, -1, -1, -0.5])
+        
+        for each_p_block in circuit_params.mixer_block:
+            for each_item in each_p_block:
+                self.assertTrue(isinstance(each_item, RotationGateMap))
+                
+    def test_QAOACircuitParams_weird_cases(self):
+        
+        """
+        Testing various weird cases
+        """
+        
+        # TestCase 1: Empty List Mixer Block
+        circuit_params = QAOACircuitParams(self.cost_hamil, [], p = self.p)
+
+        # TestCase 2: Wrong Type Cost Block
+        self.assertRaises(AttributeError, QAOACircuitParams, [], self.mixer_hamil, self.p)
+        self.assertRaises(AttributeError, QAOACircuitParams, [RZGateMap(0)], 
+                          self.mixer_hamil, self.p)
+        
+        # TestCase 3: p is not an int
+        self.assertRaises(TypeError, QAOACircuitParams, self.cost_hamil, 
+                          self.mixer_hamil, 'test')
+    
+    def test_QAOACircuitParams_abstract_circuit(self):
+        
+        """
+        The abstract circuit should be consistent with the cost hamiltonian, mixer block and the p value.
+        """
+        
+        mixer_hamil = X_mixer_hamiltonian(n_qubits = 3)
+        mixer_gatemap = [RXGateMap(0), RXGateMap(1), RXGateMap(2)]
+        
+        circuit_params = QAOACircuitParams(self.cost_hamil, self.mixer_hamil, p = self.p)
+        circuit_params_gm = QAOACircuitParams(self.cost_hamil, self.mixer_gatemap, 
+                                              p = self.p, 
+                                              mixer_coeffs = self.mixer_gatemap_coeffs)
+        
+        # Checks if the gates are identical
+        for each_cp_gate, each_cpgm_gate in zip(circuit_params.abstract_circuit, circuit_params_gm.abstract_circuit):
+            self.assertTrue(type(each_cp_gate), type(each_cpgm_gate))
+            if hasattr(each_cp_gate, 'qubit_1'):
+                self.assertEqual(each_cp_gate.qubit_1, each_cpgm_gate.qubit_1)
+            if hasattr(each_cpgm_gate, 'qubit_2'):
+                self.assertEqual(each_cp_gate.qubit_2, each_cpgm_gate.qubit_2)
+
+
+class TestingQAOAVariationalParameters(unittest.TestCase):
 
     def test_QAOAVariationalExtendedParams(self):
         qaoa_circuit_params = QAOACircuitParams(

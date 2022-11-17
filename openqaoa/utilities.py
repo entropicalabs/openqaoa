@@ -16,12 +16,16 @@
 Utility and convenience functions for a number of QAOA applications.
 """
 
+from __future__ import annotations
+
 from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
+
+from .qaoa_parameters.gatemap import *
 
 
 def X_mixer_hamiltonian(n_qubits: int,
@@ -123,6 +127,64 @@ def XY_mixer_hamiltonian(n_qubits: int,
 
     return hamiltonian
 
+def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap, 
+                       n_qubits: int, 
+                       qubit_connectivity: Union[List[list],List[tuple], str] = 'full', 
+                       coeffs: List[float] = None) -> Tuple[List[TwoQubitRotationGateMap], List[float]]:
+    
+    """
+    Quickly generates a gatemap list and coeffs for a specific topology.
+    Can only be used with 2-Qubit Gates.
+    
+    Parameters
+    ----------
+    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
+        The connectivity of the qubits in the mixer.
+    coeffs: `list`, optional
+        The coefficients of the GateMap in the Mixer Blocks.
+    
+    Returns
+    -------
+    """
+    
+    # Set of topologies supported by default
+    connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
+                                  'chain': [(i, i+1) for i in range(n_qubits-1)],
+                                  'star': [(0, i+1) for i in range(n_qubits-1)]}
+
+    # Check if input connectivity is a default value
+    if isinstance(qubit_connectivity, str):
+        try:
+            # Define qubit connectivity from default value
+            qubit_connectivity = connectivity_topology_dict[qubit_connectivity]
+        except KeyError:
+            raise ValueError(
+                f'Please choose connection topology from {list(connectivity_topology_dict.keys())}')
+
+    # Define connectivty according to user input
+    else:
+        # Extract indices from connectivity
+        indices = set([qubit for term in qubit_connectivity for qubit in term])
+
+        # Ensure all indices are defined within the range of number of qubits
+        assert max(indices) <= n_qubits - \
+            1, 'Qubit index in connectivity list is out of range'
+        assert min(indices) >= 0, 'Qubit index should be a positive integer'
+
+    # If no coefficients provided, set all to the number of terms
+    coeffs = [1.0]*len(qubit_connectivity) if coeffs is None else coeffs
+
+    # Initialize list of terms
+    gatemaps = []
+
+    # Generate terms in the 2Q mixer
+    for pair in qubit_connectivity:
+        i, j = pair
+        gatemaps.append(input_gatemap(i, j))
+
+    return gatemaps, coeffs
+        
+
 
 def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None):
     """
@@ -220,14 +282,19 @@ def hamiltonian_from_graph(G: nx.Graph) -> Hamiltonian:
         The Hamiltonian object constructed from the specified graph.
     """
     # Node bias terms
-    nodes_info = nx.get_node_attributes(G, 'weight')
-    singlet_terms = [(node,) for node in nodes_info.keys()]
-    singlet_coeffs = list(nodes_info.values())
+    nodes_info = dict(G.nodes(data='weight'))
+    singlet_terms = [(node,) for node,weight in nodes_info.items() if weight is not None]
+    singlet_coeffs = [coeff for coeff in nodes_info.values() if coeff is not None]
 
     # Edge terms
-    edges_info = nx.get_edge_attributes(G, 'weight')
-    pair_terms = list(edges_info.keys())
-    pair_coeffs = list(edges_info.values())
+    pair_terms, pair_coeffs = [],[]
+    for u, v, edge_weight in G.edges(data="weight"):
+        pair_terms.append((u, v))
+        # We expect the edge weight to be given in the attribute called
+        # "weight". If it is None, assume a weight of 1.0
+        pair_coeffs.append(
+            edge_weight if edge_weight else 1
+        )
 
     # Collect all terms and coefficients
     terms = singlet_terms + pair_terms

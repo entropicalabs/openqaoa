@@ -40,6 +40,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
     
     @pytest.mark.qpu
     def setUp(self):
+
         try:
             opened_f = open('./tests/credentials.json', 'r')
         except FileNotFoundError:
@@ -94,7 +95,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', self.API_TOKEN, self.HUB, self.GROUP,self.PROJECT)
+        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                               shots, None,
@@ -152,7 +155,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', self.API_TOKEN, self.HUB, self.GROUP,self.PROJECT)
+        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                               shots, None,
@@ -215,7 +220,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', self.API_TOKEN, self.HUB, self.GROUP,self.PROJECT)
+        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                               shots, prepend_circuit,
@@ -268,7 +275,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(circuit_params,
                                                        betas, gammas)
 
-        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', self.API_TOKEN, self.HUB, self.GROUP,self.PROJECT)
+        qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                               shots, None,
@@ -373,8 +382,10 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             variate_params = QAOAVariationalStandardParams(circuit_params,
                                                            betas[i],
                                                            gammas[i])
-
-            qiskit_device = DeviceQiskit('ibmq_qasm_simulator', self.API_TOKEN, self.HUB, self.GROUP, self.PROJECT)
+            
+            qiskit_device = DeviceQiskit('ibmq_qasm_simulator', 
+                                     self.API_TOKEN, self.HUB, self.GROUP, 
+                                     self.PROJECT)
 
             qiskit_backend = QAOAQiskitQPUBackend(circuit_params, qiskit_device,
                                                   shots, None, None, False)

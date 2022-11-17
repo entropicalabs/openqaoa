@@ -111,7 +111,7 @@ class SWAPGateMap(GateMap):
     
 class RotationGateMap(GateMap):
 
-    def __init__(self, qubit_1: int, pauli_label: List):
+    def __init__(self, qubit_1: int, pauli_label: List = []):
 
         super().__init__(qubit_1)
 
@@ -164,9 +164,9 @@ class RZGateMap(RotationGateMap):
 
 class TwoQubitRotationGateMap(RotationGateMap):
 
-    def __init__(self, qubit_1: int, qubit_2: int, pauli_index: int):
+    def __init__(self, qubit_1: int, qubit_2: int, pauli_label: List = []):
 
-        super().__init__(qubit_1, pauli_index)
+        super().__init__(qubit_1, pauli_label)
         self.qubit_2 = qubit_2
 
     @property
@@ -375,5 +375,26 @@ class RotationGateMapFactory(object):
                     output_gates.append(RZGateMap(each_term.qubit_indices[0],
                                                     [*input_label, one_qubit_count]))
                 one_qubit_count += 1
+
+        return output_gates
+    
+    def remap_gate_map_labels(gatemap_list: List[RotationGateMap], input_label: List) -> List[RotationGateMap]:
+        
+        output_gates = []
+
+        one_qubit_count = 0
+        two_qubit_count = 0
+        
+        for each_gatemap in gatemap_list:
+            
+            if each_gatemap.pauli_label[0] == '1q':
+                each_gatemap.pauli_label = [*input_label, one_qubit_count]
+                one_qubit_count += 1
+                
+            elif each_gatemap.pauli_label[0] == '2q':
+                each_gatemap.pauli_label = [*input_label, two_qubit_count]
+                two_qubit_count += 1
+                
+            output_gates.append(each_gatemap)
 
         return output_gates
