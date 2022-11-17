@@ -523,8 +523,8 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             * Dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
-    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton', 'icans', 'cans',
-                                  'rmsprop', 'natural_grad_descent', 'spsa']
+    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton', 'rmsprop', 'natural_grad_descent', 'spsa',
+                                    'icans', 'cans']
 
     def __init__(self,
                  vqa_object: Type[VQABaseBackend],
@@ -555,13 +555,11 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 "Please specify either a string or provide callable gradient in order to use gradient based methods")
         else:
             if isinstance(jac, str):
-                self.jac = derivative(
-                    self.vqa_object, self.variational_params, self.log, 
-                    'gradient', jac, jac_options)
-                #TODO : check if we want to do it this way
-                self.jac_w_variance = derivative(
-                    self.vqa_object, self.variational_params, self.log, 
-                    'gradient_w_variance', jac, jac_options)
+                self.jac = derivative(self.vqa_object, self.variational_params, self.log, 'gradient', jac, jac_options)
+
+                if self.method in ['icans', 'cans']:
+                    self.jac_w_variance = derivative(self.vqa_object, self.variational_params, self.log, 'gradient_w_variance', jac, jac_options)
+                
             else:
                 self.jac = jac
 

@@ -146,9 +146,11 @@ class Optimizer(ABC):
         ----------
             method: str
                 The classical optimization method. Choose from:
-                 ['imfil','bobyqa','snobfit']
-                 ['vgd', 'sgd', 'rmsprop'] 
-                 ['nelder-mead','powell','cg','bfgs','newton-cg','l-bfgs-b','cobyla'] 
+                 ['nelder-mead', 'powell', 'cg', 'bfgs', 'newton-cg', 'l-bfgs-b', 'tnc', 'cobyla', 'slsqp', 
+                  'trust-constr', 'dogleg', 'trust-ncg', 'trust-exact', 'trust-krylov', 'vgd', 'newton', 
+                  'rmsprop', 'natural_grad_descent', 'spsa', 'icans', 'cans', 'pennylane_adagrad', 'pennylane_adam', 
+                  'pennylane_vgd', 'pennylane_momentum', 'pennylane_nesterov_momentum',
+                  'pennylane_rmsprop', 'pennylane_rotosolve', 'pennylane_spsa']
             maxiter : Optional[int]
                 Maximum number of iterations.
             maxfev : Optional[int]
