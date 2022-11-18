@@ -193,9 +193,15 @@ def derivative(backend_obj: QAOABaseBackend,
 
     return out
 
-def grad_w_variance_fd(backend_obj, params, gradient_options, logger):
+    """
+    returns a callable function that Computes the gradient and its variance for the i-th parameter using finite difference.
+    Or the gradient and its variance using spsa.
+    """    
 
-    # Set default value of eta
+        """
+        Computes the gradient and its variance for the i-th parameter using finite difference.
+        Or the gradient and its variance using spsa.
+        """
     eta = gradient_options['stepsize']
     fun = update_and_get_counts(backend_obj, params, logger)
     hamiltonian = backend_obj.circuit_params.cost_hamiltonian
@@ -220,7 +226,48 @@ def grad_w_variance_fd(backend_obj, params, gradient_options, logger):
         # return average and variance for the gradient for this argument
         return np.array([np.mean(grad_list), np.var(grad_list)])
         
-    def grad_fd_func(args, n_shots=None):
+    """
+    Returns a callable function that calculates the gradient and its variance with the method specified.
+
+    PARAMETERS
+    ----------
+    backend_obj : `QAOABaseBackend`
+        backend object that computes expectation values when executed. 
+    params : `QAOAVariationalBaseParams`
+        parameters of the variational circuit.
+    gradient_options : `dict`
+        stepsize : 
+            Stepsize of finite difference.
+    logger : `Logger`
+        logger object to log the number of function evaluations.
+    method : `str`
+        Method to compute the gradient. Currently only 'finite_difference' and 'grad_spsa' are supported.
+
+    RETURNS
+    -------
+    grad_func: `Callable`
+        Callable derivative function.
+    """
+
+        """
+        Computes the gradient and its variance for the given parameters.
+
+        PARAMETERS
+        ----------
+        args : `list`
+            List of parameters.
+        n_shots : `int` or `List[int]`
+            Number of shots to use for the finite difference method. If None, the number of shots specified in the backend object is used.
+            If a list is given, each item of the list is used for the corresponding parameter.
+
+        RETURNS
+        -------
+        grad : `np.array`
+            Gradient of the cost function.
+        grad_var : `np.array`
+            Variance of the gradient of the cost function.
+        """
+
 
         # if n_shots is int or None create a list with len of args 
         if n_shots == None or isinstance(n_shots, int):
@@ -249,10 +296,13 @@ def grad_fd(backend_obj, params, gradient_options, logger):
     ----------
     backend_obj : `QAOABaseBackend`
         backend object that computes expectation values when executed. 
-
+    params : `QAOAVariationalBaseParams`
+        parameters of the variational circuit.
     gradient_options : `dict`
         stepsize : 
             Stepsize of finite difference.
+    logger : `Logger`
+        logger object to log the number of function evaluations.
 
     RETURNS
     -------
@@ -290,12 +340,12 @@ def grad_ps(backend_obj, params, params_ext, logger):
     ----------
     backend_obj : `QAOABaseBackend`
         backend object that computes expectation values when executed. 
-
     params : `QAOAVariationalStandardParams`
         variational parameters object, standard parametrisation.
-
     params_ext : `QAOAVariationalExtendedParams`
         variational parameters object, extended parametrisation.
+    logger : `Logger`
+        logger object to log the number of function evaluations.
 
     RETURNS
     -------
@@ -355,13 +405,10 @@ def grad_sps(backend_obj, params_std, params_ext, gradient_options, logger):
     ----------
     backend_obj : `QAOABaseBackend`
         backend object that computes expectation values when executed. 
-
     params_std : `QAOAVariationalStandardParams`
         variational parameters object, standard parametrisation.
-
     params_ext : `QAOAVariationalExtendedParams`
         variational parameters object, extended parametrisation.
-
     gradient_options :
         n_beta_single : 
             Number of single-qubit mixer gates to sample for the stochastic parameter shift.
@@ -371,6 +418,8 @@ def grad_sps(backend_obj, params_std, params_ext, gradient_options, logger):
             Number of two-qubit cost gates to sample for the stochastic parameter shift.
         n_gamma_single : 
             Number of single-qubit cost gates to sample for the stochastic parameter shift.
+    logger : `Logger`
+        logger object to log the number of function evaluations.
 
     RETURNS
     -------
@@ -461,13 +510,13 @@ def hessian_fd(backend_obj, params, hessian_options, logger):
     ----------
     backend_obj : `QAOABaseBackend`
         backend object that computes expectation values when executed.
-
     params : `QAOAVariationalBaseParams`
         variational parameters object.
-
     hessian_options :
         hessian_stepsize : 
             stepsize of finite difference.
+    logger : `Logger`
+        logger object to log the number of function evaluations.
 
     RETURNS
     -------
@@ -511,13 +560,13 @@ def grad_spsa(backend_obj, params, gradient_options, logger):
     ----------
     backend_obj : `QAOABaseBackend`
         backend object that computes expectation values when executed. 
-
     params : `QAOAVariationalBaseParams`
         variational parameters object.
-
     gradient_options : `dict`
         gradient_stepsize : 
             stepsize of stochastic shift.
+    logger : `Logger`
+        logger object to log the number of function evaluations.
 
     RETURNS
     -------
