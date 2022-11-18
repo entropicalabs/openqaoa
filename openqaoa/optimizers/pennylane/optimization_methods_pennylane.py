@@ -19,7 +19,6 @@ Optimisers requiring a pennylane backend haven't been implemented yet.
 Similarly as with the custom optimization methods Scipy `minimize` is used. Extends available scipy methods.
 """
 
-from openqaoa.optimizers.pennylane.pennylane_optimizers.gradient_descent import GradientDescentOptimizer
 from openqaoa.optimizers import pennylane as pl
 import inspect
 from scipy.optimize import OptimizeResult
