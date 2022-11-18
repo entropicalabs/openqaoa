@@ -85,10 +85,10 @@ class DeviceQiskit(DeviceBase):
         qpu and provider is established.
     """
 
-    def __init__(self, device_name: str):
+    def __init__(self, device_name: str, hub: str = None, group: str = None, 
+                 project: str = None):
         """The user's IBMQ account has to be authenticated through qiskit in 
-        order to use this backend. This can be done through `IBMQ.enable_account` 
-        or `IBMQ.save_account`.
+        order to use this backend. This can be done through `IBMQ.save_account`.
         
         See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq
 
@@ -100,6 +100,9 @@ class DeviceQiskit(DeviceBase):
 
         self.device_name = device_name
         self.device_location = 'ibmq'
+        self.hub = hub
+        self.group = group
+        self.project = project
 
         self.provider_connected = None
         self.qpu_connected = None
@@ -160,6 +163,8 @@ class DeviceQiskit(DeviceBase):
 
         try:
             self.provider = IBMQ.load_account()
+            if any([self.hub, self.group, self.project]):
+                self.provider = IBMQ.get_provider(hub=self.hub, group=self.group, project=self.project)
             return True
         except Exception as e:
             print('An Exception has occured when trying to connect with the provider. Please note that you are required to set up your IBMQ account locally first.: {}'.format(e))
@@ -375,6 +380,9 @@ class DeviceAWS(DeviceBase):
 
 
 def device_class_arg_mapper(device_class:DeviceBase,
+                            hub: str = None,
+                            group: str = None,
+                            project: str = None,
                             as_qvm: bool = None,
                             noisy: bool = None,
                             compiler_timeout: float = None,
@@ -386,7 +394,7 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             s3_bucket_name:str = None, 
                             aws_region: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
-        DeviceQiskit: {},
+        DeviceQiskit: {'hub': hub, 'group': group, 'project': project},
 
         DevicePyquil: {'as_qvm': as_qvm,
                         'noisy': noisy,

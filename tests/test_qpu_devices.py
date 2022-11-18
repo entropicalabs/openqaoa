@@ -16,8 +16,10 @@ import unittest
 import json
 import os
 import pytest
+import itertools
 
 from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS, SUPPORTED_LOCAL_SIMULATORS
+from qiskit import IBMQ
 
 
 class TestingDeviceQiskit(unittest.TestCase):
@@ -43,45 +45,47 @@ class TestingDeviceQiskit(unittest.TestCase):
             json_obj = json.load(f)['QISKIT']
             
             try:
-                self.API_TOKEN = os.environ['IBMQ_TOKEN']
+                api_token = os.environ['IBMQ_TOKEN']
                 self.HUB = os.environ['IBMQ_HUB']
                 self.GROUP = os.environ['IBMQ_GROUP']
                 self.PROJECT = os.environ['IBMQ_PROJECT']
             except Exception:
-                self.API_TOKEN = json_obj['API_TOKEN']
-                self.HUB = json_obj['HUB']
-                self.GROUP = json_obj['GROUP']
-                self.PROJECT = json_obj['PROJECT']
+                api_token = json_obj['API_TOKEN']
+                self.HUB = 'ibm-q'
+                self.GROUP = 'open'
+                self.PROJECT = 'main'
 
-        if self.API_TOKEN == "YOUR_API_TOKEN_HERE":
+        if api_token == "YOUR_API_TOKEN_HERE":
             raise ValueError(
                 "Please provide an appropriate API TOKEN in crendentials.json.")
-        elif self.HUB == "IBMQ_HUB":
-            raise ValueError(
-                "Please provide an appropriate IBM HUB name in crendentials.json.")
-        elif self.GROUP == "IBMQ_GROUP":
-            raise ValueError(
-                "Please provide an appropriate IBMQ GROUP name in crendentials.json.")
-        elif self.PROJECT == "IBMQ_PROJECT":
-            raise ValueError(
-                "Please provide an appropriate IBMQ Project name in crendentials.json.")
+
+        IBMQ.save_account(token = api_token, overwrite=True)
     
     @pytest.mark.api
-    def test_check_connection_provider_no_backend_wrong_credentials(self):
+    def test_check_connection_provider_no_backend_wrong_hub_group_project(self):
         
         """
-        If no information provided, check_connection should return False.
+        If the wrong hub, group or project is specified, check_connection should 
+        return False.
         The provider_connected attribute should be updated to False.
+        Since the API Token is loaded from save_account, the api token will be
+        checked by Qiskit.
         """
-
-        device_obj = DeviceQiskit(device_name='', 
-                                  api_token='', 
-                                  hub='', group='',
-                                  project='')
-
-        self.assertEqual(device_obj.check_connection(), False)
-        self.assertEqual(device_obj.provider_connected, False)
-        self.assertEqual(device_obj.qpu_connected, None)
+        
+        for each_combi in itertools.product(['invalid_hub', None], 
+                                            ['invalid_group', None], 
+                                            ['invalid_project', None]):
+            
+            if each_combi != (None, None, None):
+                
+                device_obj = DeviceQiskit(device_name='',
+                                          hub=each_combi[0], 
+                                          group=each_combi[1],
+                                          project=each_combi[2])
+            
+                self.assertEqual(device_obj.check_connection(), False)
+                self.assertEqual(device_obj.provider_connected, False)
+                self.assertEqual(device_obj.qpu_connected, None)
 
     @pytest.mark.api
     def test_check_connection_provider_no_backend_provided_credentials(self):
@@ -92,8 +96,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         The provider_connected attribute should be updated to True.
         """
 
-        device_obj = DeviceQiskit(device_name='', 
-                                  api_token=self.API_TOKEN,
+        device_obj = DeviceQiskit(device_name='',
                                   hub=self.HUB, group=self.GROUP,
                                   project=self.PROJECT)
 
@@ -112,7 +115,6 @@ class TestingDeviceQiskit(unittest.TestCase):
         """
 
         device_obj = DeviceQiskit(device_name='', 
-                                  api_token=self.API_TOKEN,
                                   hub=self.HUB, group=self.GROUP,
                                   project=self.PROJECT)
 
@@ -120,7 +122,6 @@ class TestingDeviceQiskit(unittest.TestCase):
         valid_qpu_name = device_obj.available_qpus[0]
 
         device_obj = DeviceQiskit(device_name=valid_qpu_name, 
-                                  api_token=self.API_TOKEN, 
                                   hub=self.HUB, group=self.GROUP,
                                   project=self.PROJECT)
 
@@ -139,7 +140,6 @@ class TestingDeviceQiskit(unittest.TestCase):
         """
 
         device_obj = DeviceQiskit(device_name='random_invalid_backend', 
-                                  api_token=self.API_TOKEN,
                                   hub=self.HUB, group=self.GROUP,
                                   project=self.PROJECT)
 
