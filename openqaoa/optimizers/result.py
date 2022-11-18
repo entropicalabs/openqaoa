@@ -326,7 +326,7 @@ class Result:
 
         Returns
         -------
-        str or dict
+        str
         """
 
         return json.dumps(convert2serialize_complex(self), indent=indent)

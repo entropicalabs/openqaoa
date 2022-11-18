@@ -103,7 +103,7 @@ class RQAOAResults(dict):
 
         Returns
         -------
-        str or dict
+        str
         """
 
         return json.dumps(convert2serialize_complex(self.__full_dict()), indent=indent)
