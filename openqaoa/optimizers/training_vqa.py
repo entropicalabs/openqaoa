@@ -324,36 +324,14 @@ class ScipyOptimizer(OptimizeVQA):
         Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
-        jac: 
-            gradient as `Callable` if defined. else None
-
-        hess: 
-            hessian as `Callable` if defined. else None
-
-        * bounds
-        
-            * parameter bounds while training, defaults to ``None``
-
-        * constraints
-        
-            * Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
-
-        * tol
-        
-            * Tolerance for termination
-
-        * maxiters
-        
-            * sets ``maxiters = 100`` by default if not specified.
-            
-        * maxfev
-        
-            * sets ``maxfev = 100`` by default if not specified.
-            
-        * optimizer_options
-        
-            * Dictionary of optimiser-specific arguments, defaults to ``None``
-
+        * 'jac': gradient as ``Callable``, if defined else ``None``
+        * 'hess': hessian as ``Callable``, if defined else ``None``
+        * 'bounds': parameter bounds while training, defaults to ``None``
+        * 'constraints': Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
+        * 'tol': Tolerance for termination
+        * 'maxiter': sets ``maxiters = 100`` by default if not specified.            
+        * 'maxfev': sets ``maxfev = 100`` by default if not specified.
+        * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``
     """
     GRADIENT_FREE = ['cobyla', 'nelder-mead', 'powell', 'slsqp']
     SCIPY_METHODS = MINIMIZE_METHODS
@@ -493,37 +471,14 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
-        * jac
-        
-            * gradient as ``Callable``, if defined else ``None``
-
-        * hess
-        
-            * hessian as ``Callable``, if defined else ``None``
-
-        * bounds
-        
-            * parameter bounds while training, defaults to ``None``
-
-        * constraints
-        
-            * Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
-
-        * tol
-        
-            * Tolerance for termination
-
-        * maxiters
-        
-            * sets ``maxiters = 100`` by default if not specified.
-            
-        * maxfev
-        
-            * sets ``maxfev = 100`` by default if not specified.
-            
-        * optimizer_options
-        
-            * Dictionary of optimiser-specific arguments, defaults to ``None``
+        * 'jac': gradient as ``Callable``, if defined else ``None``
+        * 'hess': hessian as ``Callable``, if defined else ``None``
+        * 'bounds': parameter bounds while training, defaults to ``None``
+        * 'constraints': Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
+        * 'tol': Tolerance for termination
+        * 'maxiter': sets ``maxiters = 100`` by default if not specified.            
+        * 'maxfev': sets ``maxfev = 100`` by default if not specified.
+        * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
     CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
@@ -615,7 +570,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         Returns
         -------
         : 
-            The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
+            Returns self after the optimization process is completed. The optimized result is assigned to the attribute ``opt_result``
         '''
 
         if self.method == 'vgd':
@@ -668,38 +623,14 @@ class PennyLaneOptimizer(OptimizeVQA):
         Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
-        * jac
-        
-            * gradient as ``Callable``, if defined else ``None``
-
-        * hess
-        
-            * hessian as ``Callable``, if defined else ``None``
-
-        * bounds
-        
-            * parameter bounds while training, defaults to ``None``
-
-        * constraints
-        
-            * Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
-
-        * tol
-        
-            * Tolerance for termination
-
-        * maxiters
-        
-            * sets ``maxiters = 100`` by default if not specified.
-            
-        * maxfev
-        
-            * sets ``maxfev = 100`` by default if not specified.
-            
-        * optimizer_options
-        
-            * Dictionary of optimiser-specific arguments, defaults to ``None``
-            * Used also for the pennylande optimizers (and step function) arguments
+        * 'jac': gradient as ``Callable``, if defined else ``None``
+        * 'hess': hessian as ``Callable``, if defined else ``None``
+        * 'bounds': parameter bounds while training, defaults to ``None``
+        * 'constraints': Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
+        * 'tol': Tolerance for termination
+        * 'maxiter': sets ``maxiters = 100`` by default if not specified.            
+        * 'maxfev': sets ``maxfev = 100`` by default if not specified.
+        * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``. Used also for the pennylande optimizers (and step function) arguments.
 
     """
     PENNYLANE_OPTIMIZERS = ['pennylane_adagrad', 'pennylane_adam', 'pennylane_vgd', 
@@ -778,7 +709,7 @@ class PennyLaneOptimizer(OptimizeVQA):
         Returns
         -------
         : 
-            The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
+            Returns self after the optimization process is completed. The optimized result is assigned to the attribute ``opt_result``
         '''
 
         #set the optimizer function
