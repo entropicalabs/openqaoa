@@ -29,6 +29,9 @@ def convert2serialize(obj):
         return obj
 
 def convert2serialize_complex(obj):
+    """
+    Converts object to dictinary with complex numbers converted to strings, so the result can be serialized to JSON.
+    """
     if isinstance(obj, dict):
         return {k: convert2serialize_complex(v) for k, v in obj.items() if v is not None}
     elif hasattr(obj, "_ast"):
