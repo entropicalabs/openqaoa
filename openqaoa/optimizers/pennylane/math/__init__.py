@@ -11,6 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# # NOTICE #
+# Lines modified by Entropica Labs will bear the comment # changed from the original PennyLane code
+
 """
 This package contains unified functions for framework-agnostic tensor and array
 manipulation. Given the input tensor-like object, the call is dispatched
@@ -26,11 +30,8 @@ differentiation to be preserved.
 The following frameworks are currently supported:
 
 * NumPy
-* Autograd
-* TensorFlow
-* PyTorch
-* JAX
-"""
+""" # changed from the original PennyLane code
+
 import autoray as ar
 
 from .multi_dispatch import (

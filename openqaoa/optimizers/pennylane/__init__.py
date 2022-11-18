@@ -13,13 +13,9 @@
 #   limitations under the License.
 
 """
-Optimizer directory for the classical optimization loop for QAOA 
-
-Currently supports:
-	ScipyOptimizers (both gradient-free and gradient-based)
+PennyLane optimizers directory for the classical optimization loop for QAOA 
 """
 
-# from .optimization_methods_pennylane import *
 from .pennylane_optimizers.adagrad import *
 from .pennylane_optimizers.adam import *
 from .pennylane_optimizers.gradient_descent import *

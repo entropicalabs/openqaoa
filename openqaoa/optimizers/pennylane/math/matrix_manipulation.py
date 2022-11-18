@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Some lines of code have been modified from the original PennyLane source code
+# NOTICE #
+# Lines modified by Entropica Labs will bear the comment # changed from the original PennyLane code
 
 """This module contains methods to expand the matrix representation of an operator
 to a higher hilbert space with re-ordered wires."""

@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Some lines of code have been modified from the original PennyLane source code
+# NOTICE #
+# Lines modified by Entropica Labs will bear the comment # changed from the original PennyLane code
 
 """Rotosolve gradient free optimizer"""
 # pylint: disable=too-many-branches,cell-var-from-loop
