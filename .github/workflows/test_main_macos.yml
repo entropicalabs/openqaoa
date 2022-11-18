@@ -1,0 +1,106 @@
+name: test_macos
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.8','3.9',3.10']
+        forest-sdk-version: [2.23.0]
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{github.event.pull_request.head.sha}}
+      #python setup
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: $${{matrix.python}}
+
+      - name: Install OpenQAOA
+        run: | 
+          python -m pip install --user virtualenv
+          python -m venv env
+          source env/bin/activate
+          python -m pip install --upgrade pip
+          pip install .[tests]
+          pip install ipykernel
+
+      - name: Install forest on macos 
+        if: ${{maxtrix.os == 'macos-latest'}}
+        run: |
+          find /user/lib -name "libffi.so*"
+          curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
+          echo "Installing Forest SDK on MacOS"
+          hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
+          sudo installer -pkg /Volumes/ForestSDK/*.pkg -target /
+          sudo hdiutil detach /Volumes/ForestSDK/
+
+          qvm --version
+          quilc --version
+
+          echo "Starting qvm and quilc"
+          screen -d -m qvm -S
+          screen -d -m quilc -S
+          cd ..
+
+      - name: Run tests
+        run: |
+          source env/bin/activate
+          ipython kernel install --user --name "env"
+          python -m pytest -v -m 'not (qpu or api)'
+
+      - name: Upload coverage reports to Codecov with Github Action
+        uses: codecov/codecov-action@v3
+        with: 
+          token: ${{secrets.CODECOV_TOKEN}}
+          files: ./coverage.xml
+  docs: 
+    runs-on: macos-latest
+    steps: 
+      - name: Checkout openqaoa
+        uses: actions/checkout@v3
+        with:
+          ref: ${{github.even.pull_request.head.sha}}
+      - name: Setup python
+        uses: actions/setup-python@v3
+        with: 
+          python-version: 3.8
+      
+      - name: Install OpenQAOA
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[docs]
+
+      - name: Install forest on macos 
+        if: ${{maxtrix.os == 'macos-latest'}}
+        run: |
+          find /user/lib -name "libffi.so*"
+          curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
+          echo "Installing Forest SDK on MacOS"
+          hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
+          sudo installer -pkg /Volumes/ForestSDK/*.pkg -target /
+          sudo hdiutil detach /Volumes/ForestSDK/
+
+          qvm --version
+          quilc --version
+
+          echo "Starting qvm and quilc"
+          screen -d -m qvm -S
+          screen -d -m quilc -S
+          cd ..
+
+      - name: Build and test sphinx docs
+        run: |
+          curl https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-macOS.pkg -o pandoc-2.19.2-macOS.pkg
+          sudo installer -pkg pandoc-2.19.2-macOS.pkg -target /
+          cd docs/
+          make html
