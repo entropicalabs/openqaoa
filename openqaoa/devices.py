@@ -96,6 +96,13 @@ class DeviceQiskit(DeviceBase):
         ----------
 		device_name: `str`
 			The name of the IBMQ device to be used
+        hub: `str`
+            Valid IBMQ hub name.
+        group: `str`
+            Valid IBMQ group name. 
+        project: `str`
+            The name of the project for which the experimental data will be 
+            saved in on IBMQ's end.
         """
 
         self.device_name = device_name
