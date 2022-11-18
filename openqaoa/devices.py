@@ -16,8 +16,6 @@ import abc
 import numpy as np
 from typing import Optional
 from qiskit import IBMQ
-from qiskit.providers.ibmq import IBMQAccountError
-from qiskit.providers.ibmq.api.exceptions import RequestsApiError
 
 from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
@@ -87,17 +85,17 @@ class DeviceQiskit(DeviceBase):
         qpu and provider is established.
     """
 
-    def __init__(self, device_name: str, api_token: str,
-				 hub: str, group: str, project: str):
-        """A majority of the input parameters required for this can be found in
-        the user's IBMQ Experience account.
+    def __init__(self, device_name: str, hub: str = None, group: str = None, 
+                 project: str = None):
+        """The user's IBMQ account has to be authenticated through qiskit in 
+        order to use this backend. This can be done through `IBMQ.save_account`.
+        
+        See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq
 
         Parameters
         ----------
 		device_name: `str`
 			The name of the IBMQ device to be used
-        api_token: `str`
-            Valid IBMQ Experience Token.
         hub: `str`
             Valid IBMQ hub name.
         group: `str`
@@ -107,12 +105,11 @@ class DeviceQiskit(DeviceBase):
             saved in on IBMQ's end.
         """
 
-        self.api_token = api_token
+        self.device_name = device_name
+        self.device_location = 'ibmq'
         self.hub = hub
         self.group = group
         self.project = project
-        self.device_name = device_name
-        self.device_location = 'ibmq'
 
         self.provider_connected = None
         self.qpu_connected = None
@@ -172,27 +169,12 @@ class DeviceQiskit(DeviceBase):
         """
 
         try:
-            if IBMQ.active_account() is None:
-                self.provider = IBMQ.enable_account(self.api_token, hub=self.hub,
-                                                    group=self.group,
-                                                    project=self.project)
-            elif IBMQ.active_account()['token'] != self.api_token:
-                IBMQ.disable_account()
-                self.provider = IBMQ.enable_account(self.api_token, hub=self.hub,
-                                                    group=self.group,
-                                                    project=self.project)
-            else:
-                self.provider = IBMQ.get_provider(hub=self.hub, group=self.group,
-                                                  project=self.project)
-
+            self.provider = IBMQ.load_account()
+            if any([self.hub, self.group, self.project]):
+                self.provider = IBMQ.get_provider(hub=self.hub, group=self.group, project=self.project)
             return True
-        
-        except RequestsApiError as e:
-            print('The api key used was invalid: {}'.format(e))
-            return False
-        
         except Exception as e:
-            print('An Exception has occured when trying to connect with the provider: {}'.format(e))
+            print('An Exception has occured when trying to connect with the provider. Please note that you are required to set up your IBMQ account locally first. See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq for how to save your IBMQ account locally: {}'.format(e))
             return False
 
 
@@ -405,7 +387,6 @@ class DeviceAWS(DeviceBase):
 
 
 def device_class_arg_mapper(device_class:DeviceBase,
-                            api_token: str = None,
                             hub: str = None,
                             group: str = None,
                             project: str = None,
@@ -416,15 +397,11 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             client_configuration: QCSClientConfiguration = None,
                             endpoint_id: str = None,
                             engagement_manager: EngagementManager = None,
-                            device_name: str = None,
                             folder_name: str = None, 
                             s3_bucket_name:str = None, 
                             aws_region: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
-        DeviceQiskit: {'api_token': api_token,
-                        'hub': hub,
-                        'group': group,
-                        'project': project},
+        DeviceQiskit: {'hub': hub, 'group': group, 'project': project},
 
         DevicePyquil: {'as_qvm': as_qvm,
                         'noisy': noisy,
@@ -434,8 +411,7 @@ def device_class_arg_mapper(device_class:DeviceBase,
                         'endpoint_id': endpoint_id,
                         'engagement_manager': engagement_manager},
         
-        DeviceAWS: {'device_name': device_name,
-                    's3_bucket_name': s3_bucket_name,
+        DeviceAWS: {'s3_bucket_name': s3_bucket_name,
                     'aws_region': aws_region,
                     'folder_name': folder_name}
     }

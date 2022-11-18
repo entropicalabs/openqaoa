@@ -91,8 +91,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         q.set_device(create_device('ibmq', 
                                 name='place_holder',
-                                **{"api_token": "**",
-                                "hub": "***", 
+                                **{"hub": "***", 
                                 "group": "***", 
                                 "project": "***"}))
         assert type(q.device) == DeviceQiskit
