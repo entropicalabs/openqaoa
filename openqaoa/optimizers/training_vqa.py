@@ -145,6 +145,11 @@ class OptimizeVQA(ABC):
                            {
                                'history_update_bool': True,
                                'best_update_string': 'Replace'
+                           }, 
+                           'n_shots':
+                           {
+                               'history_update_bool': True,
+                               'best_update_string': 'Replace'
                            }
                           }, 
                           {

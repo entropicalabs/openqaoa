@@ -105,6 +105,9 @@ class Result:
     #     string += "\tThe associated cost is: " + str(self.optimized['optimized cost']) + "\n"
 
     #     return (string)
+    
+        self.log = log
+
 
     @staticmethod
     def get_counts(measurement_outcomes):
