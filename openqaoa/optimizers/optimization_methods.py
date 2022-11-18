@@ -66,7 +66,6 @@ def grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
     testx = np.copy(bestx)
     testy = np.real(fun(testx, *args))
     while improved and not stop and niter < maxiter:
-        t0 = time.time()
         improved = False
         niter += 1
         
@@ -87,8 +86,6 @@ def grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
         if maxfev is not None and funcalls >= maxfev:
             stop = True
             break
-
-        print('Iteration: ', niter, 'Time: ', time.time()-t0)
 
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))
@@ -439,7 +436,7 @@ def stochastic_grad_descent(fun, x0, jac, args=(), stepsize=0.001, mass=0.9, sta
 
 
 
-def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=None, n_shots_total_max = None, 
+def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=None, n_shots_total_budget = None, 
             mu=0.99, b=1e-06, coeffs=None, maxiter=100, tol=10**(-6), jac_w_variance=None, callback=None, **options): 
 
     # check that the stepsize is small enough
@@ -461,13 +458,19 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
 
     testx = np.copy(bestx)
     testy = besty
+
+
+    # TODO: delete this
+    n_shots_list = []
+
+
     while improved and not stop and niter < maxiter:
-        t0 = time.time()
-        
-        print('a',n_shots,testy)
 
         # compute gradient and variance
         gradient, variance = jac_w_variance(testx, n_shots=n_shots)
+
+        # TODO: delete this
+        n_shots_list.append(n_shots)
 
         # add the number of shots to the total
         n_shots_total += 2*n_shots*testx.size
@@ -501,20 +504,20 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
             break
 
         # if there is a maximum number of shots, check if the remaining shots are enough for next step, otherwise stop
-        if n_shots_total_max != None:
-            if n_shots_total_max - n_shots_total < 2*n_shots*testx.size:
+        if n_shots_total_budget != None:
+            if n_shots_total_budget - n_shots_total < 2*n_shots*testx.size:
                 stop = True
                 break
 
         niter += 1
-        print('iter',niter,'time',time.time()-t0)
 
+    print('n shots list', np.array(n_shots_list))
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))
 
 
-def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, n_shots_total_max=None, 
-            mu=0.99, b=1e-06, coeffs=None, maxiter=100, tol=10**(-6), jac_w_variance=None,callback=None, **options): 
+def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, n_shots_total_budget=None, 
+            mu=0.99, b=1e-06, coeffs=None, maxiter=100, tol=10**(-6), jac_w_variance=None, callback=None, **options): 
 
     # check that the stepsize is small enough
     lipschitz = np.sum(np.abs(coeffs)) 
@@ -536,14 +539,19 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
 
     testx = np.copy(bestx)
     testy = besty
-    while improved and not stop and niter < maxiter:
 
-        t0 = time.time()
-        
-        print('a',n_shots,testy)
+    
+    # TODO : delete this
+    n_shots_list = []
+
+
+    while improved and not stop and niter < maxiter:
 
         # compute gradient and variance
         gradient, variance = jac_w_variance(testx, n_shots=list(n_shots))
+
+        # TODO : delete this
+        n_shots_list.append(n_shots)
         
         # add the number of shots to the total
         n_shots_total += 2 * np.sum(n_shots, dtype=int)
@@ -584,13 +592,14 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
             break
 
         # if there is a maximum number of shots, check if the remaining shots are enough for next step, otherwise stop
-        if n_shots_total_max != None:
-            if n_shots_total_max - n_shots_total < 2*np.sum(n_shots):
+        if n_shots_total_budget != None:
+            if n_shots_total_budget - n_shots_total < 2*np.sum(n_shots):
                 stop = True
                 break
 
         niter += 1
-        print('iter',niter,'time',time.time()-t0)
 
+    
+    print('n shots list', np.array(n_shots_list))
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))

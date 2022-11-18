@@ -181,9 +181,8 @@ def derivative(backend_obj: QAOABaseBackend,
 
     elif derivative_type == 'gradient_w_variance':
 
-        #TODO: complete
-
-        out = grad_w_variance_fd(backend_obj, params, derivative_options, logger)
+        #TODO: complete this
+        out = grad_w_variance(backend_obj, params, derivative_options, logger, derivative_method)
 
     elif derivative_type == 'hessian':
 
@@ -194,39 +193,57 @@ def derivative(backend_obj: QAOABaseBackend,
 
     return out
 
+def __grad_variance_n_shots(args, backend_obj, params, gradient_options, logger, method='finite_difference'):
     """
     returns a callable function that Computes the gradient and its variance for the i-th parameter using finite difference.
     Or the gradient and its variance using spsa.
     """    
 
+    def fun(i=0, n_shots=None):
         """
         Computes the gradient and its variance for the i-th parameter using finite difference.
         Or the gradient and its variance using spsa.
         """
-    eta = gradient_options['stepsize']
-    fun = update_and_get_counts(backend_obj, params, logger)
-    hamiltonian = backend_obj.circuit_params.cost_hamiltonian
-    alpha = backend_obj.cvar_alpha
 
-    def _grad_variance_n_shots(args, i, n_shots):
-    
-        vect_eta = np.zeros(len(args))
-        vect_eta[i] = 1
+        # get value of eta, the function to get counts, hamiltonian, and alpha
+        eta = gradient_options['stepsize']
+        fun = update_and_get_counts(backend_obj, params, logger)
+        hamiltonian = backend_obj.circuit_params.cost_hamiltonian
+        alpha = backend_obj.cvar_alpha
+        
+        if method in ['finite_difference']:
+            # vector of zeros with length equal to the number of parameters, and 1 at the i-th position
+            vect_eta = np.zeros(len(args))
+            vect_eta[i] = 1
+        elif method in ['grad_spsa']:
+            # vector of random numbers (1 or -1) with length equal to the number of parameters
+            vect_eta = np.random.choice([-1, 1], size=len(args))
 
-        # get counts for f(x+eta/2) and f(x-eta/2)
+        # get counts f(x+eta/2) and f(x-eta/2)
         counts_i_dict = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
         counts_f_dict = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
 
-        # for each count compute the cost and create a list of shot costs
-        eval_i_list = [cost_function({key: 1}, hamiltonian, alpha) for key, value in counts_i_dict.items() for _ in range(value)]
-        eval_f_list = [cost_function({key: 1}, hamiltonian, alpha) for key, value in counts_f_dict.items() for _ in range(value)]
+        #compute cost for each state in the counts dictionary
+        costs_dict = {key: cost_function({key: 1}, hamiltonian, alpha) for key in counts_i_dict.keys() | counts_f_dict.keys()}
+
+        # for each count get the cost and create a list of shot costs
+        eval_i_list = [costs_dict[key] for key, value in counts_i_dict.items() for _ in range(value)]
+        eval_f_list = [costs_dict[key] for key, value in counts_f_dict.items() for _ in range(value)]
 
         # compute a list of gradients of one shot cost
-        grad_list =  (np.array(eval_f_list) - np.array(eval_i_list))/eta
+        grad_list =  np.real((np.array(eval_f_list) - np.array(eval_i_list))/eta)
 
+        if method in ['grad_spsa']:
+            # return average and variance for the gradient for the arguments
+            return np.array([np.mean(grad_list)/vect_eta, np.var(grad_list)/np.abs(vect_eta)])
+        
         # return average and variance for the gradient for this argument
         return np.array([np.mean(grad_list), np.var(grad_list)])
+
+    return fun
         
+
+def grad_w_variance(backend_obj, params, gradient_options, logger, method='finite_difference'):
     """
     Returns a callable function that calculates the gradient and its variance with the method specified.
 
@@ -250,6 +267,7 @@ def derivative(backend_obj: QAOABaseBackend,
         Callable derivative function.
     """
 
+    def grad_func(args, n_shots=None):
         """
         Computes the gradient and its variance for the given parameters.
 
@@ -269,24 +287,32 @@ def derivative(backend_obj: QAOABaseBackend,
             Variance of the gradient of the cost function.
         """
 
+        # function to compute gradient and its variance
+        fun_grad = __grad_variance_n_shots(args, backend_obj, params, gradient_options, logger, method) 
 
-        # if n_shots is int or None create a list with len of args 
-        if n_shots == None or isinstance(n_shots, int):
-            n_shots_list = [n_shots for _ in range(len(args))]
-        else:
-            n_shots_list = n_shots
+        if method in ['finite_difference']:
+            # if n_shots is int or None create a list with len of args 
+            if n_shots == None or isinstance(n_shots, int):
+                n_shots_list = [n_shots for _ in range(len(args))]
+            else:
+                n_shots_list = n_shots
 
-        # check if n_shots_list has the same length as args
-        if len(n_shots_list) != len(args):
-            raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
+            # check if n_shots_list has the same length as args
+            if len(n_shots_list) != len(args):
+                raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
 
-        # lists of gradients and variances for each argument
-        grad, variance = np.array([_grad_variance_n_shots(args, i, n_shots) for i, n_shots in enumerate(n_shots_list)]).T
+            # lists of gradients and variances for each argument
+            grad, variance = np.array([fun_grad(i_args, n_shots) for i_args, n_shots in enumerate(n_shots_list)]).T
 
-        # return lists
+        elif method in ['grad_spsa']:
+            # compute gradient and variance for all arguments
+            grad, variance = fun_grad(n_shots=n_shots)
+
         return grad, variance
 
-    return grad_fd_func
+    return grad_func
+
+
 
 
 def grad_fd(backend_obj, params, gradient_options, logger):
@@ -580,6 +606,6 @@ def grad_spsa(backend_obj, params, gradient_options, logger):
 
     def grad_spsa_func(args):
         delta = (2*np.random.randint(0, 2, size=len(args))-1)
-        return np.real((fun(args + c*delta) - fun(args - c*delta))*delta/(2*c))
+        return np.real((fun(args + c*delta) - fun(args - c*delta))*delta/(2*c)) 
 
     return grad_spsa_func

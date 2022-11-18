@@ -154,7 +154,7 @@ class OptimizeVQA(ABC):
                           }, 
                           {
                               'root_nodes': ['cost', 'func_evals', 'jac_func_evals', 
-                                             'qfim_func_evals'],
+                                             'qfim_func_evals','n_shots'],
                               'best_update_structure': (['cost', 'param_log'], 
                                                         ['cost', 'measurement_outcomes'], 
                                                         ['cost', 'job_ids'])
@@ -563,9 +563,10 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 "Please specify either a string or provide callable gradient in order to use gradient based methods")
         else:
             if isinstance(jac, str):
-                self.jac = derivative(self.vqa_object, self.variational_params, self.log, 'gradient', jac, jac_options)
-
-                if self.method in ['icans', 'cans']:
+                if not self.method in ['icans', 'cans']:
+                    self.jac = derivative(self.vqa_object, self.variational_params, self.log, 'gradient', jac, jac_options)
+                else:
+                    self.jac = None
                     self.jac_w_variance = derivative(self.vqa_object, self.variational_params, self.log, 'gradient_w_variance', jac, jac_options)
                 
             else:
