@@ -174,7 +174,7 @@ class DeviceQiskit(DeviceBase):
                 self.provider = IBMQ.get_provider(hub=self.hub, group=self.group, project=self.project)
             return True
         except Exception as e:
-            print('An Exception has occured when trying to connect with the provider. Please note that you are required to set up your IBMQ account locally first.: {}'.format(e))
+            print('An Exception has occured when trying to connect with the provider. Please note that you are required to set up your IBMQ account locally first. See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq for how to save your IBMQ account locally: {}'.format(e))
             return False
 
 
