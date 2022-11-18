@@ -68,7 +68,30 @@ class TestingDeviceQiskit(unittest.TestCase):
             raise ValueError(
                 "Please provide an appropriate IBMQ Project name in crendentials.json.")
 
-        IBMQ.save_account(token = api_token, overwrite=True)
+        IBMQ.save_account(token = api_token, hub=self.HUB, 
+                          group=self.GROUP, project=self.PROJECT, 
+                          overwrite=True)
+    
+    @pytest.mark.api
+    def test_changing_provider(self):
+        
+        """
+        This test checks that the specified hub,group and project in the 
+        initialisation of DeviceQiskit changes the provider to the appropriate
+        destination.
+        """
+        
+        device_obj = DeviceQiskit(device_name='ibmq_manila')
+        device_obj.check_connection()
+        
+        self.assertEqual(device_obj.provider.credentials.hub, self.HUB)
+        self.assertEqual(device_obj.provider.credentials.group, self.GROUP)
+        self.assertEqual(device_obj.provider.credentials.project, self.PROJECT)
+        
+        device_obj2 = DeviceQiskit(device_name='ibmq_manila', 
+                                   hub='ibm-q-startup')
+        device_obj2.check_connection()
+        self.assertEqual(device_obj2.provider.credentials.hub, 'ibm-q-startup')
     
     @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_hub_group_project(self):
