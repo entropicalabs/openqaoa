@@ -51,13 +51,22 @@ class TestingDeviceQiskit(unittest.TestCase):
                 self.PROJECT = os.environ['IBMQ_PROJECT']
             except Exception:
                 api_token = json_obj['API_TOKEN']
-                self.HUB = 'ibm-q'
-                self.GROUP = 'open'
-                self.PROJECT = 'main'
+                self.HUB = json_obj['HUB']
+                self.GROUP = json_obj['GROUP']
+                self.PROJECT = json_obj['PROJECT']
 
         if api_token == "YOUR_API_TOKEN_HERE":
             raise ValueError(
                 "Please provide an appropriate API TOKEN in crendentials.json.")
+        elif self.HUB == "IBMQ_HUB":
+            raise ValueError(
+                "Please provide an appropriate IBM HUB name in crendentials.json.")
+        elif self.GROUP == "IBMQ_GROUP":
+            raise ValueError(
+                "Please provide an appropriate IBMQ GROUP name in crendentials.json.")
+        elif self.PROJECT == "IBMQ_PROJECT":
+            raise ValueError(
+                "Please provide an appropriate IBMQ Project name in crendentials.json.")
 
         IBMQ.save_account(token = api_token, overwrite=True)
     
