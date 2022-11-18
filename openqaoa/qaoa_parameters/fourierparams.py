@@ -654,12 +654,12 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
             time = float(0.7 * p)
 
         n_u_singles = len(
-            qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs)
-        n_u_pairs = len(qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs)
+            qaoa_circuit_params.cost_single_qubit_coeffs)
+        n_u_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
         n_v_singles = len(
-            qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs)
+            qaoa_circuit_params.mixer_single_qubit_coeffs)
         n_v_pairs = len(
-            qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs)
+            qaoa_circuit_params.mixer_pair_qubit_coeffs)
 
         v = np.zeros(q)
         v[0] = 0.5 * time / p
@@ -687,13 +687,10 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
             np.random.seed(seed)
 
         p = qaoa_circuit_params.p
-        n_u_singles = len(
-            qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs)
-        n_u_pairs = len(qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs)
-        n_v_singles = len(
-            qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs)
-        n_v_pairs = len(
-            qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs)
+        n_u_singles = len(qaoa_circuit_params.cost_single_qubit_coeffs)
+        n_u_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
+        n_v_singles = len(qaoa_circuit_params.mixer_single_qubit_coeffs)
+        n_v_pairs = len(qaoa_circuit_params.mixer_pair_qubit_coeffs)
 
         v_singles = np.random.uniform(0, np.pi, (q, n_v_singles))
         v_pairs = np.random.uniform(0, np.pi, (q, n_v_pairs))
@@ -711,13 +708,13 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
         """
 
         v_singles = np.empty(
-            (q, len(qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs)))
+            (q, len(qaoa_circuit_params.mixer_single_qubit_coeffs)))
         v_pairs = np.empty(
-            (q, len(qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs)))
+            (q, len(qaoa_circuit_params.mixer_pair_qubit_coeffs)))
         u_singles = np.empty(
-            (q, len(qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs)))
+            (q, len(qaoa_circuit_params.cost_single_qubit_coeffs)))
         u_pairs = np.empty(
-            (q, len(qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs)))
+            (q, len(qaoa_circuit_params.cost_pair_qubit_coeffs)))
 
         return cls(qaoa_circuit_params, q,
                    v_singles, v_pairs, u_singles, u_pairs)

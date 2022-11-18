@@ -1,0 +1,13 @@
+PennyLane
+Copyright 2018-2021 Xanadu Quantum Technologies Inc.
+
+This folder contains code developed in Xanadu Quantum Technologies Inc.
+The code in folders 
+    openqaoa.optimizers.pennylane.fourier
+    openqaoa.optimizers.pennylane.math
+    openqaoa.optimizers.pennylane.numpy
+    openqaoa.optimizers.pennylane.pennylane_optimizers
+has been taken from the PennyLane library, https://github.com/PennyLaneAI/pennylane, 
+developed by Xanadu Quantum Technologies Inc.
+PennyLane is free and open source, released under the Apache License, Version 2.0.
+Some lines of code have been modified, which has been indicated in the modified files.

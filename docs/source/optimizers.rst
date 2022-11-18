@@ -21,9 +21,21 @@ SciPy Optimizers
     :show-inheritance:
     :inherited-members:
 
+.. autoclass:: openqaoa.optimizers.training_vqa.PennyLaneOptimizer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+
 Optimization Methods
 --------------------
 .. automodule:: openqaoa.optimizers.optimization_methods
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+
+.. automodule:: openqaoa.optimizers.pennylane.optimization_methods_pennylane
     :members:
     :undoc-members:
     :show-inheritance:

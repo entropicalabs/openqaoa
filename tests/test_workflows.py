@@ -26,10 +26,9 @@ from openqaoa.backends.simulators.qaoa_pyquil_sim import QAOAPyQuilWavefunctionS
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
-from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer
+from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
 import unittest
 import networkx as nw
-import pytest
 import numpy as np
 
 from openqaoa.problems.problem import MinimumVertexCover, QUBO
@@ -92,8 +91,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         q.set_device(create_device('ibmq', 
                                 name='place_holder',
-                                **{"api_token": "**",
-                                "hub": "***", 
+                                **{"hub": "***", 
                                 "group": "***", 
                                 "project": "***"}))
         assert type(q.device) == DeviceQiskit
@@ -172,6 +170,12 @@ class TestingVanillaQAOA(unittest.TestCase):
             
     def test_set_circuit_properties_circuit_params_mixer_x(self):
         
+        """
+        Checks if the X mixer created by the X_mixer_hamiltonian method and the automated methods in workflows do the same thing.
+        
+        For each qubit, there should be 1 RXGateMap per layer of p.
+        """
+        
         nodes = 6
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
@@ -188,10 +192,24 @@ class TestingVanillaQAOA(unittest.TestCase):
         mixer_hamil = X_mixer_hamiltonian(n_qubits = nodes)
 
         self.assertEqual(q.mixer_hamil.expression, mixer_hamil.expression)
-        self.assertEqual(q.circuit_params.mixer_hamiltonian.expression, 
-                         mixer_hamil.expression)
-            
+        
+        self.assertEqual(len(q.circuit_params.mixer_qubits_singles), 6)
+        self.assertEqual(len(q.circuit_params.mixer_qubits_pairs), 0)
+        for each_gatemap_name in q.circuit_params.mixer_qubits_singles:    
+            self.assertEqual(each_gatemap_name, 'RXGateMap')
+
+        for j in range(2):
+            for i in range(6):
+                self.assertEqual(q.circuit_params.mixer_block[j][i].qubit_1, i)
+
     def test_set_circuit_properties_circuit_params_mixer_xy(self):
+        
+        """
+        Checks if the XY mixer created by the XY_mixer_hamiltonian method and the automated methods in workflows do the same thing.
+        
+        Depending on the qubit connectivity selected. (chain, full or star)
+        For each pair of connected qubits, there should be 1 RXXGateMap and RYYGateMap per layer of p.
+        """
         
         g_c = nw.circulant_graph(6, [1])
         g_f = nw.complete_graph(6)
@@ -216,8 +234,11 @@ class TestingVanillaQAOA(unittest.TestCase):
             mixer_hamil = XY_mixer_hamiltonian(n_qubits = 6, qubit_connectivity = qubit_connectivity_name[i])
             
             self.assertEqual(q.mixer_hamil.expression, mixer_hamil.expression)
-            self.assertEqual(q.circuit_params.mixer_hamiltonian.expression, 
-                             mixer_hamil.expression)
+            
+            self.assertEqual(len(q.circuit_params.mixer_qubits_singles), 0)
+            for i in range(0, len(q.circuit_params.mixer_qubits_pairs), 2):
+                self.assertEqual(q.circuit_params.mixer_qubits_pairs[i], 'RXXGateMap')
+                self.assertEqual(q.circuit_params.mixer_qubits_pairs[i+1], 'RYYGateMap')
         
     def test_set_circuit_properties_variate_params(self):
         
@@ -580,6 +601,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             
             self.assertEqual(isinstance(q.optimizer, ScipyOptimizer), True)
             self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), False)
+            self.assertEqual(isinstance(q.optimizer, PennyLaneOptimizer), False)
             
         for each_method in available_optimizers()['custom_scipy_gradient']:
             q = QAOA()
@@ -589,6 +611,16 @@ class TestingVanillaQAOA(unittest.TestCase):
             
             self.assertEqual(isinstance(q.optimizer, ScipyOptimizer), False)
             self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), True)
+            self.assertEqual(isinstance(q.optimizer, PennyLaneOptimizer), False)
+            
+        for each_method in available_optimizers()['custom_scipy_pennylane']:
+            q = QAOA()
+            q.set_classical_optimizer(method = each_method, jac='grad_spsa')
+            q.compile(problem = qubo_problem)
+            
+            self.assertEqual(isinstance(q.optimizer, ScipyOptimizer), False)
+            self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), False)
+            self.assertEqual(isinstance(q.optimizer, PennyLaneOptimizer), True)
 
 class TestingRQAOA(unittest.TestCase):
     """

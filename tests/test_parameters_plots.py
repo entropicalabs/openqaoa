@@ -36,7 +36,7 @@ from openqaoa.problems.problem import MaximumCut
 # Create a hamiltonian problem on 15 qubits and create Circuit Params Class
 hamiltonian1 = MaximumCut.random_instance(n_nodes=15, edge_probability = 0.9).get_qubo_problem().hamiltonian 
 mixer_hamiltonian1 = X_mixer_hamiltonian(n_qubits = 15)
-qaoa_circuit_params1 = QAOACircuitParams(cost_hamiltonian = hamiltonian1, mixer_hamiltonian = mixer_hamiltonian1, p=4)
+qaoa_circuit_params1 = QAOACircuitParams(cost_hamiltonian = hamiltonian1, mixer_block = mixer_hamiltonian1, p=4)
 
 # Create a hamiltonian on 3 qubits with 2 coupling terms and 1 bias term and create Circuit Params Class
 Term1 = PauliOp('ZZ', (0, 1)) 
@@ -45,7 +45,7 @@ Term3 = PauliOp('Z', (0, ))
 
 hamiltonian2 = Hamiltonian([Term1, Term2, Term3], [0.7, 1.2, -0.5], 0.0)
 mixer_hamiltonian2 = X_mixer_hamiltonian(n_qubits = 3)
-qaoa_circuit_params2 = QAOACircuitParams(cost_hamiltonian = hamiltonian2, mixer_hamiltonian = mixer_hamiltonian2, p=4)
+qaoa_circuit_params2 = QAOACircuitParams(cost_hamiltonian = hamiltonian2, mixer_block = mixer_hamiltonian2, p=4)
 
 
 
