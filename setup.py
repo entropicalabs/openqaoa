@@ -20,8 +20,8 @@ requirements = [
     "qiskit>=0.36.1",
     "pyquil>=3.1.0",
     "docplex>=2.23.1",
-    "autograd~=1.4",
-    "semantic_version~=2.10",
+    "autograd>=1.4",
+    "semantic_version>=2.10",
     "autoray==0.3.1"
 ]
 
