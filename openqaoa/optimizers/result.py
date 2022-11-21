@@ -108,7 +108,7 @@ class Result:
 
     #     return (string)
     
-        self.log = log
+        self.n_shots = log.n_shots.history
 
 
     @staticmethod
@@ -254,7 +254,7 @@ class Result:
         print('states kept:', n_states_to_keep)
         return
 
-    def plot_n_shots(self, figsize = (10,8), label='x', linestyle="--", color=None, ax=None, param_to_plot=None):
+    def plot_n_shots(self, figsize = (10,8), label=None, linestyle="--", color=None, ax=None, param_to_plot=None):
         """
         Helper function to plot the number of shots for each basis state obtained from the optimized result
         """
@@ -262,15 +262,48 @@ class Result:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        if param_to_plot is None:
-            param_to_plot = self.optimized['optimized parameters']
+        # if param_to_plot is not given, plot all the parameters 
+        if param_to_plot is None: param_to_plot = list(range(len(self.n_shots[0]))) 
+        # if param_to_plot is a single value, convert to list
+        elif type(param_to_plot) == int: param_to_plot = [param_to_plot]
+        # if param_to_plot is not a list, raise error
+        if type(param_to_plot) != list: raise ValueError('param_to_plot must be a list of integers or a single integer')
+        else: 
+            for param in param_to_plot:
+                assert param < len(self.n_shots[0]) , f'param_to_plot must be a list of integers between 0 and {len(self.n_shots[0]) - 1}'
 
-        for i, list in enumerate(np.array(self.log.n_shots.history).T):
-            if i in param_to_plot:
-                if color is None:
-                    ax.plot(list, label=f'param {i}', linestyle=linestyle)
-                else:
-                    ax.plot(list, label=f'param {i}', linestyle=linestyle, color=color[i])
+        # if label is not given, create a list of labels for each parameter
+        label = [f'Parameter {i}' for i in param_to_plot] if label is None else label
+
+        # if only one parameter is given, convert label and color to list if they are string
+        if len(param_to_plot) == 1:
+            if type(label) == str: label = [label]
+            if type(color) == str: color = [color]
+
+        # if param_top_plot is a list and label or color are not lists, raise error
+        if type(label) != list and (type(color) != list or color != None):
+            raise TypeError('label and color must be list of str')
+
+        # if label and color are lists, check if they have the same length as param_to_plot
+        elif len(label) != len(param_to_plot) or (color != None and len(color) != len(param_to_plot)):
+            raise ValueError(f'param_to_plot, label and color must have the same length, param_to_plot is a list of {len(param_to_plot)} elements')
+
+        #check if linestyle is a string, if not convert to list
+        if type(linestyle) != str and type(linestyle) != list:
+            raise TypeError('linestyle must be str or list')
+        elif type(linestyle) == str:
+            linestyle = [linestyle for _ in range(len(param_to_plot))]
+        elif len(linestyle) != len(param_to_plot):
+            raise ValueError(f'linestyle must have the same length as param_to_plot (length of param_to plot is {len(param_to_plot)}), or be a string')
+            
+
+        # plot the evolution of the number of shots for each parameter that is in param_to_plot
+        transposed_n_shots = np.array(self.n_shots).T
+        for i, values in enumerate([transposed_n_shots[j] for j in param_to_plot]):
+            if color is None:
+                ax.plot(values, label=label[i], linestyle=linestyle[i])
+            else:
+                ax.plot(values, label=label[i], linestyle=linestyle[i], color=color[i])
 
         ax.set_ylabel("Number of shots")
         ax.set_xlabel("Iterations")
