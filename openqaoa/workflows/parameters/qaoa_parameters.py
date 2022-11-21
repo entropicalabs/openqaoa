@@ -22,13 +22,16 @@ import numpy
 from openqaoa.basebackend import QuantumCircuitBase
 from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
 from .parameters import Parameters
+from scipy.optimize._minimize import MINIMIZE_METHODS
+from openqaoa.optimizers.training_vqa import CustomScipyGradientOptimizer, PennyLaneOptimizer
+
 
 
 ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
                        'fourier_extended', 'fourier_w_bias', 'annealing']
 ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
 ALLOWED_MIXERS = ['x', 'xy']
-ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS
+ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS + CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS + PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
 
 ALLOWED_QVM_DEVICES = ['Aspen-11', 'Aspen-M-1']
 ALLOWED_QVM_DEVICES.extend(f'{n}q-qvm' for n in range(2, 80))

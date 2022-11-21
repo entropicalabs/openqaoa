@@ -656,6 +656,13 @@ class RQAOA(Optimizer):
         # compile qaoa object
         self._q.compile(problem, verbose=verbose)
 
+        # save the different parameters and object in the result object
+        self.results.circuit_properties  = self.circuit_properties
+        self.results.backend_properties  = self.backend_properties
+        self.results.classical_optimizer = self.classical_optimizer
+        self.results.rqaoa_parameters    = self.rqaoa_parameters
+        self.results.device              = self.device
+
         self.compiled = True
 
         return 
