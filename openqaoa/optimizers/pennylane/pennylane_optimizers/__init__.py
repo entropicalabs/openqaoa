@@ -16,12 +16,11 @@
 PennyLane optimizers directory for the classical optimization loop for QAOA 
 """
 
-from .pennylane_optimizers import *
-from . import numpy
-from . import math
-from . import fourier
-
-#empty class to be used as a placeholder for the QNode class from PennyLane
-class QNode:
-	def __init__(self):
-		pass
+from .adagrad import *
+from .adam import *
+from .gradient_descent import *
+from .momentum import *
+from .nesterov_momentum import *
+from .rms_prop import *
+from .rotosolve import *
+from .spsa import *
