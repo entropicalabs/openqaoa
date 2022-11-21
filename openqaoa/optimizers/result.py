@@ -252,6 +252,30 @@ class Result:
         print('states kept:', n_states_to_keep)
         return
 
+    def plot_n_shots(self, figsize = (10,8), label='x', linestyle="--", color=None, ax=None, param_to_plot=None):
+        """
+        Helper function to plot the number of shots for each basis state obtained from the optimized result
+        """
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if param_to_plot is None:
+            param_to_plot = self.optimized['optimized parameters']
+
+        for i, list in enumerate(np.array(self.log.n_shots.history).T):
+            if i in param_to_plot:
+                if color is None:
+                    ax.plot(list, label=f'param {i}', linestyle=linestyle)
+                else:
+                    ax.plot(list, label=f'param {i}', linestyle=linestyle, color=color[i])
+
+        ax.set_ylabel("Number of shots")
+        ax.set_xlabel("Iterations")
+        ax.legend()
+        ax.set_title("Evolution of number of shots")
+
+
 
     def lowest_cost_bitstrings(self, n_bitstrings: int = 1) -> dict:
         """

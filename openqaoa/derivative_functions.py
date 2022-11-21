@@ -98,8 +98,7 @@ def update_and_get_counts(  backend_obj: QAOABaseBackend,
         current_jac_eval = logger.jac_func_evals.best[0]
         current_jac_eval += 1
         logger.log_variables({'func_evals': current_total_eval, 
-                              'jac_func_evals': current_jac_eval,
-                              'n_shots': n_shots})
+                              'jac_func_evals': current_jac_eval})
         params.update_from_raw(args)
         
         n_shots_dict = {'n_shots':n_shots} if n_shots else {}
@@ -307,6 +306,9 @@ def grad_w_variance(backend_obj, params, gradient_options, logger, method='finit
         elif method in ['grad_spsa']:
             # compute gradient and variance for all arguments
             grad, variance = fun_grad(n_shots=n_shots)
+
+        #update number of shots       
+        logger.log_variables({'n_shots': n_shots})
 
         return grad, variance
 
