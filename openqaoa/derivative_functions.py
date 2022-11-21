@@ -222,7 +222,7 @@ def __grad_variance_n_shots(args, backend_obj, params, gradient_options, logger,
         counts_i_dict = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
         counts_f_dict = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
 
-        #compute cost for each state in the counts dictionary
+        #compute cost for each state in the counts dictionaries
         costs_dict = {key: cost_function({key: 1}, hamiltonian, alpha) for key in counts_i_dict.keys() | counts_f_dict.keys()}
 
         # for each count get the cost and create a list of shot costs
@@ -314,7 +314,108 @@ def grad_w_variance(backend_obj, params, gradient_options, logger, method='finit
 
     return grad_func
 
+def __create_n_shots_list(n_params, n_shots):
 
+    if n_shots == None or isinstance(n_shots, int):
+        n_shots_list = [n_shots for _ in range(n_params)]
+    else:
+        n_shots_list = n_shots
+
+    # check if n_shots_list has the same length as args
+    if len(n_shots_list) != n_params:
+        raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
+
+    return n_shots_list
+
+def __gradient(args, backend_obj, params, logger, variance):
+    """
+    returns a callable function that Computes the gradient and its variance for the i-th parameter using finite difference.
+    Or the gradient and its variance using spsa.
+    """    
+
+    def fun_w_variance(vect_eta, constant, n_shots=None):
+        """
+        Computes the gradient and its variance . TODO
+        """
+
+        # get value of eta, the function to get counts, hamiltonian, and alpha
+        fun = update_and_get_counts(backend_obj, params, logger)
+        hamiltonian = backend_obj.circuit_params.cost_hamiltonian
+        alpha = backend_obj.cvar_alpha
+
+        # get counts f(x+eta/2) and f(x-eta/2)
+        counts_i_dict = fun(args - vect_eta, n_shots=n_shots)
+        counts_f_dict = fun(args + vect_eta, n_shots=n_shots)
+
+        #compute cost for each state in the counts dictionaries
+        costs_dict = {key: cost_function({key: 1}, hamiltonian, alpha) for key in counts_i_dict.keys() | counts_f_dict.keys()}
+
+        # for each count get the cost and create a list of shot costs
+        eval_i_list = [costs_dict[key] for key, value in counts_i_dict.items() for _ in range(value)]
+        eval_f_list = [costs_dict[key] for key, value in counts_f_dict.items() for _ in range(value)]
+
+        # compute a list of gradients of one shot cost
+        grad_list =  np.real(constant*(np.array(eval_f_list) - np.array(eval_i_list)))
+        
+        # return average and variance for the gradient for this argument
+        return np.mean(grad_list), np.var(grad_list)
+
+    def fun(vect_eta, constant, n_shots=None):
+        """
+        Computes the gradient : TODO
+        """
+        fun = update_and_compute_expectation(backend_obj, params, logger)
+        return constant*(fun(args + vect_eta, n_shots=n_shots) - fun(args - vect_eta, n_shots=n_shots)), None
+
+    if variance:    return fun_w_variance
+    else:           return fun
+
+def grad_fd_2(backend_obj, params, gradient_options, logger, variance:bool=False):
+    """
+    Returns a callable function that calculates the gradient with the finite difference method.
+
+    PARAMETERS
+    ----------
+    backend_obj : `QAOABaseBackend`
+        backend object that computes expectation values when executed. 
+    params : `QAOAVariationalBaseParams`
+        parameters of the variational circuit.
+    gradient_options : `dict`
+        stepsize : 
+            Stepsize of finite difference.
+    logger : `Logger`
+        logger object to log the number of function evaluations.
+
+    RETURNS
+    -------
+    grad_fd_func: `Callable`
+        Callable derivative function.
+    """
+
+    # Set default value of eta
+    eta = gradient_options['stepsize']
+    __gradient_function = __gradient(backend_obj, params, logger, variance)
+
+    def grad_fd_func(args, n_shots=None):
+
+        # if n_shots is int or None create a list with len of args (if it is none, it will use the default n_shots)
+        n_shots_list = __create_n_shots_list(len(args), n_shots)
+
+        # lists of gradients and variances for each argument, initialized with zeros
+        grad, variance = np.zeros(len(args)), np.zeros(len(args))
+
+        for i in range(len(args)):
+            vect_eta = np.zeros(len(args))
+            vect_eta[i] = eta/2
+            const = 1/eta
+            
+            # Finite diff. calculation of gradient
+            grad[i], variance[i] = __gradient_function(vect_eta, const, n_shots_list[i])
+
+        if variance:  return grad, variance
+        else:         return grad
+
+    return grad_fd_func
 
 
 def grad_fd(backend_obj, params, gradient_options, logger):
