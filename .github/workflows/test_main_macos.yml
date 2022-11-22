@@ -24,22 +24,22 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{matrix.python}}
-
+ 
       - name: Install forest on macos 
         run: |
-          find /user/lib -name "libffi.so*"
-          curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-${{matrix.forest-sdk-version}}.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
+          echo $PATH
+          cd /usr/local/bin/
+          curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
           echo "Installing Forest SDK on MacOS"
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
-          sudo installer -pkg /Volumes/ForestSDK/*.pkg -target /
+          sudo cp -R /Volumes/ForestSDK/ /Applications
+          sudo installer -verbose -pkg /Applications/Forest*.pkg -target /
           sudo hdiutil detach /Volumes/ForestSDK/
-
-          qvm --version
-          quilc --version
-
           echo "Starting qvm and quilc"
-          screen -d -m qvm -S
-          screen -d -m quilc -S
+          /Applications/Forest\ SDK/bin/qvm --version
+          /Applications/Forest\ SDK/bin/quilc --version
+          screen -d -m /Applications/Forest\ SDK/bin/qvm -S
+          screen -d -m /Applications/Forest\ SDK/bin/quilc -S
           cd ..
 
       - name: Install OpenQAOA
@@ -94,6 +94,6 @@ jobs:
       - name: Build and test sphinx docs
         run: |
           curl https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-macOS.pkg -o pandoc-2.19.2-macOS.pkg
-          sudo installer -pkg pandoc-2.19.2-macOS.pkg -target /
+          sudo installer -pkg ./pandoc-2.19.2-macOS.pkg -target /
           cd docs/
           make html
