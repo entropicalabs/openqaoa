@@ -76,15 +76,14 @@ jobs:
           curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
           echo "Installing Forest SDK on MacOS"
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
+          sudo cp -R /Volumes/ForestSDK/ /Applications
           sudo installer -verbose -pkg /Volumes/ForestSDK/*.pkg -target /
           sudo hdiutil detach /Volumes/ForestSDK/
           export PATH=/usr/local/bin/qvm:$PATH
           echo $PATH
           echo "Starting qvm and quilc"
-          /usr/local/bin/qvm --version
-          /usr/local/bin/quilc --version
-          which qvm
-          which quilc
+          qvm --version
+          quilc --version
           screen -d -m qvm -S
           screen -d -m quilc -S
           cd ..
