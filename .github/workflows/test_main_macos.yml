@@ -80,7 +80,8 @@ jobs:
           ls -lah /Volumes/ForestSDK/
           sudo installer -verbose -pkg /Applications/Forest*.pkg -target /
           sudo hdiutil detach /Volumes/ForestSDK/
-          export PATH=/usr/local/bin/qvm:$PATH
+          ls /Applications/
+          export PATH=/Applications/Forest\ SDK/bin/qvm:$PATH
           echo $PATH
           echo "Starting qvm and quilc"
           qvm --version
