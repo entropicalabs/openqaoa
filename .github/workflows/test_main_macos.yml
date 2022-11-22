@@ -76,7 +76,7 @@ jobs:
           curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
           echo "Installing Forest SDK on MacOS"
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
-          sudo installer -verbose -pkg /Volumes/ForestSDK/*.pkg -target /usr/local/bin/
+          sudo installer -verbose -pkg /Volumes/ForestSDK/*.pkg -target ~
           sudo hdiutil detach /Volumes/ForestSDK/
           export PATH=/Library/Application/Forest\ SDK/bin/qvm:$PATH
           echo $PATH
