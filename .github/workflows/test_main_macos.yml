@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.8']
+        python: [3.8]
         forest-sdk-version: [2.23.0]
 
     runs-on: macos-latest
@@ -72,7 +72,7 @@ jobs:
       - name: Install forest on macos 
         run: |
           echo $PATH
-          cd usr/local/bin/
+          cd /usr/local/bin/
           curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
           echo "Installing Forest SDK on MacOS"
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
