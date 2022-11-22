@@ -77,7 +77,7 @@ jobs:
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
           sudo installer -pkg /Volumes/ForestSDK/*.pkg -target /
           sudo hdiutil detach /Volumes/ForestSDK/
-          export PATH=/Applications/Forest SDK/bin/qvm:$PATH
+          export PATH=/Applications/Forest\ SDK/bin/qvm:$PATH
           echo $PATH
           qvm --version
           quilc --version
