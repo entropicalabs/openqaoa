@@ -84,7 +84,7 @@ jobs:
           export PATH=/Applications/Forest\ SDK/bin/qvm:$PATH
           echo $PATH
           echo "Starting qvm and quilc"
-          qvm --version
+          /Applications/Forest\ SDK/bin/qvm --version
           quilc --version
           screen -d -m qvm -S
           screen -d -m quilc -S
