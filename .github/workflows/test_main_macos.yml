@@ -80,11 +80,11 @@ jobs:
           sudo hdiutil detach /Volumes/ForestSDK/
           export PATH=/usr/local/bin/qvm:$PATH
           echo $PATH
-          which qvm
-          which quilc
           echo "Starting qvm and quilc"
           /usr/local/bin/qvm --version
           /usr/local/bin/quilc --version
+          which qvm
+          which quilc
           screen -d -m qvm -S
           screen -d -m quilc -S
           cd ..
