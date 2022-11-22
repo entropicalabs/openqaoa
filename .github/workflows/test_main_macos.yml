@@ -26,7 +26,6 @@ jobs:
           python-version: $${{matrix.python}}
 
       - name: Install forest on macos 
-        if: ${{maxtrix.os == 'macos-latest'}}
         run: |
           find /user/lib -name "libffi.so*"
           curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-${{matrix.forest-sdk-version}}.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
@@ -71,7 +70,6 @@ jobs:
           python-version: 3.8
       
       - name: Install forest on macos 
-        if: ${{maxtrix.os == 'macos-latest'}}
         run: |
           find /user/lib -name "libffi.so*"
           curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
