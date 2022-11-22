@@ -71,8 +71,8 @@ jobs:
       
       - name: Install forest on macos 
         run: |
-          docker run --rm -itd -p 5555:5555 rigetti/quilc -R
-          docker run --rm -itd -p 5000:5000 rigetti/qvm -S
+          echo PATH
+          export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
           curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
           echo "Installing Forest SDK on MacOS"
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
