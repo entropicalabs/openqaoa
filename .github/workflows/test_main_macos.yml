@@ -78,7 +78,7 @@ jobs:
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
           sudo cp -R /Volumes/ForestSDK/ /Applications
           ls -lah /Volumes/ForestSDK/
-          sudo installer -verbose -pkg /Volumes/ForestSDK/*.pkg -target "/Volumes/Macintosh HD"
+          sudo installer -verbose -pkg /Applications/Forest*.pkg -target /
           sudo hdiutil detach /Volumes/ForestSDK/
           export PATH=/usr/local/bin/qvm:$PATH
           echo $PATH
