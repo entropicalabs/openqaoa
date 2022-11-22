@@ -10,8 +10,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [3.8]
-        forest-sdk-version: [2.23.0]
+        python: ['3.8']
+        forest-sdk-version: ['2.23.0']
 
     runs-on: macos-latest
 
@@ -23,7 +23,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
-          python-version: $${{matrix.python}}
+          python-version: ${{matrix.python}}
 
       - name: Install forest on macos 
         run: |
@@ -77,17 +77,13 @@ jobs:
           echo "Installing Forest SDK on MacOS"
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
           sudo cp -R /Volumes/ForestSDK/ /Applications
-          ls -lah /Volumes/ForestSDK/
           sudo installer -verbose -pkg /Applications/Forest*.pkg -target /
           sudo hdiutil detach /Volumes/ForestSDK/
-          ls /Applications/
-          export PATH=/Applications/Forest\ SDK/bin/qvm:$PATH
-          echo $PATH
           echo "Starting qvm and quilc"
           /Applications/Forest\ SDK/bin/qvm --version
-          quilc --version
-          screen -d -m qvm -S
-          screen -d -m quilc -S
+          /Applications/Forest\ SDK/bin/quilc --version
+          screen -d -m /Applications/Forest\ SDK/bin/qvm -S
+          screen -d -m /Applications/Forest\ SDK/bin/quilc -S
           cd ..
 
       - name: Install OpenQAOA
