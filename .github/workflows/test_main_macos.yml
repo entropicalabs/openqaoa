@@ -78,9 +78,9 @@ jobs:
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
           sudo installer -verbose -pkg /Volumes/ForestSDK/*.pkg -target /usr/local/bin/
           sudo hdiutil detach /Volumes/ForestSDK/
-          find / -name qvm
-          export PATH=/forest-sdk/bin/qvm:$PATH
+          export PATH=/Library/Application/Forest\ SDK/bin/qvm:$PATH
           echo $PATH
+          ls -lah /Library/
           qvm --version
           quilc --version
           echo "Starting qvm and quilc"
