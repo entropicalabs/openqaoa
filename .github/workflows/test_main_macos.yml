@@ -77,7 +77,8 @@ jobs:
           echo "Installing Forest SDK on MacOS"
           hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
           sudo cp -R /Volumes/ForestSDK/ /Applications
-          sudo installer -verbose -pkg /Volumes/ForestSDK/*.pkg -target /
+          ls -lah /Volumes/ForestSDK/
+          sudo installer -verbose -pkg /Volumes/ForestSDK/*.pkg -target "/Volumes/Macintosh HD"
           sudo hdiutil detach /Volumes/ForestSDK/
           export PATH=/usr/local/bin/qvm:$PATH
           echo $PATH
