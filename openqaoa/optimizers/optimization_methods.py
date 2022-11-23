@@ -444,6 +444,7 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
     if not stepsize < 2/lipschitz:
         raise ValueError("Stepsizec is bigger than 2/Lipschitz: it should be smaller than {0:.3g}".format(2/lipschitz))
 
+    # initialize variables for the algorithm loop
     chi = np.zeros(len(x0))
     xi = 0
     n_shots = n_shots_min
@@ -462,10 +463,10 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
     while improved and not stop and niter < maxiter:
 
         # compute gradient and variance
-        gradient, variance = jac_w_variance(testx, n_shots=n_shots)
+        gradient, variance, n_shots_used = jac_w_variance(testx, n_shots=n_shots)
 
         # add the number of shots to the total
-        n_shots_total += 2*n_shots*testx.size
+        n_shots_total += n_shots_used
 
         # compute gradient descent step
         testx = testx - stepsize*gradient
@@ -495,9 +496,9 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
             stop = True
             break
 
-        # if there is a maximum number of shots, check if the remaining shots are enough for next step, otherwise stop
-        if n_shots_total_budget != None:
-            if n_shots_total_budget - n_shots_total < 2*n_shots*testx.size:
+        # if there is a maximum number of shots and we have reached it, stop
+        if n_shots_total_budget != None:            
+            if not n_shots_total < n_shots_total_budget:
                 stop = True
                 break
 
@@ -534,10 +535,10 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
     while improved and not stop and niter < maxiter:
 
         # compute gradient and variance
-        gradient, variance = jac_w_variance(testx, n_shots=list(n_shots))
+        gradient, variance, n_shots_used = jac_w_variance(testx, n_shots=list(n_shots))
         
-        # add the number of shots to the total
-        n_shots_total += 2 * np.sum(n_shots, dtype=int)
+        # add the number of shots to the total 
+        n_shots_total += n_shots_used # TODO : add n_shots_used for the 'testy' evaluation 
 
         # compute gradient descent step
         testx = testx - stepsize*gradient
@@ -574,9 +575,9 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
             stop = True
             break
 
-        # if there is a maximum number of shots, check if the remaining shots are enough for next step, otherwise stop
+        # if there is a maximum number of shots and we have reached it, stop
         if n_shots_total_budget != None:
-            if n_shots_total_budget - n_shots_total < 2*np.sum(n_shots):
+            if not n_shots_total < n_shots_total_budget:
                 stop = True
                 break
 
