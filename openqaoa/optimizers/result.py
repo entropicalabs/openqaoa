@@ -272,8 +272,9 @@ class Result:
             for param in param_to_plot:
                 assert param < len(self.n_shots[0]) , f'param_to_plot must be a list of integers between 0 and {len(self.n_shots[0]) - 1}'
 
-        # if label is not given, create a list of labels for each parameter
-        label = [f'Parameter {i}' for i in param_to_plot] if label is None else label
+        # if label is not given, create a list of labels for each parameter (only if there is more than 1 parameter)
+        if len(self.n_shots[0]) > 1: label = [f'Parameter {i}' for i in param_to_plot] if label is None else label
+        else: label = ['n. shots per parameter']
 
         # if only one parameter is given, convert label and color to list if they are string
         if len(param_to_plot) == 1:
@@ -281,7 +282,7 @@ class Result:
             if type(color) == str: color = [color]
 
         # if param_top_plot is a list and label or color are not lists, raise error
-        if type(label) != list and (type(color) != list or color != None):
+        if (type(label) != list) or (type(color) != list and color != None):
             raise TypeError('label and color must be list of str')
 
         # if label and color are lists, check if they have the same length as param_to_plot
@@ -304,6 +305,7 @@ class Result:
                 ax.plot(values, label=label[i], linestyle=linestyle[i])
             else:
                 ax.plot(values, label=label[i], linestyle=linestyle[i], color=color[i])
+
 
         ax.set_ylabel("Number of shots")
         ax.set_xlabel("Iterations")

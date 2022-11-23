@@ -459,18 +459,10 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
     testx = np.copy(bestx)
     testy = besty
 
-
-    # TODO: delete this
-    n_shots_list = []
-
-
     while improved and not stop and niter < maxiter:
 
         # compute gradient and variance
         gradient, variance = jac_w_variance(testx, n_shots=n_shots)
-
-        # TODO: delete this
-        n_shots_list.append(n_shots)
 
         # add the number of shots to the total
         n_shots_total += 2*n_shots*testx.size
@@ -511,7 +503,6 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
 
         niter += 1
 
-    print('n shots list', np.array(n_shots_list))
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))
 
@@ -540,18 +531,10 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
     testx = np.copy(bestx)
     testy = besty
 
-    
-    # TODO : delete this
-    n_shots_list = []
-
-
     while improved and not stop and niter < maxiter:
 
         # compute gradient and variance
         gradient, variance = jac_w_variance(testx, n_shots=list(n_shots))
-
-        # TODO : delete this
-        n_shots_list.append(n_shots)
         
         # add the number of shots to the total
         n_shots_total += 2 * np.sum(n_shots, dtype=int)
@@ -599,7 +582,5 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
 
         niter += 1
 
-    
-    print('n shots list', np.array(n_shots_list))
     return OptimizeResult(fun=besty, x=bestx, nit=niter,
                           nfev=funcalls, success=(niter > 1))

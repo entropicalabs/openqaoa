@@ -64,6 +64,7 @@ def update_and_compute_expectation(backend_obj: QAOABaseBackend,
 
     return fun
 
+
 def update_and_get_counts(  backend_obj: QAOABaseBackend, 
                             params: QAOAVariationalBaseParams, 
                             logger: Logger):
@@ -105,6 +106,7 @@ def update_and_get_counts(  backend_obj: QAOABaseBackend,
         return backend_obj.get_counts(params, **n_shots_dict)
 
     return fun
+
 
 def derivative(backend_obj: QAOABaseBackend, 
                params: QAOAVariationalBaseParams, 
@@ -181,7 +183,17 @@ def derivative(backend_obj: QAOABaseBackend,
     elif derivative_type == 'gradient_w_variance':
 
         #TODO: complete this
-        out = grad_w_variance(backend_obj, params, derivative_options, logger, derivative_method)
+        if derivative_method == 'finite_difference':
+            out = grad_fd(backend_obj, params, derivative_options, logger, variance=True)
+        elif derivative_method == 'param_shift':
+            assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
+            out = grad_ps(backend_obj, params, params_ext, logger, variance=True)
+        # elif derivative_method == 'stoch_param_shift':
+        #     assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
+        #     out = grad_sps(backend_obj, params, params_ext, derivative_options, logger, variance=True)
+        elif derivative_method == 'grad_spsa':
+            out = grad_spsa(backend_obj, params, derivative_options, logger, variance=True)
+
 
     elif derivative_type == 'hessian':
 
@@ -192,140 +204,66 @@ def derivative(backend_obj: QAOABaseBackend,
 
     return out
 
-def __grad_variance_n_shots(args, backend_obj, params, gradient_options, logger, method='finite_difference'):
-    """
-    returns a callable function that Computes the gradient and its variance for the i-th parameter using finite difference.
-    Or the gradient and its variance using spsa.
-    """    
-
-    def fun(i=0, n_shots=None):
-        """
-        Computes the gradient and its variance for the i-th parameter using finite difference.
-        Or the gradient and its variance using spsa.
-        """
-
-        # get value of eta, the function to get counts, hamiltonian, and alpha
-        eta = gradient_options['stepsize']
-        fun = update_and_get_counts(backend_obj, params, logger)
-        hamiltonian = backend_obj.circuit_params.cost_hamiltonian
-        alpha = backend_obj.cvar_alpha
-        
-        if method in ['finite_difference']:
-            # vector of zeros with length equal to the number of parameters, and 1 at the i-th position
-            vect_eta = np.zeros(len(args))
-            vect_eta[i] = 1
-        elif method in ['grad_spsa']:
-            # vector of random numbers (1 or -1) with length equal to the number of parameters
-            vect_eta = np.random.choice([-1, 1], size=len(args))
-
-        # get counts f(x+eta/2) and f(x-eta/2)
-        counts_i_dict = fun(args - (eta/2)*vect_eta, n_shots=n_shots)
-        counts_f_dict = fun(args + (eta/2)*vect_eta, n_shots=n_shots)
-
-        #compute cost for each state in the counts dictionaries
-        costs_dict = {key: cost_function({key: 1}, hamiltonian, alpha) for key in counts_i_dict.keys() | counts_f_dict.keys()}
-
-        # for each count get the cost and create a list of shot costs
-        eval_i_list = [costs_dict[key] for key, value in counts_i_dict.items() for _ in range(value)]
-        eval_f_list = [costs_dict[key] for key, value in counts_f_dict.items() for _ in range(value)]
-
-        # compute a list of gradients of one shot cost
-        grad_list =  np.real((np.array(eval_f_list) - np.array(eval_i_list))/eta)
-
-        if method in ['grad_spsa']:
-            # return average and variance for the gradient for the arguments
-            return np.array([np.mean(grad_list)/vect_eta, np.var(grad_list)/np.abs(vect_eta)])
-        
-        # return average and variance for the gradient for this argument
-        return np.array([np.mean(grad_list), np.var(grad_list)])
-
-    return fun
-        
-
-def grad_w_variance(backend_obj, params, gradient_options, logger, method='finite_difference'):
-    """
-    Returns a callable function that calculates the gradient and its variance with the method specified.
-
-    PARAMETERS
-    ----------
-    backend_obj : `QAOABaseBackend`
-        backend object that computes expectation values when executed. 
-    params : `QAOAVariationalBaseParams`
-        parameters of the variational circuit.
-    gradient_options : `dict`
-        stepsize : 
-            Stepsize of finite difference.
-    logger : `Logger`
-        logger object to log the number of function evaluations.
-    method : `str`
-        Method to compute the gradient. Currently only 'finite_difference' and 'grad_spsa' are supported.
-
-    RETURNS
-    -------
-    grad_func: `Callable`
-        Callable derivative function.
-    """
-
-    def grad_func(args, n_shots=None):
-        """
-        Computes the gradient and its variance for the given parameters.
-
-        PARAMETERS
-        ----------
-        args : `list`
-            List of parameters.
-        n_shots : `int` or `List[int]`
-            Number of shots to use for the finite difference method. If None, the number of shots specified in the backend object is used.
-            If a list is given, each item of the list is used for the corresponding parameter.
-
-        RETURNS
-        -------
-        grad : `np.array`
-            Gradient of the cost function.
-        grad_var : `np.array`
-            Variance of the gradient of the cost function.
-        """
-
-        # function to compute gradient and its variance
-        fun_grad = __grad_variance_n_shots(args, backend_obj, params, gradient_options, logger, method) 
-
-        if method in ['finite_difference']:
-            # if n_shots is int or None create a list with len of args 
-            if n_shots == None or isinstance(n_shots, int):
-                n_shots_list = [n_shots for _ in range(len(args))]
-            else:
-                n_shots_list = n_shots
-
-            # check if n_shots_list has the same length as args
-            if len(n_shots_list) != len(args):
-                raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
-
-            # lists of gradients and variances for each argument
-            grad, variance = np.array([fun_grad(i_args, n_shots) for i_args, n_shots in enumerate(n_shots_list)]).T
-
-        elif method in ['grad_spsa']:
-            # compute gradient and variance for all arguments
-            grad, variance = fun_grad(n_shots=n_shots)
-
-        #update number of shots       
-        logger.log_variables({'n_shots': n_shots})
-
-        return grad, variance
-
-    return grad_func
 
 def __create_n_shots_list(n_params, n_shots):
 
-    if n_shots == None or isinstance(n_shots, int):
-        n_shots_list = [n_shots for _ in range(n_params)]
-    else:
+    # If n_shots is a list, then it must be of length n_params, else create a list of length n_params with all elements equal to n_shots
+    if isinstance(n_shots, list):
+        assert len(n_shots) == n_params, "n_shots must be a list of length equal to the number of parameters."
         n_shots_list = n_shots
-
-    # check if n_shots_list has the same length as args
-    if len(n_shots_list) != n_params:
-        raise ValueError("When computing gradient, 'n_shots' and 'args' do not have the same length.")
+    elif isinstance(n_shots, int) or n_shots is None:
+        n_shots_list = [n_shots] * n_params
+    else:
+        raise ValueError("n_shots must be either an integer or a list of integers.")
 
     return n_shots_list
+
+
+def __create_n_shots_ext_list(n_params, n_associated_params, n_shots):
+    """
+    Creates a list of number of shots for each parameter in the extended parametrisation. 
+    If n_shots is a integer, then it is used for all extended parameters. So, we create a list of length sum(n_associated_params) 
+    with all elements equal to n_shots. (sum(n_associated_params) = number of extended params)
+    If n_shots is a list, then this list tell us the number of shots for each standard parameter. We convert this list to a list of
+    number of shots for each extended parameter. Each standard parameter has a different number of associated extended parameters,
+    `n_associated_params` helps us with this. Each element of `n_associated_params` is the number of associated extended parameters to each coefficient.
+    And we know that each standard parameter has 2 associated coefficients (mixer_1q, mixer_2q, cost_1q, cost_2q).
+    
+    Parameters
+    ----------
+    n_associated_params : list
+        List of integers, where each integer is the number of associated parameters in the extended parametrisation for each coefficient.
+        The sum of all elements in this list is equal to the number of parameters in the extended parametrisation.
+    n_params : int
+        Number of parameters in the standard parametrisation.
+    n_shots : int or list
+        Number of shots to use for each parameter in the standard parametrisation. 
+        If an integer, then it is used for all the extended parameters. 
+        If a list, then it must be of length sum(n_associated_params).
+
+    Returns
+    -------
+    n_shots_ext_list : list
+        List of integers, where each integer is the number of shots to use for each parameter in the extended parametrisation.
+    """
+
+    # If n_shots is a list, then it must be of length n_params, else create a list of length n_params with all elements equal to n_shots
+    if isinstance(n_shots, list):
+        assert len(n_shots) == n_params, "n_shots must be a list of length equal to the number of parameters."
+
+        # transform n_shots list (which has length n_params) into a list of the same length of n_associated_params
+        n_shots = np.array(n_shots)
+        n_shots = n_shots.reshape(2, len(n_shots)//2).repeat(2, axis=0).reshape(n_shots.size*2) # repeat each element twice in the following way: if we have [1,2,3,4] we get [1,2,1,2,3,4,3,4]
+
+        # create the list of n_shots for each parameter in the extended parametrisation. For each parameter of each coefficient we have a number of shots (`n_shots` list), we need to repeat this number of shots the number of associated extended parameters that each coefficient has (`n_associated_params` list).
+        n_shots_list = [shots for r, shots in zip(n_associated_params, n_shots) for _ in range(r)]
+    elif isinstance(n_shots, int) or n_shots is None:
+        n_shots_list = [n_shots] * np.sum(n_associated_params)
+    else:
+        raise ValueError("n_shots must be either an integer or a list of integers.")
+
+    return n_shots_list
+
 
 def __gradient(args, backend_obj, params, logger, variance):
     """
@@ -365,12 +303,13 @@ def __gradient(args, backend_obj, params, logger, variance):
         Computes the gradient : TODO
         """
         fun = update_and_compute_expectation(backend_obj, params, logger)
-        return constant*(fun(args + vect_eta, n_shots=n_shots) - fun(args - vect_eta, n_shots=n_shots)), None
+        return constant*(fun(args + vect_eta, n_shots=n_shots) - fun(args - vect_eta, n_shots=n_shots)), 0
 
     if variance:    return fun_w_variance
     else:           return fun
 
-def grad_fd_2(backend_obj, params, gradient_options, logger, variance:bool=False):
+    
+def grad_fd(backend_obj, params, gradient_options, logger, variance:bool=False):
     """
     Returns a callable function that calculates the gradient with the finite difference method.
 
@@ -394,135 +333,85 @@ def grad_fd_2(backend_obj, params, gradient_options, logger, variance:bool=False
 
     # Set default value of eta
     eta = gradient_options['stepsize']
-    __gradient_function = __gradient(backend_obj, params, logger, variance)
 
     def grad_fd_func(args, n_shots=None):
+
+        # get the function to compute the gradient and its variance
+        __gradient_function = __gradient(args, backend_obj, params, logger, variance)     
 
         # if n_shots is int or None create a list with len of args (if it is none, it will use the default n_shots)
         n_shots_list = __create_n_shots_list(len(args), n_shots)
 
+        # if variance is True, add the number of shots per argument to the logger
+        if variance: logger.log_variables({'n_shots': n_shots_list})
+
         # lists of gradients and variances for each argument, initialized with zeros
-        grad, variance = np.zeros(len(args)), np.zeros(len(args))
+        grad, var = np.zeros(len(args)), np.zeros(len(args))
 
         for i in range(len(args)):
+            # vector and constant to compute the gradient for the i-th argument
             vect_eta = np.zeros(len(args))
             vect_eta[i] = eta/2
             const = 1/eta
             
             # Finite diff. calculation of gradient
-            grad[i], variance[i] = __gradient_function(vect_eta, const, n_shots_list[i])
+            grad[i], var[i] = __gradient_function(vect_eta, const, n_shots_list[i]) # const*[f(args + vect_eta) - f(args - vect_eta)]
 
-        if variance:  return grad, variance
+        if variance:  return grad, var
         else:         return grad
 
     return grad_fd_func
 
 
-def grad_fd(backend_obj, params, gradient_options, logger):
-    """
-    Returns a callable function that calculates the gradient with the finite difference method.
+def grad_ps(backend_obj, params, params_ext, logger, variance:bool=False):
 
-    PARAMETERS
-    ----------
-    backend_obj : `QAOABaseBackend`
-        backend object that computes expectation values when executed. 
-    params : `QAOAVariationalBaseParams`
-        parameters of the variational circuit.
-    gradient_options : `dict`
-        stepsize : 
-            Stepsize of finite difference.
-    logger : `Logger`
-        logger object to log the number of function evaluations.
-
-    RETURNS
-    -------
-    grad_fd_func: `Callable`
-        Callable derivative function.
-    """
-
-    # Set default value of eta
-    eta = gradient_options['stepsize']
-    fun = update_and_compute_expectation(backend_obj, params, logger)
-
-    def grad_fd_func(args):
-
-        grad = np.zeros(len(args))
-
-        for i in range(len(args)):
-            vect_eta = np.zeros(len(args))
-            vect_eta[i] = 1
-            
-            # Finite diff. calculation of gradient
-            eval_i = fun(args - (eta/2)*vect_eta)
-            eval_f = fun(args + (eta/2)*vect_eta)
-            grad[i] = (eval_f-eval_i)/eta
-
-        return grad
-
-    return grad_fd_func
-
-
-def grad_ps(backend_obj, params, params_ext, logger):
-    """
-    Returns a callable function that calculates the gradient with the parameter shift method.
-
-    PARAMETERS
-    ----------
-    backend_obj : `QAOABaseBackend`
-        backend object that computes expectation values when executed. 
-    params : `QAOAVariationalStandardParams`
-        variational parameters object, standard parametrisation.
-    params_ext : `QAOAVariationalExtendedParams`
-        variational parameters object, extended parametrisation.
-    logger : `Logger`
-        logger object to log the number of function evaluations.
-
-    RETURNS
-    -------
-    grad_ps_func:
-        Callable derivative function.
-    """    
-    # TODO : clean up conversion part + handle Fourier parametrisation
+    # list of coefficients
+    coeffs_list = params.p*params.mixer_1q_coeffs + params.p*params.mixer_2q_coeffs + params.p*params.cost_1q_coeffs + params.p*params.cost_2q_coeffs
     
-    fun = update_and_compute_expectation(backend_obj, params_ext, logger)
-    
-    coeffs_list = params.p*params.mixer_1q_coeffs + params.p*params.mixer_2q_coeffs + \
-            params.p*params.cost_1q_coeffs + params.p*params.cost_2q_coeffs
+    # create a list of how many extended parameters are associated with each coefficient 
+    n_associated_params = np.repeat([len(params.mixer_1q_coeffs), len(params.mixer_2q_coeffs), len(params.cost_1q_coeffs), len(params.cost_2q_coeffs)], params.p)
 
-    def grad_ps_func(args):
+    def grad_ps_func(args, n_shots=None):
 
         # Convert standard to extended parameters before applying parameter shift
         args_ext = params.convert_to_ext(args)
+
+        # get the function to compute the gradient and its variance
+        __gradient_function = __gradient(args_ext, backend_obj, params_ext, logger, variance)
+
+        # if variance is True, add the number of shots per argument (standard) to the logger
+        if variance: logger.log_variables({'n_shots': __create_n_shots_list(len(args), n_shots)})
+
+        # we call the function that returns the number of shots for each extended parameter, giving the number of shots for each standard parameter (n_shots)
+        n_shots_list = __create_n_shots_ext_list(len(args), n_associated_params, n_shots)
         
-        grad_ext = np.zeros(len(args_ext))
+        # lists of gradients and variances for each argument (extended), initialized with zeros
+        grad_ext, var_ext = np.zeros(len(args_ext)), np.zeros(len(args_ext))
 
         # Apply parameter shifts
         for i in range(len(args_ext)):
-            vect_eta = np.zeros(len(args_ext))
-            vect_eta[i] = 1
             r = coeffs_list[i]
-            grad_ext[i] = r*(fun(args_ext + (np.pi/(4*r))*vect_eta) -
-                             fun(args_ext - (np.pi/(4*r))*vect_eta))
+            vect_eta = np.zeros(len(args_ext))
+            vect_eta[i] = (np.pi/(4*r))
+            const = r
+            grad_ext[i], var_ext[i] = __gradient_function(vect_eta, const, n_shots_list[i]) # const*[f(args + vect_eta) - f(args - vect_eta)]
 
-        # Convert extended param. gradient form back into std param. form
-        
-        m1q_entries = grad_ext[:params.p*len(params.mixer_1q_coeffs)]
-        m2q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) : params.p*len(params.mixer_2q_coeffs)]
-        c1q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs): params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs) + params.p*len(params.cost_1q_coeffs)]
-        c2q_entries = grad_ext[params.p*len(params.mixer_1q_coeffs) + params.p*len(params.mixer_2q_coeffs) + params.p*len(params.cost_1q_coeffs):]
-        subdivided_ext_grad = [m1q_entries, m2q_entries, c1q_entries, c2q_entries]
-        
-        # Sum up gradients (due to the chain rule), and re-express in standard form.
-        mat = np.zeros((4, params.p))
-        for i in range(4):  # 4 types of terms
-            for j in range(params.p):
-                mat[i][j] = np.sum(subdivided_ext_grad[i][j*int(len(subdivided_ext_grad[i]) /
-                                   params.p):(j+1)*int(len(subdivided_ext_grad[i])/params.p)])
+        ## CONVERT EXTENDED FORM BACK INTO STANDARD FORM
+            
+        # with the `n_associated_params` list, add a 0 in the first position and sum the list cumulatively (so that the list indicate the indices of the grad_ext list for each parameter of each coefficient)
+        l = np.insert(np.cumsum(n_associated_params), 0, 0)
 
-        grad_std = list(np.sum(mat[:2], axis=0)) + \
-            list(np.sum(mat[2:], axis=0))
+        # sum all the gradients for each parameter of each coefficient according to the indices in l, and rehape the array to 4 rows and p columns, first row is mixer_1q, second is mixer_2q, third is cost_1q, fourth is cost_2q
+        grad = np.array([np.sum(grad_ext[ l[i-1] : l[i] ]) for i in range(1, len(l))]).reshape(4, params.p)
+        # summing 1q with 2q gradients (first row with second row, third row with fourth row), to get the gradient for each parameter in the standard form
+        grad = np.concatenate((grad[0] + grad[1], grad[2] + grad[3])) 
+
+        # repeat the same for the variances
+        var = np.array( [np.sum( var_ext[ l[i-1] : l[i] ]) for i in range(1, len(l))]).reshape(4, params.p)
+        var = np.concatenate((var[0] + var[1], var[2] + var[3]))
         
-        return np.array(grad_std)
+        if variance:  return grad, var
+        else:         return grad
 
     return grad_ps_func
 
@@ -632,6 +521,52 @@ def grad_sps(backend_obj, params_std, params_ext, gradient_options, logger):
     return grad_sps_func
 
 
+def grad_spsa(backend_obj, params, gradient_options, logger, variance:bool=False):
+    """
+    Returns a callable function that calculates the gradient approxmiation with the Simultaneous Perturbation Stochastic Approximation (SPSA) method.
+
+    PARAMETERS
+    ----------
+    backend_obj : `QAOABaseBackend`
+        backend object that computes expectation values when executed. 
+    params : `QAOAVariationalBaseParams`
+        variational parameters object.
+    gradient_options : `dict`
+        gradient_stepsize : 
+            stepsize of stochastic shift.
+    logger : `Logger`
+        logger object to log the number of function evaluations.
+
+    RETURNS
+    -------
+    grad_spsa_func: `Callable`
+        Callable derivative function.
+
+    """
+    eta = gradient_options['stepsize']
+
+    def grad_spsa_func(args, n_shots=None):
+
+        # if variance is True, add the number of shots per argument to the logger
+        if variance: logger.log_variables({'n_shots': [n_shots]})
+
+        # get the function to compute the gradient and its variance            
+        __gradient_function = __gradient(args, backend_obj, params, logger, variance)
+
+        # vector and constant to compute the gradient and its variance
+        delta = (2*np.random.randint(0, 2, size=len(args))-1)
+        vector_eta = delta*eta/2
+        const = 1/eta
+
+        # compute the gradient and its variance: const*[f(args + vect_eta) - f(args - vect_eta)]
+        grad, var = __gradient_function(vector_eta, const, n_shots)
+
+        if variance:  return grad*delta, var*np.abs(delta)
+        else:         return grad*delta
+
+    return grad_spsa_func
+
+
 def hessian_fd(backend_obj, params, hessian_options, logger):
     """
     Returns a callable function that calculates the hessian with the finite difference method.
@@ -680,35 +615,3 @@ def hessian_fd(backend_obj, params, hessian_options, logger):
         return hess
 
     return hessian_fd_func
-
-
-def grad_spsa(backend_obj, params, gradient_options, logger):
-    """
-    Returns a callable function that calculates the gradient approxmiation with the Simultaneous Perturbation Stochastic Approximation (SPSA) method.
-
-    PARAMETERS
-    ----------
-    backend_obj : `QAOABaseBackend`
-        backend object that computes expectation values when executed. 
-    params : `QAOAVariationalBaseParams`
-        variational parameters object.
-    gradient_options : `dict`
-        gradient_stepsize : 
-            stepsize of stochastic shift.
-    logger : `Logger`
-        logger object to log the number of function evaluations.
-
-    RETURNS
-    -------
-    grad_spsa_func: `Callable`
-        Callable derivative function.
-
-    """
-    c = gradient_options['stepsize']
-    fun = update_and_compute_expectation(backend_obj, params, logger)
-
-    def grad_spsa_func(args):
-        delta = (2*np.random.randint(0, 2, size=len(args))-1)
-        return np.real((fun(args + c*delta) - fun(args - c*delta))*delta/(2*c)) 
-
-    return grad_spsa_func
