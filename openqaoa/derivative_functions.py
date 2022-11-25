@@ -461,7 +461,7 @@ def grad_ps(backend_obj, params, params_ext, gradient_options, logger, stochasti
             # check if the number of gates to sample is valid and if it is -1 then set it to the number of gates in the full parameter shift rule
             for i, x in enumerate(n_sample):
                 y = len(params_coeffs[i])
-                assert -1 <= x <= y, f"Invalid {names_params[i]}, it must be between -1 and {y}, but {x} is passed."
+                assert -1 <= x <= y, f"Invalid jac_options['{names_params[i]}'], it must be between -1 and {y}, but {x} is passed."
                 if x == -1: n_sample[i] = y
 
             # create a list of how many gates are associated with each coefficient 
