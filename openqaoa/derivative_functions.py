@@ -173,27 +173,25 @@ def derivative(backend_obj: QAOABaseBackend,
             out = grad_fd(backend_obj, params, derivative_options, logger)
         elif derivative_method == 'param_shift':
             assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
-            out = grad_ps(backend_obj, params, params_ext, logger)
+            out = grad_ps(backend_obj, params, params_ext, derivative_options, logger)
         elif derivative_method == 'stoch_param_shift':
             assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
-            out = grad_sps(backend_obj, params, params_ext, derivative_options, logger)
+            out = grad_ps(backend_obj, params, params_ext, derivative_options, logger, stochastic=True)
         elif derivative_method == 'grad_spsa':
             out = grad_spsa(backend_obj, params, derivative_options, logger)
 
     elif derivative_type == 'gradient_w_variance':
 
-        #TODO: complete this
         if derivative_method == 'finite_difference':
             out = grad_fd(backend_obj, params, derivative_options, logger, variance=True)
         elif derivative_method == 'param_shift':
             assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
-            out = grad_ps(backend_obj, params, params_ext, logger, variance=True)
+            out = grad_ps(backend_obj, params, params_ext, derivative_options, logger, variance=True)
         elif derivative_method == 'stoch_param_shift':
             assert params.__class__.__name__ == 'QAOAVariationalStandardParams', f"{params.__class__.__name__} not supported - only Standard Parametrisation is supported for parameter shift/stochastic parameter shift for now."
-            out = grad_sps(backend_obj, params, params_ext, derivative_options, logger, variance=True)
+            out = grad_ps(backend_obj, params, params_ext, derivative_options, logger, stochastic=True, variance=True)
         elif derivative_method == 'grad_spsa':
             out = grad_spsa(backend_obj, params, derivative_options, logger, variance=True)
-
 
     elif derivative_type == 'hessian':
 
@@ -365,9 +363,10 @@ def grad_fd(backend_obj, params, gradient_options, logger, variance:bool=False):
     return grad_fd_func
 
 
-def grad_ps(backend_obj, params, params_ext, gradient_options, logger, variance:bool=False, stochastic:bool=False):
+def grad_ps(backend_obj, params, params_ext, gradient_options, logger, stochastic:bool=False, variance:bool=False):
     """
-    Returns a callable function that calculates the gradient (and its variance if `variance=True`) with the parameter shift method.
+    If `stochastic=False` returns a callable function that calculates the gradient (and its variance if `variance=True`) with the parameter shift method.
+    If `stochastic=True` returns a callable function that approximates the gradient (and its variance if `variance=True`) with the stochastic parameter shift method, which samples (n_beta_single, n_beta_pair, n_gamma_single, n_gamma_pair) gates at each layer instead of all gates. See "Algorithm 4" of https://arxiv.org/pdf/1910.01155.pdf. By convention, (n_beta_single, n_beta_pair, n_gamma_single, n_gamma_pair) = (-1, -1, -1, -1) will sample all gates (which is then equivalent to the full parameter shift rule).
 
     PARAMETERS
     ----------
@@ -377,6 +376,11 @@ def grad_ps(backend_obj, params, params_ext, gradient_options, logger, variance:
         variational parameters object, standard parametrisation.
     params_ext : `QAOAVariationalExtendedParams`
         variational parameters object, extended parametrisation.
+    gradient_options :
+        * 'n_beta_single': Number of single-qubit mixer gates to sample for the stochastic parameter shift.
+        * 'n_beta_pair': Number of two-qubit mixer gates to sample for the stochastic parameter shift.
+        * 'n_gamma_single': Number of single-qubit cost gates to sample for the stochastic parameter shift.
+        * 'n_gamma_pair': Number of two-qubit cost gates to sample for the stochastic parameter shift.
     logger : `Logger`
         logger object to log the number of function evaluations.
     variance : `bool`
@@ -394,20 +398,6 @@ def grad_ps(backend_obj, params, params_ext, gradient_options, logger, variance:
     params_coeffs = [params.mixer_1q_coeffs, params.mixer_2q_coeffs, params.cost_1q_coeffs, params.cost_2q_coeffs]
     # list of coefficients for all the extended parameters
     coeffs_list = [x for coeffs in params_coeffs for x in coeffs for _ in range(params.p)]
-
-    if stochastic:
-        # list of the names of the parameters and list of the number of gates for each parameter
-        names_params = ['n_beta_single', 'n_beta_pair', 'n_gamma_single', 'n_gamma_pair']
-        n_sample = [gradient_options[x] for x in names_params]
-
-        # check if the number of gates to sample is valid and if it is -1 then set it to the number of gates in the full parameter shift rule
-        for i, x in enumerate(n_sample):
-            y = len(params_coeffs[i])
-            assert -1 <= x <= y, f"Invalid {names_params[i]}, it must be between -1 and {y}, but {x} is passed."
-            if x == -1: n_sample[i] = y
-
-        # create a list of how many gates are associated with each coefficient 
-        n_associated_params_stochastic = np.repeat(n_sample, params.p)
     
     # create a list of how many extended parameters are associated with each coefficient 
     n_associated_params = np.repeat([len(x) for x in params_coeffs], params.p)
@@ -428,12 +418,16 @@ def grad_ps(backend_obj, params, params_ext, gradient_options, logger, variance:
         ## compute the gradient (and variance) of all extended parameters with the stochastic parameter shift method
             # lists of gradients and variances for each argument (extended), initialized with zeros
         grad_ext, var_ext = np.zeros(len(args_ext)), np.zeros(len(args_ext))
+            # variable to count the number of shots used        
+        n_shots_used = 0
             # Apply parameter shifts
-        for i in range(len(args_ext)):
+        for i, sample_param_bool in enumerate(__sample_params()): # __sample_params is only relevant if stochastic=True, if stochastic=False we loop over all extended parameters. __sample_params() returns a list with True or False for each extended parameter (`i` is the index of the extended parameter, and `sample_param_bool` is True if the parameter is sampled)
+            if not sample_param_bool: continue # (only relevant if stochastic=True) if the parameter is not sampled (`sample_param_bool==False`), skip it 
             r = coeffs_list[i]
             vect_eta = np.zeros(len(args_ext))
             vect_eta[i] = (np.pi/(4*r))
             grad_ext[i], var_ext[i] = __gradient_function(vect_eta, r, n_shots_list[i]) # r*[f(args + vect_eta) - f(args - vect_eta)]
+            n_shots_used += n_shots_list[i] * 2 if n_shots_list[i] != None else 0 #we multiply by 2 because we call the function twice to compute the gradient
 
         ## convert extended form back into standard form
             # sum all the gradients for each parameter of each coefficient according to the indices in l, and rehape the array to 4 rows and p columns, first row is mixer_1q, second is mixer_2q, third is cost_1q, fourth is cost_2q
@@ -447,114 +441,46 @@ def grad_ps(backend_obj, params, params_ext, gradient_options, logger, variance:
         # if variance is True, add the number of shots per argument (standard) to the logger
         if variance: logger.log_variables({'n_shots': __create_n_shots_list(len(args), n_shots)})
         
-        if variance:  return grad, var, 2*sum(n_shots_list)  #return gradient, variance, and total number of shots
-        else:         return grad                            #return gradient
-
-    return grad_ps_func
-
-
-def grad_sps(backend_obj, params_std, params_ext, gradient_options, logger, variance:bool=False):
-    """
-    Returns a callable function that approximates the gradient (and its variance if `variance=True`) with the stochastic parameter shift method, which samples (n_beta_single, n_beta_pair, n_gamma_single, n_gamma_pair) gates at each layer instead of all gates. See "Algorithm 4" of https://arxiv.org/pdf/1910.01155.pdf. By convention, (n_beta_single, n_beta_pair, n_gamma_single, n_gamma_pair) = (-1, -1, -1, -1) will sample all gates (which is then equivalent to the full parameter shift rule).
-
-    PARAMETERS
-    ----------
-    backend_obj : `QAOABaseBackend`
-        backend object that computes expectation values when executed. 
-    params_std : `QAOAVariationalStandardParams`
-        variational parameters object, standard parametrisation.
-    params_ext : `QAOAVariationalExtendedParams`
-        variational parameters object, extended parametrisation.
-    gradient_options :
-        n_beta_single : 
-            Number of single-qubit mixer gates to sample for the stochastic parameter shift.
-        n_beta_pair : 
-            Number of X two-qubit mixer gates to sample for the stochastic parameter shift.
-        n_gamma_pair : 
-            Number of two-qubit cost gates to sample for the stochastic parameter shift.
-        n_gamma_single : 
-            Number of single-qubit cost gates to sample for the stochastic parameter shift.
-    logger : `Logger`
-        logger object to log the number of function evaluations.
-    variance : `bool`
-        If True, the variance of the gradient is also computed.
-        If False, only the gradient is computed.
-
-    RETURNS
-    -------
-    grad_sps_func:
-        Callable derivative function.
-    """
-
-    # list of the names of the parameters and list of the number of gates for each parameter
-    names_params = ['n_beta_single', 'n_beta_pair', 'n_gamma_single', 'n_gamma_pair']
-    n_sample = [gradient_options[x] for x in names_params]
-
-    # list of the number of gates for each parameter if all gates are sampled (equivalent to the full parameter shift rule)
-    n_sample_equivalent_ps = [len(x) for x in [params_std.mixer_1q_coeffs, params_std.mixer_2q_coeffs, params_std.cost_1q_coeffs, params_std.cost_2q_coeffs]]
-
-    # check if the number of gates to sample is valid and if it is -1 then set it to the number of gates in the full parameter shift rule
-    for i, (x, y) in enumerate(zip(n_sample, n_sample_equivalent_ps)): 
-        assert -1 <= x <= y, f"Invalid {names_params[i]}, it must be between -1 and {y}, but {x} is passed."
-        if x == -1: n_sample[i] = y
-    
-    # list of the coefficients
-    coeffs_list = params_std.p*params_std.mixer_1q_coeffs + params_std.p*params_std.mixer_2q_coeffs + params_std.p*params_std.cost_1q_coeffs + params_std.p*params_std.cost_2q_coeffs
-
-    # create a list of how many gates are associated with each coefficient 
-    n_associated_params = np.repeat(n_sample, params_std.p)
-    
-    # create a list of how many extended parameters are associated with each coefficient (equivalent to the full parameter shift rule)
-    n_associated_params_equivalent_ps = np.repeat(n_sample_equivalent_ps, params_std.p)
-    # with the `n_associated_params_equivalent_ps` list, add a 0 in the first position and sum the list cumulatively (so that this list indicate which gate is associated with which coefficient) 
-    l = np.insert(np.cumsum(n_associated_params_equivalent_ps), 0, 0) # the i-th coefficient is associated with extended parameters with indices in range [l[i], l[i+1]]
-    
-    def grad_sps_func(args, n_shots=None):
-
-        # Convert standard to extended parameters before applying parameter shift
-        args_ext = params_std.convert_to_ext(args)
-
-        # get the function to compute the gradient and its variance
-        __gradient_function = __gradient(args_ext, backend_obj, params_ext, logger, variance)
-
-        # if variance is True, add the number of shots per argument (standard) to the logger
-        if variance: logger.log_variables({'n_shots': __create_n_shots_list(len(args), n_shots)})
-
-        # we call the function that returns the number of shots for each extended parameter, giving the number of shots for each standard parameter (n_shots)
-        n_shots_list = __create_n_shots_ext_list(len(args), n_associated_params_equivalent_ps, n_shots)
-
-        # define the list of indices of the extended parameters that are associated with each coefficient
-        sampled_indices = np.array([])
-        for i, n in enumerate(n_associated_params):
-            # take n random indices from the range of indices associated with the i-th extended parameter [l[i], l[i+1]]
-            sampled_indices = np.append(sampled_indices, np.random.choice(range(l[i], l[i+1]), n, False)) 
-
-        ## compute the gradient (and variance) of all extended parameters (that the sampled indices indicate) with the stochastic parameter shift method
-            # lists of gradients and variances for each argument (extended), initialized with zeros
-        grad_ext, var_ext = np.zeros(len(args_ext)), np.zeros(len(args_ext))
-            # Apply parameter shifts
-        n_shots_used = 0
-        for i in range(len(args_ext)):
-            if i in sampled_indices:        
-                r = coeffs_list[i]
-                vect_eta = np.zeros(len(args_ext))
-                vect_eta[i] = (np.pi/(4*r))
-                grad_ext[i], var_ext[i] = __gradient_function(vect_eta, r, n_shots_list[i]) # r*[f(args + vect_eta) - f(args - vect_eta)]
-                n_shots_used += 2*n_shots_list[i] if n_shots_list[i] is not None else 0 # keep track of the number of shots used
-
-        ## convert extended form back into standard form
-            # sum all the gradients for each parameter of each coefficient according to the indices in l, and rehape the array to 4 rows and p columns, first row is mixer_1q, second is mixer_2q, third is cost_1q, fourth is cost_2q
-        grad = np.array([np.sum(grad_ext[ l[i-1] : l[i] ]) for i in range(0, len(l)-1)]).reshape(4, params_std.p)
-            # summing 1q with 2q gradients (first row with second row, third row with fourth row), to get the gradient for each parameter in the standard form
-        grad = np.concatenate((grad[0] + grad[1], grad[2] + grad[3]))
-            # repeat the same for the variances
-        var = np.array( [np.sum( var_ext[ l[i-1] : l[i] ]) for i in range(0, len(l)-1)]).reshape(4, params_std.p)
-        var = np.concatenate((var[0] + var[1], var[2] + var[3]))
-        
         if variance:  return grad, var, n_shots_used  #return gradient, variance, and total number of shots
         else:         return grad                            #return gradient
 
-    return grad_sps_func
+    def __sample_params():
+        """
+        Generator that returns a list with True or False for each extended parameter, if False the parameter is not sampled, 
+        meaning that the gradient is not computed for that parameter. 
+        For parameter shift method (not stochastic), all parameters are sampled.
+        For stochastic parameter shift method, the parameters are sampled according to the number given by the user for each parameter.
+        """
+        
+        if stochastic: # if stochastic is True, we sample the parameters according to the number given by the user for each parameter, this information is in the `gradient_options` dictionary.
+
+            # list of the names of the parameters and list of the number of gates for each parameter
+            names_params = ['n_beta_single', 'n_beta_pair', 'n_gamma_single', 'n_gamma_pair']
+            n_sample = [gradient_options[x] for x in names_params]
+
+            # check if the number of gates to sample is valid and if it is -1 then set it to the number of gates in the full parameter shift rule
+            for i, x in enumerate(n_sample):
+                y = len(params_coeffs[i])
+                assert -1 <= x <= y, f"Invalid {names_params[i]}, it must be between -1 and {y}, but {x} is passed."
+                if x == -1: n_sample[i] = y
+
+            # create a list of how many gates are associated with each coefficient 
+            n_sample = np.repeat(n_sample, params.p)
+            
+            # sample the parameters according to the number of gates to sample (this information is in n_sample)
+            sampled_list = np.array([])
+            for i, n in enumerate(n_sample):
+                # randomly choose n parameters to sample in the i-th group of standard parameters
+                sampled_indices = np.random.choice(range(l[i], l[i+1]), n, False)
+                # create a list of booleans, where True means that the parameter is sampled
+                sampled_list = np.append(sampled_list, np.array([i in sampled_indices for i in range(l[i], l[i+1])]))
+        else:
+            # if stochastic is False, sample all the parameters (there is one parameter for each coefficient)
+            sampled_list = np.ones(len(coeffs_list), dtype=bool) 
+
+        return sampled_list
+
+    return grad_ps_func
 
 
 def grad_spsa(backend_obj, params, gradient_options, logger, variance:bool=False):
