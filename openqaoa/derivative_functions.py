@@ -289,6 +289,9 @@ def __gradient(args, backend_obj, params, logger, variance):
         eval_i_list = [costs_dict[key] for key, value in counts_i_dict.items() for _ in range(value)]
         eval_f_list = [costs_dict[key] for key, value in counts_f_dict.items() for _ in range(value)]
 
+        # check if the number of shots used in the simulator / QPU is equal to n_shots
+        assert len(eval_i_list)==n_shots and len(eval_f_list)==n_shots, "This backend does not support changing the number of shots."
+
         # compute a list of gradients of one shot cost
         grad_list =  np.real(constant*(np.array(eval_f_list) - np.array(eval_i_list)))
         
