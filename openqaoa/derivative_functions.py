@@ -344,9 +344,6 @@ def grad_fd(backend_obj, params, gradient_options, logger, variance:bool=False):
         # if n_shots is int or None create a list with len of args (if it is none, it will use the default n_shots)
         n_shots_list = __create_n_shots_list(len(args), n_shots)
 
-        # if variance is True, add the number of shots per argument to the logger
-        if variance: logger.log_variables({'n_shots': n_shots_list})
-
         # lists of gradients and variances for each argument, initialized with zeros
         grad, var = np.zeros(len(args)), np.zeros(len(args))
 
@@ -359,13 +356,16 @@ def grad_fd(backend_obj, params, gradient_options, logger, variance:bool=False):
             # Finite diff. calculation of gradient
             grad[i], var[i] = __gradient_function(vect_eta, const, n_shots_list[i]) # const*[f(args + vect_eta) - f(args - vect_eta)]
 
+        # if variance is True, add the number of shots per argument to the logger
+        if variance: logger.log_variables({'n_shots': n_shots_list})
+
         if variance:  return grad, var, 2*sum(n_shots_list)   #return gradient, variance, and total number of shots
         else:         return grad                             #return gradient
 
     return grad_fd_func
 
 
-def grad_ps(backend_obj, params, params_ext, logger, variance:bool=False):
+def grad_ps(backend_obj, params, params_ext, gradient_options, logger, variance:bool=False, stochastic:bool=False):
     """
     Returns a callable function that calculates the gradient (and its variance if `variance=True`) with the parameter shift method.
 
@@ -390,11 +390,27 @@ def grad_ps(backend_obj, params, params_ext, logger, variance:bool=False):
     """    
     # TODO : handle Fourier parametrisation
 
-    # list of coefficients
-    coeffs_list = params.p*params.mixer_1q_coeffs + params.p*params.mixer_2q_coeffs + params.p*params.cost_1q_coeffs + params.p*params.cost_2q_coeffs
+    # list of list of the coefficients (mixer_1q, mixer_2q, cost_1q, cost_2q)
+    params_coeffs = [params.mixer_1q_coeffs, params.mixer_2q_coeffs, params.cost_1q_coeffs, params.cost_2q_coeffs]
+    # list of coefficients for all the extended parameters
+    coeffs_list = [x for coeffs in params_coeffs for x in coeffs for _ in range(params.p)]
+
+    if stochastic:
+        # list of the names of the parameters and list of the number of gates for each parameter
+        names_params = ['n_beta_single', 'n_beta_pair', 'n_gamma_single', 'n_gamma_pair']
+        n_sample = [gradient_options[x] for x in names_params]
+
+        # check if the number of gates to sample is valid and if it is -1 then set it to the number of gates in the full parameter shift rule
+        for i, x in enumerate(n_sample):
+            y = len(params_coeffs[i])
+            assert -1 <= x <= y, f"Invalid {names_params[i]}, it must be between -1 and {y}, but {x} is passed."
+            if x == -1: n_sample[i] = y
+
+        # create a list of how many gates are associated with each coefficient 
+        n_associated_params_stochastic = np.repeat(n_sample, params.p)
     
     # create a list of how many extended parameters are associated with each coefficient 
-    n_associated_params = np.repeat([len(params.mixer_1q_coeffs), len(params.mixer_2q_coeffs), len(params.cost_1q_coeffs), len(params.cost_2q_coeffs)], params.p)
+    n_associated_params = np.repeat([len(x) for x in params_coeffs], params.p)
     # with the `n_associated_params` list, add a 0 in the first position and sum the list cumulatively (so that this list indicate which gate is associated with which coefficient) 
     l = np.insert(np.cumsum(n_associated_params), 0, 0) # the i-th coefficient is associated with extended parameters with indices in range [l[i], l[i+1]]
 
@@ -405,9 +421,6 @@ def grad_ps(backend_obj, params, params_ext, logger, variance:bool=False):
 
         # get the function to compute the gradient and its variance
         __gradient_function = __gradient(args_ext, backend_obj, params_ext, logger, variance)
-
-        # if variance is True, add the number of shots per argument (standard) to the logger
-        if variance: logger.log_variables({'n_shots': __create_n_shots_list(len(args), n_shots)})
 
         # we call the function that returns the number of shots for each extended parameter, giving the number of shots for each standard parameter (n_shots)
         n_shots_list = __create_n_shots_ext_list(len(args), n_associated_params, n_shots)
@@ -426,10 +439,13 @@ def grad_ps(backend_obj, params, params_ext, logger, variance:bool=False):
             # sum all the gradients for each parameter of each coefficient according to the indices in l, and rehape the array to 4 rows and p columns, first row is mixer_1q, second is mixer_2q, third is cost_1q, fourth is cost_2q
         grad = np.array([np.sum(grad_ext[ l[i-1] : l[i] ]) for i in range(0, len(l)-1)]).reshape(4, params.p)
             # summing 1q with 2q gradients (first row with second row, third row with fourth row), to get the gradient for each parameter in the standard form
-        grad = np.concatenate((grad[0] + grad[1], grad[2] + grad[3]))
+        grad = np.concatenate((grad[0] + grad[1], grad[2] + grad[3])) # now we have the gradient in the standard form (one gradient for each standard parameter)
             # repeat the same for the variances
         var = np.array( [np.sum( var_ext[ l[i-1] : l[i] ]) for i in range(0, len(l)-1)]).reshape(4, params.p)
         var = np.concatenate((var[0] + var[1], var[2] + var[3]))
+
+        # if variance is True, add the number of shots per argument (standard) to the logger
+        if variance: logger.log_variables({'n_shots': __create_n_shots_list(len(args), n_shots)})
         
         if variance:  return grad, var, 2*sum(n_shots_list)  #return gradient, variance, and total number of shots
         else:         return grad                            #return gradient
