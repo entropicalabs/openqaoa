@@ -154,7 +154,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         return parametric_circuit
 
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Execute the circuit and obtain the counts
 
@@ -170,6 +170,8 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             as its value.
         """
 
+        n_shots = self.n_shots if n_shots == None else n_shots
+
         circuit = self.qaoa_circuit(params)
 
         job_state = False
@@ -178,7 +180,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         while job_state == False:
             job = execute(circuit, backend=self.backend_qpu,
-                          shots=self.n_shots, initial_layout=self.qubit_layout)
+                          shots=n_shots, initial_layout=self.qubit_layout)
 
             api_contact = False
             no_of_api_retries = 0
