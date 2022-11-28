@@ -14,12 +14,12 @@
 from typing import Union, Optional, List
 import numpy as np
 
-from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAAWSQPUBackend, 
-                        QAOAPyQuilWavefunctionSimulatorBackend,
+from ..backends import (QAOAQiskitQPUBackend,
+                        QAOAAWSQPUBackend,
                         QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
                         QAOAvectorizedBackendSimulator)
 
-from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS
+from ..devices import DeviceBase, DeviceLocal, DeviceQiskit, DeviceAWS
 from ..qaoa_parameters.baseparams import QAOACircuitParams
 from ..basebackend import QuantumCircuitBase, QAOABaseBackend
 
@@ -28,12 +28,10 @@ DEVICE_NAME_TO_OBJECT_MAPPER = {
     'qiskit.shot_simulator': QAOAQiskitBackendShotBasedSimulator,
     'qiskit.statevector_simulator': QAOAQiskitBackendStatevecSimulator,
     'vectorized': QAOAvectorizedBackendSimulator,
-    'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend
 }
 
 DEVICE_ACCESS_OBJECT_MAPPER = {
     DeviceQiskit: QAOAQiskitQPUBackend,
-    DevicePyquil: QAOAPyQuilQPUBackend, 
     DeviceAWS: QAOAAWSQPUBackend
 }
 
@@ -51,16 +49,11 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
     BACKEND_ARGS_MAPPER = {
         QAOAvectorizedBackendSimulator: {},
         QAOAQiskitBackendStatevecSimulator: {},
-        QAOAPyQuilWavefunctionSimulatorBackend: {},
         QAOAQiskitBackendShotBasedSimulator: {'n_shots': n_shots,
                                               'seed_simulator':seed_simulator,
                                               'qiskit_simulation_method': qiskit_simulation_method,
                                               'noise_model': noise_model},
         QAOAQiskitQPUBackend: {'n_shots': n_shots,
-                               'qubit_layout':qubit_layout},
-        QAOAPyQuilQPUBackend: {'n_shots': n_shots,
-                               'active_reset': active_reset,
-                               'rewiring': rewiring,
                                'qubit_layout':qubit_layout},
         QAOAAWSQPUBackend: {'n_shots': n_shots, 
                             'qubit_layout': qubit_layout, 
