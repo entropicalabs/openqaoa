@@ -436,7 +436,7 @@ def stochastic_grad_descent(fun, x0, jac, args=(), stepsize=0.001, mass=0.9, sta
 
 
 
-def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=None, n_shots_total_budget = None, 
+def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=None, n_shots_budget = None, 
             mu=0.99, b=1e-06, coeffs=None, maxiter=100, tol=10**(-6), jac_w_variance=None, callback=None, **options): 
 
     # check that the stepsize is small enough
@@ -453,7 +453,7 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
     besty = np.real(fun(bestx, *args))
     funcalls = 1  # tracks no. of function evals.
     niter = 0
-    n_shots_total = 0 # tracks no. of shots taken
+    n_shots_used_total = 0 # tracks no. of shots taken
     improved = True
     stop = False
 
@@ -466,7 +466,7 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
         gradient, variance, n_shots_used = jac_w_variance(testx, n_shots=n_shots)
 
         # add the number of shots to the total
-        n_shots_total += n_shots_used
+        n_shots_used_total += n_shots_used
 
         # compute gradient descent step
         testx = testx - stepsize*gradient
@@ -497,8 +497,8 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
             break
 
         # if there is a maximum number of shots and we have reached it, stop
-        if n_shots_total_budget != None:            
-            if not n_shots_total < n_shots_total_budget:
+        if n_shots_budget != None:            
+            if not n_shots_used_total < n_shots_budget:
                 stop = True
                 break
 
@@ -508,7 +508,7 @@ def CANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shot
                           nfev=funcalls, success=(niter > 1))
 
 
-def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, n_shots_total_budget=None, 
+def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_shots_max=10000, n_shots_budget=None, 
             mu=0.99, b=1e-06, coeffs=None, maxiter=100, tol=10**(-6), jac_w_variance=None, callback=None, **options): 
 
     # check that the stepsize is small enough
@@ -525,7 +525,7 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
     besty = np.real(fun(bestx, *args))
     funcalls = 1  # tracks no. of function evals.
     niter = 0
-    n_shots_total = 0 # track no. of shots
+    n_shots_used_total = 0 # track no. of shots
     improved = True
     stop = False
 
@@ -538,7 +538,7 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
         gradient, variance, n_shots_used = jac_w_variance(testx, n_shots=list(n_shots))
         
         # add the number of shots to the total 
-        n_shots_total += n_shots_used # TODO : add n_shots_used for the 'testy' evaluation 
+        n_shots_used_total += n_shots_used # TODO : add n_shots_used for the 'testy' evaluation 
 
         # compute gradient descent step
         testx = testx - stepsize*gradient
@@ -576,8 +576,8 @@ def iCANS(fun, x0, args=(), maxfev=None, stepsize=0.00001, n_shots_min=10, n_sho
             break
 
         # if there is a maximum number of shots and we have reached it, stop
-        if n_shots_total_budget != None:
-            if not n_shots_total < n_shots_total_budget:
+        if n_shots_budget != None:
+            if not n_shots_used_total < n_shots_budget:
                 stop = True
                 break
 
