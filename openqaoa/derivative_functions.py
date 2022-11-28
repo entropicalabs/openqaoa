@@ -204,6 +204,21 @@ def derivative(backend_obj: QAOABaseBackend,
 
 
 def __create_n_shots_list(n_params, n_shots):
+    """
+    Creates a list of `n_shots` for each parameter in the variational circuit.
+
+    Parameters
+    ----------
+    n_params : int
+        Number of parameters in the variational circuit.
+    n_shots : int or list
+        Number of shots to use for each parameter in the variational circuit. If `n_shots` is an integer, then the same number of shots is used for each parameter. If `n_shots` is a list, then the length of the list must be equal to `n_params` and we return the list.
+
+    Returns
+    -------
+    out:
+        List of `n_shots` for each parameter in the variational circuit.
+    """
 
     # If n_shots is a list, then it must be of length n_params, else create a list of length n_params with all elements equal to n_shots
     if isinstance(n_shots, list):
