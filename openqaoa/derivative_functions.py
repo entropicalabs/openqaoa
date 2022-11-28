@@ -68,13 +68,13 @@ def update_and_compute_expectation(backend_obj: QAOABaseBackend,
 def update_and_get_counts(  backend_obj: QAOABaseBackend, 
                             params: QAOAVariationalBaseParams, 
                             logger: Logger):
-    
     """
     Helper function that returns a callable that takes in a list/nparray of raw parameters.
     This function will handle:
-        (1) Updating logger object with `logger.log_variables`
-        (2) Updating variational parameters with `update_from_raw` 
-        (3) Getting the counts dictonary with `backend_obj.get_counts`
+
+        #. Updating logger object with `logger.log_variables`
+        #. Updating variational parameters with `update_from_raw` 
+        #. Getting the counts dictonary with `backend_obj.get_counts`
     
     PARAMETERS
     ----------
