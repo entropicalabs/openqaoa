@@ -10,14 +10,16 @@ with open("openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "amazon-braket-sdk>=1.23.0",
+    "amazon-braket-sdk",
     "pandas==1.1.4",
     "sympy>=1.10.1",
     "numpy==1.19.5",
     "networkx==2.4",
     "matplotlib==3.2.2",
     "scipy==1.5.2",
-    "qiskit>=0.36.1",
+    "qiskit-terra",
+    "qiskit-aer",
+    "qiskit-ibmq-provider",
     "docplex>=2.23.1",
     "autograd>=1.4",
     "semantic_version>=2.10",
