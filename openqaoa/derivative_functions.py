@@ -79,11 +79,9 @@ def update_and_get_counts(  backend_obj: QAOABaseBackend,
     PARAMETERS
     ----------
     backend_obj: QAOABaseBackend
-        `QAOABaseBackend` object that contains information about the backend that is being used to perform the QAOA circuit
-        
+        `QAOABaseBackend` object that contains information about the backend that is being used to perform the QAOA circuit        
     params : QAOAVariationalBaseParams
-        `QAOAVariationalBaseParams` object containing variational angles.
-        
+        `QAOAVariationalBaseParams` object containing variational angles.        
     logger: Logger
         Logger Class required to log information from the evaluations required for the jacobian/hessian computation.
     
@@ -279,13 +277,45 @@ def __create_n_shots_ext_list(n_params, n_associated_params, n_shots):
 
 def __gradient(args, backend_obj, params, logger, variance):
     """
-    returns a callable function that Computes the gradient and its variance for the i-th parameter using finite difference.
-    Or the gradient and its variance using spsa.
+    Returns a callable function that computes the gradient as `constant*(fun(args + vect_eta) - fun(args - vect_eta))` and its variance (if variance=True).
+    Where fun is the function that we want to differentiate, vect_eta is a vector of length n_params, and constant is a constant that depends on the derivative method.
+    
+    Parameters
+    ----------
+    args : np.array
+        List of arguments to pass to the function that we want to differentiate.
+    backend_obj : QAOABaseBackend
+        `QAOABaseBackend` object that contains information about the backend that is being used to perform the QAOA circuit
+    params : QAOAVariationalBaseParams
+        `QAOAVariationalBaseParams` object containing variational angles.
+    logger: Logger
+        Logger Class required to log information from the evaluations required for the jacobian/hessian computation.
+    variance : bool
+        If True, then the variance of the gradient is also computed.
+
+    Returns
+    -------
+    out:
+        Callable function that computes the gradient and its variance (if variance=True).
     """    
 
     def fun_w_variance(vect_eta, constant, n_shots=None):
         """
-        Computes the gradient and its variance . TODO
+        Computes the gradient and its variance as `constant*(fun(args + vect_eta) - fun(args - vect_eta))`.
+
+        Parameters
+        ----------
+        vect_eta : np.array
+            Vector of length n_params.
+        constant : float
+            Constant that depends on the derivative method.
+        n_shots : int
+            Number of shots to use when calling fun().
+        
+        Returns
+        -------
+        out:
+            Gradient and its variance.
         """
 
         # get value of eta, the function to get counts, hamiltonian, and alpha
@@ -315,7 +345,21 @@ def __gradient(args, backend_obj, params, logger, variance):
 
     def fun(vect_eta, constant, n_shots=None):
         """
-        Computes the gradient : TODO
+        Computes the gradient as `constant*(fun(args + vect_eta) - fun(args - vect_eta))`.
+
+        Parameters
+        ----------
+        vect_eta : np.array
+            Vector of length n_params.
+        constant : float
+            Constant that depends on the derivative method.
+        n_shots : int 
+            Number of shots to use when calling fun().
+
+        Returns
+        -------
+        out:
+            Gradient.
         """
         fun = update_and_compute_expectation(backend_obj, params, logger)
         return constant*(fun(args + vect_eta, n_shots=n_shots) - fun(args - vect_eta, n_shots=n_shots)), 0
