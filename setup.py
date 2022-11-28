@@ -46,7 +46,7 @@ requirements_test = [
 
 setup(
     name="openqaoa",
-    python_requires='>=3.8, <3.11',
+    python_requires='>=3.7, <3.11',
     version= version,
     author="Entropica Labs",
     packages=find_packages(where="."),
@@ -57,6 +57,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
