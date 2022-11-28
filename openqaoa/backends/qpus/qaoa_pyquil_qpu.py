@@ -229,7 +229,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         return parametric_circuit
 
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Execute the circuit and obtain the counts.
 
@@ -244,6 +244,10 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         counts : dictionary
             A dictionary with the bitstring as the key and the number of counts as its value.
         """
+
+        # TODO: make n_shots useful
+        assert n_shots is None, "PyQuil does not support n_shots in get_counts"
+
         executable_program = self.qaoa_circuit(params)
 
         result = self.device.quantum_computer.run(executable_program)
