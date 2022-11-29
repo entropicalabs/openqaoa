@@ -47,7 +47,7 @@ requirements_test = [
 
 setup(
     name="openqaoa",
-    python_requires='==3.7',
+    python_requires='~=3.7',
     version= version,
     author="Entropica Labs",
     packages=find_packages(where="."),
