@@ -230,7 +230,7 @@ class QAOABaseBackend(VQABaseBackend):
         pass
 
     @abstractmethod
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         This method will be implemented in the child classes according to the type
         of backend used.
@@ -496,7 +496,7 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
         self.n_shots = n_shots
 
     @abstractmethod
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Measurement outcome vs frequency information from a circuit execution
         represented as a python dictionary

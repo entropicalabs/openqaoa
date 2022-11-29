@@ -596,12 +596,10 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             print("Warning : SPSA is an experimental feature.")
             method = om.SPSA
         elif self.method == 'cans':
-            print("Warning : CANS is an experimental feature.")
             method = om.CANS
             self.options['jac_w_variance'] = self.jac_w_variance
             self.options['coeffs'] = self.vqa_object.cost_hamiltonian.coeffs
         elif self.method == 'icans':
-            print("Warning : iCANS is an experimental feature.")
             method = om.iCANS
             self.options['jac_w_variance'] = self.jac_w_variance
             self.options['coeffs'] = self.vqa_object.cost_hamiltonian.coeffs
