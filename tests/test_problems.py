@@ -1,4 +1,3 @@
-from math import dist
 import unittest
 import networkx as nx
 import numpy as np
