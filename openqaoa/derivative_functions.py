@@ -490,14 +490,14 @@ def grad_ps(backend_obj, params, params_ext, gradient_options, logger, stochasti
             vect_eta[i] = (np.pi/(4*r))
             grad_ext[i], var_ext[i] = __gradient_function(vect_eta, r, n_shots_list[i]) # r*[f(args + vect_eta) - f(args - vect_eta)]
             n_shots_used += n_shots_list[i] * 2 if n_shots_list[i] != None else 0 #we multiply by 2 because we call the function twice to compute the gradient
-
+            
         ## convert extended form back into standard form
             # sum all the gradients for each parameter of each coefficient according to the indices in l, and rehape the array to 4 rows and p columns, first row is mixer_1q, second is mixer_2q, third is cost_1q, fourth is cost_2q
-        grad = np.array([np.sum(grad_ext[ l[i-1] : l[i] ]) for i in range(0, len(l)-1)]).reshape(4, params.p)
+        grad = np.array([np.sum(grad_ext[ l[i] : l[i+1] ]) for i in range(len(l)-1)]).reshape(4, params.p)
             # summing 1q with 2q gradients (first row with second row, third row with fourth row), to get the gradient for each parameter in the standard form
         grad = np.concatenate((grad[0] + grad[1], grad[2] + grad[3])) # now we have the gradient in the standard form (one gradient for each standard parameter)
             # repeat the same for the variances
-        var = np.array( [np.sum( var_ext[ l[i-1] : l[i] ]) for i in range(0, len(l)-1)]).reshape(4, params.p)
+        var = np.array( [np.sum( var_ext[ l[i] : l[i+1] ]) for i in range(len(l)-1)]).reshape(4, params.p)
         var = np.concatenate((var[0] + var[1], var[2] + var[3]))
 
         # if variance is True, add the number of shots per argument (standard) to the logger
