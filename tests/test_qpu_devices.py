@@ -18,136 +18,8 @@ import os
 import pytest
 import itertools
 
-from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS
-from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
-from openqaoa.qaoa_parameters import Hamiltonian, create_qaoa_variational_params
-from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
-from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa.devices import create_device
-from openqaoa.basebackend import QAOABaseBackendShotBased
-
+from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS, SUPPORTED_LOCAL_SIMULATORS
 from qiskit import IBMQ
-
-
-SUPPORTED_LOCAL_SIMULATORS = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
-
-class TestingDeviceLocal(unittest.TestCase):
-    
-    """
-    These tests check that the Device Object created for local devices have the
-    appropriate behaviour.
-    """
-    
-    def test_supported_device_names(self):
-        
-        for each_device_name in SUPPORTED_LOCAL_SIMULATORS:
-            device_obj = DeviceLocal(each_device_name)
-            
-            self.assertEqual(device_obj.check_connection(), True)
-    
-    def test_unsupported_device_names(self):
-        
-        device_obj = DeviceLocal('unsupported_device')
-        
-        self.assertEqual(device_obj.check_connection(), False)
-
-    def test_get_counts_and_expectation_n_shots(self):
-        """ 
-        Check that the .get_counts admit n_shots as an argument, and works properly for the backend of all local devices.
-        Also check that .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the QAOABaseBackendShotBased backends.
-        """
-
-        for device_name in SUPPORTED_LOCAL_SIMULATORS:
-
-            device = create_device(location='local', name=device_name)
-
-            cost_hamil = Hamiltonian.classical_hamiltonian([[0, 1]], [1], constant=0)
-            mixer_hamil = X_mixer_hamiltonian(2)
-
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-            variational_params_std = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
-            backend = get_qaoa_backend(circuit_params=circuit_params, device=device, n_shots=1000)
-                        
-            assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values())==58, "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=58).".format(device_name)
-            if isinstance(backend, QAOABaseBackendShotBased): 
-                try: backend.expectation(params=variational_params_std, n_shots=58)
-                except Exception: raise Exception("backend.expectation does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
-                try: backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
-                except Exception: raise Exception("backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
-
-class TestingDeviceQPUs(unittest.TestCase):
-    """ These tests check methods of the backend of the Device Object for QPUs."""
-
-    def setUp(self):
-        try:
-            opened_f = open('./tests/credentials.json', 'r')
-        except FileNotFoundError:
-            opened_f = open('credentials.json', 'r')
-                
-        with opened_f as f:
-            json_obj = json.load(f)['QISKIT']
-            
-            try:
-                api_token = os.environ['IBMQ_TOKEN']
-                self.HUB = os.environ['IBMQ_HUB']
-                self.GROUP = os.environ['IBMQ_GROUP']
-                self.PROJECT = os.environ['IBMQ_PROJECT']
-            except Exception:
-                api_token = json_obj['API_TOKEN']
-                self.HUB = json_obj['HUB']
-                self.GROUP = json_obj['GROUP']
-                self.PROJECT = json_obj['PROJECT']
-
-        if api_token == "YOUR_API_TOKEN_HERE":
-            raise ValueError(
-                "Please provide an appropriate API TOKEN in crendentials.json.")
-        elif self.HUB == "IBMQ_HUB":
-            raise ValueError(
-                "Please provide an appropriate IBM HUB name in crendentials.json.")
-        elif self.GROUP == "IBMQ_GROUP":
-            raise ValueError(
-                "Please provide an appropriate IBMQ GROUP name in crendentials.json.")
-        elif self.PROJECT == "IBMQ_PROJECT":
-            raise ValueError(
-                "Please provide an appropriate IBMQ Project name in crendentials.json.")
-            
-        IBMQ.save_account(token = api_token, hub=self.HUB, 
-                          group=self.GROUP, project=self.PROJECT, 
-                          overwrite=True)
-
-    def test_get_counts_and_expectation_n_shots(self):
-        """ Check that the .get_counts, .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the backends of all QPUs. """
-
-        list_device_attributes = [ 
-                                    {'device_name': 'ibmq_qasm_simulator', 'hub': self.HUB, 'group': self.GROUP, 'project': self.PROJECT}, 
-                                    {'device_name': "2q-qvm", 'as_qvm': True, 'execution_timeout': 3, 'compiler_timeout': 3},       
-                                    {'device_name': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'}
-                                ]
-
-        for (device, backend), device_attributes in zip(DEVICE_ACCESS_OBJECT_MAPPER.items(), list_device_attributes):
-            cost_hamil = Hamiltonian.classical_hamiltonian([[0, 1]], [1], constant=0)
-            mixer_hamil = X_mixer_hamiltonian(2)
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-            device = device(**device_attributes)
-
-            variational_params_std = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
-            backend = backend(circuit_params = circuit_params, device = device, cvar_alpha = 1, n_shots=100, prepend_state = None, append_state = None, init_hadamard = True)
-
-            ## TODO: get rid of the ``` if str(e) != "PyQuil does not support n_shots in get_counts" ``` 
-
-            # Check that the .get_counts method admits n_shots as an argument
-            try: assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values()) == 58, "`n_shots` is not being respected for the QPU `{}` when calling backend.get_counts(n_shots=58).".format(device_attributes['device_name'])
-            except Exception as e: 
-                if str(e) != "PyQuil does not support n_shots in get_counts": raise e 
-
-            try: backend.expectation(params=variational_params_std, n_shots=58)
-            except Exception as e:
-                if str(e) != "PyQuil does not support n_shots in get_counts":  
-                    raise Exception("backend.expectation does not admit `n_shots` as an argument for the QPU `{}`.".format(device_attributes['device_name']))
-            try: backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
-            except Exception: 
-                if str(e) != "PyQuil does not support n_shots in get_counts": 
-                    raise Exception("backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the QPU `{}`.".format(device_attributes['device_name']))
 
 
 class TestingDeviceQiskit(unittest.TestCase):
@@ -306,6 +178,27 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, False)
+
+
+class TestingDeviceLocal(unittest.TestCase):
+    
+    """
+    This tests check that the Device Object created for local devices have the
+    appropriate behaviour.
+    """
+    
+    def test_supported_device_names(self):
+        
+        for each_device_name in SUPPORTED_LOCAL_SIMULATORS:
+            device_obj = DeviceLocal(each_device_name)
+            
+            self.assertEqual(device_obj.check_connection(), True)
+    
+    def test_unsupported_device_names(self):
+        
+        device_obj = DeviceLocal('unsupported_device')
+        
+        self.assertEqual(device_obj.check_connection(), False)
 
 
 class TestingDeviceAWS(unittest.TestCase):
