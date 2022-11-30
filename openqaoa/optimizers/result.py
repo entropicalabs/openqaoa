@@ -254,7 +254,7 @@ class Result:
         print('states kept:', n_states_to_keep)
         return
 
-    def plot_n_shots(self, figsize = (10,8), param_to_plot=None, label=None, linestyle="--", color=None, ax=None, xlabel="Iterations", ylabel="Number of shots", title="Evolution of number of shots"):
+    def plot_n_shots(self, figsize = (10,8), param_to_plot=None, label=None, linestyle="--", color=None, ax=None, xlabel="Iterations", ylabel="Number of shots", title="Evolution of number of shots for gradient estimation"):
         """
         Helper function to plot the evlution of the number of shots used for each evaluation of the cost function when computing the gradient.
         It only works for shot adaptive optimizers: cans and icans. 
