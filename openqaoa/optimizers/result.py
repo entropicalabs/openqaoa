@@ -120,6 +120,7 @@ class Result:
         ----------
         measurement_outcomes: `Union[np.array, dict]`
             The measurement outcome as returned by the Logger. It can either be a statevector or a count dictionary
+            
         Returns
         -------
         `dict`
