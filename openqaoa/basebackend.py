@@ -234,6 +234,7 @@ class QAOABaseBackend(VQABaseBackend):
         """
         This method will be implemented in the child classes according to the type
         of backend used.
+        
         Parameters
         ----------
         params: `QAOAVariationalBaseParams`
