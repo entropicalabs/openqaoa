@@ -184,32 +184,6 @@ class TestQAOACostBaseClass(unittest.TestCase):
                 x = 4 if gradient_name == 'finite_difference' else 6 #that is also checking that  SPS samples all gates when (n_beta, n_gamma_pair, n_gamma_single) is (-1, -1, -1)
                 assert n_shots == x*1000, f'The number of shots should be {x*1000} but is {n_shots}.'
 
-    def test_gradient_w_variance_computation_optimization(self):
-        "Test gradient computation by param. shift, finite difference, and SPS (all gates sampled) on barbell graph. "
-
-        # Analytical cost expression : C(b,g) = -sin(4b)*sin(2g)
-        backend, params = self.__backend_params(terms=[[0, 1]], weights=[1], p=1, nqubits=2)
-
-        gradients_types_list = ['finite_difference', 'param_shift', 'stoch_param_shift']
-        gradients_fun_list = [derivative(backend, params, self.log, 'gradient_w_variance', type_, {'stepsize': 0.00000001}) for type_ in gradients_types_list]
-
-        test_points = [[0, 0], [np.pi/2, np.pi/3], [1, 2]]
-
-        for point in test_points: 
-
-            for gradient_fun, gradient_name in zip(gradients_fun_list, gradients_types_list):
-
-                #compute gradient for each point with number of shots 1000 for ech function evaluation 
-                grad, var, n_shots = gradient_fun(point, n_shots=1000)
-
-                #check if there is a gradient and variance (we can't check the value of the gradient and variance because it is randomly computed, since n_shots is 1000)
-                for g in grad: assert np.abs(g)>=0, f'Gradient computation failed for {gradient_name} on barbell graph. grad: {grad}'
-                for v in var: assert v>0, f'Error computing the variance of the gradient for {gradient_name} on barbell graph.'
-
-                #check if the number of shots is correct
-                x = 4 if gradient_name == 'finite_difference' else 6 #that is also checking that  SPS samples all gates when (n_beta, n_gamma_pair, n_gamma_single) is (-1, -1, -1)
-                assert n_shots == x*1000, f'The number of shots should be {x*1000} but is {n_shots}.'
-
     def test_SPS_sampling(self):
         "Test that SPS samples the number of gates specified by the user."
         backend, params = self.__backend_params(terms=[[0, 1]], weights=[1], p=1, nqubits=2)
