@@ -161,6 +161,8 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         params: QAOAVariationalBaseParams
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
+        n_shots: int
+            The number of times to run the circuit. If None, n_shots is set to the default: self.n_shots
 
         Returns
         -------

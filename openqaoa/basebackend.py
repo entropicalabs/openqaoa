@@ -234,6 +234,13 @@ class QAOABaseBackend(VQABaseBackend):
         """
         This method will be implemented in the child classes according to the type
         of backend used.
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+            The QAOA parameters - an object of one of the parameter classes, containing 
+            variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
         """
         pass
 
@@ -246,6 +253,8 @@ class QAOABaseBackend(VQABaseBackend):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
 
         Returns
         -------
@@ -268,6 +277,8 @@ class QAOABaseBackend(VQABaseBackend):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
 
         Returns
         -------
@@ -506,6 +517,8 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters as a 1D array (derived from an object of one of the
             parameter classes, containing hyperparameters and variable parameters).
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
 
         Returns
         -------

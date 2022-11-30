@@ -192,6 +192,8 @@ class OptimizeVQA(ABC):
         ----------
         x: 
             Parameters (a list of floats) over which optimization is performed.
+        n_shots:
+            Number of shots to be used for the backend when computing the expectation. If None, nothing is passed to the backend.
 
         Returns 
         -------
