@@ -254,48 +254,80 @@ class Result:
         print('states kept:', n_states_to_keep)
         return
 
-    def plot_n_shots(self, figsize = (10,8), label=None, linestyle="--", color=None, ax=None, param_to_plot=None):
+    def plot_n_shots(self, figsize = (10,8), param_to_plot=None, label=None, linestyle="--", color=None, ax=None, xlabel="Iterations", ylabel="Number of shots", title="Evolution of number of shots"):
         """
-        Helper function to plot the number of shots for each basis state obtained from the optimized result
+        Helper function to plot the evlution of the number of shots used for each evaluation of the cost function when computing the gradient.
+        It only works for shot adaptive optimizers: cans and icans. 
+        If cans was used, the number of shots will be the same for each parameter at each iteration.
+        If icans was used, the number of shots could be different for each parameter at each iteration.
+
+        Parameters
+        ----------
+        figsize: `tuple`
+            The size of the figure to be plotted. Defaults to (10,8).
+        param_to_plot: `list[int]` or `int`
+            The parameteres to plot. If None, all parameters will be plotted. Defaults to None.
+            If a int is given, only the parameter with that index will be plotted.
+            If a list of ints is given, the parameters with those indexes will be plotted.
+        label: `list[str]` or `str`
+            The label for each parameter. Defaults to Parameter {i}. 
+            If only one parameter is plot the label can be a string, otherwise it must be a list of strings.
+        linestyle: `list[str]` or `str`
+            The linestyle for each parameter. Defaults to '--' for all parameters. 
+            If it is a string all parameters will use it, if it a list of strings the linestyle of each parameter will depend on one string of the list.
+        color: `list[str]` or `str`
+            The color for each parameter. Defaults to None for all parameters (matplotlib will choose the colors). 
+            If only one parameter is plot the color can be a string, otherwise it must be a list of strings.
+        ax: 'matplotlib.axes._subplots.AxesSubplot'
+            Axis on which to plot the graph. If none is given, a new figure will be created.
+
         """
 
         if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
+            ax = plt.subplots(figsize=figsize)[1]
 
+        ## creating a list of parameters to plot
         # if param_to_plot is not given, plot all the parameters 
         if param_to_plot is None: param_to_plot = list(range(len(self.n_shots[0]))) 
         # if param_to_plot is a single value, convert to list
         elif type(param_to_plot) == int: param_to_plot = [param_to_plot]
         # if param_to_plot is not a list, raise error
-        if type(param_to_plot) != list: raise ValueError('param_to_plot must be a list of integers or a single integer')
+        if type(param_to_plot) != list: raise ValueError('`param_to_plot` must be a list of integers or a single integer')
         else: 
             for param in param_to_plot:
-                assert param < len(self.n_shots[0]) , f'param_to_plot must be a list of integers between 0 and {len(self.n_shots[0]) - 1}'
+                assert param < len(self.n_shots[0]) , f'`param_to_plot` must be a list of integers between 0 and {len(self.n_shots[0]) - 1}'
 
         # if label is not given, create a list of labels for each parameter (only if there is more than 1 parameter)
         if len(self.n_shots[0]) > 1: label = [f'Parameter {i}' for i in param_to_plot] if label is None else label
         else: label = ['n. shots per parameter']
 
-        # if only one parameter is given, convert label and color to list if they are string
+        # if only one parameter is plotted, convert label and color to list if they are string
         if len(param_to_plot) == 1:
             if type(label) == str: label = [label]
             if type(color) == str: color = [color]
 
         # if param_top_plot is a list and label or color are not lists, raise error
         if (type(label) != list) or (type(color) != list and color != None):
-            raise TypeError('label and color must be list of str')
+            raise TypeError('`label` and `color` must be list of str')
+        # if label is a list, check that all the elements are strings
+        for l in label: assert type(l) == str, '`label` must be a list of strings'
+        # if color is a list, check that all the elements are strings
+        if color != None: 
+            for c in color: assert type(c) == str, '`color` must be a list of strings'
 
         # if label and color are lists, check if they have the same length as param_to_plot
-        elif len(label) != len(param_to_plot) or (color != None and len(color) != len(param_to_plot)):
-            raise ValueError(f'param_to_plot, label and color must have the same length, param_to_plot is a list of {len(param_to_plot)} elements')
+        if len(label) != len(param_to_plot) or (color != None and len(color) != len(param_to_plot)):
+            raise ValueError(f'`param_to_plot`, `label` and `color` must have the same length, `param_to_plot` is a list of {len(param_to_plot)} elements')
 
         #check if linestyle is a string, if not convert to list
         if type(linestyle) != str and type(linestyle) != list:
-            raise TypeError('linestyle must be str or list')
+            raise TypeError('`linestyle` must be str or list')
         elif type(linestyle) == str:
             linestyle = [linestyle for _ in range(len(param_to_plot))]
         elif len(linestyle) != len(param_to_plot):
-            raise ValueError(f'linestyle must have the same length as param_to_plot (length of param_to plot is {len(param_to_plot)}), or be a string')
+            raise ValueError(f'`linestyle` must have the same length as param_to_plot (length of `param_to_plot` is {len(param_to_plot)}), or be a string')
+        else:
+            for ls in linestyle: assert type(ls) == str, '`linestyle` must be a list of strings'
             
 
         # plot the evolution of the number of shots for each parameter that is in param_to_plot
@@ -307,10 +339,10 @@ class Result:
                 ax.plot(values, label=label[i], linestyle=linestyle[i], color=color[i])
 
 
-        ax.set_ylabel("Number of shots")
-        ax.set_xlabel("Iterations")
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel(xlabel)
         ax.legend()
-        ax.set_title("Evolution of number of shots")
+        ax.set_title(title)
 
 
 
