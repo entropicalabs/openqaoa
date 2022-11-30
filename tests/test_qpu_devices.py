@@ -18,8 +18,59 @@ import os
 import pytest
 import itertools
 
-from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS, SUPPORTED_LOCAL_SIMULATORS
+from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS
+from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
+from openqaoa.qaoa_parameters import Hamiltonian, create_qaoa_variational_params
+from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
+from openqaoa.utilities import X_mixer_hamiltonian
+from openqaoa.devices import create_device
+from openqaoa.basebackend import QAOABaseBackendShotBased
+
 from qiskit import IBMQ
+
+
+SUPPORTED_LOCAL_SIMULATORS = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
+
+class TestingDeviceLocal(unittest.TestCase):
+    
+    """
+    These tests check that the Device Object created for local devices have the
+    appropriate behaviour.
+    """
+    
+    def test_supported_device_names(self):
+        
+        for each_device_name in SUPPORTED_LOCAL_SIMULATORS:
+            device_obj = DeviceLocal(each_device_name)
+            
+            self.assertEqual(device_obj.check_connection(), True)
+    
+    def test_unsupported_device_names(self):
+        
+        device_obj = DeviceLocal('unsupported_device')
+        
+        self.assertEqual(device_obj.check_connection(), False)
+
+    def test_get_counts_n_shots(self):
+        """ Check that the number of shots is correctly set for the .get_counts method of local simulators. """
+
+        for device_name in SUPPORTED_LOCAL_SIMULATORS:
+
+            device = create_device(location='local', name=device_name)
+
+            cost_hamil = Hamiltonian.classical_hamiltonian([[0, 1]], [1], constant=0)
+            mixer_hamil = X_mixer_hamiltonian(2)
+
+            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+            variational_params_std = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
+            backend = get_qaoa_backend(circuit_params=circuit_params, device=device, n_shots=1000)
+                        
+            assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values())==58, "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=58).".format(device_name)
+            if isinstance(backend, QAOABaseBackendShotBased): 
+                try: backend.expectation(params=variational_params_std, n_shots=58)
+                except Exception: raise Exception("backend.expectation does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
+                try: backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
+                except Exception: raise Exception("backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
 
 
 class TestingDeviceQiskit(unittest.TestCase):
@@ -178,27 +229,6 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, False)
-
-
-class TestingDeviceLocal(unittest.TestCase):
-    
-    """
-    This tests check that the Device Object created for local devices have the
-    appropriate behaviour.
-    """
-    
-    def test_supported_device_names(self):
-        
-        for each_device_name in SUPPORTED_LOCAL_SIMULATORS:
-            device_obj = DeviceLocal(each_device_name)
-            
-            self.assertEqual(device_obj.check_connection(), True)
-    
-    def test_unsupported_device_names(self):
-        
-        device_obj = DeviceLocal('unsupported_device')
-        
-        self.assertEqual(device_obj.check_connection(), False)
 
 
 class TestingDeviceAWS(unittest.TestCase):
