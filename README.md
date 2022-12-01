@@ -77,7 +77,7 @@ Devices are serviced both locally and on the cloud. For the IBM Quantum experien
 | Device location  | Device Name |
 | ------------- | ------------- |
 | `local`  | `['qiskit.shot_simulator', 'qiskit.statevector_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
-| [Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html)    | IonQ, Rigetti, OCQ, and simulators |
+| [Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html)    | IonQ, Rigetti, OQC, and simulators |
 | [IBMQ](https://quantum-computing.ibm.com/)    | Please check the IBMQ backends available to your account |
 | [Rigetti QCS](https://qcs.rigetti.com/sign-in)     | Aspen-11, Aspen-M-1, and QVM simulator |
 

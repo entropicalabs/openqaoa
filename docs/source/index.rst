@@ -123,7 +123,7 @@ Currently, the available devices are:
    * - `local`
      - `['qiskit_shot_simulator', 'qiskit_statevec_simulator', 'qiskit_qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`
    * - `Amazon Braket`
-     -  ['IonQ', 'Rigetti', 'OCQ']
+     -  ['IonQ', 'Rigetti', 'OQC']
    * - `IBMQ`
      - Please check the IBMQ backends available to your account
    * - `Rigetti's QCS`
