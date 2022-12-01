@@ -489,8 +489,14 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
-    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton', 'rmsprop', 'natural_grad_descent', 'spsa',
-                                    'icans', 'cans']
+    CUSTOM_GRADIENT_OPTIMIZERS_MAPPER = {   'vgd': om.grad_descent, 
+                                            'newton': om.newton_descent, 
+                                            'rmsprop': om.rmsprop, 
+                                            'natural_grad_descent': om.natural_grad_descent, 
+                                            'spsa': om.SPSA,
+                                            'cans': om.CANS,
+                                            'icans': om.iCANS   }
+    CUSTOM_GRADIENT_OPTIMIZERS = list(CUSTOM_GRADIENT_OPTIMIZERS_MAPPER.keys())
 
     def __init__(self,
                  vqa_object: Type[VQABaseBackend],
@@ -584,27 +590,18 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             Returns self after the optimization process is completed. The optimized result is assigned to the attribute ``opt_result``
         '''
 
-        if self.method == 'vgd':
-            method = om.grad_descent
-        elif self.method == 'newton':
-            method = om.newton_descent
-        elif self.method == 'rmsprop':
-            method = om.rmsprop
-        elif self.method == 'natural_grad_descent':
-            method = om.natural_grad_descent
-            self.options['qfim'] = qfim(self.vqa_object,
-                self.variational_params, self.log)
+        # set the optimizer function to the `method` variable based on the input
+        
+        method = CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS_MAPPER[self.method]
+                    
+        if self.method == 'natural_grad_descent':
+            self.options['qfim'] = qfim(self.vqa_object, self.variational_params, self.log)
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
-            method = om.SPSA
-        elif self.method == 'cans':
-            method = om.CANS
+        elif self.method in ['cans', 'icans']:
             self.options['jac_w_variance'] = self.jac_w_variance
             self.options['coeffs'] = self.vqa_object.cost_hamiltonian.coeffs
-        elif self.method == 'icans':
-            method = om.iCANS
-            self.options['jac_w_variance'] = self.jac_w_variance
-            self.options['coeffs'] = self.vqa_object.cost_hamiltonian.coeffs
+            self.options['n_shots_cost'] = self.vqa_object.n_shots
         
         try:
             if self.hess == None:
@@ -652,9 +649,7 @@ class PennyLaneOptimizer(OptimizeVQA):
         * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``. Used also for the pennylande optimizers (and step function) arguments.
 
     """
-    PENNYLANE_OPTIMIZERS = ['pennylane_adagrad', 'pennylane_adam', 'pennylane_vgd', 
-                                  'pennylane_momentum', 'pennylane_nesterov_momentum',
-                                  'pennylane_rmsprop', 'pennylane_rotosolve', 'pennylane_spsa']
+    PENNYLANE_OPTIMIZERS = list(ompl.AVAILABLE_OPTIMIZERS.keys())
 
     def __init__(self,
                  vqa_object: Type[VQABaseBackend],
@@ -735,11 +730,9 @@ class PennyLaneOptimizer(OptimizeVQA):
         method = ompl.pennylane_optimizer
 
         # set the method to be used for the optimization
-        self.options['pennylane_method'] = self.method.replace("pennylane_", "") 
+        self.options['pennylane_method'] = self.method
 
-        if self.options['pennylane_method'] == 'natural_grad_descent': 
-            self.options['qfim'] = qfim(self.vqa_object, self.variational_params, self.log)
-        elif self.options['pennylane_method'] in ['spsa', 'rotosolve']:    
+        if self.options['pennylane_method'] in ['pennylane_spsa', 'pennylane_rotosolve']:    
             self.jac = None 
         
         try:
