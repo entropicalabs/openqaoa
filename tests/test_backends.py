@@ -29,8 +29,6 @@ from openqaoa.basebackend import QAOABaseBackendShotBased
 from qiskit import IBMQ
 
 
-SUPPORTED_LOCAL_SIMULATORS = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
-
 def get_params():
     cost_hamil = Hamiltonian.classical_hamiltonian([[0, 1]], [1], constant=0)
     mixer_hamil = X_mixer_hamiltonian(2)
@@ -51,7 +49,7 @@ class TestingBackendLocal(unittest.TestCase):
         Also check that .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the QAOABaseBackendShotBased backends.
         """
 
-        for device_name in SUPPORTED_LOCAL_SIMULATORS:
+        for device_name in DEVICE_NAME_TO_OBJECT_MAPPER.keys():
 
             circuit_params, variational_params_std= get_params()
 
@@ -67,13 +65,13 @@ class TestingBackendLocal(unittest.TestCase):
 
 class TestingBackendQPUs(unittest.TestCase):
     """ 
-    These tests check methods of the backend of the Device Object for QPUs.
+    These tests check methods of the QPU backends.
 
     For all of these tests, credentials.json MUST be filled with the appropriate
-    credentials. If unsure about to correctness of the current input credentials
-    , please run test_qpu_devices.py. 
+    credentials. 
     """
 
+    @pytest.mark.qpu
     def setUp(self):
         try:
             opened_f = open('./tests/credentials.json', 'r')
@@ -95,53 +93,56 @@ class TestingBackendQPUs(unittest.TestCase):
                 self.PROJECT = json_obj['PROJECT']
 
         if api_token == "YOUR_API_TOKEN_HERE":
-            raise ValueError(
-                "Please provide an appropriate API TOKEN in crendentials.json.")
+            raise ValueError("Please provide an appropriate API TOKEN in crendentials.json.")
         elif self.HUB == "IBMQ_HUB":
-            raise ValueError(
-                "Please provide an appropriate IBM HUB name in crendentials.json.")
+            raise ValueError("Please provide an appropriate IBM HUB name in crendentials.json.")
         elif self.GROUP == "IBMQ_GROUP":
-            raise ValueError(
-                "Please provide an appropriate IBMQ GROUP name in crendentials.json.")
+            raise ValueError("Please provide an appropriate IBMQ GROUP name in crendentials.json.")
         elif self.PROJECT == "IBMQ_PROJECT":
-            raise ValueError(
-                "Please provide an appropriate IBMQ Project name in crendentials.json.")
+            raise ValueError("Please provide an appropriate IBMQ Project name in crendentials.json.")
             
         IBMQ.save_account(token = api_token, hub=self.HUB, 
                           group=self.GROUP, project=self.PROJECT, 
                           overwrite=True)
 
+    @pytest.mark.qpu
     def test_get_counts_and_expectation_n_shots(self):
         """ Check that the .get_counts, .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the backends of all QPUs. """
 
         list_device_attributes = [ 
-                                    {'device_name': 'ibmq_qasm_simulator', 'hub': self.HUB, 'group': self.GROUP, 'project': self.PROJECT}, 
-                                    {'device_name': "2q-qvm", 'as_qvm': True, 'execution_timeout': 3, 'compiler_timeout': 3},       
-                                    {'device_name': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'}
+                                    {'QPU': 'Qiskit', 'device_name': 'ibmq_qasm_simulator', 'hub': self.HUB, 'group': self.GROUP, 'project': self.PROJECT}, 
+                                    {'QPU': 'Pyquil', 'device_name': "2q-qvm", 'as_qvm': True, 'execution_timeout': 3, 'compiler_timeout': 3},       
+                                    {'QPU': 'AWS', 'device_name': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'}
                                 ]
+
+        assert len(list_device_attributes) == len(DEVICE_ACCESS_OBJECT_MAPPER), "The number of QPUs in the list of tests is not the same as the number of QPUs in the DEVICE_ACCESS_OBJECT_MAPPER. The list should be updated."
 
         for (device, backend), device_attributes in zip(DEVICE_ACCESS_OBJECT_MAPPER.items(), list_device_attributes):
 
-            circuit_params, variational_params_std= get_params()
+            circuit_params, variational_params_std = get_params()
 
-            device = device(**device_attributes)
-            backend = backend(circuit_params = circuit_params, device = device, cvar_alpha = 1, n_shots=100, prepend_state = None, append_state = None, init_hadamard = True)
+            QPU_name = device_attributes.pop('QPU')
+            print("Testing {} backend.".format(QPU_name))
 
-            ## TODO: get rid of the ``` if str(e) != "PyQuil does not support n_shots in get_counts" ``` 
+            # TODO : remove the following if:
+            if QPU_name == "Pyquil": 
+                print("Skipping test for Pyquil backend.")
+                continue # we need to skip this test for now, since the pyquil backend does not admit n_shots as an argument.
 
-            # Check that the .get_counts method admits n_shots as an argument
-            try: assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values()) == 58, "`n_shots` is not being respected for the QPU `{}` when calling backend.get_counts(n_shots=58).".format(device_attributes['device_name'])
+            try: 
+                device = device(**device_attributes)
+                backend = backend(circuit_params = circuit_params, device = device, cvar_alpha = 1, n_shots=100, prepend_state = None, append_state = None, init_hadamard = True)
+
+                # Check that the .get_counts, .expectation and .expectation_w_variance methods admit n_shots as an argument
+                assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values()) == 58, "`n_shots` is not being respected when calling .get_counts(n_shots=58).".format(QPU_name)
+                backend.expectation(params=variational_params_std, n_shots=58)
+                backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
+
             except Exception as e: 
-                if str(e) != "PyQuil does not support n_shots in get_counts": raise e 
 
-            try: backend.expectation(params=variational_params_std, n_shots=58)
-            except Exception as e:
-                if str(e) != "PyQuil does not support n_shots in get_counts":  
-                    raise Exception("backend.expectation does not admit `n_shots` as an argument for the QPU `{}`.".format(device_attributes['device_name']))
-            try: backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
-            except Exception: 
-                if str(e) != "PyQuil does not support n_shots in get_counts": 
-                    raise Exception("backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the QPU `{}`.".format(device_attributes['device_name']))
+                raise e from type(e)(f"Error raised for `{QPU_name}`: " + str(e))
+
+            print("Test passed for {} backend.".format(QPU_name))
 
 
 
