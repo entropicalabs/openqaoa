@@ -77,7 +77,6 @@ class RQAOAResults(dict):
         """
         full_dict = copy.deepcopy(self)
         full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
-        full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results} for step in full_dict['intermediate_steps']]
         full_dict['device']              = self.device
         full_dict['circuit_properties']  = self.circuit_properties
         full_dict['backend_properties']  = self.backend_properties

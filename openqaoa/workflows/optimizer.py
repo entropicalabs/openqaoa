@@ -677,9 +677,12 @@ class RQAOA(Optimizer):
         Results will be stored in the `results` attribute.
         """
 
+        #check if the object has been compiled (or already optimized)
+        assert self.compiled, "RQAOA object has not been compiled. Please run the compile method first."
+
         # lists to append the eliminations and the qaoa objects
         elimination_tracker = []
-        qaoa_steps = []
+        q_results_steps = []
         problem_steps = []
 
         # get variables
@@ -688,8 +691,8 @@ class RQAOA(Optimizer):
         n_qubits = problem.n
         counter = self.rqaoa_parameters.counter
 
-        # copy the original qaoa object
-        q = copy.deepcopy(self._q)
+        # get the qaoa object
+        q = self._q
 
         # create a different max_terms function for each type 
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
@@ -720,8 +723,8 @@ class RQAOA(Optimizer):
             n_qubits = new_problem.n
 
             # Save qaoa object and new problem
-            qaoa_steps.append(copy.deepcopy(q))
-            problem_steps.append(copy.deepcopy(new_problem))
+            q_results_steps.append(q.results)
+            problem_steps.append(new_problem)
 
             # problem is updated
             problem = new_problem
@@ -744,8 +747,11 @@ class RQAOA(Optimizer):
         self.results['classical_output'] = {'minimum_energy': cl_energy,  'optimal_states': cl_ground_states}
         self.results['elimination_rules'] = elimination_tracker
         self.results['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
-        self.results['intermediate_steps'] = [{'QUBO': problem, 'QAOA': qaoa} for qaoa, problem in zip(qaoa_steps, problem_steps)]
+        self.results['intermediate_steps'] = [{'QUBO': problem, 'QAOA_results': q_results} for q_results, problem in zip(q_results_steps, problem_steps)]
         self.results['number_steps'] = counter - self.rqaoa_parameters.counter 
+
+        # set compiled to false
+        self.compiled = False
 
         if verbose:
             print(f'RQAOA optimization completed.')
