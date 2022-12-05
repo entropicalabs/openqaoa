@@ -24,6 +24,7 @@ from scipy.optimize._minimize import minimize, MINIMIZE_METHODS
 from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 
 from ..basebackend import VQABaseBackend
+from ..backends import QAOAvectorizedBackendSimulator
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
 from .pennylane import optimization_methods_pennylane as ompl
@@ -601,7 +602,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         elif self.method in ['cans', 'icans']:
             self.options['jac_w_variance'] = self.jac_w_variance
             self.options['coeffs'] = self.vqa_object.cost_hamiltonian.coeffs
-            self.options['n_shots_cost'] = self.vqa_object.n_shots
+            self.options['n_shots_cost'] = self.vqa_object.n_shots if not isinstance(self.vqa_object, QAOAvectorizedBackendSimulator) else 0
         
         try:
             if self.hess == None:
