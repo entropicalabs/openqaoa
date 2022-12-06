@@ -63,7 +63,7 @@ class TestingBackendLocal(unittest.TestCase):
                 try: backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
                 except Exception: raise Exception("backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
 
-class TestingBackendQPUs(unittest.TestCase):
+class TestingBackendQPUs(unittest.TestCase): 
     """ 
     These tests check methods of the QPU backends.
 
