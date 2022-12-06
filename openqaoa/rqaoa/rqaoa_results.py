@@ -81,7 +81,7 @@ class RQAOAResults(dict):
         full_dict['circuit_properties']  = self.circuit_properties
         full_dict['backend_properties']  = self.backend_properties
         full_dict['classical_optimizer'] = self.classical_optimizer
-        full_dict['rqaoa_parameters']    = self.rqaoa_parameters
+        full_dict['rqaoa_parameters']    = self.rqaoa_parameters 
 
         return full_dict
 
