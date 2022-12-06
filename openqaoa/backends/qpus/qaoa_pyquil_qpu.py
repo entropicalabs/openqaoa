@@ -239,7 +239,6 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
         n_shots: int
-            NOT WORKING YET. TODO: implement this.
             The number of times to run the circuit. If None, n_shots is set to the default: self.n_shots
 
         Returns
@@ -248,10 +247,10 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             A dictionary with the bitstring as the key and the number of counts as its value.
         """
 
-        # TODO: make n_shots useful
-        assert n_shots is None, "PyQuil does not support n_shots in get_counts"
-
         executable_program = self.qaoa_circuit(params)
+
+        # if n_shots is given change the number of shots
+        if n_shots is not None: executable_program.wrap_in_numshots_loop(n_shots)
 
         result = self.device.quantum_computer.run(executable_program)
 

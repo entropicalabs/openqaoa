@@ -124,10 +124,10 @@ class TestingBackendQPUs(unittest.TestCase):
             QPU_name = device_attributes.pop('QPU')
             print("Testing {} backend.".format(QPU_name))
 
-            # TODO : remove the following if:
-            if QPU_name == "Pyquil": 
-                print("Skipping test for Pyquil backend.")
-                continue # we need to skip this test for now, since the pyquil backend does not admit n_shots as an argument.
+
+            # if QPU_name in ["AWS", 'Qiskit']:
+            #     print(f"Skipping test for {QPU_name} backend.")
+            #     continue 
 
             try: 
                 device = device(**device_attributes)
