@@ -481,7 +481,8 @@ class RQAOA(Optimizer):
     If you want to use non-default parameters:
 
     Standard/custom (default) type:
-    >>> r = QAOA()
+
+    >>> r = RQAOA()
     >>> r.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
     >>> r.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
     >>> r.set_backend_properties(n_shots=200, cvar_alpha=1)
@@ -491,7 +492,8 @@ class RQAOA(Optimizer):
     >>> r.optimize()
 
     Ada-RQAOA:
-    >>> r_adaptive = QAOA()
+
+    >>> r_adaptive = RQAOA()
     >>> r_adaptive.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
     >>> r_adaptive.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
     >>> r_adaptive.set_backend_properties(n_shots=200, cvar_alpha=1)
