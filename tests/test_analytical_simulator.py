@@ -14,17 +14,61 @@
 
 
 import unittest
+import numpy as np
 
 from openqaoa.backends.simulators.qaoa_analytical_sim import QAOABackendAnalyticalSimulator 
-from openqaoa.utilities import random_k_regular_graph
+#from openqaoa.utilities import random_k_regular_graph
 from openqaoa.workflows.optimizer import QAOA, RQAOA
 from openqaoa.problems.problem import QUBO, MaximumCut
 from openqaoa.devices import create_device
+from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees
+from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
+from openqaoa.qaoa_parameters import QAOAVariationalStandardParams
 
 """
-A set of tests for FastQAOA: see the notebook Test_Examples.ipynb for explanations of how the
-expected answers are derived.
+A set of tests for obtaining the expectation value of a given quantum circuit given by the analytical formula, as derived in arXiv:2011.13420v2
 """
+def Disagrees_SetUp(n_qubits):
+    """
+    Helper function for the tests below
+    """
+
+    register = range(n_qubits)
+    p = 1
+    cost_hamil = ring_of_disagrees(register)
+    mixer_hamil = X_mixer_hamiltonian(n_qubits)
+
+    betas = [np.pi/8]
+    gammas = [np.pi/4]
+
+    qaoa_circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p)
+    variational_params_std = QAOAVariationalStandardParams(qaoa_circuit_params,
+                                                           betas,
+                                                           gammas)
+    # Get the part of the Hamiltonian proportional to the identity
+
+    return register, cost_hamil, qaoa_circuit_params, variational_params_std
+
+
+class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
+    """
+    Unittest based testing of QAOABackendAnalyticalSimulator
+    """
+
+    def test_execute_exp_val(self):
+
+        n_qubits = 8
+        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits)
+
+        backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params, prepend_state=None,
+                                                            append_state=None, init_hadamard=True)
+        exp_val = backend_analytical.expectation(variate_params)
+
+        # Check correct expecation value
+        assert np.isclose(exp_val, -6)
+
+        
+'''    
 def run_Rqaoa_experiment():  
     
     g = random_k_regular_graph(degree=3, nodes=range(8), weighted=True, biases=False) 
@@ -63,9 +107,7 @@ def run_Rqaoa_experiment():
     
     
 run_Rqaoa_experiment()    
-
-
 '''
+
 if __name__ == "__main__":
     unittest.main()
-'''

@@ -47,12 +47,11 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
                                          append_state,
                                          init_hadamard,
                                          cvar_alpha)
+        
         self.measurement_outcomes = {}  # passing an empty dictionary for the logger since measurements are irrelevant for this backend.
         
         # check if conditions for the analytical formula are met
         assert self.circuit_params.p == 1, "Analytical formula only holds for p=1."
-        
-        print(self.circuit_params.mixer_qubits_singles)
         
         for gatemap in self.circuit_params.mixer_qubits_singles:
             assert gatemap == 'RXGateMap', "Analytical formula only holds for X mixer."
