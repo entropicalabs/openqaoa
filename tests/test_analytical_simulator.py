@@ -35,33 +35,36 @@ def run_Rqaoa_experiment():
 
     
     # Define the RQAOA object (default rqaoa_type = 'adaptive')
-    R = RQAOA()
+    r = RQAOA()
 
     # Set parameters for RQAOA, in this case we fix the n_max to 1 (default), the final cutoff value to 3
-    R.set_rqaoa_parameters(steps=1, n_cutoff=3)
+    r.set_rqaoa_parameters(steps=1, n_cutoff=3)
 
     ## Setting up the QAOA properties
     init_beta = 0.42
     init_gamma = 0.42
 
-    R.set_circuit_properties(p=1, init_type='custom', variational_params_dict={"betas":[init_beta], "gammas":[init_gamma]}, mixer_hamiltonian='x')
+    r.set_circuit_properties(p=1, init_type='custom', variational_params_dict={"betas":[init_beta], "gammas":[init_gamma]}, mixer_hamiltonian='x')
 
     # Define the device you want to run your problem on using the create_device() function - Here we choose the local wavefunction simulator supported by OpenQAOA
     device = create_device(location='local', name='analytical_simulator')
-    R.set_device(device)
+    r.set_device(device)
     
     # Set the classical method used to optimiza over QAOA angles and its properties
-    R.set_classical_optimizer(method="COBYLA", optimizer_options = {"stepsize" : 10**(-10)}, tol=10**(-1), maxfev=1, maxiter=1, optimization_progress=False, cost_progress=False, parameter_log=False)
+    r.set_classical_optimizer(method="COBYLA", optimizer_options = {"stepsize" : 10**(-10)}, tol=10**(-1), maxfev=1, maxiter=1, optimization_progress=False, cost_progress=False, parameter_log=False)
 
    
     # Compile problem instance on RQAOA, just like with QAOA
-    R.compile(maxcut_qubo)
+    r.compile(maxcut_qubo)
     
-    R.optimize()
+    r.optimize()
     
-    print(R.results)
+    print(r.results)
+    
     
 run_Rqaoa_experiment()    
+
+
 '''
 if __name__ == "__main__":
     unittest.main()

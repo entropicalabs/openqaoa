@@ -49,6 +49,17 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
                                          cvar_alpha)
         self.measurement_outcomes = {}  # passing an empty dictionary for the logger since measurements are irrelevant for this backend.
         
+        # check if conditions for the analytical formula are met
+        assert self.circuit_params.p == 1, "Analytical formula only holds for p=1."
+        
+        print(self.circuit_params.mixer_qubits_singles)
+        
+        for gatemap in self.circuit_params.mixer_qubits_singles:
+            assert gatemap == 'RXGateMap', "Analytical formula only holds for X mixer."
+        
+        for gatemap in self.circuit_params.mixer_qubits_pairs:
+            assert gatemap == [], "Analytical formula only holds for X mixer."
+        
     def assign_angles(self):
         raise NotImplementedError("This method is irrelevant for this backend")
         
