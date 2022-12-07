@@ -170,7 +170,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
             as its value.
         """
 
-        n_shots = self.n_shots if n_shots == None else n_shots
+        n_shots = self.n_shots if n_shots == None else n_shots 
 
         circuit = self.qaoa_circuit(params)
 
