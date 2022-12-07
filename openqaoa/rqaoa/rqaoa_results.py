@@ -75,7 +75,7 @@ class RQAOAResults(dict):
         """
         Returns all values and attributes of the result in a dictionary.
         """
-        full_dict = copy.deepcopy(self)
+        full_dict = self.copy()
         full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
         full_dict['device']              = self.device
         full_dict['circuit_properties']  = self.circuit_properties
