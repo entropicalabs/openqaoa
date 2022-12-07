@@ -51,13 +51,13 @@ class RQAOAResults(dict):
         """
         Returns the i-th qaoa step of the RQAOA.
         """
-        return self['intermediate_steps'][i]['QAOA']
+        return self['intermediate_steps'][i]['QAOA_results']
 
     def get_qaoa_step_optimized_angles(self, i):
         """
         Returns the optimized angles of the i-th qaoa step of the RQAOA.
         """
-        return self.get_qaoa_step(i).results.optimized['optimized angles']
+        return self.get_qaoa_step(i).optimized['optimized angles']
 
     def get_problem_step(self, i):
         """
@@ -75,14 +75,13 @@ class RQAOAResults(dict):
         """
         Returns all values and attributes of the result in a dictionary.
         """
-        full_dict = copy.deepcopy(self)
+        full_dict = self.copy()
         full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
-        full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results} for step in full_dict['intermediate_steps']]
         full_dict['device']              = self.device
         full_dict['circuit_properties']  = self.circuit_properties
         full_dict['backend_properties']  = self.backend_properties
         full_dict['classical_optimizer'] = self.classical_optimizer
-        full_dict['rqaoa_parameters']    = self.rqaoa_parameters
+        full_dict['rqaoa_parameters']    = self.rqaoa_parameters 
 
         return full_dict
 
