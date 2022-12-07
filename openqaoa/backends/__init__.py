@@ -34,3 +34,4 @@ from .qpus.qaoa_braket_qpu import *
 from .simulators.qaoa_qiskit_sim import *
 from .simulators.qaoa_pyquil_sim import *
 from .simulators.qaoa_vectorized import *
+from .simulators.qaoa_analytical_sim import *

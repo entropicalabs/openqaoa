@@ -90,9 +90,12 @@ class Result:
                 if len(log.job_ids.best) != 0 else []
         }
 
-        self.most_probable_states = most_probable_bitstring(
-            cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
+    @property
+    def most_probable_string(self):
+        string = most_probable_bitstring(
+            self.cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
         ) if log.measurement_outcomes.best != [] else []
+        return string
 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
