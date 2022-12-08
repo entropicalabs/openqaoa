@@ -102,6 +102,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         assert exception, "XY mixer Hamiltonian didn't fail."
         
     def test_end_to_end_rqaoa(self):
+        pass
         
     def test_exact_solution(self):
         """
