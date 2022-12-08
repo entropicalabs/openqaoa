@@ -56,7 +56,6 @@ class Result:
     def __init__(
         self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian]
     ):
-        self._log = log
 
         self.method = method
 
@@ -90,13 +89,10 @@ class Result:
                 log.job_ids.best[0] 
                 if len(log.job_ids.best) != 0 else []
         }
-
-    @property
-    def most_probable_states(self):
-        string = most_probable_bitstring(
-            self.cost_hamiltonian, self.get_counts(self._log.measurement_outcomes.best[0])
-        ) if self._log.measurement_outcomes.best != [] else []
-        return string
+        
+        self.most_probable_states = most_probable_bitstring(
+                cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
+            ) if type(log.measurement_outcomes.best[0]) != dict and log.measurement_outcomes.best != [] else [] # we are checking that type of measurement_outcomes.best[0] is not dict because the measurement_outcomes.best is [{}] for analytical_backend.
 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
