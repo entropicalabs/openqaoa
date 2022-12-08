@@ -174,7 +174,7 @@ class TestingRQAOA(unittest.TestCase):
         elimination history and computing the energy of the final states.
 
         The test consists in reconstructing a set of states for a given elimination history 
-        amnd computing their energies.
+        and computing their energies.
         """
 
         ## Problem definition

@@ -56,6 +56,7 @@ class Result:
     def __init__(
         self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian]
     ):
+        self._log = log
 
         self.method = method
 
@@ -91,10 +92,10 @@ class Result:
         }
 
     @property
-    def most_probable_string(self):
+    def most_probable_states(self):
         string = most_probable_bitstring(
-            self.cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-        ) if log.measurement_outcomes.best != [] else []
+            self.cost_hamiltonian, self.get_counts(self._log.measurement_outcomes.best[0])
+        ) if self._log.measurement_outcomes.best != [] else []
         return string
 
     # def __repr__(self):

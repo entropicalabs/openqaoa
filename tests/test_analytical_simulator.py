@@ -28,15 +28,14 @@ from openqaoa.qaoa_parameters import QAOAVariationalStandardParams
 """
 A set of tests for obtaining the expectation value of a given quantum circuit given by the analytical formula, as derived in arXiv:2011.13420v2
 """
-def Disagrees_SetUp(n_qubits):
+def Disagrees_SetUp(n_qubits, p, mixer_hamil):
     """
     Helper function for the tests below
     """
 
     register = range(n_qubits)
-    p = 1
     cost_hamil = ring_of_disagrees(register)
-    mixer_hamil = X_mixer_hamiltonian(n_qubits)
+    
 
     betas = [np.pi/8]
     gammas = [np.pi/4]
@@ -55,17 +54,93 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
     Unittest based testing of QAOABackendAnalyticalSimulator
     """
 
-    def test_execute_exp_val(self):
-
+    def test_expectation(self):
+        """
+        Testing if the analytical formula returns the energy expectation value for a given beta and gamma on an easy problem (Ring of disagree). 
+        """
         n_qubits = 8
-        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits)
+        p = 1
+        mixer_hamil = X_mixer_hamiltonian(n_qubits)
+        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil)
 
-        backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params, prepend_state=None,
-                                                            append_state=None, init_hadamard=True)
+        backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
         exp_val = backend_analytical.expectation(variate_params)
 
         # Check correct expecation value
         assert np.isclose(exp_val, -6)
+        
+    def test_p_not_1_fails(self):
+        """
+        Testing if the analytical backend fails if the number of layers, p, is different than 1. 
+        """
+        try:
+            n_qubits = 8
+            p = 2
+            mixer_hamil = X_mixer_hamiltonian(n_qubits)
+            register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil)
+            backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
+            exception = False
+        except:
+            exception = True
+            
+        assert exception, "p != 1 didn't fail."
+        
+    def test_different_mixer_fails(self):
+        """
+        Testing if the analytical backend fails if the mixer hamiltonian is different than X. 
+        """
+        try:
+            n_qubits = 8
+            p = 1
+            mixer_hamil = XY_mixer_hamiltonian(n_qubits)
+            register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil)
+            backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
+            exception = False
+        except:
+            exception = True
+            
+        assert exception, "XY mixer Hamiltonian didn't fail."
+        
+    def test_end_to_end_rqaoa(self):
+        
+    def test_exact_solution(self):
+        """
+        NOTE:Since the implementation of exact solution is backend agnostic
+            Checking it once should be okay. 
+
+        Nevertheless, for the sake of completeness it will be tested for all backend
+        instances.
+
+        """
+
+        n_qubits = 8
+        register = range(n_qubits)
+        p = 1
+
+        correct_energy = -8
+        correct_config = [0, 1, 0, 1, 0, 1, 0, 1]
+
+        # The tests pass regardless of the value of betas and gammas is this correct?
+        betas = [np.pi/8]
+        gammas = [np.pi/4]
+
+        cost_hamiltonian = ring_of_disagrees(register)
+        mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
+        qaoa_circuit_params = QAOACircuitParams(
+            cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = QAOAVariationalStandardParams(qaoa_circuit_params,
+                                                               betas, gammas)
+
+        backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
+        # exact solution is defined as the property of the cost function
+        energy_vec, config_vec = backend_analytical.exact_solution
+
+        assert np.isclose(energy_vec, correct_energy)
+
+        config_vec = [config.tolist() for config in config_vec]
+
+        assert correct_config in config_vec
+        
 
         
 '''    

@@ -13,11 +13,11 @@
 #   limitations under the License.
 
 """
-Energy expectation as a funtion of angles computed accordingly to the analytical expression for p=1.
+Energy expectation as a function of angles computed accordingly to the analytical expression for p=1.
 """
 import numpy as np
 
-from ...basebackend import QAOABaseBackend
+from ...basebackend import QAOABaseBackend, QuantumCircuitBase
 from ...qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from ...qaoa_parameters.operators import Hamiltonian
 from openqaoa.utilities import energy_expectation_analytical
@@ -25,7 +25,6 @@ from openqaoa.utilities import energy_expectation_analytical
 # not sure about those ones:
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams 
 from typing import Union, List, Tuple, Type, Optional
-from ...basebackend import QAOABaseBackendStatevector, QuantumCircuitBase
 
 
 class QAOABackendAnalyticalSimulator(QAOABaseBackend):
@@ -33,22 +32,16 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
     TODO write something here.
     """
     
-    def __init__(self,
-                 circuit_params: QAOACircuitParams,
-                 prepend_state: Optional[Union[np.ndarray, List[complex]]],
-                 append_state: Optional[Union[np.ndarray, List[complex]]],
-                 init_hadamard: bool,
-                 cvar_alpha: float = 1):
+    def __init__(self, circuit_params: QAOACircuitParams):
         
-        assert cvar_alpha == 1,  "Please use the shot-based simulator for simulations with cvar_alpha < 1"
-        
-        QAOABaseBackendStatevector.__init__(self, circuit_params,
-                                         prepend_state,
-                                         append_state,
-                                         init_hadamard,
-                                         cvar_alpha)
+        QAOABaseBackend.__init__(self, circuit_params,
+                                         prepend_state = None,
+                                         append_state = None,
+                                         init_hadamard = True,
+                                         cvar_alpha = 1)
         
         self.measurement_outcomes = {}  # passing an empty dictionary for the logger since measurements are irrelevant for this backend.
+        
         
         # check if conditions for the analytical formula are met
         assert self.circuit_params.p == 1, "Analytical formula only holds for p=1."
