@@ -695,9 +695,9 @@ class TestingRQAOA(unittest.TestCase):
         problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
 
         r = RQAOA()
+        exception = False
         try:
             r.optimize()
-            exception = False
         except: 
             exception = True
         
@@ -706,9 +706,9 @@ class TestingRQAOA(unittest.TestCase):
         
         r.compile(problem)        
         r.optimize()
+        exception = False
         try:
             r.optimize()
-            exception = False
         except:
             exception = True
 
