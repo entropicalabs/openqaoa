@@ -14,9 +14,9 @@
 
 from abc import ABC
 import numpy as np
-import copy
-from openqaoa.devices import DeviceLocal, DeviceBase
+from datetime import datetime
 
+from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
 from openqaoa.problems.helper_functions import convert2serialize
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
@@ -609,6 +609,17 @@ class RQAOA(Optimizer):
         self.rqaoa_parameters = RqaoaParameters(**kwargs) 
 
         return None
+
+    def set_exp_tag(self, **kwargs):
+        """
+        Method that stores any keyword argument in the results object. This is useful to store the parameters of the experiment or any other information that the user wants to store, as a name for the experiment. 
+
+        Parameters
+        ----------
+        Any keyword argument passed to this function will be stored in the results object.
+        """
+        kwargs['datetime'] = datetime.now().strftime("%m/%d/%Y_%H:%M:%S") if 'date' not in kwargs.keys() else kwargs['date']
+        self.results['exp_tag'] = kwargs
 
     def compile(self, problem: QUBO = None, verbose: bool = False):
         """

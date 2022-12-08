@@ -16,8 +16,6 @@ import copy
 import json
 
 from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
-from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
-from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 
 class RQAOAResults(dict):
     """
@@ -29,10 +27,11 @@ class RQAOAResults(dict):
         """
         Initializes the result class.
         """
-        self.circuit_properties  = CircuitProperties()
-        self.backend_properties  = BackendProperties()
-        self.classical_optimizer = ClassicalOptimizer()
-        self.rqaoa_parameters    = RqaoaParameters()
+        # initialize the attributes, so that they are always present
+        self.circuit_properties  = None
+        self.backend_properties  = None
+        self.classical_optimizer = None
+        self.rqaoa_parameters    = None
         self.device              = None
 
         self.__serializable_dict = {}
@@ -83,7 +82,7 @@ class RQAOAResults(dict):
                                                 'backend_properties': self.backend_properties,
                                                 'classical_optimizer': self.classical_optimizer,
                                                 'rqaoa_parameters': self.rqaoa_parameters,
-                                                'device': self.device
+                                                'device':  {'device_location': self.device.device_location, 'device_name': self.device.device_name},
                                             }
         serializable_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in serializable_dict['elimination_rules']] 
 
