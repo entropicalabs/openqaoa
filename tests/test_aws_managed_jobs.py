@@ -55,7 +55,7 @@ class TestingAwsJobs(unittest.TestCase):
         # the string that should be passed to CreateQuantumTask’s jobToken parameter for quantum tasks created in the job container
         # os.environ["AMZN_BRAKET_JOB_TOKEN"] = ''
 
-        self.vc = MinimumVertexCover(nw.circulant_graph(6, [1]), field =1.0, penalty=10).get_qubo_problem()
+        self.vc = MinimumVertexCover(nw.circulant_graph(10, [1]), field =1.0, penalty=10).get_qubo_problem()
 
     def testOsEnvironAssignement(self):
 
@@ -164,24 +164,24 @@ class TestingAwsJobs(unittest.TestCase):
     #     assert len(job.workflow.results.optimized['optimized angles']) == 2
     #     assert job.completed == True
 
-    @pytest.mark.docker_aws
-    def testLocalJob(self):
+    # @pytest.mark.docker_aws
+    # def testLocalJob(self):
 
-        input_data_path = os.path.join(os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data", "openqaoa_params.json")
+    #     input_data_path = os.path.join(os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data", "openqaoa_params.json")
 
-        # Create the qubo and the qaoa
-        q = QAOA()
-        q.set_classical_optimizer(maxiter=2)
+    #     # Create the qubo and the qaoa
+    #     q = QAOA()
+    #     q.set_classical_optimizer(maxiter=2)
 
-        input_data = create_aws_input_data(q, self.vc)
-        save_input_data(input_data,input_data_path)
+    #     input_data = create_aws_input_data(q, self.vc)
+    #     save_input_data(input_data,input_data_path)
 
-        job = LocalQuantumJob.create(
-            device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            source_module="./tests/jobs_test_input/aws_braket_source_module/openqaoa_qaoa_script.py",
-            image_uri='amazon-braket-oq-dev',
-            input_data={"input_data": input_data_path}
-            )
+    #     job = LocalQuantumJob.create(
+    #         device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+    #         source_module="./tests/jobs_test_input/aws_braket_source_module/openqaoa_qaoa_script.py",
+    #         image_uri='amazon-braket-oq-dev',
+    #         input_data={"input_data": input_data_path}
+    #         )
 
     @pytest.mark.docker_aws
     def testLocalJobRQAOA(self):
@@ -190,7 +190,8 @@ class TestingAwsJobs(unittest.TestCase):
 
         # Create the qubo and the qaoa
         r = RQAOA()
-        r.set_classical_optimizer(maxiter=2)
+        r.set_rqaoa_parameters(n_cutoff=3)
+        r.set_classical_optimizer(maxiter=10, save_intermediate=False)
 
         input_data = create_aws_input_data(r, self.vc)
         save_input_data(input_data,input_data_path)
