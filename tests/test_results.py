@@ -265,8 +265,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         
         # test the keys
         expected_keys = ['solution', 'classical_output', 'elimination_rules', 'schedule', 'intermediate_steps', 
-                         'number_steps', 'device', 'circuit_properties', 'backend_properties', 'classical_optimizer',
-                         'rqaoa_parameters']
+                         'number_steps', 'parameters_used']
         for key in expected_keys:
             assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
 

@@ -682,10 +682,12 @@ class RQAOA(Optimizer):
         #check if the object has been compiled (or already optimized)
         assert self.compiled, "RQAOA object has not been compiled. Please run the compile method first."
 
-        # lists to append the eliminations and the qaoa objects
+        # lists to append the eliminations, the problems, the qaoa results objects, the correlation matrix and the expectation values z
         elimination_tracker = []
         q_results_steps = []
         problem_steps = []
+        exp_vals_z_steps = []
+        corr_matrix_steps = []
 
         # get variables
         problem = self.problem  
@@ -704,6 +706,9 @@ class RQAOA(Optimizer):
 
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
+
+            # Save the problem             
+            problem_steps.append(problem)
 
             # Run QAOA
             q.optimize()
@@ -724,9 +729,10 @@ class RQAOA(Optimizer):
             # Extract new number of qubits
             n_qubits = new_problem.n
 
-            # Save qaoa object and new problem
+            # Save qaoa object, correlation matrix and expectation values z
             q_results_steps.append(q.results)
-            problem_steps.append(new_problem)
+            corr_matrix_steps.append(corr_matrix)
+            exp_vals_z_steps.append(exp_vals_z)
 
             # problem is updated
             problem = new_problem
@@ -746,10 +752,10 @@ class RQAOA(Optimizer):
 
         # Compute description dictionary containing all the information            
         self.results['solution'] = full_solutions
-        self.results['classical_output'] = {'minimum_energy': cl_energy,  'optimal_states': cl_ground_states}
+        self.results['classical_output'] = {'minimum_energy': cl_energy, 'optimal_states': cl_ground_states}
         self.results['elimination_rules'] = elimination_tracker
         self.results['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
-        self.results['intermediate_steps'] = [{'QUBO': problem, 'QAOA_results': q_results} for q_results, problem in zip(q_results_steps, problem_steps)]
+        self.results['intermediate_steps'] = [{'QUBO': problem, 'QAOA_results': q_results, 'exp_vals_z': exp_vals_z, 'corr_matrix': corr_matrix} for problem, q_results, exp_vals_z, corr_matrix in zip(problem_steps, q_results_steps, exp_vals_z_steps, corr_matrix_steps)]
         self.results['number_steps'] = counter - self.rqaoa_parameters.counter 
 
         # set compiled to false

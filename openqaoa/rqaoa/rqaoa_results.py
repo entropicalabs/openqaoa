@@ -35,6 +35,8 @@ class RQAOAResults(dict):
         self.rqaoa_parameters    = RqaoaParameters()
         self.device              = None
 
+        self.__serializable_dict = {}
+
     def get_solution(self):
         """
         Returns the solution of the optimization.
@@ -71,25 +73,33 @@ class RQAOAResults(dict):
         """
         return self.get_problem_step(i).hamiltonian
 
-    def __full_dict(self):
+    def __serializable_dict_fun(self):
         """
         Returns all values and attributes of the result in a dictionary.
         """
-        full_dict = self.copy()
-        full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
-        full_dict['device']              = self.device
-        full_dict['circuit_properties']  = self.circuit_properties
-        full_dict['backend_properties']  = self.backend_properties
-        full_dict['classical_optimizer'] = self.classical_optimizer
-        full_dict['rqaoa_parameters']    = self.rqaoa_parameters 
+        serializable_dict = self.copy()
+        serializable_dict['parameters_used'] = {
+                                                'circuit_properties': self.circuit_properties,
+                                                'backend_properties': self.backend_properties,
+                                                'classical_optimizer': self.classical_optimizer,
+                                                'rqaoa_parameters': self.rqaoa_parameters,
+                                                'device': self.device
+                                            }
+        serializable_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in serializable_dict['elimination_rules']] 
 
-        return full_dict
+        for step in serializable_dict['intermediate_steps']:
+            step['QAOA_results'] = {'optimized': step['QAOA_results'].optimized, 'most_probable_states': step['QAOA_results'].most_probable_states}
+            step['QAOA_results']['optimized'].pop('optimized measurement outcomes')
+
+        return serializable_dict
 
     def as_dict(self):
         """
         Returns all values and attributes of the result as a dictionary.
         """
-        return convert2serialize(self.__full_dict())
+        if self.__serializable_dict == {}: self.__serializable_dict = self.__serializable_dict_fun()
+
+        return convert2serialize(self.__serializable_dict)
 
     def dumps(self, indent:int=2):
         """
@@ -104,8 +114,9 @@ class RQAOAResults(dict):
         -------
         str
         """
+        if self.__serializable_dict == {}: self.__serializable_dict = self.__serializable_dict_fun()
 
-        return json.dumps(convert2serialize_complex(self.__full_dict()), indent=indent)
+        return json.dumps(convert2serialize(self.__serializable_dict), indent=indent)
 
     def dump(self, file_path:str, indent:int=2):
         """
@@ -118,12 +129,13 @@ class RQAOAResults(dict):
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
         """
+        if self.__serializable_dict == {}: self.__serializable_dict = self.__serializable_dict_fun()
 
         # adding .json extension if not present
         file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
 
         # saving the result in a json file
         with open(file_path, 'w') as f:
-            json.dump(convert2serialize_complex(self.__full_dict()), f, indent=indent)
+            json.dump(convert2serialize(self.__serializable_dict), f, indent=indent)
 
         print('Results saved as {}'.format(file_path))
