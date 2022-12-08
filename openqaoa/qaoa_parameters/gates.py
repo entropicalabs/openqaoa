@@ -39,7 +39,7 @@ class Gate(ABC):
         pass
     
     @abstractmethod
-    def apply_pyquil_gate(self,circuit):     
+    def apply_pyquil_gate(self,circuit):
         pass
     
     @abstractmethod

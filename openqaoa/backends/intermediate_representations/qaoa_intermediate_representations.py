@@ -153,8 +153,8 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
 	@property
 	def gate_mapper(self):
 		"""
-		Construct a mapping between gates of BasicQisBuilder
-		and OpenQAOA
+		Construct a mapping between OpenQAOA and BasicQisBuilder
+        gates.
 
 		Parameters
 		----------
@@ -211,7 +211,7 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
 			#append the circuit
 		
 		for qi, ci in zip(self.qureg,self.creg):
-			self.qis_builder.m(qi,ci)
+			self.qis_builder.mz(qi,ci)
 	
 		return None
 
