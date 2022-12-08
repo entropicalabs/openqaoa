@@ -83,7 +83,8 @@ class RQAOAResults(dict):
                                                 'backend_properties': self.backend_properties,
                                                 'classical_optimizer': self.classical_optimizer,
                                                 'rqaoa_parameters': self.rqaoa_parameters,
-                                                'device': self.device
+                                                'device': {'device_location': self.device.device_location, 
+                                                           'device_name': self.device.device_name}
                                             }
         serializable_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in serializable_dict['elimination_rules']] 
 

@@ -12,7 +12,11 @@ def main():
     job.set_up()
     job.run_workflow()
 
-    save_job_result({"result": job.workflow.results.as_dict()})
+    res = job.workflow.results.as_dict()
+
+    print(res)
+
+    save_job_result({"result": res})
     
     # save_job_result({"result": job.workflow.results.dumps()})
 

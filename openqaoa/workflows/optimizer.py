@@ -757,7 +757,9 @@ class RQAOA(Optimizer):
         self.results['classical_output'] = {'minimum_energy': cl_energy, 'optimal_states': cl_ground_states}
         self.results['elimination_rules'] = elimination_tracker
         self.results['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
-        self.results['intermediate_steps'] = [{'QUBO': problem, 'QAOA_results': q_results, 'exp_vals_z': exp_vals_z, 'corr_matrix': corr_matrix} for problem, q_results, exp_vals_z, corr_matrix in zip(problem_steps, q_results_steps, exp_vals_z_steps, corr_matrix_steps)]
+        self.results['intermediate_steps'] = [{'QUBO': problem, 
+        'QAOA_results': q_results, 'exp_vals_z': exp_vals_z, 'corr_matrix': corr_matrix}
+            for problem, q_results, exp_vals_z, corr_matrix in zip(problem_steps, q_results_steps, exp_vals_z_steps, corr_matrix_steps)]
         self.results['number_steps'] = counter - self.rqaoa_parameters.counter 
 
         # set compiled to false
