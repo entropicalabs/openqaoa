@@ -32,7 +32,11 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
     TODO write something here.
     """
     
-    def __init__(self, circuit_params: QAOACircuitParams):
+    def __init__(self, circuit_params: QAOACircuitParams, 
+                 prepend_state = None,
+                 append_state = None,
+                 init_hadamard = True,
+                 cvar_alpha = 1):
         
         QAOABaseBackend.__init__(self, circuit_params,
                                          prepend_state = None,

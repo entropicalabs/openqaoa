@@ -70,13 +70,13 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         """
         Testing if the analytical backend fails if the number of layers, p, is different than 1. 
         """
+        exception = False
         try:
             n_qubits = 8
             p = 2
             mixer_hamil = X_mixer_hamiltonian(n_qubits)
             register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil)
             backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
-            exception = False
         except:
             exception = True
             
@@ -86,19 +86,22 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         """
         Testing if the analytical backend fails if the mixer hamiltonian is different than X. 
         """
+        exception = False
         try:
             n_qubits = 8
             p = 1
             mixer_hamil = XY_mixer_hamiltonian(n_qubits)
             register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil)
             backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
-            exception = False
         except:
             exception = True
             
         assert exception, "XY mixer Hamiltonian didn't fail."
         
     def test_end_to_end_rqaoa(self):
+        """
+        Testing the whole rqaoa workflow if the device is set to 'analytical_simulator'.
+        """
         # Create a 3-regular weighted graph
         g = random_k_regular_graph(degree=3, nodes=range(8), seed=2642, weighted=True, biases=False) 
 
