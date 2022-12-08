@@ -681,7 +681,7 @@ class TestingRQAOA(unittest.TestCase):
             r.set_rqaoa_parameters(n_cutoff = n_cutoff, steps=eliminations, rqaoa_type=type)
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
-        r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
+        r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)   
         r.compile(problem)
         r.optimize()
 
@@ -689,7 +689,7 @@ class TestingRQAOA(unittest.TestCase):
 
     def test_rqaoa_optimize_multiple_times(self):
         """
-        Test that the rqaoa can be compiled multiple times
+        Test that the rqaoa can not be optimized multiple times
         """
         graph = nw.circulant_graph(10, [1])
         problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()

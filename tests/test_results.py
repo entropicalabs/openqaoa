@@ -26,6 +26,10 @@ import json
 
 from openqaoa.problems.problem import MinimumVertexCover, QUBO
 from openqaoa.qaoa_parameters.operators import Hamiltonian
+from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
+from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
+from openqaoa.devices import DeviceBase
+from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 
@@ -181,6 +185,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
+        r.set_exp_tag(name='rqaoa_test') 
         r.compile(problem)
         r.optimize()
 
@@ -196,6 +201,10 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # Test for the standard RQAOA
         results = self._run_rqaoa()
+        assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
+        assert isinstance(results['exp_tag'], dict), 'exp_tag is not a dictionary'
+        assert results['exp_tag']['name'] == 'rqaoa_test', 'exp_tag name is not correct'
+        assert isinstance(results['exp_tag']['datetime'], str), 'exp_tag datetime is not a string'
         for key in results['solution'].keys():
             assert len(key) == n_qubits, 'Number of qubits solution is not correct'
         assert isinstance(results['classical_output']['minimum_energy'], float)
@@ -207,10 +216,21 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         for step in results['intermediate_steps']:
             assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
             assert isinstance(step['QAOA_results'], Result), 'QAOA_results is not of type QAOA Results'
+            assert isinstance(step['exp_vals_z'], np.ndarray), 'exp_vals_z is not of type numpy array'
+            assert isinstance(step['corr_matrix'], np.ndarray), 'corr_matrix is not of type numpy array'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
-
+        assert isinstance(results.backend_properties, BackendProperties), 'Attribute backend_properties is not of type BackendProperties'
+        assert isinstance(results.circuit_properties, CircuitProperties), 'Attribute circuit_properties is not of type CircuitProperties'
+        assert isinstance(results.classical_optimizer, ClassicalOptimizer), 'Attribute classical_optimizer is not of type ClassicalOptimizer'
+        assert isinstance(results.rqaoa_parameters, RqaoaParameters), 'Attribute rqaoa_parameters is not of type RqaoaParameters'
+        assert isinstance(results.device, DeviceBase), 'Attribute device is not of type DeviceBase'
+       
         # Test for the adaptive RQAOA
         results = self._run_rqaoa(type='adaptive')
+        assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
+        assert isinstance(results['exp_tag'], dict), 'exp_tag is not a dictionary'
+        assert results['exp_tag']['name'] == 'rqaoa_test', 'exp_tag name is not correct'
+        assert isinstance(results['exp_tag']['datetime'], str), 'exp_tag datetime is not a string'
         for key in results['solution'].keys():
             assert len(key) == n_qubits, 'Number of qubits solution is not correct'
         assert isinstance(results['classical_output']['minimum_energy'], float)
@@ -222,8 +242,15 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         for step in results['intermediate_steps']:
             assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
             assert isinstance(step['QAOA_results'], Result), 'QAOA_results is not of type QAOA Results'
+            assert isinstance(step['exp_vals_z'], np.ndarray), 'exp_vals_z is not of type numpy array'
+            assert isinstance(step['corr_matrix'], np.ndarray), 'corr_matrix is not of type numpy array'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
-
+        assert isinstance(results.backend_properties, BackendProperties), 'Attribute backend_properties is not of type BackendProperties'
+        assert isinstance(results.circuit_properties, CircuitProperties), 'Attribute circuit_properties is not of type CircuitProperties'
+        assert isinstance(results.classical_optimizer, ClassicalOptimizer), 'Attribute classical_optimizer is not of type ClassicalOptimizer'
+        assert isinstance(results.rqaoa_parameters, RqaoaParameters), 'Attribute rqaoa_parameters is not of type RqaoaParameters'
+        assert isinstance(results.device, DeviceBase), 'Attribute device is not of type DeviceBase'
+       
 
     def test_rqaoa_result_methods_steps(self):
         """
