@@ -26,7 +26,7 @@ from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
 from openqaoa.qaoa_parameters import QAOAVariationalStandardParams
 
 """
-A set of tests for obtaining the expectation value of a given quantum circuit given by the analytical formula, as derived in arXiv:2011.13420v2
+A set of tests for the analytical simulator backend which computes the energy of a given quantum circuit as a function of beta and gamma.
 """
 def Disagrees_SetUp(n_qubits, p, mixer_hamil):
     """
