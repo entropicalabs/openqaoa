@@ -54,7 +54,7 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
                                          init_hadamard = True,
                                          cvar_alpha = 1)
         
-        self.measurement_outcomes = {}  # passing an empty dictionary for the logger since measurements are irrelevant for this backend.
+        self.measurement_outcomes = None  # passing an empty dictionary for the logger since measurements are irrelevant for this backend.
         
         
         # check if conditions for the analytical formula are met

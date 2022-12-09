@@ -141,7 +141,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         
         opt_solution_string = list(opt_solution.keys())[0]
         
-        assert opt_solution_string == '11111000'
+        assert opt_solution_string == '01011010'
         
     def test_exact_solution(self):
         """

@@ -26,6 +26,7 @@ from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, 
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
+from openqaoa.backends import QAOABackendAnalyticalSimulator
 from openqaoa import rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 
@@ -769,7 +770,7 @@ class RQAOA(Optimizer):
         p = q.circuit_properties.p
         qaoa_optimized_angles = q.results.optimized['optimized angles']
         qaoa_optimized_counts = q.results.get_counts(q.results.optimized['optimized measurement outcomes'])
-        analytical = isinstance(qaoa_backend, QAOABaseBackendStatevector)
+        analytical = isinstance(qaoa_backend, QAOABaseBackendStatevector) or isinstance(qaoa_backend, QAOABackendAnalyticalSimulator)
     
         return exp_val_hamiltonian_termwise(variational_params, 
                 qaoa_backend, cost_hamiltonian, mixer_type, p, qaoa_optimized_angles, 

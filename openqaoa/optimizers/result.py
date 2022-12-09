@@ -92,7 +92,7 @@ class Result:
         
         self.most_probable_states = most_probable_bitstring(
                 cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-            ) if type(log.measurement_outcomes.best[0]) != dict and log.measurement_outcomes.best != [] else [] # we are checking that type of measurement_outcomes.best[0] is not dict because the measurement_outcomes.best is [{}] for analytical_backend.
+            ) if type(log.measurement_outcomes.best[0]) != type(None) and log.measurement_outcomes.best != [] else [] # we are checking that type of measurement_outcomes.best[0] is not dict because the measurement_outcomes.best is [{}] for analytical_backend.
 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters

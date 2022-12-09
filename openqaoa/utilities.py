@@ -988,7 +988,7 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)
     corr_matrix = np.zeros((n_qubits, n_qubits))
-
+    
     # If single layer ansatz use analytical results
     if (analytical == True and p == 1 and mixer_type == 'x' and
         isinstance(qaoa_optimized_angles, list)):
