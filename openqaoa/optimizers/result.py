@@ -54,8 +54,9 @@ class Result:
     """
 
     def __init__(
-        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian]
+        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], backend: str
     ):
+
 
         self.method = method
 
@@ -92,8 +93,7 @@ class Result:
         
         self.most_probable_states = most_probable_bitstring(
                 cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-            ) if type(log.measurement_outcomes.best[0]) != type(None) and log.measurement_outcomes.best != [] else [] # we are checking that type of measurement_outcomes.best[0] is not dict because the measurement_outcomes.best is [{}] for analytical_backend.
-
+            ) if backend != "QAOABackendAnalyticalSimulator" and log.measurement_outcomes.best != [] else [] 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
     #     Todo
