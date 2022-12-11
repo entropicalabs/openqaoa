@@ -19,7 +19,10 @@ requirements = [
     "scipy>=1.8",
     "qiskit>=0.36.1",
     "pyquil>=3.1.0",
-    "docplex>=2.23.1"
+    "docplex>=2.23.1",
+    "autograd>=1.4",
+    "semantic_version>=2.10",
+    "autoray>=0.3.1"
 ]
 
 requirements_docs = [

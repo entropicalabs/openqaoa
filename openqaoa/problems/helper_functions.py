@@ -28,6 +28,27 @@ def convert2serialize(obj):
     else:
         return obj
 
+def convert2serialize_complex(obj):
+    """
+    Converts object to dictinary with complex numbers converted to strings, so the result can be serialized to JSON.
+    """
+    if isinstance(obj, dict):
+        return {k: convert2serialize_complex(v) for k, v in obj.items() if v is not None}
+    elif hasattr(obj, "_ast"):
+        return convert2serialize_complex(obj._ast())
+    elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
+        return [convert2serialize_complex(v) for v in obj if v is not None]
+    elif hasattr(obj, "__dict__"):
+        return {
+            k: convert2serialize_complex(v)
+            for k, v in obj.__dict__.items()
+            if not callable(v) and v is not None
+        }
+    elif isinstance(obj, complex):
+        return str(obj)
+    else:
+        return obj
+
 
 def check_kwargs(list_expected_params, list_default_values, **kwargs):
     """

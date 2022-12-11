@@ -168,10 +168,10 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
 
         dt = time / p
 
-        n_gamma_singles = len(qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs)
-        n_gamma_pairs = len(qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs)
-        n_beta_singles = len(qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs)
-        n_beta_pairs = len(qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs)
+        n_gamma_singles = len(qaoa_circuit_params.cost_single_qubit_coeffs)
+        n_gamma_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
+        n_beta_singles = len(qaoa_circuit_params.mixer_single_qubit_coeffs)
+        n_beta_pairs = len(qaoa_circuit_params.mixer_pair_qubit_coeffs)
 
         betas = np.linspace((dt / time) * (time * (1 - 0.5 / p)),
                             (dt / time) * (time * 0.5 / p), p)
@@ -197,10 +197,10 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
             np.random.seed(seed)
 
         p=qaoa_circuit_params.p
-        n_gamma_singles = len(qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs)
-        n_gamma_pairs = len(qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs)
-        n_beta_singles = len(qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs)
-        n_beta_pairs = len(qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs)
+        n_gamma_singles = len(qaoa_circuit_params.cost_single_qubit_coeffs)
+        n_gamma_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
+        n_beta_singles = len(qaoa_circuit_params.mixer_single_qubit_coeffs)
+        n_beta_pairs = len(qaoa_circuit_params.mixer_pair_qubit_coeffs)
 
         betas_singles = np.random.uniform(0,np.pi,(p,n_beta_singles))
         betas_pairs = np.random.uniform(0,np.pi,(p,n_beta_pairs))
@@ -217,10 +217,10 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
         """        
 
         p=qaoa_circuit_params.p
-        n_gamma_singles = len(qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs)
-        n_gamma_pairs = len(qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs)
-        n_beta_singles = len(qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs)
-        n_beta_pairs = len(qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs)
+        n_gamma_singles = len(qaoa_circuit_params.cost_single_qubit_coeffs)
+        n_gamma_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
+        n_beta_singles = len(qaoa_circuit_params.mixer_single_qubit_coeffs)
+        n_beta_pairs = len(qaoa_circuit_params.mixer_pair_qubit_coeffs)
 
         betas_singles = np.empty((p,n_beta_singles))
         betas_pairs = np.empty((p,n_beta_pairs))

@@ -199,6 +199,9 @@ def newton_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
     OptimizeResult : OptimizeResult
         Scipy OptimizeResult object.
     '''
+    
+    assert jac is not None, "This method needs jacobian specified"
+    assert hess is not None, "This method needs hessian specified"
 
     bestx = x0
     besty = fun(x0)

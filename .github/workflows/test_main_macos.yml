@@ -1,0 +1,58 @@
+name: test_macos
+
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.8', '3.9', '3.10']
+        forest-sdk-version: ['2.23.0']
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{github.event.pull_request.head.sha}}
+      #python setup
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{matrix.python}}
+ 
+      - name: Install forest on macos 
+        run: |
+          echo $PATH
+          cd /usr/local/bin/
+          curl https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0.dmg -o forest-sdk-${{matrix.forest-sdk-version}}.dmg
+          echo "Installing Forest SDK on MacOS"
+          hdiutil attach forest-sdk-${{matrix.forest-sdk-version}}.dmg
+          sudo cp -R /Volumes/ForestSDK/ /Applications
+          sudo installer -verbose -pkg /Applications/Forest*.pkg -target /
+          sudo hdiutil detach /Volumes/ForestSDK/
+          echo "Starting qvm and quilc"
+          /Applications/Forest\ SDK/bin/qvm --version
+          /Applications/Forest\ SDK/bin/quilc --version
+          screen -d -m /Applications/Forest\ SDK/bin/qvm -S
+          screen -d -m /Applications/Forest\ SDK/bin/quilc -S
+          cd ..
+
+      - name: Install OpenQAOA
+        run: | 
+          python -m pip install --user virtualenv
+          python -m venv env
+          source env/bin/activate
+          python -m pip install --upgrade pip
+          pip install .[tests]
+          pip install ipykernel
+
+      - name: Run tests
+        run: |
+          source env/bin/activate
+          ipython kernel install --user --name "env"
+          python -m pytest -v -m 'not (qpu or api)'

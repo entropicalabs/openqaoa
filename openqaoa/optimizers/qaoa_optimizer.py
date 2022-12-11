@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
-from .training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer
+from .training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
 from ..basebackend import VQABaseBackend
 
 
@@ -24,7 +24,8 @@ def available_optimizers():
 
     optimizers = {
         'scipy': ScipyOptimizer.SCIPY_METHODS,
-        'custom_scipy_gradient': CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS
+        'custom_scipy_gradient': CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS,
+        'custom_scipy_pennylane': PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
     }
 
     return optimizers
@@ -55,17 +56,25 @@ def get_optimizer(vqa_object: VQABaseBackend,
     """
     SUPPORTED_OPTIMIZERS = {
         'scipy': ScipyOptimizer,
-        'custom_scipy_gradient': CustomScipyGradientOptimizer
+        'custom_scipy_gradient': CustomScipyGradientOptimizer,
+        'custom_scipy_pennylane': PennyLaneOptimizer
     }
 
     method = optimizer_dict['method'].lower()
     optimizers = available_optimizers()
 
+    method_valid = False
     for opt_class, methods in optimizers.items():
         if method in methods:
             selected_class = opt_class
-
-    optimizer = SUPPORTED_OPTIMIZERS[selected_class](vqa_object, variational_params,
+            method_valid = True
+            
+    assert method_valid, ValueError(f'Selected method is not supported. Please choose from {available_optimizers()}')
+            
+    try:
+        optimizer = SUPPORTED_OPTIMIZERS[selected_class](vqa_object, variational_params,
                                                          optimizer_dict)
+    except Exception as e:
+        raise e
    
     return optimizer

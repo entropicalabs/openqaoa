@@ -26,6 +26,7 @@ from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 from ..basebackend import VQABaseBackend
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
+from .pennylane import optimization_methods_pennylane as ompl
 
 from .logger_vqa import Logger
 from .result import Result
@@ -323,36 +324,14 @@ class ScipyOptimizer(OptimizeVQA):
         Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
-        jac: 
-            gradient as `Callable` if defined. else None
-
-        hess: 
-            hessian as `Callable` if defined. else None
-
-        * bounds
-        
-            * parameter bounds while training, defaults to ``None``
-
-        * constraints
-        
-            * Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
-
-        * tol
-        
-            * Tolerance for termination
-
-        * maxiters
-        
-            * sets ``maxiters = 100`` by default if not specified.
-            
-        * maxfev
-        
-            * sets ``maxfev = 100`` by default if not specified.
-            
-        * optimizer_options
-        
-            * Dictionary of optimiser-specific arguments, defaults to ``None``
-
+        * 'jac': gradient as ``Callable``, if defined else ``None``
+        * 'hess': hessian as ``Callable``, if defined else ``None``
+        * 'bounds': parameter bounds while training, defaults to ``None``
+        * 'constraints': Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
+        * 'tol': Tolerance for termination
+        * 'maxiter': sets ``maxiters = 100`` by default if not specified.            
+        * 'maxfev': sets ``maxfev = 100`` by default if not specified.
+        * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``
     """
     GRADIENT_FREE = ['cobyla', 'nelder-mead', 'powell', 'slsqp']
     SCIPY_METHODS = MINIMIZE_METHODS
@@ -467,10 +446,13 @@ class ScipyOptimizer(OptimizeVQA):
                                   tol=self.tol, constraints=self.constraints, options=self.options, bounds=self.bounds)
         except ConnectionError as e:
             print(e, '\n')
-            print("The optimization has been terminated early. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+            print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        except Exception as e:
+            raise e
         finally:
             self.results_dictionary()
-            return self
+        
+        return self
 
 
 class CustomScipyGradientOptimizer(OptimizeVQA):
@@ -489,37 +471,14 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
 
     optimizer_dict:
-        * jac
-        
-            * gradient as ``Callable``, if defined else ``None``
-
-        * hess
-        
-            * hessian as ``Callable``, if defined else ``None``
-
-        * bounds
-        
-            * parameter bounds while training, defaults to ``None``
-
-        * constraints
-        
-            * Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
-
-        * tol
-        
-            * Tolerance for termination
-
-        * maxiters
-        
-            * sets ``maxiters = 100`` by default if not specified.
-            
-        * maxfev
-        
-            * sets ``maxfev = 100`` by default if not specified.
-            
-        * optimizer_options
-        
-            * Dictionary of optimiser-specific arguments, defaults to ``None``
+        * 'jac': gradient as ``Callable``, if defined else ``None``
+        * 'hess': hessian as ``Callable``, if defined else ``None``
+        * 'bounds': parameter bounds while training, defaults to ``None``
+        * 'constraints': Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
+        * 'tol': Tolerance for termination
+        * 'maxiter': sets ``maxiters = 100`` by default if not specified.            
+        * 'maxfev': sets ``maxfev = 100`` by default if not specified.
+        * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
     CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
@@ -611,8 +570,9 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         Returns
         -------
         : 
-            The optimized return object from the ``scipy.optimize`` package the result is assigned to the attribute ``opt_result``
+            Returns self after the optimization process is completed. The optimized result is assigned to the attribute ``opt_result``
         '''
+
         if self.method == 'vgd':
             method = om.grad_descent
         elif self.method == 'newton':
@@ -637,7 +597,142 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                                   jac=self.jac, hess=self.hess, tol=self.tol, constraints=self.constraints,
                                   options=self.options, bounds=self.bounds)
         except ConnectionError as e:
+            print(e, '\n')
             print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        except Exception as e:
+            raise e
         finally:
             self.results_dictionary()
-            return self
+        
+        return self
+
+
+class PennyLaneOptimizer(OptimizeVQA):
+    """
+    Python custom scipy optimization with pennylane optimizers for the VQA class.
+
+    .. Tip::
+        Using bounds may result in lower optimization performance
+
+    Parameters
+    ----------
+    vqa_object:
+        Backend object of class VQABaseBackend which contains information on the backend used to perform computations, and the VQA circuit.
+    
+    variational_params:
+        Object of class QAOAVariationalBaseParams, which contains information on the circuit to be executed,  the type of parametrisation, and the angles of the VQA circuit.
+
+    optimizer_dict:
+        * 'jac': gradient as ``Callable``, if defined else ``None``
+        * 'hess': hessian as ``Callable``, if defined else ``None``
+        * 'bounds': parameter bounds while training, defaults to ``None``
+        * 'constraints': Linear/Non-Linear constraints (only for COBYLA, SLSQP and trust-constr)
+        * 'tol': Tolerance for termination
+        * 'maxiter': sets ``maxiters = 100`` by default if not specified.            
+        * 'maxfev': sets ``maxfev = 100`` by default if not specified.
+        * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``. Used also for the pennylande optimizers (and step function) arguments.
+
+    """
+    PENNYLANE_OPTIMIZERS = ['pennylane_adagrad', 'pennylane_adam', 'pennylane_vgd', 
+                                  'pennylane_momentum', 'pennylane_nesterov_momentum',
+                                  'pennylane_rmsprop', 'pennylane_rotosolve', 'pennylane_spsa']
+
+    def __init__(self,
+                 vqa_object: Type[VQABaseBackend],
+                 variational_params: Type[QAOAVariationalBaseParams],
+                 optimizer_dict: dict):
+
+        super().__init__(vqa_object, variational_params, optimizer_dict)
+
+        self.vqa_object = vqa_object
+        self._validate_and_set_params(optimizer_dict)
+
+    def _validate_and_set_params(self, optimizer_dict):
+        """
+        Verify that the specified arguments are valid for the particular optimizer.
+        """
+
+        if self.method not in PennyLaneOptimizer.PENNYLANE_OPTIMIZERS:
+            raise ValueError(
+                f"Please choose from the supported methods: {PennyLaneOptimizer.PENNYLANE_OPTIMIZERS}")
+
+        jac = optimizer_dict.get('jac', None)
+        jac_options = optimizer_dict.get('jac_options', None)
+
+        if jac is None or not isinstance(jac, (Callable, str)):
+            raise ValueError(
+                "Please specify either a string or provide callable gradient in order to use gradient based methods")
+        else:
+            if isinstance(jac, str):
+                self.jac = derivative(self.vqa_object, self.variational_params, self.log, 'gradient', jac, jac_options)
+            else:
+                self.jac = jac
+
+        constraints = optimizer_dict.get('constraints', ())
+        if constraints == () or isinstance(constraints, LinearConstraint) or isinstance(constraints, NonlinearConstraint):
+            self.constraints = constraints
+        else:
+            raise ValueError(
+                f"Constraints for Scipy optimization should be of type {LinearConstraint} or {NonlinearConstraint}")
+
+        bounds = optimizer_dict.get('bounds', None)
+        if bounds is None or isinstance(bounds, Bounds):
+            self.bounds = bounds
+        else:
+            raise ValueError(
+                f"Bounds for Scipy optimization should be of type {Bounds}")
+
+        self.options = optimizer_dict.get('optimizer_options', {})
+        self.options["maxiter"] = optimizer_dict.get('maxiter', None)
+        if optimizer_dict.get('maxfev') is not None:
+            self.options["maxfev"] = optimizer_dict.get('maxfev', None)
+
+        self.tol = optimizer_dict.get('tol', None)
+
+        return self
+
+    def __repr__(self):
+        """
+        Overview of the instantiated optimier/trainer.
+        """
+        maxiter = self.options["maxiter"]
+        string = f"Optimizer for VQA of type: {type(self.vqa).__base__.__name__} \n"
+        string += f"Backend: {type(self.vqa).__name__} \n"
+        string += f"Method: {str(self.method).upper()} with Max Iterations: {maxiter}\n"
+
+        return string
+
+    def optimize(self):
+        '''
+        Main method which implements the optimization process using ``scipy.minimize``.
+
+        Returns
+        -------
+        : 
+            Returns self after the optimization process is completed. The optimized result is assigned to the attribute ``opt_result``
+        '''
+
+        #set the optimizer function
+        method = ompl.pennylane_optimizer
+
+        # set the method to be used for the optimization
+        self.options['pennylane_method'] = self.method.replace("pennylane_", "") 
+
+        if self.options['pennylane_method'] == 'natural_grad_descent': 
+            self.options['qfim'] = qfim(self.vqa_object, self.variational_params, self.log)
+        elif self.options['pennylane_method'] in ['spsa', 'rotosolve']:    
+            self.jac = None 
+        
+        try:
+            result = minimize(self.optimize_this, x0=self.initial_params, method=method,
+                                jac=self.jac, tol=self.tol, constraints=self.constraints,
+                                options=self.options, bounds=self.bounds)
+        except ConnectionError as e:
+            print(e, '\n')
+            print("The optimization has been terminated early. Most likely due to a connection error. You can retrieve results from the optimization runs that were completed through the .results_information method.")
+        except Exception as e:
+            raise e
+        finally:
+            self.results_dictionary()
+        
+        return self

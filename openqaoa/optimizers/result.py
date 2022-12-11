@@ -18,10 +18,12 @@ from re import I
 import matplotlib.pyplot as plt
 from typing import Type
 import numpy as np
+import json
 
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy
+from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -301,3 +303,51 @@ class Result:
             ]
         }
         return best_results
+
+    def as_dict(self):
+        """
+        Returns a dictionary with the attributes of the class.
+
+        Returns
+        -------
+        dict
+            A dictionary with the attributes of the class.
+        """
+        return convert2serialize(self)
+
+    def dumps(self, indent:int=2):
+        """
+        Returns a json string of the QAOA results.
+
+        Parameters
+        ----------
+        indent : int
+            The number of spaces to indent the result in the json file. If None, the result is not indented.
+
+        Returns
+        -------
+        str
+        """
+
+        return json.dumps(convert2serialize_complex(self), indent=indent)
+
+    def dump(self, file_path:str, indent:int=2):
+        """
+        Saves a json file with the QAOA results.
+
+        Parameters
+        ----------
+        file_path : str
+            The name and path of the file to save the result. 
+        indent : int
+            The number of spaces to indent the result in the json file. If None, the result is not indented.
+        """
+
+        # adding .json extension if not present
+        file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
+
+        # saving the result in a json file
+        with open(file_path, 'w') as f:
+            json.dump(convert2serialize_complex(self), f, indent=indent)
+
+        print('Results saved as {}'.format(file_path))
