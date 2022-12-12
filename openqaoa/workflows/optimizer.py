@@ -481,7 +481,8 @@ class RQAOA(Optimizer):
     If you want to use non-default parameters:
 
     Standard/custom (default) type:
-    >>> r = QAOA()
+
+    >>> r = RQAOA()
     >>> r.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
     >>> r.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
     >>> r.set_backend_properties(n_shots=200, cvar_alpha=1)
@@ -491,7 +492,8 @@ class RQAOA(Optimizer):
     >>> r.optimize()
 
     Ada-RQAOA:
-    >>> r_adaptive = QAOA()
+
+    >>> r_adaptive = RQAOA()
     >>> r_adaptive.set_circuit_properties(p=10, param_type='extended', init_type='ramp', mixer_hamiltonian='x')
     >>> r_adaptive.set_device_properties(device_location='qcs', device_name='Aspen-11', cloud_credentials={'name' : "Aspen11", 'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10})
     >>> r_adaptive.set_backend_properties(n_shots=200, cvar_alpha=1)
@@ -679,10 +681,15 @@ class RQAOA(Optimizer):
         Results will be stored in the `results` attribute.
         """
 
-        # lists to append the eliminations and the qaoa objects
+        #check if the object has been compiled (or already optimized)
+        assert self.compiled, "RQAOA object has not been compiled. Please run the compile method first."
+
+        # lists to append the eliminations, the problems, the qaoa results objects, the correlation matrix and the expectation values z
         elimination_tracker = []
-        qaoa_steps = []
+        q_results_steps = []
         problem_steps = []
+        exp_vals_z_steps = []
+        corr_matrix_steps = []
 
         # get variables
         problem = self.problem  
@@ -690,8 +697,8 @@ class RQAOA(Optimizer):
         n_qubits = problem.n
         counter = self.rqaoa_parameters.counter
 
-        # copy the original qaoa object
-        q = copy.deepcopy(self._q)
+        # get the qaoa object
+        q = self._q
 
         # create a different max_terms function for each type 
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
@@ -701,6 +708,9 @@ class RQAOA(Optimizer):
 
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
+
+            # Save the problem             
+            problem_steps.append(problem)
 
             # Run QAOA
             q.optimize()
@@ -721,9 +731,10 @@ class RQAOA(Optimizer):
             # Extract new number of qubits
             n_qubits = new_problem.n
 
-            # Save qaoa object and new problem
-            qaoa_steps.append(copy.deepcopy(q))
-            problem_steps.append(copy.deepcopy(new_problem))
+            # Save qaoa object, correlation matrix and expectation values z
+            q_results_steps.append(q.results)
+            corr_matrix_steps.append(corr_matrix)
+            exp_vals_z_steps.append(exp_vals_z)
 
             # problem is updated
             problem = new_problem
@@ -743,11 +754,16 @@ class RQAOA(Optimizer):
 
         # Compute description dictionary containing all the information            
         self.results['solution'] = full_solutions
-        self.results['classical_output'] = {'minimum_energy': cl_energy,  'optimal_states': cl_ground_states}
+        self.results['classical_output'] = {'minimum_energy': cl_energy, 'optimal_states': cl_ground_states}
         self.results['elimination_rules'] = elimination_tracker
         self.results['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
-        self.results['intermediate_steps'] = [{'QUBO': problem, 'QAOA': qaoa} for qaoa, problem in zip(qaoa_steps, problem_steps)]
+        self.results['intermediate_steps'] = [{'QUBO': problem, 
+        'QAOA_results': q_results, 'exp_vals_z': exp_vals_z, 'corr_matrix': corr_matrix}
+            for problem, q_results, exp_vals_z, corr_matrix in zip(problem_steps, q_results_steps, exp_vals_z_steps, corr_matrix_steps)]
         self.results['number_steps'] = counter - self.rqaoa_parameters.counter 
+
+        # set compiled to false
+        self.compiled = False
 
         if verbose:
             print(f'RQAOA optimization completed.')

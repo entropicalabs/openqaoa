@@ -12,10 +12,8 @@ def main():
     job.set_up()
     job.run_workflow()
 
-
-    job.workflow.results.dump('job.json')
-
     save_job_result({"result": json.loads(job.workflow.results.dumps())})
+    # save_job_result({"result": job.workflow.results.dumps()})
     
 
 if __name__ == "__main__":

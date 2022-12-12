@@ -6,6 +6,7 @@ on:
     branches:
     - dev
     - feat_aws_jobs
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -42,7 +43,7 @@ jobs:
       - name: Install qvm
         run: |
           find /usr/lib -name "libffi.so*"
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so /usr/lib/x86_64-linux-gnu/libffi.so.6
           wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
           tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
           cd forest-sdk-2.23.0-linux-deb/
@@ -61,3 +62,4 @@ jobs:
           source env/bin/activate
           ipython kernel install --name "env" --user
           python -m pytest -v -m 'not (qpu or api or docker_aws)' --cov --cov-report=xml:coverage.xml
+

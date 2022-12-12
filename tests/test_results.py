@@ -13,6 +13,7 @@
 #   limitations under the License.
 
 from openqaoa.workflows.optimizer import QAOA, RQAOA
+from openqaoa.optimizers.result import Result
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
 from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS
@@ -205,7 +206,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
         for step in results['intermediate_steps']:
             assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
-            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
+            assert isinstance(step['QAOA_results'], Result), 'QAOA_results is not of type QAOA Results'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
 
         # Test for the adaptive RQAOA
@@ -220,7 +221,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
         for step in results['intermediate_steps']:
             assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
-            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
+            assert isinstance(step['QAOA_results'], Result), 'QAOA_results is not of type QAOA Results'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
 
 
@@ -239,11 +240,11 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         for i in range(results['number_steps']):
             step = results.get_step(i)
             assert isinstance(step, dict), 'Step is not a dictionary'
-            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
+            assert isinstance(step['QAOA_results'], Result), 'QAOA_results is not of type QAOA Results'
             assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
 
             qaoa = results.get_qaoa_step(i)
-            assert isinstance(qaoa, QAOA), 'QAOA is not of type QAOA'
+            assert isinstance(qaoa, Result), 'QAOA_results is not of type QAOA Results'
 
             optimized_angles_to_find = optimized_angles_to_find_list[i]
             optimized_angles = results.get_qaoa_step_optimized_angles(i)
@@ -264,8 +265,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         
         # test the keys
         expected_keys = ['solution', 'classical_output', 'elimination_rules', 'schedule', 'intermediate_steps', 
-                         'number_steps', 'device', 'circuit_properties', 'backend_properties', 'classical_optimizer',
-                         'rqaoa_parameters']
+                         'number_steps', 'parameters_used']
         for key in expected_keys:
             assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
 

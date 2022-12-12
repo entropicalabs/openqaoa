@@ -661,8 +661,25 @@ class TestingRQAOA(unittest.TestCase):
         problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
 
         r = RQAOA()
-        r.compile(problem)
-        for _ in range(5): r.optimize()
+        try:
+            r.optimize()
+            exception = False
+        except: 
+            exception = True
+        
+        assert exception, 'RQAOA should not be able to optimize without compilation'
+
+        
+        r.compile(problem)        
+        r.optimize()
+        try:
+            r.optimize()
+            exception = False
+        except:
+            exception = True
+
+        assert exception, 'RQAOA should not be able to optimize twice without compilation'
+        
 
     def test_example_1_adaptive_custom(self):
 
