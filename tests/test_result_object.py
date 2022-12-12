@@ -13,6 +13,7 @@ from openqaoa.problems.converters import FromDocplex2IsingModel
 from openqaoa.devices import create_device
 
 class TestingLoggerClass(unittest.TestCase):
+    
     def test_attribute_existence(self):
         """
         This test checks that 'most_probable_states', 'evals', 'intermediate', 'optimized' are correctly
