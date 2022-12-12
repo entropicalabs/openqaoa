@@ -10,13 +10,11 @@ with open("openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "pandas>=1.3.5"
+    "pandas>=1.3.5",
     "sympy>=1.10.1",
     "numpy>=1.22.3",
     "networkx>=2.8",
-    "scipy==1.8",
-    "matplotlib>=3.4.3, <3.5.0",
-    "qiskit>=0.36.1",
+    "scipy>=1.8",
     "docplex>=2.23.1",
     "azure-quantum",
     "qdk",
