@@ -76,7 +76,7 @@ class TestingResultOutputs(unittest.TestCase):
                 self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['intermediate measurement outcomes']))
 
 
-    def _run_qaoa(self):
+    def __run_qaoa(self):
         """
         Run a QAOA algorithm and return the results
         """
@@ -91,7 +91,7 @@ class TestingResultOutputs(unittest.TestCase):
 
         return q.results
 
-    def _test_results_dict(self, results_dict):
+    def __test_results_dict(self, results_dict):
         """
         private function to test the results dictionary
         """
@@ -110,11 +110,11 @@ class TestingResultOutputs(unittest.TestCase):
         """
 
         # run the QAOA and get the results as a dictionary with the asdict method
-        results = self._run_qaoa()
+        results = self.__run_qaoa()
         results_dict = results.asdict()
         
         # test the dictionary
-        self._test_results_dict(results_dict)
+        self.__test_results_dict(results_dict)
 
     #test dumps
     def test_qaoa_result_dumps(self):
@@ -123,13 +123,13 @@ class TestingResultOutputs(unittest.TestCase):
         """
 
         # Test for .dumps returning a string
-        results = self._run_qaoa()
+        results = self.__run_qaoa()
         json_string = results.dumps()
         assert isinstance(json_string, str), 'json_string is not a string'
 
         # read the json string and test the dictionary that is returned
         results_dict = json.loads(json_string)
-        self._test_results_dict(results_dict)
+        self.__test_results_dict(results_dict)
 
     #test dump 
     def test_qaoa_result_dump(self):
@@ -141,7 +141,7 @@ class TestingResultOutputs(unittest.TestCase):
         name_file = 'results.json'
 
         #run the algorithm
-        results = self._run_qaoa()
+        results = self.__run_qaoa()
 
         # Test for .dump creating a file and containing the correct information
         results.dump(name_file, indent=None)
@@ -154,7 +154,7 @@ class TestingResultOutputs(unittest.TestCase):
             results_dict = json.load(file)
 
         # test the dictionary that is returned
-        self._test_results_dict(results_dict)
+        self.__test_results_dict(results_dict)
 
         # delete the file
         os.remove(name_file)
@@ -165,7 +165,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
     Test the  Results Output after a full RQAOA loop
     """        
 
-    def _run_rqaoa(self, type='custom', eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+    def __run_rqaoa(self, type='custom', eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
         """
         private function to run the RQAOA
         """
@@ -185,7 +185,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
-        r.set_exp_tag(name='rqaoa_test') 
+        r.set_exp_tags(name='rqaoa_test') 
         r.compile(problem)
         r.optimize()
 
@@ -200,7 +200,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         n_cutoff = 3
 
         # Test for the standard RQAOA
-        results = self._run_rqaoa()
+        results = self.__run_rqaoa()
         assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
         assert isinstance(results['exp_tag'], dict), 'exp_tag is not a dictionary'
         assert results['exp_tag']['name'] == 'rqaoa_test', 'exp_tag name is not correct'
@@ -226,7 +226,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         assert isinstance(results.device, DeviceBase), 'Attribute device is not of type DeviceBase'
        
         # Test for the adaptive RQAOA
-        results = self._run_rqaoa(type='adaptive')
+        results = self.__run_rqaoa(type='adaptive')
         assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
         assert isinstance(results['exp_tag'], dict), 'exp_tag is not a dictionary'
         assert results['exp_tag']['name'] == 'rqaoa_test', 'exp_tag name is not correct'
@@ -258,7 +258,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         """
 
         # run the RQAOA
-        results = self._run_rqaoa()
+        results = self.__run_rqaoa()
 
         # angles that we should get
         optimized_angles_to_find_list = [[0.34048594327263326, 0.3805304635645852], [0.4066391532372541, 0.3764245401202528], [0.8574965024416041, -0.5645176360484713]]
@@ -283,7 +283,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
             hamiltonian = results.get_hamiltonian_step(i)
             assert isinstance(hamiltonian, Hamiltonian), 'Hamiltonian is not of type Hamiltonian'
 
-    def _test_results_dict(self, results_dict):
+    def __test_results_dict(self, results_dict):
         """
         private function to test the results dictionary
         """
@@ -303,11 +303,11 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         """
 
         # run the RQAOA and get the results as a dictionary with the asdict method
-        results = self._run_rqaoa()
+        results = self.__run_rqaoa()
         results_dict = results.asdict()
         
         # test the dictionary
-        self._test_results_dict(results_dict)
+        self.__test_results_dict(results_dict)
 
     #test dumps
     def test_rqaoa_result_dumps(self):
@@ -316,13 +316,13 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         """
 
         # Test for .dumps returning a string
-        results = self._run_rqaoa()
+        results = self.__run_rqaoa()
         json_string = results.dumps()
         assert isinstance(json_string, str), 'json_string is not a string'
 
         # read the json string and test the dictionary that is returned
         results_dict = json.loads(json_string)
-        self._test_results_dict(results_dict)
+        self.__test_results_dict(results_dict)
 
     #test dump 
     def test_rqaoa_result_dump(self):
@@ -334,7 +334,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         name_file = 'results.json'
 
         #run the algorithm
-        results = self._run_rqaoa()
+        results = self.__run_rqaoa()
 
         # Test for .dump creating a file and containing the correct information
         results.dump(name_file, indent=None)
@@ -347,7 +347,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
             results_dict = json.load(file)
 
         # test the dictionary that is returned
-        self._test_results_dict(results_dict)
+        self.__test_results_dict(results_dict)
 
         # delete the file
         os.remove(name_file)

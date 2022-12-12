@@ -659,7 +659,7 @@ class TestingRQAOA(unittest.TestCase):
         assert r.rqaoa_parameters.counter == 0
 
         self._test_default_values(r)
-
+       
     def test_rqaoa_compile_and_qoao_default_values(self):
         """
         Test creation of the qaoa object and its default values
@@ -667,10 +667,10 @@ class TestingRQAOA(unittest.TestCase):
         r = RQAOA()
         r.compile(QUBO.random_instance(n=7))
 
-        self._test_default_values(r._q)
+        self._test_default_values(r._RQAOA__q)
         
 
-    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+    def __run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
 
         r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)
@@ -740,10 +740,10 @@ class TestingRQAOA(unittest.TestCase):
 
         # run RQAOA and append solution
         for nmax in Nmax:
-            solutions.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
+            solutions.append(self.__run_rqaoa('adaptive', problem, n_cutoff, nmax))
 
         for schedule in schedules:
-            solutions.append(self._run_rqaoa('custom', problem, n_cutoff, schedule))
+            solutions.append(self.__run_rqaoa('custom', problem, n_cutoff, schedule))
 
         # Correct solution
         exact_soutions = {'101010101010': -12, '010101010101': -12}
@@ -764,8 +764,8 @@ class TestingRQAOA(unittest.TestCase):
 
         # run RQAOA and append solution in list
         solutions = []
-        solutions.append(self._run_rqaoa('adaptive', problem, n_cutoff))
-        solutions.append(self._run_rqaoa('custom', problem, n_cutoff))
+        solutions.append(self.__run_rqaoa('adaptive', problem, n_cutoff))
+        solutions.append(self.__run_rqaoa('custom', problem, n_cutoff))
 
         # Correct solution
         exact_soutions = {'1010101010': 5, '0101010101': 5}
@@ -788,8 +788,8 @@ class TestingRQAOA(unittest.TestCase):
 
         # run RQAOA and append solution in list
         solutions = []
-        solutions.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
-        solutions.append(self._run_rqaoa('custom', problem, n_cutoff, step))
+        solutions.append(self.__run_rqaoa('adaptive', problem, n_cutoff, nmax))
+        solutions.append(self.__run_rqaoa('custom', problem, n_cutoff, step))
 
         # Correct solution
         exact_soutions = {'0111111111': 9, '1011111111': 9, '1101111111': 9, '1110111111': 9, '1111011111': 9,
@@ -821,10 +821,10 @@ class TestingRQAOA(unittest.TestCase):
 
         # run RQAOA and append solution
         for nmax in Nmax:
-            solutions.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
+            solutions.append(self.__run_rqaoa('adaptive', problem, n_cutoff, nmax))
 
         for schedule in schedules:
-            solutions.append(self._run_rqaoa('custom', problem, n_cutoff, schedule))
+            solutions.append(self.__run_rqaoa('custom', problem, n_cutoff, schedule))
 
         # Correct solution
         exact_states = ['1111100000', '1111010000', '1110110000', '1101110000', '1011110000', '0111110000', '1111001000', '1110101000', '1101101000', '1011101000', '0111101000', '1110011000', '1101011000', '1011011000', '0111011000', '1100111000', '1010111000', '0110111000', '1001111000', '0101111000', '0011111000', '1111000100', '1110100100', '1101100100', '1011100100', '0111100100', '1110010100', '1101010100', '1011010100', '0111010100', '1100110100', '1010110100', '0110110100', '1001110100', '0101110100', '0011110100', '1110001100', '1101001100', '1011001100', '0111001100', '1100101100', '1010101100', '0110101100', '1001101100', '0101101100', '0011101100', '1100011100', '1010011100', '0110011100', '1001011100', '0101011100', '0011011100', '1000111100', '0100111100', '0010111100', '0001111100', '1111000010', '1110100010', '1101100010', '1011100010', '0111100010', '1110010010', '1101010010', '1011010010', '0111010010', '1100110010', '1010110010', '0110110010', '1001110010', '0101110010', '0011110010', '1110001010', '1101001010', '1011001010', '0111001010', '1100101010', '1010101010', '0110101010', '1001101010', '0101101010', '0011101010', '1100011010', '1010011010', '0110011010', '1001011010', '0101011010', '0011011010', '1000111010', '0100111010', '0010111010', '0001111010', '1110000110', '1101000110', '1011000110', '0111000110', '1100100110', '1010100110', '0110100110', '1001100110', '0101100110', '0011100110', '1100010110', '1010010110', '0110010110', '1001010110', '0101010110', '0011010110', '1000110110', '0100110110', '0010110110', '0001110110', '1100001110', '1010001110', '0110001110', '1001001110', '0101001110', '0011001110', '1000101110', '0100101110', '0010101110', '0001101110', '1000011110', '0100011110', '0010011110', '0001011110', '0000111110', '1111000001', '1110100001', '1101100001', '1011100001', '0111100001', '1110010001', '1101010001', '1011010001', '0111010001', '1100110001', '1010110001', '0110110001', '1001110001', '0101110001', '0011110001', '1110001001', '1101001001', '1011001001', '0111001001', '1100101001', '1010101001', '0110101001', '1001101001', '0101101001', '0011101001', '1100011001', '1010011001', '0110011001', '1001011001', '0101011001', '0011011001', '1000111001', '0100111001', '0010111001', '0001111001', '1110000101', '1101000101', '1011000101', '0111000101', '1100100101', '1010100101', '0110100101', '1001100101', '0101100101', '0011100101', '1100010101', '1010010101', '0110010101', '1001010101', '0101010101', '0011010101', '1000110101', '0100110101', '0010110101', '0001110101', '1100001101', '1010001101', '0110001101', '1001001101', '0101001101', '0011001101', '1000101101', '0100101101', '0010101101', '0001101101', '1000011101', '0100011101', '0010011101', '0001011101', '0000111101', '1110000011', '1101000011', '1011000011', '0111000011', '1100100011', '1010100011', '0110100011', '1001100011', '0101100011', '0011100011', '1100010011', '1010010011', '0110010011', '1001010011', '0101010011', '0011010011', '1000110011', '0100110011', '0010110011', '0001110011', '1100001011', '1010001011', '0110001011', '1001001011', '0101001011', '0011001011', '1000101011', '0100101011', '0010101011', '0001101011', '1000011011', '0100011011', '0010011011', '0001011011', '0000111011', '1100000111', '1010000111', '0110000111', '1001000111', '0101000111', '0011000111', '1000100111', '0100100111', '0010100111', '0001100111', '1000010111', '0100010111', '0010010111', '0001010111', '0000110111', '1000001111', '0100001111', '0010001111', '0001001111', '0000101111', '0000011111']
