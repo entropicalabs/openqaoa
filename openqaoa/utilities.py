@@ -1378,7 +1378,7 @@ def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
 
     return obj
 
-def convert2serialize(obj):
+def convert2serialize(obj, complex_to_string:bool=False):
     """
     Recursively converts object to dictionary.
 
@@ -1386,6 +1386,8 @@ def convert2serialize(obj):
     ----------
     obj: object
         Object to convert to dictionary.
+    complex_to_string: bool
+        If True, convert complex numbers to string, so the result can be serialized to JSON.
 
     Returns
     -------
@@ -1393,47 +1395,20 @@ def convert2serialize(obj):
         Dictionary representation of the object.
     """
     if isinstance(obj, dict):
-        return {k: convert2serialize(v) for k, v in obj.items() if v is not None}
+        return {k: convert2serialize(v, complex_to_string) for k, v in obj.items() if v is not None}
     elif hasattr(obj, "_ast"):
-        return convert2serialize(obj._ast())
+        return convert2serialize(obj._ast(), complex_to_string)
+    elif isinstance(obj, tuple):
+        return tuple(convert2serialize(v, complex_to_string) for v in obj if v is not None)
     elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
-        return [convert2serialize(v) for v in obj if v is not None]
+        return [convert2serialize(v, complex_to_string) for v in obj if v is not None]
     elif hasattr(obj, "__dict__"):
         return {
-            k: convert2serialize(v)
+            k: convert2serialize(v, complex_to_string)
             for k, v in obj.__dict__.items()
             if not callable(v) and v is not None
         }
-    else:
-        return obj
-
-def convert2serialize_complex(obj):
-    """
-    Converts object to dictionary with complex numbers converted to strings, so the result can be serialized to JSON.
-
-    Parameters
-    ----------
-    obj: object
-        Object to convert to dictionary.
-
-    Returns
-    -------
-    dict: dict
-        Dictionary representation of the object.
-    """
-    if isinstance(obj, dict):
-        return {k: convert2serialize_complex(v) for k, v in obj.items() if v is not None}
-    elif hasattr(obj, "_ast"):
-        return convert2serialize_complex(obj._ast())
-    elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
-        return [convert2serialize_complex(v) for v in obj if v is not None]
-    elif hasattr(obj, "__dict__"):
-        return {
-            k: convert2serialize_complex(v)
-            for k, v in obj.__dict__.items()
-            if not callable(v) and v is not None
-        }
-    elif isinstance(obj, complex):
+    elif complex_to_string and isinstance(obj, complex):
         return str(obj)
     else:
         return obj
