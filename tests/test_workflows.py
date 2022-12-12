@@ -18,11 +18,10 @@ from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian
 from openqaoa.workflows.optimizer import QAOA, RQAOA
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
-from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS, DeviceLocal, DevicePyquil, DeviceQiskit
+from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS, DeviceLocal, DeviceQiskit
 from openqaoa.qaoa_parameters import (Hamiltonian, QAOACircuitParams, QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams, 
 QAOAVariationalExtendedParams, QAOAVariationalFourierParams, 
 QAOAVariationalFourierExtendedParams, QAOAVariationalFourierWithBiasParams)
-from openqaoa.backends.simulators.qaoa_pyquil_sim import QAOAPyQuilWavefunctionSimulatorBackend
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
@@ -82,14 +81,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         Check that all QPU-provider related devices are correctly initialised
         """
         q = QAOA()
-        q.set_device(create_device('qcs', 
-                                name='6q-qvm',
-                                **{'as_qvm':True, 'execution_timeout' : 10, 'compiler_timeout':10}))
-        assert type(q.device) == DevicePyquil
-        assert q.device.device_name == '6q-qvm'
-        assert q.device.device_location ==  'qcs'
-
-
         q.set_device(create_device('ibmq', 
                                 name='place_holder',
                                 **{"api_token": "**",
@@ -491,33 +482,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.compile(problem = qubo_problem)
         
         self.assertEqual(type(q.backend), QAOAQiskitBackendStatevecSimulator)
-        
-        self.assertEqual(q.backend.init_hadamard, True)
-        self.assertEqual(q.backend.prepend_state, None)
-        self.assertEqual(q.backend.append_state, None)
-        self.assertEqual(q.backend.cvar_alpha, 1)
-        
-        self.assertRaises(AttributeError, lambda: q.backend.n_shots)
-        
-    def test_set_backend_properties_check_backend_pyquil_statevector(self):
-        
-        """
-        Check if the backend returned by set_backend_properties is correct
-        Based on the input device. For pyquil statevector simulator.
-        Also Checks if defaults from workflows are used in the backend.
-        """
-        
-        nodes = 6
-        edge_probability = 0.6
-        g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
-        problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
-        
-        q = QAOA()
-        q.set_device(create_device(location = 'local', name = 'pyquil.statevector_simulator'))
-        q.compile(problem = qubo_problem)
-        
-        self.assertEqual(type(q.backend), QAOAPyQuilWavefunctionSimulatorBackend)
         
         self.assertEqual(q.backend.init_hadamard, True)
         self.assertEqual(q.backend.prepend_state, None)

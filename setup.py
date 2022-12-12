@@ -10,15 +10,11 @@ with open("openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "amazon-braket-sdk==1.23.0",
-    "pandas>=1.3.5"
+    "pandas>=1.3.5",
     "sympy>=1.10.1",
     "numpy>=1.22.3",
     "networkx>=2.8",
-    "scipy==1.8",
-    "matplotlib>=3.4.3, <3.5.0",
-    "qiskit>=0.36.1",
-    "pyquil>=3.1.0",
+    "scipy>=1.8",
     "docplex>=2.23.1",
     "azure-quantum",
     "qdk",
@@ -33,14 +29,16 @@ requirements_docs = [
     "sphinx-rtd-theme==1.0.0",
     "nbsphinx==0.8.9",
     "ipython==8.2.0",
-    "nbconvert>=6.5.1"    
+    "nbconvert>=6.5.1",
+    "matplotlib>=3.4.3"
 ]
 
 requirements_test = [
     "pytest>=7.1.0",
     "pytest-cov>=3.0.0",
     "ipython>=8.2.0",
-    "nbconvert>=6.5.1"
+    "nbconvert>=6.5.1",
+    "matplotlib>=3.4.3"
 ]
 
 setup(

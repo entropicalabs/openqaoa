@@ -28,9 +28,6 @@ Currently Supported:
 		Fast numpy native Statevector Simulator
 """
 from .qpus.qaoa_qiskit_qpu import *
-from .qpus.qaoa_pyquil_qpu import *
-from .qpus.qaoa_braket_qpu import *
 
 from .simulators.qaoa_qiskit_sim import *
-from .simulators.qaoa_pyquil_sim import *
 from .simulators.qaoa_vectorized import *

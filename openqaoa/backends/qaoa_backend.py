@@ -14,12 +14,12 @@
 from typing import Union, Optional, List
 import numpy as np
 
-from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAAWSQPUBackend, 
-                        QAOAPyQuilWavefunctionSimulatorBackend,
-                        QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
+from ..backends import (QAOAQiskitQPUBackend, 
+                        QAOAQiskitBackendStatevecSimulator,
+                        QAOAQiskitBackendShotBasedSimulator, 
                         QAOAvectorizedBackendSimulator)
 
-from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS, DeviceAzure
+from ..devices import DeviceBase, DeviceLocal, DeviceQiskit, DeviceAzure
 from ..qaoa_parameters.baseparams import QAOACircuitParams
 from ..basebackend import QuantumCircuitBase, QAOABaseBackend
 
@@ -27,14 +27,11 @@ DEVICE_NAME_TO_OBJECT_MAPPER = {
     'qiskit.qasm_simulator': QAOAQiskitBackendShotBasedSimulator,
     'qiskit.shot_simulator': QAOAQiskitBackendShotBasedSimulator,
     'qiskit.statevector_simulator': QAOAQiskitBackendStatevecSimulator,
-    'vectorized': QAOAvectorizedBackendSimulator,
-    'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend
+    'vectorized': QAOAvectorizedBackendSimulator
 }
 
 DEVICE_ACCESS_OBJECT_MAPPER = {
     DeviceQiskit: QAOAQiskitQPUBackend,
-    DevicePyquil: QAOAPyQuilQPUBackend, 
-    DeviceAWS: QAOAAWSQPUBackend,
     DeviceAzure: QAOAQiskitQPUBackend
 }
 
@@ -44,28 +41,17 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
                         seed_simulator: Optional[int] = None,
                         qiskit_simulation_method: Optional[str] = None,
                         noise_model = None,
-                        active_reset: Optional[bool] = None,
-                        rewiring = None,
-                        qubit_layout = None, 
-                        disable_qubit_rewiring: Optional[bool] = None):
+                        qubit_layout = None):
 
     BACKEND_ARGS_MAPPER = {
         QAOAvectorizedBackendSimulator: {},
         QAOAQiskitBackendStatevecSimulator: {},
-        QAOAPyQuilWavefunctionSimulatorBackend: {},
         QAOAQiskitBackendShotBasedSimulator: {'n_shots': n_shots,
                                               'seed_simulator':seed_simulator,
                                               'qiskit_simulation_method': qiskit_simulation_method,
                                               'noise_model': noise_model},
         QAOAQiskitQPUBackend: {'n_shots': n_shots,
                                'qubit_layout':qubit_layout},
-        QAOAPyQuilQPUBackend: {'n_shots': n_shots,
-                               'active_reset': active_reset,
-                               'rewiring': rewiring,
-                               'qubit_layout':qubit_layout},
-        QAOAAWSQPUBackend: {'n_shots': n_shots, 
-                            'qubit_layout': qubit_layout, 
-                            'disable_qubit_rewiring': disable_qubit_rewiring}
     }
 
     final_backend_kwargs = {key: value for key, value in BACKEND_ARGS_MAPPER[backend_obj].items()

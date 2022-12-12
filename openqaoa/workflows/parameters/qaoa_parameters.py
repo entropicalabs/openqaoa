@@ -192,9 +192,6 @@ class BackendProperties(Parameters):
                  qubit_layout: Optional[Union[List[int], np.ndarray]] = None,
                  qiskit_simulation_method: Optional[str] = None,
                  seed_simulator: Optional[int] = None,
-                 active_reset: Optional[bool] = None,
-                 rewiring: Optional[str] = None,
-                 disable_qubit_rewiring: Optional[bool] = None
                  ):
         
         self.init_hadamard = init_hadamard
@@ -206,9 +203,6 @@ class BackendProperties(Parameters):
         self.qubit_layout = qubit_layout
         self.seed_simulator = seed_simulator
         self.qiskit_simulation_method = qiskit_simulation_method
-        self.active_reset = active_reset
-        self.rewiring = rewiring
-        self.disable_qubit_rewiring = disable_qubit_rewiring
         
     # @property
     # def cvar_alpha(self):

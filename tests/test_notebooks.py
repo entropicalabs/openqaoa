@@ -59,6 +59,6 @@ def test_08_results_example():
 def test_09_RQAOA_example():
     notebook_test_function("./examples/09_RQAOA_example.ipynb")
 
-@pytest.mark.qpu
-def test_10_workflows_on_Amazon_braket():
-    notebook_test_function("./examples/10_workflows_on_Amazon_braket.ipynb")
+# @pytest.mark.qpu
+# def test_10_workflows_on_Amazon_braket():
+#     notebook_test_function("./examples/10_workflows_on_Amazon_braket.ipynb")
