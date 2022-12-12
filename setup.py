@@ -29,7 +29,8 @@ requirements_docs = [
     "sphinx-rtd-theme==1.0.0",
     "nbsphinx==0.8.9",
     "ipython==8.2.0",
-    "nbconvert>=6.5.1"    
+    "nbconvert>=6.5.1",
+    "matplotlib>=3.4.3"
 ]
 
 requirements_test = [
