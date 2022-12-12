@@ -103,15 +103,15 @@ class TestingResultOutputs(unittest.TestCase):
         for key in expected_keys:
             assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
 
-    #test as_dict method
-    def test_qaoa_result_as_dict(self):
+    #test asdict method
+    def test_qaoa_result_asdict(self):
         """
-        Test as_dict method for the QAOA result class
+        Test asdict method for the QAOA result class
         """
 
-        # run the QAOA and get the results as a dictionary with the as_dict method
+        # run the QAOA and get the results as a dictionary with the asdict method
         results = self._run_qaoa()
-        results_dict = results.as_dict()
+        results_dict = results.asdict()
         
         # test the dictionary
         self._test_results_dict(results_dict)
@@ -296,15 +296,15 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         for key in expected_keys:
             assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
 
-    #test as_dict method
-    def test_rqaoa_result_as_dict(self):
+    #test asdict method
+    def test_rqaoa_result_asdict(self):
         """
-        Test as_dict method for the RQAOAResult class
+        Test asdict method for the RQAOAResult class
         """
 
-        # run the RQAOA and get the results as a dictionary with the as_dict method
+        # run the RQAOA and get the results as a dictionary with the asdict method
         results = self._run_rqaoa()
-        results_dict = results.as_dict()
+        results_dict = results.asdict()
         
         # test the dictionary
         self._test_results_dict(results_dict)

@@ -15,19 +15,21 @@
 from abc import ABC
 import numpy as np
 from datetime import datetime
+import json, copy
+from typing import Union, List
 
 from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
-from openqaoa.problems.helper_functions import convert2serialize
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters, ALLOWED_RQAOA_TYPES
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise
+from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, convert2serialize, convert2serialize_complex, delete_keys_from_dict
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
 from openqaoa import rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
+from openqaoa.optimizers import Result
 
 
 class Optimizer(ABC):
@@ -75,9 +77,30 @@ class Optimizer(ABC):
         self.cloud_provider = list(DEVICE_ACCESS_OBJECT_MAPPER.keys())
         self.compiled = False
 
-    def asdict(self):
-        attributes_dict = convert2serialize(self)
-        return attributes_dict
+        # Initialize the experiment tags
+        self.exp_tags = {} 
+        self.exp_tags['datetime'] = datetime.now().strftime("%m/%d/%Y_%H:%M:%S") 
+        self.exp_tags['name'] = 'default_name' # TODO : put a default name
+
+        # Initialize the results and problem objects
+        self.problem = None
+        self.results = None
+
+    def set_exp_tags(self, tags:dict={}, name:str=None):
+        """
+        Method to add tags to the experiment. Tags are stored in a dictionary (self.exp_tags) and can be used to identify the experiment.
+        Name is a special tag that is used to identify the experiment in the results object, it will also be stored in the dictionary, and will overwrite any previous name.
+
+        Parameters
+        ----------
+        dict: `dict`
+            Dictionary containing the tags to be added to the experiment
+        name: `str`
+            Name of the experiment. If None, the name will not be changed. If not None, the name will be changed to the new one.
+        """
+        
+        self.exp_tags = {**self.exp_tags, **tags}
+        self.exp_tags['name'] = name if name is not None else self.exp_tags['name']
 
     def set_device(self, device: DeviceBase):
         """"
@@ -198,6 +221,66 @@ class Optimizer(ABC):
 
     def optimize():
         raise NotImplementedError
+
+    def _serializable_dict(self, keys_to_delete_results:List[str]=None):
+        """
+        Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
+        """
+        serializable_dict = {}
+        serializable_dict['exp_tags'] = self.exp_tags
+        serializable_dict['input_problem'] = self.problem
+        serializable_dict['input_parameters'] = {
+                                                'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
+                                                'backend_properties': self.backend_properties,
+                                                'classical_optimizer': self.classical_optimizer,
+                                                }
+        serializable_dict['results'] = delete_keys_from_dict(obj=convert2serialize(self.results), keys_to_delete=keys_to_delete_results)
+
+        return serializable_dict
+
+    def asdict(self, keep_measurements:bool=False):
+        """
+        Returns all values and attributes of the object as a dictionary.
+        """
+
+        return convert2serialize(self._serializable_dict(keep_measurements=keep_measurements))
+
+    def dumps(self, indent:int=2, keep_measurements:bool=False):
+        """
+        Returns a json string of the RQAOA object.
+
+        Parameters
+        ----------
+        indent : int
+            The number of spaces to indent the result in the json file. If None, the result is not indented.
+
+        Returns
+        -------
+        str
+        """
+
+        return json.dumps(convert2serialize_complex(self._serializable_dict(keep_measurements=keep_measurements)), indent=indent)
+
+    def dump(self, file_path:str, indent:int=2, keep_measurements:bool=False):
+        """
+        Saves the RQAOA object as json file.
+
+        Parameters
+        ----------
+        file_path : str
+            The name of the file to save the result. If None, the result is saved as 'result.json'.
+        indent : int
+            The number of spaces to indent the result in the json file. If None, the result is not indented.
+        """
+
+        # adding .json extension if not present
+        file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
+
+        # saving the result in a json file
+        with open(file_path, 'w') as f:
+            json.dump(convert2serialize_complex(self._serializable_dict(keep_measurements=keep_measurements)), f, indent=indent)
+
+        print('Results saved as {}'.format(file_path))
 
 
 class QAOA(Optimizer):
@@ -354,6 +437,8 @@ class QAOA(Optimizer):
         """
 
         assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
+
+        self.problem = problem
         
         self.cost_hamil = Hamiltonian.classical_hamiltonian(
             terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
@@ -416,6 +501,22 @@ class QAOA(Optimizer):
         if verbose:
             print(f'optimization completed.')
         return
+
+    def _serializable_dict(self, keep_measurements:bool = False):
+        """
+        Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
+        """
+        # we choose which keys to delete from the results dictionary, we always delete the intermediate measurement outcomes (because they are too long)
+        if keep_measurements: keys_to_delete_results = ['intermediate measurement outcomes']
+        else: keys_to_delete_results = ['intermediate measurement outcomes', 'optimized measurement outcomes'] # we also delete the optimized measurement outcomes if user says so
+            
+        # we call the _serializable_dict method of the parent class, specifying the keys to delete from the results dictionary
+        serializable_dict = super()._serializable_dict(keys_to_delete_results = keys_to_delete_results)
+
+        # we add the keys of the QAOA object that we want to return
+        serializable_dict['input_parameters']['circuit_properties'] = self.circuit_properties
+
+        return serializable_dict
 
 
 class RQAOA(Optimizer):
@@ -518,6 +619,9 @@ class RQAOA(Optimizer):
         # varaible that will store results object (when optimize is called)
         self.results = RQAOAResults()
 
+        # add name of the experiment in exp_tags
+        self.exp_tags['exp_type'] = 'rqaoa'
+
     def set_circuit_properties(self, **kwargs): 
         """
         Specify the circuit properties to construct the QAOA circuits
@@ -610,17 +714,6 @@ class RQAOA(Optimizer):
 
         return None
 
-    def set_exp_tag(self, **kwargs):
-        """
-        Method that stores any keyword argument in the results object. This is useful to store the parameters of the experiment or any other information that the user wants to store, as a name for the experiment. 
-
-        Parameters
-        ----------
-        Any keyword argument passed to this function will be stored in the results object.
-        """
-        kwargs['datetime'] = datetime.now().strftime("%m/%d/%Y_%H:%M:%S") if 'date' not in kwargs.keys() else kwargs['date']
-        self.results['exp_tag'] = kwargs
-
     def compile(self, problem: QUBO = None, verbose: bool = False):
         """
         Create a QAOA object and initialize it with the circuit properties, device, classical optimizer and
@@ -661,21 +754,15 @@ class RQAOA(Optimizer):
 
 
         # Create the qaoa object with the properties
-        self._q = QAOA(self.device)
-        self._q.circuit_properties  = self.circuit_properties
-        self._q.backend_properties  = self.backend_properties
-        self._q.classical_optimizer = self.classical_optimizer
+        self.__q = QAOA(self.device)
+        self.__q.circuit_properties  = self.circuit_properties
+        self.__q.backend_properties  = self.backend_properties
+        self.__q.classical_optimizer = self.classical_optimizer
 
         # compile qaoa object
-        self._q.compile(problem, verbose=verbose)
+        self.__q.compile(problem, verbose=verbose)
 
-        # save the different parameters and object in the result object
-        self.results.circuit_properties  = self.circuit_properties
-        self.results.backend_properties  = self.backend_properties
-        self.results.classical_optimizer = self.classical_optimizer
-        self.results.rqaoa_parameters    = self.rqaoa_parameters
-        self.results.device              = self.device
-
+        # set compiled boolean to true
         self.compiled = True
 
         return 
@@ -707,7 +794,7 @@ class RQAOA(Optimizer):
         counter = self.rqaoa_parameters.counter
 
         # get the qaoa object
-        q = self._q
+        q = self.__q
 
         # create a different max_terms function for each type 
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
@@ -725,16 +812,16 @@ class RQAOA(Optimizer):
             q.optimize()
 
             # Obtain statistical results
-            exp_vals_z, corr_matrix = self._exp_val_hamiltonian_termwise(q)
+            exp_vals_z, corr_matrix = self.__exp_val_hamiltonian_termwise(q)
             # Retrieve highest expectation values according to adaptive method or schedule in custom method
-            max_terms_and_stats = f_max_terms(exp_vals_z, corr_matrix, self._n_step(n_qubits, n_cutoff, counter))
+            max_terms_and_stats = f_max_terms(exp_vals_z, corr_matrix, self.__n_step(n_qubits, n_cutoff, counter))
             # Generate spin map
             spin_map = rqaoa.spin_mapping(problem, max_terms_and_stats)
             # Eliminate spins and redefine problem
             new_problem, spin_map = rqaoa.redefine_problem(problem, spin_map)
 
             # Extract final set of eliminations with correct dependencies and update tracker
-            eliminations = {(spin_map[spin][1],spin):spin_map[spin][0] for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]}
+            eliminations = [{'pair': (spin_map[spin][1],spin), 'correlation': spin_map[spin][0]} for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]]
             elimination_tracker.append(eliminations)
 
             # Extract new number of qubits
@@ -765,8 +852,8 @@ class RQAOA(Optimizer):
         self.results['solution'] = full_solutions
         self.results['classical_output'] = {'minimum_energy': cl_energy, 'optimal_states': cl_ground_states}
         self.results['elimination_rules'] = elimination_tracker
-        self.results['schedule'] = [len(max_tc) for max_tc in elimination_tracker]
-        self.results['intermediate_steps'] = [{'QUBO': problem, 'QAOA_results': q_results, 'exp_vals_z': exp_vals_z, 'corr_matrix': corr_matrix} for problem, q_results, exp_vals_z, corr_matrix in zip(problem_steps, q_results_steps, exp_vals_z_steps, corr_matrix_steps)]
+        self.results['schedule'] = [len(eliminations) for eliminations in elimination_tracker]
+        self.results['intermediate_steps'] = [{'problem': problem, 'qaoa_results': q_results, 'exp_vals_z': exp_vals_z, 'corr_matrix': corr_matrix} for problem, q_results, exp_vals_z, corr_matrix in zip(problem_steps, q_results_steps, exp_vals_z_steps, corr_matrix_steps)]
         self.results['number_steps'] = counter - self.rqaoa_parameters.counter 
 
         # set compiled to false
@@ -777,8 +864,7 @@ class RQAOA(Optimizer):
 
         return 
 
-
-    def _exp_val_hamiltonian_termwise(self, q):
+    def __exp_val_hamiltonian_termwise(self, q):
         """
         Private method to call the exp_val_hamiltonian_termwise function taking the data from
         the QAOA object _q. 
@@ -798,8 +884,7 @@ class RQAOA(Optimizer):
                 qaoa_backend, cost_hamiltonian, mixer_type, p, qaoa_optimized_angles, 
                 qaoa_optimized_counts, analytical=analytical)
 
-
-    def _n_step(self, n_qubits, n_cutoff, counter):
+    def __n_step(self, n_qubits, n_cutoff, counter):
         """
         Private method that returns the n_max value in case of adaptive or the number of eliminations according 
         to the schedule and the counter in case of custom method.
@@ -814,3 +899,34 @@ class RQAOA(Optimizer):
 
         # If the step eliminates more spins than available, reduce step to match cutoff
         return (n_qubits - n_cutoff) if (n_qubits - n_cutoff) < n else n
+    
+    def _serializable_dict(self, keep_measurements:bool=False):
+        """
+        Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
+
+        Parameters
+        ----------
+        keep_measurements: bool
+            If True, the optimized measurement outcomes are kept in the result dictionary of the intermediate qaoa steps. If False, they are deleted.
+
+        Returns
+        -------
+        serializable_dict: dict
+            Dictionary containing all the values and attributes of the object that we want to return in `asdict` and `dump(s)` methods.
+        """
+
+        # we choose which keys to delete from the results dictionary, we always delete the cost_hamiltonian (because for each intermediate we already have the problem)
+        # and the intermediate measurement outcomes (because they are too long)
+        if keep_measurements: keys_to_delete_results = ['cost_hamiltonian', 'intermediate measurement outcomes']
+        else: keys_to_delete_results = ['cost_hamiltonian', 'intermediate measurement outcomes', 'optimized measurement outcomes'] # we also delete the optimized measurement outcomes if user says so
+            
+        # we call the _serializable_dict method of the parent class, specifying the keys to delete from the results dictionary
+        serializable_dict = super()._serializable_dict(keys_to_delete_results = keys_to_delete_results)
+
+        # we add the keys of the RQAOA object that we want to return
+        serializable_dict['input_parameters']['circuit_properties'] = self.circuit_properties
+        serializable_dict['input_parameters']['rqaoa_parameters'] = self.rqaoa_parameters
+
+        return serializable_dict
+
+    

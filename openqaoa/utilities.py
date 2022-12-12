@@ -1341,3 +1341,99 @@ def qaoa_probabilities(statevector) -> dict:
         prob_dict.update({key: prob_vec[x]})
 
     return prob_dict
+
+
+################################################################################
+# DICTIONARY MANIPULATION and SERIALIZATION
+################################################################################
+def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
+    """
+    Recursively delete all the keys keys_to_delete from a object (or list of dictionaries)
+
+    Parameters
+    ----------
+    obj: dict or list[dict]
+        dictionary or list of dictionaries from which we want to delete keys
+    keys_to_delete: list
+        list of keys to delete from the dictionaries
+
+    Returns
+    -------
+    obj: dict or list[dict]
+        dictionary or list of dictionaries from which we have deleted keys
+    """
+    if isinstance(obj, dict):
+        for key in keys_to_delete:
+            if key in obj:
+                del obj[key]
+        for key in obj:
+            if isinstance(obj[key], dict):
+                delete_keys_from_dict(obj[key], keys_to_delete)                    
+            elif isinstance(obj[key], list):
+                for item in obj[key]:
+                    delete_keys_from_dict(item, keys_to_delete)
+    elif isinstance(obj, list):
+        for item in obj:
+            delete_keys_from_dict(item, keys_to_delete)
+
+    return obj
+
+def convert2serialize(obj):
+    """
+    Recursively converts object to dictionary.
+
+    Parameters
+    ----------
+    obj: object
+        Object to convert to dictionary.
+
+    Returns
+    -------
+    dict: dict
+        Dictionary representation of the object.
+    """
+    if isinstance(obj, dict):
+        return {k: convert2serialize(v) for k, v in obj.items() if v is not None}
+    elif hasattr(obj, "_ast"):
+        return convert2serialize(obj._ast())
+    elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
+        return [convert2serialize(v) for v in obj if v is not None]
+    elif hasattr(obj, "__dict__"):
+        return {
+            k: convert2serialize(v)
+            for k, v in obj.__dict__.items()
+            if not callable(v) and v is not None
+        }
+    else:
+        return obj
+
+def convert2serialize_complex(obj):
+    """
+    Converts object to dictionary with complex numbers converted to strings, so the result can be serialized to JSON.
+
+    Parameters
+    ----------
+    obj: object
+        Object to convert to dictionary.
+
+    Returns
+    -------
+    dict: dict
+        Dictionary representation of the object.
+    """
+    if isinstance(obj, dict):
+        return {k: convert2serialize_complex(v) for k, v in obj.items() if v is not None}
+    elif hasattr(obj, "_ast"):
+        return convert2serialize_complex(obj._ast())
+    elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
+        return [convert2serialize_complex(v) for v in obj if v is not None]
+    elif hasattr(obj, "__dict__"):
+        return {
+            k: convert2serialize_complex(v)
+            for k, v in obj.__dict__.items()
+            if not callable(v) and v is not None
+        }
+    elif isinstance(obj, complex):
+        return str(obj)
+    else:
+        return obj
