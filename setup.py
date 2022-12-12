@@ -36,7 +36,8 @@ requirements_test = [
     "pytest>=7.1.0",
     "pytest-cov>=3.0.0",
     "ipython>=8.2.0",
-    "nbconvert>=6.5.1"
+    "nbconvert>=6.5.1",
+    "matplotlib>=3.4.3"
 ]
 
 setup(
