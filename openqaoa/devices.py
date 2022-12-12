@@ -19,21 +19,11 @@ from qiskit import IBMQ
 from qiskit.providers.ibmq import IBMQAccountError
 from qiskit.providers.ibmq.api.exceptions import RequestsApiError
 
-from qcs_api_client.client import QCSClientConfiguration
-from pyquil.api._engagement_manager import EngagementManager
-from pyquil import get_qc
-
-from boto3.session import Session
-from botocore.exceptions import NoRegionError
-from braket.aws import AwsDevice
-from braket.aws.aws_session import AwsSession
-
 from azure.quantum.qiskit import AzureQuantumProvider
 
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
-    'qiskit.statevector_simulator','vectorized',
-    'pyquil.statevector_simulator'
+    'qiskit.statevector_simulator','vectorized'
 ]
 
 
@@ -283,212 +273,11 @@ class DeviceQiskit(DeviceBase):
             return False
 
 
-class DevicePyquil(DeviceBase):
-    """
-    Contains the required information and methods needed to access remote
-    Rigetti QPUs via Pyquil.
-    """
-
-    def __init__(self, device_name: str, as_qvm: bool = None, noisy: bool = None,
-                 compiler_timeout: float = 20.0,
-                 execution_timeout: float = 20.0,
-                 client_configuration: QCSClientConfiguration = None,
-                 endpoint_id: str = None,
-                 engagement_manager: EngagementManager = None):
-        """
-        Parameters
-        ----------
-        device_name: str 
-            The name of the desired quantum computer. This should correspond to 
-            a name returned by :py:func:`list_quantum_computers`. Names ending 
-            in "-qvm" will return a QVM. Names ending in "-pyqvm" will return a 
-            :py:class:`PyQVM`. Names ending in "-noisy-qvm" will return a QVM 
-            with a noise model. Otherwise, we will return a QPU with the given 
-            name.
-        as_qvm: bool 
-            An optional flag to force construction of a QVM (instead of a QPU). 
-            If specified and set to ``True``, a QVM-backed quantum computer will 
-            be returned regardless of the name's suffix.
-        noisy: bool
-            An optional flag to force inclusion of a noise model. If specified 
-            and set to ``True``, a quantum computer with a noise model will be 
-            returned regardless of the name's suffix. The generic QVM noise 
-            model is simple T1 and T2 noise plus readout error. See 
-            :py:func:`~pyquil.noise.decoherence_noise_with_asymmetric_ro`. Note, 
-            we currently do not support noise models based on QCS hardware; a 
-            value of `True`` will result in an error if the requested QPU is a 
-            QCS hardware QPU.
-        compiler_timeout: float
-            Time limit for compilation requests, in seconds.
-        execution_timeout: float
-            Time limit for execution requests, in seconds.
-        client_configuration: QCSClientConfiguration
-            Optional client configuration. If none is provided, a default one 
-            will be loaded.
-        endpoint_id: str
-            Optional quantum processor endpoint ID, as used in the 
-            `QCS API Docs`_.
-        engagement_manager: EngagementManager
-            Optional engagement manager. If none is provided, a default one will 
-            be created.
-        """
-
-        self.device_name = device_name
-        self.device_location = 'qcs'
-        self.as_qvm = as_qvm
-        self.noisy = noisy
-        self.compiler_timeout = compiler_timeout
-        self.execution_timeout = execution_timeout
-        self.client_configuration = client_configuration
-        self.endpoint_id = endpoint_id
-        self.engagement_manager = engagement_manager
-
-        self.quantum_computer = get_qc(name=self.device_name, as_qvm=self.as_qvm, noisy=self.noisy,
-                                       compiler_timeout=self.compiler_timeout, execution_timeout=self.execution_timeout,
-                                       client_configuration=self.client_configuration, endpoint_id=self.endpoint_id, engagement_manager=self.engagement_manager)
-
-    def check_connection(self) -> bool:
-        """This method should allow a user to easily check if the credentials
-        provided to access the remote QPU is valid.
-
-        If no device was specified in initialisation of object, just runs
-        a test connection without a specific device.
-        If device was specified, checks if connection to that device
-        can be established.
-
-        TODO : 
-        Accessing Rigetti's QCS is currently unsupported, so this part is empty until that is figured out.
-        """
-
-        return True
-
-
-class DeviceAWS(DeviceBase):
-
-    """
-    Contains the required information and methods needed to access QPUs hosted
-    on AWS Braket.
-
-    Attributes:
-    available_qpus: `list`
-        When connection to AWS is established, this attribute contains a list
-        of device names which can be used to access the selected device by
-        reinitialising the Access Object with the name of the available device
-        as input to the device_name parameter.
-    """
-
-    def __init__(self, device_name: str, aws_access_key_id: Optional[str] = None, 
-                 aws_secret_access_key: Optional[str] = None, aws_region: Optional[str] = None, 
-                 s3_bucket_name: Optional[str] = None, folder_name: str = 'openqaoa'):
-
-        """A majority of the input parameters required for this can be found in
-        the user's AWS Web Services account.
-
-        Parameters
-        ----------
-        device_name: `str`
-            The ARN string of the braket QPU/simulator to be used
-        aws_access_key_id: `str`
-            Valid AWS Access Key ID.
-        aws_secret_access_key: `str`
-            Valid AWS Secret Access Key.
-        aws_region: `str`
-            AWS Region where the device the user is planning to access is located. 
-        s3_bucket_name: `str`
-            The name of the s3 bucket the user has connected with AWS Braket. 
-            The output of the experiments from Braket will be stored in this.
-        folder_name: `str`
-            The name of the folder in the s3 bucket that will contain the results
-            from the tasks performed in this run.
-        """
-
-        self.device_name = device_name
-        self.device_location = 'aws'
-        self.aws_access_key_id = aws_access_key_id
-        self.aws_secret_access_key = aws_secret_access_key
-        self.aws_region = aws_region
-        self.s3_bucket_name = s3_bucket_name
-        self.folder_name = folder_name
-
-        self.provider_connected = None
-        self.qpu_connected = None
-
-    def check_connection(self) -> bool:
-
-        self.provider_connected = self._check_provider_connection()
-
-        if self.provider_connected == False:
-            return self.provider_connected
-
-        # Only QPUs that are available for the specified aws region on Braket 
-        # will be shown. We filter out QPUs that do not work with the circuit model
-        sess_devices = self.aws_session.search_devices()
-
-        device_filter = np.multiply(
-            [each_dict['deviceStatus'] == 'ONLINE' for each_dict in sess_devices],
-            [each_dict['providerName'] != 'D-Wave Systems' for each_dict in sess_devices]
-        )
-        active_devices = np.array(sess_devices)[device_filter].tolist()
-
-        self.available_qpus = [backend_dict['deviceArn']
-                               for backend_dict in active_devices]
-
-        if self.device_name == '':
-            return self.provider_connected
-
-        self.qpu_connected = self._check_backend_connection()
-
-        if self.provider_connected and self.qpu_connected:
-            return True
-        else:
-            return False
-
-    def _check_backend_connection(self) -> bool:
-
-        if self.device_name in self.available_qpus:
-            self.backend_device = AwsDevice(self.device_name, self.aws_session)
-            return True
-        else:
-            print(
-                f"Please choose from {self.available_qpus} for this provider")
-            return False
-
-    def _check_provider_connection(self) -> bool:
-
-        try:
-            sess = Session(aws_access_key_id = self.aws_access_key_id, 
-                           aws_secret_access_key = self.aws_secret_access_key, 
-                           region_name = self.aws_region)
-            self.aws_session = AwsSession(sess, default_bucket = self.s3_bucket_name)
-            self.s3_bucket_name = self.aws_session.default_bucket()
-            return True
-        except NoRegionError:
-            self.aws_session = None
-            return True
-        except Exception as e:
-            print('An Exception has occured when trying to connect with the \
-            provider: {}'.format(e))
-            return False
-
-
-def device_class_arg_mapper(device_class:DeviceBase,
+def device_class_arg_mapper(device_class: DeviceBase,
                             api_token: str = None,
                             hub: str = None,
                             group: str = None,
                             project: str = None,
-                            as_qvm: bool = None,
-                            noisy: bool = None,
-                            compiler_timeout: float = None,
-                            execution_timeout: float = None,
-                            client_configuration: QCSClientConfiguration = None,
-                            endpoint_id: str = None,
-                            engagement_manager: EngagementManager = None,
-                            device_name: str = None,
-                            aws_access_key_id: str = None, 
-                            aws_secret_access_key: str = None,
-                            aws_region: str = None, 
-                            s3_bucket_name: str = None,
-                            folder_name: str = None, 
                             resource_id: str = None, 
                             az_location: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
@@ -496,24 +285,8 @@ def device_class_arg_mapper(device_class:DeviceBase,
                         'hub': hub,
                         'group': group,
                         'project': project},
-
-        DevicePyquil: {'as_qvm': as_qvm,
-                        'noisy': noisy,
-                        'compiler_timeout': compiler_timeout,
-                        'execution_timeout': execution_timeout,
-                        'client_configuration': client_configuration,
-                        'endpoint_id': endpoint_id,
-                        'engagement_manager': engagement_manager},
-
-        DeviceAWS: {'device_name':device_name,
-                    'aws_access_key_id':aws_access_key_id,
-                    'aws_secret_access_key':aws_secret_access_key,
-                    'aws_region': aws_region,
-                    's3_bucket_name': s3_bucket_name,
-                    'folder_name': folder_name}, 
         
-        DeviceAzure: {'device_name': device_name, 
-                      'resource_id': resource_id, 
+        DeviceAzure: {'resource_id': resource_id, 
                       'location': az_location}
     }
 
@@ -544,10 +317,6 @@ def create_device(location: str, name: str, **kwargs):
     location = location.lower()
     if location == 'ibmq':
         device_class = DeviceQiskit
-    elif location == 'qcs':
-        device_class = DevicePyquil
-    elif location == 'aws':
-        device_class = DeviceAWS
     elif location == 'local':
         device_class = DeviceLocal
     elif location == 'azure':
