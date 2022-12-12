@@ -23,7 +23,6 @@ import json
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy
-from openqaoa.utilities import convert2serialize, convert2serialize_complex
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):

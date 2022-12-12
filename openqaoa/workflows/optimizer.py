@@ -23,7 +23,7 @@ from openqaoa.problems.problem import QUBO
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters, ALLOWED_RQAOA_TYPES
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, convert2serialize, convert2serialize_complex, delete_keys_from_dict
+from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, convert2serialize, delete_keys_from_dict
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
@@ -86,17 +86,17 @@ class Optimizer(ABC):
         self.problem = None
         self.results = None
 
-    def set_exp_tags(self, tags:dict={}, name:str=None):
+    def set_exp_tags(self, name:str=None, tags:dict={}):
         """
         Method to add tags to the experiment. Tags are stored in a dictionary (self.exp_tags) and can be used to identify the experiment.
         Name is a special tag that is used to identify the experiment in the results object, it will also be stored in the dictionary, and will overwrite any previous name.
 
         Parameters
         ----------
-        dict: `dict`
-            Dictionary containing the tags to be added to the experiment
         name: `str`
             Name of the experiment. If None, the name will not be changed. If not None, the name will be changed to the new one.
+        tags: `dict`
+            Dictionary containing the tags to be added to the experiment. If the tag already exists, it will be overwritten.
         """
         
         self.exp_tags = {**self.exp_tags, **tags}
@@ -227,7 +227,7 @@ class Optimizer(ABC):
         Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
         """
         serializable_dict = {}
-        serializable_dict['exp_tags'] = self.exp_tags
+        serializable_dict['exp_tags'] = tuple(self.exp_tags.items())
         serializable_dict['input_problem'] = self.problem
         serializable_dict['input_parameters'] = {
                                                 'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
@@ -259,7 +259,7 @@ class Optimizer(ABC):
         str
         """
 
-        return json.dumps(convert2serialize_complex(self._serializable_dict(keep_measurements=keep_measurements)), indent=indent)
+        return json.dumps(convert2serialize(self._serializable_dict(keep_measurements=keep_measurements), complex_to_string=True), indent=indent)
 
     def dump(self, file_path:str, indent:int=2, keep_measurements:bool=False):
         """
@@ -278,7 +278,7 @@ class Optimizer(ABC):
 
         # saving the result in a json file
         with open(file_path, 'w') as f:
-            json.dump(convert2serialize_complex(self._serializable_dict(keep_measurements=keep_measurements)), f, indent=indent)
+            json.dump(convert2serialize(self._serializable_dict(keep_measurements=keep_measurements), complex_to_string=True), f, indent=indent)
 
         print('Results saved as {}'.format(file_path))
 
@@ -707,8 +707,7 @@ class RQAOA(Optimizer):
             if hasattr(self.rqaoa_parameters, key):
                 pass
             else:
-                raise ValueError(
-                    f'Specified argument {key} is not supported by RQAOA')
+                raise ValueError(f'Specified argument {key} is not supported by RQAOA')
 
         self.rqaoa_parameters = RqaoaParameters(**kwargs) 
 
