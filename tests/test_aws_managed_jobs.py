@@ -138,31 +138,31 @@ class TestingAwsJobs(unittest.TestCase):
         assert job.workflow.classical_optimizer.asdict() ==  r.classical_optimizer.asdict()
         assert job.workflow.rqaoa_parameters.asdict() ==  r.rqaoa_parameters.asdict()
 
-    @pytest.mark.api
-    def testEndToEnd(self):
-        '''
-        Test Creation and Loading of input_data
-        '''
+    # @pytest.mark.api
+    # def testEndToEnd(self):
+    #     '''
+    #     Test Creation and Loading of input_data
+    #     '''
 
-        input_data_path = os.path.join(os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data", "openqaoa_params.json")
-        os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"] = '/oq_release_tests/testing_jobs/EndToEnd'
+    #     input_data_path = os.path.join(os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data", "openqaoa_params.json")
+    #     os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"] = '/oq_release_tests/testing_jobs/EndToEnd'
 
-        # Create the qubo and the qaoa
-        q = QAOA()
-        q.set_classical_optimizer(maxiter=2)
+    #     # Create the qubo and the qaoa
+    #     q = QAOA()
+    #     q.set_classical_optimizer(maxiter=2)
 
-        input_data = create_aws_input_data(q, self.vc)
-        save_input_data(input_data,input_data_path)
+    #     input_data = create_aws_input_data(q, self.vc)
+    #     save_input_data(input_data,input_data_path)
 
-        # Create an aws workflow and try check that loading the json gives the same params
-        job = AWSJobs(algorithm='QAOA')
-        job.load_input_data()
+    #     # Create an aws workflow and try check that loading the json gives the same params
+    #     job = AWSJobs(algorithm='QAOA')
+    #     job.load_input_data()
 
-        job.set_up()
-        job.run_workflow()
+    #     job.set_up()
+    #     job.run_workflow()
 
-        assert len(job.workflow.results.optimized['optimized angles']) == 2
-        assert job.completed == True
+    #     assert len(job.workflow.results.optimized['optimized angles']) == 2
+    #     assert job.completed == True
 
     @pytest.mark.docker_aws
     def testLocalJob(self):
@@ -183,6 +183,9 @@ class TestingAwsJobs(unittest.TestCase):
             input_data={"input_data": input_data_path}
             )
 
+        assert job.state() == 'COMPLETED'
+
+
     @pytest.mark.docker_aws
     def testLocalJobRQAOA(self):
 
@@ -202,6 +205,8 @@ class TestingAwsJobs(unittest.TestCase):
             image_uri='amazon-braket-oq-dev',
             input_data={"input_data": input_data_path}
             )
+
+        assert job.state() == 'COMPLETED'
 
 if __name__ == '__main__':
     unittest.main()
