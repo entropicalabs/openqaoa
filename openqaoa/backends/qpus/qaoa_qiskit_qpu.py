@@ -85,10 +85,17 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         if self.device.provider_connected and self.device.qpu_connected:
             self.backend_qpu = self.device.backend_device
         elif self.device.provider_connected and self.device.qpu_connected in [False, None]:
-            raise Exception(
-                'Connection to IBMQ was made. Error connecting to the specified backend.')
+            if type(self.device).__name__ == 'DeviceAzure':
+                raise Exception('Connection to Azure was made. Error connecting to the specified backend.')
+            else:
+                raise Exception(
+                    'Connection to IBMQ was made. Error connecting to the specified backend.')
         else:
-            raise Exception('Error connecting to IBMQ.')
+            if type(self.device).__name__ == 'DeviceAzure':
+                raise Exception('Error connecting to Azure.')
+            else:
+                raise Exception('Error connecting to IBMQ.')
+
         # For parametric circuits
         self.parametric_circuit = self.parametric_qaoa_circuit
 
@@ -174,10 +181,12 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         max_job_retries = 5
 
         while job_state == False:
-#             job = execute(circuit, backend=self.backend_qpu,
-#                           shots=self.n_shots, initial_layout=self.qubit_layout)
-            job = self.backend_qpu.run(circuit, shots=self.n_shots, 
-                                       initial_layout=self.qubit_layout)
+            
+            # initial_layout only passed if not azure device
+            input_items = {'shots':self.n_shots, 'initial_layout':self.qubit_layout}
+            if type(self.device).__name__ == 'DeviceAzure':
+                input_items.pop('initial_layout')
+            job = self.backend_qpu.run(circuit, **input_items)
 
             api_contact = False
             no_of_api_retries = 0
