@@ -56,16 +56,16 @@ class RQAOAResults(dict):
         """
         return self['intermediate_steps'][step]['exp_vals_z']
 
-    def get_correlation_matrix(self, step):
+    def get_corr_matrix(self, step):
         """
         Returns the correlation matrix of the i-th step of the RQAOA. 
         """
         return self['intermediate_steps'][step]['corr_matrix']
 
-    def plot_correlation_matrix(self, step, cmap="cool"):
+    def plot_corr_matrix(self, step, cmap="cool"):
         """
         Plots the correlation matrix of the i-th step of the RQAOA.
         TODO : add more options
         """
-        plt.imshow(self.get_correlation_matrix(step=step), cmap=cmap)
+        plt.imshow(self.get_corr_matrix(step=step), cmap=cmap)
         plt.colorbar()

@@ -21,14 +21,9 @@ import unittest
 import networkx as nw
 import numpy as np
 import itertools
-import os
-import json
 
 from openqaoa.problems.problem import MinimumVertexCover, QUBO
 from openqaoa.qaoa_parameters.operators import Hamiltonian
-from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
-from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
-from openqaoa.devices import DeviceBase
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
@@ -75,91 +70,6 @@ class TestingResultOutputs(unittest.TestCase):
                 self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['intermediate cost']))
                 self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['intermediate measurement outcomes']))
 
-
-    def __run_qaoa(self):
-        """
-        Run a QAOA algorithm and return the results
-        """
-
-        # Create the problem
-        g = nw.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
-
-        q = QAOA()
-        q.compile(vc, verbose=False)
-        q.optimize()
-
-        return q.results
-
-    def __test_results_dict(self, results_dict):
-        """
-        private function to test the results dictionary
-        """
-        # test is a dictionary
-        assert isinstance(results_dict, dict), 'Results are not a dictionary'
-        
-        # test the keys
-        expected_keys = ['method', 'cost_hamiltonian', 'evals', 'intermediate', 'optimized', 'most_probable_states']
-        for key in expected_keys:
-            assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
-
-    #test asdict method
-    def test_qaoa_result_asdict(self):
-        """
-        Test asdict method for the QAOA result class
-        """
-
-        # run the QAOA and get the results as a dictionary with the asdict method
-        results = self.__run_qaoa()
-        results_dict = results.asdict()
-        
-        # test the dictionary
-        self.__test_results_dict(results_dict)
-
-    #test dumps
-    def test_qaoa_result_dumps(self):
-        """
-        Test the dumps for the QAOA result class
-        """
-
-        # Test for .dumps returning a string
-        results = self.__run_qaoa()
-        json_string = results.dumps()
-        assert isinstance(json_string, str), 'json_string is not a string'
-
-        # read the json string and test the dictionary that is returned
-        results_dict = json.loads(json_string)
-        self.__test_results_dict(results_dict)
-
-    #test dump 
-    def test_qaoa_result_dump(self):
-        """
-        Test the dump method for the QAOA result class 
-        """
-
-        # name for the file that will be created and deleted
-        name_file = 'results.json'
-
-        #run the algorithm
-        results = self.__run_qaoa()
-
-        # Test for .dump creating a file and containing the correct information
-        results.dump(name_file, indent=None)
-        assert os.path.isfile(name_file), 'Dump file does not exist'
-        with open(name_file, 'r') as file:
-            assert file.read() == results.dumps(indent=None), 'Dump file does not contain the correct data'
-
-        # read the json string 
-        with open(name_file, 'r') as file:
-            results_dict = json.load(file)
-
-        # test the dictionary that is returned
-        self.__test_results_dict(results_dict)
-
-        # delete the file
-        os.remove(name_file)
-
-
 class TestingRQAOAResultOutputs(unittest.TestCase):
     """
     Test the  Results Output after a full RQAOA loop
@@ -202,54 +112,40 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         # Test for the standard RQAOA
         results = self.__run_rqaoa()
         assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
-        assert isinstance(results['exp_tag'], dict), 'exp_tag is not a dictionary'
-        assert results['exp_tag']['name'] == 'rqaoa_test', 'exp_tag name is not correct'
-        assert isinstance(results['exp_tag']['datetime'], str), 'exp_tag datetime is not a string'
         for key in results['solution'].keys():
             assert len(key) == n_qubits, 'Number of qubits solution is not correct'
         assert isinstance(results['classical_output']['minimum_energy'], float)
         assert isinstance(results['classical_output']['optimal_states'], list)
-        for rule in results['elimination_rules']:
-            assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
+        for rule_list in results['elimination_rules']:
+            for rule in rule_list:
+                assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
         assert isinstance(results['schedule'], list), 'Schedule is not a list'
         assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
         for step in results['intermediate_steps']:
-            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
-            assert isinstance(step['QAOA_results'], Result), 'QAOA_results is not of type QAOA Results'
+            assert isinstance(step['problem'], QUBO), 'problem is not of type QUBO'
+            assert isinstance(step['qaoa_results'], Result), 'QAOA_results is not of type QAOA Results'
             assert isinstance(step['exp_vals_z'], np.ndarray), 'exp_vals_z is not of type numpy array'
             assert isinstance(step['corr_matrix'], np.ndarray), 'corr_matrix is not of type numpy array'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
-        assert isinstance(results.backend_properties, BackendProperties), 'Attribute backend_properties is not of type BackendProperties'
-        assert isinstance(results.circuit_properties, CircuitProperties), 'Attribute circuit_properties is not of type CircuitProperties'
-        assert isinstance(results.classical_optimizer, ClassicalOptimizer), 'Attribute classical_optimizer is not of type ClassicalOptimizer'
-        assert isinstance(results.rqaoa_parameters, RqaoaParameters), 'Attribute rqaoa_parameters is not of type RqaoaParameters'
-        assert isinstance(results.device, DeviceBase), 'Attribute device is not of type DeviceBase'
        
         # Test for the adaptive RQAOA
         results = self.__run_rqaoa(type='adaptive')
         assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
-        assert isinstance(results['exp_tag'], dict), 'exp_tag is not a dictionary'
-        assert results['exp_tag']['name'] == 'rqaoa_test', 'exp_tag name is not correct'
-        assert isinstance(results['exp_tag']['datetime'], str), 'exp_tag datetime is not a string'
         for key in results['solution'].keys():
             assert len(key) == n_qubits, 'Number of qubits solution is not correct'
         assert isinstance(results['classical_output']['minimum_energy'], float)
         assert isinstance(results['classical_output']['optimal_states'], list)
-        for rule in results['elimination_rules']:
-            assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
+        for rule_list in results['elimination_rules']:
+            for rule in rule_list:
+                assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
         assert isinstance(results['schedule'], list), 'Schedule is not a list'
         assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
         for step in results['intermediate_steps']:
-            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
-            assert isinstance(step['QAOA_results'], Result), 'QAOA_results is not of type QAOA Results'
+            assert isinstance(step['problem'], QUBO), 'QUBO is not of type QUBO'
+            assert isinstance(step['qaoa_results'], Result), 'QAOA_results is not of type QAOA Results'
             assert isinstance(step['exp_vals_z'], np.ndarray), 'exp_vals_z is not of type numpy array'
             assert isinstance(step['corr_matrix'], np.ndarray), 'corr_matrix is not of type numpy array'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
-        assert isinstance(results.backend_properties, BackendProperties), 'Attribute backend_properties is not of type BackendProperties'
-        assert isinstance(results.circuit_properties, CircuitProperties), 'Attribute circuit_properties is not of type CircuitProperties'
-        assert isinstance(results.classical_optimizer, ClassicalOptimizer), 'Attribute classical_optimizer is not of type ClassicalOptimizer'
-        assert isinstance(results.rqaoa_parameters, RqaoaParameters), 'Attribute rqaoa_parameters is not of type RqaoaParameters'
-        assert isinstance(results.device, DeviceBase), 'Attribute device is not of type DeviceBase'
        
 
     def test_rqaoa_result_methods_steps(self):
@@ -260,97 +156,37 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         # run the RQAOA
         results = self.__run_rqaoa()
 
-        # angles that we should get
-        optimized_angles_to_find_list = [[0.34048594327263326, 0.3805304635645852], [0.4066391532372541, 0.3764245401202528], [0.8574965024416041, -0.5645176360484713]]
+        # test the solution method
+        assert results.get_solution() == results['solution'], 'get_solution method is not correct'
 
-        # test the methods
+        # test the methods for the intermediate steps 
         for i in range(results['number_steps']):
-            step = results.get_step(i)
-            assert isinstance(step, dict), 'Step is not a dictionary'
-            assert isinstance(step['QAOA_results'], Result), 'QAOA_results is not of type QAOA Results'
-            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
 
-            qaoa = results.get_qaoa_step(i)
-            assert isinstance(qaoa, Result), 'QAOA_results is not of type QAOA Results'
+            #methods for intermediate qaao results
+            assert results.get_qaoa_results(i) == results['intermediate_steps'][i]['qaoa_results'], 'get_qaoa_results method is not correct'
+            assert results.get_qaoa_optimized_angles(i) == results.get_qaoa_results(i).optimized['optimized angles'], 'get_qaoa_optimized_angles method is not correct'
 
-            optimized_angles_to_find = optimized_angles_to_find_list[i]
-            optimized_angles = results.get_qaoa_step_optimized_angles(i)
-            assert optimized_angles == optimized_angles_to_find, 'Optimized angles are not correct'
+            #methods for intermediate qubo
+            assert results.get_problem(i) == results['intermediate_steps'][i]['problem'], 'get_qubo method is not correct'
+            assert isinstance(results.get_hamiltonian(i), Hamiltonian), 'get_hamiltonian method is not correct'
 
-            problem = results.get_problem_step(i)
-            assert isinstance(problem, QUBO), 'QUBO is not of type QUBO'
+            #methods for intermediate exp_vals_z and corr_matrix
+            assert results.get_exp_vals_z(i) is results['intermediate_steps'][i]['exp_vals_z'], 'get_exp_vals_z method is not correct'
+            assert results.get_corr_matrix(i) is results['intermediate_steps'][i]['corr_matrix'], 'get_corr_matrix method is not correct'
 
-            hamiltonian = results.get_hamiltonian_step(i)
-            assert isinstance(hamiltonian, Hamiltonian), 'Hamiltonian is not of type Hamiltonian'
-
-    def __test_results_dict(self, results_dict):
+    def test_rqaoa_result_plot_corr_matrix(self):
         """
-        private function to test the results dictionary
-        """
-        # test is a dictionary
-        assert isinstance(results_dict, dict), 'Results are not a dictionary'
-        
-        # test the keys
-        expected_keys = ['solution', 'classical_output', 'elimination_rules', 'schedule', 'intermediate_steps', 
-                         'number_steps', 'parameters_used']
-        for key in expected_keys:
-            assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
-
-    #test asdict method
-    def test_rqaoa_result_asdict(self):
-        """
-        Test asdict method for the RQAOAResult class
+        Test the plot_corr_matrix method for the RQAOAResult class
         """
 
-        # run the RQAOA and get the results as a dictionary with the asdict method
-        results = self.__run_rqaoa()
-        results_dict = results.asdict()
-        
-        # test the dictionary
-        self.__test_results_dict(results_dict)
-
-    #test dumps
-    def test_rqaoa_result_dumps(self):
-        """
-        Test the dumps for the RQAOAResult class
-        """
-
-        # Test for .dumps returning a string
-        results = self.__run_rqaoa()
-        json_string = results.dumps()
-        assert isinstance(json_string, str), 'json_string is not a string'
-
-        # read the json string and test the dictionary that is returned
-        results_dict = json.loads(json_string)
-        self.__test_results_dict(results_dict)
-
-    #test dump 
-    def test_rqaoa_result_dump(self):
-        """
-        Test the dump method for the RQAOAResult class
-        """
-
-        # name for the file that will be created and deleted
-        name_file = 'results.json'
-
-        #run the algorithm
+        # run the RQAOA
         results = self.__run_rqaoa()
 
-        # Test for .dump creating a file and containing the correct information
-        results.dump(name_file, indent=None)
-        assert os.path.isfile(name_file), 'Dump file does not exist'
-        with open(name_file, 'r') as file:
-            assert file.read() == results.dumps(indent=None), 'Dump file does not contain the correct data'
+        # test the plot_corr_matrix method
+        for i in range(results['number_steps']):
+            results.plot_corr_matrix(step=i)
 
-        # read the json string 
-        with open(name_file, 'r') as file:
-            results_dict = json.load(file)
-
-        # test the dictionary that is returned
-        self.__test_results_dict(results_dict)
-
-        # delete the file
-        os.remove(name_file)
+    
 
 if __name__ == "__main__":
 	unittest.main()
