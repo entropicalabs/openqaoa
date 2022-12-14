@@ -137,7 +137,7 @@ class QUBO:
         self._n = input_n
 
     def asdict(self):
-        return convert2serialize(self)
+        return self.__dict__
 
     @staticmethod
     def clean_terms_and_weights(terms, weights):
