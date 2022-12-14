@@ -30,6 +30,7 @@ from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradient
 import unittest
 import networkx as nw
 import numpy as np
+import json, os
 
 from openqaoa.problems.problem import MinimumVertexCover, QUBO
 
@@ -835,9 +836,122 @@ class TestingRQAOA(unittest.TestCase):
             for key in solution:
                 assert solution[key] == exact_soutions[key]
 
+    def __run_rqaoa(self, type='custom', eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+        """
+        private function to run the RQAOA
+        """
 
-    
-    # TODO : do we want to test qaoa properties through rqaoa?
+        n_qubits = 6
+        n_cutoff = 3
+        g = nw.circulant_graph(n_qubits, [1])
+        problem = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+
+        r = RQAOA()
+        qiskit_device = create_device(location='local', name=name_device)
+        r.set_device(qiskit_device)
+        if type == 'adaptive':
+            r.set_rqaoa_parameters(n_cutoff = n_cutoff, n_max=eliminations, rqaoa_type=type)
+        else:
+            r.set_rqaoa_parameters(n_cutoff = n_cutoff, steps=eliminations, rqaoa_type=type)
+        r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
+        r.set_backend_properties(prepend_state=None, append_state=None)
+        r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
+        r.set_exp_tags(name='rqaoa_test') 
+        r.compile(problem)
+        r.optimize()
+
+        return r
+
+    def __test_rqaoa_as_dict(self, as_dict):
+        """
+        private function to test the results dictionary
+        """
+        # test is a dictionary
+        assert isinstance(as_dict, dict), 'Results are not a dictionary'
+        
+        # test the keys
+        expected_keys = ['solution', 'classical_output', 'elimination_rules', 'schedule', 'intermediate_steps', 
+                         'number_steps', 'parameters_used', 'fff']
+        
+        for k, v in self.__test_keys(as_dict, expected_keys):
+            assert v, 'Key {} is not in the dictionary'.format(k)
+
+    def __test_keys(self, obj, expected_keys):
+        """
+        private function to test the keys. It recursively tests the keys of the nested dictionaries, or lists of dictionaries
+        """
+        if isinstance(expected_keys, list):
+            expected_keys = {key: False for key in expected_keys}
+
+        if isinstance(obj, dict):
+            for key in obj:
+                if key in expected_keys.keys(): expected_keys[key] = True
+
+                if isinstance(obj[key], dict):
+                    self.__test_keys(obj[key], expected_keys)
+                elif isinstance(obj[key], list):
+                    for item in obj[key]:
+                        self.__test_keys(item, expected_keys)
+        elif isinstance(obj, list):
+            for item in obj:
+                self.__test_keys(item, expected_keys)
+            
+
+    #test asdict method
+    def test_rqaoa_result_asdict(self):
+        """
+        Test asdict method for the RQAOAResult class
+        """
+
+        # run the RQAOA and get the results as a dictionary with the asdict method
+        r = self.__run_rqaoa()
+        r_dict = r.asdict()
+        
+        # test the dictionary
+        self.__test_rqaoa_as_dict(r_dict)
+
+    #test dumps
+    def test_rqaoa_result_dumps(self):
+        """
+        Test the dumps for the RQAOAResult class
+        """
+
+        # Test for .dumps returning a string
+        results = self.__run_rqaoa()
+        json_string = results.dumps()
+        assert isinstance(json_string, str), 'json_string is not a string'
+
+        # read the json string and test the dictionary that is returned
+        results_dict = json.loads(json_string)
+        self.__test_results_dict(results_dict)
+
+    #test dump 
+    def test_rqaoa_result_dump(self):
+        """
+        Test the dump method for the RQAOAResult class
+        """
+
+        # name for the file that will be created and deleted
+        name_file = 'results.json'
+
+        #run the algorithm
+        results = self.__run_rqaoa()
+
+        # Test for .dump creating a file and containing the correct information
+        results.dump(name_file, indent=None)
+        assert os.path.isfile(name_file), 'Dump file does not exist'
+        with open(name_file, 'r') as file:
+            assert file.read() == results.dumps(indent=None), 'Dump file does not contain the correct data'
+
+        # read the json string 
+        with open(name_file, 'r') as file:
+            results_dict = json.load(file)
+
+        # test the dictionary that is returned
+        self.__test_results_dict(results_dict)
+
+        # delete the file
+        os.remove(name_file)
 
 
 if __name__ == '__main__':
