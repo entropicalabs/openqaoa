@@ -297,7 +297,7 @@ class OptimizeVQA(ABC):
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
         
-        self.qaoa_result = Result(self.log, self.method, self.vqa.cost_hamiltonian)
+        self.qaoa_result = Result(self.log, self.method, self.vqa.cost_hamiltonian, type(self.vqa))
         
         if(file_path and os.path.isdir(file_path)):
             print('Saving results locally')
