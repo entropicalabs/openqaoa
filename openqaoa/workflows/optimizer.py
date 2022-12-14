@@ -17,6 +17,7 @@ import numpy as np
 from datetime import datetime
 import json
 from typing import List
+import gzip
 
 from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
@@ -276,9 +277,9 @@ class Optimizer(ABC):
         else:
             return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= keys_not_to_include), indent=indent)
 
-    def dump(self, file_path:str, indent:int=2, keys_not_to_include:List[str]=[]):
+    def dump(self, file_path:str, indent:int=2, compresslevel:int=0, keys_not_to_include:List[str]=[]):
         """
-        Saves the Optimizer object as json file.
+        Saves the Optimizer object as json file (if compresslevel is 0). If compresslevel is not 0, saves the Optimizer object as a .gz file (which should be decompressed before use).
 
         Parameters
         ----------
@@ -286,19 +287,33 @@ class Optimizer(ABC):
             The name of the file to save the result. If None, the result is saved as 'result.json'.
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
+        compresslevel : int
+            The compression level to use. If 0, no compression is used and a json file is saved.
+            If 1, the fastest compression method is used. If 9, the slowest but most effective compression method is used. And a .gz file is saved.
         keys_not_to_include : List[str]
             A list of keys that should not be included in the json file.
         """
 
-        # adding .json extension if not present
-        file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
+        if compresslevel == 0: 
 
-        # saving the result in a json file
-        with open(file_path, 'w') as f:
-            if keys_not_to_include == []:
-                json.dump(self._serializable_dict(complex_to_string=True), f, indent=indent)
-            else:
-                json.dump(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= keys_not_to_include), f, indent=indent)
+            # adding .json extension if not present
+            file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
+
+            # saving the result in a json file
+            with open(file_path, 'w') as f:
+                if keys_not_to_include == []:
+                    json.dump(self._serializable_dict(complex_to_string=True), f, indent=indent)
+                else:
+                    json.dump(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= keys_not_to_include), f, indent=indent)
+
+        else:
+            # adding .json.gz extension if not present
+            file_path = file_path[:-5] if '.json' == file_path[-5:] else file_path
+            file_path = file_path + '.json.gz' if '.json.gz' != file_path[-8:] else file_path
+
+            # we save the json created by the dumps method as a .gz file
+            with gzip.open(file_path, 'w', compresslevel=compresslevel) as f:
+                f.write(self.dumps(indent=indent, keys_not_to_include=keys_not_to_include).encode('utf-8'))
 
         print('Results saved as {}'.format(file_path))
 
@@ -940,7 +955,6 @@ class RQAOA(Optimizer):
         serializable_dict: dict
             Dictionary containing all the values and attributes of the object that we want to return in `asdict` and `dump(s)` methods.
         """
-
         # we call the _serializable_dict method of the parent class, specifying the keys to delete from the results dictionary
         serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
 
