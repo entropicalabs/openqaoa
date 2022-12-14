@@ -15,21 +15,20 @@
 from abc import ABC
 import numpy as np
 from datetime import datetime
-import json, copy
-from typing import Union, List
+import json
+from typing import List
 
 from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters, ALLOWED_RQAOA_TYPES
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, convert2serialize, delete_keys_from_dict
+from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
 from openqaoa import rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
-from openqaoa.optimizers import Result
 
 
 class Optimizer(ABC):
@@ -222,48 +221,64 @@ class Optimizer(ABC):
     def optimize():
         raise NotImplementedError
 
-    def _serializable_dict(self, keys_to_delete_results:List[str]=None):
+    def _serializable_dict(self, complex_to_string:bool=False):
         """
         Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
+
+        Parameters
+        ----------
+        complex_to_string: bool
+            If True, converts all complex numbers to strings. This is useful for JSON serialization, for the `dump(s)` methods.
         """
         serializable_dict = {}
         serializable_dict['exp_tags'] = tuple(self.exp_tags.items())
-        serializable_dict['input_problem'] = self.problem
+        serializable_dict['input_problem'] = self.problem.asdict()
         serializable_dict['input_parameters'] = {
                                                 'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
-                                                'backend_properties': self.backend_properties,
-                                                'classical_optimizer': self.classical_optimizer,
+                                                'backend_properties': vars(self.backend_properties),
+                                                'classical_optimizer': vars(self.classical_optimizer),
                                                 }
-        serializable_dict['results'] = delete_keys_from_dict(obj=convert2serialize(self.results), keys_to_delete=keys_to_delete_results)
+        serializable_dict['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
 
         return serializable_dict
 
-    def asdict(self, keep_measurements:bool=False):
+    def asdict(self, keys_not_to_include:List[str]=[]):
         """
-        Returns all values and attributes of the object as a dictionary.
-        """
+        Returns a dictionary of the Optimizer object, where all objects are converted to dictionaries.
 
-        return convert2serialize(self._serializable_dict(keep_measurements=keep_measurements))
-
-    def dumps(self, indent:int=2, keep_measurements:bool=False):
+        Returns
+        -------
+        dict
         """
-        Returns a json string of the RQAOA object.
+        if keys_not_to_include == []:
+            return self._serializable_dict(complex_to_string=False)
+        else:
+            return delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=False), keys_to_delete= keys_not_to_include)
+
+    def dumps(self, indent:int=2, keys_not_to_include:List[str]=[]):
+        """
+        Returns a json string of the Optimizer object.
 
         Parameters
         ----------
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
+        keys_not_to_include : List[str]
+            A list of keys to exclude from the json string.
 
         Returns
         -------
         str
         """
 
-        return json.dumps(convert2serialize(self._serializable_dict(keep_measurements=keep_measurements), complex_to_string=True), indent=indent)
+        if keys_not_to_include == []:
+            return json.dumps(self._serializable_dict(complex_to_string=True), indent=indent)
+        else:
+            return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= keys_not_to_include), indent=indent)
 
-    def dump(self, file_path:str, indent:int=2, keep_measurements:bool=False):
+    def dump(self, file_path:str, indent:int=2, keys_not_to_include:List[str]=[]):
         """
-        Saves the RQAOA object as json file.
+        Saves the Optimizer object as json file.
 
         Parameters
         ----------
@@ -271,6 +286,8 @@ class Optimizer(ABC):
             The name of the file to save the result. If None, the result is saved as 'result.json'.
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
+        keys_not_to_include : List[str]
+            A list of keys that should not be included in the json file.
         """
 
         # adding .json extension if not present
@@ -278,7 +295,10 @@ class Optimizer(ABC):
 
         # saving the result in a json file
         with open(file_path, 'w') as f:
-            json.dump(convert2serialize(self._serializable_dict(keep_measurements=keep_measurements), complex_to_string=True), f, indent=indent)
+            if keys_not_to_include == []:
+                json.dump(self._serializable_dict(complex_to_string=True), f, indent=indent)
+            else:
+                json.dump(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= keys_not_to_include), f, indent=indent)
 
         print('Results saved as {}'.format(file_path))
 
@@ -502,19 +522,26 @@ class QAOA(Optimizer):
             print(f'optimization completed.')
         return
 
-    def _serializable_dict(self, keep_measurements:bool = False):
-        """
+    def _serializable_dict(self, complex_to_string:bool = False): 
+        """ 
         Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
+
+        Parameters
+        ----------
+        complex_to_string: bool
+            If True, complex numbers are converted to strings. This is useful for JSON serialization.
+        
+        Returns
+        -------
+        serializable_dict: dict
+            A dictionary containing all the values and attributes of the object that we want to return in `asdict` and `dump(s)` methods.
         """
-        # we choose which keys to delete from the results dictionary, we always delete the intermediate measurement outcomes (because they are too long)
-        if keep_measurements: keys_to_delete_results = ['intermediate measurement outcomes']
-        else: keys_to_delete_results = ['intermediate measurement outcomes', 'optimized measurement outcomes'] # we also delete the optimized measurement outcomes if user says so
-            
+
         # we call the _serializable_dict method of the parent class, specifying the keys to delete from the results dictionary
-        serializable_dict = super()._serializable_dict(keys_to_delete_results = keys_to_delete_results)
+        serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
 
         # we add the keys of the QAOA object that we want to return
-        serializable_dict['input_parameters']['circuit_properties'] = self.circuit_properties
+        serializable_dict['input_parameters']['circuit_properties'] = vars(self.circuit_properties)
 
         return serializable_dict
 
@@ -899,14 +926,14 @@ class RQAOA(Optimizer):
         # If the step eliminates more spins than available, reduce step to match cutoff
         return (n_qubits - n_cutoff) if (n_qubits - n_cutoff) < n else n
     
-    def _serializable_dict(self, keep_measurements:bool=False):
+    def _serializable_dict(self, complex_to_string:bool = False):
         """
         Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
 
         Parameters
         ----------
-        keep_measurements: bool
-            If True, the optimized measurement outcomes are kept in the result dictionary of the intermediate qaoa steps. If False, they are deleted.
+        complex_to_string: bool
+            If True, complex numbers are converted to strings. If False, complex numbers are converted to lists of real and imaginary parts.
 
         Returns
         -------
@@ -914,18 +941,12 @@ class RQAOA(Optimizer):
             Dictionary containing all the values and attributes of the object that we want to return in `asdict` and `dump(s)` methods.
         """
 
-        # we choose which keys to delete from the results dictionary, we always delete the cost_hamiltonian (because for each intermediate we already have the problem)
-        # and the intermediate measurement outcomes (because they are too long)
-        if keep_measurements: keys_to_delete_results = ['cost_hamiltonian', 'intermediate measurement outcomes']
-        else: keys_to_delete_results = ['cost_hamiltonian', 'intermediate measurement outcomes', 'optimized measurement outcomes'] # we also delete the optimized measurement outcomes if user says so
-            
         # we call the _serializable_dict method of the parent class, specifying the keys to delete from the results dictionary
-        serializable_dict = super()._serializable_dict(keys_to_delete_results = keys_to_delete_results)
+        serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
 
         # we add the keys of the RQAOA object that we want to return
-        serializable_dict['input_parameters']['circuit_properties'] = self.circuit_properties
-        serializable_dict['input_parameters']['rqaoa_parameters'] = self.rqaoa_parameters
+        serializable_dict['input_parameters']['circuit_properties'] = vars(self.circuit_properties)
+        serializable_dict['input_parameters']['rqaoa_parameters'] = vars(self.rqaoa_parameters)
 
         return serializable_dict
 
-    
