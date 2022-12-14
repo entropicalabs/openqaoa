@@ -22,7 +22,8 @@ import json
 
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
-from ..utilities import qaoa_probabilities, bitstring_energy
+from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize
+from ..basebackend import QAOABaseBackendStatevector
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -53,8 +54,10 @@ class Result:
     """
 
     def __init__(
-        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian]
+        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], backend: str
     ):
+
+        self.__backend = backend
 
         self.method = method
 
@@ -106,6 +109,46 @@ class Result:
     #     string += "\tThe associated cost is: " + str(self.optimized['optimized cost']) + "\n"
 
     #     return (string)
+
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False):
+        """
+        Returns a dictionary with the results of the optimization, where the dictionary is serializable.
+
+        Parameters
+        ----------
+        keep_cost_hamiltonian: `bool`
+            If True, the cost hamiltonian is kept in the dictionary. If False, it is removed.
+        complex_to_string: `bool`
+            If True, the complex numbers are converted to strings. If False, they are kept as complex numbers. This is useful for the JSON serialization.
+
+        Returns
+        -------
+        return_dict: `dict`
+            A dictionary with the results of the optimization, where the dictionary is serializable.
+        """
+
+        return_dict = {}
+        return_dict['method'] = self.method
+        if keep_cost_hamiltonian: return_dict['cost_hamiltoian'] = convert2serialize(self.cost_hamiltonian)
+        return_dict['evals'] = self.evals
+        return_dict['most_probable_states'] = self.most_probable_states
+
+        complx_to_str = lambda x: str(x) if isinstance(x, np.complex128) or isinstance(x, complex) else x
+        
+        if complex_to_string and issubclass(self.__backend, QAOABaseBackendStatevector):
+            return_dict['intermediate'] = {}
+            for key, value in self.intermediate.items():
+                return_dict['intermediate'][key] = [[complx_to_str(item) for item in list] for list in value] if 'measurement' in key else value
+
+            return_dict['optimized'] = {}
+            for key, value in self.optimized.items():
+                return_dict['optimized'][key] = [complx_to_str(item) for item in value] if 'measurement' in key else value
+        else:
+            return_dict['intermediate'] = self.intermediate
+            return_dict['optimized'] = self.optimized
+
+        return return_dict
+
 
     @staticmethod
     def get_counts(measurement_outcomes):
