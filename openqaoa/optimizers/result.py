@@ -93,7 +93,7 @@ class Result:
         
         self.most_probable_states = most_probable_bitstring(
                 cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-            ) if backend != "QAOABackendAnalyticalSimulator" and log.measurement_outcomes.best != [] else [] 
+            ) if backend.__name__ != "QAOABackendAnalyticalSimulator" and log.measurement_outcomes.best != [] else [] 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
     #     Todo
