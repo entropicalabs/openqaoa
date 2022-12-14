@@ -20,6 +20,34 @@ class RQAOAResults(dict):
     It stores the results of the RQAOA optimization as a dictionary. With some custom methods.
     """
 
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False):
+        """
+        Returns the results as a full dictionary, meaning that the objects of the intermediate steps are also converted to dictionaries.
+
+        Parameters
+        ----------
+        keep_cost_hamiltonian : bool, optional
+            If True, the cost Hamiltonian is kept in the dictionary, by default True.
+        complex_to_string : bool, optional
+            If True, the complex numbers are converted to strings, by default False. This is useful for JSON serialization.
+
+        Returns
+        -------
+        dict
+            The results as a dictionary.
+        """
+
+        results = {k: v for k, v in self.items()}
+        results['intermediate_steps'] = []
+        for step in self['intermediate_steps']:
+            results['intermediate_steps'].append({
+                    'problem':      step['problem'].asdict(),
+                    'qaoa_results': step['qaoa_results'].asdict(keep_cost_hamiltonian=keep_cost_hamiltonian, complex_to_string=complex_to_string),
+                    'exp_vals_z':   step['exp_vals_z'].tolist(),
+                    'corr_matrix':  step['corr_matrix'].tolist(),
+                }) # TODO : test that all the keys are here
+        return results
+
     def get_solution(self):
         """
         Returns the solution of the optimization.
