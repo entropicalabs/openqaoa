@@ -138,11 +138,13 @@ class Result:
         if complex_to_string and issubclass(self.__backend, QAOABaseBackendStatevector):
             return_dict['intermediate'] = {}
             for key, value in self.intermediate.items():
-                return_dict['intermediate'][key] = [[complx_to_str(item) for item in list] for list in value] if 'measurement' in key else value
+                return_dict['intermediate'][key] = [[complx_to_str(item) for item in list_] for list_ in value if (isinstance(list_, list) or isinstance(list_, np.ndarray))] \
+                                                    if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)) else value
 
             return_dict['optimized'] = {}
             for key, value in self.optimized.items():
-                return_dict['optimized'][key] = [complx_to_str(item) for item in value] if 'measurement' in key else value
+                return_dict['optimized'][key] = [complx_to_str(item) for item in value] \
+                                                    if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)) else value
         else:
             return_dict['intermediate'] = self.intermediate
             return_dict['optimized'] = self.optimized
