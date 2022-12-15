@@ -400,6 +400,9 @@ class QAOA(Optimizer):
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
 
+        # add name of the experiment in exp_tags
+        self.exp_tags['exp_type'] = 'qaoa'
+
     def set_circuit_properties(self, **kwargs):
         """
         Specify the circuit properties to construct QAOA circuit
