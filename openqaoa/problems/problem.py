@@ -337,7 +337,7 @@ class TSP(Problem):
         self.B = B
 
         # set the metadata
-        self.metadata = {'name': 'TSP', 'n_cities': self.n_cities}
+        self.metadata = {'name': 'tsp', 'n_cities': self.n_cities}
 
 
     @property
