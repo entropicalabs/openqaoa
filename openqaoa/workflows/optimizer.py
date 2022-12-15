@@ -24,7 +24,7 @@ from openqaoa.problems.problem import QUBO
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters, ALLOWED_RQAOA_TYPES
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict
+from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, convert2serialize
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
@@ -239,6 +239,8 @@ class Optimizer(ABC):
                                                 'backend_properties': vars(self.backend_properties),
                                                 'classical_optimizer': vars(self.classical_optimizer),
                                                 }
+        # print(serializable_dict['input_parameters']['backend_properties']['noise_model'])                                      
+        serializable_dict['input_parameters']['backend_properties']['noise_model'] = convert2serialize(serializable_dict['input_parameters']['backend_properties']['noise_model']) if serializable_dict['input_parameters']['backend_properties']['noise_model'] is not None else None                                    
         serializable_dict['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
 
         return serializable_dict
