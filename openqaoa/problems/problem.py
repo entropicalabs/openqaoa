@@ -20,7 +20,8 @@ import numpy as np
 import scipy
 import itertools
 
-from .helper_functions import convert2serialize, check_kwargs
+from .helper_functions import check_kwargs
+from ..utilities import convert2serialize
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 
 
