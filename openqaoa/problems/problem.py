@@ -20,8 +20,7 @@ import numpy as np
 import scipy
 import itertools
 
-from .helper_functions import check_kwargs
-from openqaoa.utilities import convert2serialize
+from .helper_functions import convert2serialize, check_kwargs
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 
 
@@ -137,7 +136,7 @@ class QUBO:
         self._n = input_n
 
     def asdict(self):
-        return self.__dict__
+        return convert2serialize(self)
 
     @staticmethod
     def clean_terms_and_weights(terms, weights):
