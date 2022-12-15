@@ -62,30 +62,30 @@ class Result:
         self.cost_hamiltonian = cost_hamiltonian
 
         self.evals = {
-            "number of evals": log.func_evals.best[0],
-            "jac evals": log.jac_func_evals.best[0],
-            "qfim evals": log.qfim_func_evals.best[0],
+            "number_of_evals": log.func_evals.best[0],
+            "jac_evals": log.jac_func_evals.best[0],
+            "qfim_evals": log.qfim_func_evals.best[0],
         }
 
         self.intermediate = {
-            'angles log': np.array(log.param_log.history).tolist(),
-            'intermediate cost': log.cost.history,
-            'intermediate measurement outcomes':
+            'angles_log': np.array(log.param_log.history).tolist(),
+            'intermediate_cost': log.cost.history,
+            'intermediate_measurement_outcomes':
                 log.measurement_outcomes.history,
-            'intermediate runs job id': log.job_ids.history
+            'intermediate_runs_job_id': log.job_ids.history
         }
 
         self.optimized = {
-            'optimized angles':
+            'optimized_angles':
                 np.array(log.param_log.best[0]).tolist()
                 if log.param_log.best != [] else [],
-            'optimized cost':
+            'optimized_cost':
                 log.cost.best[0]
                 if log.cost.best != [] else None,
-            'optimized measurement outcomes':
+            'optimized_measurement_outcomes':
                 log.measurement_outcomes.best[0]
                 if log.measurement_outcomes.best != [] else {},
-            'optimized run job id': 
+            'optimized_run_job_id': 
                 log.job_ids.best[0] 
                 if len(log.job_ids.best) != 0 else []
         }
@@ -104,7 +104,7 @@ class Result:
     #     string = "Optimization Results:\n"
     #     string += "\tThe solution is " + str(self.solution['degeneracy']) + " degenerate" "\n"
     #     string += "\tThe most probable bitstrings are: " + str(self.solution['bitstring']) + "\n"
-    #     string += "\tThe associated cost is: " + str(self.optimized['optimized cost']) + "\n"
+    #     string += "\tThe associated cost is: " + str(self.optimized['optimized_cost']) + "\n"
 
     #     return (string)
 
@@ -150,11 +150,11 @@ class Result:
 
         ax.plot(
             range(
-                self.evals["number of evals"]
-                - self.evals["jac evals"]
-                - self.evals["qfim evals"]
+                self.evals["number_of_evals"]
+                - self.evals["jac_evals"]
+                - self.evals["qfim_evals"]
             ),
-            self.intermediate["intermediate cost"],
+            self.intermediate["intermediate_cost"],
             label=label,
             linestyle=linestyle,
             color=color,
@@ -187,7 +187,7 @@ class Result:
             Axis on which to plot the graph. Deafults to None
         """
 
-        outcome = self.optimized['optimized measurement outcomes']
+        outcome = self.optimized['optimized_measurement_outcomes']
 
         # converting to counts dictionary if outcome is statevector
         if type(outcome) == type(np.array([])):
@@ -270,17 +270,17 @@ class Result:
 
         """
 
-        if isinstance(self.optimized["optimized measurement outcomes"], dict):
-            measurement_outcomes = self.optimized["optimized measurement outcomes"]
+        if isinstance(self.optimized["optimized_measurement_outcomes"], dict):
+            measurement_outcomes = self.optimized["optimized_measurement_outcomes"]
             solution_bitstring = list(measurement_outcomes.keys())
-        elif isinstance(self.optimized["optimized measurement outcomes"], np.ndarray):
+        elif isinstance(self.optimized["optimized_measurement_outcomes"], np.ndarray):
             measurement_outcomes = self.get_counts(
-                self.optimized["optimized measurement outcomes"]
+                self.optimized["optimized_measurement_outcomes"]
             )
             solution_bitstring = list(measurement_outcomes.keys())
         else:
             raise TypeError(
-                f"The measurement outcome {type(self.optimized['optimized measurement outcomes'])} is not valid."
+                f"The measurement outcome {type(self.optimized['optimized_measurement_outcomes'])} is not valid."
             )
         energies = [
             bitstring_energy(self.cost_hamiltonian, bitstring)

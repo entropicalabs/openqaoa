@@ -66,9 +66,9 @@ class TestingResultOutputs(unittest.TestCase):
                 q.set_device(device)
                 q.compile(vc)
                 q.optimize()
-                self.assertEqual(recorded_evals[each_choice[0]], len(q.results.intermediate['angles log']))
-                self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['intermediate cost']))
-                self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['intermediate measurement outcomes']))
+                self.assertEqual(recorded_evals[each_choice[0]], len(q.results.intermediate['angles_log']))
+                self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['intermediate_cost']))
+                self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['intermediate_measurement_outcomes']))
 
 
     def _run_qaoa(self):
