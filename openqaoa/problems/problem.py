@@ -118,6 +118,9 @@ class QUBO:
         self.constant = constant
         self.n = n
 
+        # Initialize the metadata dictionary
+        self.metadata = {}
+
     @property
     def n(self):
         return self._n
@@ -134,6 +137,17 @@ class QUBO:
             )
 
         self._n = input_n
+
+    def set_metadata(self, metadata:dict={}):
+        """
+        Sets the metadata of the problem.
+
+        Parameters
+        ----------
+        metadata: dict
+            The metadata of the problem. All keys and values will be stored in the metadata dictionary.
+        """
+        self.metadata = {**self.metadata, **metadata}
 
     def asdict(self):
         return convert2serialize(self)
