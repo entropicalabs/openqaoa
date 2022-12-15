@@ -237,7 +237,8 @@ class ClassicalOptimizer(Parameters):
     optimize: bool
         Whether to perform optimization routine on the given QAOA problem
     method: str
-        optimization method for QAOA e.g. 'COBYLA'
+        The classical optimization method. To see the list of supported optimizers, refer
+            to `available_optimizers` in openqaoa/optimizers/qaoa_optimizer.py
     maxiter : Optional[int]
         Maximum number of iterations.
     maxfev : Optional[int]
@@ -264,7 +265,7 @@ class ClassicalOptimizer(Parameters):
             eps : float
                 Small number to prevent division by zero for RMSProp.
             lambd : float
-                Small number to regularize QFIM for Natural Gradient Descent.
+                Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
     jac_options : dict
         Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
     hess_options : dict

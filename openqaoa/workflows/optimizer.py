@@ -144,45 +144,52 @@ class Optimizer(ABC):
 
         Parameters
         ----------
-            method: str
-                The classical optimization method. To see the list of supported optimizers, refer
+        optimize: bool
+            Whether to perform optimization routine on the given QAOA problem
+        method: str
+            The classical optimization method. To see the list of supported optimizers, refer
                 to `available_optimizers` in openqaoa/optimizers/qaoa_optimizer.py
-            maxiter : Optional[int]
-                Maximum number of iterations.
-            maxfev : Optional[int]
-                Maximum number of function evaluations.
-            jac: str
-                Method to compute the gradient vector. Choose from:
-                    - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
-            hess: str
-                Method to compute the hessian. Choose from:
-                    - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
-            constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
-                Scipy-based constraints on parameters of optimization. Will be available soon
-            bounds: scipy.optimize.Bounds
-                Scipy-based bounds on parameters of optimization. Will be available soon
-            tol : float
-                Tolerance before the optimizer terminates; if `tol` is larger than
-                the difference between two steps, terminate optimization.
-            optimizer_options : dict
-                Dictionary of optimiser-specific arguments.
-                    stepsize : float
-                        Step size of each gradient descent step.
-                    decay : float
-                        Stepsize decay parameter of RMSProp.
-                    eps : float
-                        Small number to prevent division by zero for RMSProp.
-                    lambd : float
-                        Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
-            ramp_time: float
-                The slope(rate) of linear ramp initialisation of QAOA parameters.
-            jac_options : dict
-                Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
-            hess_options : dict
-                Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
-            save_intermediate: bool
-                If True, the intermediate parameters of the optimization and job ids, if available, are saved throughout the run. This is set to False by default.
+        maxiter : Optional[int]
+            Maximum number of iterations.
+        maxfev : Optional[int]
+            Maximum number of function evaluations.
+        jac: str
+            Method to compute the gradient vector. Choose from:
+                - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
+        hess:
+            Method to compute the hessian. Choose from:
+                - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
+        constraints: `scipy.optimize.LinearConstraints`, `scipy.optimize.NonlinearConstraints` 
+            Scipy-based constraints on parameters of optimization 
+        bounds: `scipy.scipy.optimize.Bounds`
+            Scipy-based bounds on parameters of optimization 
+        tol : float
+            Tolerance before the optimizer terminates; if `tol` is larger than
+            the difference between two steps, terminate optimization.
+        optimizer_options: dict
+            Dictionary of optimiser-specific arguments, defaults to ``None``.
+                stepsize : float
+                    Step size of each gradient descent step.
+                decay : float
+                    Stepsize decay parameter of RMSProp.
+                eps : float
+                    Small number to prevent division by zero for RMSProp.
+                lambd : float
+                    Small number to prevent singularity of QFIM matrix for Natural Gradient Descent.
+        jac_options : dict
+            Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
+        hess_options : dict
+            Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
+        optimization_progress : bool
+            Returns history of measurement outcomes/wavefunction if `True`. Defaults to `False`.
+        cost_progress : bool
+            Returns history of cost values if `True`. Defaults to `True`. 
+        parameter_log : bool
+            Returns history of angles if `True`. Defaults to `True`.
+        save_intermediate: bool
+            Outputs the jobids and parameters used for each circuit into seperate csv files. Defaults to `False`.
         """
+
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
                 pass #setattr(self.classical_optimizer, key, value)
