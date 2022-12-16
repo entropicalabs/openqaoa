@@ -39,11 +39,7 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
         circuit construction and depth of the circuit. Note that it only works for p=1 and the X Mixer Hamiltonian.
     """
     
-    def __init__(self, circuit_params: QAOACircuitParams, 
-                 prepend_state = None,
-                 append_state = None,
-                 init_hadamard = True,
-                 cvar_alpha = 1):
+    def __init__(self, circuit_params: QAOACircuitParams):
         
         QAOABaseBackend.__init__(self, circuit_params,
                                          prepend_state = None,

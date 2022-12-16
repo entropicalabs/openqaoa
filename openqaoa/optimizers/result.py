@@ -24,6 +24,8 @@ from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy
 from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
+from openqaoa.backends import QAOABackendAnalyticalSimulator
+from openqaoa.basebackend import QAOABaseBackend
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -54,7 +56,7 @@ class Result:
     """
 
     def __init__(
-        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], backend: str
+        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], type_backend: Type[QAOABaseBackend]
     ):
 
 
@@ -93,7 +95,7 @@ class Result:
         
         self.most_probable_states = most_probable_bitstring(
                 cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-            ) if backend.__name__ != "QAOABackendAnalyticalSimulator" and log.measurement_outcomes.best != [] else [] 
+            ) if isintance(type_backend, QAOABackendAnalyticalSimulator) and log.measurement_outcomes.best != [] else [] 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
     #     Todo
