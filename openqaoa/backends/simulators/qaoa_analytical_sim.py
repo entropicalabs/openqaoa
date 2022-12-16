@@ -32,7 +32,7 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
     A simulator class, specific for QAOA with a single layer, p=1, starting with a layer of Hadamards and using the X mixer. 
     Works by calculating the expectation value of the given quantum circuit (specificied with beta and gamma angles) from the analytical formula derived in arXiv:2011.13420v2.
      
-     Parameters
+    Parameters
     ----------
     circuit_params: QAOACircuitParams
         An object of the class ``QAOACircuitParams`` which contains information on 
