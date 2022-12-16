@@ -494,7 +494,7 @@ class QAOAVariationalBaseParams(ABC):
         Returns
         -------
         QAOAVariationalBaseParams:
-            The converted paramters s.t. all the rotation angles of the in
+            The converted parameters s.t. all the rotation angles of the in
             and output parameters are the same.
         """
         from . import converter
