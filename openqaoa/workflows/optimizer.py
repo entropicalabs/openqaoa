@@ -88,8 +88,6 @@ class Optimizer(ABC):
 
         # Initialize the experiment tags
         self.exp_tags = {} 
-        # self.exp_tags['datetime'] = datetime.now().strftime("%m/%d/%Y_%H:%M:%S") 
-        # self.exp_tags['exp_name'] = None #we generate a name for the experiment when we compile it
         
         # Initialize the results and problem objects
         self.problem = None
@@ -121,7 +119,6 @@ class Optimizer(ABC):
         """
         
         self.exp_tags = {**self.exp_tags, **tags}
-        # self.exp_tags['name'] = name if name is not None else self.exp_tags['name']
 
     def set_device(self, device: DeviceBase):
         """"
