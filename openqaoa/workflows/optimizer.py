@@ -18,13 +18,14 @@ from datetime import datetime
 import json
 from typing import List
 import gzip
+import uuid
 
 from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters, ALLOWED_RQAOA_TYPES
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, convert2serialize
+from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, convert2serialize, generate_uuid
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
@@ -77,16 +78,36 @@ class Optimizer(ABC):
         self.cloud_provider = list(DEVICE_ACCESS_OBJECT_MAPPER.keys())
         self.compiled = False
 
+        # Initialize the identifier stamps, we initialize all the stamps needed to None
+        self.id = {
+            'uuid': None, #we generate a uuid for the experiment when we compile it
+            'parent_uuid': None, #user can set the parent uuid when they create the experiment using the set_identification method
+            'type': None, #type of the object
+            'datetime': datetime.now().strftime("%m/%d/%Y_%H:%M:%S") 
+        }
+
         # Initialize the experiment tags
         self.exp_tags = {} 
-        self.exp_tags['datetime'] = datetime.now().strftime("%m/%d/%Y_%H:%M:%S") 
-        self.exp_tags['name'] = 'default_name' # TODO : put a default name
-
+        # self.exp_tags['datetime'] = datetime.now().strftime("%m/%d/%Y_%H:%M:%S") 
+        # self.exp_tags['exp_name'] = None #we generate a name for the experiment when we compile it
+        
         # Initialize the results and problem objects
         self.problem = None
         self.results = None
 
-    def set_exp_tags(self, name:str=None, tags:dict={}):
+    def set_identification(self, parent_uuid:str):
+        """
+        Method to set the parent uuid of the experiment. The parent uuid is used to identify the project to which the experiment belongs.
+
+        Parameters
+        ----------
+        parent_uuid: `str`
+            The uuid of the project to which the experiment belongs. If None, the parent uuid will not be changed. If not None, the parent uuid will be changed to the new one.
+        """
+        
+        self.id['parent_uuid'] = parent_uuid
+
+    def set_exp_tags(self, tags:dict):
         """
         Method to add tags to the experiment. Tags are stored in a dictionary (self.exp_tags) and can be used to identify the experiment.
         Name is a special tag that is used to identify the experiment in the results object, it will also be stored in the dictionary, and will overwrite any previous name.
@@ -100,7 +121,7 @@ class Optimizer(ABC):
         """
         
         self.exp_tags = {**self.exp_tags, **tags}
-        self.exp_tags['name'] = name if name is not None else self.exp_tags['name']
+        # self.exp_tags['name'] = name if name is not None else self.exp_tags['name']
 
     def set_device(self, device: DeviceBase):
         """"
@@ -216,8 +237,23 @@ class Optimizer(ABC):
         self.classical_optimizer = ClassicalOptimizer(**kwargs)
         return None
 
-    def compile():
-        raise NotImplementedError
+    def compile(self, problem:QUBO):   
+        """
+        Method that will make sure that the problem is in the correct form for the optimizer to run. And generate the uuid of the workflow.
+        This method should be extended by the child classes to include the compilation of the problem into the correct form for the optimizer to run.
+
+        Parameters
+        ----------
+        problem: QUBO
+            The problem to be optimized. Must be in QUBO form.
+        """   
+
+        # check and set problem
+        assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
+        self.problem = problem
+
+        #uuid
+        self.id['uuid'] = generate_uuid()
 
     def optimize():
         raise NotImplementedError
@@ -232,6 +268,7 @@ class Optimizer(ABC):
             If True, converts all complex numbers to strings. This is useful for JSON serialization, for the `dump(s)` methods.
         """
         serializable_dict = {}
+        serializable_dict['identification'] = self.id
         serializable_dict['exp_tags'] = tuple(self.exp_tags.items())
         serializable_dict['input_problem'] = self.problem.asdict()
         serializable_dict['input_parameters'] = {
@@ -296,10 +333,13 @@ class Optimizer(ABC):
             A list of keys that should not be included in the json file.
         """
 
+        add_identification = lambda file_path: self.id['uuid'] + '--' + file_path if self.id['parent_uuid'] is None else self.id['parent_uuid'] + '--' + self.id['uuid'] + '--' + file_path
+
         if compresslevel == 0: 
 
             # adding .json extension if not present
             file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
+            file_path = add_identification(file_path)
 
             # saving the result in a json file
             with open(file_path, 'w') as f:
@@ -312,6 +352,7 @@ class Optimizer(ABC):
             # adding .json.gz extension if not present
             file_path = file_path[:-5] if '.json' == file_path[-5:] else file_path
             file_path = file_path + '.json.gz' if '.json.gz' != file_path[-8:] else file_path
+            file_path = add_identification(file_path)
 
             # we save the json created by the dumps method as a .gz file
             with gzip.open(file_path, 'w', compresslevel=compresslevel) as f:
@@ -400,8 +441,8 @@ class QAOA(Optimizer):
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
 
-        # add name of the experiment in exp_tags
-        self.exp_tags['exp_type'] = 'qaoa'
+        # change id type to qaoa
+        self.id['type'] = 'qaoa_workflow'
 
     def set_circuit_properties(self, **kwargs):
         """
@@ -476,9 +517,8 @@ class QAOA(Optimizer):
             Set True to have a summary of QAOA to displayed after compilation
         """
 
-        assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
-
-        self.problem = problem
+        # we compile the method of the parent class to genereate the uuid and check the problem is a QUBO object and save it
+        super().compile(problem=problem)
         
         self.cost_hamil = Hamiltonian.classical_hamiltonian(
             terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
@@ -666,8 +706,8 @@ class RQAOA(Optimizer):
         # varaible that will store results object (when optimize is called)
         self.results = RQAOAResults()
 
-        # add name of the experiment in exp_tags
-        self.exp_tags['exp_type'] = 'rqaoa'
+        # change id type to RQAOA
+        self.id['type'] = 'rqaoa_workflow'
 
     def set_circuit_properties(self, **kwargs): 
         """
@@ -779,8 +819,8 @@ class RQAOA(Optimizer):
             !NotYetImplemented! Set true to have a summary of QAOA first step to displayed after compilation
         """
 
-        # save the original problem
-        self.problem = problem 
+        # we compile the method of the parent class to genereate the uuid and check the problem is a QUBO object and save it
+        super().compile(problem=problem)
 
         # if type is custom and steps is an int, set steps correctly
         if self.rqaoa_parameters.rqaoa_type == "custom" and self.rqaoa_parameters.n_cutoff<=problem.n:
@@ -807,6 +847,9 @@ class RQAOA(Optimizer):
 
         # compile qaoa object
         self.__q.compile(problem, verbose=verbose)
+
+        # set the parent id to the qaoa object
+        self.__q.set_identification(parent_uuid = self.id['uuid'])
 
         # set compiled boolean to true
         self.compiled = True

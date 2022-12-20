@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
+import uuid
 import matplotlib.pyplot as plt
 import networkx as nx
 from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
@@ -1412,3 +1413,29 @@ def convert2serialize(obj, complex_to_string:bool=False):
         return str(obj)
     else:
         return obj
+
+
+################################################################################
+# UUID
+################################################################################
+
+def generate_uuid(prefix: str = "") -> str:
+    """
+    Generate a UUID string.
+
+    Returns
+    -------
+    uuid: `str`
+        String representation of a UUID.
+    """
+    unique_id = False
+    while unique_id == False:
+        str_uuid = str(uuid.uuid4())
+
+        # TODO : check if the id is unique
+        unique_id = True
+
+    if prefix == "":
+        return str_uuid
+    else:
+        return prefix + "-" + str_uuid # TODO : ask if we want to keep the prefix (the problem is how we check in the database if the id is unique)
