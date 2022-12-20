@@ -274,8 +274,9 @@ class Optimizer(ABC):
                                                 'classical_optimizer': vars(self.classical_optimizer).copy(),
                                                 }
         # change the parameters that aren't serializable to strings 
-        if serializable_dict['input_parameters']['backend_properties']['noise_model'] is not None:                                                                     
-            serializable_dict['input_parameters']['backend_properties']['noise_model'] = str(serializable_dict['input_parameters']['backend_properties']['noise_model']) 
+        for item in ['noise_model' , 'append_state', 'prepend_state']:
+            if serializable_dict['input_parameters']['backend_properties'][item] is not None:                                                                     
+                serializable_dict['input_parameters']['backend_properties'][item] = str(serializable_dict['input_parameters']['backend_properties'][item]) 
         
         serializable_dict['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
 
@@ -284,6 +285,11 @@ class Optimizer(ABC):
     def asdict(self, keys_not_to_include:List[str]=[]):
         """
         Returns a dictionary of the Optimizer object, where all objects are converted to dictionaries.
+
+        Parameters
+        ----------
+        keys_not_to_include : List[str]
+            A list of keys to exclude from the returned dictionary.
 
         Returns
         -------
