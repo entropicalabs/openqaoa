@@ -104,14 +104,34 @@ class TestingResultOutputs(unittest.TestCase):
 
         #create a dictionary with all the expected keys and set them to False
         expected_keys = ['method', 'cost_hamiltoian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id']
-        expected_keys = {item: False for item in expected_keys}
+        expected_keys_dict = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found
-        _test_keys_in_dict(results_dict, expected_keys)
+        _test_keys_in_dict(results_dict, expected_keys_dict)
+
+        # Check if the dictionary has all the expected keys 
+        for key, value in expected_keys_dict.items():
+            assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+
+
+        ## now we repeat the same test but we do not include the cost hamiltonian
+
+        #get dict without cost hamiltonian
+        results_dict = qaoa.results.asdict(keep_cost_hamiltonian = False)
+
+        #expected keys 
+        expected_keys_dict = {item: False for item in expected_keys}    
+        expected_keys_not_in_dict = ['cost_hamiltoian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs']        
+
+        #test the keys, it will set the keys to True if they are found, except the ones that were not included which should be those in expected_keys_not_in_dict
+        _test_keys_in_dict(results_dict, expected_keys_dict) 
 
         # Check if the dictionary has all the expected keys except the ones that were not included
-        for key, value in expected_keys.items():
-            assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+        for key, value in expected_keys_dict.items():
+            if not key in expected_keys_not_in_dict:
+                assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary of the RQAOAResult class, but it should not have been.'
 
         """
         to get the list of expected keys, run the following code:

@@ -45,7 +45,7 @@ class RQAOAResults(dict):
                     'qaoa_results': step['qaoa_results'].asdict(keep_cost_hamiltonian=keep_cost_hamiltonian, complex_to_string=complex_to_string),
                     'exp_vals_z':   step['exp_vals_z'].tolist(),
                     'corr_matrix':  step['corr_matrix'].tolist(),
-                }) # TODO : test that all the keys are here
+                }) 
         return results
 
     def get_solution(self):
