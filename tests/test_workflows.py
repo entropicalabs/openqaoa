@@ -694,7 +694,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.__test_expected_keys(json.loads(qaoa.dumps(keys_not_to_include=keys_not_to_include)), keys_not_to_include, method='dumps')
 
         # check QAOA dump
-        file_name = 'test_dump.json'
+        file_name = 'test_dump_qaoa.json'
         uuid, parent_uuid = qaoa.id['uuid'], qaoa.id['parent_uuid']
         full_name = f'{parent_uuid}--{uuid}--{file_name}'
 
@@ -1009,7 +1009,7 @@ class TestingRQAOA(unittest.TestCase):
         self.__test_expected_keys(json.loads(rqaoa.dumps(keys_not_to_include=keys_not_to_include)), keys_not_to_include, method='dumps')
 
         # check RQAOA dump
-        file_name = 'test_dump.json'
+        file_name = 'test_dump_rqaoa.json'
         uuid, parent_uuid = rqaoa.id['uuid'], rqaoa.id['parent_uuid']
         full_name = f'{parent_uuid}--{uuid}--{file_name}'
 
