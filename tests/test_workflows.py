@@ -38,6 +38,25 @@ ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']
 
 
+def _test_keys_in_dict(obj, expected_keys):
+    """
+    private function to test the keys. It recursively tests the keys of the nested dictionaries, or lists of dictionaries
+    """
+
+    if isinstance(obj, dict):
+        for key in obj:
+            if key in expected_keys.keys(): expected_keys[key] = True
+
+            if isinstance(obj[key], dict):
+                _test_keys_in_dict(obj[key], expected_keys)
+            elif isinstance(obj[key], list):
+                for item in obj[key]:
+                    _test_keys_in_dict(item, expected_keys)
+    elif isinstance(obj, list):
+        for item in obj:
+            _test_keys_in_dict(item, expected_keys)
+
+
 class TestingVanillaQAOA(unittest.TestCase):
 
     """
@@ -623,6 +642,105 @@ class TestingVanillaQAOA(unittest.TestCase):
             self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), False)
             self.assertEqual(isinstance(q.optimizer, PennyLaneOptimizer), True)
 
+    def test_qaoa_asdict_dumps(self):
+        """Test the asdict method of the QAOA class."""
+
+        #qaoa
+        qaoa = QAOA()
+        qaoa.compile(problem = QUBO.random_instance(n=8))
+        qaoa.set_identification('test_qaoa_parent_uuid')
+        qaoa.optimize()
+
+        # check QAOA asdict
+        self.__test_expected_keys(qaoa.asdict(), method='asdict')
+
+        # check QAOA asdict deleting some keys
+        keys_not_to_include = ['corr_matrix', 'number_steps']
+        self.__test_expected_keys(qaoa.asdict(keys_not_to_include=keys_not_to_include), keys_not_to_include, method='asdict')
+
+        # check QAOA dumps
+        self.__test_expected_keys(json.loads(qaoa.dumps()), method='dumps')
+
+        # check QAOA dumps deleting some keys
+        keys_not_to_include = ['parent_uuid', 'counter']
+        self.__test_expected_keys(json.loads(qaoa.dumps(keys_not_to_include=keys_not_to_include)), keys_not_to_include, method='dumps')
+
+        # check QAOA dump
+        file_name = 'test_dump.json'
+        uuid, parent_uuid = qaoa.id['uuid'], qaoa.id['parent_uuid']
+        full_name = f'{parent_uuid}--{uuid}--{file_name}'
+
+        qaoa.dump(file_name, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist'
+        with open(full_name, 'r') as file:
+            assert file.read() == qaoa.dumps(indent=None), 'Dump file does not contain the correct data'
+        os.remove(full_name)
+
+        # check QAOA dump when qaoa has no parent_uuid
+        qaoa.id['parent_uuid'] = None
+        full_name = f'{uuid}--{file_name}'
+        qaoa.dump(file_name, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist, when qaoa has no parent_uuid'
+        os.remove(full_name)
+
+        # check QAOA dump deleting some keys
+        keys_not_to_include = ['schedule', 'pair']
+        qaoa.dump(file_name, keys_not_to_include=keys_not_to_include, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
+        with open(full_name, 'r') as file:
+            assert file.read() == qaoa.dumps(keys_not_to_include=keys_not_to_include, indent=None), 'Dump file does not contain the correct data, when deleting some keys'
+        os.remove(full_name)
+
+        # check QAOA dump with compression
+        qaoa.dump(file_name, compresslevel=2, indent=None)
+        assert os.path.isfile(full_name+'.gz'), 'Dump file does not exist, when compressing'
+        with gzip.open(full_name+'.gz', 'rb') as file:
+            assert file.read() == qaoa.dumps(indent=None).encode(), 'Dump file does not contain the correct data, when compressing'
+        os.remove(full_name+'.gz')
+        
+
+    def __test_expected_keys(self, obj, keys_not_to_include=[], method='asdict'):
+        """
+        method to test if the dictionary has all the expected keys
+        """
+
+        #create a dictionary with all the expected keys and set them to False
+        expected_keys = ['identification', 'uuid', 'parent_uuid', 'type', 'datetime', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', '_n', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'n_shots', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', '_param_type', '_init_type', 'qubit_register', '_p', 'q', 'variational_params_dict', 'total_annealing_time', '_annealing_time', 'linear_ramp_time', '_mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'results', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id']
+        expected_keys = {item: False for item in expected_keys}
+
+        #test the keys, it will set the keys to True if they are found
+        _test_keys_in_dict(obj, expected_keys)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys.items():
+            if key not in keys_not_to_include:
+                assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
+
+        """
+        to get the list of expected keys, run the following code:
+
+            def get_keys(obj, list_keys):
+                if isinstance(obj, dict):
+                    for key in obj:
+                        if not key in list_keys: list_keys.append(key)
+
+                        if isinstance(obj[key], dict):
+                            get_keys(obj[key], list_keys)
+                        elif isinstance(obj[key], list):
+                            for item in obj[key]:
+                                get_keys(item, list_keys)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        get_keys(item, list_keys)
+
+            expected_keys = []
+            get_keys(qaoa.asdict(), expected_keys)
+            print(expected_keys)
+        """
+
+
 class TestingRQAOA(unittest.TestCase):
     """
     Unit test based testing of the RQAOA workflow class
@@ -907,7 +1025,7 @@ class TestingRQAOA(unittest.TestCase):
         expected_keys = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found
-        self.__test_keys_in_dict(obj, expected_keys)
+        _test_keys_in_dict(obj, expected_keys)
 
         # Check if the dictionary has all the expected keys except the ones that were not included
         for key, value in expected_keys.items():
@@ -916,23 +1034,29 @@ class TestingRQAOA(unittest.TestCase):
             else:
                 assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
 
-    def __test_keys_in_dict(self, obj, expected_keys):
         """
-        private function to test the keys. It recursively tests the keys of the nested dictionaries, or lists of dictionaries
+        to get the list of expected keys, run the following code:
+
+            def get_keys(obj, list_keys):
+                if isinstance(obj, dict):
+                    for key in obj:
+                        if not key in list_keys: list_keys.append(key)
+
+                        if isinstance(obj[key], dict):
+                            get_keys(obj[key], list_keys)
+                        elif isinstance(obj[key], list):
+                            for item in obj[key]:
+                                get_keys(item, list_keys)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        get_keys(item, list_keys)
+
+            expected_keys = []
+            get_keys(rqaoa.asdict(), expected_keys)
+            print(expected_keys)
         """
 
-        if isinstance(obj, dict):
-            for key in obj:
-                if key in expected_keys.keys(): expected_keys[key] = True
 
-                if isinstance(obj[key], dict):
-                    self.__test_keys_in_dict(obj[key], expected_keys)
-                elif isinstance(obj[key], list):
-                    for item in obj[key]:
-                        self.__test_keys_in_dict(item, expected_keys)
-        elif isinstance(obj, list):
-            for item in obj:
-                self.__test_keys_in_dict(item, expected_keys)
 
 
 if __name__ == '__main__':
