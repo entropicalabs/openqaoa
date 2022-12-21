@@ -642,6 +642,34 @@ class TestingVanillaQAOA(unittest.TestCase):
             self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), False)
             self.assertEqual(isinstance(q.optimizer, PennyLaneOptimizer), True)
 
+    def test_set_identification(self):
+        """
+        Test the set_identification method of the QAOA class.
+        """
+
+        qaoa = QAOA()
+        qaoa.set_identification('test_qaoa_parent_uuid')
+        qaoa.compile(problem = QUBO.random_instance(n=8))
+        qaoa.optimize()
+
+        for key, value in qaoa.id.items():
+            assert value != None, "The value of the key {} (of the dictionary qaoa.id) is None, when it shouldn't.".format(key)
+
+        assert qaoa.id['parent_uuid'] == 'test_qaoa_parent_uuid', "The value of the key 'parent_uuid' (of the dictionary qaoa.id) is not 'test_qaoa_parent_uuid'."
+
+    def test_set_exp_tags(self):
+        """
+        Test the set_exp_tags method of the QAOA class.
+        """
+
+        qaoa = QAOA()
+        qaoa.set_exp_tags(tags={'tag1': 'value1', 'tag2': 'value2'})
+        qaoa.set_exp_tags(tags={'tag1': 'value9'})
+        qaoa.compile(problem = QUBO.random_instance(n=8))
+        qaoa.optimize()
+
+        assert qaoa.exp_tags == {'tag1':'value9', 'tag2':'value2'}, "Experiment tags are not set correctly."
+
     def test_qaoa_asdict_dumps(self):
         """Test the asdict method of the QAOA class."""
 
@@ -698,7 +726,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             assert file.read() == qaoa.dumps(indent=None).encode(), 'Dump file does not contain the correct data, when compressing'
         os.remove(full_name+'.gz')
         
-
     def __test_expected_keys(self, obj, keys_not_to_include=[], method='asdict'):
         """
         method to test if the dictionary has all the expected keys
