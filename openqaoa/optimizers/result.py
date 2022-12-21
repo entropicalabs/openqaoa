@@ -129,7 +129,7 @@ class Result:
 
         return_dict = {}
         return_dict['method'] = self.method
-        if keep_cost_hamiltonian: return_dict['cost_hamiltoian'] = convert2serialize(self.cost_hamiltonian)
+        if keep_cost_hamiltonian: return_dict['cost_hamiltonian'] = convert2serialize(self.cost_hamiltonian)
         return_dict['evals'] = self.evals
         return_dict['most_probable_states'] = self.most_probable_states
 

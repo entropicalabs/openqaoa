@@ -102,8 +102,14 @@ class TestingResultOutputs(unittest.TestCase):
         # get dict
         results_dict = qaoa.results.asdict()
 
+        # list of expected keys
+        expected_keys = ['method', 'cost_hamiltonian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id']
+        
+        #we append all the keys that we find in rqaoa.results, so if we introduce a new key, we will know that we need to update the result.asdict method
+        for key in vars(qaoa.results).keys():
+            if not key in expected_keys and not '_Result__' in key: expected_keys.append(key)
+
         #create a dictionary with all the expected keys and set them to False
-        expected_keys = ['method', 'cost_hamiltoian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id']
         expected_keys_dict = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found
@@ -121,7 +127,7 @@ class TestingResultOutputs(unittest.TestCase):
 
         #expected keys 
         expected_keys_dict = {item: False for item in expected_keys}    
-        expected_keys_not_in_dict = ['cost_hamiltoian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs']        
+        expected_keys_not_in_dict = ['cost_hamiltonian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs']        
 
         #test the keys, it will set the keys to True if they are found, except the ones that were not included which should be those in expected_keys_not_in_dict
         _test_keys_in_dict(results_dict, expected_keys_dict) 
@@ -282,7 +288,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         results_dict = results.asdict()
 
         #create a list of expected keys
-        expected_keys = ['solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'terms', 'weights', 'constant', '_n', 'qaoa_results', 'method', 'cost_hamiltoian', 'n_qubits', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id', 'exp_vals_z', 'corr_matrix', 'number_steps']
+        expected_keys = ['solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'terms', 'weights', 'constant', '_n', 'qaoa_results', 'method', 'cost_hamiltonian', 'n_qubits', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id', 'exp_vals_z', 'corr_matrix', 'number_steps']
 
         #we append all the keys that we find in rqaoa.results, so if we introduce a new key, we will know that we need to update the result.asdict method
         for key in results.keys():
