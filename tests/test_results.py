@@ -29,6 +29,25 @@ from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 
 
+def _test_keys_in_dict(obj, expected_keys):
+    """
+    private function to test the keys. It recursively tests the keys of the nested dictionaries, or lists of dictionaries
+    """
+
+    if isinstance(obj, dict):
+        for key in obj:
+            if key in expected_keys.keys(): expected_keys[key] = True
+
+            if isinstance(obj[key], dict):
+                _test_keys_in_dict(obj[key], expected_keys)
+            elif isinstance(obj[key], list):
+                for item in obj[key]:
+                    _test_keys_in_dict(item, expected_keys)
+    elif isinstance(obj, list):
+        for item in obj:
+            _test_keys_in_dict(item, expected_keys)
+
+
 class TestingResultOutputs(unittest.TestCase):
 
     """
@@ -70,6 +89,52 @@ class TestingResultOutputs(unittest.TestCase):
                 self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['intermediate cost']))
                 self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['intermediate measurement outcomes']))
 
+    def test_qaoa_result_asdict(self):
+        """
+        Test the plot_exp_vals_z method for the RQAOAResult class
+        """
+
+        # run the QAOA
+        qaoa = QAOA()
+        qaoa.compile(problem = QUBO.random_instance(n=8))
+        qaoa.optimize()
+        
+        # get dict
+        results_dict = qaoa.results.asdict()
+
+        #create a dictionary with all the expected keys and set them to False
+        expected_keys = ['method', 'cost_hamiltoian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id']
+        expected_keys = {item: False for item in expected_keys}
+
+        #test the keys, it will set the keys to True if they are found
+        _test_keys_in_dict(results_dict, expected_keys)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys.items():
+            assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+
+        """
+        to get the list of expected keys, run the following code:
+
+            def get_keys(obj, list_keys):
+                if isinstance(obj, dict):
+                    for key in obj:
+                        if not key in list_keys: list_keys.append(key)
+
+                        if isinstance(obj[key], dict):
+                            get_keys(obj[key], list_keys)
+                        elif isinstance(obj[key], list):
+                            for item in obj[key]:
+                                get_keys(item, list_keys)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        get_keys(item, list_keys)
+
+            expected_keys = []
+            get_keys(rqaoa.results.asdict(), expected_keys)
+            print(expected_keys)
+        """
+
 class TestingRQAOAResultOutputs(unittest.TestCase):
     """
     Test the  Results Output after a full RQAOA loop
@@ -95,7 +160,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
-        r.set_exp_tags(name='rqaoa_test') 
         r.compile(problem)
         r.optimize()
 
@@ -186,7 +250,49 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         for i in range(results['number_steps']):
             results.plot_corr_matrix(step=i)
 
-    
+    def test_rqaoa_result_asdict(self):
+        """
+        Test the plot_exp_vals_z method for the RQAOAResult class
+        """
+
+        # run the RQAOA
+        results = self.__run_rqaoa()
+        
+        # get dict
+        results_dict = results.asdict()
+
+        #create a dictionary with all the expected keys and set them to False
+        expected_keys = ['solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'terms', 'weights', 'constant', '_n', 'qaoa_results', 'method', 'cost_hamiltoian', 'n_qubits', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id', 'exp_vals_z', 'corr_matrix', 'number_steps']
+        expected_keys = {item: False for item in expected_keys}
+
+        #test the keys, it will set the keys to True if they are found
+        _test_keys_in_dict(results_dict, expected_keys)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys.items():
+            assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+
+        """
+        to get the list of expected keys, run the following code:
+
+            def get_keys(obj, list_keys):
+                if isinstance(obj, dict):
+                    for key in obj:
+                        if not key in list_keys: list_keys.append(key)
+
+                        if isinstance(obj[key], dict):
+                            get_keys(obj[key], list_keys)
+                        elif isinstance(obj[key], list):
+                            for item in obj[key]:
+                                get_keys(item, list_keys)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        get_keys(item, list_keys)
+
+            expected_keys = []
+            get_keys(rqaoa.results.asdict(), expected_keys)
+            print(expected_keys)
+        """
 
 if __name__ == "__main__":
 	unittest.main()
