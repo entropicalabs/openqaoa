@@ -99,33 +99,36 @@ class Optimizer(ABC):
 
         Parameters
         -------------------
-            device: DeviceBase
-            prepend_state: [Union[QuantumCircuitBase,List[complex], np.ndarray]
-                The state prepended to the circuit.
-            append_state: [Union[QuantumCircuitBase,List[complex], np.ndarray]
-                The state prepended to the circuit.
-            init_hadamard: bool
+        device: DeviceBase
+            The device to use for the backend.
+        prepend_state: Union[openqaoa.basebackend.QuantumCircuitBase,numpy.ndarray(complex)]
+            The state prepended to the circuit.
+        append_state: Union[QuantumCircuitBase,numpy.ndarray(complex)]
+            The state appended to the circuit.
+        init_hadamard: bool
             Whether to apply a Hadamard gate to the beginning of the 
-                QAOA part of the circuit.. Defaults to `True`
-            n_shots: int
-            Optional argument to specify the number of shots required to run QAOA computations
-                on shot-based simulators and QPUs. Defaults to 100.
-            cvar_alpha: float
-                The value of alpha for the CVaR cost function
-            noise_model: `qiskit.providers.aer.noise.NoiseModel`
-                    The Qiskit noise model to be used for the simulation.
-            qiskit_simulation_method: str, optional
-                The method to be used for the simulation.
-            seed_simulator: int
-                Optional argument to initialize a pseudorandom solution. Default None
-            active_reset:
-                #TODO
-            rewiring:
-                Rewiring scheme to be used for Pyquil. 
-                Either 'PRAGMA INITIAL_REWIRING "NAIVE"' or 
-                'PRAGMA INITIAL_REWIRING "PARTIAL"'. If None, defaults to NAIVE
-            disable_qubit_rewiring: `bool`
-                Disable automatic qubit rewiring on AWS braket backend
+            QAOA part of the circuit.
+        n_shots: int
+            The number of shots to be used for the shot-based computation.
+        cvar_alpha: float
+            The value of the CVaR parameter.
+        noise_model: NoiseModel
+            The `qiskit` noise model to be used for the shot-based simulator.
+        qubit_layout: Union[List[int], numpy.ndarray]
+            Mapping from physical to logical qubit indices, used to eventually 
+            construct the quantum circuit.  For example, for a system composed by 3 qubits
+        `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
+            and the right hand side is the logical qubits
+        qiskit_simulation_method: str
+            Specify the simulation method to use with the `qiskit.AerSimulator`
+        seed_simulator: int
+            Specify a seed for `qiskit` simulators
+        active_reset: bool
+            To use the active_reset functionality on Rigetti backends through QCS
+        rewiring: str
+            Specify the rewiring strategy for compilation for Rigetti QPUs through QCS
+        disable_qubit_rewiring: bool
+            enable/disbale qubit rewiring when accessing QPUs via the AWS `braket`
         """
 
         for key, value in kwargs.items():
@@ -293,42 +296,42 @@ class QAOA(Optimizer):
 
         Parameters
         -------------------
-            qubit_register: `list`
-                Select the desired qubits to run the QAOA program. Meant to be used as a qubit
-                selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
-            p: `int`
-                Depth `p` of the QAOA circuit
-            q: `int`
-                Analogue of `p` of the QAOA circuit in the Fourier parameterisation
-            param_type: `str`
-                Choose the QAOA circuit parameterisation. Currently supported parameterisations include:
-                `'standard'`: Standard QAOA parameterisation
-                `'standard_w_bias'`: Standard QAOA parameterisation with a separate parameter for single-qubit terms.
-                `'extended'`: Individual parameter for each qubit and each term in the Hamiltonian.
-                `'fourier'`: Fourier circuit parameterisation
-                `'fourier_extended'`: Fourier circuit parameterisation with individual parameter for each qubit and term in Hamiltonian.
-                `'fourier_w_bias'`: Fourier circuit parameterisation with aseparate parameter for single-qubit terms
-            init_type: `str`
-                Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
-                `'rand'`: Randomly initialise circuit parameters
-                `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit parameters (inspired from Quantum Annealing)
-                `'custom'`: User specified initial circuit parameters
-            mixer_hamiltonian: `str`
-                Parameterisation of the mixer hamiltonian:
-                `'x'`: Randomly initialise circuit parameters
-                `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
-            mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
-                The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`. The user can specify the 
-                connectivity as a list of lists, a list of tuples, or a string chosen from ['full', 'chain', 'star'].
-            mixer_coeffs: `list`
-                The coefficients of the mixer Hamiltonian. By default all set to -1
-            annealing_time: `float`
-                Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
-            linear_ramp_time: `float`
-                The slope(rate) of linear ramp initialisation of QAOA parameters.
-            variational_params_dict: `dict`
-                Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
-                For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
+        qubit_register: `list`
+            Select the desired qubits to run the QAOA program. Meant to be used as a qubit
+            selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
+        p: `int`
+            Depth `p` of the QAOA circuit
+        q: `int`
+            Analogue of `p` of the QAOA circuit in the Fourier parameterisation
+        param_type: `str`
+            Choose the QAOA circuit parameterisation. Currently supported parameterisations include:
+            `'standard'`: Standard QAOA parameterisation
+            `'standard_w_bias'`: Standard QAOA parameterisation with a separate parameter for single-qubit terms.
+            `'extended'`: Individual parameter for each qubit and each term in the Hamiltonian.
+            `'fourier'`: Fourier circuit parameterisation
+            `'fourier_extended'`: Fourier circuit parameterisation with individual parameter for each qubit and term in Hamiltonian.
+            `'fourier_w_bias'`: Fourier circuit parameterisation with aseparate parameter for single-qubit terms
+        init_type: `str`
+            Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
+            `'rand'`: Randomly initialise circuit parameters
+            `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit parameters (inspired from Quantum Annealing)
+            `'custom'`: User specified initial circuit parameters
+        mixer_hamiltonian: `str`
+            Parameterisation of the mixer hamiltonian:
+            `'x'`: Randomly initialise circuit parameters
+            `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
+        mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
+            The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`. The user can specify the 
+            connectivity as a list of lists, a list of tuples, or a string chosen from ['full', 'chain', 'star'].
+        mixer_coeffs: `list`
+            The coefficients of the mixer Hamiltonian. By default all set to -1
+        annealing_time: `float`
+            Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
+        linear_ramp_time: `float`
+            The slope(rate) of linear ramp initialisation of QAOA parameters.
+        variational_params_dict: `dict`
+            Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
+            For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
 
         for key, value in kwargs.items():
@@ -437,41 +440,41 @@ class RQAOA(Optimizer):
     .. note::
         The attributes of the RQAOA class should be initialized using the set methods of QAOA. For example, to set the qaoa circuit's depth to 10 you should run `set_circuit_properties(p=10)`
 
-    Attributes
+    Parameters
     ----------
-        device: `DeviceBase`
-            Device to be used by the optimizer
-        backend_properties: `BackendProperties`
-            The backend properties of the RQAOA workflow. These properties will be used to run QAOA at each RQAOA step.
-            Use to set the backend properties such as the number of shots and the cvar values.
-            For a complete list of its parameters and usage please see the method set_backend_properties
-        classical_optimizer: `ClassicalOptimizer`
-            The classical optimiser properties of the RQAOA workflow. 
-            Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
-            For a complete list of its parameters and usage please see the method set_classical_optimizer
-        local_simulators: `list[str]`
-            A list containing the available local simulators
-        cloud_provider: `list[str]`
-            A list containing the available cloud providers
-        compiled: `Bool`
-            A boolean flag to check whether the optimizer object has been correctly compiled at least once
-        circuit_properties: `CircuitProperties`
-            The circuit properties of the RQAOA workflow. These properties will be used to run QAOA at each RQAOA step.
-            Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
-            For a complete list of its parameters and usage please see the method set_circuit_properties
-        rqaoa_parameters: `RqaoaParameters`
-            Set of parameters containing all the relevant information for the recursive procedure of RQAOA.
-        results: `RQAOAResults`
-            The results of the RQAOA optimization. 
-            Dictionary containing all the information about the RQAOA run: the
-            solution states and energies (key: 'solution'), the output of the classical 
-            solver (key: 'classical_output'), the elimination rules for each step
-            (key: 'elimination_rules'), the number of eliminations at each step (key: 'schedule'), 
-            total number of steps (key: 'number_steps'), the intermediate QUBO problems and the 
-            intermediate QAOA objects that have been optimized in each RQAOA step (key: 'intermediate_problems').
-            This object (`RQAOAResults`) is a dictionary with some custom methods as RQAOAResults.get_hamiltonian_step(i) 
-            which get the hamiltonian of reduced problem of the i-th step. To see the full list of methods please see the
-            RQAOAResults class.  
+    device: `DeviceBase`
+        Device to be used by the optimizer
+    backend_properties: `BackendProperties`
+        The backend properties of the RQAOA workflow. These properties will be used to run QAOA at each RQAOA step.
+        Use to set the backend properties such as the number of shots and the cvar values.
+        For a complete list of its parameters and usage please see the method set_backend_properties
+    classical_optimizer: `ClassicalOptimizer`
+        The classical optimiser properties of the RQAOA workflow. 
+        Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
+        For a complete list of its parameters and usage please see the method set_classical_optimizer
+    local_simulators: `list[str]`
+        A list containing the available local simulators
+    cloud_provider: `list[str]`
+        A list containing the available cloud providers
+    compiled: `Bool`
+        A boolean flag to check whether the optimizer object has been correctly compiled at least once
+    circuit_properties: `CircuitProperties`
+        The circuit properties of the RQAOA workflow. These properties will be used to run QAOA at each RQAOA step.
+        Use to set depth `p`, choice of parametrisation, parameter initialisation strategies, mixer hamiltonians.
+        For a complete list of its parameters and usage please see the method set_circuit_properties
+    rqaoa_parameters: `RqaoaParameters`
+        Set of parameters containing all the relevant information for the recursive procedure of RQAOA.
+    results: `RQAOAResults`
+        The results of the RQAOA optimization. 
+        Dictionary containing all the information about the RQAOA run: the
+        solution states and energies (key: 'solution'), the output of the classical 
+        solver (key: 'classical_output'), the elimination rules for each step
+        (key: 'elimination_rules'), the number of eliminations at each step (key: 'schedule'), 
+        total number of steps (key: 'number_steps'), the intermediate QUBO problems and the 
+        intermediate QAOA objects that have been optimized in each RQAOA step, with the correlation matrix and expectation values in z of the step (key: 'intermediate_problems').
+        This object (`RQAOAResults`) is a dictionary with some custom methods as RQAOAResults.get_hamiltonian_step(i) 
+        which get the hamiltonian of reduced problem of the i-th step. To see the full list of methods please see the
+        RQAOAResults class.  
 
     Examples
     --------
@@ -530,43 +533,43 @@ class RQAOA(Optimizer):
         Specify the circuit properties to construct the QAOA circuits
 
         Parameters
-        ----------
-            qubit_register: `list`
-                Select the desired qubits to run the QAOA program. Meant to be used as a qubit
-                selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
-            p: `int`
-                Depth `p` of the QAOA circuit
-            q: `int`
-                Analogue of `p` of the QAOA circuit in the Fourier parameterisation
-            param_type: `str`
-                Choose the QAOA circuit parameterisation. Currently supported parameterisations include:
-                `'standard'`: Standard QAOA parameterisation
-                `'standard_w_bias'`: Standard QAOA parameterisation with a separate parameter for single-qubit terms.
-                `'extended'`: Individual parameter for each qubit and each term in the Hamiltonian.
-                `'fourier'`: Fourier circuit parameterisation
-                `'fourier_extended'`: Fourier circuit parameterisation with individual parameter for each qubit and term in Hamiltonian.
-                `'fourier_w_bias'`: Fourier circuit parameterisation with aseparate parameter for single-qubit terms
-            init_type: `str`
-                Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
-                `'rand'`: Randomly initialise circuit parameters
-                `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit parameters (inspired from Quantum Annealing)
-                `'custom'`: User specified initial circuit parameters
-            mixer_hamiltonian: `str`
-                Parameterisation of the mixer hamiltonian:
-                `'x'`: Randomly initialise circuit parameters
-                `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
-            mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
-                The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`. The user can specify the 
-                connectivity as a list of lists, a list of tuples, or a string chosen from ['full', 'chain', 'star'].
-            mixer_coeffs: `list`
-                The coefficients of the mixer Hamiltonian. By default all set to -1
-            annealing_time: `float`
-                Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
-            linear_ramp_time: `float`
-                The slope(rate) of linear ramp initialisation of QAOA parameters.
-            variational_params_dict: `dict`
-                Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
-                For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
+        -------------------
+        qubit_register: `list`
+            Select the desired qubits to run the QAOA program. Meant to be used as a qubit
+            selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
+        p: `int`
+            Depth `p` of the QAOA circuit
+        q: `int`
+            Analogue of `p` of the QAOA circuit in the Fourier parameterisation
+        param_type: `str`
+            Choose the QAOA circuit parameterisation. Currently supported parameterisations include:
+            `'standard'`: Standard QAOA parameterisation
+            `'standard_w_bias'`: Standard QAOA parameterisation with a separate parameter for single-qubit terms.
+            `'extended'`: Individual parameter for each qubit and each term in the Hamiltonian.
+            `'fourier'`: Fourier circuit parameterisation
+            `'fourier_extended'`: Fourier circuit parameterisation with individual parameter for each qubit and term in Hamiltonian.
+            `'fourier_w_bias'`: Fourier circuit parameterisation with aseparate parameter for single-qubit terms
+        init_type: `str`
+            Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
+            `'rand'`: Randomly initialise circuit parameters
+            `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit parameters (inspired from Quantum Annealing)
+            `'custom'`: User specified initial circuit parameters
+        mixer_hamiltonian: `str`
+            Parameterisation of the mixer hamiltonian:
+            `'x'`: Randomly initialise circuit parameters
+            `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
+        mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
+            The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`. The user can specify the 
+            connectivity as a list of lists, a list of tuples, or a string chosen from ['full', 'chain', 'star'].
+        mixer_coeffs: `list`
+            The coefficients of the mixer Hamiltonian. By default all set to -1
+        annealing_time: `float`
+            Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
+        linear_ramp_time: `float`
+            The slope(rate) of linear ramp initialisation of QAOA parameters.
+        variational_params_dict: `dict`
+            Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
+            For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
 
         for key in kwargs.keys():

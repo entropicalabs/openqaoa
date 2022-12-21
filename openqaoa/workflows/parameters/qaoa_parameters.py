@@ -44,6 +44,45 @@ ALLOWED_DEVICES  = ALLOWED_LOCAL_SIMUALTORS + ALLOWED_QVM_DEVICES + ALLOWED_IMBQ
 class CircuitProperties(Parameters):
     """
     Tunable properties of the QAOA circuit to be specified by the user
+
+    Parameters
+    -------------------
+    qubit_register: `list`
+        Select the desired qubits to run the QAOA program. Meant to be used as a qubit
+        selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
+    p: `int`
+        Depth `p` of the QAOA circuit
+    q: `int`
+        Analogue of `p` of the QAOA circuit in the Fourier parameterisation
+    param_type: `str`
+        Choose the QAOA circuit parameterisation. Currently supported parameterisations include:
+        `'standard'`: Standard QAOA parameterisation
+        `'standard_w_bias'`: Standard QAOA parameterisation with a separate parameter for single-qubit terms.
+        `'extended'`: Individual parameter for each qubit and each term in the Hamiltonian.
+        `'fourier'`: Fourier circuit parameterisation
+        `'fourier_extended'`: Fourier circuit parameterisation with individual parameter for each qubit and term in Hamiltonian.
+        `'fourier_w_bias'`: Fourier circuit parameterisation with aseparate parameter for single-qubit terms
+    init_type: `str`
+        Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
+        `'rand'`: Randomly initialise circuit parameters
+        `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit parameters (inspired from Quantum Annealing)
+        `'custom'`: User specified initial circuit parameters
+    mixer_hamiltonian: `str`
+        Parameterisation of the mixer hamiltonian:
+        `'x'`: Randomly initialise circuit parameters
+        `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
+    mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
+        The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`. The user can specify the 
+        connectivity as a list of lists, a list of tuples, or a string chosen from ['full', 'chain', 'star'].
+    mixer_coeffs: `list`
+        The coefficients of the mixer Hamiltonian. By default all set to -1
+    annealing_time: `float`
+        Total time to run the QAOA program in the Annealing parameterisation (digitised annealing)
+    linear_ramp_time: `float`
+        The slope(rate) of linear ramp initialisation of QAOA parameters.
+    variational_params_dict: `dict`
+        Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
+        For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
     """
 
     def __init__(self,
