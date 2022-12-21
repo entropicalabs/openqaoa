@@ -26,13 +26,17 @@ from openqaoa.backends.simulators.qaoa_pyquil_sim import QAOAPyQuilWavefunctionS
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
+from openqaoa.problems.problem import MinimumVertexCover, QUBO
 from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
 import unittest
 import networkx as nw
 import numpy as np
 import json, os, gzip
 
-from openqaoa.problems.problem import MinimumVertexCover, QUBO
+from qiskit import Aer
+from qiskit.test.mock import FakeVigo
+from qiskit.providers.aer.noise import NoiseModel
+from qiskit.providers.aer import QasmSimulator
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']
@@ -725,6 +729,27 @@ class TestingVanillaQAOA(unittest.TestCase):
         with gzip.open(full_name+'.gz', 'rb') as file:
             assert file.read() == qaoa.dumps(indent=None).encode(), 'Dump file does not contain the correct data, when compressing'
         os.remove(full_name+'.gz')
+
+    def test_qaoa_asdict_with_noise(self):
+        "test to check that we can serialize a QAOA object with noise"
+        device_backend = FakeVigo()
+        device = QasmSimulator.from_backend(device_backend)
+        noise_model = NoiseModel.from_backend(device)
+        q_noisy_shot = QAOA()
+
+        # device
+        qiskit_noisy_shot = create_device(location='local', name='qiskit.qasm_simulator')
+        q_noisy_shot.set_device(qiskit_noisy_shot)
+        # circuit properties
+        q_noisy_shot.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        # backend properties
+        q_noisy_shot.set_backend_properties(n_shots = 200, noise_model = noise_model)
+        # classical optimizer properties
+        q_noisy_shot.set_classical_optimizer(method='COBYLA', maxiter=200,
+                                            cost_progress=True, parameter_log=True)
+        q_noisy_shot.compile(QUBO.random_instance(n=8))
+        q_noisy_shot.optimize()
+        q_noisy_shot.asdict()
         
     def __test_expected_keys(self, obj, keys_not_to_include=[], method='asdict'):
         """
