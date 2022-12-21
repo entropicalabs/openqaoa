@@ -265,9 +265,9 @@ class Optimizer(ABC):
             If True, converts all complex numbers to strings. This is useful for JSON serialization, for the `dump(s)` methods.
         """
         serializable_dict = {}
-        serializable_dict['identification'] = self.id
+        serializable_dict['identification'] = self.id.copy()
         serializable_dict['exp_tags'] = tuple(self.exp_tags.items())
-        serializable_dict['input_problem'] = self.problem.asdict()
+        serializable_dict['input_problem'] = self.problem.asdict().copy()
         serializable_dict['input_parameters'] = {
                                                 'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
                                                 'backend_properties': vars(self.backend_properties).copy(),

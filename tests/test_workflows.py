@@ -30,7 +30,7 @@ from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradient
 import unittest
 import networkx as nw
 import numpy as np
-import json, os
+import json, os, gzip
 
 from openqaoa.problems.problem import MinimumVertexCover, QUBO
 
@@ -671,7 +671,10 @@ class TestingRQAOA(unittest.TestCase):
         self._test_default_values(r._RQAOA__q)
         
 
-    def __run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+    def __run_rqaoa(self, type, problem=None, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator', return_object=False):
+
+        if problem == None:
+            problem = QUBO.random_instance(n=8)
 
         r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)
@@ -683,9 +686,13 @@ class TestingRQAOA(unittest.TestCase):
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)   
+        r.set_identification(parent_uuid='test-parent-id')
+        r.set_exp_tags(tags={'tag1': 'value1', 'tag2': 'value2'})
         r.compile(problem)
         r.optimize()
 
+        if return_object:
+            return r
         return r.results.get_solution()
 
     def test_rqaoa_optimize_multiple_times(self):
@@ -836,122 +843,96 @@ class TestingRQAOA(unittest.TestCase):
             for key in solution:
                 assert solution[key] == exact_soutions[key]
 
-    def __run_rqaoa(self, type='custom', eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
-        """
-        private function to run the RQAOA
-        """
+    def test_rqaoa_asdict_dumps(self):
+        """Test the asdict method of the RQAOA class."""
 
-        n_qubits = 6
-        n_cutoff = 3
-        g = nw.circulant_graph(n_qubits, [1])
-        problem = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        #rqaoa
+        rqaoa = self.__run_rqaoa('custom', return_object=True)
 
-        r = RQAOA()
-        qiskit_device = create_device(location='local', name=name_device)
-        r.set_device(qiskit_device)
-        if type == 'adaptive':
-            r.set_rqaoa_parameters(n_cutoff = n_cutoff, n_max=eliminations, rqaoa_type=type)
-        else:
-            r.set_rqaoa_parameters(n_cutoff = n_cutoff, steps=eliminations, rqaoa_type=type)
-        r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
-        r.set_backend_properties(prepend_state=None, append_state=None)
-        r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
-        r.set_exp_tags(name='rqaoa_test') 
-        r.compile(problem)
-        r.optimize()
+        # check RQAOA asdict
+        self.__test_expected_keys(rqaoa.asdict(), method='asdict')
 
-        return r
+        # check RQAOA asdict deleting some keys
+        keys_not_to_include = ['corr_matrix', 'number_steps']
+        self.__test_expected_keys(rqaoa.asdict(keys_not_to_include=keys_not_to_include), keys_not_to_include, method='asdict')
 
-    def __test_rqaoa_as_dict(self, as_dict):
-        """
-        private function to test the results dictionary
-        """
-        # test is a dictionary
-        assert isinstance(as_dict, dict), 'Results are not a dictionary'
+        # check RQAOA dumps
+        self.__test_expected_keys(json.loads(rqaoa.dumps()), method='dumps')
+
+        # check RQAOA dumps deleting some keys
+        keys_not_to_include = ['parent_uuid', 'counter']
+        self.__test_expected_keys(json.loads(rqaoa.dumps(keys_not_to_include=keys_not_to_include)), keys_not_to_include, method='dumps')
+
+        # check RQAOA dump
+        file_name = 'test_dump.json'
+        uuid, parent_uuid = rqaoa.id['uuid'], rqaoa.id['parent_uuid']
+        full_name = f'{parent_uuid}--{uuid}--{file_name}'
+
+        rqaoa.dump(file_name, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist'
+        with open(full_name, 'r') as file:
+            assert file.read() == rqaoa.dumps(indent=None), 'Dump file does not contain the correct data'
+        os.remove(full_name)
+
+        # check RQAOA dump when rqaoa has no parent_uuid
+        rqaoa.id['parent_uuid'] = None
+        full_name = f'{uuid}--{file_name}'
+        rqaoa.dump(file_name, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist, when rqaoa has no parent_uuid'
+        os.remove(full_name)
+
+        # check RQAOA dump deleting some keys
+        keys_not_to_include = ['schedule', 'pair']
+        rqaoa.dump(file_name, keys_not_to_include=keys_not_to_include, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
+        with open(full_name, 'r') as file:
+            assert file.read() == rqaoa.dumps(keys_not_to_include=keys_not_to_include, indent=None), 'Dump file does not contain the correct data, when deleting some keys'
+        os.remove(full_name)
+
+        # check RQAOA dump with compression
+        rqaoa.dump(file_name, compresslevel=2, indent=None)
+        assert os.path.isfile(full_name+'.gz'), 'Dump file does not exist, when compressing'
+        with gzip.open(full_name+'.gz', 'rb') as file:
+            assert file.read() == rqaoa.dumps(indent=None).encode(), 'Dump file does not contain the correct data, when compressing'
+        os.remove(full_name+'.gz')
         
-        # test the keys
-        expected_keys = ['solution', 'classical_output', 'elimination_rules', 'schedule', 'intermediate_steps', 
-                         'number_steps', 'parameters_used', 'fff']
-        
-        for k, v in self.__test_keys(as_dict, expected_keys):
-            assert v, 'Key {} is not in the dictionary'.format(k)
 
-    def __test_keys(self, obj, expected_keys):
+    def __test_expected_keys(self, obj, keys_not_to_include=[], method='asdict'):
+        """
+        method to test if the dictionary has all the expected keys
+        """
+
+        #create a dictionary with all the expected keys and set them to False
+        expected_keys = ['identification', 'uuid', 'parent_uuid', 'type', 'datetime', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', '_n', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'n_shots', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', '_param_type', '_init_type', 'qubit_register', '_p', 'q', 'variational_params_dict', 'total_annealing_time', '_annealing_time', 'linear_ramp_time', '_mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'rqaoa_type', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'results', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id', 'exp_vals_z', 'corr_matrix', 'number_steps']
+        expected_keys = {item: False for item in expected_keys}
+
+        #test the keys, it will set the keys to True if they are found
+        self.__test_keys_in_dict(obj, expected_keys)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys.items():
+            if key not in keys_not_to_include:
+                assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
+
+    def __test_keys_in_dict(self, obj, expected_keys):
         """
         private function to test the keys. It recursively tests the keys of the nested dictionaries, or lists of dictionaries
         """
-        if isinstance(expected_keys, list):
-            expected_keys = {key: False for key in expected_keys}
 
         if isinstance(obj, dict):
             for key in obj:
                 if key in expected_keys.keys(): expected_keys[key] = True
 
                 if isinstance(obj[key], dict):
-                    self.__test_keys(obj[key], expected_keys)
+                    self.__test_keys_in_dict(obj[key], expected_keys)
                 elif isinstance(obj[key], list):
                     for item in obj[key]:
-                        self.__test_keys(item, expected_keys)
+                        self.__test_keys_in_dict(item, expected_keys)
         elif isinstance(obj, list):
             for item in obj:
-                self.__test_keys(item, expected_keys)
-            
-
-    #test asdict method
-    def test_rqaoa_result_asdict(self):
-        """
-        Test asdict method for the RQAOAResult class
-        """
-
-        # run the RQAOA and get the results as a dictionary with the asdict method
-        r = self.__run_rqaoa()
-        r_dict = r.asdict()
-        
-        # test the dictionary
-        self.__test_rqaoa_as_dict(r_dict)
-
-    #test dumps
-    def test_rqaoa_result_dumps(self):
-        """
-        Test the dumps for the RQAOAResult class
-        """
-
-        # Test for .dumps returning a string
-        results = self.__run_rqaoa()
-        json_string = results.dumps()
-        assert isinstance(json_string, str), 'json_string is not a string'
-
-        # read the json string and test the dictionary that is returned
-        results_dict = json.loads(json_string)
-        self.__test_results_dict(results_dict)
-
-    #test dump 
-    def test_rqaoa_result_dump(self):
-        """
-        Test the dump method for the RQAOAResult class
-        """
-
-        # name for the file that will be created and deleted
-        name_file = 'results.json'
-
-        #run the algorithm
-        results = self.__run_rqaoa()
-
-        # Test for .dump creating a file and containing the correct information
-        results.dump(name_file, indent=None)
-        assert os.path.isfile(name_file), 'Dump file does not exist'
-        with open(name_file, 'r') as file:
-            assert file.read() == results.dumps(indent=None), 'Dump file does not contain the correct data'
-
-        # read the json string 
-        with open(name_file, 'r') as file:
-            results_dict = json.load(file)
-
-        # test the dictionary that is returned
-        self.__test_results_dict(results_dict)
-
-        # delete the file
-        os.remove(name_file)
+                self.__test_keys_in_dict(item, expected_keys)
 
 
 if __name__ == '__main__':
