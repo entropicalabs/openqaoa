@@ -59,6 +59,18 @@ class Optimizer(ABC):
             A list containing the available cloud providers
         compiled: `Bool`
             A boolean flag to check whether the optimizer object has been correctly compiled at least once     
+        id: `dict`
+            A dictionary containing the identification stamps of the optimizer object. 
+            'uuid' is the unique identifier of the optimizer object, 
+            'parent_uuid' is the unique identifier of the parent object (e.g. the project to which the optimizer object belongs), the user can set this value using the set_identification method, 
+            'type' is the type of the object, 
+            'datetime' is the date and time of the creation of the object. 
+        exp_tags: `dict`
+            A dictionary containing the tags of the optimizer object. The user can set this value using the set_exp_tags method.
+        problem: `Problem`
+            The problem object that the optimizer will be optimizing.
+        results: `Results`
+            The results object that will contain the results of the optimization routine.
     """
 
     def __init__(self, device=DeviceLocal('vectorized')):  
