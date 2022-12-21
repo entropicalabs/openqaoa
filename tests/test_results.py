@@ -281,8 +281,16 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         # get dict
         results_dict = results.asdict()
 
-        #create a dictionary with all the expected keys and set them to False
+        #create a list of expected keys
         expected_keys = ['solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'terms', 'weights', 'constant', '_n', 'qaoa_results', 'method', 'cost_hamiltoian', 'n_qubits', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id', 'exp_vals_z', 'corr_matrix', 'number_steps']
+
+        #we append all the keys that we find in rqaoa.results, so if we introduce a new key, we will know that we need to update the result.asdict method
+        for key in results.keys():
+            if not key in expected_keys: expected_keys.append(key)
+        for key in results['intermediate_steps'][0].keys():
+            if not key in expected_keys: expected_keys.append(key)
+
+        # dictionary with all the expected keys and set them to False
         expected_keys = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found
