@@ -799,7 +799,8 @@ class RQAOA(Optimizer):
             if hasattr(self.rqaoa_parameters, key):
                 pass
             else:
-                raise ValueError(f'Specified argument {key} is not supported by RQAOA')
+                raise ValueError(
+                    f'Specified argument {key} is not supported by RQAOA')
 
         self.rqaoa_parameters = RqaoaParameters(**kwargs) 
 
