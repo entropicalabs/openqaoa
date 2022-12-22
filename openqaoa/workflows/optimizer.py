@@ -279,11 +279,11 @@ class Optimizer(ABC):
         serializable_dict = {}
         serializable_dict['identification'] = self.id.copy()
         serializable_dict['exp_tags'] = tuple(self.exp_tags.items())
-        serializable_dict['input_problem'] = self.problem.asdict().copy()
+        serializable_dict['input_problem'] = dict(self.problem)
         serializable_dict['input_parameters'] = {
                                                 'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
-                                                'backend_properties': vars(self.backend_properties).copy(),
-                                                'classical_optimizer': vars(self.classical_optimizer).copy(),
+                                                'backend_properties': dict(self.backend_properties),
+                                                'classical_optimizer': dict(self.classical_optimizer),
                                                 }
         # change the parameters that aren't serializable to strings 
         for item in ['noise_model' , 'append_state', 'prepend_state']:
@@ -559,6 +559,7 @@ class QAOA(Optimizer):
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,
                                         **self.backend_properties.__dict__)
+
         self.optimizer = get_optimizer(vqa_object=self.backend,
                                        variational_params=self.variate_params,
                                        optimizer_dict=self.classical_optimizer.asdict())
@@ -618,7 +619,7 @@ class QAOA(Optimizer):
         serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
 
         # we add the keys of the QAOA object that we want to return
-        serializable_dict['input_parameters']['circuit_properties'] = vars(self.circuit_properties).copy()
+        serializable_dict['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
 
         return serializable_dict
 
@@ -1025,8 +1026,8 @@ class RQAOA(Optimizer):
         serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
 
         # we add the keys of the RQAOA object that we want to return
-        serializable_dict['input_parameters']['circuit_properties'] = vars(self.circuit_properties).copy()
-        serializable_dict['input_parameters']['rqaoa_parameters'] = vars(self.rqaoa_parameters).copy()
+        serializable_dict['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
+        serializable_dict['input_parameters']['rqaoa_parameters'] = dict(self.rqaoa_parameters)
 
         return serializable_dict
 
