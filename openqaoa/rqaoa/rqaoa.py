@@ -390,7 +390,14 @@ def redefine_problem(problem: QUBO, spin_map: dict):
     """
 
     # Define new QUBO problem as a dictionary
+    old_register = set([spin for term in problem.terms for spin in term])
     new_problem_dict = {}
+    
+    # get number of eliminations from spin map
+    num_eliminations = 0
+    for spin in spin_map.keys():
+        if spin != spin_map[spin][1] or spin_map[spin][1] == None:
+            num_eliminations += 1
 
     # Scan all terms and weights
     for term, weight in zip(problem.terms, problem.weights):
@@ -478,10 +485,17 @@ def redefine_problem(problem: QUBO, spin_map: dict):
     # Define quadratic register after removing vanishing terms
     new_quadratic_register = set([spin for edge in new_problem_dict.keys() if len(edge) == 2 for spin in edge])
 
-    # If lengths do not match, there are isolated nodes
-    if len(new_register) != len(new_quadratic_register):
+    # Check for isolated nodes after constructing the new problem
+    there_is_isolated_nodes = False
+    
+    if len(new_register) != len(new_quadratic_register):  # If lengths do not match, there are isolated nodes
         isolated_nodes = new_register.difference(new_quadratic_register)
-        
+        there_is_isolated_nodes = True
+    elif len(old_register) - len(new_register) != num_eliminations: # If too few eliminations, there are isolated nodes; only important for problems with no biases.
+        isolated_nodes = old_register.difference(new_register)
+        there_is_isolated_nodes = True
+
+    if there_is_isolated_nodes:
         # Fix isolated nodes
         for node in isolated_nodes:
             singlet = (node,)
