@@ -19,9 +19,6 @@ import random
 
 from copy import deepcopy
 from .qaoa_parameters.extendedparams import QAOAVariationalExtendedParams 
-from .qaoa_parameters.baseparams import QAOAVariationalBaseParams
-from .basebackend import QAOABaseBackend
-from .optimizers.logger_vqa import Logger
 
 
 def update_and_compute_expectation(backend_obj: QAOABaseBackend, 

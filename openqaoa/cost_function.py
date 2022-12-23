@@ -13,9 +13,10 @@
 #   limitations under the License.
 
 # Cost function to be used for QAOA training
+from __future__ import annotations
+
 from typing import Dict
 from collections import OrderedDict
-from .qaoa_parameters.operators import Hamiltonian
 from .utilities import bitstring_energy
 import numpy as np
 
