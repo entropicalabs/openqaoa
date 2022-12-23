@@ -117,7 +117,7 @@ class Optimizer(ABC):
         qubit_layout: Union[List[int], numpy.ndarray]
             Mapping from physical to logical qubit indices, used to eventually 
             construct the quantum circuit.  For example, for a system composed by 3 qubits
-        `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
+            `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
             and the right hand side is the logical qubits
         qiskit_simulation_method: str
             Specify the simulation method to use with the `qiskit.AerSimulator`
