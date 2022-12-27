@@ -491,7 +491,7 @@ def redefine_problem(problem: QUBO, spin_map: dict):
     if len(new_register) != len(new_quadratic_register):  # If lengths do not match, there are isolated nodes
         isolated_nodes = new_register.difference(new_quadratic_register)
         there_is_isolated_nodes = True
-    elif len(old_register) - len(new_register) != num_eliminations: # If too few eliminations, there are isolated nodes; only important for problems with no biases.
+    elif len(old_register) - len(new_register) != num_eliminations: # If too few eliminations, there are isolated nodes; only important for bias-free problems.
         isolated_nodes = old_register.difference(new_register)
         there_is_isolated_nodes = True
 
