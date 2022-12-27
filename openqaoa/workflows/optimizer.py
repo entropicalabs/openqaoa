@@ -129,6 +129,13 @@ class Optimizer(ABC):
         tags: `dict`
             Dictionary containing the tags to be added to the experiment. If the tag already exists, it will be overwritten.
         """
+
+        # check if the keys are strings and the values are python primitives (so that they can be serialized)
+        for key, value in tags.items():
+            if not isinstance(key, str):
+                raise TypeError("The keys of the tags dictionary must be strings. {} is not a string.".format(key))
+            if not isinstance(value, (str, int, float, bool)):
+                raise TypeError("The values of the tags dictionary must be python primitives. {} is not a python primitive.".format(value))
         
         self.exp_tags = {**self.exp_tags, **tags}
 

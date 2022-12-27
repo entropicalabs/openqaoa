@@ -674,6 +674,20 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         assert qaoa.exp_tags == {'tag1':'value9', 'tag2':'value2'}, "Experiment tags are not set correctly."
 
+        error = False
+        try:
+            qaoa.set_exp_tags(tags={'tag1': complex(1,2)})
+        except:
+            error = True
+        assert error, "Experiment tag values should be primitives."
+
+        error = False
+        try:
+            qaoa.set_exp_tags(tags={(1,2): 'test'})
+        except:
+            error = True
+        assert error, "Experiment tag keys should be strings."
+
     def test_qaoa_asdict_dumps(self):
         """Test the asdict method of the QAOA class."""
 
