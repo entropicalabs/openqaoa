@@ -110,7 +110,8 @@ class Result:
 
     def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False):
         """
-        Returns a dictionary with the results of the optimization, where the dictionary is serializable.
+        Returns a dictionary with the results of the optimization, where the dictionary is serializable. 
+        If the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
 
         Parameters
         ----------
@@ -133,16 +134,21 @@ class Result:
 
         complx_to_str = lambda x: str(x) if isinstance(x, np.complex128) or isinstance(x, complex) else x
         
+        # if the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
         if complex_to_string and issubclass(self.__backend, QAOABaseBackendStatevector):
             return_dict['intermediate'] = {}
             for key, value in self.intermediate.items():
-                return_dict['intermediate'][key] = [[complx_to_str(item) for item in list_] for list_ in value if (isinstance(list_, list) or isinstance(list_, np.ndarray))] \
-                                                    if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)) else value
+                if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)):
+                    return_dict['intermediate'][key] = [[complx_to_str(item) for item in list_] for list_ in value if (isinstance(list_, list) or isinstance(list_, np.ndarray))]
+                else:
+                    return_dict['intermediate'][key] = value 
 
             return_dict['optimized'] = {}
             for key, value in self.optimized.items():
-                return_dict['optimized'][key] = [complx_to_str(item) for item in value] \
-                                                    if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)) else value
+                if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)):
+                    return_dict['optimized'][key] = [complx_to_str(item) for item in value] 
+                else:
+                    return_dict['optimized'][key] = value
         else:
             return_dict['intermediate'] = self.intermediate
             return_dict['optimized'] = self.optimized
