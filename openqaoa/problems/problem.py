@@ -19,6 +19,7 @@ import networkx as nx
 import numpy as np
 import scipy
 import itertools
+import json
 
 from .helper_functions import convert2serialize, check_kwargs
 from openqaoa.qaoa_parameters.operators import Hamiltonian
@@ -118,9 +119,9 @@ class QUBO:
         self.constant = constant
         self.n = n
 
-        self.name = "generic_qubo" if "name" not in metadata else metadata["name"]
         # Initialize the metadata dictionary
         self.metadata = {**{"name":"generic_qubo"}, **metadata}
+        self.name = metadata["name"]
 
     @property
     def n(self):
@@ -149,6 +150,12 @@ class QUBO:
             The metadata of the problem. All keys and values will be stored in the metadata dictionary.
         """
         self.metadata = {**self.metadata, **metadata}
+
+        #here we try that metadata is serializable
+        try:
+            _ = json.dumps(self.metadata)
+        except Exception as e:
+            raise e
 
     def asdict(self):
         return convert2serialize(self)
