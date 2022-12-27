@@ -63,7 +63,7 @@ class Optimizer(ABC):
             A dictionary containing the identification stamps of the optimizer object. 
             'uuid' is the unique identifier of the optimizer object, 
             'parent_uuid' is the unique identifier of the parent object (e.g. the project to which the optimizer object belongs), the user can set this value using the set_identification method, 
-            'type' is the type of the object, 
+            'type' is the type of the object (QAOA or RQAOA), 
             'datetime' is the date and time of the creation of the object. 
         exp_tags: `dict`
             A dictionary containing the tags of the optimizer object. The user can set this value using the set_exp_tags method.
