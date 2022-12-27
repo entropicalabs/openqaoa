@@ -58,9 +58,7 @@ class Result:
     ):
 
         self.__backend = backend
-
         self.method = method
-
         self.cost_hamiltonian = cost_hamiltonian
 
         self.evals = {
