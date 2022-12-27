@@ -713,26 +713,29 @@ class RQAOA(Optimizer):
             spin_map = rqaoa.spin_mapping(problem, max_terms_and_stats)
             # Eliminate spins and redefine problem
             new_problem, spin_map = rqaoa.redefine_problem(problem, spin_map)
+            if new_problem == problem:
+                print("Eliminations lead to a total reduction of the problem.\n Increasing the cutoff to solve the smallest non-vanishing problem.")
+                break
+            else:
+                # Extract final set of eliminations with correct dependencies and update tracker
+                eliminations = {(spin_map[spin][1],spin):spin_map[spin][0] for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]}
+                elimination_tracker.append(eliminations)
 
-            # Extract final set of eliminations with correct dependencies and update tracker
-            eliminations = {(spin_map[spin][1],spin):spin_map[spin][0] for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]}
-            elimination_tracker.append(eliminations)
+                # Extract new number of qubits
+                n_qubits = new_problem.n
 
-            # Extract new number of qubits
-            n_qubits = new_problem.n
+                # Save qaoa object and new problem
+                qaoa_steps.append(copy.deepcopy(q))
+                problem_steps.append(copy.deepcopy(new_problem))
 
-            # Save qaoa object and new problem
-            qaoa_steps.append(copy.deepcopy(q))
-            problem_steps.append(copy.deepcopy(new_problem))
+                # problem is updated
+                problem = new_problem
 
-            # problem is updated
-            problem = new_problem
-            
-            # Compile qaoa with the problem
-            q.compile(problem, verbose=False)
+                # Compile qaoa with the problem
+                q.compile(problem, verbose=False)
 
-            # Add one step to the counter
-            counter += 1
+                # Add one step to the counter
+                counter += 1
 
         # Solve the new problem classically
         cl_energy, cl_ground_states = ground_state_hamiltonian(problem.hamiltonian)

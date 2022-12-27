@@ -388,7 +388,7 @@ def redefine_problem(problem: QUBO, spin_map: dict):
     spin_map: `dict`
         Updated spin_map with sponatenous eliminations from cancellations during spin removal process.
     """
-
+    
     # Define new QUBO problem as a dictionary
     new_problem_dict = {}
 
@@ -498,9 +498,15 @@ def redefine_problem(problem: QUBO, spin_map: dict):
                 # Delete isolated node from new problem
                 new_problem_dict.pop((node,))
 
-    # Redefine new QUBO problem from the dictionary
-    new_problem = problem_from_dict(new_problem_dict)
-
+    # For some unweighted graphs specific eliminations can lead to eliminating the whole instance before reaching cutoff.
+    if new_problem_dict == {}:
+        new_problem = problem  # set the problem to the old problem and solve classically for the smallest non-vanishing instance.
+        
+    else:
+        # Redefine new QUBO problem from the dictionary
+        new_problem = problem_from_dict(new_problem_dict)
+   
+    
     return new_problem, spin_map
 
 
