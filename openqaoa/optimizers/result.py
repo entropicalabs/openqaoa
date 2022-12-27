@@ -270,12 +270,12 @@ class Result:
 
         """
 
-        if isinstance(self.optimized["optimized_measurement_outcomes"], dict):
-            measurement_outcomes = self.optimized["optimized_measurement_outcomes"]
+        if isinstance(self.optimized["measurement_outcomes"], dict):
+            measurement_outcomes = self.optimized["measurement_outcomes"]
             solution_bitstring = list(measurement_outcomes.keys())
-        elif isinstance(self.optimized["optimized_measurement_outcomes"], np.ndarray):
+        elif isinstance(self.optimized["measurement_outcomes"], np.ndarray):
             measurement_outcomes = self.get_counts(
-                self.optimized["optimized_measurement_outcomes"]
+                self.optimized["measurement_outcomes"]
             )
             solution_bitstring = list(measurement_outcomes.keys())
         else:
