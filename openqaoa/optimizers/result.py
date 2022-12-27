@@ -68,24 +68,24 @@ class Result:
         }
 
         self.intermediate = {
-            'angles_log': np.array(log.param_log.history).tolist(),
-            'intermediate_cost': log.cost.history,
-            'intermediate_measurement_outcomes':
+            'angles': np.array(log.param_log.history).tolist(),
+            'cost': log.cost.history,
+            'measurement_outcomes':
                 log.measurement_outcomes.history,
-            'intermediate_runs_job_id': log.job_ids.history
+            'job_id': log.job_ids.history
         }
 
         self.optimized = {
-            'optimized_angles':
+            'angles':
                 np.array(log.param_log.best[0]).tolist()
                 if log.param_log.best != [] else [],
-            'optimized_cost':
+            'cost':
                 log.cost.best[0]
                 if log.cost.best != [] else None,
-            'optimized_measurement_outcomes':
+            'measurement_outcomes':
                 log.measurement_outcomes.best[0]
                 if log.measurement_outcomes.best != [] else {},
-            'optimized_run_job_id': 
+            'job_id': 
                 log.job_ids.best[0] 
                 if len(log.job_ids.best) != 0 else []
         }
@@ -104,7 +104,7 @@ class Result:
     #     string = "Optimization Results:\n"
     #     string += "\tThe solution is " + str(self.solution['degeneracy']) + " degenerate" "\n"
     #     string += "\tThe most probable bitstrings are: " + str(self.solution['bitstring']) + "\n"
-    #     string += "\tThe associated cost is: " + str(self.optimized['optimized_cost']) + "\n"
+    #     string += "\tThe associated cost is: " + str(self.optimized['cost']) + "\n"
 
     #     return (string)
 
@@ -154,7 +154,7 @@ class Result:
                 - self.evals["jac_evals"]
                 - self.evals["qfim_evals"]
             ),
-            self.intermediate["intermediate_cost"],
+            self.intermediate["cost"],
             label=label,
             linestyle=linestyle,
             color=color,
@@ -187,7 +187,7 @@ class Result:
             Axis on which to plot the graph. Deafults to None
         """
 
-        outcome = self.optimized['optimized_measurement_outcomes']
+        outcome = self.optimized['measurement_outcomes']
 
         # converting to counts dictionary if outcome is statevector
         if type(outcome) == type(np.array([])):
@@ -280,7 +280,7 @@ class Result:
             solution_bitstring = list(measurement_outcomes.keys())
         else:
             raise TypeError(
-                f"The measurement outcome {type(self.optimized['optimized_measurement_outcomes'])} is not valid."
+                f"The measurement outcome {type(self.optimized['measurement_outcomes'])} is not valid."
             )
         energies = [
             bitstring_energy(self.cost_hamiltonian, bitstring)

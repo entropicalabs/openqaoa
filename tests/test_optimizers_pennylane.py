@@ -182,8 +182,8 @@ class TestPennylaneOptimizers(unittest.TestCase):
             vector_optimizer()
 
             # formatting the data
-            y_opt = vector_optimizer.qaoa_result.intermediate['intermediate_cost'][1:4]
-            if pennylane_method in ['rotosolve']: y_opt = vector_optimizer.qaoa_result.intermediate['intermediate_cost'][4:40:12]
+            y_opt = vector_optimizer.qaoa_result.intermediate['cost'][1:4]
+            if pennylane_method in ['rotosolve']: y_opt = vector_optimizer.qaoa_result.intermediate['cost'][4:40:12]
 
             # get optimizer to try
             optimizer = AVAILABLE_OPTIMIZERS[pennylane_method]
