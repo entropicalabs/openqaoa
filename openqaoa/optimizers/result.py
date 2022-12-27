@@ -23,7 +23,7 @@ import json
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize
-from ..basebackend import QAOABaseBackendStatevector
+from ..basebackend import QAOABaseBackend, QAOABaseBackendStatevector
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -54,7 +54,7 @@ class Result:
     """
 
     def __init__(
-        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], backend: str
+        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], backend: Type[QAOABaseBackend]
     ):
 
         self.__backend = backend
