@@ -274,25 +274,6 @@ class OptimizeVQA(ABC):
         file_name:
             Custom name for to save the data; a generic name with the time of 
             optimization is used if not specified
-
-        Returns
-        -------
-        :
-            Dictionary with the following keys
-                
-                #. "solution"
-                    #. "bitstring"
-                    #. "degeneracy"
-                #. "number_of_evals"
-                #. "jac_evals"
-                #. "qfim_evals"
-                #. "parameter log"
-                #. "optimized param"
-                #. "intermediate_cost"
-                #. "optimized_cost"
-                #. "intermediate_measurement_outcomes"
-                #. "optimized_measurement_outcomes"
-                #. "optimization method"
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
