@@ -95,7 +95,7 @@ class Optimizer(ABC):
             'uuid': None, #we generate a uuid for the experiment when we compile it
             'parent_uuid': None, #user can set the parent uuid when they create the experiment using the set_identification method
             'type': None, #type of the object
-            'datetime': datetime.now().strftime("%m/%d/%Y_%H:%M:%S") 
+            'datetime': datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S.%f%z') 
         }
 
         # Initialize the experiment tags
