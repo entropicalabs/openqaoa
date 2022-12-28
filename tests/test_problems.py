@@ -139,6 +139,49 @@ class TestProblem(unittest.TestCase):
             self.assertEqual("The input parameter terms must be of type of list or tuple",
                              str(e.exception))
 
+    def test_qubo_metadata(self):
+        """Test that metadata is correctly stored"""
+        qubo_problem = QUBO.random_instance(3)
+        qubo_problem.set_metadata({'tag1': 'value1', 'tag2': 'value2'})
+        qubo_problem.set_metadata({'tag2': 'value2.0'})
+
+        assert qubo_problem.metadata['tag1'] == 'value1', "qubo metadata is not well set"
+        assert qubo_problem.metadata['tag2'] == 'value2.0', "qubo metadata is not well set, should have overwritten previous value"
+
+        error = False
+        try:
+            qubo_problem.set_metadata({'tag10': complex(1, 2)})
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting metadata that is not json serializable"
+
+        error = False
+        try:
+            qubo_problem.set_metadata({(1,2): 'value'})
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting key metadata that is not json serializable"
+
+    def test_qubo_problem_instance_serializable(self):
+        """ test that when problem instance is not serializable, it throws an error """
+        
+        qubo = QUBO.random_instance(3)
+
+        error = False
+        try:
+            qubo.problem_instance={'tag10': complex(1, 2)}
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting qubo problem instance that is not json serializable"
+
+        error = False
+        try:
+            qubo.problem_instance={(1,2): 'value'}
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting key qubo problem instance that is not json serializable"
+
+
     # TESTING NUMBER PARITION CLASS
     
     def test_number_partitioning_terms_weights_constant(self):
