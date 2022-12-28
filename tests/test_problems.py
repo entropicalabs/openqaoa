@@ -796,6 +796,38 @@ class TestProblem(unittest.TestCase):
 
         self.assertRaises(Exception, test_assertion_fn)
 
+    def test_problem_instance(self):
+        """
+        Test problem instance method of the QUBO class.
+        We create a random instance of all the different problems, we generate the QUBO problem out of it and then we check if the problem instance attribute is correct, by comparing the keys of the problem instance with the expected keys.
+        """
+
+        all = {
+            "tsp":TSP.random_instance(n_cities=3),
+            "number_partition":NumberPartition.random_instance(n_numbers=3),
+            "maximum_cut":MaximumCut.random_instance(n_nodes=3, edge_probability=0.5),
+            "knapsack":Knapsack.random_instance(n_items=3),
+            "slack_free_knapsack":SlackFreeKnapsack.random_instance(n_items=3),
+            "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=3, edge_probability=0.5),
+            "shortest_path":ShortestPath.random_instance(n_nodes=3, edge_probability=0.5),
+        }
+        all_qubos = {k:v.get_qubo_problem() for k,v in all.items()}
+        all_qubos["generic_qubo"] = QUBO.random_instance(10)
+
+        expected_keys = {
+            "tsp":['problem_type', 'n_cities', 'G', 'A', 'B'],
+            "number_partition":['problem_type', 'numbers', 'n_numbers'],
+            "maximum_cut":['problem_type', 'G'],
+            "knapsack":['problem_type', 'values', 'weights', 'weight_capacity', 'penalty', 'n_items'],
+            "slack_free_knapsack":['problem_type', 'values', 'weights', 'weight_capacity', 'penalty', 'n_items'],
+            "minimum_vertex_cover":['problem_type', 'G', 'field', 'penalty'],
+            "shortest_path":['problem_type', 'G', 'source', 'dest'],
+            "generic_qubo":['problem_type']
+        }
+
+        for k,v in all_qubos.items():
+            assert list(v.problem_instance.keys()) == expected_keys[k], "Problem instance keys are not correct for problem type {}".format(k)
+            assert k == v.problem_instance['problem_type'], "Problem type is not correct for problem type {}".format(k)
 
 if __name__ == '__main__':
     unittest.main()
