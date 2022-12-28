@@ -149,12 +149,11 @@ class QUBO:
         metadata: dict
             The metadata of the problem. All keys and values will be stored in the metadata dictionary.
         """
-        # check if the keys are strings and the values are python primitives (so that they can be serialized)
-        for key, value in metadata.items():
-            if not isinstance(key, str):
-                raise TypeError("The keys of the metadata dictionary must be strings. {} is not a string.".format(key))
-            if not isinstance(value, (str, int, float, bool)):
-                raise TypeError("The values of the metadata dictionary must be python primitives. {} is not a python primitive.".format(value))
+        #here we try if the dictionary is serializable
+        try:
+            _ = json.dumps(metadata)
+        except Exception as e:
+            raise e
 
         # update the metadata
         self.metadata = {**self.metadata, **metadata}
