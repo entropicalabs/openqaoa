@@ -11,6 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
 
 from typing import List, Tuple, Union
 import matplotlib.pyplot as plt
@@ -18,8 +19,7 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 from ..qaoa_parameters.baseparams import (QAOACircuitParams,
                                           QAOAVariationalBaseParams,
-                                          shapedArray,
-                                          _is_iterable_empty)
+                                          shapedArray)
 
 
 class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):

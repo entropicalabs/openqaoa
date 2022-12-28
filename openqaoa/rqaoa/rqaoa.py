@@ -11,15 +11,12 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
 
 import numpy as np
 
-from openqaoa.qaoa_parameters import Hamiltonian
 from openqaoa.utilities import bitstring_energy
 from openqaoa.problems.problem import QUBO
-
-
-
 
 def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
     """

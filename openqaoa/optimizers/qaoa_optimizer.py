@@ -11,11 +11,9 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
 
-from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from .training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
-from ..basebackend import VQABaseBackend
-
 
 def available_optimizers():
     """

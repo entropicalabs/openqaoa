@@ -11,6 +11,8 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
+
 from typing import Union, Optional, List
 import numpy as np
 
@@ -19,9 +21,7 @@ from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAAWSQPUBa
                         QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
                         QAOAvectorizedBackendSimulator)
 
-from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS
-from ..qaoa_parameters.baseparams import QAOACircuitParams
-from ..basebackend import QuantumCircuitBase, QAOABaseBackend
+from ..devices import DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS
 
 DEVICE_NAME_TO_OBJECT_MAPPER = {
     'qiskit.qasm_simulator': QAOAQiskitBackendShotBasedSimulator,

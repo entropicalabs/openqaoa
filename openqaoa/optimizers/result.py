@@ -11,6 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
 
 from functools import update_wrapper
 from logging.config import dictConfig
@@ -20,8 +21,6 @@ from typing import Type
 import numpy as np
 import json
 
-from .logger_vqa import Logger
-from ..qaoa_parameters.operators import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy
 from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
 

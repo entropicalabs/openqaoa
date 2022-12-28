@@ -11,15 +11,14 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
 
 from typing import List, Dict, Optional, Union
 import numpy as np
 import qiskit
-from scipy.optimize._minimize import MINIMIZE_METHODS
 import scipy
 import numpy
 
-from openqaoa.basebackend import QuantumCircuitBase
 from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
 from .parameters import Parameters
 from scipy.optimize._minimize import MINIMIZE_METHODS

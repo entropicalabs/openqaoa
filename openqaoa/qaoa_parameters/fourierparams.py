@@ -11,6 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
 
 from typing import List, Union
 import warnings
@@ -20,8 +21,7 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 from scipy.fftpack import dct, dst
 
-from ..qaoa_parameters.baseparams import (QAOACircuitParams,
-                                          QAOAVariationalBaseParams,
+from ..qaoa_parameters.baseparams import (QAOAVariationalBaseParams,
                                           shapedArray,
                                           _is_iterable_empty)
 

@@ -11,6 +11,8 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
+
 import os
 from typing import Optional, List
 # AWS Braket imports
@@ -21,9 +23,7 @@ from braket.circuits.result_types import Probability
 from braket.circuits.free_parameter import FreeParameter
 from braket.jobs.metrics import log_metric
 
-from ...devices import DeviceAWS
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
-from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 
 class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
     """

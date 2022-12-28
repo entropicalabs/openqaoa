@@ -19,6 +19,7 @@ from openqaoa.problems.helper_functions import convert2serialize, convert2serial
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 
+
 class RQAOAResults(dict):
     """
     A class to handle the results of RQAOA workflows

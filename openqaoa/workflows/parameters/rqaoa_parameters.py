@@ -11,10 +11,10 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from __future__ import annotations
 
 from typing import Union
 from .parameters import Parameters
-from openqaoa.qaoa_parameters import Hamiltonian
 
 ALLOWED_RQAOA_TYPES = ['adaptive', 'custom']
 
