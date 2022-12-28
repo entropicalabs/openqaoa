@@ -43,6 +43,25 @@ class Problem(ABC):
         """
         pass
 
+    def __iter__(self):
+        for key, value in self.__dict__.items():
+            # remove "_" from the beginning of the key if it exists
+            new_key = key[1:] if key.startswith("_") else key
+            # convert networkx graphs to dictionaries
+            new_value = nx.node_link_data(value) if isinstance(value, nx.Graph) else value
+            yield (new_key, new_value)
+
+    @property
+    def problem_instance(self):
+        """
+        Returns a dictionary containing the serialization of the class and the problem type name, which will be passed as metadata to the QUBO class.
+        
+        Returns
+        -------
+            A dictionary containing the serialization of the class and the problem type name.
+        """
+        return {**{"problem_type": self.__name__}, **dict(self)}
+
 
 class QUBO:
     """
@@ -72,7 +91,9 @@ class QUBO:
     # Maximum number of terms allowed to enable the cleaning procedure
     TERMS_CLEANING_LIMIT = 5000
 
-    def __init__(self, n, terms, weights, metadata:dict={}, clean_terms_and_weights=False):
+    def __init__(self, n, terms, weights, 
+                    problem_instance:dict={"problem_type": "generic_qubo"}, 
+                    clean_terms_and_weights=False):
 
         # check-type for terms and weights
         if not isinstance(terms, list) and not isinstance(terms, tuple):
@@ -119,9 +140,16 @@ class QUBO:
         self.constant = constant
         self.n = n
 
-        # Initialize the metadata dictionary
-        self.metadata = {**{"name":"generic_qubo"}, **metadata}
-        self.name = metadata["name"]
+        # attribute to store the problem instance
+        self.problem_instance = problem_instance
+
+        # Initialize the metadata dictionary 
+        self.metadata = {}
+
+    def __iter__(self):
+        for key, value in self.__dict__.items():
+            # remove "_" from the beginning of the key if it exists
+            yield (key[1:] if key.startswith("_") else key, value)
 
     @property
     def n(self):
@@ -159,7 +187,7 @@ class QUBO:
         self.metadata = {**self.metadata, **metadata}
 
     def asdict(self):
-        return convert2serialize(self)
+        return convert2serialize(dict(self))
 
     @staticmethod
     def clean_terms_and_weights(terms, weights):
@@ -296,6 +324,9 @@ class TSP(Problem):
     -------
     None
     """
+
+    __name__ = "tsp"
+
     def __init__(self,
                  city_coordinates=None,
                  distance_matrix=None,
@@ -343,10 +374,6 @@ class TSP(Problem):
         # Set penalty coefficients if given, otherwise give default value
         self.A = A if A else 2 * distance_matrix.max()
         self.B = B
-
-        # set the metadata
-        self.metadata = {'name': 'tsp', 'n_cities': self.n_cities}
-
 
     @property
     def graph(self):
@@ -588,7 +615,7 @@ class TSP(Problem):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
             n, terms, weights)
-        return QUBO(n, ising_terms, ising_weights, self.metadata)
+        return QUBO(n, ising_terms, ising_weights, self.problem_instance)
 
 
 class NumberPartition(Problem):
@@ -605,13 +632,12 @@ class NumberPartition(Problem):
         An instance of the Number Partitioning problem.
     """
 
+    __name__ = "number_partition"
+
     def __init__(self, numbers=None):
         # Set the numbers to be partitioned. If not given, generate a random list with integers
         self.numbers = numbers
         self.n_numbers = None if numbers == None else len(self.numbers)
-
-        # inizialize metadata and add n_numbers to the metadata
-        self.metadata = {"name": "number_partition", "n_numbers": self.n_numbers}
 
     @property
     def numbers(self):
@@ -691,7 +717,7 @@ class NumberPartition(Problem):
             terms.append([])
             weights.append(constant_term)
 
-        return QUBO(self.n_numbers, terms, weights, self.metadata)
+        return QUBO(self.n_numbers, terms, weights, self.problem_instance)
 
 
 class MaximumCut(Problem):
@@ -708,14 +734,13 @@ class MaximumCut(Problem):
         An instance of the Maximum Cut problem.
     """
 
+    __name__ = "maximum_cut"
+
     DEFAULT_EDGE_WEIGHT = 1.0
 
     def __init__(self, G):
 
         self.G = G
-
-        # Initialize metadata and add n_nodes and n_edges to the metadata
-        self.metadata = {"name": "maximum_cut", "n_nodes": G.number_of_nodes()}
 
     @property
     def G(self):
@@ -785,7 +810,7 @@ class MaximumCut(Problem):
                 edge_weight if edge_weight else MaximumCut.DEFAULT_EDGE_WEIGHT
             )
 
-        return QUBO(self.G.number_of_nodes(), terms, weights, self.metadata)
+        return QUBO(self.G.number_of_nodes(), terms, weights, self.problem_instance)
 
 
 class Knapsack(Problem):
@@ -808,6 +833,8 @@ class Knapsack(Problem):
         An instance of the Knapsack problem.
     """
 
+    __name__ = "knapsack"
+
     def __init__(self, values, weights, weight_capacity, penalty):
         # Check whether the input is valid. Number of values should match the number of weights.
         if len(values) != len(weights):
@@ -819,9 +846,6 @@ class Knapsack(Problem):
         self.weight_capacity = weight_capacity
         self.penalty = penalty
         self.n_items = len(weights)
-
-        # Initialize metadata and add n_items to the metadata
-        self.metadata = {"name": "knapsack", "n_items": self.n_items}
 
     @property
     def values(self):
@@ -1019,7 +1043,7 @@ class Knapsack(Problem):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
             n, terms, weights)
-        return QUBO(n, ising_terms, ising_weights, self.metadata)
+        return QUBO(n, ising_terms, ising_weights, self.problem_instance)
 
 
 class SlackFreeKnapsack(Knapsack):
@@ -1046,11 +1070,11 @@ class SlackFreeKnapsack(Knapsack):
         An instance of the SlackFreeKnapsack problem.
     """
 
+    __name__ = "slack_free_knapsack"
+
     def __init__(self, values, weights, weight_capacity, penalty):
 
         super().__init__(values, weights, weight_capacity, penalty)
-
-        self.metadata["name"]= "slack_free_knapsack"
 
     @staticmethod
     def random_instance(**kwargs):
@@ -1144,7 +1168,7 @@ class SlackFreeKnapsack(Knapsack):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
             n, terms, weights)
-        return QUBO(n, ising_terms, ising_weights, self.metadata)
+        return QUBO(n, ising_terms, ising_weights, self.problem_instance)
 
 
 class MinimumVertexCover(Problem):
@@ -1165,14 +1189,13 @@ class MinimumVertexCover(Problem):
     An instance of the Minimum Vertex Cover problem.
     """
 
+    __name__ = "minimum_vertex_cover"
+
     def __init__(self, G, field, penalty):
 
         self.G = G
         self.field = field
         self.penalty = penalty
-
-        # Set the metadata
-        self.metadata = {"name": "minimum_vertex_cover", "n_nodes": G.number_of_nodes()}
 
     @property
     def G(self):
@@ -1309,7 +1332,7 @@ class MinimumVertexCover(Problem):
         # Extract terms and weights from the problem definition
         terms, weights = self.terms_and_weights()
 
-        return QUBO(self.G.number_of_nodes(), list(terms), list(weights), self.metadata)
+        return QUBO(self.G.number_of_nodes(), list(terms), list(weights), self.problem_instance)
 
 
 class ShortestPath(Problem):
@@ -1330,6 +1353,8 @@ class ShortestPath(Problem):
         An instance of the Shortest Path problem.
     """
 
+    __name__ = "shortest_path"
+
     def __init__(self, G, source, dest):
 
         # Relabel nodes to integers starting from 0
@@ -1345,9 +1370,6 @@ class ShortestPath(Problem):
             G.nodes
         ), f"Destination node not within nodes of input graph"
         assert source != dest, "Source and destination nodes cannot be the same"
-
-        # Set metadata
-        self.metadata = {"name": "shortest_path", "n_nodes": G.number_of_nodes()}
 
     @staticmethod
     def random_instance(**kwargs):
@@ -1512,4 +1534,4 @@ class ShortestPath(Problem):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
             n, terms, weights)
-        return QUBO(n, ising_terms, ising_weights, self.metadata)
+        return QUBO(n, ising_terms, ising_weights, self.problem_instance)
