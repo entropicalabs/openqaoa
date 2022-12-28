@@ -140,7 +140,7 @@ class QUBO:
         self.constant = constant
         self.n = n
 
-        # attribute to store the problem instance
+        # attribute to store the problem instance, it will be checked if it is json serializable in the __setattr__ method
         self.problem_instance = problem_instance
 
         # Initialize the metadata dictionary 
@@ -150,6 +150,17 @@ class QUBO:
         for key, value in self.__dict__.items():
             # remove "_" from the beginning of the key if it exists
             yield (key[1:] if key.startswith("_") else key, value)
+
+    def __setattr__(self, __name, __value):
+        # check if problem_instance is json serializable, also check if metadata is json serializable
+        if __name == "problem_instance" or __name == "metadata":
+            try:
+                _ = json.dumps(__value)
+            except Exception as e:
+                raise e    
+
+        super().__setattr__(__name, __value)
+        
 
     @property
     def n(self):
@@ -177,13 +188,8 @@ class QUBO:
         metadata: dict
             The metadata of the problem. All keys and values will be stored in the metadata dictionary.
         """
-        #here we try if the dictionary is serializable
-        try:
-            _ = json.dumps(metadata)
-        except Exception as e:
-            raise e
 
-        # update the metadata
+        # update the metadata (it will be checked if it is json serializable in the __setattr__ method)
         self.metadata = {**self.metadata, **metadata}
 
     def asdict(self):
