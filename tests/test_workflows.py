@@ -812,7 +812,7 @@ class TestingRQAOA(unittest.TestCase):
     Unit test based testing of the RQAOA workflow class
     """
 
-    def _test_default_values(self, x):
+    def _test_default_values(self, x): 
         """
         General function to check default values of rqaoa and qaoa
         """
