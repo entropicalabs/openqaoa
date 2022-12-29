@@ -887,7 +887,7 @@ class TestingUtilities(unittest.TestCase):
 
         # Test that the identifier has been generated correctly
         assert isinstance(uuid,str), f'UUID has not been generated correctly, should be a string'
-        assert len(uuid) == 41, f'UUID has not been generated correctly, should be 40 characters long'
+        assert len(uuid) == 41, f'UUID has not been generated correctly, should be 41 characters long'
         assert uuid[:5] == 'test-', f'UUID has not been generated correctly, should start with "test-"'
         
 
