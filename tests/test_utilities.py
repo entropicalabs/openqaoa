@@ -797,6 +797,101 @@ class TestingUtilities(unittest.TestCase):
             # Check each string has the same probability associated
             for string in prob_dict.keys():
                 assert np.allclose(prob_dicts[idx][string],correct_prob_dicts[idx][string]), f'Probablity have not been generated correctly'
+
+    def test_delete_keys_from_dict(self):
+        """
+        Tests the function that deletes a set of keys from a dictionary: delete_keys_from_dict.
+        """
+
+        # Input dictionaries
+        input_dicts = [{'0':2/3, '1':1/3}, {'00':0,'01':0,'10':1/2,'11':1/2},
+                                {'000':0,'001':1/3,'010':0,'100':0,'011':1/3,'101':0,'110':1/3,'111':0},
+                                [{'list_0':1/3, 'list_1':1/3}, {'list_0':1/3, 'list_1':1/3}, {'list_0':1/3, 'list_1':1/3, 'list_2':1/3, 'list_3':1/3}]]
+
+        # Keys to be deleted
+        keys = ['0','00','000', 'list_0']
+
+        # Delete keys from dictionaries
+        output_dicts = delete_keys_from_dict(input_dicts,keys)
+
+        # expected output dictionaries
+        expected_dicts = [{'1':1/3}, {'01':0,'10':1/2,'11':1/2},
+                                {'001':1/3,'010':0,'100':0,'011':1/3,'101':0,'110':1/3,'111':0},
+                                [{'list_1':1/3}, {'list_1':1/3}, {'list_1':1/3, 'list_2':1/3, 'list_3':1/3}]]
+
+        # Test that each dictionary has been generated correctly
+        assert output_dicts == expected_dicts, f'Keys have not been deleted correctly'
+
+    def test_convert2serialize(self):
+        """
+        Tests the function that converts an object into a serializable dictionary: convert2serialize.
+        """
+
+        # define a new class
+        class TestClass:
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
+
+        # define a new class with _ast() method
+        class TestClass2:
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
+
+            def _ast(self):
+                return {'a':self.a,'b':self.b}
+
+        # Create an instance of the class
+        test_instance = TestClass(a = 1, b = 2)
+
+        # Convert the instance into a serializable dictionary
+        serialized_dict = convert2serialize(test_instance)
+
+        # Expected dictionary
+        expected_dict = {'a': 1, 'b': 2}
+
+        # Test that the dictionary has been generated correctly
+        assert serialized_dict == expected_dict, f'Object has not been converted correctly'
+
+        # now test with a list of instances, with attributes being list, dictionaries, complex numbers and numpy arrays
+        test_instance_list = [
+            TestClass(a = [1,2,3], b = {'x':1,'y':2}), TestClass2(a = np.array([1,2,3]), b = 1+1j)
+        ]
+
+        # Convert the instance into a serializable dictionary
+        serialized_dict = convert2serialize(test_instance_list, complex_to_string=True)
+
+        # Expected dictionary
+        expected_dict = [
+            {'a': [1,2,3], 'b': {'x':1,'y':2}}, {'a': [1,2,3], 'b': '(1+1j)'}
+        ]
+
+        # Test that the dictionary has been generated correctly
+        assert serialized_dict == expected_dict, f'Object has not been converted correctly'
+
+    def test_generate_uuid(self):
+        """
+        Tests the function that generates a unique identifier: generate_uuid.
+        """
+
+        # Generate a unique identifier
+        uuid = generate_uuid()
+
+        # Test that the identifier has been generated correctly
+        assert isinstance(uuid,str), f'UUID has not been generated correctly, should be a string'
+        assert len(uuid) == 36, f'UUID has not been generated correctly, should be 36 characters long'
+
+        # Generate a unique identifier, prefixing it with a string
+        uuid = generate_uuid(prefix = 'test')
+
+        # Test that the identifier has been generated correctly
+        assert isinstance(uuid,str), f'UUID has not been generated correctly, should be a string'
+        assert len(uuid) == 41, f'UUID has not been generated correctly, should be 40 characters long'
+        assert uuid[:5] == 'test-', f'UUID has not been generated correctly, should start with "test-"'
+        
+
+
         
 if __name__ == "__main__":
 	unittest.main()
