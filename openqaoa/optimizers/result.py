@@ -58,7 +58,6 @@ class Result:
     ):
 
         self.method = method
-
         self.cost_hamiltonian = cost_hamiltonian
 
         self.evals = {
@@ -87,7 +86,9 @@ class Result:
                 if log.measurement_outcomes.best != [] else {},
             'job_id': 
                 log.job_ids.best[0] 
-                if len(log.job_ids.best) != 0 else []
+                if len(log.job_ids.best) != 0 else [],
+            'eval_number': 
+                log.eval_number.best[0] 
         }
 
         self.most_probable_states = most_probable_bitstring(
@@ -150,9 +151,10 @@ class Result:
 
         ax.plot(
             range(
+                1,
                 self.evals["number_of_evals"]
                 - self.evals["jac_evals"]
-                - self.evals["qfim_evals"]
+                - self.evals["qfim_evals"] + 1
             ),
             self.intermediate["cost"],
             label=label,

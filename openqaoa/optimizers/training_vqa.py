@@ -127,7 +127,7 @@ class OptimizeVQA(ABC):
                                'history_update_bool': optimizer_dict.get('parameter_log',True), 
                                'best_update_string': 'Replace'
                            }, 
-                           'counter':
+                           'eval_number':
                            {
                                 'history_update_bool': True, 
                                 'best_update_string': 'Replace'
@@ -159,7 +159,7 @@ class OptimizeVQA(ABC):
                               'best_update_structure': (['cost', 'param_log'], 
                                                         ['cost', 'measurement_outcomes'], 
                                                         ['cost', 'job_ids'],
-                                                        ['cost', 'counter'],)
+                                                        ['cost', 'eval_number'],)
                           })
         
         self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
@@ -218,13 +218,17 @@ class OptimizeVQA(ABC):
         if self.save_to_csv:
             save_parameter('param_log', deepcopy(x))
         
-        callback_cost = self.vqa.expectation(self.variational_params)
-        
+        callback_cost = self.vqa.expectation(self.variational_params)        
         log_dict.update({'cost': callback_cost})
+
         current_eval = self.log.func_evals.best[0]
         current_eval += 1
         log_dict.update({'func_evals': current_eval})
-        
+
+        eval_number = self.log.eval_number.history[-1] if len(self.log.eval_number.history) > 0 else 0
+        eval_number += 1
+        log_dict.update({'eval_number': eval_number})  #this one will say which evaluation is the optimized one  
+
         log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
         
         if hasattr(self.vqa, 'log_with_backend') and callable(getattr(self.vqa, 'log_with_backend')):
