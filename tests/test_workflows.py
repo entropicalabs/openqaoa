@@ -683,7 +683,7 @@ class TestingRQAOA(unittest.TestCase):
             r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer, init_type=init_type, variational_params_dict={'betas': [0]*p, 'gammas': [0]*p})
         else:
             r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
-        r.set_backend_properties(prepend_state=None, append_state=None)
+        r.set_backend_properties(prepend_state=None, append_state=None, seed_simulator=1)
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
         r.compile(problem)
         r.optimize()
