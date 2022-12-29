@@ -670,7 +670,7 @@ class TestingRQAOA(unittest.TestCase):
         self._test_default_values(r._q)
         
 
-    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator', get_solution=True):
 
         r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)
@@ -685,7 +685,7 @@ class TestingRQAOA(unittest.TestCase):
         r.compile(problem)
         r.optimize()
 
-        return r.results.get_solution()
+        return r.results.get_solution() if get_solution else r
 
     def test_rqaoa_optimize_multiple_times(self):
         """
@@ -817,6 +817,27 @@ class TestingRQAOA(unittest.TestCase):
         for solution in solutions:
             for key in solution:
                 assert solution[key] == exact_soutions[key]
+
+    def test_rqaoa_intermediate_angles(self):
+        """
+        Test the optimized angles of the RQAOA steps are those we expect
+        """
+        # define the problem
+        n_qubits = 6
+        n_cutoff = 3
+        g = nw.circulant_graph(n_qubits, [1])
+        problem = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+
+        # run the RQAOA
+        results = self._run_rqaoa(type='custom', problem=problem, n_cutoff=n_cutoff, get_solution=False).results
+
+        # angles that we should get
+        expected_optimized_angles = [[0.34048594327263326, 0.3805304635645852], [0.4066391532372541, 0.3764245401202528], [0.8574965024416041, -0.5645176360484713]]
+
+        # test the methods
+        for i, step in enumerate(results['intermediate_steps']):
+            print(step['QAOA'].results.optimized['optimized angles'])
+            assert step['QAOA'].results.optimized['optimized angles'] == expected_optimized_angles[i], 'Optimized angles are not correct'
 
 
     
