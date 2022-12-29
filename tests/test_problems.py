@@ -2,6 +2,7 @@ from math import dist
 import unittest
 import networkx as nx
 import numpy as np
+from random import randint, random
 from openqaoa.problems.problem import (
     NumberPartition, QUBO, TSP, Knapsack, ShortestPath,
     SlackFreeKnapsack, MaximumCut, MinimumVertexCover
@@ -846,16 +847,16 @@ class TestProblem(unittest.TestCase):
         """
 
         all = {
-            "tsp":TSP.random_instance(n_cities=3),
-            "number_partition":NumberPartition.random_instance(n_numbers=3),
-            "maximum_cut":MaximumCut.random_instance(n_nodes=3, edge_probability=0.5),
-            "knapsack":Knapsack.random_instance(n_items=3),
-            "slack_free_knapsack":SlackFreeKnapsack.random_instance(n_items=3),
-            "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=3, edge_probability=0.5),
-            "shortest_path":ShortestPath.random_instance(n_nodes=3, edge_probability=0.5),
+            "tsp":TSP.random_instance(n_cities=randint(2, 15)),
+            "number_partition":NumberPartition.random_instance(n_numbers=randint(2, 15)),
+            "maximum_cut":MaximumCut.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "knapsack":Knapsack.random_instance(n_items=randint(2, 15)),
+            "slack_free_knapsack":SlackFreeKnapsack.random_instance(n_items=randint(2, 15)),
+            "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "shortest_path":ShortestPath.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
         }
         all_qubos = {k:v.get_qubo_problem() for k,v in all.items()}
-        all_qubos["generic_qubo"] = QUBO.random_instance(10)
+        all_qubos["generic_qubo"] = QUBO.random_instance(randint(2, 15))
 
         expected_keys = {
             "tsp":['problem_type', 'n_cities', 'G', 'A', 'B'],
