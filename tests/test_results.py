@@ -139,6 +139,26 @@ class TestingResultOutputs(unittest.TestCase):
             else:
                 assert value==False, f'Key {key} was found in the dictionary of the RQAOAResult class, but it should not have been.'
 
+
+        ## now we repeat the same test but we do not include some keys
+
+        #get dict without some values
+        results_dict = qaoa.results.asdict(keys_not_to_include = ['solutions_bitstrings', 'method'])
+
+        #expected keys
+        expected_keys_dict = {item: False for item in expected_keys}
+        expected_keys_not_in_dict = ['solutions_bitstrings', 'method']
+
+        #test the keys, it will set the keys to True if they are found, except the ones that were not included which should be those in expected_keys_not_in_dict
+        _test_keys_in_dict(results_dict, expected_keys_dict)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys_dict.items():
+            if not key in expected_keys_not_in_dict:
+                assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary of the RQAOAResult class, but it should not have been.'
+
         """
         to get the list of expected keys, run the following code:
 
@@ -305,6 +325,26 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         # Check if the dictionary has all the expected keys except the ones that were not included
         for key, value in expected_keys.items():
             assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+
+
+        ## now we repeat the same test but we do not include some keys
+
+        #get dict without some values
+        results_dict = results.asdict(keys_not_to_include = ['solutions_bitstrings', 'method'])
+
+        #expected keys
+        expected_keys_dict = {item: False for item in expected_keys}
+        expected_keys_not_in_dict = ['solutions_bitstrings', 'method']
+
+        #test the keys, it will set the keys to True if they are found, except the ones that were not included which should be those in expected_keys_not_in_dict
+        _test_keys_in_dict(results_dict, expected_keys_dict)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys_dict.items():
+            if not key in expected_keys_not_in_dict:
+                assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary of the RQAOAResult class, but it should not have been.'
 
         """
         to get the list of expected keys, run the following code:

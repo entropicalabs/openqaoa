@@ -16,13 +16,13 @@ from functools import update_wrapper
 from logging.config import dictConfig
 from re import I
 import matplotlib.pyplot as plt
-from typing import Type
+from typing import Type, List
 import numpy as np
 import json
 
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
-from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize
+from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize, delete_keys_from_dict
 from ..basebackend import QAOABaseBackend, QAOABaseBackendStatevector
 
 
@@ -108,7 +108,7 @@ class Result:
 
     #     return (string)
 
-    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False):
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, keys_not_to_include:List[str]=[]):
         """
         Returns a dictionary with the results of the optimization, where the dictionary is serializable. 
         If the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
@@ -119,6 +119,8 @@ class Result:
             If True, the cost hamiltonian is kept in the dictionary. If False, it is removed.
         complex_to_string: `bool`
             If True, the complex numbers are converted to strings. If False, they are kept as complex numbers. This is useful for the JSON serialization.
+        keys_not_to_include: `list[str]`
+            A list of keys to exclude from the returned dictionary.
 
         Returns
         -------
@@ -153,7 +155,7 @@ class Result:
             return_dict['intermediate'] = self.intermediate
             return_dict['optimized'] = self.optimized
 
-        return return_dict
+        return return_dict if keys_not_to_include == [] else delete_keys_from_dict(return_dict, keys_not_to_include)
 
 
     @staticmethod

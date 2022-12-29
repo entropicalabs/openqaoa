@@ -13,6 +13,8 @@
 #   limitations under the License.
 
 import matplotlib.pyplot as plt
+from typing import List
+from ..utilities import delete_keys_from_dict
 
 class RQAOAResults(dict):
     """
@@ -20,7 +22,7 @@ class RQAOAResults(dict):
     It stores the results of the RQAOA optimization as a dictionary. With some custom methods.
     """
 
-    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False):
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, keys_not_to_include:List[str]=[]):
         """
         Returns the results as a full dictionary, meaning that the objects of the intermediate steps are also converted to dictionaries.
 
@@ -30,6 +32,8 @@ class RQAOAResults(dict):
             If True, the cost Hamiltonian is kept in the dictionary, by default True.
         complex_to_string : bool, optional
             If True, the complex numbers are converted to strings, by default False. This is useful for JSON serialization.
+        keys_not_to_include: `list[str]`
+            A list of keys to exclude from the returned dictionary.
 
         Returns
         -------
@@ -46,7 +50,7 @@ class RQAOAResults(dict):
                     'exp_vals_z':   step['exp_vals_z'].tolist(),
                     'corr_matrix':  step['corr_matrix'].tolist(),
                 }) 
-        return results
+        return results if keys_not_to_include == [] else delete_keys_from_dict(results, keys_not_to_include)
 
     def get_solution(self):
         """
