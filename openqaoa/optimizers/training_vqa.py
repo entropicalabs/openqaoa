@@ -127,6 +127,11 @@ class OptimizeVQA(ABC):
                                'history_update_bool': optimizer_dict.get('parameter_log',True), 
                                'best_update_string': 'Replace'
                            }, 
+                           'counter':
+                           {
+                                'history_update_bool': True, 
+                                'best_update_string': 'Replace'
+                           },
                            'func_evals': 
                            {
                                'history_update_bool': False, 
@@ -153,7 +158,8 @@ class OptimizeVQA(ABC):
                                              'qfim_func_evals'],
                               'best_update_structure': (['cost', 'param_log'], 
                                                         ['cost', 'measurement_outcomes'], 
-                                                        ['cost', 'job_ids'])
+                                                        ['cost', 'job_ids'],
+                                                        ['cost', 'counter'],)
                           })
         
         self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
