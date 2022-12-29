@@ -670,7 +670,7 @@ class TestingRQAOA(unittest.TestCase):
         self._test_default_values(r._q)
         
 
-    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, init_type=None, name_device='qiskit.statevector_simulator', get_solution=True):
 
         r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)
@@ -679,13 +679,16 @@ class TestingRQAOA(unittest.TestCase):
             r.set_rqaoa_parameters(n_cutoff = n_cutoff, n_max=eliminations, rqaoa_type=type)
         else:
             r.set_rqaoa_parameters(n_cutoff = n_cutoff, steps=eliminations, rqaoa_type=type)
-        r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
+        if init_type!=None:
+            r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer, init_type=init_type, variational_params_dict={'betas': [0]*p, 'gammas': [0]*p})
+        else:
+            r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
         r.compile(problem)
         r.optimize()
 
-        return r.results.get_solution()
+        return r.results.get_solution() if get_solution else r
 
     def test_rqaoa_optimize_multiple_times(self):
         """
@@ -817,6 +820,26 @@ class TestingRQAOA(unittest.TestCase):
         for solution in solutions:
             for key in solution:
                 assert solution[key] == exact_soutions[key]
+
+    def test_rqaoa_intermediate_angles(self):
+        """
+        Test the optimized angles of the RQAOA steps are those we expect
+        """
+        # define the problem
+        n_qubits = 6
+        n_cutoff = 3
+        g = nw.circulant_graph(n_qubits, [1])
+        problem = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+
+        # run the RQAOA
+        results = self._run_rqaoa(type='custom', problem=problem, n_cutoff=n_cutoff, init_type='custom', get_solution=False).results
+
+        # angles that we should get
+        expected_optimized_angles = [[-0.44721359549995804, 1.8944271909999162], [-0.783836356976455, 1.8813276832615031], [-0.1899089188447804, -0.7656500947988301]]
+
+        # test the methods
+        for i, step in enumerate(results['intermediate_steps']):
+            assert step['QAOA'].results.optimized['optimized angles'] == expected_optimized_angles[i], 'Optimized angles are not correct'
 
 
     

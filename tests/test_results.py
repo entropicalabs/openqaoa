@@ -232,9 +232,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         # run the RQAOA
         results = self._run_rqaoa()
 
-        # angles that we should get
-        optimized_angles_to_find_list = [[0.34048594327263326, 0.3805304635645852], [0.4066391532372541, 0.3764245401202528], [0.8574965024416041, -0.5645176360484713]]
-
         # test the methods
         for i in range(results['number_steps']):
             step = results.get_step(i)
@@ -244,10 +241,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
             qaoa = results.get_qaoa_step(i)
             assert isinstance(qaoa, QAOA), 'QAOA is not of type QAOA'
-
-            optimized_angles_to_find = optimized_angles_to_find_list[i]
-            optimized_angles = results.get_qaoa_step_optimized_angles(i)
-            assert optimized_angles == optimized_angles_to_find, 'Optimized angles are not correct'
 
             problem = results.get_problem_step(i)
             assert isinstance(problem, QUBO), 'QUBO is not of type QUBO'
