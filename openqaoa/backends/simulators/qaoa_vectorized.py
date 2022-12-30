@@ -25,6 +25,9 @@ from scipy.sparse.linalg import expm
 
 from ...basebackend import QAOABaseBackendStatevector
 
+import openqaoa.qaoa_parameters.baseparams
+import openqaoa.qaoa_parameters.operators
+
 
 # Pauli gates
 constI = csc_matrix(np.eye(2))
