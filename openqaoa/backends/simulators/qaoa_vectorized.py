@@ -704,7 +704,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
             None
         """
         # generate a job id for the wavefunction evaluation
-        self.job_id = generate_uuid()
+        self.job_id = generate_uuid() 
 
         # reset the wavefunction back to its initialisation state
         self.reset_circuit()
