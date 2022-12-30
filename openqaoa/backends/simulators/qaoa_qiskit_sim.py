@@ -15,7 +15,7 @@
 # General Imports
 from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts
+from ...utilities import flip_counts, generate_uuid
 from ...cost_function import cost_function
 from ...qaoa_parameters.gatemap import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
                                           RYYGateMap, RZZGateMap, RZXGateMap)
@@ -119,6 +119,9 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
+        # generate a job id for the wavefunction evaluation
+        self.job_id = generate_uuid()
+
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
@@ -193,7 +196,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
 
 class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBackendParametric):
     """
-    Local Shot-based simulators offered by Qiskit
+    Local Statevector-based simulators offered by Qiskit
 
     Parameters
     ----------
@@ -284,6 +287,9 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
+        # generate a job id for the wavefunction evaluation
+        self.job_id = generate_uuid()
+
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)

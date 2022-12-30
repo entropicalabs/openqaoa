@@ -21,6 +21,7 @@ from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBase
 from ...qaoa_parameters.gatemap import (
     RXGateMap, RYGateMap, RZGateMap)
 from ...cost_function import cost_function
+from ...utilities import generate_uuid
 
 
 class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
@@ -55,6 +56,9 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         `pyquil.Program`
                 A pyquil.Program object.
         """
+        # generate a job id for the wavefunction evaluation
+        self.job_id = generate_uuid()
+
         self.assign_angles(params)
 
         circuit = Program()
