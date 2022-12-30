@@ -123,7 +123,7 @@ def _permute_qubits(wavefn: np.ndarray, perm: list) -> np.ndarray:
 
 
 def _build_cost_hamiltonian(n_qubits: int,
-                            cost_hamiltonian: Type[Hamiltonian]) -> np.array:
+                            cost_hamiltonian: Type[openqaoa.qaoa_parameters.operators.Hamiltonian]) -> np.array:
     """
     Builds the cost Hamiltonian as a vector, since it is diagonal.
     Output is an ndarray of shape [2]*n_qubits, for use in the run_measure_exp_val value method.
@@ -227,7 +227,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         https://arxiv.org/abs/1907.04769 for further details.
     """
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 circuit_params: Type[openqaoa.qaoa_parameters.baseparams.QAOACircuitParams],
                  prepend_state: Optional[Union[np.ndarray, List[complex]]],
                  append_state: Optional[Union[np.ndarray, List[complex]]],
                  init_hadamard: bool,
@@ -682,7 +682,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn = wfn/np.sqrt(2)
 
     def qaoa_circuit(self,
-                     params: Type[QAOAVariationalBaseParams]):
+                     params: Type[openqaoa.qaoa_parameters.baseparams.QAOAVariationalBaseParams]):
         """
         Executes the entire QAOA circuit, with angles specified within ``params``.
         Steps:
@@ -725,7 +725,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
                 
     def wavefunction(self,
-                     params: Type[QAOAVariationalBaseParams] = None) -> list:
+                     params: Type[openqaoa.qaoa_parameters.baseparams.QAOAVariationalBaseParams] = None) -> list:
 
         """
         Get the wavefunction of the state produced by the parametric circuit.
@@ -753,7 +753,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         return wf
 
-    def expectation(self, params: Type[QAOAVariationalBaseParams]) -> float:
+    def expectation(self, params: Type[openqaoa.qaoa_parameters.baseparams.QAOAVariationalBaseParams]) -> float:
         """
         Call the execute function on the circuit to compute the
         expectation value of the Quantum Circuit w.r.t cost operator
@@ -780,7 +780,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         return out
 
     def expectation_w_uncertainty(self,
-                                  params: Type[QAOAVariationalBaseParams]) -> Tuple[float, float]:
+                                  params: Type[openqaoa.qaoa_parameters.baseparams.QAOAVariationalBaseParams]) -> Tuple[float, float]:
         """
         Call the execute function on the circuit to compute the
         expectation value of the ``QuantumCircuit`` w.r.t cost operator
