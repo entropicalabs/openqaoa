@@ -195,10 +195,9 @@ class Optimizer(ABC):
 
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
-                pass #setattr(self.classical_optimizer, key, value)
+                pass 
             else:
-                raise ValueError(
-                    'Specified argument is not supported by the Classical Optimizer')
+                raise ValueError(f'Specified argument `{value}` for `{key}` in not supported by the classical optimizer')
 
         self.classical_optimizer = ClassicalOptimizer(**kwargs)
         return None
@@ -338,9 +337,11 @@ class QAOA(Optimizer):
             if hasattr(self.circuit_properties, key):
                 pass
             else:
-                raise ValueError(
-                    "Specified argument is not supported by the circuit")
+                raise ValueError(f'Specified argument `{value}` for `{key}` is not supported by the circuit')
         self.circuit_properties = CircuitProperties(**kwargs)
+
+        # Check validity of circuit properties
+        self.circuit_properties.check_validity()
 
         return None
 
@@ -572,7 +573,7 @@ class RQAOA(Optimizer):
             For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
 
-        for key in kwargs.keys():
+        for key, value in kwargs.items():
             if hasattr(self.circuit_properties, key):
                 pass
             else:
@@ -609,12 +610,11 @@ class RQAOA(Optimizer):
             Default is 0, but can be changed to start in the position of the schedule that one wants.
         """
 
-        for key in kwargs.keys():
+        for key, value in kwargs.items():
             if hasattr(self.rqaoa_parameters, key):
                 pass
             else:
-                raise ValueError(
-                    f'Specified argument {key} is not supported by RQAOA')
+                raise ValueError( f'Specified argument `{value}` for `{key}` is not supported by RQAOA')
 
         self.rqaoa_parameters = RqaoaParameters(**kwargs) 
 

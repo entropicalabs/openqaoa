@@ -17,7 +17,7 @@ import numpy as np
 import qiskit
 from scipy.optimize._minimize import MINIMIZE_METHODS
 import scipy
-import numpy
+import inspect
 
 from openqaoa.basebackend import QuantumCircuitBase
 from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
@@ -88,103 +88,68 @@ class CircuitProperties(Parameters):
     def __init__(self,
                  param_type: str = 'standard',
                  init_type: str = 'ramp',
-                 qubit_register: List = [],
+                 qubit_register: List = None,
                  p: int = 1,
-                 q: Optional[int] = 1,
+                 q: Optional[int] = None,
                  annealing_time: Optional[float] = None,
                  linear_ramp_time: Optional[float] = None,
-                 variational_params_dict: Optional[dict] = {},
+                 variational_params_dict: Optional[dict] = None,
                  mixer_hamiltonian: Optional[str] = 'x',
-                 mixer_qubit_connectivity: Optional[Union[List[list],
-                                                          List[tuple], str]] = None,
+                 mixer_qubit_connectivity: Optional[Union[List[list], List[tuple], str]] = None,
                  mixer_coeffs: Optional[float] = None,
                  seed: Optional[int] = None):
 
-        self.param_type = param_type
-        self.init_type = init_type
-        self.qubit_register = qubit_register
-        self.p = p
-        self.q = q if param_type.lower() in ['fourier','fourier_extended', 'fourier_w_bias'] else None
-        self.variational_params_dict = variational_params_dict
-        self.annealing_time = annealing_time if annealing_time is not None else 0.7*self.p
-        self.linear_ramp_time = linear_ramp_time if linear_ramp_time is not None else 0.7*self.p
-        self.mixer_hamiltonian = mixer_hamiltonian
-        if self.mixer_hamiltonian.lower() == 'xy':
-            self.mixer_qubit_connectivity = mixer_qubit_connectivity if mixer_qubit_connectivity is not None else 'full'
-        else:
-            self.mixer_qubit_connectivity = None
-        self.mixer_coeffs = mixer_coeffs
-        self.seed = seed
+        # all parameters are set as attributes
+         for param_name in inspect.signature(CircuitProperties).parameters:
+            setattr(self, param_name, eval(param_name))
 
-    @property
-    def param_type(self):
-        return self._param_type
+    def __setattr__(self, __name, __value):
 
-    @param_type.setter
-    def param_type(self, value):
-        if value not in ALLOWED_PARAM_TYPES:
-            raise ValueError(
-                f"param_type {value} is not recognised. Please use {ALLOWED_PARAM_TYPES}")
-        self._param_type = value
+        constraints = {
+            "param_type": ALLOWED_PARAM_TYPES,
+            "init_type": ALLOWED_INIT_TYPES,
+            "mixer_hamiltonian": ALLOWED_MIXERS,
+            "p": (lambda x: x <= 0, f"Number of layers `p` cannot be smaller or equal to zero."),
+            "q": (lambda x: x <= 0, f"Number of layers `q` cannot be smaller or equal to zero."),
+            "annealing_time": (lambda x: x <= 0, f"The annealing time `annealing_time` cannot be smaller or equal to zero."),
+        }
+        
+        for key, constraint in constraints.items():
+            if __name == key:
 
-    @property
-    def init_type(self):
-        return self._init_type
+                if isinstance(constraint, list):
+                    if __value not in constraint:
+                        raise ValueError(f"Parameter {__name} must be one of {constraint}. Value '{__value}' was provided") 
+                elif isinstance(constraint, tuple):
+                    if __value != None and constraint[0](__value):
+                        raise ValueError(constraint[1] + f" Value '{__value}' was provided")
+        
+        super().__setattr__(__name, __value)
 
-    @init_type.setter
-    def init_type(self, value):
-        if value not in ALLOWED_INIT_TYPES:
-            raise ValueError(
-                f"init_type {value} is not recognised. Please use {ALLOWED_INIT_TYPES}")
-        self._init_type = value
+    def check_validity(self):
 
-    @property
-    def mixer_hamiltonian(self):
-        return self._mixer_hamiltonian
+        valid_dict = {
+            "param_type": {
+                "standard": [
+                    (self.q != None, "The number of layers `q` is not compatible with standard parameterisation."),
+                    (self.annealing_time != None, "The annealing time `annealing_time` is not compatible with standard parameterisation."),
+                ]
+            },
+            "init_type": {
+                "ramp": [
+                    (self.variational_params_dict != None, "The dictionary `variational_params_dict` is not compatible with custom initialisation."),
+                ]
+            },
+        }
 
-    @mixer_hamiltonian.setter
-    def mixer_hamiltonian(self, value):
-        if value not in ALLOWED_MIXERS:
-            raise ValueError(
-                f"mixer_hamiltonian {value} is not recognised. Please use {ALLOWED_MIXERS}")
-        self._mixer_hamiltonian = value
+        for key, param_dict in valid_dict.items():
+            for param, constraints_list in param_dict.items():
+                if getattr(self, key) == param:
+                    for condition, message in constraints_list:
+                        if condition:
+                            raise ValueError(message)
 
-    @property
-    def p(self):
-        return self._p
-
-    @p.setter
-    def p(self, value):
-        if value <= 0:
-            raise ValueError(
-                f"Number of layers `p` cannot be smaller or equal to zero. Value {value} was provided")
-        self._p = value
-
-    @property
-    def annealing_time(self):
-        return self._annealing_time
-
-    @annealing_time.setter
-    def annealing_time(self, value):
-        if value <= 0:
-            raise ValueError(
-                f"The annealing time `annealing_time` cannot be smaller or equal to zero. Value {value} was provided")
-        self._annealing_time = value
-
-
-    # @property
-    # def mixer_qubit_connectivity(self):
-    #     return self._mixer_qubit_connectivity
-
-    # @annealing_time.setter
-    # def mixer_qubit_connectivity(self, value):
-    #     print(value)
-    #     if (self.mixer_hamiltonian != 'xy') and (value != None):
-    #         self._mixer_qubit_connectivity = None
-    #         raise ValueError(f"mixer_qubit_connectivity can be used if and only if `mixer_hamiltonian` is set to `xy`")
-    #     else:
-    #         print(value)
-    #         self._mixer_qubit_connectivity = value
+        self.clean_attributes()
 
 class BackendProperties(Parameters):
     """

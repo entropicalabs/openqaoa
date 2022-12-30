@@ -16,5 +16,13 @@ from openqaoa.problems.helper_functions import convert2serialize
 
 
 class Parameters:
+
+    def clean_attributes(self):
+
+        #delete all attributes that are == to None
+        for key in list(self.__dict__.keys()):
+            if self.__dict__[key] is None:
+                del self.__dict__[key]
+
     def asdict(self):
         return convert2serialize(self)
