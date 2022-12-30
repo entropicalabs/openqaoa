@@ -56,8 +56,6 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         `pyquil.Program`
                 A pyquil.Program object.
         """
-        # generate a job id for the wavefunction evaluation
-        self.job_id = generate_uuid()
 
         self.assign_angles(params)
 
@@ -102,7 +100,10 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         -------
         wf: `List[complex]`
                 pyquil Wavefunction object.
-        """
+        """        
+        # generate a job id for the wavefunction evaluation
+        self.job_id = generate_uuid()
+        
         program = self.qaoa_circuit(params)
 
         wf_sim = WavefunctionSimulator()

@@ -119,8 +119,6 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-        # generate a job id for the wavefunction evaluation
-        self.job_id = generate_uuid()
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
@@ -176,6 +174,9 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         counts: `dict`
             The counts of the final QAOA circuit after binding angles from variational parameters.
         """
+        # generate a job id for the wavefunction evaluation
+        self.job_id = generate_uuid()
+
         qaoa_circuit = self.qaoa_circuit(params)
         counts = self.backend_simulator.run(qaoa_circuit, shots=self.n_shots).result().get_counts()
         flipped_counts = flip_counts(counts)
