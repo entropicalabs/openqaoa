@@ -23,6 +23,9 @@ from openqaoa.devices import DevicePyquil
 from openqaoa.backends import QAOAPyQuilQPUBackend
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.problems.problem import NumberPartition
+from openqaoa.workflows.optimizer import QAOA
+from openqaoa.problems.problem import QUBO
+from openqaoa.devices import create_device
 import pytest
 
 class TestingQAOACostPyquilQVM(unittest.TestCase):
@@ -275,6 +278,39 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             qvm_backend.expectation(variate_params)
         except Exception as e:
             self.assertEqual(str(e), 'There are lesser qubits on the device than the number of qubits required for the circuit.')
+
+    @pytest.mark.qvm
+    def test_job_ids(self):
+        """
+        Test if correct job ids are generated and returned when running on qvm
+        """
+
+        #define problem
+        problem = QUBO.random_instance(3)
+
+        # initialize
+        q = QAOA()
+
+        # device
+        device = create_device(location='qcs', name="3q-qvm")
+        q.set_device(device)
+
+        # classical optimizer only 3 iterations
+        q.set_classical_optimizer(maxiter=3)
+
+        # compile
+        q.compile(problem)
+
+        # run
+        q.optimize()
+
+        # check if we have job ids
+        opt_id = q.results.optimized['optimized run job id']
+        assert len(opt_id) == 36 and isinstance(opt_id, str), f'QCS QVM: job id is not a string of length 36, but {opt_id}'
+
+        inter_id = q.results.intermediate['intermediate runs job id']
+        for id in inter_id:
+            assert len(id) == 36 and isinstance(id, str), f'QCS QVM: on intermediate job id is not a string of length 36, but {id}'
         
    
 
