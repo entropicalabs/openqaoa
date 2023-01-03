@@ -964,7 +964,7 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
     p: `int`
         Number of layers in QAOA ansatz.
     qaoa_optimized_angles: `list`
-        optimized angles of the underlying QAOA.
+        Optimized angles of the underlying QAOA.
     qaoa_optimized_counts: `dict`
         Dictionary containing the measurement counts of optimized QAOA circuit.
     analytical: `bool`
