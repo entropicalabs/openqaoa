@@ -332,7 +332,7 @@ class QAOA(Optimizer):
             Dictionary object specifying the initial value of each circuit parameter for the chosen parameterisation, if the `init_type` is selected as `'custom'`.    
             For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
-
+        self.circuit_properties = CircuitProperties()
         for key, value in kwargs.items():
             if hasattr(self.circuit_properties, key):
                 pass
@@ -371,19 +371,19 @@ class QAOA(Optimizer):
         
         self.mixer_hamil = get_mixer_hamiltonian(n_qubits=self.cost_hamil.n_qubits,
                                                  mixer_type=self.circuit_properties.mixer_hamiltonian,
-                                                 qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
-                                                 coeffs=self.circuit_properties.mixer_coeffs)
+                                                 qubit_connectivity=getattr(self.circuit_properties, "mixer_qubit_connectivity", None),
+                                                 coeffs=getattr(self.circuit_properties, "mixer_coeffs", None))
 
         self.circuit_params = QAOACircuitParams(
             self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p)
-        self.variate_params = create_qaoa_variational_params(qaoa_circuit_params=self.circuit_params,
-                                                             params_type=self.circuit_properties.param_type,
-                                                             init_type=self.circuit_properties.init_type, 
-                                                             variational_params_dict=self.circuit_properties.variational_params_dict,
-                                                             linear_ramp_time=self.circuit_properties.linear_ramp_time, 
-                                                             q=self.circuit_properties.q, 
-                                                             seed=self.circuit_properties.seed,
-                                                             total_annealing_time=self.circuit_properties.annealing_time)
+        self.variate_params = create_qaoa_variational_params(qaoa_circuit_params=       self.circuit_params,
+                                                             params_type=               self.circuit_properties.param_type,
+                                                             init_type=                 self.circuit_properties.init_type, 
+                                                             variational_params_dict=   getattr(self.circuit_properties, "variational_params_dict", {}),
+                                                             linear_ramp_time=          getattr(self.circuit_properties, "linear_ramp_time", None),
+                                                             q=                         getattr(self.circuit_properties, "q", None),
+                                                             seed=                      getattr(self.circuit_properties, "seed", None),
+                                                             total_annealing_time=      getattr(self.circuit_properties, "annealing_time", None))
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,

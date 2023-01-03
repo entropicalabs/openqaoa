@@ -17,19 +17,19 @@ import numpy as np
 import qiskit
 from scipy.optimize._minimize import MINIMIZE_METHODS
 import scipy
-import inspect
+# import inspect
 
 from openqaoa.basebackend import QuantumCircuitBase
 from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
 from .parameters import Parameters
 from scipy.optimize._minimize import MINIMIZE_METHODS
 from openqaoa.optimizers.training_vqa import CustomScipyGradientOptimizer, PennyLaneOptimizer
+from openqaoa.qaoa_parameters import VARIATIONAL_PARAMS_DICT_KEYS, SUPPORTED_INITIALIZATION_TYPES
 
 
 
-ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
-                       'fourier_extended', 'fourier_w_bias', 'annealing']
-ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
+ALLOWED_PARAM_TYPES = list(VARIATIONAL_PARAMS_DICT_KEYS.keys())
+ALLOWED_INIT_TYPES = SUPPORTED_INITIALIZATION_TYPES
 ALLOWED_MIXERS = ['x', 'xy']
 ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS + CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS + PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
 
@@ -62,6 +62,7 @@ class CircuitProperties(Parameters):
         `'fourier'`: Fourier circuit parameterisation
         `'fourier_extended'`: Fourier circuit parameterisation with individual parameter for each qubit and term in Hamiltonian.
         `'fourier_w_bias'`: Fourier circuit parameterisation with aseparate parameter for single-qubit terms
+        `'annealing'`: Annealing parameterisation
     init_type: `str`
         Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
         `'rand'`: Randomly initialise circuit parameters
@@ -100,56 +101,64 @@ class CircuitProperties(Parameters):
                  seed: Optional[int] = None):
 
         # all parameters are set as attributes
-         for param_name in inspect.signature(CircuitProperties).parameters:
-            setattr(self, param_name, eval(param_name))
+        self.param_type = param_type
+        self.init_type = init_type
+        self.qubit_register = qubit_register
+        self.p = p
+        self.q = q
+        self.annealing_time = annealing_time
+        self.linear_ramp_time = linear_ramp_time
+        self.variational_params_dict = variational_params_dict
+        self.mixer_hamiltonian = mixer_hamiltonian
+        self.mixer_qubit_connectivity = mixer_qubit_connectivity
+        self.mixer_coeffs = mixer_coeffs
+        self.seed = seed
+
+        #  for param_name in inspect.signature(CircuitProperties).parameters:
+        #     setattr(self, param_name, eval(param_name))
 
     def __setattr__(self, __name, __value):
 
         constraints = {
-            "param_type": ALLOWED_PARAM_TYPES,
-            "init_type": ALLOWED_INIT_TYPES,
-            "mixer_hamiltonian": ALLOWED_MIXERS,
+            "param_type": (lambda x: x not in ALLOWED_PARAM_TYPES, f"Parameters type `param_type` must be one of {ALLOWED_PARAM_TYPES}."),
+            "init_type": (lambda x: x not in ALLOWED_INIT_TYPES, f"Initialisation type `init_type` must be one of {ALLOWED_INIT_TYPES}."),
+            "mixer_hamiltonian": (lambda x: x not in ALLOWED_MIXERS, f"Mixer Hamiltonian `mixer_hamiltonian` must be one of {ALLOWED_MIXERS}."),
             "p": (lambda x: x <= 0, f"Number of layers `p` cannot be smaller or equal to zero."),
             "q": (lambda x: x <= 0, f"Number of layers `q` cannot be smaller or equal to zero."),
             "annealing_time": (lambda x: x <= 0, f"The annealing time `annealing_time` cannot be smaller or equal to zero."),
         }
-        
-        for key, constraint in constraints.items():
-            if __name == key:
 
-                if isinstance(constraint, list):
-                    if __value not in constraint:
-                        raise ValueError(f"Parameter {__name} must be one of {constraint}. Value '{__value}' was provided") 
-                elif isinstance(constraint, tuple):
-                    if __value != None and constraint[0](__value):
-                        raise ValueError(constraint[1] + f" Value '{__value}' was provided")
+        if __name in constraints.keys():
+            constraint, message = constraints[__name]
+            if __value != None and constraint(__value):
+                raise ValueError(message + f" Value '{__value}' was provided.")
         
         super().__setattr__(__name, __value)
 
-    def check_validity(self):
-
-        valid_dict = {
-            "param_type": {
-                "standard": [
-                    (self.q != None, "The number of layers `q` is not compatible with standard parameterisation."),
-                    (self.annealing_time != None, "The annealing time `annealing_time` is not compatible with standard parameterisation."),
-                ]
-            },
-            "init_type": {
-                "ramp": [
-                    (self.variational_params_dict != None, "The dictionary `variational_params_dict` is not compatible with custom initialisation."),
-                ]
-            },
-        }
-
-        for key, param_dict in valid_dict.items():
-            for param, constraints_list in param_dict.items():
-                if getattr(self, key) == param:
-                    for condition, message in constraints_list:
-                        if condition:
-                            raise ValueError(message)
+    def check_validity(self):        
 
         self.clean_attributes()
+
+        # check if all required parameters are different from None
+        needed_params = ["param_type", "init_type", "p", "mixer_hamiltonian"]
+
+        for param in needed_params:
+            if getattr(self, param, None) == None:
+                raise ValueError(f"Parameter '{param}' need to be different from None.")
+
+        # check if the parameters are valid
+        valid_dict = [
+            ("q", "param_type", ["fourier", "fourier_extended", "fourier_w_bias"]),
+            ("linear_ramp_time", "init_type", ["ramp"]),
+            ("mixer_qubit_connectivity", "mixer_hamiltonian", ["xy"]),
+            ("mixer_coeffs", "mixer_hamiltonian", ["xy"]),
+            ("annealing_time", "param_type", ["annealing"]),
+            ("variational_params_dict", "init_type", ["custom"])
+        ]
+
+        for param, condition, values in valid_dict:
+            if getattr(self, param, None) != None and getattr(self, condition, None) not in values:
+                raise ValueError(f"To use parameter '{param}' parameter '{condition}' must be one of {values}.")
 
 class BackendProperties(Parameters):
     """
