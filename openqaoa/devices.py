@@ -427,10 +427,10 @@ def create_device(location: str, name: str, **kwargs):
 
     Parameters
     ----------
-    device_name: str
-        The name of the device to be accessed.
-    device_location: str
+    location: str
         The location of the device to be accessed.
+    name: str
+        The name of the device to be accessed.
     kwargs: dict
         A dictionary of keyword arguments to be passed to the device class.
         These will be used to initialise the device.
@@ -440,16 +440,17 @@ def create_device(location: str, name: str, **kwargs):
     device: DeviceBase
         An instance of the appropriate device class.
     """
-    location = location.lower()
-    if location == 'ibmq':
-        device_class = DeviceQiskit
-    elif location == 'qcs':
-        device_class = DevicePyquil
-    elif location == 'aws':
-        device_class = DeviceAWS
-    elif location == 'local':
-        device_class = DeviceLocal
-    else:
-        raise ValueError(f'Invalid device location, Choose from: {location}')
+
+    DEVICE_MAPPER = {
+        'ibmq': DeviceQiskit,
+        'qcs': DevicePyquil,
+        'aws': DeviceAWS,
+        'local': DeviceLocal
+    }
+
+    if location not in DEVICE_MAPPER:
+        raise ValueError(f'Invalid device location, Choose from: {DEVICE_MAPPER.keys()}')
+    
+    device_class = DEVICE_MAPPER[location]
 
     return device_class(device_name=name, **kwargs)
