@@ -16,6 +16,7 @@ import unittest
 from openqaoa.workflows.optimizer import QAOA
 from openqaoa.problems.problem import QUBO
 from openqaoa.devices import create_device
+from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
 
 
 class TestSimulators(unittest.TestCase):
@@ -26,7 +27,7 @@ class TestSimulators(unittest.TestCase):
         problem = QUBO.random_instance(3)
 
         #loop over all simulators
-        for n in ['qiskit.qasm_simulator', 'qiskit.shot_simulator', 'qiskit.statevector_simulator', 'vectorized', 'pyquil.statevector_simulator']:
+        for n in SUPPORTED_LOCAL_SIMULATORS:
 
             # initialize
             q = QAOA()
