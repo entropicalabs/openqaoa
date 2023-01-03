@@ -390,7 +390,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, 
-                                         optimizer_dict = {'method': 'cobyla',
+                                         optimizer_dict = {'method': 'nelder-mead',
                                                            'maxiter': niter,
                                                           })
         vector_optimizer.vqa.expectation = Mock(side_effect = Exception("Error!"))
