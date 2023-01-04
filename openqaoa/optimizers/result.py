@@ -89,7 +89,7 @@ class Result:
                 if len(log.job_ids.best) != 0 else [],
             'eval_number': 
                 log.eval_number.best[0] 
-                if len(log.job_ids.best) != 0 else [],
+                if len(log.eval_number.best) != 0 else [],
         }
 
         self.most_probable_states = most_probable_bitstring(

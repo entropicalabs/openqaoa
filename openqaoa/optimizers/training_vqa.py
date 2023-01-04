@@ -129,7 +129,7 @@ class OptimizeVQA(ABC):
                            }, 
                            'eval_number':
                            {
-                                'history_update_bool': True, 
+                                'history_update_bool': False, 
                                 'best_update_string': 'Replace'
                            },
                            'func_evals': 
@@ -225,9 +225,7 @@ class OptimizeVQA(ABC):
         current_eval += 1
         log_dict.update({'func_evals': current_eval})
 
-        eval_number = self.log.eval_number.history[-1] if len(self.log.eval_number.history) > 0 else 0
-        eval_number += 1
-        log_dict.update({'eval_number': eval_number})  #this one will say which evaluation is the optimized one  
+        log_dict.update({'eval_number': (current_eval - self.log.jac_func_evals.best[0] - self.log.qfim_func_evals.best[0])})  #this one will say which evaluation is the optimized one
 
         log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
         
