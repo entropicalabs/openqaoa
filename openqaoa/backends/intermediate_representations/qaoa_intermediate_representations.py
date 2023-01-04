@@ -14,8 +14,7 @@
 
 from abc import abstractmethod
 from typing import Optional, List
-from pyqir.generator import BasicQisBuilder, SimpleModule, ir_to_bitcode, types
-from pyqir.generator import SimpleModule
+from pyqir import BasicQisBuilder, SimpleModule
 from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
 from openqaoa.qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from openqaoa.qaoa_parameters import gates
@@ -215,7 +214,7 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
 	
 		return None
 
-	def convert_to_ir(self, params: QAOAVariationalBaseParams):
+	def convert_to_ir(self, params: QAOAVariationalBaseParams) -> str:
 		"""
 		Convert the QAOA circuit designated with `params` using the 
 		BasicQisBuilder into Intermediate Representation using
@@ -241,7 +240,34 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
 
 		return ir
 
-	
+	# TODO figure out recording of results so that bitcode can be immediately obtained
+
+	# def convert_to_bitcode(self, params: QAOAVariationalBaseParams) -> bytes:
+	# 	"""
+	# 	Convert the QAOA circuit designated with `params` using the 
+	# 	BasicQisBuilder into LLVM bitcode using
+	# 	built-in function
+
+	# 	Parameters
+	# 	----------
+	# 	params: `QAOAVariationalBaseParams`
+	# 		The QAOA variational parameters
+
+	# 	Returns
+	# 	-------
+	# 	bitcode: `str`
+	# 		The LLVM bitcode corresponding to the 
+	# 		QAOA circuit
+	# 	"""
+
+	# 	#construct the circuit using BasicQisBuilder
+	# 	self.qaoa_circuit(params)
+
+	# 	#return the bitcode using the QAOA SimpleModule
+	# 	bitcode = self.qaoa_module.bitcode()
+
+	# 	return bitcode
+
 		
 
 									
