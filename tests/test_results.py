@@ -71,7 +71,7 @@ class TestingResultOutputs(unittest.TestCase):
                 self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['measurement_outcomes']))
 
 
-    def _run_qaoa(self):
+    def _run_qaoa(self, optimization_method=None):
         """
         Run a QAOA algorithm and return the results
         """
@@ -81,6 +81,8 @@ class TestingResultOutputs(unittest.TestCase):
         vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
 
         q = QAOA()
+        if optimization_method is not None:
+            q.set_classical_optimizer(method=optimization_method, jac='finite_difference')
         q.compile(vc, verbose=False)
         q.optimize()
 
@@ -97,6 +99,20 @@ class TestingResultOutputs(unittest.TestCase):
         expected_keys = ['method', 'cost_hamiltonian', 'evals', 'intermediate', 'optimized', 'most_probable_states']
         for key in expected_keys:
             assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
+
+    #test eval_number 
+    def test_qaoa_result_eval_number(self):
+        """
+        Test the eval_number method for the QAOA result class
+        """
+
+        # run the QAOA and get the results
+        results = self._run_qaoa(optimization_method='spsa')
+
+        print(results.optimized['eval_number'])
+
+        # test the eval_number method
+        assert results.intermediate['cost'].index(min(results.intermediate['cost'])) + 1 == results.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation'
 
     #test as_dict method
     def test_qaoa_result_as_dict(self):
