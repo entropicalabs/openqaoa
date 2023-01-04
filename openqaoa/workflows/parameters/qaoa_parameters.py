@@ -158,7 +158,7 @@ class CircuitProperties(Parameters):
 
         for param, condition, values in valid_dict:
             if getattr(self, param, None) != None and getattr(self, condition, None) not in values:
-                raise ValueError(f"To use parameter '{param}' parameter '{condition}' must be one of {values}.")
+                raise ValueError(f"To use parameter '{param}', parameter '{condition}' must be one of {values}.")
 
 class BackendProperties(Parameters):
     """

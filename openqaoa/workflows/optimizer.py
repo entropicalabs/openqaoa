@@ -333,6 +333,7 @@ class QAOA(Optimizer):
             For example, for standard parametrisation set {'betas': [0.1, 0.2, 0.3], 'gammas': [0.1, 0.2, 0.3]}
         """
         self.circuit_properties = CircuitProperties()
+        
         for key, value in kwargs.items():
             if hasattr(self.circuit_properties, key):
                 pass
