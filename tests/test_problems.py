@@ -2,6 +2,7 @@ from math import dist
 import unittest
 import networkx as nx
 import numpy as np
+from random import randint, random
 from openqaoa.problems.problem import (
     NumberPartition, QUBO, TSP, Knapsack, ShortestPath,
     SlackFreeKnapsack, MaximumCut, MinimumVertexCover
@@ -138,6 +139,49 @@ class TestProblem(unittest.TestCase):
                 QUBO(n, each_terms, weights)
             self.assertEqual("The input parameter terms must be of type of list or tuple",
                              str(e.exception))
+
+    def test_qubo_metadata(self):
+        """Test that metadata is correctly stored"""
+        qubo_problem = QUBO.random_instance(3)
+        qubo_problem.set_metadata({'tag1': 'value1', 'tag2': 'value2'})
+        qubo_problem.set_metadata({'tag2': 'value2.0'})
+
+        assert qubo_problem.metadata['tag1'] == 'value1', "qubo metadata is not well set"
+        assert qubo_problem.metadata['tag2'] == 'value2.0', "qubo metadata is not well set, should have overwritten previous value"
+
+        error = False
+        try:
+            qubo_problem.set_metadata({'tag10': complex(1, 2)})
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting metadata that is not json serializable"
+
+        error = False
+        try:
+            qubo_problem.set_metadata({(1,2): 'value'})
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting key metadata that is not json serializable"
+
+    def test_qubo_problem_instance_serializable(self):
+        """ test that when problem instance is not serializable, it throws an error """
+        
+        qubo = QUBO.random_instance(3)
+
+        error = False
+        try:
+            qubo.problem_instance={'tag10': complex(1, 2)}
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting qubo problem instance that is not json serializable"
+
+        error = False
+        try:
+            qubo.problem_instance={(1,2): 'value'}
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting key qubo problem instance that is not json serializable"
+
 
     # TESTING NUMBER PARITION CLASS
     
@@ -796,6 +840,38 @@ class TestProblem(unittest.TestCase):
 
         self.assertRaises(Exception, test_assertion_fn)
 
+    def test_problem_instance(self):
+        """
+        Test problem instance method of the QUBO class.
+        We create a random instance of all the different problems, we generate the QUBO problem out of it and then we check if the problem instance attribute is correct, by comparing the keys of the problem instance with the expected keys.
+        """
+
+        all = {
+            "tsp":TSP.random_instance(n_cities=randint(2, 15)),
+            "number_partition":NumberPartition.random_instance(n_numbers=randint(2, 15)),
+            "maximum_cut":MaximumCut.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "knapsack":Knapsack.random_instance(n_items=randint(2, 15)),
+            "slack_free_knapsack":SlackFreeKnapsack.random_instance(n_items=randint(2, 15)),
+            "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "shortest_path":ShortestPath.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+        }
+        all_qubos = {k:v.get_qubo_problem() for k,v in all.items()}
+        all_qubos["generic_qubo"] = QUBO.random_instance(randint(2, 15))
+
+        expected_keys = {
+            "tsp":['problem_type', 'n_cities', 'G', 'A', 'B'],
+            "number_partition":['problem_type', 'numbers', 'n_numbers'],
+            "maximum_cut":['problem_type', 'G'],
+            "knapsack":['problem_type', 'values', 'weights', 'weight_capacity', 'penalty', 'n_items'],
+            "slack_free_knapsack":['problem_type', 'values', 'weights', 'weight_capacity', 'penalty', 'n_items'],
+            "minimum_vertex_cover":['problem_type', 'G', 'field', 'penalty'],
+            "shortest_path":['problem_type', 'G', 'source', 'dest'],
+            "generic_qubo":['problem_type']
+        }
+
+        for k,v in all_qubos.items():
+            assert list(v.problem_instance.keys()) == expected_keys[k], "Problem instance keys are not correct for problem type {}".format(k)
+            assert k == v.problem_instance['problem_type'], "Problem type is not correct for problem type {}".format(k)
 
 if __name__ == '__main__':
     unittest.main()
