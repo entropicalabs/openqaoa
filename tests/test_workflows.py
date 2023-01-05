@@ -14,7 +14,7 @@
 
 from argparse import SUPPRESS
 from threading import local
-from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian
+from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
 from openqaoa.workflows.optimizer import QAOA, RQAOA
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
@@ -646,20 +646,97 @@ class TestingVanillaQAOA(unittest.TestCase):
             self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), False)
             self.assertEqual(isinstance(q.optimizer, PennyLaneOptimizer), True)
 
-    def test_set_identification(self):
+    def test_set_header(self):
         """
-        Test the set_identification method of the QAOA class.
+        Test the set_identification method of the QAOA class. Step by step it is checked that the header is set correctly.
         """
 
-        qaoa = QAOA()
-        qaoa.set_identification('test_qaoa_parent_uuid')
+        # create a QAOA object
+        qaoa:QAOA = QAOA()
+
+        #check if the header values are set to None, except for the experiment_uuid and algorithm
+        for key, value in qaoa.header.items():
+            if key == 'experiment_uuid':
+                assert is_valid_uuid(qaoa.header['experiment_uuid']), "The experiment_uuid is not a valid uuid."
+            elif key == 'algorithm':
+                assert qaoa.header['algorithm']=='qaoa'
+            else:
+                assert value == None, "The value of the key {} (of the dictionary qaoa.header) is not None, when it should be.".format(key)
+
+        # save the experiment_uuid
+        experiment_uuid = qaoa.header['experiment_uuid']
+
+        # set the header
+        qaoa.set_header(
+            project_uuid="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+            name="test", 
+            run_by="raul", 
+            provider="-", 
+            target="-", 
+            cloud="local", 
+            client="-", 
+            qubit_number=10, 
+            qubit_routing="-", 
+            error_mitigation="-", 
+            error_correction="-"
+            )
+
+        # check if the header values are set to the correct values, except for the atomic_uuid, execution_time_start, and execution_time_end (which are set to None)
+        dict_values = {
+            'experiment_uuid': experiment_uuid,
+            'project_uuid': '8353185c-b175-4eda-9628-b4e58cb0e41b',
+            'algorithm': 'qaoa',
+            'name': 'test',
+            'run_by': 'raul',
+            'provider': '-',
+            'target': '-',
+            'cloud': 'local',
+            'client': '-',
+            'qubit_number': 10,
+            'qubit_routing': '-',
+            'error_mitigation': '-',
+            'error_correction': '-',
+        }
+        for key, value in qaoa.header.items():
+            if key not in ['atomic_uuid', 'execution_time_start', 'execution_time_end']:
+                assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
+        assert qaoa.header['atomic_uuid'] == None, "The atomic_uuid is not None, when it shouldn't be."
+        assert qaoa.header['execution_time_start'] == None, "The execution_time_start is not None, when it shouldn't be."
+        assert qaoa.header['execution_time_end'] == None, "The execution_time_end is not None, when it shouldn't be."
+
+        # compile the QAOA object
         qaoa.compile(problem = QUBO.random_instance(n=8))
+
+        #check if the header values are still set to the correct values, except for execution_time_start, and execution_time_end (which are set to None). Now atomic_uuid should be set to a valid uuid.
+        for key, value in qaoa.header.items():
+            if key not in ['execution_time_start', 'execution_time_end', 'atomic_uuid']:
+                assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
+        assert is_valid_uuid(qaoa.header['atomic_uuid']), "The atomic_uuid is not a valid uuid."
+        assert qaoa.header['execution_time_start'] == None, "The execution_time_start is not None, when it shouldn't be."
+        assert qaoa.header['execution_time_end'] == None, "The execution_time_end is not None, when it shouldn't be."
+
+        # save the atomic_uuid
+        atomic_uuid = qaoa.header['atomic_uuid']
+
+        # optimize the QAOA object
         qaoa.optimize()
 
-        for key, value in qaoa.id.items():
-            assert value != None, "The value of the key {} (of the dictionary qaoa.id) is None, when it shouldn't.".format(key)
+        #check if the header values are still set to the correct values, now everything should be set to a valid value (execution_time_start and execution_time_end should be integers>1672933928)
+        dict_values['atomic_uuid'] = atomic_uuid
+        for key, value in qaoa.header.items():
+            if key not in ['execution_time_start', 'execution_time_end']:
+                assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
+        assert qaoa.header['execution_time_start'] > 1672933928, "The execution_time_start is not a valid integer."
+        assert qaoa.header['execution_time_end'] > 1672933928, "The execution_time_end is not a valid integer."
 
-        assert qaoa.id['parent_uuid'] == 'test_qaoa_parent_uuid', "The value of the key 'parent_uuid' (of the dictionary qaoa.id) is not 'test_qaoa_parent_uuid'."
+
+        # test if an error is raised when the project_uuid is not a valid string
+        error = False
+        try:
+            qaoa.set_header(project_uuid="test")
+        except:
+            error = True
+        assert error, "The project_uuid is not valid string, but no error was raised."
 
     def test_set_exp_tags(self):
         """
