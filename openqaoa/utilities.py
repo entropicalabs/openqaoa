@@ -1341,3 +1341,37 @@ def qaoa_probabilities(statevector) -> dict:
         prob_dict.update({key: prob_vec[x]})
 
     return prob_dict
+
+
+################################################################################
+# DICTIONARY MANIPULATION and SERIALIZATION
+################################################################################
+def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
+    """
+    Recursively delete all the keys keys_to_delete from a object (or list of dictionaries)
+    Parameters
+    ----------
+    obj: dict or list[dict]
+        dictionary or list of dictionaries from which we want to delete keys
+    keys_to_delete: list
+        list of keys to delete from the dictionaries
+    Returns
+    -------
+    obj: dict or list[dict]
+        dictionary or list of dictionaries from which we have deleted keys
+    """
+    if isinstance(obj, dict):
+        for key in keys_to_delete:
+            if key in obj:
+                del obj[key]
+        for key in obj:
+            if isinstance(obj[key], dict):
+                delete_keys_from_dict(obj[key], keys_to_delete)                    
+            elif isinstance(obj[key], list):
+                for item in obj[key]:
+                    delete_keys_from_dict(item, keys_to_delete)
+    elif isinstance(obj, list):
+        for item in obj:
+            delete_keys_from_dict(item, keys_to_delete)
+
+    return obj
