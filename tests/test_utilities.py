@@ -871,6 +871,15 @@ class TestingUtilities(unittest.TestCase):
         # Test that the dictionary has been generated correctly
         assert serialized_dict == expected_dict, f'Object has not been converted correctly'
 
+    def test_function_is_valid_uuid(self):
+        """
+        Tests the function that checks if a string is a valid uuid: is_valid_uuid.
+        """
+
+        # Test that the function correctly identifies valid uuids
+        assert is_valid_uuid('123e4567-e89b-12d3-a456-426655440000'), f'UUID has not been identified correctly'
+        assert is_valid_uuid('not_a_uuid') == False, f'wrong UUID has not been identified correctly'
+
     def test_generate_uuid(self):
         """
         Tests the function that generates a unique identifier: generate_uuid.
@@ -879,12 +888,8 @@ class TestingUtilities(unittest.TestCase):
         # Generate a unique identifier
         generated_uuid = generate_uuid()
 
-        # Test that the identifier has been generated correctly
-        assert isinstance(generated_uuid,str), f'UUID has not been generated correctly, should be a string'
-        assert len(generated_uuid) == 36, f'UUID has not been generated correctly, should be 36 characters long'   
-        
-        # test that the uuid is valid
-        _ = uuid.UUID(generated_uuid)
+        # Test that the uuid has been generated correctly
+        assert is_valid_uuid(generated_uuid), f'UUID has not been generated correctly'
 
         
 if __name__ == "__main__":
