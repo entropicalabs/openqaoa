@@ -18,18 +18,17 @@ from datetime import datetime
 import json
 from typing import List
 import gzip
-import uuid
 
 from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
-from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters, ALLOWED_RQAOA_TYPES
+from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, convert2serialize, generate_uuid
+from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, is_valid_uuid, generate_uuid
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
-from openqaoa import rqaoa
+import openqaoa.rqaoa as rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 
 
@@ -91,11 +90,23 @@ class Optimizer(ABC):
         self.compiled = False
 
         # Initialize the identifier stamps, we initialize all the stamps needed to None
-        self.id = {
-            'uuid': None, #we generate a uuid for the experiment when we compile it
-            'parent_uuid': None, #user can set the parent uuid when they create the experiment using the set_identification method
-            'type': None, #type of the object
-            'datetime': datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S.%f%z') 
+        self.header = {
+            "atomic_uuid": None, # the uuid of the run it is generated automatically in the compilation
+            "experiment_uuid": generate_uuid(), # the uuid of the experiment it is generated automatically here
+            "project_uuid": None, 
+            "algorithm": None, # qaoa or rqaoa
+            "name": None,
+            "run_by": None,  
+            "provider": None,
+            "target": None,
+            "cloud": None,
+            "client": None,
+            "qubit_number": None,
+            "qubit_routing": None,
+            "error_mitigation": None,
+            "error_correction": None,
+            "execution_time_start": None,
+            "execution_time_end": None
         }
 
         # Initialize the experiment tags
@@ -105,17 +116,39 @@ class Optimizer(ABC):
         self.problem = None
         self.results = None
 
-    def set_identification(self, parent_uuid:str):
+    def __setattr__(self, __name, __value):
+        # check the attribute exp_tags is json serializable
+        if __name == 'exp_tags':
+            try:
+                json.dumps(__value)
+            except:
+                raise ValueError('The exp_tags attribute is not json serializable')
+
+        return super().__setattr__(__name, __value)
+
+    def set_header(self, project_uuid:str, name:str, run_by:str, provider:str, target:str, cloud:str, client:str, qubit_number:int, qubit_routing:str, error_mitigation:str, error_correction:str):
         """
-        Method to set the parent uuid of the experiment. The parent uuid is used to identify the project to which the experiment belongs.
+        Method to set the identification stamps of the optimizer object in self.header.
 
         Parameters
         ----------
-        parent_uuid: `str`
-            The uuid of the project to which the experiment belongs. If None, the parent uuid will not be changed. If not None, the parent uuid will be changed to the new one.
+        TODO : document the parameters
         """
+
+        if not is_valid_uuid(project_uuid):
+            raise ValueError('The project_uuid is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b')
         
-        self.id['parent_uuid'] = parent_uuid
+        self.header['project_uuid'] = project_uuid 
+        self.header['name'] = name
+        self.header['run_by'] = run_by
+        self.header['provider'] = provider
+        self.header['target'] = target
+        self.header['cloud'] = cloud
+        self.header['client'] = client
+        self.header['qubit_number'] = qubit_number
+        self.header['qubit_routing'] = qubit_routing
+        self.header['error_mitigation'] = error_mitigation
+        self.header['error_correction'] = error_correction
 
     def set_exp_tags(self, tags:dict):
         """
@@ -129,13 +162,6 @@ class Optimizer(ABC):
         tags: `dict`
             Dictionary containing the tags to be added to the experiment. If the tag already exists, it will be overwritten.
         """
-
-        # check if the keys are strings and the values are python primitives (so that they can be serialized)
-        for key, value in tags.items():
-            if not isinstance(key, str):
-                raise TypeError("The keys of the tags dictionary must be strings. {} is not a string.".format(key))
-            if not isinstance(value, (str, int, float, bool)):
-                raise TypeError("The values of the tags dictionary must be python primitives. {} is not a python primitive.".format(value))
         
         self.exp_tags = {**self.exp_tags, **tags}
 
@@ -255,7 +281,7 @@ class Optimizer(ABC):
 
     def compile(self, problem:QUBO):   
         """
-        Method that will make sure that the problem is in the correct form for the optimizer to run. And generate the uuid of the workflow.
+        Method that will make sure that the problem is in the correct form for the optimizer to run. And generate the atomic uuid
         This method should be extended by the child classes to include the compilation of the problem into the correct form for the optimizer to run.
 
         Parameters
@@ -268,36 +294,48 @@ class Optimizer(ABC):
         assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
         self.problem = problem
 
-        #uuid
-        self.id['uuid'] = generate_uuid()
+        # the atomic uuid is generated every time that it is compiled
+        self.header['atomic_uuid'] = generate_uuid()
 
     def optimize():
         raise NotImplementedError
 
     def _serializable_dict(self, complex_to_string:bool=False):
         """
-        Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
+        Returns a dictionary with all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
+        The returned dictionary has two keys: header and data. The header contains all the data that can identify the experiment, while the data contains all the input and output data of the experiment (also the experiment tags).
 
         Parameters
         ----------
         complex_to_string: bool
             If True, converts all complex numbers to strings. This is useful for JSON serialization, for the `dump(s)` methods.
         """
-        serializable_dict = {}
-        serializable_dict['identification'] = self.id.copy()
-        serializable_dict['exp_tags'] = self.exp_tags.copy()
-        serializable_dict['input_problem'] = dict(self.problem)
-        serializable_dict['input_parameters'] = {
-                                                'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
-                                                'backend_properties': dict(self.backend_properties),
-                                                'classical_optimizer': dict(self.classical_optimizer),
-                                                }
+
+        # create the final header dictionary
+        header = self.header.copy()
+        header['metadata'] = {**self.exp_tags.copy()}
+        
+        # create the final data dictionary
+        data = {}
+        data['exp_tags'] = self.exp_tags.copy()
+        data['input_problem'] = dict(self.problem)
+        data['input_parameters'] = {
+                                    'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
+                                    'backend_properties': dict(self.backend_properties),
+                                    'classical_optimizer': dict(self.classical_optimizer),
+                                    }
         # change the parameters that aren't serializable to strings 
         for item in ['noise_model' , 'append_state', 'prepend_state']:
-            if serializable_dict['input_parameters']['backend_properties'][item] is not None:                                                                     
-                serializable_dict['input_parameters']['backend_properties'][item] = str(serializable_dict['input_parameters']['backend_properties'][item]) 
+            if data['input_parameters']['backend_properties'][item] is not None:                                                                     
+                data['input_parameters']['backend_properties'][item] = str(serializable_dict['input_parameters']['backend_properties'][item]) 
         
-        serializable_dict['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
+        data['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
+
+        # we return a dictionary (serializable_dict) that will have two keys: header and data
+        serializable_dict = {
+            "header": header, # header is a dictionary containing all the data that can identify the experiment
+            "data": data, # data is a dictionary containing all the input and output data of the experiment (also the experiment tags)
+        }
 
         return serializable_dict
 
@@ -357,13 +395,16 @@ class Optimizer(ABC):
             A list of keys that should not be included in the json file.
         """
 
-        add_identification = lambda file_path: self.id['uuid'] + '--' + file_path if self.id['parent_uuid'] is None else self.id['parent_uuid'] + '--' + self.id['uuid'] + '--' + file_path
+        if self.header['project_uuid'] is None: #TODO: review this, atomic_uuid not here?
+            add_identification_function = lambda file_path: self.header['experiment_uuid'] + '--' + file_path
+        else:
+            add_identification_function = lambda file_path: self.header['project_uuid'] + '--' + self.header['experiment_uuid'] + '--' + file_path
 
         if compresslevel == 0: 
 
             # adding .json extension if not present
             file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
-            file_path = add_identification(file_path)
+            file_path = add_identification_function(file_path)
 
             # saving the result in a json file
             with open(file_path, 'w') as f:
@@ -376,7 +417,7 @@ class Optimizer(ABC):
             # adding .json.gz extension if not present
             file_path = file_path[:-5] if '.json' == file_path[-5:] else file_path
             file_path = file_path + '.json.gz' if '.json.gz' != file_path[-8:] else file_path
-            file_path = add_identification(file_path)
+            file_path = add_identification_function(file_path)
 
             # we save the json created by the dumps method as a .gz file
             with gzip.open(file_path, 'w', compresslevel=compresslevel) as f:
@@ -465,8 +506,8 @@ class QAOA(Optimizer):
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
 
-        # change id type to qaoa
-        self.id['type'] = 'qaoa_workflow'
+        # change header algorithm to qaoa
+        self.header['algorithm'] = 'qaoa'
 
     def set_circuit_properties(self, **kwargs):
         """
@@ -599,9 +640,15 @@ class QAOA(Optimizer):
         if self.compiled == False:
             raise ValueError('Please compile the QAOA before optimizing it!')
 
+        # timestamp for the start of the optimization
+        self.header['execution_time_start'] = int(datetime.utcnow().timestamp())
+
         self.optimizer.optimize()
         # TODO: results and qaoa_results will differ
         self.results = self.optimizer.qaoa_result
+
+        # timestamp for the end of the optimization
+        self.header['execution_time_end'] = int(datetime.utcnow().timestamp())
 
         if verbose:
             print(f'optimization completed.')
@@ -626,7 +673,7 @@ class QAOA(Optimizer):
         serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
 
         # we add the keys of the QAOA object that we want to return
-        serializable_dict['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
+        serializable_dict['data']['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
 
         return serializable_dict
 
@@ -731,8 +778,8 @@ class RQAOA(Optimizer):
         # varaible that will store results object (when optimize is called)
         self.results = RQAOAResults()
 
-        # change id type to RQAOA
-        self.id['type'] = 'rqaoa_workflow'
+        # change algorithm name to rqaoa
+        self.header['algorithm'] = 'rqaoa'
 
     def set_circuit_properties(self, **kwargs): 
         """
@@ -871,11 +918,11 @@ class RQAOA(Optimizer):
         self.__q.backend_properties  = self.backend_properties
         self.__q.classical_optimizer = self.classical_optimizer
 
+        # set the header of the qaoa object to be the same as the header of the rqaoa object
+        self.__q.header = self.header
+
         # compile qaoa object
         self.__q.compile(problem, verbose=verbose)
-
-        # set the parent id to the qaoa object
-        self.__q.set_identification(parent_uuid = self.id['uuid'])
 
         # set compiled boolean to true
         self.compiled = True
@@ -916,6 +963,9 @@ class RQAOA(Optimizer):
             f_max_terms = rqaoa.ada_max_terms  
         else:
             f_max_terms = rqaoa.max_terms 
+
+        # timestamp for the start of the optimization
+        self.header['execution_time_start'] = int(datetime.utcnow().timestamp())
 
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
@@ -963,6 +1013,9 @@ class RQAOA(Optimizer):
         full_solutions = rqaoa.final_solution(
             elimination_tracker, cl_ground_states, self.problem.hamiltonian)
 
+        # timestamp for the end of the optimization
+        self.header['execution_time_end'] = int(datetime.utcnow().timestamp())
+
         # Compute description dictionary containing all the information            
         self.results['solution'] = full_solutions
         self.results['classical_output'] = {'minimum_energy': cl_energy, 'optimal_states': cl_ground_states}
@@ -979,7 +1032,7 @@ class RQAOA(Optimizer):
 
         return 
 
-    def __exp_val_hamiltonian_termwise(self, q):
+    def __exp_val_hamiltonian_termwise(self, q:QAOA):
         """
         Private method to call the exp_val_hamiltonian_termwise function taking the data from
         the QAOA object _q. 
@@ -1033,8 +1086,8 @@ class RQAOA(Optimizer):
         serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
 
         # we add the keys of the RQAOA object that we want to return
-        serializable_dict['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
-        serializable_dict['input_parameters']['rqaoa_parameters'] = dict(self.rqaoa_parameters)
+        serializable_dict['data']['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
+        serializable_dict['data']['input_parameters']['rqaoa_parameters'] = dict(self.rqaoa_parameters)
 
         return serializable_dict
 
