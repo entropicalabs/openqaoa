@@ -1428,3 +1428,28 @@ def generate_uuid() -> str:
         String representation of a UUID.
     """
     return str(uuid.uuid4())
+
+def is_valid_uuid(uuid_to_test: str) -> bool:
+    """
+    Check if a string is a valid UUID.
+
+    Parameters
+    ----------
+    uuid_to_test: `str`
+        String to check if it is a valid UUID.
+
+    Returns
+    -------
+    is_valid: `bool`
+        Boolean indicating if the string is a valid UUID.
+    """
+
+    try:
+        # generate a UUID object from the string, if it is a valid UUID it won't throw an error
+        _ = uuid.UUID(uuid_to_test, version=4)
+        return True
+    except ValueError:
+        # If it's a value error, then the string is not a valid string for a UUID.
+        return False
+
+
