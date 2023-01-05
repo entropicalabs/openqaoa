@@ -36,7 +36,7 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
     ----------
     circuit_params: QAOACircuitParams
         An object of the class ``QAOACircuitParams`` which contains information on 
-        circuit construction and depth of the circuit. Note that it only works for p=1 and the X Mixer Hamiltonian.
+        circuit construction and depth of the circuit. Note that it only works for p=1 and the X Mixer.
     """
     
     def __init__(self, circuit_params: QAOACircuitParams, 
