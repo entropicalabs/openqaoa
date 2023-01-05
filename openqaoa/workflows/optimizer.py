@@ -285,7 +285,7 @@ class Optimizer(ABC):
         """
         serializable_dict = {}
         serializable_dict['identification'] = self.id.copy()
-        serializable_dict['exp_tags'] = tuple(self.exp_tags.items())
+        serializable_dict['exp_tags'] = self.exp_tags.copy()
         serializable_dict['input_problem'] = dict(self.problem)
         serializable_dict['input_parameters'] = {
                                                 'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
