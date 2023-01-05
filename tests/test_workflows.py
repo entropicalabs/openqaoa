@@ -675,13 +675,12 @@ class TestingVanillaQAOA(unittest.TestCase):
             target="-", 
             cloud="local", 
             client="-", 
-            qubit_number=10, 
             qubit_routing="-", 
             error_mitigation="-", 
             error_correction="-"
             )
 
-        # check if the header values are set to the correct values, except for the atomic_uuid, execution_time_start, and execution_time_end (which are set to None)
+        # check if the header values are set to the correct values, except for the qubit_number, atomic_uuid, execution_time_start, and execution_time_end (which are set to None)
         dict_values = {
             'experiment_uuid': experiment_uuid,
             'project_uuid': '8353185c-b175-4eda-9628-b4e58cb0e41b',
@@ -692,28 +691,27 @@ class TestingVanillaQAOA(unittest.TestCase):
             'target': '-',
             'cloud': 'local',
             'client': '-',
-            'qubit_number': 10,
             'qubit_routing': '-',
             'error_mitigation': '-',
             'error_correction': '-',
+            'qubit_number': None,
+            'atomic_uuid': None,
+            'execution_time_start': None,
+            'execution_time_end': None
         }
         for key, value in qaoa.header.items():
-            if key not in ['atomic_uuid', 'execution_time_start', 'execution_time_end']:
-                assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
-        assert qaoa.header['atomic_uuid'] == None, "The atomic_uuid is not None, when it shouldn't be."
-        assert qaoa.header['execution_time_start'] == None, "The execution_time_start is not None, when it shouldn't be."
-        assert qaoa.header['execution_time_end'] == None, "The execution_time_end is not None, when it shouldn't be."
+            assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
 
         # compile the QAOA object
         qaoa.compile(problem = QUBO.random_instance(n=8))
 
-        #check if the header values are still set to the correct values, except for execution_time_start, and execution_time_end (which are set to None). Now atomic_uuid should be set to a valid uuid.
+        #check if the header values are still set to the correct values, except for execution_time_start, and execution_time_end (which are set to None). 
+        # Now atomic_uuid should be set to a valid uuid. And qubit_number should be set to 8 (number of qubits of the problem)
+        dict_values['qubit_number'] = 8
         for key, value in qaoa.header.items():
-            if key not in ['execution_time_start', 'execution_time_end', 'atomic_uuid']:
+            if key not in ['atomic_uuid']:
                 assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
         assert is_valid_uuid(qaoa.header['atomic_uuid']), "The atomic_uuid is not a valid uuid."
-        assert qaoa.header['execution_time_start'] == None, "The execution_time_start is not None, when it shouldn't be."
-        assert qaoa.header['execution_time_end'] == None, "The execution_time_end is not None, when it shouldn't be."
 
         # save the atomic_uuid
         atomic_uuid = qaoa.header['atomic_uuid']

@@ -101,7 +101,7 @@ class Optimizer(ABC):
             "target": None,
             "cloud": None,
             "client": None,
-            "qubit_number": None,
+            "qubit_number": None, #it is set automatically in the compilation from the problem object
             "qubit_routing": None,
             "error_mitigation": None,
             "error_correction": None,
@@ -126,7 +126,7 @@ class Optimizer(ABC):
 
         return super().__setattr__(__name, __value)
 
-    def set_header(self, project_uuid:str, name:str, run_by:str, provider:str, target:str, cloud:str, client:str, qubit_number:int, qubit_routing:str, error_mitigation:str, error_correction:str):
+    def set_header(self, project_uuid:str, name:str, run_by:str, provider:str, target:str, cloud:str, client:str, qubit_routing:str, error_mitigation:str, error_correction:str):
         """
         Method to set the identification stamps of the optimizer object in self.header.
 
@@ -145,7 +145,6 @@ class Optimizer(ABC):
         self.header['target'] = target
         self.header['cloud'] = cloud
         self.header['client'] = client
-        self.header['qubit_number'] = qubit_number
         self.header['qubit_routing'] = qubit_routing
         self.header['error_mitigation'] = error_mitigation
         self.header['error_correction'] = error_correction
@@ -296,6 +295,9 @@ class Optimizer(ABC):
 
         # the atomic uuid is generated every time that it is compiled
         self.header['atomic_uuid'] = generate_uuid()
+
+        # header is updated with the qubit number of the problem
+        self.header['qubit_number'] = self.problem.n
 
     def optimize():
         raise NotImplementedError
