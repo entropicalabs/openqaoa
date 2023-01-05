@@ -16,6 +16,7 @@ import networkx as nx
 import numpy as np
 import itertools
 import unittest
+import uuid
 
 from openqaoa.devices import DeviceLocal
 from openqaoa.utilities import *
@@ -876,14 +877,14 @@ class TestingUtilities(unittest.TestCase):
         """
 
         # Generate a unique identifier
-        uuid = generate_uuid()
+        generated_uuid = generate_uuid()
 
         # Test that the identifier has been generated correctly
-        assert isinstance(uuid,str), f'UUID has not been generated correctly, should be a string'
-        assert len(uuid) == 36, f'UUID has not been generated correctly, should be 36 characters long'   
+        assert isinstance(generated_uuid,str), f'UUID has not been generated correctly, should be a string'
+        assert len(generated_uuid) == 36, f'UUID has not been generated correctly, should be 36 characters long'   
         
         # test that the uuid is valid
-        _ = uuid.UUID(str(uuid))
+        _ = uuid.UUID(generated_uuid)
 
         
 if __name__ == "__main__":
