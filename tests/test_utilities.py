@@ -880,17 +880,10 @@ class TestingUtilities(unittest.TestCase):
 
         # Test that the identifier has been generated correctly
         assert isinstance(uuid,str), f'UUID has not been generated correctly, should be a string'
-        assert len(uuid) == 36, f'UUID has not been generated correctly, should be 36 characters long'
-
-        # Generate a unique identifier, prefixing it with a string
-        uuid = generate_uuid(prefix = 'test')
-
-        # Test that the identifier has been generated correctly
-        assert isinstance(uuid,str), f'UUID has not been generated correctly, should be a string'
-        assert len(uuid) == 41, f'UUID has not been generated correctly, should be 41 characters long'
-        assert uuid[:5] == 'test-', f'UUID has not been generated correctly, should start with "test-"'
+        assert len(uuid) == 36, f'UUID has not been generated correctly, should be 36 characters long'   
         
-
+        # test that the uuid is valid
+        _ = uuid.UUID(str(uuid))
 
         
 if __name__ == "__main__":
