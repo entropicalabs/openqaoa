@@ -1350,14 +1350,13 @@ def qaoa_probabilities(statevector) -> dict:
 def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
     """
     Recursively delete all the keys keys_to_delete from a object (or list of dictionaries)
-
     Parameters
     ----------
     obj: dict or list[dict]
         dictionary or list of dictionaries from which we want to delete keys
     keys_to_delete: list
         list of keys to delete from the dictionaries
-
+        
     Returns
     -------
     obj: dict or list[dict]

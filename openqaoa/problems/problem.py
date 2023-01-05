@@ -19,10 +19,13 @@ import networkx as nx
 import numpy as np
 import scipy
 import itertools
+import json
+from typing import List
 
 from .helper_functions import check_kwargs
 from ..utilities import convert2serialize
 from openqaoa.qaoa_parameters.operators import Hamiltonian
+from openqaoa.utilities import delete_keys_from_dict
 
 
 class Problem(ABC):
@@ -42,6 +45,25 @@ class Problem(ABC):
             A random instance of the problem.
         """
         pass
+
+    def __iter__(self):
+        for key, value in self.__dict__.items():
+            # remove "_" from the beginning of the key if it exists
+            new_key = key[1:] if key.startswith("_") else key
+            # convert networkx graphs to dictionaries for serialization (to get back to a graph, use nx.node_link_graph)
+            new_value = nx.node_link_data(value) if isinstance(value, nx.Graph) else value
+            yield (new_key, new_value)
+
+    @property
+    def problem_instance(self):
+        """
+        Returns a dictionary containing the serialization of the class and the problem type name, which will be passed as metadata to the QUBO class.
+        
+        Returns
+        -------
+            A dictionary containing the serialization of the class and the problem type name.
+        """
+        return {**{"problem_type": self.__name__}, **dict(self)}
 
 
 class QUBO:
@@ -72,7 +94,9 @@ class QUBO:
     # Maximum number of terms allowed to enable the cleaning procedure
     TERMS_CLEANING_LIMIT = 5000
 
-    def __init__(self, n, terms, weights, clean_terms_and_weights=False):
+    def __init__(self, n, terms, weights, 
+                    problem_instance:dict={"problem_type": "generic_qubo"}, 
+                    clean_terms_and_weights=False):
 
         # check-type for terms and weights
         if not isinstance(terms, list) and not isinstance(terms, tuple):
@@ -118,11 +142,28 @@ class QUBO:
 
         self.constant = constant
         self.n = n
-    
+
+        # attribute to store the problem instance, it will be checked if it is json serializable in the __setattr__ method
+        self.problem_instance = problem_instance
+
+        # Initialize the metadata dictionary 
+        self.metadata = {}
+
     def __iter__(self):
         for key, value in self.__dict__.items():
             # remove "_" from the beginning of the key if it exists
             yield (key[1:] if key.startswith("_") else key, value)
+
+    def __setattr__(self, __name, __value):
+        # check if problem_instance is json serializable, also check if metadata is json serializable
+        if __name == "problem_instance" or __name == "metadata":
+            try:
+                _ = json.dumps(__value)
+            except Exception as e:
+                raise e    
+
+        super().__setattr__(__name, __value)
+        
 
     @property
     def n(self):
@@ -141,8 +182,37 @@ class QUBO:
 
         self._n = input_n
 
-    def asdict(self):
-        return convert2serialize(dict(self))
+    def set_metadata(self, metadata:dict={}):
+        """
+        Sets the metadata of the problem.
+
+        Parameters
+        ----------
+        metadata: dict
+            The metadata of the problem. All keys and values will be stored in the metadata dictionary.
+        """
+
+        # update the metadata (it will be checked if it is json serializable in the __setattr__ method)
+        self.metadata = {**self.metadata, **metadata}
+
+    def asdict(self, keys_not_to_include:List[str]=[]):
+        """
+        Returns a dictionary containing the serialization of the class.
+        
+        Parameters
+        ----------
+        keys_not_to_include: List[str]
+            A list of keys that should not be included in the serialization.
+
+        Returns
+        -------
+            A dictionary containing the serialization of the class.
+        """
+
+        if keys_not_to_include == []:
+            return convert2serialize(dict(self))
+        else:
+            return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= keys_not_to_include) 
 
     @staticmethod
     def clean_terms_and_weights(terms, weights):
@@ -279,6 +349,9 @@ class TSP(Problem):
     -------
     None
     """
+
+    __name__ = "tsp"
+
     def __init__(self,
                  city_coordinates=None,
                  distance_matrix=None,
@@ -567,7 +640,7 @@ class TSP(Problem):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
             n, terms, weights)
-        return QUBO(n, ising_terms, ising_weights)
+        return QUBO(n, ising_terms, ising_weights, self.problem_instance)
 
 
 class NumberPartition(Problem):
@@ -583,6 +656,8 @@ class NumberPartition(Problem):
     -------
         An instance of the Number Partitioning problem.
     """
+
+    __name__ = "number_partition"
 
     def __init__(self, numbers=None):
         # Set the numbers to be partitioned. If not given, generate a random list with integers
@@ -667,7 +742,7 @@ class NumberPartition(Problem):
             terms.append([])
             weights.append(constant_term)
 
-        return QUBO(self.n_numbers, terms, weights)
+        return QUBO(self.n_numbers, terms, weights, self.problem_instance)
 
 
 class MaximumCut(Problem):
@@ -683,6 +758,8 @@ class MaximumCut(Problem):
     -------
         An instance of the Maximum Cut problem.
     """
+
+    __name__ = "maximum_cut"
 
     DEFAULT_EDGE_WEIGHT = 1.0
 
@@ -758,7 +835,7 @@ class MaximumCut(Problem):
                 edge_weight if edge_weight else MaximumCut.DEFAULT_EDGE_WEIGHT
             )
 
-        return QUBO(self.G.number_of_nodes(), terms, weights)
+        return QUBO(self.G.number_of_nodes(), terms, weights, self.problem_instance)
 
 
 class Knapsack(Problem):
@@ -780,6 +857,8 @@ class Knapsack(Problem):
     -------
         An instance of the Knapsack problem.
     """
+
+    __name__ = "knapsack"
 
     def __init__(self, values, weights, weight_capacity, penalty):
         # Check whether the input is valid. Number of values should match the number of weights.
@@ -989,7 +1068,7 @@ class Knapsack(Problem):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
             n, terms, weights)
-        return QUBO(n, ising_terms, ising_weights)
+        return QUBO(n, ising_terms, ising_weights, self.problem_instance)
 
 
 class SlackFreeKnapsack(Knapsack):
@@ -1015,6 +1094,8 @@ class SlackFreeKnapsack(Knapsack):
     -------
         An instance of the SlackFreeKnapsack problem.
     """
+
+    __name__ = "slack_free_knapsack"
 
     def __init__(self, values, weights, weight_capacity, penalty):
 
@@ -1112,7 +1193,7 @@ class SlackFreeKnapsack(Knapsack):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
             n, terms, weights)
-        return QUBO(n, ising_terms, ising_weights)
+        return QUBO(n, ising_terms, ising_weights, self.problem_instance)
 
 
 class MinimumVertexCover(Problem):
@@ -1132,6 +1213,8 @@ class MinimumVertexCover(Problem):
     -------
     An instance of the Minimum Vertex Cover problem.
     """
+
+    __name__ = "minimum_vertex_cover"
 
     def __init__(self, G, field, penalty):
 
@@ -1274,7 +1357,7 @@ class MinimumVertexCover(Problem):
         # Extract terms and weights from the problem definition
         terms, weights = self.terms_and_weights()
 
-        return QUBO(self.G.number_of_nodes(), list(terms), list(weights))
+        return QUBO(self.G.number_of_nodes(), list(terms), list(weights), self.problem_instance)
 
 
 class ShortestPath(Problem):
@@ -1294,6 +1377,8 @@ class ShortestPath(Problem):
     -------
         An instance of the Shortest Path problem.
     """
+
+    __name__ = "shortest_path"
 
     def __init__(self, G, source, dest):
 
@@ -1474,4 +1559,4 @@ class ShortestPath(Problem):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
             n, terms, weights)
-        return QUBO(n, ising_terms, ising_weights)
+        return QUBO(n, ising_terms, ising_weights, self.problem_instance)
