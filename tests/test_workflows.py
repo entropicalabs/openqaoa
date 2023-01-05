@@ -648,7 +648,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
     def test_set_header(self):
         """
-        Test the set_identification method of the QAOA class. Step by step it is checked that the header is set correctly.
+        Test the test_set_header method of the QAOA class. Step by step it is checked that the header is set correctly.
         """
 
         # create a QAOA object
@@ -769,7 +769,19 @@ class TestingVanillaQAOA(unittest.TestCase):
         #qaoa
         qaoa = QAOA()
         qaoa.compile(problem = QUBO.random_instance(n=8))
-        qaoa.set_identification('test_qaoa_parent_uuid')
+        # set the header
+        qaoa.set_header(
+            project_uuid="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+            name="test", 
+            run_by="raul", 
+            provider="-", 
+            target="-", 
+            cloud="local", 
+            client="-", 
+            qubit_routing="-", 
+            error_mitigation="-", 
+            error_correction="-"
+            )
         qaoa.optimize()
 
         # check QAOA asdict
@@ -788,8 +800,8 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # check QAOA dump
         file_name = 'test_dump_qaoa.json'
-        uuid, parent_uuid = qaoa.id['uuid'], qaoa.id['parent_uuid']
-        full_name = f'{parent_uuid}--{uuid}--{file_name}'
+        uuid, project_uuid = qaoa.header['experiment_uuid'], qaoa.header['project_uuid']
+        full_name = f'{project_uuid}--{uuid}--{file_name}'
 
         qaoa.dump(file_name, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist'
@@ -797,11 +809,11 @@ class TestingVanillaQAOA(unittest.TestCase):
             assert file.read() == qaoa.dumps(indent=None), 'Dump file does not contain the correct data'
         os.remove(full_name)
 
-        # check QAOA dump when qaoa has no parent_uuid
-        qaoa.id['parent_uuid'] = None
+        # check QAOA dump when qaoa has no project_uuid
+        qaoa.header['project_uuid'] = None
         full_name = f'{uuid}--{file_name}'
         qaoa.dump(file_name, indent=None)
-        assert os.path.isfile(full_name), 'Dump file does not exist, when qaoa has no parent_uuid'
+        assert os.path.isfile(full_name), 'Dump file does not exist, when qaoa has no project_uuid'
         os.remove(full_name)
 
         # check QAOA dump deleting some keys
@@ -846,7 +858,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         """
 
         #create a dictionary with all the expected keys and set them to False
-        expected_keys = ['identification', 'uuid', 'parent_uuid', 'type', 'datetime', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'n_shots', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'param_type', 'init_type', 'qubit_register', 'p', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'results', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id']
+        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'problem_type', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'n_shots', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'param_type', 'init_type', 'qubit_register', 'p', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'results', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id']
         expected_keys = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found
@@ -945,7 +957,18 @@ class TestingRQAOA(unittest.TestCase):
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)   
-        r.set_identification(parent_uuid='test-parent-id')
+        r.set_header(
+            project_uuid="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+            name="test", 
+            run_by="raul", 
+            provider="-", 
+            target="-", 
+            cloud="local", 
+            client="-", 
+            qubit_routing="-", 
+            error_mitigation="-", 
+            error_correction="-"
+            )
         r.set_exp_tags(tags={'tag1': 'value1', 'tag2': 'value2'})
         r.compile(problem)
         r.optimize()
@@ -1119,13 +1142,13 @@ class TestingRQAOA(unittest.TestCase):
         self.__test_expected_keys(json.loads(rqaoa.dumps()), method='dumps')
 
         # check RQAOA dumps deleting some keys
-        keys_not_to_include = ['parent_uuid', 'counter']
+        keys_not_to_include = ['project_uuid', 'counter']
         self.__test_expected_keys(json.loads(rqaoa.dumps(keys_not_to_include=keys_not_to_include)), keys_not_to_include, method='dumps')
 
         # check RQAOA dump
         file_name = 'test_dump_rqaoa.json'
-        uuid, parent_uuid = rqaoa.id['uuid'], rqaoa.id['parent_uuid']
-        full_name = f'{parent_uuid}--{uuid}--{file_name}'
+        uuid, project_uuid = rqaoa.header['experiment_uuid'], rqaoa.header['project_uuid']
+        full_name = f'{project_uuid}--{uuid}--{file_name}'
 
         rqaoa.dump(file_name, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist'
@@ -1133,11 +1156,11 @@ class TestingRQAOA(unittest.TestCase):
             assert file.read() == rqaoa.dumps(indent=None), 'Dump file does not contain the correct data'
         os.remove(full_name)
 
-        # check RQAOA dump when rqaoa has no parent_uuid
-        rqaoa.id['parent_uuid'] = None
+        # check RQAOA dump when rqaoa has no project_uuid
+        rqaoa.header['project_uuid'] = None
         full_name = f'{uuid}--{file_name}'
         rqaoa.dump(file_name, indent=None)
-        assert os.path.isfile(full_name), 'Dump file does not exist, when rqaoa has no parent_uuid'
+        assert os.path.isfile(full_name), 'Dump file does not exist, when rqaoa has no project_uuid'
         os.remove(full_name)
 
         # check RQAOA dump deleting some keys
@@ -1162,7 +1185,7 @@ class TestingRQAOA(unittest.TestCase):
         """
 
         #create a dictionary with all the expected keys and set them to False
-        expected_keys = ['identification', 'uuid', 'parent_uuid', 'type', 'datetime', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'n_shots', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'param_type', 'init_type', 'qubit_register', 'p', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'rqaoa_type', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'results', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id', 'exp_vals_z', 'corr_matrix', 'number_steps']
+        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'problem_type', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'n_shots', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'param_type', 'init_type', 'qubit_register', 'p', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'rqaoa_type', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'results', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number of evals', 'jac evals', 'qfim evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles log', 'intermediate cost', 'intermediate measurement outcomes', 'intermediate runs job id', 'optimized', 'optimized angles', 'optimized cost', 'optimized measurement outcomes', 'optimized run job id', 'exp_vals_z', 'corr_matrix', 'number_steps']
         expected_keys = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found

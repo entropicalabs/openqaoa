@@ -58,12 +58,7 @@ class Optimizer(ABC):
             A list containing the available cloud providers
         compiled: `Bool`
             A boolean flag to check whether the optimizer object has been correctly compiled at least once     
-        id: `dict`
-            A dictionary containing the identification stamps of the optimizer object. 
-            'uuid' is the unique identifier of the optimizer object, 
-            'parent_uuid' is the unique identifier of the parent object (e.g. the project to which the optimizer object belongs), the user can set this value using the set_identification method, 
-            'type' is the type of the object (QAOA or RQAOA), 
-            'datetime' is the date and time of the creation of the object. 
+        id: TODO
         exp_tags: `dict`
             A dictionary containing the tags of the optimizer object. The user can set this value using the set_exp_tags method.
         problem: `Problem`
@@ -329,7 +324,7 @@ class Optimizer(ABC):
         # change the parameters that aren't serializable to strings 
         for item in ['noise_model' , 'append_state', 'prepend_state']:
             if data['input_parameters']['backend_properties'][item] is not None:                                                                     
-                data['input_parameters']['backend_properties'][item] = str(serializable_dict['input_parameters']['backend_properties'][item]) 
+                data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
         data['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
 
