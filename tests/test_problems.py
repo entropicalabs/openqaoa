@@ -816,7 +816,7 @@ class TestProblem(unittest.TestCase):
         self.assertEqual(sp_prob.constant, ShortestPath(
             gr, 0, 2).get_qubo_problem().constant)
 
-    def test_assertion_error(self):
+    def test_shortestpath_assertion_errors(self):
 
         def test_assertion_fn():
             n_row = 1
@@ -840,6 +840,16 @@ class TestProblem(unittest.TestCase):
 
         self.assertRaises(Exception, test_assertion_fn)
 
+        def test_assertion_n_lower_than_3_fn():
+            # generate random graph with 2 nodes
+            G = nx.gnp_random_graph(2, 1)
+
+            # set the problem (should raise an assertion error)
+            shortest_path_problem = ShortestPath(G, 0, -1)
+
+        self.assertRaises(Exception, test_assertion_n_lower_than_3_fn)  
+
+
     def test_problem_instance(self):
         """
         Test problem instance method of the QUBO class.
@@ -853,7 +863,7 @@ class TestProblem(unittest.TestCase):
             "knapsack":Knapsack.random_instance(n_items=randint(2, 15)),
             "slack_free_knapsack":SlackFreeKnapsack.random_instance(n_items=randint(2, 15)),
             "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
-            "shortest_path":ShortestPath.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "shortest_path":ShortestPath.random_instance(n_nodes=randint(3, 15), edge_probability=random()),
         }
         all_qubos = {k:v.get_qubo_problem() for k,v in all.items()}
         all_qubos["generic_qubo"] = QUBO.random_instance(randint(2, 15))

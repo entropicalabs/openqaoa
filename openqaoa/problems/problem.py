@@ -1394,6 +1394,9 @@ class ShortestPath(Problem):
             G.nodes
         ), f"Destination node not within nodes of input graph"
         assert source != dest, "Source and destination nodes cannot be the same"
+        
+        # check if the graph has more than 2 nodes, otherwise raise an error
+        assert G.number_of_nodes() > 2, "The graph must have more than 2 nodes"
 
     @staticmethod
     def random_instance(**kwargs):
