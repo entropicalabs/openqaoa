@@ -189,10 +189,13 @@ class TestingResultOutputs(unittest.TestCase):
 
         for method in ['cobyla', 'spsa', 'vgd', 'newton', 'natural_grad_descent']:
             # run the QAOA and get the results
-            results = self._run_qaoa(optimization_method=method)
+            q = QAOA()
+            q.set_classical_optimizer(maxiter=15, method=method, jac='finite_difference', hess='finite_difference')
+            q.compile(problem = QUBO.random_instance(n=8))
+            q.optimize()
 
             # test the eval_number method
-            assert results.intermediate['cost'].index(min(results.intermediate['cost'])) + 1 == results.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation, when using {} method'.format(method)
+            assert q.results.intermediate['cost'].index(min(q.results.intermediate['cost'])) + 1 == q.results.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation, when using {} method'.format(method)
 
 
 
