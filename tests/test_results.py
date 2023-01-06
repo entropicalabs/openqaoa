@@ -85,13 +85,13 @@ class TestingResultOutputs(unittest.TestCase):
                 q.set_device(device)
                 q.compile(vc)
                 q.optimize()
-                self.assertEqual(recorded_evals[each_choice[0]], len(q.results.intermediate['angles log']))
-                self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['intermediate cost']))
-                self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['intermediate measurement outcomes']))
+                self.assertEqual(recorded_evals[each_choice[0]], len(q.results.intermediate['angles']))
+                self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['cost']))
+                self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['measurement_outcomes']))
 
     def test_qaoa_result_asdict(self):
         """
-        Test the plot_exp_vals_z method for the RQAOAResult class
+        Test the qaoa result.asdict method
         """
 
         # run the QAOA
@@ -180,6 +180,22 @@ class TestingResultOutputs(unittest.TestCase):
             get_keys(rqaoa.results.asdict(), expected_keys)
             print(expected_keys)
         """
+
+    #test eval_number 
+    def test_qaoa_result_eval_number(self):
+        """
+        Test the eval_number method for the QAOA result class
+        """
+
+        for method in ['cobyla', 'spsa', 'vgd', 'newton', 'natural_grad_descent']:
+            # run the QAOA and get the results
+            results = self._run_qaoa(optimization_method=method)
+
+            # test the eval_number method
+            assert results.intermediate['cost'].index(min(results.intermediate['cost'])) + 1 == results.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation, when using {} method'.format(method)
+
+
+
 
 class TestingRQAOAResultOutputs(unittest.TestCase):
     """

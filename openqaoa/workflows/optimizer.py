@@ -1041,8 +1041,8 @@ class RQAOA(Optimizer):
         cost_hamiltonian = q.cost_hamil
         mixer_type = q.circuit_properties.mixer_hamiltonian
         p = q.circuit_properties.p
-        qaoa_optimized_angles = q.results.optimized['optimized angles']
-        qaoa_optimized_counts = q.results.get_counts(q.results.optimized['optimized measurement outcomes'])
+        qaoa_optimized_angles = q.results.optimized['angles']
+        qaoa_optimized_counts = q.results.get_counts(q.results.optimized['measurement_outcomes'])
         analytical = isinstance(qaoa_backend, QAOABaseBackendStatevector)
     
         return exp_val_hamiltonian_termwise(variational_params, 

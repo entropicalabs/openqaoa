@@ -68,7 +68,7 @@ class RQAOAResults(dict):
         """
         Returns the optimized angles of the i-th qaoa step of the RQAOA.
         """
-        return self.get_qaoa_results(step).optimized['optimized angles']
+        return self.get_qaoa_results(step).optimized['angles']
 
     def get_problem(self, step):
         """
