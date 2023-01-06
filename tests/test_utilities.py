@@ -692,8 +692,8 @@ class TestingUtilities(unittest.TestCase):
         qaoa_results = optimizer.qaoa_result
         
         qaoa_results_optimized = qaoa_results.optimized 
-        qaoa_optimized_angles = qaoa_results_optimized['optimized angles']
-        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
+        qaoa_optimized_angles = qaoa_results_optimized['angles']
+        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['measurement_outcomes'])
         num_exp_vals_z, num_corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
             qaoa_backend, hamiltonian, 'x', p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=False)
 
