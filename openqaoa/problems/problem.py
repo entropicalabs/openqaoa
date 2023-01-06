@@ -122,6 +122,7 @@ class QUBO:
             raise ValueError(
                 "The number of terms and number of weights do not match")
 
+        constant = 0
         try:
             constant_index = [i for i, term in enumerate(
                 terms) if len(term) == 0][0]
