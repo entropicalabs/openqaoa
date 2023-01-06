@@ -305,10 +305,10 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         q.optimize()
 
         # check if we have job ids
-        opt_id = q.results.optimized['optimized run job id']
+        opt_id = q.results.optimized['job_id']
         assert len(opt_id) == 36 and isinstance(opt_id, str), f'QCS QVM: job id is not a string of length 36, but {opt_id}'
 
-        inter_id = q.results.intermediate['intermediate runs job id']
+        inter_id = q.results.intermediate['job_id']
         for id in inter_id:
             assert len(id) == 36 and isinstance(id, str), f'QCS QVM: on intermediate job id is not a string of length 36, but {id}'
         
