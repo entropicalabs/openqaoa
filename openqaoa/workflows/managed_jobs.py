@@ -98,8 +98,8 @@ class AWSJobs(Optimizer):
         ### Set up the QUBO problem ###
         self.qubo = QUBO(terms=self.input_data['qubo']['terms'],
                         weights=self.input_data['qubo']['weights'],
-                        n=self.input_data['qubo']['n'],
-                        constant=self.input_data['qubo']['constant'])
+                        n=self.input_data['qubo']['n']
+                        )
         
 
     def aws_jobs_load_workflow(self):

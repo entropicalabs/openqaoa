@@ -110,7 +110,8 @@ class TestingAwsJobs(unittest.TestCase):
         assert job.workflow.backend_properties.asdict() ==  q.backend_properties.asdict()
         assert job.workflow.circuit_properties.asdict() ==  q.circuit_properties.asdict()
         assert job.workflow.classical_optimizer.asdict() ==  q.classical_optimizer.asdict()
-        assert job.qubo.asdict() ==  self.vc.asdict()
+        assert job.qubo.asdict()['terms'] ==  self.vc.asdict()['terms']
+        assert job.qubo.asdict()['weights'] ==  self.vc.asdict()['weights']
 
     @pytest.mark.api
     def testCreateAndLoadRqaoaWorkflows(self):

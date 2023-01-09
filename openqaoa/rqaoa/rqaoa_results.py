@@ -59,7 +59,7 @@ class RQAOAResults(dict):
         """
         Returns the optimized angles of the i-th qaoa step of the RQAOA.
         """
-        return self.get_qaoa_step(i).results.optimized['angles']
+        return self.get_qaoa_step(i).optimized['angles']
 
     def get_problem_step(self, i):
         """
@@ -90,7 +90,7 @@ class RQAOAResults(dict):
 
         for step in serializable_dict['intermediate_steps']:
             step['QAOA_results'] = {'optimized': step['QAOA_results'].optimized, 'most_probable_states': step['QAOA_results'].most_probable_states}
-            step['QAOA_results']['optimized'].pop('optimized measurement outcomes')
+            step['QAOA_results']['optimized'].pop('measurement_outcomes')
 
         return serializable_dict
 
