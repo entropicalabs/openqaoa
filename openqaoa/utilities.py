@@ -37,12 +37,12 @@ def X_mixer_hamiltonian(n_qubits: int,
     ----------
     n_qubits: `int`
         The number of qubits in the mixer Hamiltonian.
-    coeffs: `list`
+    coeffs: `List[float]`
         The coefficients of the X terms in the Hamiltonian.
 
     Returns
     -------
-    hamiltonian: `Hamiltonian`
+    `Hamiltonian`
         The Hamiltonian object corresponding to the X mixer.
     """
     # If no coefficients provided, set all to -1
@@ -77,15 +77,13 @@ def XY_mixer_hamiltonian(n_qubits: int,
         The number of qubits in the system.
     qubit_connectivity: `Union[List[list],List[tuple], str]`
         The connectivity of the qubits in the mixer Hamiltonian.
-    coeffs: `list`
+    coeffs: `List[float]`
         The coefficients of the XY terms in the Hamiltonian.
 
     Returns
     -------
-    hamiltonian: `Hamiltonian`
+    `Hamiltonian`
         The Hamiltonian object corresponding to the XY mixer.
-
-    
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
@@ -139,13 +137,19 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
     
     Parameters
     ----------
-    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
+    input_gatemap: `TwoQubitRotationGateMap`
+        The GateMap whose connectivity we are trying to create.
+    n_qubits: `int`
+        The number of qubits in the system.
+    qubit_connectivity: `Union[List[list],List[tuple], str]`
         The connectivity of the qubits in the mixer.
-    coeffs: `list`, optional
+    coeffs: `List[float]`, optional
         The coefficients of the GateMap in the Mixer Blocks.
     
     Returns
     -------
+    `Tuple[List[TwoQubitRotationGateMap], List[float]]`
+        Returns tuple containing the list of gatemaps and their associated coefficients. If no coefficients were on initialisation provided, a default of 1.0 is used for all gatemap objects.
     """
     
     # Set of topologies supported by default
@@ -187,7 +191,7 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
         
 
 
-def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None):
+def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None) -> Hamiltonian:
     """
     Parameters
     ----------
@@ -195,14 +199,14 @@ def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivi
         Number of qubits in the Hamiltonian.
     mixer_type: `str`
         Name of the mixer Hamiltonian. Choose from `x` or `xy`.
-    qubit_connectivity: `list` or `str`, optional
+    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
         The connectivity of the qubits in the mixer Hamiltonian.
-    coeffs: `list`
+    coeffs: `List[float]`, optional
         The coefficients of the terms in the Hamiltonian.
 
     Returns:
     --------
-    mixer: `Hamiltonian`
+    `Hamiltonian`
         Hamiltonian object containing the specificied mixer.
     """
 
