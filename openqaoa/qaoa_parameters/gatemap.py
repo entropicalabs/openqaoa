@@ -315,6 +315,10 @@ class RotationGateMapFactory(object):
 
     def convert_hamiltonian_to_gate_maps(hamil_obj: Hamiltonian,
                                            input_label: List) -> List[RotationGateMap]:
+        
+        """
+        Converts a Hamiltonian Object into a List of RotationGateMap Objects.
+        """
 
         pauli_terms = hamil_obj.terms
 
@@ -379,6 +383,11 @@ class RotationGateMapFactory(object):
         return output_gates
     
     def remap_gate_map_labels(gatemap_list: List[RotationGateMap], input_label: List) -> List[RotationGateMap]:
+        
+        """
+        Recreates a list of RotationGateMap Objects with the appropriately 
+        assigned pauli_label attribute.
+        """
         
         output_gates = []
 

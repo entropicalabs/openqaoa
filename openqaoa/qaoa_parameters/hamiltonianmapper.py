@@ -31,12 +31,12 @@ class HamiltonianMapper(object):
         ----------
         hamil_obj : `Hamiltonian`
             The Hamiltonian object to construct the gates from
-        input_label : List[str]
+        input_label : `list`
             Input label defining the type of gate
 
         Return
         ------
-        List[RotationGateMap]
+        `list[RotationGateMap]`
             List of RotationGateMap objects defining part of the circuit
         """
 
@@ -52,8 +52,10 @@ class HamiltonianMapper(object):
         ----------
         hamil_obj : `Hamiltonian`
             The Hamiltonian object to construct the gates from
-        tag : str
+        tag : `str`
             The tag to be used for the repeated gates
+        n_repetitions: `int`
+            The number of times the layer of gates have to be repeated. 
         """
         output_gate_list = []
 
@@ -65,11 +67,42 @@ class HamiltonianMapper(object):
     
     def remap_gate_map_labels(gatemap_list: List[RotationGateMap], input_label: List = []) -> List[RotationGateMap]:
         
+        """
+        This method reassigns the pauli_label of all the gates in the
+        RotationGateMap list. The newly assigned labels help the circuit
+        identify which variational angles fit into which gate.
+        
+        Parameters
+        ----------
+        gatemap_list: `list[RotationGateMap]`
+            The list of RotationGateMap objects that needs the pauli_label attribute to be remapped.
+        input_label : `list`
+            Input label defining the type of gate
+            
+        Return
+        ------
+        `list[RotationGateMap]`
+            List of RotationGateMap objects defining part of the circuit
+        """
+        
         assert type(input_label) is list, 'input_label must be of type list'
 
         return RotationGateMapFactory.remap_gate_map_labels(gatemap_list, input_label)
     
     def repeat_gate_maps_from_gate_map_list(gatemap_list: List[RotationGateMap], tag: str, n_repetitions: int) -> List[List[RotationGateMap]]:
+        
+        """
+        Repeat the gates for n_repetitions layers based on the input list of RotationGateMap objects.
+        
+        Parameters
+        ----------
+        gatemap_list: `list[RotationGateMap]`
+            The list of RotationGateMap objects that needs to be cloned.
+        tag : `str`
+            The tag to be used for the repeated gates
+        n_repetitions: `int`
+            The number of times to clone the RotationGateMap objects in the list.
+        """
         
         output_gate_list = []
         
