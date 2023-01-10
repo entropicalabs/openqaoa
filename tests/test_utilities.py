@@ -22,7 +22,7 @@ from openqaoa.utilities import *
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
-from openqaoa.problems.problem import MinimumVertexCover
+from openqaoa.problems import MinimumVertexCover
 
 """
 Unit test based testing of the utility functions

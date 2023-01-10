@@ -22,7 +22,7 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.devices import DevicePyquil
 from openqaoa.backends import QAOAPyQuilQPUBackend
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
-from openqaoa.problems.problem import NumberPartition
+from openqaoa.problems import NumberPartition
 import pytest
 
 class TestingQAOACostPyquilQVM(unittest.TestCase):

@@ -17,7 +17,7 @@ import numpy as np
 import copy
 from openqaoa.devices import DeviceLocal, DeviceBase
 
-from openqaoa.problems.problem import QUBO
+from openqaoa.problems import QUBO
 from openqaoa.problems.helper_functions import convert2serialize
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters, ALLOWED_RQAOA_TYPES

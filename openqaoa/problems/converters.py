@@ -14,11 +14,11 @@
 
 import numpy as np
 from collections import defaultdict
-from .problem import QUBO
+from .qubo import QUBO
 from typing import Union
 
 
-class FromDocplex2IsingModel:
+class FromDocplex2IsingModel(object):
     def __init__(
         self,
         model,

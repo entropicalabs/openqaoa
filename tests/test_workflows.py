@@ -31,7 +31,7 @@ import unittest
 import networkx as nw
 import numpy as np
 
-from openqaoa.problems.problem import MinimumVertexCover, QUBO
+from openqaoa.problems import MinimumVertexCover, QUBO
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']

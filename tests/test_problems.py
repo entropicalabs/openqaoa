@@ -3,7 +3,7 @@ import unittest
 import networkx as nx
 import numpy as np
 from random import randint, random
-from openqaoa.problems.problem import (
+from openqaoa.problems import (
     NumberPartition, QUBO, TSP, Knapsack, ShortestPath,
     SlackFreeKnapsack, MaximumCut, MinimumVertexCover
 )

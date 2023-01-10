@@ -23,7 +23,7 @@ import itertools
 import os
 import json
 
-from openqaoa.problems.problem import MinimumVertexCover, QUBO
+from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
