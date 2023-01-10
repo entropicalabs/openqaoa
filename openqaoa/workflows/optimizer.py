@@ -14,7 +14,7 @@
 
 from abc import ABC
 import numpy as np
-from datetime import datetime
+import time
 import json
 from typing import List
 import gzip
@@ -638,14 +638,14 @@ class QAOA(Optimizer):
             raise ValueError('Please compile the QAOA before optimizing it!')
 
         # timestamp for the start of the optimization
-        self.header['execution_time_start'] = int(datetime.utcnow().timestamp())
+        self.header['execution_time_start'] = int(time.time())
 
         self.optimizer.optimize()
         # TODO: results and qaoa_results will differ
         self.results = self.optimizer.qaoa_result
 
         # timestamp for the end of the optimization
-        self.header['execution_time_end'] = int(datetime.utcnow().timestamp())
+        self.header['execution_time_end'] = int(time.time())
 
         if verbose:
             print(f'optimization completed.')
@@ -962,7 +962,7 @@ class RQAOA(Optimizer):
             f_max_terms = rqaoa.max_terms 
 
         # timestamp for the start of the optimization
-        self.header['execution_time_start'] = int(datetime.utcnow().timestamp())
+        self.header['execution_time_start'] = int(time.time())
 
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
@@ -1011,7 +1011,7 @@ class RQAOA(Optimizer):
             elimination_tracker, cl_ground_states, self.problem.hamiltonian)
 
         # timestamp for the end of the optimization
-        self.header['execution_time_end'] = int(datetime.utcnow().timestamp())
+        self.header['execution_time_end'] = int(time.time())
 
         # Compute description dictionary containing all the information            
         self.results['solution'] = full_solutions
