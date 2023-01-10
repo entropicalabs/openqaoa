@@ -143,7 +143,7 @@ class TestingResultOutputs(unittest.TestCase):
         ## now we repeat the same test but we do not include some keys
 
         #get dict without some values
-        results_dict = qaoa.results.asdict(keys_not_to_include = ['solutions_bitstrings', 'method'])
+        results_dict = qaoa.results.asdict(exclude_keys = ['solutions_bitstrings', 'method'])
 
         #expected keys
         expected_keys_dict = {item: False for item in expected_keys}
@@ -349,7 +349,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         ## now we repeat the same test but we do not include some keys
 
         #get dict without some values
-        results_dict = results.asdict(keys_not_to_include = ['solutions_bitstrings', 'method'])
+        results_dict = results.asdict(exclude_keys = ['solutions_bitstrings', 'method'])
 
         #expected keys
         expected_keys_dict = {item: False for item in expected_keys}

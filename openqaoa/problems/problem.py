@@ -195,13 +195,13 @@ class QUBO:
         # update the metadata (it will be checked if it is json serializable in the __setattr__ method)
         self.metadata = {**self.metadata, **metadata}
 
-    def asdict(self, keys_not_to_include:List[str]=[]):
+    def asdict(self, exclude_keys:List[str]=[]):
         """
         Returns a dictionary containing the serialization of the class.
         
         Parameters
         ----------
-        keys_not_to_include: List[str]
+        exclude_keys: List[str]
             A list of keys that should not be included in the serialization.
 
         Returns
@@ -209,10 +209,10 @@ class QUBO:
             A dictionary containing the serialization of the class.
         """
 
-        if keys_not_to_include == []:
+        if exclude_keys == []:
             return convert2serialize(dict(self))
         else:
-            return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= keys_not_to_include) 
+            return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= exclude_keys) 
 
     @staticmethod
     def clean_terms_and_weights(terms, weights):

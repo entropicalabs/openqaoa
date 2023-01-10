@@ -336,25 +336,25 @@ class Optimizer(ABC):
 
         return serializable_dict
 
-    def asdict(self, keys_not_to_include:List[str]=[]):
+    def asdict(self, exclude_keys:List[str]=[]):
         """
         Returns a dictionary of the Optimizer object, where all objects are converted to dictionaries.
 
         Parameters
         ----------
-        keys_not_to_include : List[str]
+        exclude_keys : List[str]
             A list of keys to exclude from the returned dictionary.
 
         Returns
         -------
         dict
         """
-        if keys_not_to_include == []:
+        if exclude_keys == []:
             return self._serializable_dict(complex_to_string=False)
         else:
-            return delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=False), keys_to_delete= keys_not_to_include)
+            return delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=False), keys_to_delete= exclude_keys)
 
-    def dumps(self, indent:int=2, keys_not_to_include:List[str]=[]):
+    def dumps(self, indent:int=2, exclude_keys:List[str]=[]):
         """
         Returns a json string of the Optimizer object.
 
@@ -362,7 +362,7 @@ class Optimizer(ABC):
         ----------
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
-        keys_not_to_include : List[str]
+        exclude_keys : List[str]
             A list of keys to exclude from the json string.
 
         Returns
@@ -370,12 +370,12 @@ class Optimizer(ABC):
         str
         """
 
-        if keys_not_to_include == []:
+        if exclude_keys == []:
             return json.dumps(self._serializable_dict(complex_to_string=True), indent=indent)
         else:
-            return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= keys_not_to_include), indent=indent)
+            return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= exclude_keys), indent=indent)
 
-    def dump(self, file_path:str, indent:int=2, compresslevel:int=0, keys_not_to_include:List[str]=[]):
+    def dump(self, file_path:str, indent:int=2, compresslevel:int=0, exclude_keys:List[str]=[]):
         """
         Saves the Optimizer object as json file (if compresslevel is 0). If compresslevel is not 0, saves the Optimizer object as a .gz file (which should be decompressed before use).
 
@@ -388,7 +388,7 @@ class Optimizer(ABC):
         compresslevel : int
             The compression level to use. If 0, no compression is used and a json file is saved.
             If 1, the fastest compression method is used. If 9, the slowest but most effective compression method is used. And a .gz file is saved.
-        keys_not_to_include : List[str]
+        exclude_keys : List[str]
             A list of keys that should not be included in the json file.
         """
 
@@ -405,10 +405,10 @@ class Optimizer(ABC):
 
             # saving the result in a json file
             with open(file_path, 'w') as f:
-                if keys_not_to_include == []:
+                if exclude_keys == []:
                     json.dump(self._serializable_dict(complex_to_string=True), f, indent=indent)
                 else:
-                    json.dump(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= keys_not_to_include), f, indent=indent)
+                    json.dump(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= exclude_keys), f, indent=indent)
 
         else:
             # adding .json.gz extension if not present
@@ -418,7 +418,7 @@ class Optimizer(ABC):
 
             # we save the json created by the dumps method as a .gz file
             with gzip.open(file_path, 'w', compresslevel=compresslevel) as f:
-                f.write(self.dumps(indent=indent, keys_not_to_include=keys_not_to_include).encode('utf-8'))
+                f.write(self.dumps(indent=indent, exclude_keys=exclude_keys).encode('utf-8'))
 
         print('Results saved as {}'.format(file_path))
 

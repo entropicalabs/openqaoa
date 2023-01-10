@@ -788,15 +788,15 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.__test_expected_keys(qaoa.asdict(), method='asdict')
 
         # check QAOA asdict deleting some keys
-        keys_not_to_include = ['corr_matrix', 'number_steps']
-        self.__test_expected_keys(qaoa.asdict(keys_not_to_include=keys_not_to_include), keys_not_to_include, method='asdict')
+        exclude_keys = ['corr_matrix', 'number_steps']
+        self.__test_expected_keys(qaoa.asdict(exclude_keys=exclude_keys), exclude_keys, method='asdict')
 
         # check QAOA dumps
         self.__test_expected_keys(json.loads(qaoa.dumps()), method='dumps')
 
         # check QAOA dumps deleting some keys
-        keys_not_to_include = ['parent_uuid', 'counter']
-        self.__test_expected_keys(json.loads(qaoa.dumps(keys_not_to_include=keys_not_to_include)), keys_not_to_include, method='dumps')
+        exclude_keys = ['parent_uuid', 'counter']
+        self.__test_expected_keys(json.loads(qaoa.dumps(exclude_keys=exclude_keys)), exclude_keys, method='dumps')
 
         # check QAOA dump
         file_name = 'test_dump_qaoa.json'
@@ -817,11 +817,11 @@ class TestingVanillaQAOA(unittest.TestCase):
         os.remove(full_name)
 
         # check QAOA dump deleting some keys
-        keys_not_to_include = ['schedule', 'pair']
-        qaoa.dump(file_name, keys_not_to_include=keys_not_to_include, indent=None)
+        exclude_keys = ['schedule', 'pair']
+        qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
         with open(full_name, 'r') as file:
-            assert file.read() == qaoa.dumps(keys_not_to_include=keys_not_to_include, indent=None), 'Dump file does not contain the correct data, when deleting some keys'
+            assert file.read() == qaoa.dumps(exclude_keys=exclude_keys, indent=None), 'Dump file does not contain the correct data, when deleting some keys'
         os.remove(full_name)
 
         # check QAOA dump with compression
@@ -852,7 +852,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q_noisy_shot.optimize()
         q_noisy_shot.asdict()
         
-    def __test_expected_keys(self, obj, keys_not_to_include=[], method='asdict'):
+    def __test_expected_keys(self, obj, exclude_keys=[], method='asdict'):
         """
         method to test if the dictionary has all the expected keys
         """
@@ -866,7 +866,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # Check if the dictionary has all the expected keys except the ones that were not included
         for key, value in expected_keys.items():
-            if key not in keys_not_to_include:
+            if key not in exclude_keys:
                 assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
             else:
                 assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
@@ -1135,15 +1135,15 @@ class TestingRQAOA(unittest.TestCase):
         self.__test_expected_keys(rqaoa.asdict(), method='asdict')
 
         # check RQAOA asdict deleting some keys
-        keys_not_to_include = ['corr_matrix', 'number_steps']
-        self.__test_expected_keys(rqaoa.asdict(keys_not_to_include=keys_not_to_include), keys_not_to_include, method='asdict')
+        exclude_keys = ['corr_matrix', 'number_steps']
+        self.__test_expected_keys(rqaoa.asdict(exclude_keys=exclude_keys), exclude_keys, method='asdict')
 
         # check RQAOA dumps
         self.__test_expected_keys(json.loads(rqaoa.dumps()), method='dumps')
 
         # check RQAOA dumps deleting some keys
-        keys_not_to_include = ['project_uuid', 'counter']
-        self.__test_expected_keys(json.loads(rqaoa.dumps(keys_not_to_include=keys_not_to_include)), keys_not_to_include, method='dumps')
+        exclude_keys = ['project_uuid', 'counter']
+        self.__test_expected_keys(json.loads(rqaoa.dumps(exclude_keys=exclude_keys)), exclude_keys, method='dumps')
 
         # check RQAOA dump
         file_name = 'test_dump_rqaoa.json'
@@ -1164,11 +1164,11 @@ class TestingRQAOA(unittest.TestCase):
         os.remove(full_name)
 
         # check RQAOA dump deleting some keys
-        keys_not_to_include = ['schedule', 'pair']
-        rqaoa.dump(file_name, keys_not_to_include=keys_not_to_include, indent=None)
+        exclude_keys = ['schedule', 'pair']
+        rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
         with open(full_name, 'r') as file:
-            assert file.read() == rqaoa.dumps(keys_not_to_include=keys_not_to_include, indent=None), 'Dump file does not contain the correct data, when deleting some keys'
+            assert file.read() == rqaoa.dumps(exclude_keys=exclude_keys, indent=None), 'Dump file does not contain the correct data, when deleting some keys'
         os.remove(full_name)
 
         # check RQAOA dump with compression
@@ -1179,7 +1179,7 @@ class TestingRQAOA(unittest.TestCase):
         os.remove(full_name+'.gz')
         
 
-    def __test_expected_keys(self, obj, keys_not_to_include=[], method='asdict'):
+    def __test_expected_keys(self, obj, exclude_keys=[], method='asdict'):
         """
         method to test if the dictionary has all the expected keys
         """
@@ -1193,7 +1193,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Check if the dictionary has all the expected keys except the ones that were not included
         for key, value in expected_keys.items():
-            if key not in keys_not_to_include:
+            if key not in exclude_keys:
                 assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
             else:
                 assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'

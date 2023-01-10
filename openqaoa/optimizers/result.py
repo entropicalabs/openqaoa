@@ -111,7 +111,7 @@ class Result:
 
     #     return (string)
 
-    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, keys_not_to_include:List[str]=[]):
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, exclude_keys:List[str]=[]):
         """
         Returns a dictionary with the results of the optimization, where the dictionary is serializable. 
         If the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
@@ -122,7 +122,7 @@ class Result:
             If True, the cost hamiltonian is kept in the dictionary. If False, it is removed.
         complex_to_string: `bool`
             If True, the complex numbers are converted to strings. If False, they are kept as complex numbers. This is useful for the JSON serialization.
-        keys_not_to_include: `list[str]`
+        exclude_keys: `list[str]`
             A list of keys to exclude from the returned dictionary.
 
         Returns
@@ -158,7 +158,7 @@ class Result:
             return_dict['intermediate'] = self.intermediate
             return_dict['optimized'] = self.optimized
 
-        return return_dict if keys_not_to_include == [] else delete_keys_from_dict(return_dict, keys_not_to_include)
+        return return_dict if exclude_keys == [] else delete_keys_from_dict(return_dict, exclude_keys)
 
 
     @staticmethod
