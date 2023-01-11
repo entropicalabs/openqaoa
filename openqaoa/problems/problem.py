@@ -270,7 +270,7 @@ class QUBO:
             return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= exclude_keys) 
 
     @staticmethod
-    def from_dict(dict: dict, clean_terms_and_weights=False):
+    def from_dict(dict: dict, clean_terms_and_weights=False): 
         """
         Returns a QUBO object from a dictionary. The dictionary should be comparable to the output of the asdict method.
 
