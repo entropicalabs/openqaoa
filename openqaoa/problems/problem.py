@@ -85,7 +85,7 @@ class Problem(ABC):
         problem_instance = problem_instance.copy()
         
         # mapper from problem type to class
-        problem_mapper = {
+        problem_mapper = { 
             "generic_qubo": QUBO,
             "tsp": TSP,
             "number_partition": NumberPartition,
