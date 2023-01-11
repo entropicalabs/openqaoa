@@ -92,6 +92,9 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
         float:
             Expectation value of cost operator wrt to the QAOA parameters according to the analytical expression for p=1.
         """
+        # generate a job id
+        self.job_id = generate_uuid() 
+        
         betas = params.betas
         gammas = params.gammas
         
