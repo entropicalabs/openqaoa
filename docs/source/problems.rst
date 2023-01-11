@@ -53,6 +53,7 @@ Built-in problems
 
 .. autoclass:: openqaoa.problems.ShortestPath
     :members:
+    :undoc-members:
     :show-inheritance:
     :inherited-members:
 
