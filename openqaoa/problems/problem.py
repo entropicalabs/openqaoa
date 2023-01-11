@@ -22,7 +22,8 @@ import itertools
 import json
 from typing import List
 
-from .helper_functions import convert2serialize, check_kwargs
+from .helper_functions import check_kwargs
+from ..utilities import convert2serialize
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 from openqaoa.utilities import delete_keys_from_dict
 
@@ -194,13 +195,13 @@ class QUBO:
         # update the metadata (it will be checked if it is json serializable in the __setattr__ method)
         self.metadata = {**self.metadata, **metadata}
 
-    def asdict(self, keys_not_to_include:List[str]=[]):
+    def asdict(self, exclude_keys:List[str]=[]):
         """
         Returns a dictionary containing the serialization of the class.
         
         Parameters
         ----------
-        keys_not_to_include: List[str]
+        exclude_keys: List[str]
             A list of keys that should not be included in the serialization.
 
         Returns
@@ -208,10 +209,10 @@ class QUBO:
             A dictionary containing the serialization of the class.
         """
 
-        if keys_not_to_include == []:
+        if exclude_keys == []:
             return convert2serialize(dict(self))
         else:
-            return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= keys_not_to_include) 
+            return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= exclude_keys) 
 
     @staticmethod
     def clean_terms_and_weights(terms, weights):
