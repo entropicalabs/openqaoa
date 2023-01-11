@@ -20,6 +20,7 @@ from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOAB
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...devices import DevicePyquil
 from ...qaoa_parameters.gatemap import RZZGateMap, SWAPGateMap
+from ...utilities import generate_uuid
 
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
@@ -244,9 +245,13 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         counts : dictionary
             A dictionary with the bitstring as the key and the number of counts as its value.
         """
+
         executable_program = self.qaoa_circuit(params)
 
         result = self.device.quantum_computer.run(executable_program)
+
+        # we create an uuid for the job
+        self.job_id = generate_uuid()
 
         # TODO: check the endian (big or little) ordering of measurement outcomes
         meas_list = [''.join(str(bit) for bit in bitstring)

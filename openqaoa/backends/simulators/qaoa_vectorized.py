@@ -25,6 +25,7 @@ from scipy.sparse.linalg import expm
 from ...basebackend import QAOABaseBackendStatevector, QuantumCircuitBase
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...qaoa_parameters.operators import Hamiltonian
+from openqaoa.utilities import generate_uuid
 
 
 # Pauli gates
@@ -702,6 +703,9 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         -------
             None
         """
+        # generate a job id for the wavefunction evaluation
+        self.job_id = generate_uuid() 
+
         # reset the wavefunction back to its initialisation state
         self.reset_circuit()
         
