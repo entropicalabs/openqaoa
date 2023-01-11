@@ -1002,6 +1002,9 @@ class RQAOA(Optimizer):
 
             # Add one step to the counter
             counter += 1
+        
+        # Solve the new problem classically
+        cl_energy, cl_ground_states = ground_state_hamiltonian(problem.hamiltonian)
             
         # Retrieve full solutions including eliminated spins and their energies
         full_solutions = rqaoa.final_solution(
