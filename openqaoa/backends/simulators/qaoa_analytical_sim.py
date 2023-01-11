@@ -20,7 +20,7 @@ import numpy as np
 from ...basebackend import QAOABaseBackend, QuantumCircuitBase
 from ...qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from ...qaoa_parameters.operators import Hamiltonian
-from openqaoa.utilities import energy_expectation_analytical
+from openqaoa.utilities import energy_expectation_analytical, generate_uuid
 
 # not sure about those ones:
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams 
