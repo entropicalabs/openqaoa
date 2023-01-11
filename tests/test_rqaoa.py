@@ -293,7 +293,20 @@ class TestingRQAOA(unittest.TestCase):
         assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
 
 
-    def test_isolated_nodes(self):
+    def test_isolated_nodes_minimum_example(self):
+        """
+        Testing an edge case: solving MaxCut on a specific random unweighted graph must identify correctly the isolated nodes.
+
+        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the nodes has been correctly isolated.
+        """
+        test_qubo = QUBO(n=6, terms=[[0, 1], [2, 3], [2, 5], [3, 4], [4, 5]], weights=[2.0, 1.0, 1.0, 1.0, 1.0])
+        spin_map = {0: (1, 0), 1: (-1.0, 0), 2: (1, 2), 3: (1, 3), 4: (1, 4), 5: (1, 5)}
+        new_problem, new_spin_map = redefine_problem(test_qubo, spin_map)
+        
+        assert new_problem.terms == [[0, 1], [0, 3], [1, 2], [2, 3]]
+        
+        
+    def test_isolated_nodes_whole_workflow(self):
         """
         Testing an edge case: solving MaxCut on a specific random unweighted graph must identify correctly the isolated nodes.
 
@@ -331,7 +344,7 @@ class TestingRQAOA(unittest.TestCase):
         # Compare results to known behaviour:
         assert opt_results['schedule'] == [1, 1, 1, 1, 1, 1, 2, 1]
         assert opt_results['solution'] == {'011001101001': -6.0, '011000110011': -6.0}
-            
+        
 if __name__ == "__main__":
 	unittest.main()
  
