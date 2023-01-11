@@ -14,9 +14,13 @@
 
 import numpy as np
 import unittest
+import networkx as nx
 
 from openqaoa.qaoa_parameters import Hamiltonian
 from openqaoa.rqaoa import *
+from openqaoa.problems.problem import MaximumCut
+from openqaoa.workflows.optimizer import RQAOA
+from openqaoa.devices import create_device
 
 """
 Unittest based testing of current implementation of the RQAOA Algorithm
@@ -288,6 +292,51 @@ class TestingRQAOA(unittest.TestCase):
         # Test computed Hamiltonian contains the correct terms
         assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
 
+    def test_total_elimination_whole_workflow(self):
+        """
+        Testing an edge case: solving MaxCut on a specific random unweighted graph leads to vanishing instances before reaching cutoff size.
+        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the classical solution was obtained for the smallest cutoff for which the problem still exists.
+        """
+        # Generate the graph
+        g = nx.generators.gnp_random_graph(n=12, p=0.7, seed=58, directed=False)
+
+        # Define the problem and translate it into a binary QUBO.
+        maxcut_qubo = MaximumCut(g).get_qubo_problem()
+
+        # Define the RQAOA object
+        R = RQAOA()
+
+        # Set parameters for RQAOA: standard with cut off size 3 qubits
+        R.set_rqaoa_parameters(steps=1, n_cutoff=3)
+        
+        # Set more parameters with a very specific starting point
+        R.set_circuit_properties(p=1, init_type='custom', variational_params_dict={"betas":[0.2732211141792405], "gammas":[1.6017587697695814]}, mixer_hamiltonian='x')
+
+        # Define the device to be vectorized
+        device = create_device(location='local', name='vectorized')
+        R.set_device(device)
+
+        # Set the classical method used to optimiza over QAOA angles and its properties
+        R.set_classical_optimizer(method="cobyla", maxiter=200)
+
+        # Compile and optimize the problem instance on RQAOA
+        R.compile(maxcut_qubo)
+        R.optimize()
+
+        # Get results
+        opt_results = R.results
+
+        # Compare results to known behaviour:
+        assert opt_results['solution'] == {'101010100010': -11.0,
+                                           '010100010101': -11.0,
+                                           '101100010101': -11.0,
+                                           '101011100010': -11.0,
+                                           '010101010101': -11.0,
+                                           '101010101010': -11.0,
+                                           '010100011101': -11.0,
+                                           '010011101010': -11.0,
+                                           '101011101010': -11.0,
+                                           '010101011101': -11.0}
 
 if __name__ == "__main__":
 	unittest.main()

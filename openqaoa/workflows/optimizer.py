@@ -1011,7 +1011,8 @@ class RQAOA(Optimizer):
             counter += 1
             
         # In case eliminations cancel out the whole graph, spin values do not matter
-        if total_elimination:
+        if False:
+        #if total_elimination:
             # Set the values of the spins arbitrarily
             #cl_ground_states = ""
             #for spin in np.arange(0, len(spin_map.keys())):
