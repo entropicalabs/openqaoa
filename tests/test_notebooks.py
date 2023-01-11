@@ -66,6 +66,9 @@ def test_10_workflows_on_Amazon_braket():
 @pytest.mark.notebook
 def test_11_Mixer_example():
     notebook_test_function("./examples/11_Mixer_example.ipynb")
+
+def test_X_dumping_data():
+    notebook_test_function("./examples/X_dumping_data.ipynb")
        
 ### Community Tutorials
 

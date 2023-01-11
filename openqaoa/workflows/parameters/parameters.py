@@ -12,9 +12,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from openqaoa.problems.helper_functions import convert2serialize
+from openqaoa.utilities import convert2serialize
 
 
 class Parameters:
+    def __iter__(self):
+        for key, value in self.__dict__.items():
+            # remove "_" from the beginning of the key if it exists
+            yield (key[1:] if key.startswith("_") else key, value)
+
     def asdict(self):
-        return convert2serialize(self)
+        return convert2serialize(dict(self))
