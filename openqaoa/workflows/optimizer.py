@@ -959,15 +959,14 @@ class RQAOA(Optimizer):
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
             f_max_terms = rqaoa.ada_max_terms  
         else:
-            f_max_terms = rqaoa.max_terms 
+            f_max_terms = rqaoa.max_terms  
 
-<<<<<<< HEAD
-        total_elimination = False  # flag, set to true if the problem vanishes due to elimination before reachign cutoff
-=======
         # timestamp for the start of the optimization
         self.header['execution_time_start'] = int(time.time())
-
->>>>>>> dev
+        
+        # flag, set to true if the problem vanishes due to elimination before reaching cutoff
+        total_elimination = False 
+        
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
 
