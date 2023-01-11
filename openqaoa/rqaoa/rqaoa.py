@@ -560,10 +560,11 @@ def final_solution(elimination_tracker: list, cl_states: list, hamiltonian: Hami
         for terms_and_stats in elimination_tracker:
 
             # Back track elimination from the specific step
-            for term, val in terms_and_stats.items():
+            for term_stat in terms_and_stats:
 
                 # Extract qubits, by definition i<j
-                i, j = term
+                i, j = term_stat['pair']
+                val = term_stat['correlation']
 
                 # If i (parent spin) is None, j is fixed to cost
                 if i is None:
