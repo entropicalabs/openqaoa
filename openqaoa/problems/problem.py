@@ -270,6 +270,46 @@ class QUBO:
             return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= exclude_keys) 
 
     @staticmethod
+    def from_dict(dict: dict, clean_terms_and_weights=False):
+        """
+        Returns a QUBO object from a dictionary. The dictionary should be comparable to the output of the asdict method.
+
+        Parameters
+        ----------
+        dict: dict
+            The dictionary containing the serialization of the QUBO object.
+        clean_terms_and_weights: bool
+            Boolean indicating whether terms and weights can be cleaned by combining similar terms.
+
+        Returns
+        -------
+            A QUBO object.
+        """
+
+        # make a copy of the dictionary to avoid modifying the input
+        dict = dict.copy()
+
+        # extract the metadata
+        metadata = dict.pop("metadata", {})
+
+        # make a copy of the terms and weights to avoid modifying the input
+        dict['terms'] = dict['terms'].copy()
+        dict['weights'] = dict['weights'].copy()
+
+        # add the constant term
+        dict['terms'].append([])
+        dict['weights'].append(dict.pop('constant', 0))
+
+        # create the QUBO object
+        qubo = QUBO(**dict, clean_terms_and_weights=clean_terms_and_weights)
+
+        # add the metadata
+        qubo.metadata = metadata.copy()
+
+        # return the QUBO object
+        return qubo
+
+    @staticmethod
     def clean_terms_and_weights(terms, weights):
         """ Goes through the terms and weights and group them when possible"""
         # List to record the terms as sets
