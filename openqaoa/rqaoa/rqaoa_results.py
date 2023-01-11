@@ -12,12 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import copy
-import json
-
-from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
-from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
-from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
+import matplotlib.pyplot as plt
+from typing import List
+from ..utilities import delete_keys_from_dict
 
 class RQAOAResults(dict):
     """
@@ -25,15 +22,35 @@ class RQAOAResults(dict):
     It stores the results of the RQAOA optimization as a dictionary. With some custom methods.
     """
 
-    def __init__(self):
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, exclude_keys:List[str]=[]):
         """
-        Initializes the result class.
+        Returns the results as a full dictionary, meaning that the objects of the intermediate steps are also converted to dictionaries.
+
+        Parameters
+        ----------
+        keep_cost_hamiltonian : bool, optional
+            If True, the cost Hamiltonian is kept in the dictionary, by default True.
+        complex_to_string : bool, optional
+            If True, the complex numbers are converted to strings, by default False. This is useful for JSON serialization.
+        exclude_keys: `list[str]`
+            A list of keys to exclude from the returned dictionary.
+
+        Returns
+        -------
+        dict
+            The results as a dictionary.
         """
-        self.circuit_properties  = CircuitProperties()
-        self.backend_properties  = BackendProperties()
-        self.classical_optimizer = ClassicalOptimizer()
-        self.rqaoa_parameters    = RqaoaParameters()
-        self.device              = None
+
+        results = {k: v for k, v in self.items()}
+        results['intermediate_steps'] = []
+        for step in self['intermediate_steps']:
+            results['intermediate_steps'].append({
+                    'problem':      step['problem'].asdict(),
+                    'qaoa_results': step['qaoa_results'].asdict(keep_cost_hamiltonian=keep_cost_hamiltonian, complex_to_string=complex_to_string),
+                    'exp_vals_z':   step['exp_vals_z'].tolist(),
+                    'corr_matrix':  step['corr_matrix'].tolist(),
+                }) 
+        return results if exclude_keys == [] else delete_keys_from_dict(results, exclude_keys)
 
     def get_solution(self):
         """
@@ -41,90 +58,46 @@ class RQAOAResults(dict):
         """
         return self['solution']
 
-    def get_step(self, i):
-        """
-        Returns the QUBO problem and QAOA of the i-th intermidate step of the optimization.
-        """
-        return self['intermediate_steps'][i]
-
-    def get_qaoa_step(self, i):
+    def get_qaoa_results(self, step):
         """
         Returns the i-th qaoa step of the RQAOA.
         """
-        return self['intermediate_steps'][i]['QAOA']
+        return self['intermediate_steps'][step]['qaoa_results']
 
-    def get_qaoa_step_optimized_angles(self, i):
+    def get_qaoa_optimized_angles(self, step):
         """
         Returns the optimized angles of the i-th qaoa step of the RQAOA.
         """
-        return self.get_qaoa_step(i).results.optimized['angles']
+        return self.get_qaoa_results(step).optimized['angles']
 
-    def get_problem_step(self, i):
+    def get_problem(self, step):
         """
         Returns the QUBO problem in the i-th step of the RQAOA.
         """
-        return self['intermediate_steps'][i]['QUBO']
+        return self['intermediate_steps'][step]['problem']
 
-    def get_hamiltonian_step(self, i):
+    def get_hamiltonian(self, step):
         """
         Returns the Hamiltonian of the i-th step of the RQAOA.
         """
-        return self.get_problem_step(i).hamiltonian
+        return self.get_problem(step).hamiltonian
 
-    def __full_dict(self):
+    def get_exp_vals_z(self, step):
         """
-        Returns all values and attributes of the result in a dictionary.
+        Returns the expectation values of the Z operator of the i-th step of the RQAOA.
         """
-        full_dict = copy.deepcopy(self)
-        full_dict['elimination_rules']   = [{str(key): value for key, value in dict.items()} for dict in full_dict['elimination_rules']] 
-        full_dict['intermediate_steps']  = [{'QUBO': step['QUBO'], 'QAOA': step['QAOA'].results} for step in full_dict['intermediate_steps']]
-        full_dict['device']              = self.device
-        full_dict['circuit_properties']  = self.circuit_properties
-        full_dict['backend_properties']  = self.backend_properties
-        full_dict['classical_optimizer'] = self.classical_optimizer
-        full_dict['rqaoa_parameters']    = self.rqaoa_parameters
+        return self['intermediate_steps'][step]['exp_vals_z']
 
-        return full_dict
-
-    def as_dict(self):
+    def get_corr_matrix(self, step):
         """
-        Returns all values and attributes of the result as a dictionary.
+        Returns the correlation matrix of the i-th step of the RQAOA. 
         """
-        return convert2serialize(self.__full_dict())
+        return self['intermediate_steps'][step]['corr_matrix']
 
-    def dumps(self, indent:int=2):
+    def plot_corr_matrix(self, step, cmap="cool"):
         """
-        Returns a json string of the RQAOA result.
-
-        Parameters
-        ----------
-        indent : int
-            The number of spaces to indent the result in the json file. If None, the result is not indented.
-
-        Returns
-        -------
-        str
+        Plots the correlation matrix of the i-th step of the RQAOA.
+        TODO : add more options
         """
-
-        return json.dumps(convert2serialize_complex(self.__full_dict()), indent=indent)
-
-    def dump(self, file_path:str, indent:int=2):
-        """
-        Saves the result as json file.
-
-        Parameters
-        ----------
-        file_path : str
-            The name of the file to save the result. If None, the result is saved as 'result.json'.
-        indent : int
-            The number of spaces to indent the result in the json file. If None, the result is not indented.
-        """
-
-        # adding .json extension if not present
-        file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
-
-        # saving the result in a json file
-        with open(file_path, 'w') as f:
-            json.dump(convert2serialize_complex(self.__full_dict()), f, indent=indent)
-
-        print('Results saved as {}'.format(file_path))
+        plt.imshow(self.get_corr_matrix(step=step), cmap=cmap)
+        plt.colorbar()

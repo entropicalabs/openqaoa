@@ -52,4 +52,5 @@ class Problem(ABC):
         -------
             A dictionary containing the serialization of the class and the problem type name.
         """
+
         return {**{"problem_type": self.__name__}, **dict(self)}

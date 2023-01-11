@@ -13,6 +13,7 @@
 #   limitations under the License.
 
 from openqaoa.workflows.optimizer import QAOA, RQAOA
+from openqaoa.optimizers.result import Result
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
 from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS
@@ -20,13 +21,31 @@ import unittest
 import networkx as nw
 import numpy as np
 import itertools
-import os
-import json
 
 from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.qaoa_parameters.operators import Hamiltonian
+from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
+
+
+def _test_keys_in_dict(obj, expected_keys):
+    """
+    private function to test the keys. It recursively tests the keys of the nested dictionaries, or lists of dictionaries
+    """
+
+    if isinstance(obj, dict):
+        for key in obj:
+            if key in expected_keys.keys(): expected_keys[key] = True
+
+            if isinstance(obj[key], dict):
+                _test_keys_in_dict(obj[key], expected_keys)
+            elif isinstance(obj[key], list):
+                for item in obj[key]:
+                    _test_keys_in_dict(item, expected_keys)
+    elif isinstance(obj, list):
+        for item in obj:
+            _test_keys_in_dict(item, expected_keys)
 
 
 class TestingResultOutputs(unittest.TestCase):
@@ -70,34 +89,97 @@ class TestingResultOutputs(unittest.TestCase):
                 self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['cost']))
                 self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['measurement_outcomes']))
 
-
-    def _run_qaoa(self, optimization_method="cobyla", maxiter=5):
+    def test_qaoa_result_asdict(self):
         """
-        Run a QAOA algorithm and return the results
+        Test the qaoa result.asdict method
         """
 
-        # Create the problem
-        g = nw.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
-
-        q = QAOA()
-        q.set_classical_optimizer(maxiter=15, method=optimization_method, jac='finite_difference', hess='finite_difference')
-        q.compile(vc, verbose=False)
-        q.optimize()
-
-        return q.results
-
-    def _test_results_dict(self, results_dict):
-        """
-        private function to test the results dictionary
-        """
-        # test is a dictionary
-        assert isinstance(results_dict, dict), 'Results are not a dictionary'
+        # run the QAOA
+        qaoa = QAOA()
+        qaoa.compile(problem = QUBO.random_instance(n=8))
+        qaoa.optimize()
         
-        # test the keys
-        expected_keys = ['method', 'cost_hamiltonian', 'evals', 'intermediate', 'optimized', 'most_probable_states']
-        for key in expected_keys:
-            assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
+        # get dict
+        results_dict = qaoa.results.asdict()
+
+        # list of expected keys
+        expected_keys = ['method', 'cost_hamiltonian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'angles', 'cost', 'measurement_outcomes', 'job_id']
+        
+        #we append all the keys that we find in rqaoa.results, so if we introduce a new key, we will know that we need to update the result.asdict method
+        for key in vars(qaoa.results).keys():
+            if not key in expected_keys and not '_Result__' in key: expected_keys.append(key)
+
+        #create a dictionary with all the expected keys and set them to False
+        expected_keys_dict = {item: False for item in expected_keys}
+
+        #test the keys, it will set the keys to True if they are found
+        _test_keys_in_dict(results_dict, expected_keys_dict)
+
+        # Check if the dictionary has all the expected keys 
+        for key, value in expected_keys_dict.items():
+            assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+
+
+        ## now we repeat the same test but we do not include the cost hamiltonian
+
+        #get dict without cost hamiltonian
+        results_dict = qaoa.results.asdict(keep_cost_hamiltonian = False)
+
+        #expected keys 
+        expected_keys_dict = {item: False for item in expected_keys}    
+        expected_keys_not_in_dict = ['cost_hamiltonian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs']        
+
+        #test the keys, it will set the keys to True if they are found, except the ones that were not included which should be those in expected_keys_not_in_dict
+        _test_keys_in_dict(results_dict, expected_keys_dict) 
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys_dict.items():
+            if not key in expected_keys_not_in_dict:
+                assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary of the RQAOAResult class, but it should not have been.'
+
+
+        ## now we repeat the same test but we do not include some keys
+
+        #get dict without some values
+        results_dict = qaoa.results.asdict(exclude_keys = ['solutions_bitstrings', 'method'])
+
+        #expected keys
+        expected_keys_dict = {item: False for item in expected_keys}
+        expected_keys_not_in_dict = ['solutions_bitstrings', 'method']
+
+        #test the keys, it will set the keys to True if they are found, except the ones that were not included which should be those in expected_keys_not_in_dict
+        _test_keys_in_dict(results_dict, expected_keys_dict)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys_dict.items():
+            if not key in expected_keys_not_in_dict:
+                assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary of the RQAOAResult class, but it should not have been.'
+
+        """
+        to get the list of expected keys, run the following code:
+
+            def get_keys(obj, list_keys):
+                if isinstance(obj, dict):
+                    for key in obj:
+                        if not key in list_keys: list_keys.append(key)
+
+                        if isinstance(obj[key], dict):
+                            get_keys(obj[key], list_keys)
+                        elif isinstance(obj[key], list):
+                            for item in obj[key]:
+                                get_keys(item, list_keys)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        get_keys(item, list_keys)
+
+            expected_keys = []
+            get_keys(rqaoa.results.asdict(), expected_keys)
+            print(expected_keys)
+        """
 
     #test eval_number 
     def test_qaoa_result_eval_number(self):
@@ -107,66 +189,15 @@ class TestingResultOutputs(unittest.TestCase):
 
         for method in ['cobyla', 'spsa', 'vgd', 'newton', 'natural_grad_descent']:
             # run the QAOA and get the results
-            results = self._run_qaoa(optimization_method=method)
+            q = QAOA()
+            q.set_classical_optimizer(maxiter=15, method=method, jac='finite_difference', hess='finite_difference')
+            q.compile(problem = QUBO.random_instance(n=8))
+            q.optimize()
 
             # test the eval_number method
-            assert results.intermediate['cost'].index(min(results.intermediate['cost'])) + 1 == results.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation, when using {} method'.format(method)
+            assert q.results.intermediate['cost'].index(min(q.results.intermediate['cost'])) + 1 == q.results.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation, when using {} method'.format(method)
 
-    #test as_dict method
-    def test_qaoa_result_as_dict(self):
-        """
-        Test as_dict method for the QAOA result class
-        """
 
-        # run the QAOA and get the results as a dictionary with the as_dict method
-        results = self._run_qaoa()
-        results_dict = results.as_dict()
-        
-        # test the dictionary
-        self._test_results_dict(results_dict)
-
-    #test dumps
-    def test_qaoa_result_dumps(self):
-        """
-        Test the dumps for the QAOA result class
-        """
-
-        # Test for .dumps returning a string
-        results = self._run_qaoa()
-        json_string = results.dumps()
-        assert isinstance(json_string, str), 'json_string is not a string'
-
-        # read the json string and test the dictionary that is returned
-        results_dict = json.loads(json_string)
-        self._test_results_dict(results_dict)
-
-    #test dump 
-    def test_qaoa_result_dump(self):
-        """
-        Test the dump method for the QAOA result class 
-        """
-
-        # name for the file that will be created and deleted
-        name_file = 'results.json'
-
-        #run the algorithm
-        results = self._run_qaoa()
-
-        # Test for .dump creating a file and containing the correct information
-        results.dump(name_file, indent=None)
-        assert os.path.isfile(name_file), 'Dump file does not exist'
-        with open(name_file, 'r') as file:
-            assert file.read() == results.dumps(indent=None), 'Dump file does not contain the correct data'
-
-        # read the json string 
-        with open(name_file, 'r') as file:
-            results_dict = json.load(file)
-
-        # test the dictionary that is returned
-        self._test_results_dict(results_dict)
-
-        # delete the file
-        os.remove(name_file)
 
 
 class TestingRQAOAResultOutputs(unittest.TestCase):
@@ -174,7 +205,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
     Test the  Results Output after a full RQAOA loop
     """        
 
-    def _run_rqaoa(self, type='custom', eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+    def __run_rqaoa(self, type='custom', eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
         """
         private function to run the RQAOA
         """
@@ -208,35 +239,43 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         n_cutoff = 3
 
         # Test for the standard RQAOA
-        results = self._run_rqaoa()
+        results = self.__run_rqaoa()
+        assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
         for key in results['solution'].keys():
             assert len(key) == n_qubits, 'Number of qubits solution is not correct'
         assert isinstance(results['classical_output']['minimum_energy'], float)
         assert isinstance(results['classical_output']['optimal_states'], list)
-        for rule in results['elimination_rules']:
-            assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
+        for rule_list in results['elimination_rules']:
+            for rule in rule_list:
+                assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
         assert isinstance(results['schedule'], list), 'Schedule is not a list'
         assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
         for step in results['intermediate_steps']:
-            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
-            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
+            assert isinstance(step['problem'], QUBO), 'problem is not of type QUBO'
+            assert isinstance(step['qaoa_results'], Result), 'QAOA_results is not of type QAOA Results'
+            assert isinstance(step['exp_vals_z'], np.ndarray), 'exp_vals_z is not of type numpy array'
+            assert isinstance(step['corr_matrix'], np.ndarray), 'corr_matrix is not of type numpy array'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
-
+       
         # Test for the adaptive RQAOA
-        results = self._run_rqaoa(type='adaptive')
+        results = self.__run_rqaoa(type='adaptive')
+        assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
         for key in results['solution'].keys():
             assert len(key) == n_qubits, 'Number of qubits solution is not correct'
         assert isinstance(results['classical_output']['minimum_energy'], float)
         assert isinstance(results['classical_output']['optimal_states'], list)
-        for rule in results['elimination_rules']:
-            assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
+        for rule_list in results['elimination_rules']:
+            for rule in rule_list:
+                assert isinstance(rule, dict), 'Elimination rule item is not a dictionary'
         assert isinstance(results['schedule'], list), 'Schedule is not a list'
         assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
         for step in results['intermediate_steps']:
-            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
-            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
+            assert isinstance(step['problem'], QUBO), 'QUBO is not of type QUBO'
+            assert isinstance(step['qaoa_results'], Result), 'QAOA_results is not of type QAOA Results'
+            assert isinstance(step['exp_vals_z'], np.ndarray), 'exp_vals_z is not of type numpy array'
+            assert isinstance(step['corr_matrix'], np.ndarray), 'corr_matrix is not of type numpy array'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
-
+       
 
     def test_rqaoa_result_methods_steps(self):
         """
@@ -244,100 +283,109 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         """
 
         # run the RQAOA
-        results = self._run_rqaoa()
+        results = self.__run_rqaoa()
 
-        # angles that we should get
-        optimized_angles_to_find_list = [[0.34048594327263326, 0.3805304635645852], [0.4066391532372541, 0.3764245401202528], [0.8574965024416041, -0.5645176360484713]]
+        # test the solution method
+        assert results.get_solution() == results['solution'], 'get_solution method is not correct'
 
-        # test the methods
+        # test the methods for the intermediate steps 
         for i in range(results['number_steps']):
-            step = results.get_step(i)
-            assert isinstance(step, dict), 'Step is not a dictionary'
-            assert isinstance(step['QAOA'], QAOA), 'QAOA is not of type QAOA'
-            assert isinstance(step['QUBO'], QUBO), 'QUBO is not of type QUBO'
 
-            qaoa = results.get_qaoa_step(i)
-            assert isinstance(qaoa, QAOA), 'QAOA is not of type QAOA'
+            #methods for intermediate qaao results
+            assert results.get_qaoa_results(i) == results['intermediate_steps'][i]['qaoa_results'], 'get_qaoa_results method is not correct'
+            assert results.get_qaoa_optimized_angles(i) == results.get_qaoa_results(i).optimized['angles'], 'get_qaoa_optimized_angles method is not correct'
 
-            optimized_angles_to_find = optimized_angles_to_find_list[i]
-            optimized_angles = results.get_qaoa_step_optimized_angles(i)
-            assert optimized_angles == optimized_angles_to_find, 'Optimized angles are not correct'
+            #methods for intermediate qubo
+            assert results.get_problem(i) == results['intermediate_steps'][i]['problem'], 'get_qubo method is not correct'
+            assert isinstance(results.get_hamiltonian(i), Hamiltonian), 'get_hamiltonian method is not correct'
 
-            problem = results.get_problem_step(i)
-            assert isinstance(problem, QUBO), 'QUBO is not of type QUBO'
+            #methods for intermediate exp_vals_z and corr_matrix
+            assert results.get_exp_vals_z(i) is results['intermediate_steps'][i]['exp_vals_z'], 'get_exp_vals_z method is not correct'
+            assert results.get_corr_matrix(i) is results['intermediate_steps'][i]['corr_matrix'], 'get_corr_matrix method is not correct'
 
-            hamiltonian = results.get_hamiltonian_step(i)
-            assert isinstance(hamiltonian, Hamiltonian), 'Hamiltonian is not of type Hamiltonian'
-
-    def _test_results_dict(self, results_dict):
+    def test_rqaoa_result_plot_corr_matrix(self):
         """
-        private function to test the results dictionary
+        Test the plot_corr_matrix method for the RQAOAResult class
         """
-        # test is a dictionary
-        assert isinstance(results_dict, dict), 'Results are not a dictionary'
+
+        # run the RQAOA
+        results = self.__run_rqaoa()
+
+        # test the plot_corr_matrix method
+        for i in range(results['number_steps']):
+            results.plot_corr_matrix(step=i)
+
+    def test_rqaoa_result_asdict(self):
+        """
+        Test the plot_exp_vals_z method for the RQAOAResult class
+        """
+
+        # run the RQAOA
+        results = self.__run_rqaoa()
         
-        # test the keys
-        expected_keys = ['solution', 'classical_output', 'elimination_rules', 'schedule', 'intermediate_steps', 
-                         'number_steps', 'device', 'circuit_properties', 'backend_properties', 'classical_optimizer',
-                         'rqaoa_parameters']
-        for key in expected_keys:
-            assert key in results_dict.keys(), '{} key not in results dictionary'.format(key)
+        # get dict
+        results_dict = results.asdict()
 
-    #test as_dict method
-    def test_rqaoa_result_as_dict(self):
+        #create a list of expected keys
+        expected_keys = ['solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'terms', 'weights', 'constant', 'n', 'qaoa_results', 'method', 'cost_hamiltonian', 'n_qubits', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'exp_vals_z', 'corr_matrix', 'number_steps']
+
+        #we append all the keys that we find in rqaoa.results, so if we introduce a new key, we will know that we need to update the result.asdict method
+        for key in results.keys():
+            if not key in expected_keys: expected_keys.append(key)
+        for key in results['intermediate_steps'][0].keys():
+            if not key in expected_keys: expected_keys.append(key)
+
+        # dictionary with all the expected keys and set them to False
+        expected_keys = {item: False for item in expected_keys}
+
+        #test the keys, it will set the keys to True if they are found
+        _test_keys_in_dict(results_dict, expected_keys)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys.items():
+            assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+
+
+        ## now we repeat the same test but we do not include some keys
+
+        #get dict without some values
+        results_dict = results.asdict(exclude_keys = ['solutions_bitstrings', 'method'])
+
+        #expected keys
+        expected_keys_dict = {item: False for item in expected_keys}
+        expected_keys_not_in_dict = ['solutions_bitstrings', 'method']
+
+        #test the keys, it will set the keys to True if they are found, except the ones that were not included which should be those in expected_keys_not_in_dict
+        _test_keys_in_dict(results_dict, expected_keys_dict)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys_dict.items():
+            if not key in expected_keys_not_in_dict:
+                assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary of the RQAOAResult class, but it should not have been.'
+
         """
-        Test as_dict method for the RQAOAResult class
+        to get the list of expected keys, run the following code:
+
+            def get_keys(obj, list_keys):
+                if isinstance(obj, dict):
+                    for key in obj:
+                        if not key in list_keys: list_keys.append(key)
+
+                        if isinstance(obj[key], dict):
+                            get_keys(obj[key], list_keys)
+                        elif isinstance(obj[key], list):
+                            for item in obj[key]:
+                                get_keys(item, list_keys)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        get_keys(item, list_keys)
+
+            expected_keys = []
+            get_keys(rqaoa.results.asdict(), expected_keys)
+            print(expected_keys)
         """
-
-        # run the RQAOA and get the results as a dictionary with the as_dict method
-        results = self._run_rqaoa()
-        results_dict = results.as_dict()
-        
-        # test the dictionary
-        self._test_results_dict(results_dict)
-
-    #test dumps
-    def test_rqaoa_result_dumps(self):
-        """
-        Test the dumps for the RQAOAResult class
-        """
-
-        # Test for .dumps returning a string
-        results = self._run_rqaoa()
-        json_string = results.dumps()
-        assert isinstance(json_string, str), 'json_string is not a string'
-
-        # read the json string and test the dictionary that is returned
-        results_dict = json.loads(json_string)
-        self._test_results_dict(results_dict)
-
-    #test dump 
-    def test_rqaoa_result_dump(self):
-        """
-        Test the dump method for the RQAOAResult class
-        """
-
-        # name for the file that will be created and deleted
-        name_file = 'results.json'
-
-        #run the algorithm
-        results = self._run_rqaoa()
-
-        # Test for .dump creating a file and containing the correct information
-        results.dump(name_file, indent=None)
-        assert os.path.isfile(name_file), 'Dump file does not exist'
-        with open(name_file, 'r') as file:
-            assert file.read() == results.dumps(indent=None), 'Dump file does not contain the correct data'
-
-        # read the json string 
-        with open(name_file, 'r') as file:
-            results_dict = json.load(file)
-
-        # test the dictionary that is returned
-        self._test_results_dict(results_dict)
-
-        # delete the file
-        os.remove(name_file)
 
 if __name__ == "__main__":
 	unittest.main()
