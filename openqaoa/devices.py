@@ -15,6 +15,7 @@
 import abc
 import numpy as np
 from typing import Optional
+import networkx as nx
 from qiskit import IBMQ
 
 from qcs_api_client.client import QCSClientConfiguration
@@ -52,6 +53,14 @@ class DeviceBase(metaclass=abc.ABCMeta):
             providers without exiting the program.)
         """
         pass
+    
+    @abc.abstractproperty
+    def connectivity(self) -> nx.Graph:
+        """ 
+        Returns:
+            nx.Graph: networkx graph representing device connectivity
+        """
+        raise NotImplementedError()
 
 class DeviceLocal(DeviceBase):
     """
@@ -66,6 +75,10 @@ class DeviceLocal(DeviceBase):
             return True
         else:
             return False
+        
+    @property
+    def connectivity(self) -> nx.Graph:
+        return nx.complete_graph
 
 class DeviceQiskit(DeviceBase):
     """
@@ -176,6 +189,10 @@ class DeviceQiskit(DeviceBase):
         except Exception as e:
             print('An Exception has occured when trying to connect with the provider. Please note that you are required to set up your IBMQ account locally first. See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq for how to save your IBMQ account locally: {}'.format(e))
             return False
+        
+    def connectivity(self) -> nx.Graph:
+        
+        return self.backend_device.
 
 
 class DevicePyquil(DeviceBase):

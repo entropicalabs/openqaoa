@@ -21,8 +21,6 @@ import numpy as np
 from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
 
-from .gatemap import GateMap
-
 
 def _is_iterable_empty(in_iterable):
     if isinstance(in_iterable, Iterable):    # Is Iterable
@@ -133,7 +131,8 @@ class QAOACircuitParams(VQACircuitParams):
         Number of QAOA layers; defaults to 1 if not specified
         
     mixer_coeffs: `List[float]`
-        A list containing coefficients for each mixer GateMap. The order of the coefficients should follow the order of the GateMaps provided in the relevant gate block. This input isnt required if the input mixer block is of type Hamiltonian.
+        A list containing coefficients for each mixer GateMap. The order of the coefficients should follow the order of the
+        GateMaps provided in the relevant gate block. This input isnt required if the input mixer block is of type Hamiltonian.
 
     Attributes
     ----------
@@ -283,7 +282,7 @@ class QAOACircuitParams(VQACircuitParams):
         return string
         
     @property
-    def abstract_circuit(self) -> List[RotationGateMap]:
+    def abstract_circuit(self) -> List[GateMap]:
         
         _abstract_circuit = []
         for each_p in range(self.p):
@@ -291,6 +290,20 @@ class QAOACircuitParams(VQACircuitParams):
             _abstract_circuit.extend(self.mixer_block[each_p])
 
         return _abstract_circuit
+    
+    @property
+    def unit_layer_abstract_circuit(self) -> List[GateMap]:
+        
+        circuit = self.cost_block[0]
+        circuit.extend(self.mixer_block[0])
+        return circuit
+        
+    def route_circuit(self, qr_algo, device: DeviceBase) -> List[GateMap]:
+        """
+        Apply qubit routing to the abstract circuit gate list
+        based on device information
+        """
+        input_to_greedy_algo = [gate.indices for gate in self.abstract_circuit]
 
 
 class QAOAVariationalBaseParams(ABC):
