@@ -19,9 +19,8 @@ import scipy
 import json
 from typing import List
 
-from .helper_functions import convert2serialize
 from openqaoa.qaoa_parameters.operators import Hamiltonian
-from openqaoa.utilities import delete_keys_from_dict
+from openqaoa.utilities import delete_keys_from_dict, convert2serialize
 
 
 class QUBO(object):
