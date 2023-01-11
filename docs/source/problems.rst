@@ -1,6 +1,6 @@
 Problems
 ========
-.. autoclass:: openqaoa.problems.Problem
+.. autoclass:: openqaoa.problems.problem.Problem
     :members:
     :undoc-members:
     :inherited-members:
