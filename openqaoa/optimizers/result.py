@@ -16,16 +16,14 @@ from functools import update_wrapper
 from logging.config import dictConfig
 from re import I
 import matplotlib.pyplot as plt
-from typing import Type
+from typing import Type, List
 import numpy as np
 import json
 
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
-from ..utilities import qaoa_probabilities, bitstring_energy
-from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
-from openqaoa.backends import QAOABackendAnalyticalSimulator
-from openqaoa.basebackend import QAOABaseBackend
+from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize, delete_keys_from_dict
+from ..basebackend import QAOABaseBackend, QAOABaseBackendStatevector, QAOABackendAnalyticalSimulator
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -59,7 +57,7 @@ class Result:
         self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], type_backend: Type[QAOABaseBackend]
     ):
 
-
+        self.__type_backend = type_backend
         self.method = method
         self.cost_hamiltonian = cost_hamiltonian
 
@@ -111,6 +109,56 @@ class Result:
     #     string += "\tThe associated cost is: " + str(self.optimized['cost']) + "\n"
 
     #     return (string)
+
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, exclude_keys:List[str]=[]):
+        """
+        Returns a dictionary with the results of the optimization, where the dictionary is serializable. 
+        If the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
+
+        Parameters
+        ----------
+        keep_cost_hamiltonian: `bool`
+            If True, the cost hamiltonian is kept in the dictionary. If False, it is removed.
+        complex_to_string: `bool`
+            If True, the complex numbers are converted to strings. If False, they are kept as complex numbers. This is useful for the JSON serialization.
+        exclude_keys: `list[str]`
+            A list of keys to exclude from the returned dictionary.
+
+        Returns
+        -------
+        return_dict: `dict`
+            A dictionary with the results of the optimization, where the dictionary is serializable.
+        """
+
+        return_dict = {}
+        return_dict['method'] = self.method
+        if keep_cost_hamiltonian: return_dict['cost_hamiltonian'] = convert2serialize(self.cost_hamiltonian)
+        return_dict['evals'] = self.evals
+        return_dict['most_probable_states'] = self.most_probable_states
+
+        complx_to_str = lambda x: str(x) if isinstance(x, np.complex128) or isinstance(x, complex) else x
+        
+        # if the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
+        if complex_to_string and issubclass(self.__type_backend, QAOABaseBackendStatevector):
+            return_dict['intermediate'] = {}
+            for key, value in self.intermediate.items():
+                if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)):
+                    return_dict['intermediate'][key] = [[complx_to_str(item) for item in list_] for list_ in value if (isinstance(list_, list) or isinstance(list_, np.ndarray))]
+                else:
+                    return_dict['intermediate'][key] = value 
+
+            return_dict['optimized'] = {}
+            for key, value in self.optimized.items():
+                if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)):
+                    return_dict['optimized'][key] = [complx_to_str(item) for item in value] 
+                else:
+                    return_dict['optimized'][key] = value
+        else:
+            return_dict['intermediate'] = self.intermediate
+            return_dict['optimized'] = self.optimized
+
+        return return_dict if exclude_keys == [] else delete_keys_from_dict(return_dict, exclude_keys)
+
 
     @staticmethod
     def get_counts(measurement_outcomes):
@@ -308,51 +356,3 @@ class Result:
             ]
         }
         return best_results
-
-    def as_dict(self):
-        """
-        Returns a dictionary with the attributes of the class.
-
-        Returns
-        -------
-        dict
-            A dictionary with the attributes of the class.
-        """
-        return convert2serialize(self)
-
-    def dumps(self, indent:int=2):
-        """
-        Returns a json string of the QAOA results.
-
-        Parameters
-        ----------
-        indent : int
-            The number of spaces to indent the result in the json file. If None, the result is not indented.
-
-        Returns
-        -------
-        str
-        """
-
-        return json.dumps(convert2serialize_complex(self), indent=indent)
-
-    def dump(self, file_path:str, indent:int=2):
-        """
-        Saves a json file with the QAOA results.
-
-        Parameters
-        ----------
-        file_path : str
-            The name and path of the file to save the result. 
-        indent : int
-            The number of spaces to indent the result in the json file. If None, the result is not indented.
-        """
-
-        # adding .json extension if not present
-        file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
-
-        # saving the result in a json file
-        with open(file_path, 'w') as f:
-            json.dump(convert2serialize_complex(self), f, indent=indent)
-
-        print('Results saved as {}'.format(file_path))
