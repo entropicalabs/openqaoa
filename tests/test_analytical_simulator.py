@@ -28,16 +28,13 @@ from openqaoa.qaoa_parameters import QAOAVariationalStandardParams
 """
 A set of tests for the analytical simulator backend which computes the energy of a given quantum circuit as a function of beta and gamma.
 """
-def Disagrees_SetUp(n_qubits, p, mixer_hamil):
+def Disagrees_SetUp(n_qubits, p, mixer_hamil, betas, gammas):
     """
     Helper function for the tests below
     """
 
     register = range(n_qubits)
     cost_hamil = ring_of_disagrees(register)
-    
-    betas = [np.pi/8]
-    gammas = [np.pi/4]
 
     qaoa_circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p)
     variational_params_std = QAOAVariationalStandardParams(qaoa_circuit_params, betas, gammas)
@@ -58,7 +55,9 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         n_qubits = 8
         p = 1
         mixer_hamil = X_mixer_hamiltonian(n_qubits)
-        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil)
+        betas = [np.pi/8]
+        gammas = [np.pi/4]
+        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil, betas, gammas)
 
         backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
         exp_val = backend_analytical.expectation(variate_params)
@@ -69,13 +68,15 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
     def test_p_not_1_fails(self):
         """
         Testing if the analytical backend fails if the number of layers, p, is different than 1. 
-        """
+        """   
         exception = False
         try:
             n_qubits = 8
             p = 2
             mixer_hamil = X_mixer_hamiltonian(n_qubits)
-            register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil)
+            betas = [np.pi/8, np.pi/8]
+            gammas = [np.pi/4, np.pi/4]
+            register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil, betas, gammas)
             backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
         except:
             exception = True
