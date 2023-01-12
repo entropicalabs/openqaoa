@@ -307,10 +307,6 @@ class Optimizer(ABC):
         complex_to_string: bool
             If True, converts all complex numbers to strings. This is useful for JSON serialization, for the `dump(s)` methods.
         """
-
-        # create the final header dictionary
-        header = self.header.copy()
-        header['metadata'] = {**self.exp_tags.copy()}
         
         # create the final data dictionary
         data = {}
@@ -327,6 +323,18 @@ class Optimizer(ABC):
                 data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
         data['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
+
+        # create the final header dictionary
+        header = self.header.copy()
+        header['metadata'] = {
+            **self.exp_tags.copy(),
+            **{'problem_type': data['input_problem']['problem_instance']['problem_type']},
+            **data['input_problem']['metadata'].copy(),
+            **{'backend_n_shots': data['input_parameters']['backend_properties']['n_shots'] },
+            **{'optimizer_'+key: data['input_parameters']['classical_optimizer'][key] 
+                                    for key in ['method', 'jac', 'hess'] 
+                                    if not data['input_parameters']['classical_optimizer'][key] is None}, 
+        }   
 
         # we return a dictionary (serializable_dict) that will have two keys: header and data
         serializable_dict = {
@@ -671,6 +679,14 @@ class QAOA(Optimizer):
 
         # we add the keys of the QAOA object that we want to return
         serializable_dict['data']['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
+
+        # include parameters in the header metadata
+        serializable_dict['header']['metadata']['circuit_param_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['param_type']
+        serializable_dict['header']['metadata']['circuit_init_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['init_type']
+        serializable_dict['header']['metadata']['circuit_p'] = serializable_dict['data']['input_parameters']['circuit_properties']['p']
+
+        if serializable_dict['data']['input_parameters']['circuit_properties']['q'] is not None:
+            serializable_dict['header']['metadata']['circuit_q'] = serializable_dict['data']['input_parameters']['circuit_properties']['q']
 
         return serializable_dict
 
@@ -1085,6 +1101,18 @@ class RQAOA(Optimizer):
         # we add the keys of the RQAOA object that we want to return
         serializable_dict['data']['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
         serializable_dict['data']['input_parameters']['rqaoa_parameters'] = dict(self.rqaoa_parameters)
+
+        # include parameters in the header metadata
+        serializable_dict['header']['metadata']['circuit_param_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['param_type']
+        serializable_dict['header']['metadata']['circuit_init_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['init_type']
+        serializable_dict['header']['metadata']['circuit_p'] = serializable_dict['data']['input_parameters']['circuit_properties']['p']
+
+        if serializable_dict['data']['input_parameters']['circuit_properties']['q'] is not None:
+            serializable_dict['header']['metadata']['circuit_q'] = serializable_dict['data']['input_parameters']['circuit_properties']['q']
+
+        serializable_dict['header']['metadata']['rqaoa_type'] = serializable_dict['data']['input_parameters']['rqaoa_parameters']['rqaoa_type']
+        serializable_dict['header']['metadata']['rqaoa_n_max'] = serializable_dict['data']['input_parameters']['rqaoa_parameters']['n_max']
+        serializable_dict['header']['metadata']['rqaoa_n_cutoff'] = serializable_dict['data']['input_parameters']['rqaoa_parameters']['n_cutoff']
 
         return serializable_dict
 
