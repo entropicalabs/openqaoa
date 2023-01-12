@@ -14,23 +14,10 @@
 
 import os
 import json
-import networkx as nx
-
-# from braket.jobs import save_job_result
 
 from openqaoa.devices import DeviceAWS
 from openqaoa.workflows.optimizer import Optimizer, QAOA, RQAOA
 from openqaoa.problems.problem import QUBO
-from openqaoa.problems.problem import (
-    NumberPartition,
-    QUBO,
-    TSP,
-    Knapsack,
-    ShortestPath,
-    SlackFreeKnapsack,
-    MaximumCut,
-    MinimumVertexCover,
-)
 
 
 class AWSJobs(Optimizer):
@@ -105,29 +92,7 @@ class AWSJobs(Optimizer):
         .. note::
             Note tha this function is executed within the AWS job-docker
         """
-
-        all = {
-            "tsp": TSP,
-            "number_partition": NumberPartition,
-            "maximum_cut": MaximumCut,
-            "knapsack": Knapsack,
-            "slack_free_knapsack": SlackFreeKnapsack,
-            "minimum_vertex_cover": MinimumVertexCover,
-            "shortest_path": ShortestPath,
-        }
-
-        problem_class = all[self.input_data["qubo"]["problem_instance"]["problem_type"]]
-        recovered_graph = nx.node_link_graph(
-            self.input_data["qubo"]["problem_instance"]["G"]
-        )
-
-        self.qubo = problem_class(recovered_graph).get_qubo_problem()
-
-        ### Set up the QUBO problem ###
-        # self.qubo = QUBO(terms=self.input_data['qubo']['terms'],
-        #                 weights=self.input_data['qubo']['weights'],
-        #                 n=self.input_data['qubo']['n']
-        #                 )
+        self.qubo = QUBO.from_dict(self.input_data["qubo"])
 
     def aws_jobs_load_workflow(self):
         """
