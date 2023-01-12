@@ -295,7 +295,7 @@ class TestingRQAOA(unittest.TestCase):
     def test_total_elimination_whole_workflow(self):
         """
         Testing an edge case: solving MaxCut on a specific random unweighted graph leads to vanishing instances before reaching cutoff size.
-        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the classical solution was obtained for the smallest cutoff for which the problem still exists.
+        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the classical solution was obtained by fixing all spins arbitrarily except the correlated ones.
         """
         # Generate the graph
         g = nx.generators.gnp_random_graph(n=12, p=0.7, seed=58, directed=False)
@@ -316,7 +316,7 @@ class TestingRQAOA(unittest.TestCase):
         device = create_device(location='local', name='vectorized')
         R.set_device(device)
 
-        # Set the classical method used to optimiza over QAOA angles and its properties
+        # Set the classical method used to optimize over QAOA angles and its properties
         R.set_classical_optimizer(method="cobyla", maxiter=200)
 
         # Compile and optimize the problem instance on RQAOA
@@ -327,14 +327,15 @@ class TestingRQAOA(unittest.TestCase):
         opt_results = R.results
 
         # Compare results to known behaviour:
+        # note that the problem is highly degenerate and provide only the solutions which obey the correlations identified by the algorithm. For example, for n=4, there are 10 classical strings with the same energy, but only 8 of them have spins 0 and 1 anticorrelated.
         assert opt_results['solution'] == {'101010100010': -11.0,
                                            '010100010101': -11.0,
-                                           '101100010101': -11.0,
+                                           #'101100010101': -11.0,
                                            '101011100010': -11.0,
                                            '010101010101': -11.0,
                                            '101010101010': -11.0,
-                                           '010100011101': -11.0,
-                                           '010011101010': -11.0,
+                                           '010100011101': -11.0, 
+                                           #'010011101010': -11.0,
                                            '101011101010': -11.0,
                                            '010101011101': -11.0}
 

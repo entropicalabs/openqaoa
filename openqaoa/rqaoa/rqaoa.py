@@ -500,12 +500,11 @@ def redefine_problem(problem: QUBO, spin_map: dict):
 
     # For some unweighted graphs specific eliminations can lead to eliminating the whole instance before reaching cutoff.
     if new_problem_dict == {}:
-        new_problem = problem  # set the problem to the old problem and solve classically for the smallest non-vanishing instance.
+        new_problem = problem  # set the problem to the old problem and solve classically for the smallest non-vanishing instance. 
         
     else:
         # Redefine new QUBO problem from the dictionary
         new_problem = problem_from_dict(new_problem_dict)
-   
     
     return new_problem, spin_map
 
@@ -580,3 +579,46 @@ def final_solution(elimination_tracker: list, cl_states: list, hamiltonian: Hami
         full_solution.update({"".join(str(i) for i in state):bitstring_energy(hamiltonian, state)})
 
     return full_solution
+
+
+def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
+    cl_ground_states = [""] 
+    
+    for spin in spin_map.keys():
+        new_cl_ground_states = []
+        
+        if spin_map[spin][1] == None:
+            # add 0 or 1 arbitrarily
+            
+            for ground_state in cl_ground_states:
+                first_new_ground_state = ground_state + "0"
+                second_new_ground_state = ground_state + "1"
+                
+                new_cl_ground_states.append(first_new_ground_state)
+                new_cl_ground_states.append(second_new_ground_state)
+                
+            cl_ground_states = new_cl_ground_states
+            
+        else:
+            # fix according to correlation factor
+            factor = spin_map[spin][0]
+            parent = spin_map[spin][1]
+            
+            for ground_state in cl_ground_states:
+                if factor == 1.0:
+                    # correlated
+                    new_value_spin = ground_state[parent]
+                else:
+                    # anticorrelated
+                    new_value_spin = str(int(not bool(int(ground_state[parent]))))
+                
+                new_ground_state = ground_state + new_value_spin
+                new_cl_ground_states.append(new_ground_state)
+                
+            cl_ground_states = new_cl_ground_states
+
+    # computing the energy of the first one only, assuming degeneracy
+    cl_energy = bitstring_energy(hamiltonian, cl_ground_states[0]) 
+
+    return cl_energy, cl_ground_states
+

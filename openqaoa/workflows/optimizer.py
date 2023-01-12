@@ -1010,30 +1010,9 @@ class RQAOA(Optimizer):
             # Add one step to the counter
             counter += 1
             
-        # In case eliminations cancel out the whole graph, spin values do not matter
-        if False:
-        #if total_elimination:
-            # Set the values of the spins arbitrarily
-            #cl_ground_states = ""
-            #for spin in np.arange(0, len(spin_map.keys())):
-                #spin_value = np.random.choice([0,1])  # set at random
-                #cl_ground_states += str(spin_value)   
-                #cl_ground_states += str(0)  # set everything to 0
-            #cl_ground_states[0] = 1  # set the first one to 1 to respect anticorrelations
-            #cl_ground_states = [cl_ground_states]
-            
-            #generate all permutations, high degeneracy
-            single_cl_ground_state = ["0" for _ in np.arange(0, len(spin_map.keys()))]
-            single_cl_ground_state[0] = "1"
-            single_cl_ground_state = ''.join(single_cl_ground_state)
-            single_cl_ground_state = str(single_cl_ground_state)
-            
-            from itertools import permutations
-            cl_ground_states = [''.join(p) for p in permutations("1000")]
-            cl_ground_states = set(cl_ground_states)
-            
-            cl_energy = bitstring_energy(problem.hamiltonian, single_cl_ground_state) 
-            
+        if total_elimination:
+            # Solve the smallest non-vanishing problem by fixing spins arbitrarily or according to the correlations
+            cl_energy, cl_ground_states = rqaoa.solution_for_vanishing_instances(problem.hamiltonian, spin_map)
         else: 
             # Solve the new problem classically
             cl_energy, cl_ground_states = ground_state_hamiltonian(problem.hamiltonian)
