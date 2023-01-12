@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Optional, Union, List, Tuple
 import itertools
 import numpy as np
+import uuid
 import matplotlib.pyplot as plt
 import networkx as nx
 from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
@@ -36,12 +37,12 @@ def X_mixer_hamiltonian(n_qubits: int,
     ----------
     n_qubits: `int`
         The number of qubits in the mixer Hamiltonian.
-    coeffs: `list`
+    coeffs: `List[float]`
         The coefficients of the X terms in the Hamiltonian.
 
     Returns
     -------
-    hamiltonian: `Hamiltonian`
+    `Hamiltonian`
         The Hamiltonian object corresponding to the X mixer.
     """
     # If no coefficients provided, set all to -1
@@ -76,15 +77,13 @@ def XY_mixer_hamiltonian(n_qubits: int,
         The number of qubits in the system.
     qubit_connectivity: `Union[List[list],List[tuple], str]`
         The connectivity of the qubits in the mixer Hamiltonian.
-    coeffs: `list`
+    coeffs: `List[float]`
         The coefficients of the XY terms in the Hamiltonian.
 
     Returns
     -------
-    hamiltonian: `Hamiltonian`
+    `Hamiltonian`
         The Hamiltonian object corresponding to the XY mixer.
-
-    
     """
     # Set of topologies supported by default
     connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
@@ -138,13 +137,19 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
     
     Parameters
     ----------
-    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
+    input_gatemap: `TwoQubitRotationGateMap`
+        The GateMap whose connectivity we are trying to create.
+    n_qubits: `int`
+        The number of qubits in the system.
+    qubit_connectivity: `Union[List[list],List[tuple], str]`
         The connectivity of the qubits in the mixer.
-    coeffs: `list`, optional
+    coeffs: `List[float]`, optional
         The coefficients of the GateMap in the Mixer Blocks.
     
     Returns
     -------
+    `Tuple[List[TwoQubitRotationGateMap], List[float]]`
+        Returns tuple containing the list of gatemaps and their associated coefficients. If no coefficients were on initialisation provided, a default of 1.0 is used for all gatemap objects.
     """
     
     # Set of topologies supported by default
@@ -186,7 +191,7 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
         
 
 
-def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None):
+def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None) -> Hamiltonian:
     """
     Parameters
     ----------
@@ -194,14 +199,14 @@ def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivi
         Number of qubits in the Hamiltonian.
     mixer_type: `str`
         Name of the mixer Hamiltonian. Choose from `x` or `xy`.
-    qubit_connectivity: `list` or `str`, optional
+    qubit_connectivity: `Union[List[list],List[tuple], str]`, optional
         The connectivity of the qubits in the mixer Hamiltonian.
-    coeffs: `list`
+    coeffs: `List[float]`, optional
         The coefficients of the terms in the Hamiltonian.
 
     Returns:
     --------
-    mixer: `Hamiltonian`
+    `Hamiltonian`
         Hamiltonian object containing the specificied mixer.
     """
 
@@ -1341,3 +1346,114 @@ def qaoa_probabilities(statevector) -> dict:
         prob_dict.update({key: prob_vec[x]})
 
     return prob_dict
+
+
+################################################################################
+# DICTIONARY MANIPULATION and SERIALIZATION
+################################################################################
+def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
+    """
+    Recursively delete all the keys keys_to_delete from a object (or list of dictionaries)
+    Parameters
+    ----------
+    obj: dict or list[dict]
+        dictionary or list of dictionaries from which we want to delete keys
+    keys_to_delete: list
+        list of keys to delete from the dictionaries
+        
+    Returns
+    -------
+    obj: dict or list[dict]
+        dictionary or list of dictionaries from which we have deleted keys
+    """
+    if isinstance(obj, dict):
+        for key in keys_to_delete:
+            if key in obj:
+                del obj[key]
+        for key in obj:
+            if isinstance(obj[key], dict):
+                delete_keys_from_dict(obj[key], keys_to_delete)                    
+            elif isinstance(obj[key], list):
+                for item in obj[key]:
+                    delete_keys_from_dict(item, keys_to_delete)
+    elif isinstance(obj, list):
+        for item in obj:
+            delete_keys_from_dict(item, keys_to_delete)
+
+    return obj
+
+def convert2serialize(obj, complex_to_string:bool=False):
+    """
+    Recursively converts object to dictionary.
+
+    Parameters
+    ----------
+    obj: object
+        Object to convert to dictionary.
+    complex_to_string: bool
+        If True, convert complex numbers to string, so the result can be serialized to JSON.
+
+    Returns
+    -------
+    dict: dict
+        Dictionary representation of the object.
+    """
+    if isinstance(obj, dict):
+        return {k: convert2serialize(v, complex_to_string) for k, v in obj.items() if v is not None}
+    elif hasattr(obj, "_ast"):
+        return convert2serialize(obj._ast(), complex_to_string)
+    elif isinstance(obj, tuple):
+        return tuple(convert2serialize(v, complex_to_string) for v in obj if v is not None)
+    elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
+        return [convert2serialize(v, complex_to_string) for v in obj if v is not None]
+    elif hasattr(obj, "__dict__"):
+        return {
+            k: convert2serialize(v, complex_to_string)
+            for k, v in obj.__dict__.items()
+            if not callable(v) and v is not None
+        }
+    elif complex_to_string and isinstance(obj, complex):
+        return str(obj)
+    else:
+        return obj
+
+
+################################################################################
+# UUID
+################################################################################
+
+def generate_uuid() -> str:
+    """
+    Generate a UUID string.
+
+    Returns
+    -------
+    uuid: `str`
+        String representation of a UUID.
+    """
+    return str(uuid.uuid4())
+
+def is_valid_uuid(uuid_to_test: str) -> bool:
+    """
+    Check if a string is a valid UUID.
+
+    Parameters
+    ----------
+    uuid_to_test: `str`
+        String to check if it is a valid UUID.
+
+    Returns
+    -------
+    is_valid: `bool`
+        Boolean indicating if the string is a valid UUID.
+    """
+
+    try:
+        # generate a UUID object from the string, if it is a valid UUID it won't throw an error
+        _ = uuid.UUID(uuid_to_test, version=4)
+        return True
+    except ValueError:
+        # If it's a value error, then the string is not a valid string for a UUID.
+        return False
+
+

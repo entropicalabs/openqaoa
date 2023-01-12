@@ -127,6 +127,11 @@ class OptimizeVQA(ABC):
                                'history_update_bool': optimizer_dict.get('parameter_log',True), 
                                'best_update_string': 'Replace'
                            }, 
+                           'eval_number':
+                           {
+                                'history_update_bool': False, 
+                                'best_update_string': 'Replace'
+                           },
                            'func_evals': 
                            {
                                'history_update_bool': False, 
@@ -153,7 +158,8 @@ class OptimizeVQA(ABC):
                                              'qfim_func_evals'],
                               'best_update_structure': (['cost', 'param_log'], 
                                                         ['cost', 'measurement_outcomes'], 
-                                                        ['cost', 'job_ids'])
+                                                        ['cost', 'job_ids'],
+                                                        ['cost', 'eval_number'],)
                           })
         
         self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
@@ -212,13 +218,15 @@ class OptimizeVQA(ABC):
         if self.save_to_csv:
             save_parameter('param_log', deepcopy(x))
         
-        callback_cost = self.vqa.expectation(self.variational_params)
-        
+        callback_cost = self.vqa.expectation(self.variational_params)        
         log_dict.update({'cost': callback_cost})
+
         current_eval = self.log.func_evals.best[0]
         current_eval += 1
         log_dict.update({'func_evals': current_eval})
-        
+
+        log_dict.update({'eval_number': (current_eval - self.log.jac_func_evals.best[0] - self.log.qfim_func_evals.best[0])})  #this one will say which evaluation is the optimized one
+
         log_dict.update({'measurement_outcomes': self.vqa.measurement_outcomes})
         
         if hasattr(self.vqa, 'log_with_backend') and callable(getattr(self.vqa, 'log_with_backend')):
@@ -274,30 +282,11 @@ class OptimizeVQA(ABC):
         file_name:
             Custom name for to save the data; a generic name with the time of 
             optimization is used if not specified
-
-        Returns
-        -------
-        :
-            Dictionary with the following keys
-                
-                #. "solution"
-                    #. "bitstring"
-                    #. "degeneracy"
-                #. "number of evals"
-                #. "jac evals"
-                #. "qfim evals"
-                #. "parameter log"
-                #. "optimized param"
-                #. "intermediate cost"
-                #. "optimized cost"
-                #. "intermediate measurement outcomes"
-                #. "optimized measurement outcomes"
-                #. "optimization method"
         '''
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
         
-        self.qaoa_result = Result(self.log, self.method, self.vqa.cost_hamiltonian)
+        self.qaoa_result = Result(self.log, self.method, self.vqa.cost_hamiltonian, type(self.vqa))
         
         if(file_path and os.path.isdir(file_path)):
             print('Saving results locally')
