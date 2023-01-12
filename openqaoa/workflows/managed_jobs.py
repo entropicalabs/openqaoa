@@ -14,18 +14,31 @@
 
 import os
 import json
+import networkx as nx
+
 # from braket.jobs import save_job_result
 
 from openqaoa.devices import DeviceAWS
 from openqaoa.workflows.optimizer import Optimizer, QAOA, RQAOA
 from openqaoa.problems.problem import QUBO
+from openqaoa.problems.problem import (
+    NumberPartition,
+    QUBO,
+    TSP,
+    Knapsack,
+    ShortestPath,
+    SlackFreeKnapsack,
+    MaximumCut,
+    MinimumVertexCover,
+)
+
 
 class AWSJobs(Optimizer):
     """
     This class is meant to be used *only* within the framework of AWS managed hybrid jobs.
     """
 
-    def __init__(self, algorithm: str = 'qaoa'):
+    def __init__(self, algorithm: str = "qaoa"):
         """
         Initialize the QAOA class.
 
@@ -62,71 +75,86 @@ class AWSJobs(Optimizer):
         # if os.environ["AMZN_BRAKET_JOB_TOKEN"]:
         #     self.job_token = os.environ["AMZN_BRAKET_JOB_TOKEN"]
 
-
-        self.device = DeviceAWS(device_name=self.device_arn, 
-                                folder_name=self.results_dir,
-                                s3_bucket_name=self.out_s3_bucket)
+        self.device = DeviceAWS(
+            device_name=self.device_arn,
+            folder_name=self.results_dir,
+            s3_bucket_name=self.out_s3_bucket,
+        )
         self.algorithm = algorithm.lower()
         self.completed = False
 
-
     def load_input_data(self):
         """
-        A helper method to load the parameters. 
-        
+        A helper method to load the parameters.
+
         .. note::
             Note tha this function is executed within the AWS job-docker
         """
 
         path = os.path.join(self.input_dir, "input_data", "openqaoa_params.json")
-        
+
         with open(path, "r") as f:
             input_data = json.load(f)
-        
+
         self.input_data = input_data
-        
-        
 
     def extract_qubo(self):
         """
-        A helper method to load the parameters. 
-        
+        A helper method to load the parameters.
+
         .. note::
             Note tha this function is executed within the AWS job-docker
         """
-               
+
+        all = {
+            "tsp": TSP,
+            "number_partition": NumberPartition,
+            "maximum_cut": MaximumCut,
+            "knapsack": Knapsack,
+            "slack_free_knapsack": SlackFreeKnapsack,
+            "minimum_vertex_cover": MinimumVertexCover,
+            "shortest_path": ShortestPath,
+        }
+
+        problem_class = all[self.input_data["qubo"]["problem_instance"]["problem_type"]]
+        recovered_graph = nx.node_link_graph(
+            self.input_data["qubo"]["problem_instance"]["G"]
+        )
+
+        self.qubo = problem_class(recovered_graph).get_qubo_problem()
+
         ### Set up the QUBO problem ###
-        self.qubo = QUBO(terms=self.input_data['qubo']['terms'],
-                        weights=self.input_data['qubo']['weights'],
-                        n=self.input_data['qubo']['n']
-                        )
-        
+        # self.qubo = QUBO(terms=self.input_data['qubo']['terms'],
+        #                 weights=self.input_data['qubo']['weights'],
+        #                 n=self.input_data['qubo']['n']
+        #                 )
 
     def aws_jobs_load_workflow(self):
         """
-        Given a input directory and a file name loads the json representing the QAOA workflow and returns a 
+        Given a input directory and a file name loads the json representing the QAOA workflow and returns a
         valid OpenQAOA workflow
-       
+
         .. note::
             Note tha this function is executed within the AWS job-docker
         """
 
-        if 'qaoa' == self.algorithm.lower():
-            workflow = QAOA()    
-        elif 'rqaoa' == self.algorithm.lower():
+        if "qaoa" == self.algorithm.lower():
+            workflow = QAOA()
+        elif "rqaoa" == self.algorithm.lower():
             workflow = RQAOA()
-            workflow.set_rqaoa_parameters(**self.input_data['rqaoa_parameters'])
+            workflow.set_rqaoa_parameters(**self.input_data["rqaoa_parameters"])
         else:
-            raise ValueError(f'Specified algorithm {self.algorithm} is not supported. Please choose between [QAOA, RQAOA]')
-       
-        workflow.set_circuit_properties(**self.input_data['circuit_properties'])
-        workflow.set_classical_optimizer(**self.input_data['classical_optimizer'])
-        workflow.set_backend_properties(**self.input_data['backend_properties'])
-        
+            raise ValueError(
+                f"Specified algorithm {self.algorithm} is not supported. Please choose between [QAOA, RQAOA]"
+            )
+
+        workflow.set_circuit_properties(**self.input_data["circuit_properties"])
+        workflow.set_classical_optimizer(**self.input_data["classical_optimizer"])
+        workflow.set_backend_properties(**self.input_data["backend_properties"])
+
         # Set the braket device
         workflow.set_device(self.device)
         self.workflow = workflow
-    
 
     def set_up(self):
         """
@@ -141,7 +169,6 @@ class AWSJobs(Optimizer):
         self.aws_jobs_load_workflow()
         self.set_device(self.device)
 
-
     def run_workflow(self):
         """
         Function to execute the workflow on the Jobs instance
@@ -149,7 +176,7 @@ class AWSJobs(Optimizer):
         .. note::
             Note tha this function is executed within the AWS job-docker
         """
-        
+
         # Run the Workflow hybrid loop
         self.workflow.compile(self.qubo)
         try:
@@ -157,17 +184,5 @@ class AWSJobs(Optimizer):
             self.completed = True
             print("Job completed!!!!")
         except Exception as e:
-            print('An Exception has occured when to run the workflow: {}'.format(e))
+            print("An Exception has occured when to run the workflow: {}".format(e))
             return False
-        
-        
-
-
-
-
-
-
-        
-
-
-

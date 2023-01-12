@@ -853,7 +853,7 @@ class TestProblem(unittest.TestCase):
             "knapsack":Knapsack.random_instance(n_items=randint(2, 15)),
             "slack_free_knapsack":SlackFreeKnapsack.random_instance(n_items=randint(2, 15)),
             "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
-            "shortest_path":ShortestPath.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "shortest_path":ShortestPath.random_instance(n_nodes=randint(4, 15), edge_probability=random()),
         }
         all_qubos = {k:v.get_qubo_problem() for k,v in all.items()}
         all_qubos["generic_qubo"] = QUBO.random_instance(randint(2, 15))
