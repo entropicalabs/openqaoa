@@ -5,8 +5,10 @@ import numpy as np
 from random import randint, random
 from openqaoa.problems.problem import (
     NumberPartition, QUBO, TSP, Knapsack, ShortestPath,
-    SlackFreeKnapsack, MaximumCut, MinimumVertexCover
+    SlackFreeKnapsack, MaximumCut, MinimumVertexCover, 
+    Problem
 )
+from openqaoa.utilities import convert2serialize
 
 
 def terms_list_equality(terms_list1, terms_list2):
@@ -840,23 +842,28 @@ class TestProblem(unittest.TestCase):
 
         self.assertRaises(Exception, test_assertion_fn)
 
-    def test_problem_instance(self):
-        """
-        Test problem instance method of the QUBO class.
-        We create a random instance of all the different problems, we generate the QUBO problem out of it and then we check if the problem instance attribute is correct, by comparing the keys of the problem instance with the expected keys.
-        """
-
-        all = {
+    def __generate_random_problems(self):
+        problems_random_instances = {
             "tsp":TSP.random_instance(n_cities=randint(2, 15)),
             "number_partition":NumberPartition.random_instance(n_numbers=randint(2, 15)),
             "maximum_cut":MaximumCut.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
             "knapsack":Knapsack.random_instance(n_items=randint(2, 15)),
             "slack_free_knapsack":SlackFreeKnapsack.random_instance(n_items=randint(2, 15)),
             "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
-            "shortest_path":ShortestPath.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "shortest_path":ShortestPath.random_instance(n_nodes=randint(3, 15), edge_probability=random()),
         }
-        all_qubos = {k:v.get_qubo_problem() for k,v in all.items()}
-        all_qubos["generic_qubo"] = QUBO.random_instance(randint(2, 15))
+        qubo_random_instances = {k:v.get_qubo_problem() for k,v in problems_random_instances.items()}
+        qubo_random_instances["generic_qubo"] = QUBO.random_instance(randint(2, 15))
+
+        return problems_random_instances, qubo_random_instances
+
+    def test_problem_instance(self):
+        """
+        Test problem instance method of the QUBO class.
+        From the random instance of all the different problems, we generate the QUBO problem out of it and then we check if the problem instance attribute is correct, by comparing the keys of the problem instance with the expected keys.
+        """
+
+        _, qubos = self.__generate_random_problems()
 
         expected_keys = {
             "tsp":['problem_type', 'n_cities', 'G', 'A', 'B'],
@@ -869,9 +876,62 @@ class TestProblem(unittest.TestCase):
             "generic_qubo":['problem_type']
         }
 
-        for k,v in all_qubos.items():
+        for k,v in qubos.items():
             assert list(v.problem_instance.keys()) == expected_keys[k], "Problem instance keys are not correct for problem type {}".format(k)
             assert k == v.problem_instance['problem_type'], "Problem type is not correct for problem type {}".format(k)
+
+
+    def test_problem_from_instance_dict(self):
+        """
+        Test problem from instance method of the problem class.
+        """
+        problem_mapper = {
+            "generic_qubo": QUBO,
+            "tsp": TSP,
+            "number_partition": NumberPartition,
+            "maximum_cut": MaximumCut,
+            "knapsack": Knapsack,
+            "slack_free_knapsack": SlackFreeKnapsack,
+            "minimum_vertex_cover": MinimumVertexCover,
+            "shortest_path": ShortestPath,
+        }
+
+        problems, qubos = self.__generate_random_problems()
+
+        for type in qubos:
+            if type == "generic_qubo":
+                continue
+
+            problem_instance = qubos[type].problem_instance.copy()
+
+            problem = Problem.from_instance_dict(problem_instance)
+
+            assert problem.problem_instance == problems[type].problem_instance, "Problem from instance method is not correct for problem type {}".format(type)
+            assert convert2serialize(problem) == convert2serialize(problems[type]), "Problem from instance method is not correct for problem type {}".format(type)
+
+        
+    def test_qubo_from_dict(self):
+        """
+        Test qubo from dict method of the QUBO class.
+        """
+
+        _, qubos = self.__generate_random_problems()
+        for _, qubo in qubos.items():
+
+            qubo_dict = qubo.asdict()
+
+            new_qubo = QUBO.from_dict(qubo_dict)
+
+            for term, new_term in zip(qubo.terms, new_qubo.terms):
+                assert set(term) == set(new_term), "QUBO from dict method is not correct for problem type {}, terms compared: {}, {}".format(qubo.problem_instance['problem_type'], term, new_term)
+
+                assert set(qubo.weights) == set(new_qubo.weights), "QUBO from dict method is not correct for problem type {}".format(qubo.problem_instance['problem_type'])
+
+                for key in qubo.__dict__:
+                    if key != "terms" and key != "weights":
+                        assert qubo.__dict__[key] == new_qubo.__dict__[key], "QUBO from dict method is not correct for problem type {}".format(qubo.problem_instance['problem_type'])
+        
+
 
 if __name__ == '__main__':
     unittest.main()
