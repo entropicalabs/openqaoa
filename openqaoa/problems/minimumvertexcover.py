@@ -12,13 +12,13 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from collections import Counter
+
 import networkx as nx
 
 from .helper_functions import check_kwargs
 from .problem import Problem
 from .qubo import QUBO
-
-from collections import Counter
 
 
 class MinimumVertexCover(Problem):

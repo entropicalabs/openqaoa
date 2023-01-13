@@ -12,10 +12,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import numpy as np
 from collections import defaultdict
-from .qubo import QUBO
 from typing import Union
+
+import numpy as np
+
+from .qubo import QUBO
 
 
 class FromDocplex2IsingModel(object):

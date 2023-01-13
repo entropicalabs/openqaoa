@@ -13,11 +13,11 @@
 #   limitations under the License.
 
 from collections import defaultdict
+from typing import List
+import json
 
 import numpy as np
 import scipy
-import json
-from typing import List
 
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 from openqaoa.utilities import delete_keys_from_dict, convert2serialize
