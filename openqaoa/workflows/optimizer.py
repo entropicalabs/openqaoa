@@ -383,14 +383,17 @@ class Optimizer(ABC):
         else:
             return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= exclude_keys), indent=indent)
 
-    def dump(self, file_path:str, indent:int=2, compresslevel:int=0, exclude_keys:List[str]=[]):
+    def dump(self, file_name:str = "", file_path:str="", prepend_id:bool=True, indent:int=2, compresslevel:int=0, exclude_keys:List[str]=[], overwrite:bool=False, options:dict={}):
         """
-        Saves the Optimizer object as json file (if compresslevel is 0). If compresslevel is not 0, saves the Optimizer object as a .gz file (which should be decompressed before use).
+        Saves the Optimizer object as json file (if compresslevel is 0). 
+        If compresslevel is not 0, saves the Optimizer object as a .gz file (which should be decompressed before use).
 
         Parameters
         ----------
+        file_name : str
+            The name of the json file.
         file_path : str
-            The name of the file to save the result. If None, the result is saved as 'result.json'.
+            The path where the json file will be saved.
         indent : int
             The number of spaces to indent the result in the json file. If None, the result is not indented.
         compresslevel : int
@@ -398,37 +401,50 @@ class Optimizer(ABC):
             If 1, the fastest compression method is used. If 9, the slowest but most effective compression method is used. And a .gz file is saved.
         exclude_keys : List[str]
             A list of keys that should not be included in the json file.
+        overwrite : bool
+            If True, overwrites the file if it already exists. If False, raises an error if the file already exists.
+        options : dict
+            A dictionary of options to pass to the method that creates the dictionary to dump.
+            - intermediate_mesurements : bool
+                If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
         """
 
-        if self.header['project_uuid'] is None: #TODO: review this, atomic_uuid not here?
-            add_identification_function = lambda file_path: self.header['experiment_uuid'] + '--' + file_path
+        options = {**options, **{'complex_to_string': True}}
+
+        # get the full name 
+        if prepend_id == False and file_name == "":
+            raise ValueError("If prepend_id is False, file_name must be specified.") 
+        elif prepend_id == False:
+            file = file_path + file_name
+        elif file_name == "":
+            file = file_path + self.header['experiment_uuid'] + '--' + self.header['atomic_uuid']
         else:
-            add_identification_function = lambda file_path: self.header['project_uuid'] + '--' + self.header['experiment_uuid'] + '--' + file_path
+            file = file_path + self.header['experiment_uuid'] + '--' + self.header['atomic_uuid'] + '--' + file_name
 
-        if compresslevel == 0: 
+        # adding .json extension if not present and adding .gz extension if compresslevel is not 0 and not present
+        file = file + '.json' if '.json' != file[-5:] else file
+        if compresslevel != 0: file = file + '.gz' if '.gz' != file[-3:] else file
 
-            # adding .json extension if not present
-            file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
-            file_path = add_identification_function(file_path)
+        # checking if the file already exists, and raising an error if it does and overwrite is False
+        if overwrite == False and exists(file):
+                raise FileExistsError(f"The file {file} already exists. Please change the name of the file or set overwrite=True.")
 
-            # saving the result in a json file
-            with open(file_path, 'w') as f:
+        ## saving the file
+        if compresslevel == 0: # if compresslevel is 0, save as json file
+            with open(file, 'w') as f:
                 if exclude_keys == []:
-                    json.dump(self._serializable_dict(complex_to_string=True), f, indent=indent)
+                    json.dump(self._serializable_dict(**options), f, indent=indent)
                 else:
-                    json.dump(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= exclude_keys), f, indent=indent)
+                    json.dump(delete_keys_from_dict(obj= self._serializable_dict(**options), keys_to_delete= exclude_keys), f, indent=indent)
+        else: # if compresslevel is not 0, save as .gz file (which should be decompressed before use)
+            with gzip.open(file, 'w', compresslevel=compresslevel) as f:
+                f.write(self.dumps(indent=indent, exclude_keys=exclude_keys, options=options).encode('utf-8'))
 
+        # print the file path and name
+        if file_path == "":
+            print('Results saved as "{}" in the current directory.'.format(file[len(file_path):]))
         else:
-            # adding .json.gz extension if not present
-            file_path = file_path[:-5] if '.json' == file_path[-5:] else file_path
-            file_path = file_path + '.json.gz' if '.json.gz' != file_path[-8:] else file_path
-            file_path = add_identification_function(file_path)
-
-            # we save the json created by the dumps method as a .gz file
-            with gzip.open(file_path, 'w', compresslevel=compresslevel) as f:
-                f.write(self.dumps(indent=indent, exclude_keys=exclude_keys).encode('utf-8'))
-
-        print('Results saved as {}'.format(file_path))
+            print('Results saved as "{}" in the folder "{}".'.format(file[len(file_path):], file_path))
 
 
 class QAOA(Optimizer):
