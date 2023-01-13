@@ -26,8 +26,8 @@ from openqaoa.devices import create_device
 Unittest based testing of current implementation of the RQAOA Algorithm
 """
 
-class TestingRQAOA(unittest.TestCase):
 
+class TestingRQAOA(unittest.TestCase):
     def test_find_parent(self):
         """
         Test of the find_parent function which backtracks the spin_map dictionary to obtain
@@ -38,34 +38,46 @@ class TestingRQAOA(unittest.TestCase):
         """
 
         # Spin map example without correct final dependencies
-        spin_map = dict({(0,(1,0)),(1,(-1,3)),(2,(1,5)),(3,(-1,2)),(4,(1,4)),(5,(1,4))})
+        spin_map = dict(
+            {
+                (0, (1, 0)),
+                (1, (-1, 3)),
+                (2, (1, 5)),
+                (3, (-1, 2)),
+                (4, (1, 4)),
+                (5, (1, 4)),
+            }
+        )
 
         # Solution to the problem
-        parents = {0:0,1:4,2:4,3:4,4:4,5:4} # spin:parent_spin
-        factors = [1,1,1,-1,1,1]
-        
+        parents = {0: 0, 1: 4, 2: 4, 3: 4, 4: 4, 5: 4}  # spin:parent_spin
+        factors = [1, 1, 1, -1, 1, 1]
 
         comp_parents = {}
         comp_factors = []
 
         # For each spin compute parent and connecting factor and store them
         for spin in sorted(spin_map.keys()):
-            
-            comp_parent, comp_factor = find_parent(spin_map,spin)
-            comp_parents.update({spin:comp_parent})
+
+            comp_parent, comp_factor = find_parent(spin_map, spin)
+            comp_parents.update({spin: comp_parent})
             comp_factors.append(comp_factor)
 
         # Test function result
-        assert np.allclose(list(comp_parents.values()),list(parents.values())), f'Computed parent spins are incorrect'
-        assert np.allclose(comp_factors,factors), f'Computed constraint factors are incorrect'
+        assert np.allclose(
+            list(comp_parents.values()), list(parents.values())
+        ), f"Computed parent spins are incorrect"
+        assert np.allclose(
+            comp_factors, factors
+        ), f"Computed constraint factors are incorrect"
 
     def test_spin_mapping(self):
         """
         Test of the function that generates the spin_map dictionary containing all the elimination
         rules.
 
-        The test consists in generating the correct spin_map and set of max terms and costs in 
-        its final form (accounting for the dependency that determines the elimination) for a 
+        The test consists in generating the correct spin_map and set of max terms and costs in
+        its final form (accounting for the dependency that determines the elimination) for a
         given example.
         """
 
@@ -75,40 +87,80 @@ class TestingRQAOA(unittest.TestCase):
         n_qubits = 20
 
         # Terms and weights of the graph
-        edges = [(i,j) for j in range(n_qubits) for i in range(j)]
-        weights = [1 for _ in range(len(edges))] 
+        edges = [(i, j) for j in range(n_qubits) for i in range(j)]
+        weights = [1 for _ in range(len(edges))]
 
         # Hyperparameters
-        problem = QUBO(n= n_qubits, terms=edges, weights=weights)
+        problem = QUBO(n=n_qubits, terms=edges, weights=weights)
 
         ## Testing
 
         # Example case of the maximal terms and values extracted from the expectation values
-        max_terms_and_stats = dict({(4,):0.99,(0, 1): -0.89, (0, 9): 0.77, (1,9):-0.73,\
-             (17,): -0.5, (2,4):0.32, (5,4):0.29,(16,):-0.8, (10,):0.81, (16,10):0.4, (19,14):-0.47})
+        max_terms_and_stats = dict(
+            {
+                (4,): 0.99,
+                (0, 1): -0.89,
+                (0, 9): 0.77,
+                (1, 9): -0.73,
+                (17,): -0.5,
+                (2, 4): 0.32,
+                (5, 4): 0.29,
+                (16,): -0.8,
+                (10,): 0.81,
+                (16, 10): 0.4,
+                (19, 14): -0.47,
+            }
+        )
 
         # Exact solution to the problem
-        correct_spin_map = dict({(0,(1,0)),(1,(-1,0)),(2,(1,None)),(3,(1,3)),(4,(1,None)),\
-                (5,(1,None)),(6,(1,6)),(7,(1,7)),(8,(1,8)),(9,(1,0)),(10,(1,None)),(11,(1,11)),(12,(1,12)),\
-                (13,(1,13)),(14,(1,14)),(15,(1,15)),(16,(-1,None)),(17,(-1,None)),(18,(1,18)),(19,(-1,14))})
+        correct_spin_map = dict(
+            {
+                (0, (1, 0)),
+                (1, (-1, 0)),
+                (2, (1, None)),
+                (3, (1, 3)),
+                (4, (1, None)),
+                (5, (1, None)),
+                (6, (1, 6)),
+                (7, (1, 7)),
+                (8, (1, 8)),
+                (9, (1, 0)),
+                (10, (1, None)),
+                (11, (1, 11)),
+                (12, (1, 12)),
+                (13, (1, 13)),
+                (14, (1, 14)),
+                (15, (1, 15)),
+                (16, (-1, None)),
+                (17, (-1, None)),
+                (18, (1, 18)),
+                (19, (-1, 14)),
+            }
+        )
 
         # Compute the spin_map and final constraints from the function
-        spin_map = spin_mapping(problem,max_terms_and_stats)
+        spin_map = spin_mapping(problem, max_terms_and_stats)
 
         # Check both outputs contain the same number of keys as the correct solution
-        assert len(correct_spin_map) == len(spin_map), f'Computed spin_map has incorrect length'
-        
+        assert len(correct_spin_map) == len(
+            spin_map
+        ), f"Computed spin_map has incorrect length"
+
         # Test the spin_map matches the correct solution
         for key in correct_spin_map.keys():
-            assert correct_spin_map[key][0] == spin_map[key][0], f'Computed spin_map contains incorrect factor'
-            assert correct_spin_map[key][1] == spin_map[key][1], f'Computed spin_map contains incorrect parent spin'
+            assert (
+                correct_spin_map[key][0] == spin_map[key][0]
+            ), f"Computed spin_map contains incorrect factor"
+            assert (
+                correct_spin_map[key][1] == spin_map[key][1]
+            ), f"Computed spin_map contains incorrect parent spin"
 
     def test_max_terms(self):
         """
         Test of the function that selects spin pairs or singlets are used for elimination,
         given the specific elimination number.
 
-        The test consists in finding the correct pairs and singles to eliminate, according 
+        The test consists in finding the correct pairs and singles to eliminate, according
         to the adaptive scheme, for a given example.
         """
 
@@ -116,33 +168,43 @@ class TestingRQAOA(unittest.TestCase):
         n_elim = 5
 
         # Set of single spin expectation values
-        exp_vals_z = np.array([0.33,-0.21,-0.9,0.06,-0.78])
-        
+        exp_vals_z = np.array([0.33, -0.21, -0.9, 0.06, -0.78])
+
         # Correlation matrix
-        corr_mat = np.array([[0.0,0.01,-0.64,0.69,0.48],\
-                              [0.0,0.0,-0.99,-0.27,0.03],\
-                              [0.0,0.0,0.0,1.0,-0.22],\
-                              [0.0,0.0,0.0,0.0,0.37],\
-                              [0.0,0.0,0.0,0.0,0.0]])
-                              
+        corr_mat = np.array(
+            [
+                [0.0, 0.01, -0.64, 0.69, 0.48],
+                [0.0, 0.0, -0.99, -0.27, 0.03],
+                [0.0, 0.0, 0.0, 1.0, -0.22],
+                [0.0, 0.0, 0.0, 0.0, 0.37],
+                [0.0, 0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+
         # Correct solution
-        max_tc = dict({(2,3):1.0,(1,2):-0.99,(2,):-0.9,(4,):-0.78,(0,3):0.69}) 
+        max_tc = dict(
+            {(2, 3): 1.0, (1, 2): -0.99, (2,): -0.9, (4,): -0.78, (0, 3): 0.69}
+        )
 
         # Computed solution using the function
         comp_max_tc = max_terms(exp_vals_z, corr_mat, n_elim)
 
         # Confirm the computed solution has same number of items as correct one
-        assert len(max_tc) == len(comp_max_tc), f'Computed set of singlets/correlations contains incorrect number of elements'
+        assert len(max_tc) == len(
+            comp_max_tc
+        ), f"Computed set of singlets/correlations contains incorrect number of elements"
 
         # Test the function has obtain the correct singlets/pairs with associated values
         for key in max_tc.keys():
-            assert max_tc[key] == comp_max_tc[key], f'Computed set of singlets/correlations contains incorrect values'
+            assert (
+                max_tc[key] == comp_max_tc[key]
+            ), f"Computed set of singlets/correlations contains incorrect values"
 
     def test_ada_max_terms(self):
         """
         Test of the function that adaptively selects spin pairs or singlets are used for elimination.
 
-        The test consists in finding the correct pairs and singles to eliminate, according 
+        The test consists in finding the correct pairs and singles to eliminate, according
         to the adaptive scheme, for a given example.
         """
 
@@ -150,34 +212,42 @@ class TestingRQAOA(unittest.TestCase):
         n_max = 3
 
         # Set of single spin expectation values
-        exp_vals_z = np.array([0.33,-0.21,-0.9,0.06,-0.19])
-        
+        exp_vals_z = np.array([0.33, -0.21, -0.9, 0.06, -0.19])
+
         # Correlation matrix
-        corr_mat = np.array([[0.0,0.01,-0.64,0.69,0.48],\
-                              [0.0,0.0,-0.99,-0.27,0.03],\
-                              [0.0,0.0,0.0,1.0,-0.22],\
-                              [0.0,0.0,0.0,0.0,0.37],\
-                              [0.0,0.0,0.0,0.0,0.0]])
-                              
+        corr_mat = np.array(
+            [
+                [0.0, 0.01, -0.64, 0.69, 0.48],
+                [0.0, 0.0, -0.99, -0.27, 0.03],
+                [0.0, 0.0, 0.0, 1.0, -0.22],
+                [0.0, 0.0, 0.0, 0.0, 0.37],
+                [0.0, 0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+
         # Correct solution
-        max_tc = dict({(2,3):1.0,(1,2):-0.99,(2,):-0.9}) 
+        max_tc = dict({(2, 3): 1.0, (1, 2): -0.99, (2,): -0.9})
 
         # Computed solution using the function
         comp_max_tc = ada_max_terms(exp_vals_z, corr_mat, n_max)
 
         # Confirm the computed solution has same number of items as correct one
-        assert len(max_tc) == len(comp_max_tc), f'Computed set of singlets/correlations contains incorrect number of elements'
+        assert len(max_tc) == len(
+            comp_max_tc
+        ), f"Computed set of singlets/correlations contains incorrect number of elements"
 
         # Test the function has obtain the correct singlets/pairs with associated values
         for key in max_tc.keys():
-            assert max_tc[key] == comp_max_tc[key], f'Computed set of singlets/correlations contains incorrect values'
+            assert (
+                max_tc[key] == comp_max_tc[key]
+            ), f"Computed set of singlets/correlations contains incorrect values"
 
-    def test_final_solution(self): 
+    def test_final_solution(self):
         """
         Test the function that reconstructs the final solution by backtracking the
         elimination history and computing the energy of the final states.
 
-        The test consists in reconstructing a set of states for a given elimination history 
+        The test consists in reconstructing a set of states for a given elimination history
         amnd computing their energies.
         """
 
@@ -187,65 +257,113 @@ class TestingRQAOA(unittest.TestCase):
         n_qubits = 10
 
         # Terms and weights of the graph
-        edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
+        edges = [(i, i + 1) for i in range(n_qubits - 1)] + [(0, n_qubits - 1)]
         weights = [1 for _ in range(len(edges))]
 
         # Hamiltonian
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant=0)
 
         ## Testing
 
         # Trial elimination history and ouput of classical solver
-        max_terms_and_stats_list = [    
-                                        [{'pair': (0, 1), 'correlation': -1.0}, {'pair': (0, 9), 'correlation': -1.0}],
-                                        [{'pair': (0, 1), 'correlation': 1.0}, {'pair': (0, 7), 'correlation': 1.0}],
-                                        [{'pair': (0, 1), 'correlation': -1.0}, {'pair': (0, 5), 'correlation': -1.0}],
-                                        [{'pair': (0, 1), 'correlation': 1.0}]
-                                    ]
+        max_terms_and_stats_list = [
+            [
+                {"pair": (0, 1), "correlation": -1.0},
+                {"pair": (0, 9), "correlation": -1.0},
+            ],
+            [
+                {"pair": (0, 1), "correlation": 1.0},
+                {"pair": (0, 7), "correlation": 1.0},
+            ],
+            [
+                {"pair": (0, 1), "correlation": -1.0},
+                {"pair": (0, 5), "correlation": -1.0},
+            ],
+            [{"pair": (0, 1), "correlation": 1.0}],
+        ]
 
-        classical_states = [[0, 1, 0],[1, 0, 1]]
+        classical_states = [[0, 1, 0], [1, 0, 1]]
 
         # Correct solutions
-        states = ['0101010101','1010101010']
+        states = ["0101010101", "1010101010"]
         energies = [-10, -10]
-        correct_full_solution = dict(zip(states,energies))
+        correct_full_solution = dict(zip(states, energies))
 
         # Compute solutions
-        full_solution = final_solution(max_terms_and_stats_list, classical_states, hamiltonian)
+        full_solution = final_solution(
+            max_terms_and_stats_list, classical_states, hamiltonian
+        )
 
         # Test the computed solutions
-        assert correct_full_solution == full_solution, f'Solution was not computed correctly'
+        assert (
+            correct_full_solution == full_solution
+        ), f"Solution was not computed correctly"
 
-
-    def test_problem_from_dict(self): 
+    def test_problem_from_dict(self):
         """
         Test the function that computes a calssical Hamiltonian from a given graph, accounting for approriate
         labelling of the nodes and edges.
-        
+
         The test consists in generating the correct QUBO problem for a given graph dictionary.
         """
-        
+
         # Trial graph
-        input_dict = dict({():10,(1,):1,(2,):-1,(6,):4,(1,2):1,(2,5):2,(10,14):3,(6,9):4,(6,14):5,(5,6):6})
-        
+        input_dict = dict(
+            {
+                (): 10,
+                (1,): 1,
+                (2,): -1,
+                (6,): 4,
+                (1, 2): 1,
+                (2, 5): 2,
+                (10, 14): 3,
+                (6, 9): 4,
+                (6, 14): 5,
+                (5, 6): 6,
+            }
+        )
+
         # Correct hamiltonian
-        correct_dict = dict({(0,):1,(1,):-1,(3,):4,(0,1):1,(1,2):2,(2,3):6,(3,4):4,(3,6):5,(5,6):3})
-        hamiltonian = Hamiltonian.classical_hamiltonian(list(correct_dict.keys()),list(correct_dict.values()), constant = 10)
-        hamiltonian_dict = {term.qubit_indices:coeff for term,coeff in zip(hamiltonian.terms,hamiltonian.coeffs)}
+        correct_dict = dict(
+            {
+                (0,): 1,
+                (1,): -1,
+                (3,): 4,
+                (0, 1): 1,
+                (1, 2): 2,
+                (2, 3): 6,
+                (3, 4): 4,
+                (3, 6): 5,
+                (5, 6): 3,
+            }
+        )
+        hamiltonian = Hamiltonian.classical_hamiltonian(
+            list(correct_dict.keys()), list(correct_dict.values()), constant=10
+        )
+        hamiltonian_dict = {
+            term.qubit_indices: coeff
+            for term, coeff in zip(hamiltonian.terms, hamiltonian.coeffs)
+        }
 
         # Compute hamiltonian from input graph
         comp_problem = problem_from_dict(input_dict)
         comp_hamiltonian = comp_problem.hamiltonian
-        comp_hamiltonian_dict = {term.qubit_indices:coeff for term,coeff in zip(comp_hamiltonian.terms,comp_hamiltonian.coeffs)}
-
+        comp_hamiltonian_dict = {
+            term.qubit_indices: coeff
+            for term, coeff in zip(comp_hamiltonian.terms, comp_hamiltonian.coeffs)
+        }
 
         # Test computed Hamiltonian contains the correct terms
-        assert hamiltonian_dict == comp_hamiltonian_dict, f'Terms and coefficients in the computed Hamiltonian are incorrect'
+        assert (
+            hamiltonian_dict == comp_hamiltonian_dict
+        ), f"Terms and coefficients in the computed Hamiltonian are incorrect"
 
         # Test computed Hamiltonian contains the correct terms
-        assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
+        assert np.allclose(
+            hamiltonian.constant, comp_hamiltonian.constant
+        ), f"Constant in the computed Hamiltonian is incorrect"
 
-    def test_redefine_problem(self): 
+    def test_redefine_problem(self):
         """
         Test the function that computes the new QUBO for a reduced problem, given the original
         QUBO encoding the problem and a set of elimination rules via the spin_map.
@@ -259,40 +377,57 @@ class TestingRQAOA(unittest.TestCase):
         n_qubits = 10
 
         # Edges and weights of the graph
-        input_edges = [(i,i+1) for i in range(n_qubits-1)] + [(0,n_qubits-1)]
+        input_edges = [(i, i + 1) for i in range(n_qubits - 1)] + [(0, n_qubits - 1)]
         input_weights = [1 for _ in range(len(input_edges))]
 
         # Input problem
         input_problem = QUBO(n_qubits, input_edges, input_weights)
 
         # Input spin map (elimination rules)
-        spin_map = dict({(0,(1,0)),(1,(-1,0)),(2,(1,2)),(3,(1,3)),(4,(1,2)),\
-                (5,(1,2)),(6,(1,6)),(7,(1,7)),(8,(1,8)),(9,(1,0))})
+        spin_map = dict(
+            {
+                (0, (1, 0)),
+                (1, (-1, 0)),
+                (2, (1, 2)),
+                (3, (1, 3)),
+                (4, (1, 2)),
+                (5, (1, 2)),
+                (6, (1, 6)),
+                (7, (1, 7)),
+                (8, (1, 8)),
+                (9, (1, 0)),
+            }
+        )
 
         # Compute new problem
         comp_problem, _ = redefine_problem(input_problem, spin_map)
-        
+
         # Compute the new hamiltonian
         comp_hamiltonian = comp_problem.hamiltonian
 
         ## Testing (Comparing the new hamiltonian with the correct one)
 
         # Correct edges, weights and hamiltonian for the reduced problem
-        edges = [(0,1),(1,2),(1,3),(3,4),(4,5),(0,5)]
-        weights = [-1,2,1,1,1,1]
+        edges = [(0, 1), (1, 2), (1, 3), (3, 4), (4, 5), (0, 5)]
+        weights = [-1, 2, 1, 1, 1, 1]
 
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant = 0)
-
-        # Test computed Hamiltonian contains the correct terms
-        assert hamiltonian.terms == comp_hamiltonian.terms, f'Terms in the computed Hamiltonian are incorrect'
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant=0)
 
         # Test computed Hamiltonian contains the correct terms
-        assert np.allclose(hamiltonian.coeffs,comp_hamiltonian.coeffs), f'Coefficients in the computed Hamiltonian are incorrect'
+        assert (
+            hamiltonian.terms == comp_hamiltonian.terms
+        ), f"Terms in the computed Hamiltonian are incorrect"
 
         # Test computed Hamiltonian contains the correct terms
-        assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
-        
-        
+        assert np.allclose(
+            hamiltonian.coeffs, comp_hamiltonian.coeffs
+        ), f"Coefficients in the computed Hamiltonian are incorrect"
+
+        # Test computed Hamiltonian contains the correct terms
+        assert np.allclose(
+            hamiltonian.constant, comp_hamiltonian.constant
+        ), f"Constant in the computed Hamiltonian is incorrect"
+
     def workflow_mockup(self, graph_seed):
         # Generate the graph
         g = nx.generators.gnp_random_graph(n=12, p=0.7, seed=graph_seed, directed=False)
@@ -305,12 +440,20 @@ class TestingRQAOA(unittest.TestCase):
 
         # Set parameters for RQAOA: standard with cut off size 3 qubits
         R.set_rqaoa_parameters(steps=1, n_cutoff=3)
-        
+
         # Set more parameters with a very specific starting point
-        R.set_circuit_properties(p=1, init_type='custom', variational_params_dict={"betas":[0.2732211141792405], "gammas":[1.6017587697695814]}, mixer_hamiltonian='x')
+        R.set_circuit_properties(
+            p=1,
+            init_type="custom",
+            variational_params_dict={
+                "betas": [0.2732211141792405],
+                "gammas": [1.6017587697695814],
+            },
+            mixer_hamiltonian="x",
+        )
 
         # Define the device to be vectorized
-        device = create_device(location='local', name='vectorized')
+        device = create_device(location="local", name="vectorized")
         R.set_device(device)
 
         # Set the classical method used to optimize over QAOA angles and its properties
@@ -319,58 +462,61 @@ class TestingRQAOA(unittest.TestCase):
         # Compile and optimize the problem instance on RQAOA
         R.compile(maxcut_qubo)
         R.optimize()
-        
+
         return R
 
-    
     def test_total_elimination_whole_workflow(self):
         """
         Testing an edge case: solving MaxCut on a specific random unweighted graph leads to vanishing instances before reaching cutoff size.
         The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the classical solution was obtained by fixing all spins arbitrarily except the correlated ones.
-        
+
         Note that the often those problems are highly degenerate and we provide only the solutions which obey the correlations identified by the algorithm. For example, for n=4, there are 10 classical strings with the same energy, but only 8 of them have the corresponding spins anticorrelated.
         """
         R_58 = self.workflow_mockup(graph_seed=58)
 
-        assert R_58.results['solution'] == {'101010100010': -11.0,
-                                           '010100010101': -11.0,
-                                           #'101100010101': -11.0,
-                                           '101011100010': -11.0,
-                                           '010101010101': -11.0,
-                                           '101010101010': -11.0,
-                                           '010100011101': -11.0, 
-                                           #'010011101010': -11.0,
-                                           '101011101010': -11.0,
-                                           '010101011101': -11.0}
-        
+        assert R_58.results["solution"] == {
+            "101010100010": -11.0,
+            "010100010101": -11.0,
+            #'101100010101': -11.0,
+            "101011100010": -11.0,
+            "010101010101": -11.0,
+            "101010101010": -11.0,
+            "010100011101": -11.0,
+            #'010011101010': -11.0,
+            "101011101010": -11.0,
+            "010101011101": -11.0,
+        }
+
         R_83 = self.workflow_mockup(graph_seed=83)
 
-        assert R_83.results['solution'] == {'000001011101': -10.0,
-                                            '010000101111': -10.0,
-                                            '101101010000': -10.0,
-                                            #'010100101111': -10.0,
-                                            '111100100010': -10.0,
-                                            '000011011101': -10.0,
-                                            #'101011010000': -10.0,
-                                            '010010101111': -10.0,
-                                            '101111010000': -10.0,
-                                            '111110100010': -10.0}
-        
+        assert R_83.results["solution"] == {
+            "000001011101": -10.0,
+            "010000101111": -10.0,
+            "101101010000": -10.0,
+            #'010100101111': -10.0,
+            "111100100010": -10.0,
+            "000011011101": -10.0,
+            #'101011010000': -10.0,
+            "010010101111": -10.0,
+            "101111010000": -10.0,
+            "111110100010": -10.0,
+        }
+
         R_88 = self.workflow_mockup(graph_seed=88)
 
-        assert R_88.results['solution'] == {'001011011000': -12.0,
-                                            '101011011000': -12.0,
-                                            '001111011000': -12.0,
-                                            '101111011000': -12.0,
-                                            #'110100100110': -12.0,
-                                            #'001011011001': -12.0,
-                                            '010000100111': -12.0,
-                                            '110000100111': -12.0,
-                                            '010100100111': -12.0,
-                                            '110100100111': -12.0}
-        
-        
+        assert R_88.results["solution"] == {
+            "001011011000": -12.0,
+            "101011011000": -12.0,
+            "001111011000": -12.0,
+            "101111011000": -12.0,
+            #'110100100110': -12.0,
+            #'001011011001': -12.0,
+            "010000100111": -12.0,
+            "110000100111": -12.0,
+            "010100100111": -12.0,
+            "110100100111": -12.0,
+        }
+
 
 if __name__ == "__main__":
-	unittest.main()
- 
+    unittest.main()
