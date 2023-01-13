@@ -118,6 +118,44 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
 
         assert exception, "XY mixer Hamiltonian didn't fail."
 
+    def test_not_standard_params_fails(self):
+        """
+        Testing if the analytical backend fails if the parametrization of the circuit is extended or fourier.
+        """
+        exception = False
+        try:
+            q = QAOA()
+            analytical_device = create_device(
+                location="local", name="analytical_simulator"
+            )
+            q.set_device(analytical_device)
+            q.set_circuit_properties(
+                p=1, param_type="extended", init_type="rand", mixer_hamiltonian="x"
+            )
+            q.set_classical_optimizer(method="nelder-mead", maxiter=10)
+            q.compile(maxcut_qubo)
+            q.optimize()
+        except:
+            exception = True
+        assert exception, "Extended params didn't fail"
+
+        exception = False
+        try:
+            q = QAOA()
+            analytical_device = create_device(
+                location="local", name="analytical_simulator"
+            )
+            q.set_device(analytical_device)
+            q.set_circuit_properties(
+                p=1, param_type="fourier", init_type="rand", mixer_hamiltonian="x"
+            )
+            q.set_classical_optimizer(method="nelder-mead", maxiter=10)
+            q.compile(maxcut_qubo)
+            q.optimize()
+        except:
+            exception = True
+        assert exception, "Fourier params didn't fail"
+
     def test_end_to_end_rqaoa(self):
         """
         Testing the whole rqaoa workflow if the device is set to 'analytical_simulator'.

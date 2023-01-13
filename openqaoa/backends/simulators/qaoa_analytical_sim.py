@@ -20,6 +20,7 @@ from typing import Union, List, Tuple, Type, Optional
 
 from ...basebackend import QAOABaseBackend, QuantumCircuitBase
 from ...qaoa_parameters.baseparams import QAOAVariationalBaseParams, QAOACircuitParams
+from ...qaoa_parameters.standardparams import QAOAVariationalStandardParams
 from ...qaoa_parameters.operators import Hamiltonian
 from openqaoa.utilities import energy_expectation_analytical, generate_uuid
 
@@ -109,6 +110,10 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
         """
         # generate a job id
         self.job_id = generate_uuid()
+
+        assert isinstance(
+            params, QAOAVariationalStandardParams
+        ), "Analytical formula only holds for standard parametrization (for now)."
 
         betas = params.betas
         gammas = params.gammas
