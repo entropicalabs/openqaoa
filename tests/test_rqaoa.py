@@ -291,14 +291,11 @@ class TestingRQAOA(unittest.TestCase):
 
         # Test computed Hamiltonian contains the correct terms
         assert np.allclose(hamiltonian.constant,comp_hamiltonian.constant), f'Constant in the computed Hamiltonian is incorrect'
-
-    def test_total_elimination_whole_workflow(self):
-        """
-        Testing an edge case: solving MaxCut on a specific random unweighted graph leads to vanishing instances before reaching cutoff size.
-        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the classical solution was obtained by fixing all spins arbitrarily except the correlated ones.
-        """
+        
+        
+    def workflow_mockup(self, graph_seed):
         # Generate the graph
-        g = nx.generators.gnp_random_graph(n=12, p=0.7, seed=58, directed=False)
+        g = nx.generators.gnp_random_graph(n=12, p=0.7, seed=graph_seed, directed=False)
 
         # Define the problem and translate it into a binary QUBO.
         maxcut_qubo = MaximumCut(g).get_qubo_problem()
@@ -322,13 +319,20 @@ class TestingRQAOA(unittest.TestCase):
         # Compile and optimize the problem instance on RQAOA
         R.compile(maxcut_qubo)
         R.optimize()
+        
+        return R
 
-        # Get results
-        opt_results = R.results
+    
+    def test_total_elimination_whole_workflow(self):
+        """
+        Testing an edge case: solving MaxCut on a specific random unweighted graph leads to vanishing instances before reaching cutoff size.
+        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the classical solution was obtained by fixing all spins arbitrarily except the correlated ones.
+        
+        Note that the often those problems are highly degenerate and we provide only the solutions which obey the correlations identified by the algorithm. For example, for n=4, there are 10 classical strings with the same energy, but only 8 of them have the corresponding spins anticorrelated.
+        """
+        R_58 = self.workflow_mockup(graph_seed=58)
 
-        # Compare results to known behaviour:
-        # note that the problem is highly degenerate and provide only the solutions which obey the correlations identified by the algorithm. For example, for n=4, there are 10 classical strings with the same energy, but only 8 of them have spins 0 and 1 anticorrelated.
-        assert opt_results['solution'] == {'101010100010': -11.0,
+        assert R_58.results['solution'] == {'101010100010': -11.0,
                                            '010100010101': -11.0,
                                            #'101100010101': -11.0,
                                            '101011100010': -11.0,
@@ -338,6 +342,34 @@ class TestingRQAOA(unittest.TestCase):
                                            #'010011101010': -11.0,
                                            '101011101010': -11.0,
                                            '010101011101': -11.0}
+        
+        R_83 = self.workflow_mockup(graph_seed=83)
+
+        assert R_83.results['solution'] == {'000001011101': -10.0,
+                                            '010000101111': -10.0,
+                                            '101101010000': -10.0,
+                                            #'010100101111': -10.0,
+                                            '111100100010': -10.0,
+                                            '000011011101': -10.0,
+                                            #'101011010000': -10.0,
+                                            '010010101111': -10.0,
+                                            '101111010000': -10.0,
+                                            '111110100010': -10.0}
+        
+        R_88 = self.workflow_mockup(graph_seed=88)
+
+        assert R_88.results['solution'] == {'001011011000': -12.0,
+                                            '101011011000': -12.0,
+                                            '001111011000': -12.0,
+                                            '101111011000': -12.0,
+                                            #'110100100110': -12.0,
+                                            #'001011011001': -12.0,
+                                            '010000100111': -12.0,
+                                            '110000100111': -12.0,
+                                            '010100100111': -12.0,
+                                            '110100100111': -12.0}
+        
+        
 
 if __name__ == "__main__":
 	unittest.main()
