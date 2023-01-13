@@ -20,6 +20,7 @@ import numpy as np
 import scipy
 import itertools
 import json
+import inspect
 from typing import List
 
 from .helper_functions import check_kwargs
@@ -64,6 +65,60 @@ class Problem(ABC):
             A dictionary containing the serialization of the class and the problem type name.
         """
         return {**{"problem_type": self.__name__}, **dict(self)}
+
+    @staticmethod
+    def from_instance_dict(problem_instance:dict):
+        """
+        Creates an object of the class corresponding to the problem type in the input instance, with the same attributes as the input instance.
+
+        Parameters
+        ----------
+        problem_instance: dict
+            The input instance.
+
+        Returns
+        -------
+            An object of the class corresponding to the problem type in the input instance.
+        """
+
+        # copy the instance to avoid modifying the original instance
+        problem_instance = problem_instance.copy()
+        
+        # mapper from problem type to class
+        problem_mapper = { 
+            "generic_qubo": QUBO,
+            "tsp": TSP,
+            "number_partition": NumberPartition,
+            "maximum_cut": MaximumCut,
+            "knapsack": Knapsack,
+            "slack_free_knapsack": SlackFreeKnapsack,
+            "minimum_vertex_cover": MinimumVertexCover,
+            "shortest_path": ShortestPath,
+        }
+
+        # check if the problem type is in the mapper
+        assert problem_instance["problem_type"] in problem_mapper, f"Problem type {problem_instance['problem_type']} not supported."
+        
+        # get the class corresponding to the problem type
+        problem_class = problem_mapper[problem_instance.pop('problem_type', "generic_qubo")]
+        
+        # check if the problem type is QUBO, if so, raise an exception
+        if problem_class is QUBO:
+            raise Exception("This method does not work for generic QUBO. The input instance has type `generic_qubo`. You can use the `from_dict` method of the `QUBO` class instead.")
+
+        # if the instance has a graph, convert it to a networkx graph
+        if 'G' in problem_instance:
+            problem_instance['G'] = nx.node_link_graph(problem_instance['G'])
+
+        # erase the keys that are not arguments of the class
+        arguments = inspect.getfullargspec(problem_class).args[1:]
+        for key in problem_instance.copy():
+            if key not in arguments:
+                del problem_instance[key]
+        
+        # create the problem instance and return it
+        return problem_class(**problem_instance)
+
 
 
 class QUBO:
@@ -213,6 +268,46 @@ class QUBO:
             return convert2serialize(dict(self))
         else:
             return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= exclude_keys) 
+
+    @staticmethod
+    def from_dict(dict: dict, clean_terms_and_weights=False): 
+        """
+        Returns a QUBO object from a dictionary. The dictionary should be comparable to the output of the asdict method.
+
+        Parameters
+        ----------
+        dict: dict
+            The dictionary containing the serialization of the QUBO object.
+        clean_terms_and_weights: bool
+            Boolean indicating whether terms and weights can be cleaned by combining similar terms.
+
+        Returns
+        -------
+            A QUBO object.
+        """
+
+        # make a copy of the dictionary to avoid modifying the input
+        dict = dict.copy()
+
+        # extract the metadata
+        metadata = dict.pop("metadata", {})
+
+        # make a copy of the terms and weights to avoid modifying the input
+        dict['terms'] = dict['terms'].copy()
+        dict['weights'] = dict['weights'].copy()
+
+        # add the constant term
+        dict['terms'].append([])
+        dict['weights'].append(dict.pop('constant', 0))
+
+        # create the QUBO object
+        qubo = QUBO(**dict, clean_terms_and_weights=clean_terms_and_weights)
+
+        # add the metadata
+        qubo.metadata = metadata.copy()
+
+        # return the QUBO object
+        return qubo
 
     @staticmethod
     def clean_terms_and_weights(terms, weights):

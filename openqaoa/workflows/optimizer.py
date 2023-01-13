@@ -1032,7 +1032,7 @@ class RQAOA(Optimizer):
 
         # timestamp for the start of the optimization
         self.header['execution_time_start'] = int(time.time())
-
+        
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
 
@@ -1053,7 +1053,7 @@ class RQAOA(Optimizer):
             spin_map = rqaoa.spin_mapping(problem, max_terms_and_stats)
             # Eliminate spins and redefine problem
             new_problem, spin_map = rqaoa.redefine_problem(problem, spin_map)
-
+            
             # Extract final set of eliminations with correct dependencies and update tracker
             eliminations = [{'pair': (spin_map[spin][1],spin), 'correlation': spin_map[spin][0]} for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]]
             elimination_tracker.append(eliminations)
@@ -1073,7 +1073,7 @@ class RQAOA(Optimizer):
 
             # problem is updated
             problem = new_problem
-            
+
             # Compile qaoa with the problem
             q.compile(problem, verbose=False)
 
@@ -1084,7 +1084,7 @@ class RQAOA(Optimizer):
 
         # Solve the new problem classically
         cl_energy, cl_ground_states = ground_state_hamiltonian(problem.hamiltonian)
-
+            
         # Retrieve full solutions including eliminated spins and their energies
         full_solutions = rqaoa.final_solution(
             elimination_tracker, cl_ground_states, self.problem.hamiltonian)
