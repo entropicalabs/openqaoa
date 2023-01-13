@@ -14,7 +14,8 @@ def main():
     job.set_up()
     job.run_workflow()
 
-    save_job_result({"result": json.loads(job.workflow.results.dumps())})
+    # save_job_result({"result": json.loads(job.workflow.results.dumps())})
+    save_job_result({"result": job.workflow.asdict()})
 
 
 if __name__ == "__main__":
