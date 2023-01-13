@@ -18,6 +18,7 @@ import time
 import json
 from typing import List
 import gzip
+from os.path import exists
 
 from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
@@ -297,7 +298,7 @@ class Optimizer(ABC):
     def optimize():
         raise NotImplementedError
 
-    def _serializable_dict(self, complex_to_string:bool=False):
+    def _serializable_dict(self, complex_to_string:bool=False, intermediate_mesurements:bool=True):
         """
         Returns a dictionary with all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
         The returned dictionary has two keys: header and data. The header contains all the data that can identify the experiment, while the data contains all the input and output data of the experiment (also the experiment tags).
@@ -306,6 +307,9 @@ class Optimizer(ABC):
         ----------
         complex_to_string: bool
             If True, converts all complex numbers to strings. This is useful for JSON serialization, for the `dump(s)` methods.
+        intermediate_mesurements: bool
+            If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
+            Default is True.
         """
         
         # create the final data dictionary
@@ -322,7 +326,7 @@ class Optimizer(ABC):
             if data['input_parameters']['backend_properties'][item] is not None:                                                                     
                 data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
-        data['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
+        data['results'] = self.results.asdict(False, complex_to_string, intermediate_mesurements)
 
         # create the final header dictionary
         header = self.header.copy()
@@ -330,9 +334,9 @@ class Optimizer(ABC):
             **self.exp_tags.copy(),
             **{'problem_type': data['input_problem']['problem_instance']['problem_type']},
             **data['input_problem']['metadata'].copy(),
-            **{'backend_n_shots': data['input_parameters']['backend_properties']['n_shots'] },
-            **{'optimizer_'+key: data['input_parameters']['classical_optimizer'][key] 
-                                    for key in ['method', 'jac', 'hess'] 
+            **{'n_shots': data['input_parameters']['backend_properties']['n_shots'] },
+            **{prepend+key: data['input_parameters']['classical_optimizer'][key] 
+                                    for prepend, key in zip(['optimizer_', "", ""], ['method', 'jac', 'hess']) 
                                     if not data['input_parameters']['classical_optimizer'][key] is None}, 
         }   
 
@@ -344,25 +348,34 @@ class Optimizer(ABC):
 
         return serializable_dict
 
-    def asdict(self, exclude_keys:List[str]=[]):
+    def asdict(self, exclude_keys:List[str]=[], options:dict={}):
         """
         Returns a dictionary of the Optimizer object, where all objects are converted to dictionaries.
 
         Parameters
         ----------
         exclude_keys : List[str]
-            A list of keys to exclude from the returned dictionary.
+            A list of keys to exclude from the returned dictionary.         
+        options : dict
+            A dictionary of options to pass to the method that creates the dictionary to dump.
+            - complex_to_string : bool
+                If True, converts complex numbers to strings. If False, complex numbers are not converted to strings.
+            - intermediate_mesurements : bool
+                If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
 
         Returns
         -------
         dict
         """
-        if exclude_keys == []:
-            return self._serializable_dict(complex_to_string=False)
-        else:
-            return delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=False), keys_to_delete= exclude_keys)
 
-    def dumps(self, indent:int=2, exclude_keys:List[str]=[]):
+        options = {**{'complex_to_string': False}, **options}
+
+        if exclude_keys == []:
+            return self._serializable_dict(**options)
+        else:
+            return delete_keys_from_dict(obj= self._serializable_dict(**options), keys_to_delete= exclude_keys)
+
+    def dumps(self, indent:int=2, exclude_keys:List[str]=[], options:dict={}):
         """
         Returns a json string of the Optimizer object.
 
@@ -372,16 +385,22 @@ class Optimizer(ABC):
             The number of spaces to indent the result in the json file. If None, the result is not indented.
         exclude_keys : List[str]
             A list of keys to exclude from the json string.
+        options : dict
+            A dictionary of options to pass to the method that creates the dictionary to dump.
+            - intermediate_mesurements : bool
+                If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
 
         Returns
         -------
         str
         """
 
+        options = {**options, **{'complex_to_string': True}}
+
         if exclude_keys == []:
-            return json.dumps(self._serializable_dict(complex_to_string=True), indent=indent)
+            return json.dumps(self._serializable_dict(**options), indent=indent)
         else:
-            return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= exclude_keys), indent=indent)
+            return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(**options), keys_to_delete= exclude_keys), indent=indent)
 
     def dump(self, file_name:str = "", file_path:str="", prepend_id:bool=True, indent:int=2, compresslevel:int=0, exclude_keys:List[str]=[], overwrite:bool=False, options:dict={}):
         """
@@ -675,7 +694,7 @@ class QAOA(Optimizer):
             print(f'optimization completed.')
         return
 
-    def _serializable_dict(self, complex_to_string:bool = False): 
+    def _serializable_dict(self, complex_to_string:bool = False, intermediate_mesurements:bool = True): 
         """ 
         Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
 
@@ -688,21 +707,24 @@ class QAOA(Optimizer):
         -------
         serializable_dict: dict
             A dictionary containing all the values and attributes of the object that we want to return in `asdict` and `dump(s)` methods.
+        intermediate_mesurements: bool
+            If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
+            Default is True.
         """
 
         # we call the _serializable_dict method of the parent class, specifying the keys to delete from the results dictionary
-        serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
+        serializable_dict = super()._serializable_dict(complex_to_string, intermediate_mesurements)
 
         # we add the keys of the QAOA object that we want to return
         serializable_dict['data']['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
 
         # include parameters in the header metadata
-        serializable_dict['header']['metadata']['circuit_param_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['param_type']
-        serializable_dict['header']['metadata']['circuit_init_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['init_type']
-        serializable_dict['header']['metadata']['circuit_p'] = serializable_dict['data']['input_parameters']['circuit_properties']['p']
+        serializable_dict['header']['metadata']['param_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['param_type']
+        serializable_dict['header']['metadata']['init_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['init_type']
+        serializable_dict['header']['metadata']['p'] = serializable_dict['data']['input_parameters']['circuit_properties']['p']
 
         if serializable_dict['data']['input_parameters']['circuit_properties']['q'] is not None:
-            serializable_dict['header']['metadata']['circuit_q'] = serializable_dict['data']['input_parameters']['circuit_properties']['q']
+            serializable_dict['header']['metadata']['q'] = serializable_dict['data']['input_parameters']['circuit_properties']['q']
 
         return serializable_dict
 
@@ -946,9 +968,11 @@ class RQAOA(Optimizer):
         self.__q.circuit_properties  = self.circuit_properties
         self.__q.backend_properties  = self.backend_properties
         self.__q.classical_optimizer = self.classical_optimizer
+        self.__q.exp_tags            = self.exp_tags
 
         # set the header of the qaoa object to be the same as the header of the rqaoa object
-        self.__q.header = self.header
+        self.__q.header = self.header.copy()
+        self.__q.header['algorithm'] = 'qaoa' # change the algorithm name to qaoa, since this is a qaoa object
 
         # compile qaoa object
         self.__q.compile(problem, verbose=verbose)
@@ -958,7 +982,7 @@ class RQAOA(Optimizer):
 
         return 
 
-    def optimize(self, verbose=False):
+    def optimize(self, dump:bool=False, dump_options:dict={}, verbose:bool=False):
         """
         Performs optimization using RQAOA with the `custom` method or the `adaptive` method.
         The elimination RQAOA loop will occur until the number of qubits is equal to the number of qubits specified in `n_cutoff`.
@@ -966,20 +990,33 @@ class RQAOA(Optimizer):
         and the QAOA will be recompiled with the new problem.
         Once the loop is complete, the final problem will be solved classically and the final solution will be reconstructed.
         Results will be stored in the `results` attribute.
+
+        Parameters
+        ----------
+        dump: `bool`
+            If true, the object will be dumped to a file. And at the end of each step, the qaoa object will be dumped to a file.
+            Default is False.
+        dump_options: `dict`
+            Dictionary containing the options for the dump. To see the options, see the `dump` method of the `QAOA` or `RQAOA` class.
+            Default is empty.
+        verbose: `bool`
+            TODO
         """
 
         #check if the object has been compiled (or already optimized)
         assert self.compiled, "RQAOA object has not been compiled. Please run the compile method first."
 
-        # lists to append the eliminations, the problems, the qaoa results objects, the correlation matrix and the expectation values z
+        # lists to append the eliminations, the problems, the qaoa results objects, the correlation matrix, the expectation values z and a dictionary for the atomic uuids
         elimination_tracker = []
         q_results_steps = []
         problem_steps = []
         exp_vals_z_steps = []
         corr_matrix_steps = []
+        atomic_uuid_steps = {}
 
         # get variables
         problem = self.problem  
+        problem_metadata = self.problem.metadata
         n_cutoff = self.rqaoa_parameters.n_cutoff
         n_qubits = problem.n
         counter = self.rqaoa_parameters.counter
@@ -999,11 +1036,14 @@ class RQAOA(Optimizer):
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
 
-            # Save the problem             
-            problem_steps.append(problem)
+            # put a tag to the qaoa object to know which step it is
+            q.set_exp_tags({'rqaoa_counter': counter})
 
             # Run QAOA
             q.optimize()
+
+            # save the results if dump is true
+            if dump: q.dump(**dump_options)
 
             # Obtain statistical results
             exp_vals_z, corr_matrix = self.__exp_val_hamiltonian_termwise(q)
@@ -1018,13 +1058,18 @@ class RQAOA(Optimizer):
             eliminations = [{'pair': (spin_map[spin][1],spin), 'correlation': spin_map[spin][0]} for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]]
             elimination_tracker.append(eliminations)
 
-            # Extract new number of qubits
-            n_qubits = new_problem.n
+            # add the metadata to the problem
+            new_problem.metadata = problem_metadata
 
             # Save qaoa object, correlation matrix and expectation values z
             q_results_steps.append(q.results)
             corr_matrix_steps.append(corr_matrix)
-            exp_vals_z_steps.append(exp_vals_z)
+            exp_vals_z_steps.append(exp_vals_z)                    
+            problem_steps.append(problem)
+            atomic_uuid_steps[counter] = q.header['atomic_uuid']
+
+            # Extract new number of qubits
+            n_qubits = new_problem.n
 
             # problem is updated
             problem = new_problem
@@ -1034,6 +1079,8 @@ class RQAOA(Optimizer):
 
             # Add one step to the counter
             counter += 1
+
+            # TODO: do rqaoa dumps here if dump is true, so that if the loop is interrupted, the user can still get the results
 
         # Solve the new problem classically
         cl_energy, cl_ground_states = ground_state_hamiltonian(problem.hamiltonian)
@@ -1050,11 +1097,15 @@ class RQAOA(Optimizer):
         self.results['classical_output'] = {'minimum_energy': cl_energy, 'optimal_states': cl_ground_states}
         self.results['elimination_rules'] = elimination_tracker
         self.results['schedule'] = [len(eliminations) for eliminations in elimination_tracker]
-        self.results['intermediate_steps'] = [{'problem': problem, 'qaoa_results': q_results, 'exp_vals_z': exp_vals_z, 'corr_matrix': corr_matrix} for problem, q_results, exp_vals_z, corr_matrix in zip(problem_steps, q_results_steps, exp_vals_z_steps, corr_matrix_steps)]
         self.results['number_steps'] = counter - self.rqaoa_parameters.counter 
+        self.results['intermediate_steps'] = [{'counter': counter, 'problem': problem, 'qaoa_results': q_results, 'exp_vals_z': exp_vals_z, 'corr_matrix': corr_matrix} for counter, problem, q_results, exp_vals_z, corr_matrix in zip(range(self.rqaoa_parameters.counter, counter), problem_steps, q_results_steps, exp_vals_z_steps, corr_matrix_steps)]
+        self.results['atomic_uuids'] = atomic_uuid_steps
 
         # set compiled to false
         self.compiled = False
+
+        # dump the object if dump is true
+        if dump: self.dump(**{**dump_options, **{'options':{'intermediate_mesurements': False}}})
 
         if verbose:
             print(f'RQAOA optimization completed.')
@@ -1097,7 +1148,7 @@ class RQAOA(Optimizer):
         # If the step eliminates more spins than available, reduce step to match cutoff
         return (n_qubits - n_cutoff) if (n_qubits - n_cutoff) < n else n
     
-    def _serializable_dict(self, complex_to_string:bool = False):
+    def _serializable_dict(self, complex_to_string:bool = False, intermediate_mesurements:bool = True):
         """
         Returns all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
 
@@ -1110,21 +1161,24 @@ class RQAOA(Optimizer):
         -------
         serializable_dict: dict
             Dictionary containing all the values and attributes of the object that we want to return in `asdict` and `dump(s)` methods.
+        intermediate_mesurements: bool
+            If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
+            Default is True.
         """
         # we call the _serializable_dict method of the parent class, specifying the keys to delete from the results dictionary
-        serializable_dict = super()._serializable_dict(complex_to_string=complex_to_string)
+        serializable_dict = super()._serializable_dict(complex_to_string, intermediate_mesurements)
 
         # we add the keys of the RQAOA object that we want to return
         serializable_dict['data']['input_parameters']['circuit_properties'] = dict(self.circuit_properties)
         serializable_dict['data']['input_parameters']['rqaoa_parameters'] = dict(self.rqaoa_parameters)
 
         # include parameters in the header metadata
-        serializable_dict['header']['metadata']['circuit_param_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['param_type']
-        serializable_dict['header']['metadata']['circuit_init_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['init_type']
-        serializable_dict['header']['metadata']['circuit_p'] = serializable_dict['data']['input_parameters']['circuit_properties']['p']
+        serializable_dict['header']['metadata']['param_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['param_type']
+        serializable_dict['header']['metadata']['init_type'] = serializable_dict['data']['input_parameters']['circuit_properties']['init_type']
+        serializable_dict['header']['metadata']['p'] = serializable_dict['data']['input_parameters']['circuit_properties']['p']
 
         if serializable_dict['data']['input_parameters']['circuit_properties']['q'] is not None:
-            serializable_dict['header']['metadata']['circuit_q'] = serializable_dict['data']['input_parameters']['circuit_properties']['q']
+            serializable_dict['header']['metadata']['q'] = serializable_dict['data']['input_parameters']['circuit_properties']['q']
 
         serializable_dict['header']['metadata']['rqaoa_type'] = serializable_dict['data']['input_parameters']['rqaoa_parameters']['rqaoa_type']
         serializable_dict['header']['metadata']['rqaoa_n_max'] = serializable_dict['data']['input_parameters']['rqaoa_parameters']['n_max']
