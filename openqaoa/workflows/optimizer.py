@@ -966,7 +966,7 @@ class RQAOA(Optimizer):
         
         # flag, set to true if the problem vanishes due to elimination before reaching cutoff
         total_elimination = False 
-        
+
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
 
@@ -984,6 +984,7 @@ class RQAOA(Optimizer):
             spin_map = rqaoa.spin_mapping(problem, max_terms_and_stats)
             # Eliminate spins and redefine problem
             new_problem, spin_map = rqaoa.redefine_problem(problem, spin_map)
+
             # In case eliminations cancel out the whole graph, break the loop before reaching the predefined cutoff.
             if new_problem == problem:
                 total_elimination = True
@@ -1009,7 +1010,6 @@ class RQAOA(Optimizer):
 
             # Add one step to the counter
             counter += 1
-            
         if total_elimination:
             # Solve the smallest non-vanishing problem by fixing spins arbitrarily or according to the correlations
             cl_energy, cl_ground_states = rqaoa.solution_for_vanishing_instances(problem.hamiltonian, spin_map)
