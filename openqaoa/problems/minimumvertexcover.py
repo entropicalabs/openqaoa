@@ -57,8 +57,7 @@ class MinimumVertexCover(Problem):
 
         # Relabel nodes to integers starting from 0
         mapping = dict(
-            zip(input_networkx_graph, range(
-                input_networkx_graph.number_of_nodes()))
+            zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
         )
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 
@@ -153,8 +152,7 @@ class MinimumVertexCover(Problem):
         ]
 
         # Constant term
-        constant_term = [([], n_nodes * self.field / 2 +
-                          len(edges) * self.penalty / 4)]
+        constant_term = [([], n_nodes * self.field / 2 + len(edges) * self.penalty / 4)]
 
         # Generate tuple containing a list with the terms and a list with the weights
         terms_weights = tuple(
@@ -175,4 +173,6 @@ class MinimumVertexCover(Problem):
         # Extract terms and weights from the problem definition
         terms, weights = self.terms_and_weights()
 
-        return QUBO(self.G.number_of_nodes(), list(terms), list(weights), self.problem_instance)
+        return QUBO(
+            self.G.number_of_nodes(), list(terms), list(weights), self.problem_instance
+        )

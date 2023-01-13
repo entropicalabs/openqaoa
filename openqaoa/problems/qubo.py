@@ -44,16 +44,21 @@ class QUBO(object):
 
     Returns
     -------
-        An instance of the Quadratic Unconstrained Binary Optimization 
+        An instance of the Quadratic Unconstrained Binary Optimization
         (QUBO) class.
     """
 
     # Maximum number of terms allowed to enable the cleaning procedure
     TERMS_CLEANING_LIMIT = 5000
 
-    def __init__(self, n, terms, weights, 
-                    problem_instance:dict={"problem_type": "generic_qubo"}, 
-                    clean_terms_and_weights=False):
+    def __init__(
+        self,
+        n,
+        terms,
+        weights,
+        problem_instance: dict = {"problem_type": "generic_qubo"},
+        clean_terms_and_weights=False,
+    ):
 
         # check-type for terms and weights
         if not isinstance(terms, list) and not isinstance(terms, tuple):
@@ -77,13 +82,11 @@ class QUBO(object):
 
         # Check that terms and weights have matching lengths
         if len(terms) != len(weights):
-            raise ValueError(
-                "The number of terms and number of weights do not match")
+            raise ValueError("The number of terms and number of weights do not match")
 
         constant = 0
         try:
-            constant_index = [i for i, term in enumerate(
-                terms) if len(term) == 0][0]
+            constant_index = [i for i, term in enumerate(terms) if len(term) == 0][0]
             constant = weights.pop(constant_index)
             terms.pop(constant_index)
         except:
@@ -92,8 +95,7 @@ class QUBO(object):
         # If the user wants to clean the terms and weights or if the number of
         # terms is not too big, we go through the cleaning process
         if clean_terms_and_weights or len(terms) <= QUBO.TERMS_CLEANING_LIMIT:
-            self.terms, self.weights = QUBO.clean_terms_and_weights(
-                terms, weights)
+            self.terms, self.weights = QUBO.clean_terms_and_weights(terms, weights)
         else:
             self.terms, self.weights = terms, weights
 
@@ -103,7 +105,7 @@ class QUBO(object):
         # attribute to store the problem instance, it will be checked if it is json serializable in the __setattr__ method
         self.problem_instance = problem_instance
 
-        # Initialize the metadata dictionary 
+        # Initialize the metadata dictionary
         self.metadata = {}
 
     def __iter__(self):
@@ -117,10 +119,9 @@ class QUBO(object):
             try:
                 _ = json.dumps(__value)
             except Exception as e:
-                raise e    
+                raise e
 
         super().__setattr__(__name, __value)
-        
 
     @property
     def n(self):
@@ -139,7 +140,7 @@ class QUBO(object):
 
         self._n = input_n
 
-    def set_metadata(self, metadata:dict={}):
+    def set_metadata(self, metadata: dict = {}):
         """
         Sets the metadata of the problem.
 
@@ -152,10 +153,10 @@ class QUBO(object):
         # update the metadata (it will be checked if it is json serializable in the __setattr__ method)
         self.metadata = {**self.metadata, **metadata}
 
-    def asdict(self, keys_not_to_include:List[str]=[]):
+    def asdict(self, keys_not_to_include: List[str] = []):
         """
         Returns a dictionary containing the serialization of the class.
-        
+
         Parameters
         ----------
         keys_not_to_include: List[str]
@@ -169,11 +170,13 @@ class QUBO(object):
         if keys_not_to_include == []:
             return convert2serialize(dict(self))
         else:
-            return delete_keys_from_dict(obj= convert2serialize(dict(self)), keys_to_delete= keys_not_to_include) 
+            return delete_keys_from_dict(
+                obj=convert2serialize(dict(self)), keys_to_delete=keys_not_to_include
+            )
 
     @staticmethod
     def clean_terms_and_weights(terms, weights):
-        """ Goes through the terms and weights and group them when possible"""
+        """Goes through the terms and weights and group them when possible"""
         # List to record the terms as sets
         unique_terms = []
 
@@ -211,8 +214,7 @@ class QUBO(object):
     @staticmethod
     def random_instance(n, density=0.5, format_m="coo", max_abs_value=100):
         # Generate a random matrix (elements in [0, 1]) of type sparse
-        random_matrix = scipy.sparse.rand(
-            n, n, density=density, format=format_m)
+        random_matrix = scipy.sparse.rand(n, n, density=density, format=format_m)
 
         # Retrieve the indices of non-zero elements of the matrix as list of tuples
         terms = np.transpose(random_matrix.nonzero())

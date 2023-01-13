@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+
 def check_kwargs(list_expected_params, list_default_values, **kwargs):
     """
     Checks that the given list of expected parameters can be found in the
@@ -20,10 +21,10 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
 
     Args:
         list_expected_params: List[str]
-            List of string containing the name of the expected parameters in 
+            List of string containing the name of the expected parameters in
             kwargs
         list_default_values: List
-            List containing the deafult values of the expected parameters in 
+            List containing the deafult values of the expected parameters in
             kwargs
         **kwargs:
             Keyword arguments where keys are supposed to be the expected params
@@ -32,16 +33,16 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
         A tuple with the actual expected parameters if they are found in kwargs.
 
     Raises:
-        ValueError: 
-            If one of the expected arguments is not found in kwargs and its 
+        ValueError:
+            If one of the expected arguments is not found in kwargs and its
             default value is not specified.
     """
+
     def check_kwarg(expected_param, default_value, **kwargs):
         param = kwargs.pop(expected_param, default_value)
 
         if param is None:
-            raise ValueError(
-                f"Parameter '{expected_param}' should be specified")
+            raise ValueError(f"Parameter '{expected_param}' should be specified")
 
         return param
 

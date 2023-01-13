@@ -39,10 +39,10 @@ class FromDocplex2IsingModel(object):
         multipliters: [float, integer, list]
             The strength of the penalties of the cost function
         heuristic: bool
-            If the method for the inequality constraints is used. This method 
+            If the method for the inequality constraints is used. This method
             implement a novel approach that do not required slack variables.
         strength_ineq: List[float, float]
-            Lagrange multipliers of the penalization term using the unbalanced 
+            Lagrange multipliers of the penalization term using the unbalanced
             constrained method.
             For the penalty => \lambda_2 * \zeta**2 - \lambda_1 * \zeta  || strength_ineq = [a, b]
             Usually lambda_2 < lambda_1. Please refere to the paper:
@@ -103,7 +103,7 @@ class FromDocplex2IsingModel(object):
         """
         Add equality constraints to the cost function using the penality representation.
         The constraints should be linear.
-        
+
         Parameters
         ----------
         expression : docplex.mp.linear.LinearExpr
@@ -174,7 +174,7 @@ class FromDocplex2IsingModel(object):
 
     def inequality_to_equality(self, constraint):
         """
-        Transform inequality contraints into equality constriants using 
+        Transform inequality contraints into equality constriants using
         slack variables.
 
         Parameters
@@ -215,7 +215,7 @@ class FromDocplex2IsingModel(object):
                 self.idx_terms[x] = x.index
 
             for nn, var in enumerate(slack_vars[:-1]):
-                new_exp += sign * (2 ** nn) * var
+                new_exp += sign * (2**nn) * var
 
             new_exp += (
                 sign * (slack_lim - 2 ** (n_slack - 1) + 1) * slack_vars[-1]
@@ -232,7 +232,7 @@ class FromDocplex2IsingModel(object):
 
         Parameters
         ----------
-        constraint : DOcplex inequality constraint 
+        constraint : DOcplex inequality constraint
             Inequality constraints in a DOcplex format.
 
         Returns
@@ -250,14 +250,14 @@ class FromDocplex2IsingModel(object):
                 f"It is not possible to implement constraint {constraint.sense_string}."
             )
         strength = self.strength_ineq
-        penalty = strength[0] * new_exp ** 2 - strength[1] * new_exp
+        penalty = strength[0] * new_exp**2 - strength[1] * new_exp
         return penalty
 
     def multipliers_generators(self):
         """
         Penality term size adapter, this is the Lagrange multiplier of the cost
         function penalties for every constraint if the multiplier is not indicated
-        by the user. 
+        by the user.
 
         Returns
         -------
@@ -274,7 +274,7 @@ class FromDocplex2IsingModel(object):
 
     def linear_constraints(self, multipliers=None) -> None:
         """
-        Adds the constraints of the problem to the objective function. 
+        Adds the constraints of the problem to the objective function.
 
         Parameters
         ----------
@@ -333,7 +333,7 @@ class FromDocplex2IsingModel(object):
     def qubo_to_ising(n_variables, qubo_terms, qubo_weights):
         """
         Converts the terms and weights in QUBO representation ([0,1])
-        to the Ising representation ([-1, 1]). 
+        to the Ising representation ([-1, 1]).
 
         Parameters
         ----------
@@ -343,7 +343,7 @@ class FromDocplex2IsingModel(object):
             List of QUBO variables.
         qubo_weights : List
             coefficients of the variables
-            
+
 
         Returns
         -------
@@ -399,8 +399,8 @@ class FromDocplex2IsingModel(object):
 
         Returns
         -------
-        qubo_docplex, ising_model 
-                 
+        qubo_docplex, ising_model
+
 
         """
         # save a dictionary with the qubo information

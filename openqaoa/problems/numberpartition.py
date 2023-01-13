@@ -50,8 +50,7 @@ class NumberPartition(Problem):
 
         for each_entry in input_numbers:
             if not isinstance(each_entry, int):
-                raise TypeError(
-                    "The elements in numbers list must be of type int.")
+                raise TypeError("The elements in numbers list must be of type int.")
 
         self._numbers = input_numbers
 
