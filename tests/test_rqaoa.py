@@ -518,5 +518,57 @@ class TestingRQAOA(unittest.TestCase):
         }
 
 
+    def test_isolated_nodes_minimum_example(self):
+        """
+        Testing an edge case: solving MaxCut on a specific random unweighted graph must identify correctly the isolated nodes.
+
+        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the nodes has been correctly isolated.
+        """
+        test_qubo = QUBO(n=6, terms=[[0, 1], [2, 3], [2, 5], [3, 4], [4, 5]], weights=[2.0, 1.0, 1.0, 1.0, 1.0])
+        spin_map = {0: (1, 0), 1: (-1.0, 0), 2: (1, 2), 3: (1, 3), 4: (1, 4), 5: (1, 5)}
+        new_problem, new_spin_map = redefine_problem(test_qubo, spin_map)
+        
+        assert new_problem.terms == [[0, 1], [0, 3], [1, 2], [2, 3]]
+        
+        
+    def test_isolated_nodes_whole_workflow(self):
+        """
+        Testing an edge case: solving MaxCut on a specific random unweighted graph must identify correctly the isolated nodes.
+
+        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the nodes has been correctly isolated.
+        """
+        # Generate the graph
+        g = nx.generators.gnp_random_graph(n=12, p=0.7, seed=7, directed=False)
+        
+        # Define the problem and translate it into a binary QUBO.
+        maxcut_qubo = MaximumCut(g).get_qubo_problem()
+
+        # Define the RQAOA object
+        R = RQAOA()
+
+        # Set parameters for RQAOA: standard with cut off size 3 qubits
+        R.set_rqaoa_parameters(steps=1, n_cutoff=3)
+        
+        # Set more parameters with a very specific starting point
+        R.set_circuit_properties(p=1, init_type='custom', variational_params_dict={"betas":[0.7044346364592513], "gammas":[8.926807699153894]}, mixer_hamiltonian='x')
+
+        # Define the device to be vectorized
+        device = create_device(location='local', name='vectorized')
+        R.set_device(device)
+
+        # Set the classical method used to optimiza over QAOA angles and its properties
+        R.set_classical_optimizer(method="cobyla", maxiter=200)
+
+        # Compile and optimize the problem instance on RQAOA
+        R.compile(maxcut_qubo)
+        R.optimize()
+        
+        # Get results
+        opt_results = R.results
+        
+        # Compare results to known behaviour:
+        assert opt_results['schedule'] == [1, 1, 1, 1, 1, 1, 2, 1]
+        assert opt_results['solution'] == {'011001101001': -6.0, '011000110011': -6.0}
+        
 if __name__ == "__main__":
     unittest.main()
