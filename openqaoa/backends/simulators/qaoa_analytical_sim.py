@@ -65,6 +65,8 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
         for gatemap in self.circuit_params.mixer_qubits_singles:
             assert gatemap == 'RXGateMap', "Analytical formula only holds for X mixer."
         
+        assert self.circuit_params.mixer_qubits_pairs == [], "Analytical formula only holds for X mixer."
+        
     def assign_angles(self):
         raise NotImplementedError("This method is irrelevant for this backend")
         

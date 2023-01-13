@@ -92,7 +92,9 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
             n_qubits = 8
             p = 1
             mixer_hamil = XY_mixer_hamiltonian(n_qubits)
-            register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil)
+            betas = [np.pi/8]
+            gammas = [np.pi/4]
+            register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(n_qubits, p, mixer_hamil, betas, gammas)
             backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
         except:
             exception = True
