@@ -5,9 +5,9 @@ import numpy as np
 from random import randint, random
 from openqaoa.problems import (
     NumberPartition, QUBO, TSP, Knapsack, ShortestPath,
-    SlackFreeKnapsack, MaximumCut, MinimumVertexCover, 
-    Problem
+    SlackFreeKnapsack, MaximumCut, MinimumVertexCover
 )
+from openqaoa.problems.problem import Problem
 from openqaoa.utilities import convert2serialize
 
 
