@@ -1,4 +1,3 @@
-import json
 from braket.jobs import save_job_result
 from openqaoa.workflows.managed_jobs import AWSJobs
 
@@ -13,7 +12,6 @@ def main():
     job.set_up()
     job.run_workflow()
 
-    # save_job_result({"result": json.loads(job.workflow.results.dumps())})
     save_job_result({"result": job.workflow.asdict()})
 
 

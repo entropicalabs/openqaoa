@@ -136,3 +136,6 @@ dmypy.json
 
 # Braket files
 braket-job*/
+
+# Visual Studio code
+.vscode/

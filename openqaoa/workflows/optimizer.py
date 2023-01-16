@@ -326,8 +326,12 @@ class Optimizer(ABC):
             if data['input_parameters']['backend_properties'][item] is not None:                                                                     
                 data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
-        data['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
-
+        try:
+            data['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string)
+        except:
+            data['results'] = {}
+            pass
+        
         # we return a dictionary (serializable_dict) that will have two keys: header and data
         serializable_dict = {
             "header": header, # header is a dictionary containing all the data that can identify the experiment
@@ -375,7 +379,7 @@ class Optimizer(ABC):
         else:
             return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(complex_to_string=True), keys_to_delete= exclude_keys), indent=indent)
 
-    def dump(self, file_path:str, indent:int=2, compresslevel:int=0, exclude_keys:List[str]=[]):
+    def dump(self, file_path:str, indent:int=2, compresslevel:int=0, exclude_keys:List[str]=[], identification=False):
         """
         Saves the Optimizer object as json file (if compresslevel is 0). If compresslevel is not 0, saves the Optimizer object as a .gz file (which should be decompressed before use).
 
@@ -401,7 +405,8 @@ class Optimizer(ABC):
 
             # adding .json extension if not present
             file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
-            file_path = add_identification_function(file_path)
+            if identification ==True:
+                file_path = add_identification_function(file_path)
 
             # saving the result in a json file
             with open(file_path, 'w') as f:

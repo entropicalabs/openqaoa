@@ -107,15 +107,19 @@ class AWSJobs(Optimizer):
             workflow = QAOA()
         elif "rqaoa" == self.algorithm.lower():
             workflow = RQAOA()
-            workflow.set_rqaoa_parameters(**self.input_data["rqaoa_parameters"])
+            workflow.set_rqaoa_parameters(**self.input_data['data']['input_parameters']["rqaoa_parameters"])
         else:
             raise ValueError(
                 f"Specified algorithm {self.algorithm} is not supported. Please choose between [QAOA, RQAOA]"
             )
 
-        workflow.set_circuit_properties(**self.input_data["circuit_properties"])
-        workflow.set_classical_optimizer(**self.input_data["classical_optimizer"])
-        workflow.set_backend_properties(**self.input_data["backend_properties"])
+        workflow.set_circuit_properties(**self.input_data['data']['input_parameters']["circuit_properties"])
+        workflow.set_classical_optimizer(**self.input_data['data']['input_parameters']["classical_optimizer"])
+        workflow.set_backend_properties(**self.input_data['data']['input_parameters']["backend_properties"])
+
+        self.qubo = QUBO.from_dict(self.input_data['data']['input_problem'])
+
+        workflow.compile(self.qubo)
 
         # Set the braket device
         workflow.set_device(self.device)
@@ -130,7 +134,7 @@ class AWSJobs(Optimizer):
             Note tha this function is executed within the AWS job-docker
         """
 
-        self.extract_qubo()
+        # self.extract_qubo()
         self.aws_jobs_load_workflow()
         self.set_device(self.device)
 
