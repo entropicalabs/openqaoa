@@ -261,6 +261,12 @@ class Optimizer(ABC):
                 Dictionary that specifies gradient-computation options according to method chosen in 'jac'.
             hess_options : dict
                 Dictionary that specifies Hessian-computation options according to method chosen in 'hess'.
+            optimization_progress : bool
+                Returns history of measurement outcomes/wavefunction if `True`. Defaults to `False`.
+            cost_progress : bool
+                Returns history of cost values if `True`. Defaults to `True`. 
+            parameter_log : bool
+                Returns history of angles if `True`. Defaults to `True`.
             save_intermediate: bool
                 If True, the intermediate parameters of the optimization and job ids, if available, are saved throughout the run. This is set to False by default.
         """
@@ -358,9 +364,9 @@ class Optimizer(ABC):
             A list of keys to exclude from the returned dictionary.         
         options : dict
             A dictionary of options to pass to the method that creates the dictionary to dump.
-            - complex_to_string : bool
+            complex_to_string : bool
                 If True, converts complex numbers to strings. If False, complex numbers are not converted to strings.
-            - intermediate_mesurements : bool
+            intermediate_mesurements : bool
                 If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
 
         Returns
@@ -387,8 +393,8 @@ class Optimizer(ABC):
             A list of keys to exclude from the json string.
         options : dict
             A dictionary of options to pass to the method that creates the dictionary to dump.
-            - intermediate_mesurements : bool
-                If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
+        intermediate_mesurements : bool
+            If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
 
         Returns
         -------
@@ -424,8 +430,8 @@ class Optimizer(ABC):
             If True, overwrites the file if it already exists. If False, raises an error if the file already exists.
         options : dict
             A dictionary of options to pass to the method that creates the dictionary to dump.
-            - intermediate_mesurements : bool
-                If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
+        intermediate_mesurements : bool
+            If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
         """
 
         options = {**options, **{'complex_to_string': True}}
@@ -681,14 +687,14 @@ class QAOA(Optimizer):
             raise ValueError('Please compile the QAOA before optimizing it!')
 
         # timestamp for the start of the optimization
-        self.header['execution_time_start'] = int(time.time())
+        self.header['execution_time_start'] = time.time_ns()
 
         self.optimizer.optimize()
         # TODO: results and qaoa_results will differ
         self.results = self.optimizer.qaoa_result
 
         # timestamp for the end of the optimization
-        self.header['execution_time_end'] = int(time.time())
+        self.header['execution_time_end'] = time.time_ns()
 
         if verbose:
             print(f'optimization completed.')
