@@ -46,7 +46,8 @@ class ShortestPath(Problem):
         self.source = source
         self.dest = dest
 
-        assert source in list(G.nodes), f"Source node not within nodes of input graph"
+        assert source in list(
+            G.nodes), f"Source node not within nodes of input graph"
         assert dest in list(
             G.nodes
         ), f"Destination node not within nodes of input graph"
@@ -56,16 +57,16 @@ class ShortestPath(Problem):
     def random_instance(**kwargs):
         """
         Creates a random instance of the Shortest problem, whose graph is
-        random following the Erdos-Renyi model. By default the node and edge
+        random following the Erdos-Renyi model. By default the node and edge 
         weights are set to 1.0 and the default constraint is taken to be as large.
         Parameters
         ----------
         **kwargs:
-        Required keyword arguments are:
-        n_nodes: int
-            The number of nodes (vertices) in the graph.
-        edge_probability: float
-            The probability with which an edge is added to the graph.
+            Required keyword arguments are:
+            n_nodes: int
+                The number of nodes (vertices) in the graph.
+            edge_probability: float
+                The probability with which an edge is added to the graph.
         Returns
         -------
         A random instance of the Shortest Path problem.
@@ -177,7 +178,8 @@ class ShortestPath(Problem):
                     for k, y in enumerate(self.G.edges()):
                         if i in x and i in y:
                             if j == k:
-                                path_flow_terms_weights.append(([j + n_nodes - 2], 1))
+                                path_flow_terms_weights.append(
+                                    ([j + n_nodes - 2], 1))
                             else:
                                 path_flow_terms_weights.append(
                                     ([j + n_nodes - 2, k + n_nodes - 2], 1)
@@ -207,5 +209,6 @@ class ShortestPath(Problem):
         terms, weights = self.terms_and_weights()
 
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
-        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(n, terms, weights)
+        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
+            n, terms, weights)
         return QUBO(n, ising_terms, ising_weights, self.problem_instance)

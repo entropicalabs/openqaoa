@@ -51,7 +51,8 @@ class MaximumCut(Problem):
 
         # Relabel nodes to integers starting from 0
         mapping = dict(
-            zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
+            zip(input_networkx_graph, range(
+                input_networkx_graph.number_of_nodes()))
         )
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 
@@ -64,10 +65,10 @@ class MaximumCut(Problem):
         ----------
         **kwargs:
         Required keyword arguments are:
-        n_nodes: int
-            The number of nodes (vertices) in the graph.
-        edge_probability: float
-            The probability with which an edge is added to the graph.
+            n_nodes: int
+                The number of nodes (vertices) in the graph.
+            edge_probability: float
+                The probability with which an edge is added to the graph.
         Returns
         -------
             A random instance of the Maximum Cut problem.
