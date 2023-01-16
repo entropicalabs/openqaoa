@@ -32,18 +32,14 @@ class QUBO(object):
     n: int
         The number of variables in the representation.
     terms: List[Tuple[int, ...],List]
-        The different terms in the QUBO encoding, indicating the different
-        interactions between variables.
+        The different terms in the QUBO encoding, indicating the different interactions between variables.
     weights: List[float]
-        The list of weights (or coefficients) corresponding to each
-        interaction defined in `terms`.
+        The list of weights (or coefficients) corresponding to each interaction defined in `terms`.
     clean_terms_and_weights: bool
-        Boolean indicating whether terms and weights can be cleaned by
-        combining similar terms.
+        Boolean indicating whether terms and weights can be cleaned by combining similar terms.
     Returns
     -------
-        An instance of the Quadratic Unconstrained Binary Optimization
-        (QUBO) class.
+        An instance of the Quadratic Unconstrained Binary Optimization (QUBO) class.
     """
 
     # Maximum number of terms allowed to enable the cleaning procedure
