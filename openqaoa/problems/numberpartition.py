@@ -50,8 +50,7 @@ class NumberPartition(Problem):
 
         for each_entry in input_numbers:
             if not isinstance(each_entry, int):
-                raise TypeError(
-                    "The elements in numbers list must be of type int.")
+                raise TypeError("The elements in numbers list must be of type int.")
 
         self._numbers = input_numbers
 
@@ -62,7 +61,7 @@ class NumberPartition(Problem):
         Parameters
         ----------
         n_numbers: int
-            The number of numbers to be partitioned. This is a required 
+            The number of numbers to be partitioned. This is a required
             keyword argument.
         Returns
         -------

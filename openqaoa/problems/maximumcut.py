@@ -51,8 +51,7 @@ class MaximumCut(Problem):
 
         # Relabel nodes to integers starting from 0
         mapping = dict(
-            zip(input_networkx_graph, range(
-                input_networkx_graph.number_of_nodes()))
+            zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
         )
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
 

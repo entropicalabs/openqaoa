@@ -52,13 +52,14 @@ class TSP(Problem):
 
     __name__ = "tsp"
 
-    def __init__(self,
-                 city_coordinates=None,
-                 distance_matrix=None,
-                 G=None,
-                 A=None,
-                 B=1,
-                 ):
+    def __init__(
+        self,
+        city_coordinates=None,
+        distance_matrix=None,
+        G=None,
+        A=None,
+        B=1,
+    ):
         # Initialization when a weighted graph is given
         if G is not None and nx.is_weighted(G):
             TSP.validate_graph(G)
@@ -69,7 +70,8 @@ class TSP(Problem):
                 TSP.validate_coordinates(city_coordinates)
                 n_cities = len(city_coordinates)
                 distance_matrix = scipy.spatial.distance_matrix(
-                    city_coordinates, city_coordinates)
+                    city_coordinates, city_coordinates
+                )
             # Initialization when a distance matrix is given
             elif distance_matrix is not None:
                 TSP.validate_distance_matrix(distance_matrix)
@@ -78,17 +80,19 @@ class TSP(Problem):
             # Raise error if no input is given
             else:
                 raise ValueError(
-                    'Input missing: city coordinates, distance matrix or (weighted graph) required')
+                    "Input missing: city coordinates, distance matrix or (weighted graph) required"
+                )
 
             # Take into account graph connectivity if unweighted graph is given
             G = G if G else nx.complete_graph(n_cities)
             if n_cities != len(G):
                 raise ValueError(
-                    'Number of cities does not match the number of nodes in graph')
+                    "Number of cities does not match the number of nodes in graph"
+                )
 
             # Set edge weights to be the distances between corresponding cities
             for (u, v) in G.edges():
-                G[u][v]['weight'] = distance_matrix[u, v]
+                G[u][v]["weight"] = distance_matrix[u, v]
 
         # Set number of cities
         self.n_cities = n_cities
@@ -121,15 +125,13 @@ class TSP(Problem):
 
         for each_entry in city_coordinates:
             if not isinstance(each_entry, tuple):
-                raise TypeError(
-                    "The coordinates should be contained in a tuple")
+                raise TypeError("The coordinates should be contained in a tuple")
 
             for each_value in each_entry:
                 if not isinstance(each_value, float) and not isinstance(
                     each_value, int
                 ):
-                    raise TypeError(
-                        "The coordinates must be of type float or int")
+                    raise TypeError("The coordinates must be of type float or int")
 
     @staticmethod
     def validate_distance_matrix(distance_matrix):
@@ -148,15 +150,15 @@ class TSP(Problem):
 
         for each_entry in distance_matrix:
             if not isinstance(each_entry, list):
-                raise TypeError(
-                    "Each row in the distance matrix should be a list")
+                raise TypeError("Each row in the distance matrix should be a list")
 
             for each_value in each_entry:
                 if not isinstance(each_value, float) and not isinstance(
                     each_value, int
                 ):
                     raise TypeError(
-                        "The distance matrix entries must be of type float or int")
+                        "The distance matrix entries must be of type float or int"
+                    )
 
                 if each_value < 0:
                     raise ValueError("Distances should be positive")
@@ -174,13 +176,10 @@ class TSP(Problem):
             None
         """
         # Set edge weights to be the distances between corresponding cities
-        for (u, v, weight) in G.edges(data='weight'):
+        for (u, v, weight) in G.edges(data="weight"):
             print(weight)
-            if not isinstance(weight, float) and not isinstance(
-                weight, int
-            ):
-                raise TypeError(
-                    "The edge weights must be of type float or int")
+            if not isinstance(weight, float) and not isinstance(weight, int):
+                raise TypeError("The edge weights must be of type float or int")
 
             if weight < 0:
                 raise ValueError("Edge weights should be positive")
@@ -193,7 +192,7 @@ class TSP(Problem):
         Parameters
         ----------
         n_cities: int
-            The number of cities in the TSP instance. This is a required 
+            The number of cities in the TSP instance. This is a required
             keyword argument.
         Returns
         -------
@@ -208,14 +207,13 @@ class TSP(Problem):
 
         # Generate random coordinates in a box of size sqrt(n_cities) x sqrt(n_cities)
         box_size = np.sqrt(n_cities)
-        city_coordinates = list(
-            map(tuple, box_size * rng.random(size=(n_cities, 2))))
+        city_coordinates = list(map(tuple, box_size * rng.random(size=(n_cities, 2))))
         return TSP(city_coordinates=city_coordinates)
 
     def terms_and_weights(self):
         """
         Returns the terms and weights used in the QUBO formulation of this TSP instance.
-        The QUBO formulation used is the one presented in Section 7.2 in 
+        The QUBO formulation used is the one presented in Section 7.2 in
         https://arxiv.org/pdf/1302.5843.pdf, and sets the first city to be visited to be
         the first city in order to reduce the number of variables.
         Returns
@@ -230,14 +228,14 @@ class TSP(Problem):
 
         def get_variable_index(v, j):
             """
-            Returns the actual configuration index given the two indices v (city) and j (step), 
-            to mirror the formulation given in https://arxiv.org/pdf/1302.5843.pdf. Whenever the 
-            city or step probed is the first one, it can also return a flag saying whether the 
+            Returns the actual configuration index given the two indices v (city) and j (step),
+            to mirror the formulation given in https://arxiv.org/pdf/1302.5843.pdf. Whenever the
+            city or step probed is the first one, it can also return a flag saying whether the
             variable is 0 (flag=-2) or 1 (flag=-1), since the first city is fixed to reduce the
             number of variables).
             """
-            if j > self.n_cities+1 or v > self.n_cities:
-                raise ValueError('Index out of bounds')
+            if j > self.n_cities + 1 or v > self.n_cities:
+                raise ValueError("Index out of bounds")
 
             # Whenever the step is the first one (or n+1 equivalently)
             if j == 1 or j == self.n_cities + 1:
@@ -266,7 +264,7 @@ class TSP(Problem):
 
         # Constraints ensuring that a city only appears once in the cycle, and that there is only one city per step
         # (note that it was simplified to account that the first city is always city 1)
-        constant_term += 2 * self.A * (self.n_cities-1)
+        constant_term += 2 * self.A * (self.n_cities - 1)
 
         for v in range(2, self.n_cities + 1):
             for j in range(2, self.n_cities + 1):
@@ -276,25 +274,41 @@ class TSP(Problem):
             for l in range(2, self.n_cities + 1):
                 for v in range(2, self.n_cities + 1):
                     interaction_terms.append(
-                        ([get_variable_index(v, k), get_variable_index(v, l)], self.A))
+                        ([get_variable_index(v, k), get_variable_index(v, l)], self.A)
+                    )
 
         for j in range(2, self.n_cities + 1):
             for u in range(2, self.n_cities + 1):
                 for v in range(2, self.n_cities + 1):
                     interaction_terms.append(
-                        ([get_variable_index(u, j), get_variable_index(v, j)], self.A))
+                        ([get_variable_index(u, j), get_variable_index(v, j)], self.A)
+                    )
 
         # Constraint which penalizes going through edges which are not part of the graph
         for (u, v) in nx.complement(self.graph).edges():
             for j in range(1, self.n_cities + 1):
                 interaction_terms.append(
-                    ([get_variable_index(u+1, j), get_variable_index(v+1, j+1)], self.A))
+                    (
+                        [
+                            get_variable_index(u + 1, j),
+                            get_variable_index(v + 1, j + 1),
+                        ],
+                        self.A,
+                    )
+                )
 
         # Terms to account for the path cost
         for (u, v) in self.graph.edges():
             for j in range(1, self.n_cities + 1):
-                interaction_terms.append(([get_variable_index(
-                    u+1, j), get_variable_index(v+1, j+1)], self.B * self.graph[u][v]['weight']))
+                interaction_terms.append(
+                    (
+                        [
+                            get_variable_index(u + 1, j),
+                            get_variable_index(v + 1, j + 1),
+                        ],
+                        self.B * self.graph[u][v]["weight"],
+                    )
+                )
 
         # Filtering linear and quadratic terms such that variables which are fixed (and have been flagged)
         # can be processed accordingly
@@ -309,7 +323,8 @@ class TSP(Problem):
                 # Update interaction to reduce the degree of a term if some variables are set to 1
                 # (that is remove all flag=-1)
                 interaction = list(
-                    filter(lambda a: a != ONE_VALUED_VARIABLE, interaction))
+                    filter(lambda a: a != ONE_VALUED_VARIABLE, interaction)
+                )
 
                 # Add the updated term
                 filtered_interaction_terms.append((interaction, weight))
@@ -328,6 +343,5 @@ class TSP(Problem):
         terms, weights = self.terms_and_weights()
 
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
-        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(
-            n, terms, weights)
+        ising_terms, ising_weights = QUBO.convert_qubo_to_ising(n, terms, weights)
         return QUBO(n, ising_terms, ising_weights, self.problem_instance)

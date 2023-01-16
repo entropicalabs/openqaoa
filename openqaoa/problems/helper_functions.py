@@ -25,6 +25,7 @@ from .tsp import TSP
 from .converters import FromDocplex2IsingModel
 from .qubo import QUBO
 
+
 def create_problem_from_dict(problem_instance: dict) -> Problem:
     """
     Creates an object of the class corresponding to the problem type in the input instance, with the same attributes as the input instance.
@@ -41,7 +42,7 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
     problem_instance = problem_instance.copy()
 
     # mapper from problem type to class
-    problem_mapper = { 
+    problem_mapper = {
         "generic_qubo": QUBO,
         "tsp": TSP,
         "number_partition": NumberPartition,
@@ -53,18 +54,22 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
     }
 
     # check if the problem type is in the mapper
-    assert problem_instance["problem_type"] in problem_mapper, f"Problem type {problem_instance['problem_type']} not supported."
+    assert (
+        problem_instance["problem_type"] in problem_mapper
+    ), f"Problem type {problem_instance['problem_type']} not supported."
 
     # get the class corresponding to the problem type
-    problem_class = problem_mapper[problem_instance.pop('problem_type', "generic_qubo")]
+    problem_class = problem_mapper[problem_instance.pop("problem_type", "generic_qubo")]
 
     # check if the problem type is QUBO, if so, raise an exception
     if problem_class is QUBO:
-        raise Exception("This method does not work for generic QUBO. The input instance has type `generic_qubo`. You can use the `from_dict` method of the `QUBO` class instead.")
+        raise Exception(
+            "This method does not work for generic QUBO. The input instance has type `generic_qubo`. You can use the `from_dict` method of the `QUBO` class instead."
+        )
 
     # if the instance has a graph, convert it to a networkx graph
-    if 'G' in problem_instance:
-        problem_instance['G'] = nx.node_link_graph(problem_instance['G'])
+    if "G" in problem_instance:
+        problem_instance["G"] = nx.node_link_graph(problem_instance["G"])
 
     # erase the keys that are not arguments of the class
     arguments = inspect.getfullargspec(problem_class).args[1:]
