@@ -61,8 +61,7 @@ class NumberPartition(Problem):
         Parameters
         ----------
         n_numbers: int
-            The number of numbers to be partitioned. This is a required
-            keyword argument.
+            The number of numbers to be partitioned. This is a required keyword argument.
         Returns
         -------
             A random instance of the Number Partitioning problem.

@@ -192,8 +192,7 @@ class TSP(Problem):
         Parameters
         ----------
         n_cities: int
-            The number of cities in the TSP instance. This is a required
-            keyword argument.
+            The number of cities in the TSP instance. This is a required keyword argument.
         Returns
         -------
             A random instance of the Traveling Salesman problem.

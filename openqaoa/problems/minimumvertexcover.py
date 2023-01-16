@@ -98,11 +98,11 @@ class MinimumVertexCover(Problem):
         Parameters
         ----------
         **kwargs:
-            Required keyword arguments are:
-            n_nodes: int
-                The number of nodes (vertices) in the graph.
-            edge_probability: float
-                The probability with which an edge is added to the graph.
+        Required keyword arguments are:
+        n_nodes: int
+            The number of nodes (vertices) in the graph.
+        edge_probability: float
+            The probability with which an edge is added to the graph.
         Returns
         -------
         A random instance of the Minimum Vertex Cover problem.
