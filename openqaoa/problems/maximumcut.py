@@ -14,7 +14,7 @@
 
 import networkx as nx
 
-from .helper_functions import check_kwargs
+from ..utilities import check_kwargs
 from .problem import Problem
 from .qubo import QUBO
 

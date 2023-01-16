@@ -16,8 +16,6 @@ from abc import ABC, abstractmethod
 
 import networkx as nx
 
-from openqaoa.utilities import create_problem_from_dict
-
 
 class Problem(ABC):
     @staticmethod
@@ -53,18 +51,3 @@ class Problem(ABC):
             A dictionary containing the serialization of the class and the problem type name.
         """
         return {**{"problem_type": self.__name__}, **dict(self)}
-
-    @staticmethod
-    def from_instance_dict(problem_instance:dict):
-        """
-        Creates an object of the class corresponding to the problem type in the input instance, with the same attributes as the input instance.
-        Parameters
-        ----------
-        problem_instance: dict
-            The input instance.
-        Returns
-        -------
-            An object of the class corresponding to the problem type in the input instance.
-        """
-        
-        return create_problem_from_dict(problem_instance)

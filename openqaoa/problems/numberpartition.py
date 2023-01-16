@@ -14,7 +14,7 @@
 
 import numpy as np
 
-from .helper_functions import check_kwargs
+from ..utilities import check_kwargs
 from .problem import Problem
 from .qubo import QUBO
 

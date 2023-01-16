@@ -16,7 +16,7 @@ import networkx as nx
 import numpy as np
 import scipy
 
-from .helper_functions import check_kwargs
+from ..utilities import check_kwargs
 from .problem import Problem
 from .qubo import QUBO
 

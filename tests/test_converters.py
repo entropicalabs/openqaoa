@@ -14,9 +14,11 @@
 
 import unittest
 
-from openqaoa.problems import QUBO, MaximumCut, FromDocplex2IsingModel
 from docplex.mp.model import Model
 import networkx as nx
+
+from openqaoa.problems import QUBO, MaximumCut, FromDocplex2IsingModel
+
 
 class TestDocplex2IsingClass(unittest.TestCase):
 
