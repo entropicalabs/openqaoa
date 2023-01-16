@@ -111,7 +111,7 @@ class Result:
 
     #     return (string)
 
-    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, exclude_keys:List[str]=[]):
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, intermediate_mesurements:bool=True, exclude_keys:List[str]=[]):
         """
         Returns a dictionary with the results of the optimization, where the dictionary is serializable. 
         If the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
@@ -121,7 +121,10 @@ class Result:
         keep_cost_hamiltonian: `bool`
             If True, the cost hamiltonian is kept in the dictionary. If False, it is removed.
         complex_to_string: `bool`
-            If True, the complex numbers are converted to strings. If False, they are kept as complex numbers. This is useful for the JSON serialization.
+            If True, the complex numbers are converted to strings. If False, they are kept as complex numbers. This is useful for the JSON serialization. 
+        intermediate_mesurements: bool, optional
+            If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
+            Default is True.
         exclude_keys: `list[str]`
             A list of keys to exclude from the returned dictionary.
 
@@ -143,7 +146,9 @@ class Result:
         if complex_to_string and issubclass(self.__backend, QAOABaseBackendStatevector):
             return_dict['intermediate'] = {}
             for key, value in self.intermediate.items():
-                if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)):
+                if intermediate_mesurements == False and 'measurement' in key: # if intermediate_mesurements is false, the intermediate measurements are not included in the dump
+                    return_dict['intermediate'][key] = []
+                elif 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)):
                     return_dict['intermediate'][key] = [[complx_to_str(item) for item in list_] for list_ in value if (isinstance(list_, list) or isinstance(list_, np.ndarray))]
                 else:
                     return_dict['intermediate'][key] = value 
