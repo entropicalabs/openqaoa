@@ -364,10 +364,10 @@ class Optimizer(ABC):
             A list of keys to exclude from the returned dictionary.         
         options : dict
             A dictionary of options to pass to the method that creates the dictionary to dump.
-            complex_to_string : bool
-                If True, converts complex numbers to strings. If False, complex numbers are not converted to strings.
-            intermediate_mesurements : bool
-                If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
+                complex_to_string : bool
+                    If True, converts complex numbers to strings. If False, complex numbers are not converted to strings.
+                intermediate_mesurements : bool
+                    If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
 
         Returns
         -------
