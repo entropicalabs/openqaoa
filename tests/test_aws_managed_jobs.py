@@ -179,7 +179,7 @@ class TestingAwsJobs(unittest.TestCase):
             input_data={"input_data": input_data_path},
         )
 
-        assert job.state() == True
+        assert job.state() == 'COMPLETED'
 
     @pytest.mark.docker_aws
     def testLocalJobRQAOA(self):
@@ -203,7 +203,7 @@ class TestingAwsJobs(unittest.TestCase):
             input_data={"input_data": input_data_path},
         )
 
-        assert job.state() == True
+        assert job.state() == 'COMPLETED'
 
 
 if __name__ == "__main__":
