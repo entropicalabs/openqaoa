@@ -15,7 +15,7 @@
 # General Imports
 from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts, generate_uuid
+from ...utilities import flip_counts, generate_uuid, permute_counts_dictionary
 from ...cost_function import cost_function
 from ...qaoa_parameters.gatemap import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
                                           RYYGateMap, RZZGateMap, RZXGateMap)
@@ -179,9 +179,13 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
 
         qaoa_circuit = self.qaoa_circuit(params)
         counts = self.backend_simulator.run(qaoa_circuit, shots=self.n_shots).result().get_counts()
-        flipped_counts = flip_counts(counts)
-        self.measurement_outcomes = flipped_counts
-        return flipped_counts
+        
+        final_counts = flip_counts(counts)
+        if self.initial_qubit_layout != self.final_qubit_layout:
+            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
+                                                    self.final_qubit_layout)
+        self.measurement_outcomes = final_counts
+        return final_counts
 
     def circuit_to_qasm(self):
         """

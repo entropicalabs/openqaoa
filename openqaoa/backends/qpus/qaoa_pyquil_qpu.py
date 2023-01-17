@@ -20,7 +20,7 @@ from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOAB
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from ...devices import DevicePyquil
 from ...qaoa_parameters.gatemap import RZZGateMap, SWAPGateMap
-from ...utilities import generate_uuid
+from ...utilities import generate_uuid, permute_counts_dictionary
 
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
@@ -247,21 +247,20 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         """
 
         executable_program = self.qaoa_circuit(params)
-
         result = self.device.quantum_computer.run(executable_program)
-
         # we create an uuid for the job
         self.job_id = generate_uuid()
 
-        # TODO: check the endian (big or little) ordering of measurement outcomes
         meas_list = [''.join(str(bit) for bit in bitstring)
-                     for bitstring in result.readout_data['ro']]
-        
+                     for bitstring in result.readout_data['ro']]        
         # Expose counts
-        counts = Counter(list(meas_list))
-        self.measurement_outcomes = counts
-        return counts
-
+        final_counts = Counter(list(meas_list))
+        if self.initial_qubit_layout != self.final_qubit_layout:
+            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
+                                                    self.final_qubit_layout)
+        self.measurement_outcomes = final_counts
+        return final_counts
+        
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
         """
         A method to convert the pyQuil program to a OpenQASM string.

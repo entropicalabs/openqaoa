@@ -24,6 +24,7 @@ from braket.jobs.metrics import log_metric
 from ...devices import DeviceAWS
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
+from ...utilities import permute_counts_dictionary
 
 class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
     """
@@ -209,9 +210,13 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                     raise ConnectionError(
                         "An Error Occurred with the Task(s) sent to AWS.")
 
+        final_counts = counts
+        if self.initial_qubit_layout != self.final_qubit_layout:
+            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
+                                                    self.final_qubit_layout)
         # Expose counts
-        self.measurement_outcomes = counts
-        return counts
+        self.measurement_outcomes = final_counts
+        return final_counts
     
     def log_with_backend(self, metric_name: str, value, iteration_number) -> None:
         

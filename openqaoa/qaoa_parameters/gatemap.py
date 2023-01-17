@@ -314,10 +314,17 @@ class RiSWAPGateMap(TwoQubitRotationGateMap):
 class RotationGateMapFactory(object):
 
     def convert_hamiltonian_to_gate_maps(hamil_obj: Hamiltonian,
-                                           input_label: List) -> List[RotationGateMap]:
+                                         input_label: List) -> List[RotationGateMap]:
         
         """
         Converts a Hamiltonian Object into a List of RotationGateMap Objects.
+        
+        Parameters
+        ----------
+        hamil_obj: Hamiltonian
+        
+        input_label: `list`
+            List of labels to distinguish between layers and type of gates
         """
 
         pauli_terms = hamil_obj.terms

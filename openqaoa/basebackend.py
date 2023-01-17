@@ -68,10 +68,16 @@ class VQABaseBackend(ABC):
     @abstractmethod
     def __init__(self,
                  prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
-                 append_state: Optional[Union[QuantumCircuitBase, np.ndarray]]):
+                 append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
+                 initial_qubit_layout: List[int],
+                 final_qubit_layout: List[int]):
         """The constructor. See class docstring"""
         self.prepend_state = prepend_state
         self.append_state = append_state
+        self.initial_qubit_layout = initial_qubit_layout
+        #specify the final_qubit_layout if the qubits are reordered due to SWAPs
+        self.final_qubit_layout = final_qubit_layout if final_qubit_layout is not None\
+                                  else self.initial_qubit_layout
 
     @abstractmethod
     def expectation(self, params: Any) -> float:
@@ -123,9 +129,13 @@ class QAOABaseBackend(VQABaseBackend):
                  prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
                  append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
                  init_hadamard: bool,
-                 cvar_alpha: float = 1):
+                 cvar_alpha: float,
+                 initial_qubit_layout: List[int],
+                 final_qubit_layout: List[int],
+                 ):
 
-        super().__init__(prepend_state, append_state)
+        super().__init__(prepend_state, append_state, 
+                         initial_qubit_layout, final_qubit_layout)
 
         self.circuit_params = circuit_params
         self.cost_hamiltonian = circuit_params.cost_hamiltonian
@@ -483,10 +493,14 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
                  prepend_state: Optional[QuantumCircuitBase],
                  append_state: Optional[QuantumCircuitBase],
                  init_hadamard: bool,
-                 cvar_alpha: float = 1):
+                 cvar_alpha: float,
+                 initial_qubit_layout: List[int],
+                 final_qubit_layout: List[int],
+                 ):
 
         super().__init__(circuit_params, prepend_state,
-                         append_state, init_hadamard, cvar_alpha)
+                         append_state, init_hadamard, cvar_alpha,
+                         initial_qubit_layout, final_qubit_layout)
 
         # assert self.n_qubits >= len(prepend_state.qubits), \
         # "Cannot attach a bigger circuit to the QAOA routine"

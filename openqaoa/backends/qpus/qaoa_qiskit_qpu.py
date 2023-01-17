@@ -23,7 +23,7 @@ from qiskit.circuit import Parameter
 from ...devices import DeviceQiskit
 from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts
+from ...utilities import flip_counts, permute_counts_dictionary
 
 
 # add support to perform error mitigation for a future version
@@ -210,9 +210,13 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                     "An Error Occurred with the Job(s) sent to IBMQ.")
 
         # Expose counts
-        counts_flipped = flip_counts(counts)
-        self.measurement_outcomes = counts_flipped
-        return counts_flipped
+        final_counts = flip_counts(counts)
+        #check whether SWAP gates changed the final layout of qubits
+        if self.initial_qubit_layout != self.final_qubit_layout:
+            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
+                                                    self.final_qubit_layout)
+        self.measurement_outcomes = final_counts
+        return final_counts
 
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
         """

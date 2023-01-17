@@ -18,6 +18,7 @@ import time
 import json
 from typing import List
 import gzip
+import requests
 
 from openqaoa.devices import DeviceLocal, DeviceBase
 from openqaoa.problems.problem import QUBO
@@ -272,6 +273,59 @@ class Optimizer(ABC):
 
         self.classical_optimizer = ClassicalOptimizer(**kwargs)
         return None
+    
+    def circuit_routing(self, problem:QUBO,
+                        routing_algo:str = 'greedy',
+                        initial_mapping: List[int] = None):
+        """Post the HTTP request to the routing API and retrieve routed 
+        circuit
+        
+        Parameters
+        ----------
+        problem: QUBO
+            The QUBO problem to be run on QPU
+        routing_algo: str
+            The algorithm to generate an optimal SWAP network
+        
+        Returns
+        -------
+        tuple[List[List],List[int]]
+            The first list specifies the qubit indices for operations, the second list
+            differentiates between whether the gate is Ising or SWAP
+        """
+        
+        initial_mapping = list(range(problem.n)) if initial_mapping is None else initial_mapping
+        device_connecivity = self.device.connectivity
+        problem_as_list_of_lists = [list(term) for term in problem if len(term) == 2]
+        
+        #params for MCTS        
+        params= {"max_depth_simulation":10, 
+                "max_iterations":10, 
+                "n_simulations":64, 
+                "exploration_constant":2,
+                "max_tree_depth":5} if routing_algo.lower() == 'mcts' else {}
+        query = {
+            "algorithm": routing_algo,
+            "device": device_connecivity,
+            "problem": problem_as_list_of_lists,
+            "initial_mapping": initial_mapping,
+            "params": params}
+        
+        #post the query via HTTP
+        r = requests.post(url='http://127.0.0.1:8000/qubit_routing', json=query)
+        
+        results = r.json()
+        
+        gate_indices_list = results['gates']
+        gate_type_list = results['type']
+        swap_mask = results['swap_mask']
+        
+        assert len(gate_indices_list) == len(swap_mask), \
+            "Incorrect output from qubit routing algorithm"
+        assert len(swap_mask) == problem.n ,\
+            "Incorrect number of qubits in the final qubit layout"
+        
+        return (gate_indices_list,gate_type_list,swap_mask)
 
     def compile(self, problem:QUBO):   
         """
@@ -281,7 +335,9 @@ class Optimizer(ABC):
         Parameters
         ----------
         problem: QUBO
-            The problem to be optimized. Must be in QUBO form.
+            The problem to be optimized. Must be in QUBO form
+        routing_algo: str
+            The algorithm to generate an optimal SWAP networ
         """   
 
         # check and set problem
@@ -322,7 +378,7 @@ class Optimizer(ABC):
                                     'classical_optimizer': dict(self.classical_optimizer),
                                     }
         # change the parameters that aren't serializable to strings 
-        for item in ['noise_model' , 'append_state', 'prepend_state']:
+        for item in ['noise_model','append_state','prepend_state']:
             if data['input_parameters']['backend_properties'][item] is not None:                                                                     
                 data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
@@ -560,7 +616,7 @@ class QAOA(Optimizer):
 
         return None
 
-    def compile(self, problem: QUBO = None, verbose: bool = False):
+    def compile(self, problem: QUBO = None, verbose: bool = False, routing_algo:str = 'greedy'):
         """
         Initialise the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement
@@ -582,16 +638,26 @@ class QAOA(Optimizer):
         # we compile the method of the parent class to genereate the uuid and check the problem is a QUBO object and save it
         super().compile(problem=problem)
         
+        list_gates_indices, gate_type_list, swap_mask = self.circuit_routing(problem, routing_algo, self.qubit_register)
+        final_qubit_layout = swap_mask if self.circuit_params.p%2 == 0 else None
+        
+        sorted_problem = [list(term) for term in problem if len(term) != 2] 
+        sorted_problem.extend([gate_indices for gate_indices,mask in zip(list_gates_indices, gate_type_list) if mask == 0])
+        
         self.cost_hamil = Hamiltonian.classical_hamiltonian(
-            terms=problem.terms, coeffs=problem.weights, constant=problem.constant)
+            terms=sorted_problem.terms, coeffs=sorted_problem.weights, constant=sorted_problem.constant)
         
         self.mixer_hamil = get_mixer_hamiltonian(n_qubits=self.cost_hamil.n_qubits,
                                                  mixer_type=self.circuit_properties.mixer_hamiltonian,
                                                  qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
                                                  coeffs=self.circuit_properties.mixer_coeffs)
 
-        self.circuit_params = QAOACircuitParams(
-            self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p)
+        self.circuit_params = QAOACircuitParams(self.cost_hamil,
+                                                self.mixer_hamil,
+                                                p=self.circuit_properties.p,
+                                                routed_gate_list_indices=list_gates_indices,
+                                                routed_gate_type_list=gate_type_list)
+        
         self.variate_params = create_qaoa_variational_params(qaoa_circuit_params=self.circuit_params,
                                                              params_type=self.circuit_properties.param_type,
                                                              init_type=self.circuit_properties.init_type, 
@@ -603,6 +669,8 @@ class QAOA(Optimizer):
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,
+                                        initial_qubit_layout = self.qubit_register,
+                                        final_qubit_layout = final_qubit_layout,
                                         **self.backend_properties.__dict__)
 
         self.optimizer = get_optimizer(vqa_object=self.backend,
@@ -870,7 +938,7 @@ class RQAOA(Optimizer):
 
         return None
 
-    def compile(self, problem: QUBO = None, verbose: bool = False):
+    def compile(self, problem: QUBO = None, verbose: bool = False, routing_algo:str = 'greedy'):
         """
         Create a QAOA object and initialize it with the circuit properties, device, classical optimizer and
         backend properties specified by the user.

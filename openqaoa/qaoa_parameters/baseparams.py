@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from __future__ import annotations
+# from __future__ import annotations
 
 from abc import ABC
 from typing import List, Union, Tuple, Any, Callable, Iterable, Type
@@ -20,6 +20,7 @@ import numpy as np
 
 from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
+from .gatemap import GateMap, RotationGateMap, SWAPGateMap
 
 
 def _is_iterable_empty(in_iterable):
@@ -165,7 +166,9 @@ class QAOACircuitParams(VQACircuitParams):
                  cost_hamiltonian: Hamiltonian, 
                  mixer_block: Union[List[RotationGateMap], Hamiltonian], 
                  p: int, 
-                 mixer_coeffs: List[float] = []):
+                 mixer_coeffs: List[float] = [],
+                 routed_gate_list_indices:List = None,
+                 routed_gate_type_list:List = None):
         
         super().__init__(algorithm = "QAOA")
         
@@ -184,6 +187,8 @@ class QAOACircuitParams(VQACircuitParams):
         self.cost_hamiltonian = cost_hamiltonian
         self.cost_block = cost_hamiltonian
         self.mixer_block = mixer_block
+        self.routed_gate_list_indices = routed_gate_list_indices
+        self.routed_gate_type_list = routed_gate_type_list
         
         (self.cost_single_qubit_coeffs, self.cost_pair_qubit_coeffs, self.cost_qubits_singles, self.cost_qubits_pairs) = self._assign_coefficients(self.cost_block[0], self.cost_block_coeffs)
         
@@ -226,7 +231,7 @@ class QAOACircuitParams(VQACircuitParams):
     @cost_block.setter
     def cost_block(self, input_object: Hamiltonian) -> None:
 
-        self._cost_block = HamiltonianMapper.repeat_gate_maps(input_object, 'cost', self.p)
+        self._cost_block = HamiltonianMapper.get_gate_maps(input_object, ['cost', 0])
     
     @property
     def mixer_block(self):
@@ -235,15 +240,9 @@ class QAOACircuitParams(VQACircuitParams):
     
     @mixer_block.setter
     def mixer_block(self, input_object: Union[List[RotationGateMap], Hamiltonian]) -> None:
-        
-        if type(input_object) == Hamiltonian:
-            
-            self._mixer_block = HamiltonianMapper.repeat_gate_maps(input_object, 'mixer', self.p)
-
-        else:
-            
-            self._mixer_block = HamiltonianMapper.repeat_gate_maps_from_gate_map_list(
-                input_object, 'mixer', self.p)
+                    
+        self._mixer_block = HamiltonianMapper.get_gate_maps(input_object,['mixer', 0]) \
+                            if type(input_object) == Hamiltonian else input_object
         
     def __repr__(self):
         
@@ -284,26 +283,31 @@ class QAOACircuitParams(VQACircuitParams):
     @property
     def abstract_circuit(self) -> List[GateMap]:
         
+        #route the cost block and append SWAP gates
+        if self.routed_gate_list_indices is not None and self.routed_gate_type_list is not None:
+            self.route_cost_block()
+        
+        self.mixer_blocks = HamiltonianMapper.repeat_gate_maps_from_gate_map_list(
+                self.mixer_block, 'mixer', self.p)
+        self.cost_blocks = HamiltonianMapper.repeat_gate_maps_from_gate_map_list(
+                self.cost_block, 'cost', self.p) 
+        
         _abstract_circuit = []
         for each_p in range(self.p):
-            _abstract_circuit.extend(self.cost_block[each_p])
-            _abstract_circuit.extend(self.mixer_block[each_p])
+            #apply each cost_block with reversed order to maintain the SWAP sequence
+            _abstract_circuit.extend(self.cost_blocks[each_p][::-1*(each_p)])
+            _abstract_circuit.extend(self.mixer_blocks[each_p])
 
         return _abstract_circuit
     
-    @property
-    def unit_layer_abstract_circuit(self) -> List[GateMap]:
-        
-        circuit = self.cost_block[0]
-        circuit.extend(self.mixer_block[0])
-        return circuit
-        
-    def route_circuit(self, qr_algo, device: DeviceBase) -> List[GateMap]:
+    def route_cost_block(self) -> List[GateMap]:
         """
         Apply qubit routing to the abstract circuit gate list
         based on device information
         """
-        input_to_greedy_algo = [gate.indices for gate in self.abstract_circuit]
+        for i,(gate_type,gate_ind) in enumerate(zip(self.routed_gate_type_list, self.routed_gate_list_indices)):
+            if gate_type == 1:
+                self.cost_block.insert(i,SWAPGateMap(gate_ind[0],gate_ind[1]))
 
 
 class QAOAVariationalBaseParams(ABC):

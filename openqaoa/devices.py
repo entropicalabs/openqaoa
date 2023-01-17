@@ -14,7 +14,7 @@
 
 import abc
 import numpy as np
-from typing import Optional
+from typing import Optional, List
 import networkx as nx
 from qiskit import IBMQ
 
@@ -54,8 +54,8 @@ class DeviceBase(metaclass=abc.ABCMeta):
         """
         pass
     
-    @abc.abstractproperty
-    def connectivity(self) -> nx.Graph:
+    @abc.abstractmethod
+    def connectivity(self) -> List[List[int]]:
         """ 
         Returns:
             nx.Graph: networkx graph representing device connectivity
@@ -76,9 +76,12 @@ class DeviceLocal(DeviceBase):
         else:
             return False
         
-    @property
-    def connectivity(self) -> nx.Graph:
-        return nx.complete_graph
+    def connectivity(self, n_qubits: int) -> List[List[int]]:
+        """
+        The number of qubits for simulators depend on the problem
+        """
+        G = nx.complete_graph(n_qubits)
+        return list(G.edges())
 
 class DeviceQiskit(DeviceBase):
     """
@@ -190,9 +193,8 @@ class DeviceQiskit(DeviceBase):
             print('An Exception has occured when trying to connect with the provider. Please note that you are required to set up your IBMQ account locally first. See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq for how to save your IBMQ account locally: {}'.format(e))
             return False
         
-    def connectivity(self) -> nx.Graph:
-        
-        return self.backend_device.
+    def connectivity(self) -> List[List[int]]:
+        return self.backend_device.configuration().coupling_map
 
 
 class DevicePyquil(DeviceBase):
@@ -281,6 +283,11 @@ class DevicePyquil(DeviceBase):
 
         return True
     
+    def connectivity(self) -> List[List[int]]:
+        #returns a networkx graph of qubit topology
+        G = self.quantum_computer.qubit_topology
+        connectivity_as_list = list(G.edges())
+        return connectivity_as_list
     
 class DeviceAWS(DeviceBase):
     
@@ -401,6 +408,9 @@ class DeviceAWS(DeviceBase):
         except Exception as e:
             print('An Exception has occured when trying to connect with the provider. You are required to authenticate through the AWS CLI in order to connect to the Braket QPUs. Please check if you have properly set it up. See: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html for further details. : {}'.format(e))
             return False
+        
+    def connectivity(self) -> List[List[int]]:
+        return self.backend_device.topology_graph.edges
 
 
 def device_class_arg_mapper(device_class:DeviceBase,
