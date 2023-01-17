@@ -18,7 +18,8 @@ import os
 import pytest
 import itertools
 
-from openqaoa.devices import DeviceQiskit, DeviceLocal, DeviceAWS, SUPPORTED_LOCAL_SIMULATORS
+from openqaoa.devices import (DeviceQiskit, DeviceLocal, DeviceAWS, DeviceAzure, 
+                              SUPPORTED_LOCAL_SIMULATORS)
 from qiskit import IBMQ
 
 
@@ -286,6 +287,99 @@ class TestingDeviceAWS(unittest.TestCase):
         """
 
         device_obj = DeviceAWS(device_name='random_invalid_backend')
+
+        self.assertEqual(device_obj.check_connection(), False)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, False)
+        
+
+class TestingDeviceAzure(unittest.TestCase):
+    
+    """These tests check the Object used to access Azure and their 
+    available QPUs can be established.
+
+    For any tests using provided credentials, the tests will only pass if those
+    details provided are correct/valid with Azure.
+    """
+    
+    @pytest.mark.api
+    def setUp(self):
+
+        try:
+            opened_f = open('./tests/credentials.json', 'r')
+        except FileNotFoundError:
+            opened_f = open('credentials.json', 'r')
+                
+        with opened_f as f:
+            json_obj = json.load(f)['AZURE']
+            
+            try:
+                self.RESOURCE_ID = os.environ['RESOURCE_ID']
+                self.AZ_LOCATION = os.environ['LOCATION']
+            except Exception:
+                self.RESOURCE_ID = json_obj['RESOURCE_ID']
+                self.AZ_LOCATION = json_obj['LOCATION']
+
+        if self.RESOURCE_ID == "WORKSPACE_RESOURCE_ID":
+            raise ValueError(
+                "Please provide an appropriate RESOURCE ID in crendentials.json.")
+        elif self.AZ_LOCATION == "WORKSPACE_LOCATION":
+            raise ValueError(
+                "Please provide an appropriate LOCATION name in crendentials.json.")
+        
+    @pytest.mark.api      
+    def test_check_connection_provider_no_backend_provided_credentials(self):
+        
+        """
+        If no information about the device name, but the credentials
+        used are correct, check_connection should return True.
+        The provider_connected attribute should be updated to True.
+        """
+
+        device_obj = DeviceAzure(device_name='', resource_id=self.RESOURCE_ID,
+                                 az_location=self.AZ_LOCATION)
+
+        self.assertEqual(device_obj.check_connection(), True)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, None)
+
+
+    @pytest.mark.api
+    def test_check_connection_provider_right_backend_provided_credentials(self):
+        
+        """
+        If the correct device name is provided and the credentials
+        used are correct, check_connection should return True.
+        The provider_connected attribute should be updated to True.
+        The qpu_connected attribute should be updated to True.
+        """
+
+        device_obj = DeviceAzure(device_name='', resource_id=self.RESOURCE_ID,
+                                 az_location=self.AZ_LOCATION)
+
+        device_obj.check_connection()
+        valid_qpu_name = device_obj.available_qpus[0]
+
+        device_obj = DeviceAzure(device_name=valid_qpu_name, resource_id=self.RESOURCE_ID, 
+                                 az_location=self.AZ_LOCATION)
+
+        self.assertEqual(device_obj.check_connection(), True)
+        self.assertEqual(device_obj.provider_connected, True)
+        self.assertEqual(device_obj.qpu_connected, True)
+
+
+    @pytest.mark.api
+    def test_check_connection_provider_wrong_backend_provided_credentials(self):
+        
+        """
+        If device name provided is incorrect, and not empty, and the credentials
+        used are correct, check_connection should return False.
+        The provider_connected attribute should be updated to True.
+        The qpu_connected attribute should be updated to False.
+        """
+
+        device_obj = DeviceAzure(device_name='invalid_backend', resource_id=self.RESOURCE_ID,
+                                 az_location=self.AZ_LOCATION)
 
         self.assertEqual(device_obj.check_connection(), False)
         self.assertEqual(device_obj.provider_connected, True)
