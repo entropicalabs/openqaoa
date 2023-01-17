@@ -31,6 +31,7 @@ from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
 import openqaoa.rqaoa as rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
+from openqaoa.optimizers.result import Result
 
 
 class Optimizer(ABC):
@@ -331,8 +332,10 @@ class Optimizer(ABC):
             if data['input_parameters']['backend_properties'][item] is not None:                                                                     
                 data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
-        data['results'] = self.results.asdict(False, complex_to_string, intermediate_mesurements)
-
+        # Results are not present 
+        if not self.results is None:
+            data['results'] = self.results.asdict(keep_cost_hamiltonian=False, complex_to_string=complex_to_string, intermediate_mesurements=intermediate_mesurements)
+        
         # create the final header dictionary
         header = self.header.copy()
         header['metadata'] = {
@@ -833,9 +836,6 @@ class RQAOA(Optimizer):
         self.rqaoa_parameters = RqaoaParameters()
         self.algorithm = 'rqaoa'
 
-        # varaible that will store results object (when optimize is called)
-        self.results = RQAOAResults()
-
         # change algorithm name to rqaoa
         self.header['algorithm'] = 'rqaoa'
 
@@ -1099,7 +1099,8 @@ class RQAOA(Optimizer):
         # timestamp for the end of the optimization
         self.header['execution_time_end'] = int(time.time())
 
-        # Compute description dictionary containing all the information            
+        # Compute description dictionary containing all the information
+        self.results = RQAOAResults()             
         self.results['solution'] = full_solutions
         self.results['classical_output'] = {'minimum_energy': cl_energy, 'optimal_states': cl_ground_states}
         self.results['elimination_rules'] = elimination_tracker
