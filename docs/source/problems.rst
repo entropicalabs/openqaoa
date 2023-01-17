@@ -13,7 +13,7 @@ Problems
 
 
 Built-in problems
-=================
+-----------------
 
 .. autoclass:: openqaoa.problems.TSP
     :members:
