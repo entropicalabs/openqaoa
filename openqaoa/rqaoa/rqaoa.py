@@ -640,7 +640,6 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     -------
     cl_energy: `float`
         The energy of the first solution wrt the cost Hamiltonian.
-
     cl_ground_states: `list`
         List of strings of binary values representing the classical solution of the problem respecting the spin map.
     """
