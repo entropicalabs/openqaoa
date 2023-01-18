@@ -318,6 +318,28 @@ class TestingDeviceAzure(unittest.TestCase):
             output_json = json.loads(output)[0]
             self.RESOURCE_ID = output_json['id']
             self.AZ_LOCATION = output_json['location']
+            
+    @pytest.mark.api
+    def test_check_connection_provider_no_resource_id(self):
+        
+        """
+        If no information about about the workspace is provided, the resource id
+        or az location, check_connection and provider_connected should return False.
+        """
+        
+        for resource_id, az_location in itertools.product(['', self.RESOURCE_ID], 
+                                                          ['', self.AZ_LOCATION]):
+            
+            if not (resource_id == self.RESOURCE_ID and az_location == self.AZ_LOCATION):
+            
+                device_obj = DeviceAzure(device_name='', 
+                                         resource_id=resource_id,
+                                         az_location=az_location)
+
+                self.assertEqual(device_obj.check_connection(), False)
+                self.assertEqual(device_obj.provider_connected, False)
+                self.assertEqual(device_obj.qpu_connected, None)
+        
         
     @pytest.mark.api      
     def test_check_connection_provider_no_backend_provided_credentials(self):
