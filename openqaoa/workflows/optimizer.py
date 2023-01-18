@@ -25,7 +25,7 @@ from openqaoa.problems.problem import QUBO
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, is_valid_uuid, generate_uuid
+from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, is_valid_uuid, generate_uuid, bitstring_energy
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
@@ -1034,11 +1034,14 @@ class RQAOA(Optimizer):
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
             f_max_terms = rqaoa.ada_max_terms  
         else:
-            f_max_terms = rqaoa.max_terms 
+            f_max_terms = rqaoa.max_terms  
 
         # timestamp for the start of the optimization
         self.header['execution_time_start'] = int(time.time())
         
+        # flag, set to true if the problem vanishes due to elimination before reaching cutoff
+        total_elimination = False 
+
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
 
@@ -1059,6 +1062,11 @@ class RQAOA(Optimizer):
             spin_map = rqaoa.spin_mapping(problem, max_terms_and_stats)
             # Eliminate spins and redefine problem
             new_problem, spin_map = rqaoa.redefine_problem(problem, spin_map)
+
+            # In case eliminations cancel out the whole graph, break the loop before reaching the predefined cutoff.
+            if new_problem == problem:
+                total_elimination = True
+                break
             
             # Extract final set of eliminations with correct dependencies and update tracker
             eliminations = [{'pair': (spin_map[spin][1],spin), 'correlation': spin_map[spin][0]} for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]]
@@ -1085,12 +1093,15 @@ class RQAOA(Optimizer):
 
             # Add one step to the counter
             counter += 1
-
             # TODO: do rqaoa dumps here if dump is true, so that if the loop is interrupted, the user can still get the results
 
-        # Solve the new problem classically
-        cl_energy, cl_ground_states = ground_state_hamiltonian(problem.hamiltonian)
-            
+        if total_elimination:
+            # Solve the smallest non-vanishing problem by fixing spins arbitrarily or according to the correlations
+            cl_energy, cl_ground_states = rqaoa.solution_for_vanishing_instances(problem.hamiltonian, spin_map)
+        else: 
+            # Solve the new problem classically
+            cl_energy, cl_ground_states = ground_state_hamiltonian(problem.hamiltonian)
+
         # Retrieve full solutions including eliminated spins and their energies
         full_solutions = rqaoa.final_solution(
             elimination_tracker, cl_ground_states, self.problem.hamiltonian)
