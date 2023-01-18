@@ -70,6 +70,7 @@ class TestingAwsJobs(unittest.TestCase):
         assert rqaoa_workflow.algorithm == "rqaoa"
         assert rqaoa_workflow.device.device_name == os.environ["AMZN_BRAKET_DEVICE_ARN"]
 
+    @pytest.mark.api
     def testCreateAwsInputData(self):
         """
         Test Creation and Loading of input_data
@@ -91,6 +92,7 @@ class TestingAwsJobs(unittest.TestCase):
 
         assert job.input_data == q.asdict()
 
+    @pytest.mark.api
     def testCreateAndLoadQaoaWorkflowsAndQubo(self):
         """
         Test Creation and Loading of input_data
@@ -105,7 +107,7 @@ class TestingAwsJobs(unittest.TestCase):
 
         # Create the qaoa
         q = QAOA()
-        q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        q.set_device(create_device('local', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
         # Create an aws workflow and try check that loading the json gives the same params
@@ -168,7 +170,7 @@ class TestingAwsJobs(unittest.TestCase):
 
         # Create the qubo and the qaoa
         q = QAOA()
-        q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        q.set_device(create_device('local', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
         
