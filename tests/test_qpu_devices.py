@@ -18,6 +18,7 @@ import os
 import pytest
 import itertools
 import subprocess
+import logging
 
 from qiskit import IBMQ
 

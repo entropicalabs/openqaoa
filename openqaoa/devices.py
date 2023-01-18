@@ -15,8 +15,9 @@
 import abc
 import numpy as np
 from typing import Optional
-from qiskit import IBMQ
+import logging
 
+from qiskit import IBMQ
 from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
@@ -27,6 +28,8 @@ from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
 
 from azure.quantum.qiskit import AzureQuantumProvider
+
+logging.getLogger().setLevel(logging.ERROR)
 
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
@@ -96,7 +99,7 @@ class DeviceAzure(DeviceBase):
         resource_id: `str`
         az_location: `str`
         """
-
+        
         self.resource_id = resource_id
         self.location = az_location
         self.device_name = device_name
@@ -197,7 +200,7 @@ class DeviceQiskit(DeviceBase):
             The name of the project for which the experimental data will be 
             saved in on IBMQ's end.
         """
-
+        
         self.device_name = device_name
         self.device_location = 'ibmq'
         self.hub = hub
@@ -326,7 +329,7 @@ class DevicePyquil(DeviceBase):
             Optional engagement manager. If none is provided, a default one will 
             be created.
         """
-
+        
         self.device_name = device_name
         self.device_location = 'qcs'
         self.as_qvm = as_qvm
