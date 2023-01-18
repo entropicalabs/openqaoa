@@ -17,10 +17,12 @@ import json
 import os
 import pytest
 import itertools
+import subprocess
+
+from qiskit import IBMQ
 
 from openqaoa.devices import (DeviceQiskit, DeviceLocal, DeviceAWS, DeviceAzure, 
                               SUPPORTED_LOCAL_SIMULATORS)
-from qiskit import IBMQ
 
 
 class TestingDeviceQiskit(unittest.TestCase):
@@ -304,28 +306,18 @@ class TestingDeviceAzure(unittest.TestCase):
     
     @pytest.mark.api
     def setUp(self):
-
-        try:
-            opened_f = open('./tests/credentials.json', 'r')
-        except FileNotFoundError:
-            opened_f = open('credentials.json', 'r')
-                
-        with opened_f as f:
-            json_obj = json.load(f)['AZURE']
-            
-            try:
-                self.RESOURCE_ID = os.environ['RESOURCE_ID']
-                self.AZ_LOCATION = os.environ['LOCATION']
-            except Exception:
-                self.RESOURCE_ID = json_obj['RESOURCE_ID']
-                self.AZ_LOCATION = json_obj['LOCATION']
-
-        if self.RESOURCE_ID == "WORKSPACE_RESOURCE_ID":
-            raise ValueError(
-                "Please provide an appropriate RESOURCE ID in crendentials.json.")
-        elif self.AZ_LOCATION == "WORKSPACE_LOCATION":
-            raise ValueError(
-                "Please provide an appropriate LOCATION name in crendentials.json.")
+        
+        bashCommand = "az resource list"
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        
+        if error is not None:
+            print(error)
+            raise Exception('You must have the Azure CLI installed and must be logged in to use the Azure Quantum Backends')
+        else:
+            output_json = json.loads(output)[0]
+            self.RESOURCE_ID = output_json['id']
+            self.AZ_LOCATION = output_json['location']
         
     @pytest.mark.api      
     def test_check_connection_provider_no_backend_provided_credentials(self):
