@@ -28,7 +28,8 @@ class TSP(Problem):
         #. A list of the cities' coordinates and, optionally, a (directed) graph specifiying the connectivity between cities
         #. A distance matrix encoding distances between each pair of cities and, optionally, a (directed) graph specifiying the connectivity between cities
         #. A weighted (directed) graph specifiying the connectivity and the distance between cities
-        Initializes a TSP object via three different methods:
+        
+    Initializes a TSP object via three different methods:
         #. Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
         #. Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
         #. Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
