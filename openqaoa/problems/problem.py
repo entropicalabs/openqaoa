@@ -23,10 +23,12 @@ class Problem(ABC):
     def random_instance(**kwargs):
         """
         Creates a random instance of the problem.
+        
         Parameters
         ----------
         **kwargs:
             Required keyword arguments
+            
         Returns
         -------
             A random instance of the problem.

@@ -27,6 +27,7 @@ class QUBO(object):
     """
     Creates an instance of Quadratic Unconstrained Binary Optimization (QUBO)
     class, which offers a way to encode optimization problems.
+    
     Parameters
     ----------
     n: int
@@ -37,6 +38,7 @@ class QUBO(object):
         The list of weights (or coefficients) corresponding to each interaction defined in `terms`.
     clean_terms_and_weights: bool
         Boolean indicating whether terms and weights can be cleaned by combining similar terms.
+        
     Returns
     -------
         An instance of the Quadratic Unconstrained Binary Optimization (QUBO) class.
@@ -137,6 +139,7 @@ class QUBO(object):
     def set_metadata(self, metadata: dict = {}):
         """
         Sets the metadata of the problem.
+        
         Parameters
         ----------
         metadata: dict
@@ -154,6 +157,7 @@ class QUBO(object):
         ----------
         exclude_keys: List[str]
             A list of keys that should not be included in the serialization.
+            
         Returns
         -------
             A dictionary containing the serialization of the class.
@@ -170,12 +174,14 @@ class QUBO(object):
     def from_dict(dict: dict, clean_terms_and_weights=False):
         """
         Returns a QUBO object from a dictionary. The dictionary should be comparable to the output of the asdict method.
+        
         Parameters
         ----------
         dict: dict
             The dictionary containing the serialization of the QUBO object.
         clean_terms_and_weights: bool
             Boolean indicating whether terms and weights can be cleaned by combining similar terms.
+            
         Returns
         -------
             A QUBO object.

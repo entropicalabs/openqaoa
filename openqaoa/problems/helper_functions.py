@@ -29,10 +29,12 @@ from .qubo import QUBO
 def create_problem_from_dict(problem_instance: dict) -> Problem:
     """
     Creates an object of the class corresponding to the problem type in the input instance, with the same attributes as the input instance.
+    
     Parameters
     ----------
     problem_instance: dict
         The input instance.
+        
     Returns
     -------
         An object of the class corresponding to the problem type in the input instance.

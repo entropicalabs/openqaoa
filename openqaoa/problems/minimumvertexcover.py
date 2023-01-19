@@ -24,6 +24,7 @@ from .qubo import QUBO
 class MinimumVertexCover(Problem):
     """
     Creates an instance of the Minimum Vertex Cover problem.
+    
     Parameters
     ----------
     G: nx.Graph
@@ -32,6 +33,7 @@ class MinimumVertexCover(Problem):
         The strength of the artificial field minimizing the size of the cover.
     penalty: float
         The strength of the penalty enforcing the cover constraint.
+        
     Returns
     -------
     An instance of the Minimum Vertex Cover problem.
@@ -95,6 +97,7 @@ class MinimumVertexCover(Problem):
         Creates a random instance of the Minimum Vertex Cover problem, whose graph is
         random following the Erdos-Renyi model. By default the artificial field is
         set to 1.0 and the default penalty os taken to be 10 times larger.
+        
         Parameters
         ----------
         **kwargs:
@@ -103,6 +106,7 @@ class MinimumVertexCover(Problem):
             The number of nodes (vertices) in the graph.
         edge_probability: float
             The probability with which an edge is added to the graph.
+            
         Returns
         -------
         A random instance of the Minimum Vertex Cover problem.
@@ -124,6 +128,7 @@ class MinimumVertexCover(Problem):
     def terms_and_weights(self):
         """
         Creates the terms and weights for the Minimum Vertex Cover problem
+        
         Returns
         -------
         terms_weights: tuple(list[list],list[float])
@@ -165,6 +170,7 @@ class MinimumVertexCover(Problem):
     def get_qubo_problem(self):
         """
         Returns the QUBO encoding of this problem.
+        
         Returns
         -------
         The QUBO encoding of this problem.

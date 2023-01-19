@@ -22,10 +22,12 @@ from .qubo import QUBO
 class NumberPartition(Problem):
     """
     Creates an instance of the Number Partitioning problem.
+    
     Parameters
     ----------
     numbers: List[int]
         The list of numbers to be partitioned.
+        
     Returns
     -------
         An instance of the Number Partitioning problem.
@@ -58,10 +60,12 @@ class NumberPartition(Problem):
     def random_instance(**kwargs):
         """
         Creates a random instance of the Number Partitioning problem.
+        
         Parameters
         ----------
         n_numbers: int
             The number of numbers to be partitioned. This is a required keyword argument.
+            
         Returns
         -------
             A random instance of the Number Partitioning problem.
@@ -79,6 +83,7 @@ class NumberPartition(Problem):
     def get_qubo_problem(self):
         """
         Returns the QUBO encoding of this problem.
+        
         Returns
         -------
             The QUBO encoding of this problem.

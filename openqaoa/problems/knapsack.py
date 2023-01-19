@@ -24,6 +24,7 @@ from .qubo import QUBO
 class Knapsack(Problem):
     """
     Creates an instance of the Kanpsack problem.
+    
     Parameters
     ----------
     values: List[int]
@@ -34,6 +35,7 @@ class Knapsack(Problem):
         The maximum weight the knapsack can hold.
     penalty: float
         Penalty for the weight constraint.
+        
     Returns
     -------
         An instance of the Knapsack problem.
