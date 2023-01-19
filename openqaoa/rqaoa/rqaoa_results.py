@@ -22,7 +22,7 @@ class RQAOAResults(dict):
     It stores the results of the RQAOA optimization as a dictionary. With some custom methods.
     """
 
-    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, exclude_keys:List[str]=[]):
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, intermediate_mesurements:bool=True, exclude_keys:List[str]=[]):
         """
         Returns the results as a full dictionary, meaning that the objects of the intermediate steps are also converted to dictionaries.
 
@@ -31,9 +31,12 @@ class RQAOAResults(dict):
         keep_cost_hamiltonian : bool, optional
             If True, the cost Hamiltonian is kept in the dictionary, by default True.
         complex_to_string : bool, optional
-            If True, the complex numbers are converted to strings, by default False. This is useful for JSON serialization.
-        exclude_keys: `list[str]`
-            A list of keys to exclude from the returned dictionary.
+            If True, the complex numbers are converted to strings, by default False. This is useful for JSON serialization.    
+        intermediate_mesurements: bool, optional
+            If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
+            Default is True.
+        exclude_keys: `list[str]`, optional
+            A list of keys to exclude from the returned dictionary.    
 
         Returns
         -------
@@ -45,8 +48,9 @@ class RQAOAResults(dict):
         results['intermediate_steps'] = []
         for step in self['intermediate_steps']:
             results['intermediate_steps'].append({
+                    'counter':      step['counter'],
                     'problem':      step['problem'].asdict(),
-                    'qaoa_results': step['qaoa_results'].asdict(keep_cost_hamiltonian=keep_cost_hamiltonian, complex_to_string=complex_to_string),
+                    'qaoa_results': step['qaoa_results'].asdict(keep_cost_hamiltonian, complex_to_string, intermediate_mesurements),
                     'exp_vals_z':   step['exp_vals_z'].tolist(),
                     'corr_matrix':  step['corr_matrix'].tolist(),
                 }) 
