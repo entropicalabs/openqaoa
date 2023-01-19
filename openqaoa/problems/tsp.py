@@ -25,14 +25,13 @@ class TSP(Problem):
     """
     The Traveling Salesman Problem (TSP) requires to find, given a list of cities and the distances between each pair of cities (or the cities coordinates), the shortest possible path that visits each city exactly once and returns to the origin city. Additionally, one can also specify how cities are connected together.
     Our implementation accepts three different kind of inputs:
-    
-    #. A list of the cities' coordinates and, optionally, a (directed) graph specifiying the connectivity between cities
-    #. A distance matrix encoding distances between each pair of cities and, optionally, a (directed) graph specifiying the connectivity between cities
-    #. A weighted (directed) graph specifiying the connectivity and the distance between cities
-    Initializes a TSP object via three different methods:
-    #. Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
-    #. Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
-    #. Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
+        #. A list of the cities' coordinates and, optionally, a (directed) graph specifiying the connectivity between cities
+        #. A distance matrix encoding distances between each pair of cities and, optionally, a (directed) graph specifiying the connectivity between cities
+        #. A weighted (directed) graph specifiying the connectivity and the distance between cities
+        Initializes a TSP object via three different methods:
+        #. Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
+        #. Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
+        #. Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
     
     Whenever no graph connectivity is specified, it is assumed that all cities are connected.
     
