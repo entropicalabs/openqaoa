@@ -123,10 +123,12 @@ class Knapsack(Problem):
     def random_instance(**kwargs):
         """
         Creates a random instance of the Knapsack problem.
+        
         Parameters
         ----------
         n_items: int
             The number of items that can be placed in the knapsack.
+            
         Returns
         -------
             A random instance of the Knapsack problem.
@@ -232,6 +234,7 @@ class Knapsack(Problem):
     def get_qubo_problem(self):
         """
         Returns the QUBO encoding of this problem.
+        
         Returns
         -------
             The QUBO encoding of this problem.
@@ -251,6 +254,7 @@ class SlackFreeKnapsack(Knapsack):
     The Hamiltonian consists of decision qubits with a quadratic penalty term centred
     on `W`, i.e. the maximum Knapsack Capacity.
     Creates an instance of the SlackFreeKanpsack problem.
+    
     Parameters
     ----------
     values: List[int]
@@ -261,6 +265,7 @@ class SlackFreeKnapsack(Knapsack):
         The maximum weight the knapsack can hold.
     penalty: float
         Penalty for the weight constraint.
+        
     Returns
     -------
         An instance of the SlackFreeKnapsack problem.
@@ -276,10 +281,12 @@ class SlackFreeKnapsack(Knapsack):
     def random_instance(**kwargs):
         """
         Creates a random instance of the Knapsack problem.
+        
         Parameters
         ----------
         n_items: int
             The number of items that can be placed in the knapsack.
+            
         Returns
         -------
             A random instance of the Knapsack problem.
@@ -349,6 +356,7 @@ class SlackFreeKnapsack(Knapsack):
     def get_qubo_problem(self):
         """
         Returns the QUBO encoding of this problem.
+        
         Returns
         -------
             The QUBO encoding of this problem.
