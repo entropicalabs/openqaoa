@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
-from .qaoa_parameters.gatemap import *
+from .qaoa_parameters.gatemap import TwoQubitRotationGateMap
 
 
 def X_mixer_hamiltonian(n_qubits: int,
