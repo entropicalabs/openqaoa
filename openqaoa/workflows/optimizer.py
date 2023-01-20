@@ -20,8 +20,8 @@ from typing import List
 import gzip
 from os.path import exists
 
+from openqaoa.problems import QUBO
 from openqaoa.devices import DeviceLocal, DeviceBase
-from openqaoa.problems.problem import QUBO
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
 from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params

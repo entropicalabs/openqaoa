@@ -24,9 +24,9 @@ import numpy as np
 import uuid
 import matplotlib.pyplot as plt
 import networkx as nx
-from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 
-from .qaoa_parameters.gatemap import *
+from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
+from .qaoa_parameters.gatemap import TwoQubitRotationGateMap
 
 
 def X_mixer_hamiltonian(n_qubits: int,
@@ -1456,4 +1456,45 @@ def is_valid_uuid(uuid_to_test: str) -> bool:
         # If it's a value error, then the string is not a valid string for a UUID.
         return False
 
+################################################################################
+# CHECKING FUNCTION
+################################################################################
+    
+def check_kwargs(list_expected_params, list_default_values, **kwargs):
+    """
+    Checks that the given list of expected parameters can be found in the
+    kwargs given as input. If so, it returns the parameters from kwargs, else
+    it raises an exception.
 
+    Args:
+        list_expected_params: List[str]
+            List of string containing the name of the expected parameters in
+            kwargs
+        list_default_values: List
+            List containing the deafult values of the expected parameters in
+            kwargs
+        **kwargs:
+            Keyword arguments where keys are supposed to be the expected params
+
+    Returns:
+        A tuple with the actual expected parameters if they are found in kwargs.
+
+    Raises:
+        ValueError:
+            If one of the expected arguments is not found in kwargs and its
+            default value is not specified.
+    """
+
+    def check_kwarg(expected_param, default_value, **kwargs):
+        param = kwargs.pop(expected_param, default_value)
+
+        if param is None:
+            raise ValueError(f"Parameter '{expected_param}' should be specified")
+
+        return param
+
+    params = []
+    for expected_param, default_value in zip(list_expected_params, list_default_values):
+        params.append(check_kwarg(expected_param, default_value, **kwargs))
+
+    return tuple(params)

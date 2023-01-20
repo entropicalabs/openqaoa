@@ -30,7 +30,7 @@ from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParam
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
 from openqaoa.utilities import X_mixer_hamiltonian
 
-from openqaoa.problems.problem import MaximumCut
+from openqaoa.problems import MaximumCut
 
 
 # Create a hamiltonian problem on 15 qubits and create Circuit Params Class

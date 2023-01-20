@@ -22,7 +22,7 @@ import networkx as nw
 import numpy as np
 import itertools
 
-from openqaoa.problems.problem import MinimumVertexCover, QUBO
+from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.qaoa_parameters.operators import Hamiltonian
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 
