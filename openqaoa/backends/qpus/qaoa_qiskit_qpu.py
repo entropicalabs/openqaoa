@@ -64,6 +64,8 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  append_state: Optional[QuantumCircuit],
                  init_hadamard: bool,
                  qubit_layout: List[int] = [],
+                 initial_qubit_layout: List[int] = None,
+                 final_qubit_layout: List[int] = None,
                  cvar_alpha: float = 1):
 
         QAOABaseBackendShotBased.__init__(self,
@@ -72,7 +74,9 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                                           prepend_state,
                                           append_state,
                                           init_hadamard,
-                                          cvar_alpha)
+                                          cvar_alpha,
+                                          initial_qubit_layout,
+                                          final_qubit_layout)
         QAOABaseBackendCloud.__init__(self, device)
 
         self.qureg = QuantumRegister(self.n_qubits)
@@ -139,9 +143,9 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
-            angle_param = Parameter(str(each_gate.pauli_label))
+            angle_param = Parameter(each_gate.gate_label.__repr__())
             self.qiskit_parameter_list.append(angle_param)
-            each_gate.rotation_angle = angle_param
+            each_gate.angle_value = angle_param
             decomposition = each_gate.decomposition('standard')
             # using the list above, construct the circuit
             for each_tuple in decomposition:

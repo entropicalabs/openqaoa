@@ -294,9 +294,10 @@ class Optimizer(ABC):
             differentiates between whether the gate is Ising or SWAP
         """
         
-        initial_mapping = list(range(problem.n)) if initial_mapping is None else initial_mapping
-        device_connecivity = self.device.connectivity
-        problem_as_list_of_lists = [list(term) for term in problem if len(term) == 2]
+        initial_mapping = list(range(problem.n)) if initial_mapping is None\
+                          else list(initial_mapping)
+        device_connecivity = self.device.connectivity()
+        problem_as_list_of_lists = [list(term) for term in problem.terms if len(term) == 2]
         
         #params for MCTS        
         params= {"max_depth_simulation":10, 
@@ -311,16 +312,18 @@ class Optimizer(ABC):
             "initial_mapping": initial_mapping,
             "params": params}
         
+        # print(query)
+        
         #post the query via HTTP
         r = requests.post(url='http://127.0.0.1:8000/qubit_routing', json=query)
         
         results = r.json()
         
-        gate_indices_list = results['gates']
-        gate_type_list = results['type']
+        gate_indices_list = results['gates_list']
+        gate_type_list = results['mapping']
         swap_mask = results['swap_mask']
         
-        assert len(gate_indices_list) == len(swap_mask), \
+        assert len(gate_indices_list) == len(gate_type_list), \
             "Incorrect output from qubit routing algorithm"
         assert len(swap_mask) == problem.n ,\
             "Incorrect number of qubits in the final qubit layout"
@@ -637,13 +640,18 @@ class QAOA(Optimizer):
 
         # we compile the method of the parent class to genereate the uuid and check the problem is a QUBO object and save it
         super().compile(problem=problem)
+        #connect to the device 
+        self.device.check_connection()
         
-        list_gates_indices, gate_type_list, swap_mask = self.circuit_routing(problem, routing_algo, self.qubit_register)
-        final_qubit_layout = swap_mask if self.circuit_params.p%2 == 0 else None
+        list_gates_indices, swap_mask, final_mapping = self.circuit_routing(problem, routing_algo, None)
+        final_qubit_layout = final_mapping if self.circuit_properties.p%2 == 0 else None
+        original_term_weight_pairing = {tuple(term):weight for term,weight in zip(problem.terms,problem.weights)}
         
-        sorted_problem = [list(term) for term in problem if len(term) != 2] 
-        sorted_problem.extend([gate_indices for gate_indices,mask in zip(list_gates_indices, gate_type_list) if mask == 0])
-        
+        sorted_problem_pairing = {tuple(term):original_term_weight_pairing[tuple(term)] for term in problem.terms if len(term) != 2}
+        sorted_problem_pairing.update({tuple(gate_indices):original_term_weight_pairing[tuple(gate_indices)]
+                                       for gate_indices,mask in zip(list_gates_indices, swap_mask) if mask == False})
+        print(sorted_problem_pairing)
+        sorted_problem = QUBO(problem.n, list(sorted_problem_pairing.keys()), list(sorted_problem_pairing.values()), problem.constant)
         self.cost_hamil = Hamiltonian.classical_hamiltonian(
             terms=sorted_problem.terms, coeffs=sorted_problem.weights, constant=sorted_problem.constant)
         
@@ -656,7 +664,7 @@ class QAOA(Optimizer):
                                                 self.mixer_hamil,
                                                 p=self.circuit_properties.p,
                                                 routed_gate_list_indices=list_gates_indices,
-                                                routed_gate_type_list=gate_type_list)
+                                                swap_mask=swap_mask)
         
         self.variate_params = create_qaoa_variational_params(qaoa_circuit_params=self.circuit_params,
                                                              params_type=self.circuit_properties.param_type,
@@ -669,7 +677,7 @@ class QAOA(Optimizer):
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,
-                                        initial_qubit_layout = self.qubit_register,
+                                        initial_qubit_layout = list(range(problem.n)),
                                         final_qubit_layout = final_qubit_layout,
                                         **self.backend_properties.__dict__)
 

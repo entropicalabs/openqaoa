@@ -106,6 +106,8 @@ def get_qaoa_backend(circuit_params: QAOACircuitParams,
                                                   np.ndarray]] = None,
                      init_hadamard: bool = True,
                      cvar_alpha: float = 1,
+                     initial_qubit_layout: List[int] = None,
+                     final_qubit_layout: List[int] = None,
                      **kwargs):
     """
     A wrapper function to return a QAOA backend object.
@@ -146,11 +148,15 @@ def get_qaoa_backend(circuit_params: QAOACircuitParams,
         if isinstance(device, DeviceLocal):
             backend_obj = backend_class(circuit_params=circuit_params, prepend_state=prepend_state,
                                         append_state=append_state, init_hadamard=init_hadamard,
+                                        initial_qubit_layout=initial_qubit_layout,
+                                        final_qubit_layout=final_qubit_layout,
                                         cvar_alpha=cvar_alpha, **backend_kwargs)
 
         else:
             backend_obj = backend_class(circuit_params=circuit_params, device=device,
                                         prepend_state=prepend_state, append_state=append_state,
+                                        initial_qubit_layout=initial_qubit_layout,
+                                        final_qubit_layout=final_qubit_layout,                                        
                                         init_hadamard=init_hadamard, cvar_alpha=cvar_alpha,
                                         **backend_kwargs)
     except Exception as e:

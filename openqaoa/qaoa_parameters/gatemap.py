@@ -16,20 +16,21 @@ from abc import ABC, abstractmethod
 # from types import NoneType
 import numpy as np
 from typing import List, Tuple, Union
+from copy import deepcopy
 
 from .operators import Hamiltonian
 from .gates import *
 from .rotationangle import RotationAngle
-
+from .gatemaplabel import GateMapLabel, GateMapType
 
 class GateMap(ABC):
 
     def __init__(self, qubit_1: int):
-
         self.qubit_1 = qubit_1
+        self.gate_label = None
 
+    
     def decomposition(self, decomposition_type: str) -> List[Tuple]:
-
         try:
             return getattr(self, '_decomposition_'+decomposition_type)
         except Exception as e:
@@ -48,6 +49,7 @@ class SWAPGateMap(GateMap):
 
         super().__init__(qubit_1)
         self.qubit_2 = qubit_2
+        self.gate_label = GateMapLabel(n_qubits=2, gatemap_type=GateMapType.FIXED)
 
     @property
     def _decomposition_standard(self) -> List[Tuple]:
@@ -59,77 +61,64 @@ class SWAPGateMap(GateMap):
     @property
     def _decomposition_standard2(self) -> List[Tuple]:
 
-        return [(RZ, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+        return [(RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
                 
                 # X gate decomposition
-                (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   -np.pi/2)]),
                 
                 # X gate decomposition
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   -np.pi/2)]),
                 
                 (RiSWAP, [[self.qubit_1, self.qubit_2,
-                            RotationAngle(lambda x: x, self.pauli_label,np.pi)]]),
+                            RotationAngle(lambda x: x, self.gate_label,np.pi)]]),
                 (CZ, [[self.qubit_1, self.qubit_2]]),
                 
                 # X gate decomposition
-                (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   -np.pi/2)]),
                 
                 # X gate decomposition
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   -np.pi/2)])]
 
     
 class RotationGateMap(GateMap):
 
-    def __init__(self, qubit_1: int, pauli_label: List = []):
+    def __init__(self, qubit_1: int):
 
         super().__init__(qubit_1)
-
-        self.pauli_label = pauli_label
-        self.rotation_angle = None
-
-    @property
-    def pauli_label(self) -> List:
-
-        return self._pauli_label
-
-    @pauli_label.setter
-    def pauli_label(self, input_label: List) -> None:
-
-        gate_type = ['1q']
-        gate_type.extend(input_label)
-        self._pauli_label = gate_type
-    
+        self.angle_value = None
+        self.gate_label = GateMapLabel(n_qubits=1)
+        
     @property
     def _decomposition_trivial(self) -> List[Tuple]:
         return self._decomposition_standard
@@ -140,8 +129,8 @@ class RYGateMap(RotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
 
-        return [(RY, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)])]
+        return [(RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)])]
 
 
 class RXGateMap(RotationGateMap):
@@ -149,8 +138,8 @@ class RXGateMap(RotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
 
-        return [(RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)])]
+        return [(RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)])]
 
 
 class RZGateMap(RotationGateMap):
@@ -158,36 +147,37 @@ class RZGateMap(RotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
 
-        return [(RZ, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)])]
+        return [(RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)])]
 
 
 class TwoQubitRotationGateMap(RotationGateMap):
 
-    def __init__(self, qubit_1: int, qubit_2: int, pauli_label: List = []):
+    def __init__(self, qubit_1: int, qubit_2: int):
 
-        super().__init__(qubit_1, pauli_label)
+        super().__init__(qubit_1)
         self.qubit_2 = qubit_2
+        self.gate_label = GateMapLabel(n_qubits=2)
 
-    @property
-    def pauli_label(self) -> List:
+    # @property
+    # def pauli_label(self) -> List:
 
-        return self._pauli_label
+    #     return self._pauli_label
 
-    @pauli_label.setter
-    def pauli_label(self, input_label: List) -> None:
+    # @pauli_label.setter
+    # def pauli_label(self, input_label: List) -> None:
 
-        gate_type = ['2q']
-        gate_type.extend(input_label)
-        self._pauli_label = gate_type
+    #     gate_type = ['2q']
+    #     gate_type.extend(input_label)
+    #     self._pauli_label = gate_type
 
     @property
     def _decomposition_trivial(self) -> List[Tuple]:
 
         low_level_gate = eval(type(self).__name__.strip('GateMap'))
         return [(low_level_gate, [[self.qubit_1, self.qubit_2],
-                                  RotationAngle(lambda x: x, self.pauli_label,
-                                  self.rotation_angle)])]
+                                  RotationAngle(lambda x: x, self.gate_label,
+                                  self.angle_value)])]
 
 
 class RXXGateMap(TwoQubitRotationGateMap):
@@ -195,25 +185,25 @@ class RXXGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
 
-        return [(RY, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+        return [(RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RY, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RY, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
                 (CX, [[self.qubit_1, self.qubit_2]]),
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)]),
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)]),
                 (CX, [[self.qubit_1, self.qubit_2]]),
-                (RY, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
-                (RY, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RY, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)])]
 
 
@@ -230,17 +220,17 @@ class RYYGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
 
-        return [(RX, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
+        return [(RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RX, [self.qubit_2,RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2,RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
                 (CX, [[self.qubit_1, self.qubit_2]]),
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)]),
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)]),
                 (CX, [[self.qubit_1, self.qubit_2]]),
-                (RY, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RY, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   -np.pi/2)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   -np.pi/2)])]
 
 
@@ -249,17 +239,17 @@ class RZXGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
 
-        return [(RY, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+        return [(RY, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)]),
                 (CX, [[self.qubit_1, self.qubit_2]]),
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)]),
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)]),
                 (CX, [[self.qubit_1, self.qubit_2]]),
-                (RY, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RY, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi/2)]),
-                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
+                (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
                                                   np.pi)])]
 
 
@@ -269,19 +259,19 @@ class RZZGateMap(TwoQubitRotationGateMap):
     def _decomposition_standard(self) -> List[Tuple]:
 
         return [(CX, [[self.qubit_1, self.qubit_2]]),
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)]),
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)]),
                 (CX, [[self.qubit_1, self.qubit_2]])]
 
     @property
     def _decomposition_standard2(self) -> List[Tuple]:
 
-        return [(RZ, [self.qubit_1, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)]),
-                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
-                                                  self.rotation_angle)]),
+        return [(RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)]),
+                (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
+                                                  self.angle_value)]),
                 (CPHASE, [[self.qubit_1, self.qubit_2],
-                 RotationAngle(lambda x: -2*x, self.pauli_label, self.rotation_angle)])]
+                 RotationAngle(lambda x: -2*x, self.gate_label, self.angle_value)])]
 
 
 class RYZGateMap(TwoQubitRotationGateMap):
@@ -307,110 +297,86 @@ class RiSWAPGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard2(self) -> List[Tuple]:
 
-        return [(RiSWAP, [[self.qubit_1, self.qubit_2, RotationAngle(lambda x: x, self.pauli_label,
-                                                                     self.rotation_angle)]])]
+        return [(RiSWAP, [[self.qubit_1, self.qubit_2, RotationAngle(lambda x: x, self.gate_label,
+                                                                     self.angle_value)]])]
 
 
 class RotationGateMapFactory(object):
 
-    def convert_hamiltonian_to_gate_maps(hamil_obj: Hamiltonian,
-                                         input_label: List) -> List[RotationGateMap]:
-        
+    PAULI_OPERATORS = ['X', 'Y', 'Z', 'XX', 'ZX',
+                   'ZZ', 'XY', 'YY', 'YZ']
+    GATE_GENERATOR_GATEMAP_MAPPER = {term:eval(f'R{term}GateMap')
+                                  for term in PAULI_OPERATORS}
+
+    def rotationgatemap_list_from_hamiltonian(
+        hamil_obj: Hamiltonian,
+        gatemap_type: GateMapType = None
+    ) -> List[RotationGateMap]:
         """
-        Converts a Hamiltonian Object into a List of RotationGateMap Objects.
+        Construcuts a list of Rotation GateMaps from the input Hamiltonian Object.
         
         Parameters
         ----------
         hamil_obj: Hamiltonian
-        
-        input_label: `list`
-            List of labels to distinguish between layers and type of gates
+            Hamiltonian object to construct the circuit from
+        gatemap_type: GateMapType
+            Gatemap type constructed
         """
 
         pauli_terms = hamil_obj.terms
-
         output_gates = []
 
         one_qubit_count = 0
         two_qubit_count = 0
 
         for each_term in pauli_terms:
-            if each_term.pauli_str in ['XX', 'XZ', 'ZX', 'ZZ', 'XY', 'YX', 'YY', 'YZ', 'ZY']:
-                if each_term.pauli_str == 'XX':
-                    output_gates.append(RXXGateMap(each_term.qubit_indices[0],
-                                                     each_term.qubit_indices[1],
-                                                     [*input_label, two_qubit_count]))
-                elif each_term.pauli_str == 'XZ':
-                    output_gates.append(RZXGateMap(each_term.qubit_indices[1],
-                                                     each_term.qubit_indices[0],
-                                                     [*input_label, two_qubit_count]))
-                elif each_term.pauli_str == 'ZX':
-                    output_gates.append(RZXGateMap(each_term.qubit_indices[0],
-                                                     each_term.qubit_indices[1],
-                                                     [*input_label, two_qubit_count]))
-                elif each_term.pauli_str == 'ZZ':
-                    output_gates.append(RZZGateMap(each_term.qubit_indices[0],
-                                                     each_term.qubit_indices[1],
-                                                     [*input_label, two_qubit_count]))
-                elif each_term.pauli_str == 'XY':
-                    output_gates.append(RXYGateMap(each_term.qubit_indices[0],
-                                                     each_term.qubit_indices[1],
-                                                     [*input_label, two_qubit_count]))
-                elif each_term.pauli_str == 'YX':
-                    output_gates.append(RXYGateMap(each_term.qubit_indices[1],
-                                                     each_term.qubit_indices[0],
-                                                     [*input_label, two_qubit_count]))
-                elif each_term.pauli_str == 'YY':
-                    output_gates.append(RYYGateMap(each_term.qubit_indices[0],
-                                                     each_term.qubit_indices[1],
-                                                     [*input_label, two_qubit_count]))
-                elif each_term.pauli_str == 'ZY':
-                    output_gates.append(RYZGateMap(each_term.qubit_indices[1],
-                                                     each_term.qubit_indices[0],
-                                                     [*input_label, two_qubit_count]))
-                elif each_term.pauli_str == 'YZ':
-                    output_gates.append(RYZGateMap(each_term.qubit_indices[0],
-                                                     each_term.qubit_indices[1],
-                                                     [*input_label, two_qubit_count]))
+            if each_term.pauli_str in RotationGateMapFactory.PAULI_OPERATORS:
+                pauli_str = each_term.pauli_str
+                qubit_indices = each_term.qubit_indices
+            elif each_term.pauli_str[::-1] in RotationGateMapFactory.PAULI_OPERATORS:
+                pauli_str = each_term.pauli_str[::-1]
+                qubit_indices = each_term.qubit_indices[::-1]
+            else:
+                raise ValueError("Hamiltonian contains non-Pauli terms")
+            
+            try:
+                gate_class = RotationGateMapFactory.GATE_GENERATOR_GATEMAP_MAPPER[pauli_str]                
+            except:
+                raise Error("Generating gates from Hamiltonian terms failed")
+            
+            if len(each_term.qubit_indices) == 2:
+                gate = gate_class(qubit_indices[0],qubit_indices[1])
+                gate.gate_label.update_gatelabel(new_application_sequence=two_qubit_count,
+                                                 new_gatemap_type=gatemap_type)
+                output_gates.append(gate)
                 two_qubit_count += 1
-
-            elif each_term.pauli_str in ['X', 'Y', 'Z']:
-
-                if each_term.pauli_str == 'X':
-                    output_gates.append(RXGateMap(each_term.qubit_indices[0],
-                                                    [*input_label, one_qubit_count]))
-                elif each_term.pauli_str == 'Y':
-                    output_gates.append(RYGateMap(each_term.qubit_indices[0],
-                                                    [*input_label, one_qubit_count]))
-                elif each_term.pauli_str == 'Z':
-                    output_gates.append(RZGateMap(each_term.qubit_indices[0],
-                                                    [*input_label, one_qubit_count]))
+            elif len(each_term.qubit_indices) == 1:
+                gate = gate_class(qubit_indices[0])
+                gate.gate_label.update_gatelabel(new_application_sequence=one_qubit_count,
+                                                 new_gatemap_type = gatemap_type)
+                output_gates.append(gate)
                 one_qubit_count += 1
 
         return output_gates
     
-    def remap_gate_map_labels(gatemap_list: List[RotationGateMap], input_label: List) -> List[RotationGateMap]:
-        
+    def gatemaps_layer_relabel(
+        gatemap_list: List[GateMap],
+        new_layer_number:int
+    ) -> List[RotationGateMap]:
         """
-        Recreates a list of RotationGateMap Objects with the appropriately 
-        assigned pauli_label attribute.
-        """
+        Reconstruct a new gatemap list from a list of RotationGateMap Objects with the input 
+        layer number in the gate_label attribute.
         
-        output_gates = []
-
-        one_qubit_count = 0
-        two_qubit_count = 0
+        Parameters
+        ----------
+        gatemap_list: `List[RotationGateMap]
+            The list of GateMap objects whose labels need to be udpated
+        """
+        output_gate_list = []
         
         for each_gatemap in gatemap_list:
-            
-            if each_gatemap.pauli_label[0] == '1q':
-                each_gatemap.pauli_label = [*input_label, one_qubit_count]
-                one_qubit_count += 1
+            new_gatemap = deepcopy(each_gatemap)
+            new_gatemap.gate_label.update_gatelabel(new_layer_number = new_layer_number) 
+            output_gate_list.append(new_gatemap)
                 
-            elif each_gatemap.pauli_label[0] == '2q':
-                each_gatemap.pauli_label = [*input_label, two_qubit_count]
-                two_qubit_count += 1
-                
-            output_gates.append(each_gatemap)
-
-        return output_gates
+        return output_gate_list

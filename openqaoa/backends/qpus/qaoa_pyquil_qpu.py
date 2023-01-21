@@ -95,7 +95,9 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  cvar_alpha: float,
                  active_reset: bool = False,
                  rewiring: str = '',
-                 qubit_layout: list = []
+                 qubit_layout: list = [],
+                 initial_qubit_layout: list = None,
+                 final_qubit_layout: list = None
                  ):
 
         QAOABaseBackendShotBased.__init__(self,
@@ -104,7 +106,9 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                                           prepend_state,
                                           append_state,
                                           init_hadamard,
-                                          cvar_alpha)
+                                          cvar_alpha,
+                                          initial_qubit_layout,
+                                          final_qubit_layout)
         QAOABaseBackendCloud.__init__(self, device)
 
         self.active_reset = active_reset

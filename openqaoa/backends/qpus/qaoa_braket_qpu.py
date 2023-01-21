@@ -63,7 +63,9 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                  init_hadamard: bool,
                  cvar_alpha: float,
                  qubit_layout: List[int] = [], 
-                 disable_qubit_rewiring: bool = False):
+                 disable_qubit_rewiring: bool = False,
+                 initial_qubit_layout: List[int] = None,
+                 final_qubit_layout: List[int] = None):
 
         QAOABaseBackendShotBased.__init__(self,
                                           circuit_params,
@@ -71,7 +73,9 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                                           prepend_state,
                                           append_state,
                                           init_hadamard,
-                                          cvar_alpha)
+                                          cvar_alpha,
+                                          initial_qubit_layout,
+                                          final_qubit_layout)
         QAOABaseBackendCloud.__init__(self, device)
 
         self.qureg = self.circuit_params.qureg

@@ -85,14 +85,18 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
                  cvar_alpha: float,
                  qiskit_simulation_method: str = 'automatic',
                  seed_simulator: Optional[int] = None,
-                 noise_model: Optional[NoiseModel] = None):
+                 noise_model: Optional[NoiseModel] = None,
+                 initial_qubit_layout: List[int] = None,
+                 final_qubit_layout: List[int] = None):
         
         QAOABaseBackendShotBased.__init__(self,circuit_params,
                                           n_shots,
                                           prepend_state,
                                           append_state,
                                           init_hadamard,
-                                          cvar_alpha)
+                                          cvar_alpha,
+                                          initial_qubit_layout,
+                                          final_qubit_layout)
 
         self.qureg = QuantumRegister(self.n_qubits)
         self.qubit_layout = self.circuit_params.qureg
