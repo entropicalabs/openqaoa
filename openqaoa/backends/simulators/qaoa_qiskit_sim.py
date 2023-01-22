@@ -147,10 +147,12 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         
         self.qiskit_parameter_list=[]
         for each_gate in self.abstract_circuit:
-            angle_param = Parameter(str(each_gate.pauli_label))
-            self.qiskit_parameter_list.append(angle_param)
-            each_gate.rotation_angle = angle_param
-            if type(each_gate) in self.QISKIT_GATEMAP_LIBRARY:
+            #if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ['mixer','cost']:
+                angle_param = Parameter(each_gate.gate_label.__repr__()) 
+                self.qiskit_parameter_list.append(angle_param)
+                each_gate.angle_value = angle_param
+            if type(each_gate) in QAOAQiskitBackendShotBasedSimulator.QISKIT_GATEMAP_LIBRARY:
                 decomposition = each_gate.decomposition('trivial')
             else: 
                 decomposition = each_gate.decomposition('standard')
@@ -229,8 +231,10 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
     cvar_alpha: `float`
         The value of alpha for the CVaR cost function.
     """
-    QISKIT_GATEMAP_LIBRARY = [RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
-                                RYYGateMap, RZZGateMap, RZXGateMap]
+    QISKIT_GATEMAP_LIBRARY = [
+        RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
+        RYYGateMap, RZZGateMap, RZXGateMap
+    ]
 
     def __init__(self,
                  circuit_params: QAOACircuitParams,
@@ -327,10 +331,12 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
         
         self.qiskit_parameter_list=[]
         for each_gate in self.abstract_circuit:
-            angle_param = Parameter(str(each_gate.pauli_label))
-            self.qiskit_parameter_list.append(angle_param)
-            each_gate.rotation_angle = angle_param
-            if type(each_gate) in self.QISKIT_GATEMAP_LIBRARY:
+            #if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ['mixer','cost']:
+                angle_param = Parameter(each_gate.gate_label.__repr__()) 
+                self.qiskit_parameter_list.append(angle_param)
+                each_gate.angle_value = angle_param
+            if type(each_gate) in QAOAQiskitBackendStatevecSimulator.QISKIT_GATEMAP_LIBRARY:
                 decomposition = each_gate.decomposition('trivial')
             else: 
                 decomposition = each_gate.decomposition('standard')

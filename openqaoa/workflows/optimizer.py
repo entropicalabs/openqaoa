@@ -650,7 +650,6 @@ class QAOA(Optimizer):
         sorted_problem_pairing = {tuple(term):original_term_weight_pairing[tuple(term)] for term in problem.terms if len(term) != 2}
         sorted_problem_pairing.update({tuple(gate_indices):original_term_weight_pairing[tuple(gate_indices)]
                                        for gate_indices,mask in zip(list_gates_indices, swap_mask) if mask == False})
-        print(sorted_problem_pairing)
         sorted_problem = QUBO(problem.n, list(sorted_problem_pairing.keys()), list(sorted_problem_pairing.values()), problem.constant)
         self.cost_hamil = Hamiltonian.classical_hamiltonian(
             terms=sorted_problem.terms, coeffs=sorted_problem.weights, constant=sorted_problem.constant)

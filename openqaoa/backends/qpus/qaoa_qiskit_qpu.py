@@ -143,9 +143,11 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
-            angle_param = Parameter(each_gate.gate_label.__repr__())
-            self.qiskit_parameter_list.append(angle_param)
-            each_gate.angle_value = angle_param
+            #if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ['mixer','cost']:
+                angle_param = Parameter(each_gate.gate_label.__repr__()) 
+                self.qiskit_parameter_list.append(angle_param)
+                each_gate.angle_value = angle_param
             decomposition = each_gate.decomposition('standard')
             # using the list above, construct the circuit
             for each_tuple in decomposition:

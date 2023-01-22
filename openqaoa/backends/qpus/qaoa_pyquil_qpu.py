@@ -204,10 +204,14 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         # create a list of gates in order of application on quantum circuit
         for each_gate in self.abstract_circuit:
-            gate_label = ''.join(str(label) for label in each_gate.pauli_label)
-            angle_param = parametric_circuit.declare(
-                f'pauli{gate_label}', 'REAL', 1)
-            each_gate.rotation_angle = angle_param
+            #if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ['mixer','cost']:
+                angle_param = parametric_circuit.declare(
+                    each_gate.gate_label.__repr__(),
+                    'REAL',
+                    1
+                )
+                each_gate.angle_value = angle_param
             if isinstance(each_gate, RZZGateMap) or isinstance(each_gate, SWAPGateMap):
                 decomposition = each_gate.decomposition('standard2')
             else:
