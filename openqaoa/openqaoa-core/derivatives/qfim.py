@@ -4,9 +4,9 @@ from copy import deepcopy
 
 import numpy as np
 
-from openqaoa.backends.basebackend import QAOABaseBackend, QAOABaseBackendShotBased
-from openqaoa.algorithms.qaoa.logger_vqa import Logger
-from openqaoa.qaoa_components.variational_parameters import QAOAVariationalBaseParams
+from ..backends.basebackend import QAOABaseBackend, QAOABaseBackendShotBased
+from ..optimizers.logger_vqa import Logger
+from ..qaoa_components import QAOAVariationalBaseParams
 
 
 def log_qfim_evals(logger: Logger) -> Logger:

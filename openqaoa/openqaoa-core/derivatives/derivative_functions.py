@@ -19,9 +19,9 @@ from copy import deepcopy
 
 import numpy as np
 
-from openqaoa.variational_parameters import QAOAVariationalBaseParams, QAOAVariationalExtendedParams 
-from openqaoa.backends.basebackend import QAOABaseBackend
-from openqaoa.algorithms.qaoa.logger_vqa import Logger
+from ..qaoa_components import (QAOAVariationalBaseParams, QAOAVariationalExtendedParams) 
+from ..backends.basebackend import QAOABaseBackend
+from ..optimizers.logger_vqa import Logger
 
 
 def update_and_compute_expectation(backend_obj: QAOABaseBackend, 
