@@ -13,10 +13,10 @@
 #   limitations under the License.
 
 from typing import Union
-from .parameters import Parameters
-from openqaoa.qaoa_parameters import Hamiltonian
+from openqaoa.algorithms.parameters import Parameters
 
 ALLOWED_RQAOA_TYPES = ['adaptive', 'custom']
+
 
 class RqaoaParameters(Parameters):
     """
@@ -101,7 +101,3 @@ class RqaoaParameters(Parameters):
                 raise ValueError(
                     f'When using the custom method, the `n_max` parameter is not required.  \
                     The parameter that specifies the number of eliminations is `steps`, which can be a string or a list.')
-
-        
-
-

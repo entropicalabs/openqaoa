@@ -14,9 +14,9 @@
 
 import numpy as np
 
-from openqaoa.qaoa_parameters import Hamiltonian
+from openqaoa.qaoa_components import Hamiltonian
 from openqaoa.utilities import bitstring_energy
-from openqaoa.problems.problem import QUBO
+from openqaoa.problems import QUBO
 
 
 def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):

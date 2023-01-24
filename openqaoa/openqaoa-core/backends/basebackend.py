@@ -25,13 +25,14 @@
 """
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Union, List, Type, Dict, Optional, Any, Tuple
-import numpy as np
 from copy import deepcopy
 
-from .devices import DeviceBase
+import numpy as np
+
+from .devices_core import DeviceBase
 from .qaoa_parameters.gatemap import RotationGateMap, TwoQubitRotationGateMap
 from .qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from .utilities import qaoa_probabilities
+from openqaoa.utilities import qaoa_probabilities
 from .cost_function import cost_function
 
 class QuantumCircuitBase:

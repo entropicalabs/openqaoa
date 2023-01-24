@@ -12,9 +12,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import matplotlib.pyplot as plt
 from typing import List
-from ..utilities import delete_keys_from_dict
+
+import matplotlib.pyplot as plt
+
+from openqaoa.utilities import delete_keys_from_dict
 
 class RQAOAResults(dict):
     """

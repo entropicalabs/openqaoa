@@ -22,7 +22,7 @@ AbstractParams and child classes let one choose the parameterisation for
 solving the QAOA problem in hand.  
 """
 
-from .standardparams import *
+from .variational_parameters.standardparams import *
 from .extendedparams import *
 from .fourierparams import *
 from .annealingparams import *

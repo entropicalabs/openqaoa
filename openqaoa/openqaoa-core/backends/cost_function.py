@@ -15,9 +15,11 @@
 # Cost function to be used for QAOA training
 from typing import Dict
 from collections import OrderedDict
-from .qaoa_parameters.operators import Hamiltonian
-from .utilities import bitstring_energy
+
 import numpy as np
+
+from openqaoa.qaoa_components.operators import Hamiltonian
+from openqaoa.utilities import bitstring_energy
 
 def expectation_value_classical(counts: Dict, hamiltonian: Hamiltonian):
     """
