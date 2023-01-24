@@ -22,9 +22,8 @@ from copy import copy
 from scipy.sparse import csc_matrix, kron, diags
 from scipy.sparse.linalg import expm
 
-from ...basebackend import QAOABaseBackendStatevector, QuantumCircuitBase
-from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...qaoa_parameters.operators import Hamiltonian
+from .basebackend import QAOABaseBackendStatevector, QuantumCircuitBase
+from ..qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams, Hamiltonian
 from openqaoa.utilities import generate_uuid
 
 

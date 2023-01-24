@@ -12,10 +12,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from .gatemap import RotationGateMap, RotationGateMapFactory
-from .operators import Hamiltonian
 from typing import List
 from copy import deepcopy
+
+from .gatemap import RotationGateMap, RotationGateMapFactory
+from .operators import Hamiltonian
 
 # Plausible Class Names
 # IntermediateMapper

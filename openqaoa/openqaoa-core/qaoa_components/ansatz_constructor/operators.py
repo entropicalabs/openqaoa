@@ -16,9 +16,10 @@
 Construct Pauli operators and Hamiltonians.
 """
 from collections import Counter
+from typing import List, Union, Tuple
+
 from sympy import Symbol
 import numpy as np
-from typing import List, Union, Tuple
 
 Identity = np.array(([1, 0], [0, 1]), dtype=complex)
 PauliX = np.array(([0, 1], [1, 0]), dtype=complex)

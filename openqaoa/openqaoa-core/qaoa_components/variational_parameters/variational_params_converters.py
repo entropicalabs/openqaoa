@@ -28,6 +28,7 @@ StandardWithBias <------ FourierWithBias
     Annealing
 """
 from __future__ import annotations
+
 from typing import Type
 
 from copy import deepcopy

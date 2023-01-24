@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from abc import ABC
 
+from ..ansatz_constructor import QAOACircuitParams
+
 class QAOAVariationalBaseParams(ABC):
     """
     A class that initialises and keeps track of the Variational

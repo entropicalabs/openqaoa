@@ -20,10 +20,9 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 from scipy.fftpack import dct, dst
 
-from ..qaoa_parameters.baseparams import (QAOACircuitParams,
-                                          QAOAVariationalBaseParams,
-                                          shapedArray,
-                                          _is_iterable_empty)
+from .variational_baseparams import QAOAVariationalBaseParams
+from ..ansatz_constructor import QAOACircuitParams
+from ..ansatz_constructor.baseparams import shapedArray, _is_iterable_empty
 
 
 class QAOAVariationalFourierParams(QAOAVariationalBaseParams):

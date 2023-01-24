@@ -13,14 +13,14 @@
 #   limitations under the License.
 
 from typing import List, Tuple, Union
+
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import numpy as np
-from ..qaoa_parameters.baseparams import (QAOACircuitParams,
-                                          QAOAVariationalBaseParams,
-                                          shapedArray,
-                                          _is_iterable_empty)
 
+from .variational_baseparams import QAOAVariationalBaseParams
+from ..ansatz_constructor import QAOACircuitParams
+from ..ansatz_constructor.baseparams import shapedArray
 
 class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     """

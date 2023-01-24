@@ -22,13 +22,5 @@ AbstractParams and child classes let one choose the parameterisation for
 solving the QAOA problem in hand.  
 """
 
-from .variational_parameters.standardparams import *
-from .extendedparams import *
-from .fourierparams import *
-from .annealingparams import *
-from .qaoa_params import *
-from .operators import *
-from .baseparams import *
-from .gatemap import *
-from .gates import *
-from .variational_params_converters import converter
+from .ansatz_constructor import *
+from .variational_parameters import *

@@ -14,12 +14,14 @@
 
 from typing import List, Union, Optional, Tuple
 import numpy as np
-from .baseparams import QAOACircuitParams, QAOAVariationalBaseParams
+
+from .variational_baseparams import QAOAVariationalBaseParams
 from .annealingparams import QAOAVariationalAnnealingParams
 from .fourierparams import (QAOAVariationalFourierParams, QAOAVariationalFourierExtendedParams,
                             QAOAVariationalFourierWithBiasParams)
 from .extendedparams import QAOAVariationalExtendedParams
 from .standardparams import QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams
+from ..ansatz_constructor import QAOACircuitParams
 
 VARIATIONAL_PARAMS_DICT_KEYS = {'standard': ['betas', 'gammas'],
                                 'standard_w_bias': ['betas', 'gammas_singles', 'gammas_pairs'],
