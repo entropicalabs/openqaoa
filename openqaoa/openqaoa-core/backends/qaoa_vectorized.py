@@ -22,9 +22,10 @@ from copy import copy
 from scipy.sparse import csc_matrix, kron, diags
 from scipy.sparse.linalg import expm
 
-from .basebackend import QAOABaseBackendStatevector, QuantumCircuitBase
-from ..qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams, Hamiltonian
-from openqaoa.utilities import generate_uuid
+from .basebackend import QAOABaseBackendStatevector
+from ..qaoa_components import (QAOACircuitParams, QAOAVariationalBaseParams, 
+Hamiltonian)
+from ..utilities import generate_uuid
 
 
 # Pauli gates

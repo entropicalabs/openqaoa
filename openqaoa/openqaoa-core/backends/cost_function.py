@@ -18,8 +18,8 @@ from collections import OrderedDict
 
 import numpy as np
 
-from openqaoa.qaoa_components.operators import Hamiltonian
-from openqaoa.utilities import bitstring_energy
+from ..qaoa_components import Hamiltonian
+from ..utilities import bitstring_energy
 
 def expectation_value_classical(counts: Dict, hamiltonian: Hamiltonian):
     """

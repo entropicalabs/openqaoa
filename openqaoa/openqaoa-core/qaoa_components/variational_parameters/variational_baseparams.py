@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Union
 from abc import ABC
+
+import numpy as np
 
 from ..ansatz_constructor import QAOACircuitParams
 
