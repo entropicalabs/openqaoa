@@ -18,11 +18,11 @@ import json
 import gzip
 from os.path import exists
 
-from openqaoa.devices import DeviceLocal, DeviceBase
-from openqaoa.problems.problem import QUBO
-from openqaoa.algorithms.qaoa.qaoa_parameters import BackendProperties, ClassicalOptimizer
-from openqaoa.utilities import delete_keys_from_dict, is_valid_uuid, generate_uuid
-from openqaoa.backends.qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
+from .qaoa.qaoa_parameters import BackendProperties, ClassicalOptimizer
+from ..backends import DeviceLocal, DeviceBase
+from ..problems.problem import QUBO
+from ..utilities import delete_keys_from_dict, is_valid_uuid, generate_uuid
+from ..backends.qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 
 
 class Optimizer(ABC):

@@ -15,6 +15,7 @@
 from typing import Union
 
 from ..parameters import Parameters
+from ...qaoa_components import Hamiltonian
 
 ALLOWED_RQAOA_TYPES = ['adaptive', 'custom']
 
