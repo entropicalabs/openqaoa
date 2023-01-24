@@ -15,8 +15,9 @@
 import abc
 import numpy as np
 from typing import Optional
-from qiskit import IBMQ
+import logging
 
+from qiskit import IBMQ
 from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
@@ -25,6 +26,10 @@ from boto3.session import Session
 from botocore.exceptions import NoRegionError
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
+
+from azure.quantum.qiskit import AzureQuantumProvider
+
+logging.getLogger().setLevel(logging.ERROR)
 
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
@@ -67,6 +72,98 @@ class DeviceLocal(DeviceBase):
         else:
             return False
 
+
+class DeviceAzure(DeviceBase):
+
+    """
+    Contains the required information and methods needed to access remote 
+    Azure QPUs and Simulators.
+    Parameters
+    ----------
+    available_qpus: `list`
+        When connection to a provider is established, this attribute contains a list
+        of backend names which can be used to access the selected backend by reinitialising
+        the Access Object with the name of the available backend as input to the
+        device_name parameter.
+    """
+
+    def __init__(self, device_name: str, resource_id: str, az_location: str):
+        """
+        Input parameters required for this can be found in the user's Azure 
+        Quantum Workspace.
+        
+        Parameters
+        ----------
+        device_name: `str`
+            The name of the Azure remote QPU/Simulator to be used
+        resource_id: `str`
+        az_location: `str`
+        """
+        
+        self.resource_id = resource_id
+        self.location = az_location
+        self.device_name = device_name
+        self.device_location = 'azure'
+
+        self.provider_connected = None
+        self.qpu_connected = None
+
+    def check_connection(self):
+        """
+        """
+
+        self.provider_connected = self._check_provider_connection()
+
+        if self.provider_connected == False:
+            return self.provider_connected
+
+        self.available_qpus = [backend.name()
+                               for backend in self.provider.backends()]
+
+        if self.device_name == '':
+            return self.provider_connected
+
+        self.qpu_connected = self._check_backend_connection()
+
+        if self.provider_connected and self.qpu_connected:
+            return True
+        else:
+            return False
+
+    def _check_backend_connection(self) -> bool:
+        """Private method for checking connection with backend(s).
+        """
+
+        if self.device_name in self.available_qpus:
+            self.backend_device = self.provider.get_backend(self.device_name)
+            self.n_qubits = self.backend_device.configuration().n_qubits
+            return True
+        else:
+            print(
+                f"Please choose from {self.available_qpus} for this provider")
+            return False
+
+    def _check_provider_connection(self) -> bool:
+        """
+        Private method for checking connection with provider.
+        """
+
+        try:
+            self.provider = AzureQuantumProvider(resource_id=self.resource_id, 
+                                                 location=self.location)
+
+            return True
+
+        except ValueError as e:
+            print('Either the resource id or location specified was invalid: {}'.format(e))
+            return False
+
+        except Exception as e:
+            print('An Exception has occured when trying to connect with the \
+            provider: {}'.format(e))
+            return False
+        
+
 class DeviceQiskit(DeviceBase):
     """
     Contains the required information and methods needed to access remote
@@ -104,7 +201,7 @@ class DeviceQiskit(DeviceBase):
             The name of the project for which the experimental data will be 
             saved in on IBMQ's end.
         """
-
+        
         self.device_name = device_name
         self.device_location = 'ibmq'
         self.hub = hub
@@ -233,7 +330,7 @@ class DevicePyquil(DeviceBase):
             Optional engagement manager. If none is provided, a default one will 
             be created.
         """
-
+        
         self.device_name = device_name
         self.device_location = 'qcs'
         self.as_qvm = as_qvm
@@ -399,7 +496,9 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             engagement_manager: EngagementManager = None,
                             folder_name: str = None, 
                             s3_bucket_name:str = None, 
-                            aws_region: str = None) -> dict:
+                            aws_region: str = None, 
+                            resource_id: str = None, 
+                            az_location: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'hub': hub, 'group': group, 'project': project},
 
@@ -413,7 +512,10 @@ def device_class_arg_mapper(device_class:DeviceBase,
         
         DeviceAWS: {'s3_bucket_name': s3_bucket_name,
                     'aws_region': aws_region,
-                    'folder_name': folder_name}
+                    'folder_name': folder_name},
+        
+        DeviceAzure: {'resource_id': resource_id, 
+                      'location': az_location}
     }
 
     final_device_kwargs = {key: value for key, value in DEVICE_ARGS_MAPPER[device_class].items()
@@ -449,6 +551,8 @@ def create_device(location: str, name: str, **kwargs):
         device_class = DeviceAWS
     elif location == 'local':
         device_class = DeviceLocal
+    elif location == 'azure':
+        device_class = DeviceAzure
     else:
         raise ValueError(f'Invalid device location, Choose from: {location}')
 

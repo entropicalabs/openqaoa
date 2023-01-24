@@ -18,7 +18,7 @@ import networkx as nx
 
 from openqaoa.qaoa_parameters import Hamiltonian
 from openqaoa.rqaoa import *
-from openqaoa.problems.problem import MaximumCut
+from openqaoa.problems import MaximumCut
 from openqaoa.workflows.optimizer import RQAOA
 from openqaoa.devices import create_device
 

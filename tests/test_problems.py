@@ -3,13 +3,13 @@ import unittest
 import networkx as nx
 import numpy as np
 from random import randint, random
-from openqaoa.problems.problem import (
+from openqaoa.problems import (
     NumberPartition, QUBO, TSP, Knapsack, ShortestPath,
-    SlackFreeKnapsack, MaximumCut, MinimumVertexCover, 
-    Problem
+    SlackFreeKnapsack, MaximumCut, MinimumVertexCover
 )
+from openqaoa.problems.problem import Problem
 from openqaoa.utilities import convert2serialize
-
+from openqaoa.problems.helper_functions import create_problem_from_dict
 
 def terms_list_equality(terms_list1, terms_list2):
     """
@@ -904,7 +904,7 @@ class TestProblem(unittest.TestCase):
 
             problem_instance = qubos[type].problem_instance.copy()
 
-            problem = Problem.from_instance_dict(problem_instance)
+            problem = create_problem_from_dict(problem_instance)
 
             assert problem.problem_instance == problems[type].problem_instance, "Problem from instance method is not correct for problem type {}".format(type)
             assert convert2serialize(problem) == convert2serialize(problems[type]), "Problem from instance method is not correct for problem type {}".format(type)

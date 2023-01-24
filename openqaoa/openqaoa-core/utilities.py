@@ -20,14 +20,13 @@ from __future__ import annotations
 
 from typing import Optional, Union, List, Tuple
 import itertools
-from itertools import permutations
 import numpy as np
 import uuid
 import matplotlib.pyplot as plt
 import networkx as nx
-from .qaoa_parameters import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 
-from .qaoa_parameters.gatemap import TwoQubitRotationGateMap
+from .qaoa_components import Hamiltonian, PauliOp, QAOAVariationalBaseParams
+from .qaoa_components.ansatz_constructor.gatemap import TwoQubitRotationGateMap
 
 
 def X_mixer_hamiltonian(n_qubits: int,
@@ -1484,7 +1483,7 @@ def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
     sub_sys_ground = np.zeros(n_qubits-excitations, dtype=int)
 
     total_state = np.concatenate((sub_sys_ground, sub_sys_excitations))
-    total_basis_comp = set(permutations(total_state))
+    total_basis_comp = set(itertools.permutations(total_state))
     total_basis_comp = np.array(
         [''.join(str(i) for i in basis_comp) for basis_comp in total_basis_comp])
 

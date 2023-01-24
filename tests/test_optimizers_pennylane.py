@@ -9,7 +9,6 @@ import inspect
 
 from openqaoa.workflows.optimizer import QAOA
 from openqaoa.devices import create_device
-from openqaoa.problems.problem import MinimumVertexCover
 from openqaoa.optimizers.training_vqa import PennyLaneOptimizer
 from openqaoa.optimizers.pennylane.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS
 from openqaoa.derivative_functions import derivative
@@ -19,7 +18,7 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers import get_optimizer
 from openqaoa.qfim import qfim as Qfim
-from openqaoa.problems.problem import QUBO
+from openqaoa.problems import QUBO, MinimumVertexCover
 
 
 #list of optimizers to test, pennylane optimizers

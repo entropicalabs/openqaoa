@@ -20,7 +20,7 @@ from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAAWSQPUBa
                         QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
                         QAOAvectorizedBackendSimulator)
 
-from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS
+from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS, DeviceAzure
 from ..qaoa_parameters.baseparams import QAOACircuitParams
 from ..basebackend import QuantumCircuitBase, QAOABaseBackend
 
@@ -35,7 +35,8 @@ DEVICE_NAME_TO_OBJECT_MAPPER = {
 DEVICE_ACCESS_OBJECT_MAPPER = {
     DeviceQiskit: QAOAQiskitQPUBackend,
     DevicePyquil: QAOAPyQuilQPUBackend, 
-    DeviceAWS: QAOAAWSQPUBackend
+    DeviceAWS: QAOAAWSQPUBackend,
+    DeviceAzure: QAOAQiskitQPUBackend
 }
 
 

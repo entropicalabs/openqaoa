@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 from docplex.mp.model import Model
 
-from openqaoa.problems.problem import MinimumVertexCover
+from openqaoa.problems import MinimumVertexCover
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian
 from openqaoa.optimizers.result import Result
 from openqaoa.optimizers.result import most_probable_bitstring
