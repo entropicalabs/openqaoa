@@ -12,10 +12,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from __future__ import annotations
+
 import abc
-from typing import Optional
+import logging
 
 import numpy as np
+
+logging.getLogger().setLevel(logging.ERROR)
 
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
@@ -58,7 +62,6 @@ class DeviceLocal(DeviceBase):
         else:
             return False
 
-
 def device_class_arg_mapper(device_class:DeviceBase,
                             hub: str = None,
                             group: str = None,
@@ -72,7 +75,9 @@ def device_class_arg_mapper(device_class:DeviceBase,
                             engagement_manager: EngagementManager = None,
                             folder_name: str = None, 
                             s3_bucket_name:str = None, 
-                            aws_region: str = None) -> dict:
+                            aws_region: str = None, 
+                            resource_id: str = None, 
+                            az_location: str = None) -> dict:
     DEVICE_ARGS_MAPPER = {
         DeviceQiskit: {'hub': hub, 'group': group, 'project': project},
 
@@ -86,7 +91,10 @@ def device_class_arg_mapper(device_class:DeviceBase,
         
         DeviceAWS: {'s3_bucket_name': s3_bucket_name,
                     'aws_region': aws_region,
-                    'folder_name': folder_name}
+                    'folder_name': folder_name},
+        
+        DeviceAzure: {'resource_id': resource_id, 
+                      'location': az_location}
     }
 
     final_device_kwargs = {key: value for key, value in DEVICE_ARGS_MAPPER[device_class].items()
@@ -122,6 +130,8 @@ def create_device(location: str, name: str, **kwargs):
         device_class = DeviceAWS
     elif location == 'local':
         device_class = DeviceLocal
+    elif location == 'azure':
+        device_class = DeviceAzure
     else:
         raise ValueError(f'Invalid device location, Choose from: {location}')
 
