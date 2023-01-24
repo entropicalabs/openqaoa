@@ -1,13 +1,13 @@
 import time
 
 from .qaoa_parameters import CircuitProperties
-from openqaoa.algorithms.baseworkflow import Optimizer
-from openqaoa.backends.devices_core import DeviceLocal
-from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.problems.problem import QUBO
-from openqaoa.qaoa_components import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.utilities import get_mixer_hamiltonian
-from openqaoa.optimizers.qaoa_optimizer import get_optimizer
+from ..baseworkflow import Optimizer
+from ...backends.devices_core import DeviceLocal
+from ...backends.qaoa_backend import get_qaoa_backend
+from ...problems.problem import QUBO
+from ...qaoa_components import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
+from ...utilities import get_mixer_hamiltonian
+from ...optimizers.qaoa_optimizer import get_optimizer
 
 
 class QAOA(Optimizer):

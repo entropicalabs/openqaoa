@@ -1,1 +1,1 @@
-from .rqaoa_worflow import RQAOA
+from .rqaoa_workflow import RQAOA

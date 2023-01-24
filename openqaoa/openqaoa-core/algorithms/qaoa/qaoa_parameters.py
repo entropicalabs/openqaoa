@@ -17,10 +17,10 @@ from typing import List, Dict, Optional, Union
 import numpy as np
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
-from openqaoa.backends.basebackend import QuantumCircuitBase
-from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
-from opneqaoa.algorithms.parameters import Parameters
-from openqaoa.optimizers.training_vqa import CustomScipyGradientOptimizer, PennyLaneOptimizer
+from ...backends.basebackend import QuantumCircuitBase
+from ...backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
+from ..parameters import Parameters
+from ...optimizers.training_vqa import CustomScipyGradientOptimizer, PennyLaneOptimizer
 
 
 

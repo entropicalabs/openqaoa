@@ -17,16 +17,16 @@ import time
 import numpy as np
 
 from .rqaoa_parameters import RqaoaParameters
-from openqaoa.algorithms.baseworkflow import Optimizer
-from openqaoa.algorithms.qaoa.qaoa_workflow import QAOA
-from openqaoa.algorithms.qaoa.qaoa_parameters import CircuitProperties
-from openqaoa.devices import DeviceLocal, DeviceBase
-from openqaoa.problems.problem import QUBO
-from openqaoa.qaoa_parameters import Hamiltonian
-from openqaoa.utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise
-from openqaoa.backends.basebackend import QAOABaseBackendStatevector
+from ..baseworkflow import Optimizer
+from ..qaoa import QAOA
+from ..qaoa.qaoa_parameters import CircuitProperties
+from ...backends.devices import DeviceLocal, DeviceBase
+from ...problems.problem import QUBO
+from ...qaoa_components import Hamiltonian
+from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise
+from ...backends.basebackend import QAOABaseBackendStatevector
 import openqaoa.rqaoa as rqaoa
-from openqaoa.rqaoa.rqaoa_results import RQAOAResults
+from ...rqaoa.rqaoa_results import RQAOAResults
 
 
 class RQAOA(Optimizer):

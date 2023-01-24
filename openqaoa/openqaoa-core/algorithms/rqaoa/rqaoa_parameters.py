@@ -13,7 +13,8 @@
 #   limitations under the License.
 
 from typing import Union
-from openqaoa.algorithms.parameters import Parameters
+
+from ..parameters import Parameters
 
 ALLOWED_RQAOA_TYPES = ['adaptive', 'custom']
 
