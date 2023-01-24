@@ -21,11 +21,11 @@ from ..baseworkflow import Optimizer
 from ..qaoa import QAOA
 from ..qaoa.qaoa_parameters import CircuitProperties
 from ...backends.devices import DeviceLocal, DeviceBase
-from ...problems.problem import QUBO
+from ...problems import QUBO
 from ...qaoa_components import Hamiltonian
 from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise
 from ...backends.basebackend import QAOABaseBackendStatevector
-import openqaoa.rqaoa as rqaoa
+from ...rqaoa import rqaoa
 from ...rqaoa.rqaoa_results import RQAOAResults
 
 

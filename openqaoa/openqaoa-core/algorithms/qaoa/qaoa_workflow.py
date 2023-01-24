@@ -4,7 +4,7 @@ from .qaoa_parameters import CircuitProperties
 from ..baseworkflow import Optimizer
 from ...backends.devices_core import DeviceLocal
 from ...backends.qaoa_backend import get_qaoa_backend
-from ...problems.problem import QUBO
+from ...problems import QUBO
 from ...qaoa_components import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from ...utilities import get_mixer_hamiltonian
 from ...optimizers.qaoa_optimizer import get_optimizer
