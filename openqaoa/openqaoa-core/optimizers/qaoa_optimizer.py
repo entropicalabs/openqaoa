@@ -12,9 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from openqaoa.qaoa_components import QAOAVariationalBaseParams
+from ..qaoa_components import QAOAVariationalBaseParams
 from .training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
-from ..basebackend import VQABaseBackend
+from ..backends.basebackend import VQABaseBackend
 
 
 def available_optimizers():

@@ -16,7 +16,7 @@ from typing import List
 
 import matplotlib.pyplot as plt
 
-from openqaoa.utilities import delete_keys_from_dict
+from ..utilities import delete_keys_from_dict
 
 class RQAOAResults(dict):
     """

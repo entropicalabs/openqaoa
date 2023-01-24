@@ -23,16 +23,16 @@ from datetime import datetime
 from scipy.optimize._minimize import minimize, MINIMIZE_METHODS
 from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 
-from ..basebackend import VQABaseBackend
-from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
+from ..backends.basebackend import VQABaseBackend
+from ..qaoa_components import QAOAVariationalBaseParams
 from . import optimization_methods as om
 from .pennylane import optimization_methods_pennylane as ompl
 
 from .logger_vqa import Logger
 from .result import Result
 
-from ..derivative_functions import derivative
-from ..qfim import qfim
+from ..derivatives.derivative_functions import derivative
+from ..derivatives.qfim import qfim
 
 ###
 # TODO: Find better place for this
