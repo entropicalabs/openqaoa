@@ -15,10 +15,10 @@
 from functools import update_wrapper
 from logging.config import dictConfig
 from re import I
-import matplotlib.pyplot as plt
 from typing import Type, List
+
 import numpy as np
-import json
+import matplotlib.pyplot as plt
 
 from .logger_vqa import Logger
 from ..qaoa_components import Hamiltonian

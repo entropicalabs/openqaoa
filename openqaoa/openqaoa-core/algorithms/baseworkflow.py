@@ -20,7 +20,7 @@ from os.path import exists
 
 from .qaoa.qaoa_parameters import BackendProperties, ClassicalOptimizer
 from ..backends import DeviceLocal, DeviceBase
-from ..problems.problem import QUBO
+from ..problems import QUBO
 from ..utilities import delete_keys_from_dict, is_valid_uuid, generate_uuid
 from ..backends.qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 
