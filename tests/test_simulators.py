@@ -14,7 +14,7 @@
 
 import unittest
 from openqaoa.workflows.optimizer import QAOA
-from openqaoa.problems.problem import QUBO
+from openqaoa.problems import QUBO
 from openqaoa.devices import create_device
 from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
 

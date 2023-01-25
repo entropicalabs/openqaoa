@@ -26,7 +26,7 @@ from openqaoa.backends.simulators.qaoa_pyquil_sim import QAOAPyQuilWavefunctionS
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
-from openqaoa.problems.problem import MinimumVertexCover, QUBO
+from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
 import unittest
 import networkx as nw
@@ -762,6 +762,27 @@ class TestingVanillaQAOA(unittest.TestCase):
         except:
             error = True
         assert error, "Experiment tag keys should be strings."
+    
+    def test_qaoa_asdict_with_noise(self):
+        "test to check that we can serialize a QAOA object with noise"
+        device_backend = FakeVigo()
+        device = QasmSimulator.from_backend(device_backend)
+        noise_model = NoiseModel.from_backend(device)
+        q_noisy_shot = QAOA()
+
+        # device
+        qiskit_noisy_shot = create_device(location='local', name='qiskit.qasm_simulator')
+        q_noisy_shot.set_device(qiskit_noisy_shot)
+        # circuit properties
+        q_noisy_shot.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        # backend properties
+        q_noisy_shot.set_backend_properties(n_shots = 200, noise_model = noise_model)
+        # classical optimizer properties
+        q_noisy_shot.set_classical_optimizer(method='COBYLA', maxiter=200,
+                                            cost_progress=True, parameter_log=True)
+        q_noisy_shot.compile(QUBO.random_instance(n=8))
+        q_noisy_shot.optimize()
+        q_noisy_shot.asdict()
 
     def test_qaoa_asdict_dumps(self):
         """Test the asdict method of the QAOA class."""
@@ -800,8 +821,8 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # check QAOA dump
         file_name = 'test_dump_qaoa.json'
-        uuid, project_uuid = qaoa.header['experiment_uuid'], qaoa.header['project_uuid']
-        full_name = f'{project_uuid}--{uuid}--{file_name}'
+        experiment_uuid, atomic_uuid = qaoa.header['experiment_uuid'], qaoa.header['atomic_uuid']
+        full_name = f'{experiment_uuid}--{atomic_uuid}--{file_name}'
 
         qaoa.dump(file_name, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist'
@@ -809,12 +830,35 @@ class TestingVanillaQAOA(unittest.TestCase):
             assert file.read() == qaoa.dumps(indent=None), 'Dump file does not contain the correct data'
         os.remove(full_name)
 
-        # check QAOA dump when qaoa has no project_uuid
-        qaoa.header['project_uuid'] = None
-        full_name = f'{uuid}--{file_name}'
-        qaoa.dump(file_name, indent=None)
-        assert os.path.isfile(full_name), 'Dump file does not exist, when qaoa has no project_uuid'
-        os.remove(full_name)
+        # check RQAOA dump whitout prepending the experiment_uuid and atomic_uuid
+        qaoa.dump(file_name, indent=None,prepend_id=False)
+        assert os.path.isfile(file_name), 'Dump file does not exist, when not prepending the experiment_uuid and atomic_uuid'
+        
+        # check RQAOA dump fails when the file already exists
+        error = False
+        try:
+            qaoa.dump(file_name, indent=None,prepend_id=False)
+        except FileExistsError:
+            error = True
+        assert error, 'Dump file does not fail when the file already exists'
+
+        # check that we can overwrite the file
+        qaoa.dump(file_name, indent=None,prepend_id=False, overwrite=True)
+        assert os.path.isfile(file_name), 'Dump file does not exist, when overwriting'
+        os.remove(file_name)
+
+        # check RQAOA dump fails when prepend_id is True and file_name is not given
+        error = False
+        try:
+            qaoa.dump(prepend_id=False)
+        except ValueError:
+            error = True
+        assert error, 'Dump file does not fail when prepend_id is True and file_name is not given'
+
+        # check you can dump to a file with no arguments
+        qaoa.dump()
+        assert os.path.isfile(f'{experiment_uuid}--{atomic_uuid}.json'), 'Dump file does not exist, when no name is given'
+        os.remove(f'{experiment_uuid}--{atomic_uuid}.json')
 
         # check QAOA dump deleting some keys
         exclude_keys = ['schedule', 'pair']
@@ -831,26 +875,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             assert file.read() == qaoa.dumps(indent=None).encode(), 'Dump file does not contain the correct data, when compressing'
         os.remove(full_name+'.gz')
 
-    def test_qaoa_asdict_with_noise(self):
-        "test to check that we can serialize a QAOA object with noise"
-        device_backend = FakeVigo()
-        device = QasmSimulator.from_backend(device_backend)
-        noise_model = NoiseModel.from_backend(device)
-        q_noisy_shot = QAOA()
-
-        # device
-        qiskit_noisy_shot = create_device(location='local', name='qiskit.qasm_simulator')
-        q_noisy_shot.set_device(qiskit_noisy_shot)
-        # circuit properties
-        q_noisy_shot.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='x')
-        # backend properties
-        q_noisy_shot.set_backend_properties(n_shots = 200, noise_model = noise_model)
-        # classical optimizer properties
-        q_noisy_shot.set_classical_optimizer(method='COBYLA', maxiter=200,
-                                            cost_progress=True, parameter_log=True)
-        q_noisy_shot.compile(QUBO.random_instance(n=8))
-        q_noisy_shot.optimize()
-        q_noisy_shot.asdict()
+        
         
     def __test_expected_keys(self, obj, exclude_keys=[], method='asdict'):
         """
@@ -858,7 +883,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         """
 
         #create a dictionary with all the expected keys and set them to False
-        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'problem_type', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'n_shots', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'param_type', 'init_type', 'qubit_register', 'p', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'angles', 'cost', 'measurement_outcomes', 'job_id']
+        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 'init_type', 'p', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number']
         expected_keys = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found
@@ -1147,8 +1172,8 @@ class TestingRQAOA(unittest.TestCase):
 
         # check RQAOA dump
         file_name = 'test_dump_rqaoa.json'
-        uuid, project_uuid = rqaoa.header['experiment_uuid'], rqaoa.header['project_uuid']
-        full_name = f'{project_uuid}--{uuid}--{file_name}'
+        experiment_uuid, atomic_uuid = rqaoa.header['experiment_uuid'], rqaoa.header['atomic_uuid']
+        full_name = f'{experiment_uuid}--{atomic_uuid}--{file_name}'
 
         rqaoa.dump(file_name, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist'
@@ -1156,12 +1181,35 @@ class TestingRQAOA(unittest.TestCase):
             assert file.read() == rqaoa.dumps(indent=None), 'Dump file does not contain the correct data'
         os.remove(full_name)
 
-        # check RQAOA dump when rqaoa has no project_uuid
-        rqaoa.header['project_uuid'] = None
-        full_name = f'{uuid}--{file_name}'
-        rqaoa.dump(file_name, indent=None)
-        assert os.path.isfile(full_name), 'Dump file does not exist, when rqaoa has no project_uuid'
-        os.remove(full_name)
+        # check RQAOA dump whitout prepending the experiment_uuid and atomic_uuid
+        rqaoa.dump(file_name, indent=None,prepend_id=False)
+        assert os.path.isfile(file_name), 'Dump file does not exist, when not prepending the experiment_uuid and atomic_uuid'
+        
+        # check RQAOA dump fails when the file already exists
+        error = False
+        try:
+            rqaoa.dump(file_name, indent=None,prepend_id=False)
+        except FileExistsError:
+            error = True
+        assert error, 'Dump file does not fail when the file already exists'
+
+        # check that we can overwrite the file
+        rqaoa.dump(file_name, indent=None,prepend_id=False, overwrite=True)
+        assert os.path.isfile(file_name), 'Dump file does not exist, when overwriting'
+        os.remove(file_name)
+
+        # check RQAOA dump fails when prepend_id is True and file_name is not given
+        error = False
+        try:
+            rqaoa.dump(prepend_id=False)
+        except ValueError:
+            error = True
+        assert error, 'Dump file does not fail when prepend_id is True and file_name is not given'
+
+        # check you can dump to a file with no arguments
+        rqaoa.dump()
+        assert os.path.isfile(f'{experiment_uuid}--{atomic_uuid}.json'), 'Dump file does not exist, when no name is given'
+        os.remove(f'{experiment_uuid}--{atomic_uuid}.json')
 
         # check RQAOA dump deleting some keys
         exclude_keys = ['schedule', 'pair']
@@ -1185,7 +1233,7 @@ class TestingRQAOA(unittest.TestCase):
         """
 
         #create a dictionary with all the expected keys and set them to False
-        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'problem_type', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'n_shots', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'param_type', 'init_type', 'qubit_register', 'p', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'rqaoa_type', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'results', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'exp_vals_z', 'corr_matrix', 'number_steps']
+        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 'init_type', 'p', 'rqaoa_type', 'rqaoa_n_max', 'rqaoa_n_cutoff', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'results', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'number_steps', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number', 'exp_vals_z', 'corr_matrix', 'atomic_uuids']
         expected_keys = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found
@@ -1220,7 +1268,80 @@ class TestingRQAOA(unittest.TestCase):
             print(expected_keys)
         """
 
+    def test_rqaoa_dumping_step_by_step(self):
+        """
+        test dumping the RQAOA object step by step
+        """
+        
+        # define the problem
+        problem = QUBO.random_instance(n=8)
+        problem.set_metadata({'metadata_key1': 'metadata_value1', 'metadata_key2': 'metadata_value2'})
 
+        # define the RQAOA object
+        r = RQAOA()
+
+        # set experimental tags
+        r.set_exp_tags({'tag1': 'value1', 'tag2': 'value2'})
+
+        # set the classical optimizer
+        r.set_classical_optimizer(optimization_progress=True)  
+
+        # compile the problem
+        r.compile(problem)
+
+        # optimize the problem while dumping the data at each step
+        r.optimize(dump=True, dump_options={'file_name': 'test_dumping_step_by_step', 'compresslevel': 2, 'indent': None})
+
+        # create list of expected file names
+        experiment_uuid, atomic_uuid = r.header['experiment_uuid'], r.header['atomic_uuid']
+        file_names = {uuid: experiment_uuid + '--' + uuid + '--' + 'test_dumping_step_by_step.json.gz' for uuid in r.results['atomic_uuids'].values()}
+        file_names[atomic_uuid] = experiment_uuid + '--' + atomic_uuid + '--' + 'test_dumping_step_by_step.json.gz'
+
+        # check if the files exist
+        for file_name in file_names.values():
+            assert os.path.isfile(file_name), f'File {file_name} does not exist.'
+
+        # put each file in a dictionary
+        files = {}
+        for atomic_uuid, file_name in file_names.items():
+            with gzip.open(file_name, 'rb') as file:
+                files[atomic_uuid] = json.loads(file.read().decode())
+
+        rqaoa_files, qaoa_files = 0, 0
+                
+        # check if the files have the expected keys
+        for atomic_uuid, dictionary in files.items():
+
+            file_name = file_names[atomic_uuid]
+
+            if r.header['atomic_uuid'] == atomic_uuid: # rqaoa files
+
+                rqaoa_files += 1
+
+                assert dictionary['header']['experiment_uuid'] == r.header['experiment_uuid'], f'File {file_name} has a different experiment_uuid than the RQAOA object.'
+                assert dictionary['header']['atomic_uuid'] == r.header['atomic_uuid'], f'File {file_name} has a different atomic_uuid than the RQAOA object.'
+                assert dictionary['header']['algorithm'] == 'rqaoa', f'File {file_name} has a different algorithm than rqaoa, which is the expected algorithm.'
+
+                #check that the intermediate mesuraments are empty
+                for step in dictionary['data']['results']['intermediate_steps']:
+                    assert step['qaoa_results']['intermediate']['measurement_outcomes'] == [], f'File {file_name} has intermediate mesuraments, but it should not have them.'
+            
+            else: # qaoa files
+
+                qaoa_files += 1
+
+                assert dictionary['header']['atomic_uuid'] == atomic_uuid, f'File {file_name} has a different atomic_uuid than expected.'
+                assert dictionary['header']['algorithm'] == 'qaoa', f'File {file_name} has a different algorithm than qaoa, which is the expected algorithm.'
+
+                #check that the intermediate mesuraments are not empty
+                assert len(dictionary['data']['results']['intermediate']['measurement_outcomes']) > 0, f'File {file_name} does not have intermediate mesuraments, but it should have them.'
+
+        assert rqaoa_files == 1, f'Expected 1 rqaoa file, but {rqaoa_files} were found.'
+        assert qaoa_files == len(r.results['atomic_uuids']), f'Expected {len(r.results["atomic_uuids"])} qaoa files, but {qaoa_files} were found.'
+
+        # erease the files
+        for file_name in file_names.values():
+            os.remove(file_name)
 
 
 if __name__ == '__main__':
