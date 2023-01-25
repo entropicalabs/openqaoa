@@ -111,7 +111,9 @@ class Result:
 
     #     return (string)
     
-        self.n_shots = log.n_shots.history
+        # if we are using a shot adaptive optimizer, we need to add the number of shots to the result   
+        if log.n_shots.history != []:
+            self.n_shots = log.n_shots.history
 
 
     def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, intermediate_mesurements:bool=True, exclude_keys:List[str]=[]):
@@ -165,6 +167,10 @@ class Result:
         else:
             return_dict['intermediate'] = self.intermediate
             return_dict['optimized'] = self.optimized
+
+        # if we are using a shot adaptive optimizer, we need to add the number of shots to the result, so if attribute n_shots is not empty, it is added to the dictionary
+        if getattr(self, 'n_shots', None) != None:
+            return_dict['n_shots'] = self.n_shots
 
         return return_dict if exclude_keys == [] else delete_keys_from_dict(return_dict, exclude_keys)
 

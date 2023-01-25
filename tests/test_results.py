@@ -117,7 +117,7 @@ class TestingResultOutputs(unittest.TestCase):
 
         # Check if the dictionary has all the expected keys 
         for key, value in expected_keys_dict.items():
-            assert value==True, f'Key {key} was not found in the dictionary of the RQAOAResult class.'
+            assert value==True, f'Key {key} was not found in the dictionary of the QAOA Result class.'
 
 
         ## now we repeat the same test but we do not include the cost hamiltonian
