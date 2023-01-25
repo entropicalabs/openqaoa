@@ -13,16 +13,20 @@
 #   limitations under the License.
 
 from typing import Union, Optional, List
+
 import numpy as np
 
-from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAAWSQPUBackend, 
-                        QAOAPyQuilWavefunctionSimulatorBackend,
-                        QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
-                        QAOAvectorizedBackendSimulator)
+from .qaoa_vectorized import QAOAvectorizedBackendSimulator
+from .devices_core import DeviceBase, DeviceLocal
+from .basebackend import QuantumCircuitBase, QAOABaseBackend
+from ..qaoa_components import QAOACircuitParams
+from openqaoa_braket.backends import DeviceAWS, QAOAAWSQPUBackend
+from openqaoa_qiskit.backends import (DeviceQiskit, QAOAQiskitQPUBackend, 
+                                      QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator)
+from openqaoa_azure.backends import DeviceAzure
+from openqaoa_pyquil.backends import (DevicePyquil, QAOAPyQuilQPUBackend, 
+                                      QAOAPyQuilWavefunctionSimulatorBackend)
 
-from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS, DeviceAzure
-from ..qaoa_parameters.baseparams import QAOACircuitParams
-from ..basebackend import QuantumCircuitBase, QAOABaseBackend
 
 DEVICE_NAME_TO_OBJECT_MAPPER = {
     'qiskit.qasm_simulator': QAOAQiskitBackendShotBasedSimulator,

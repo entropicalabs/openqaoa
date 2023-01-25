@@ -30,3 +30,5 @@ Currently Supported:
 from .qaoa_vectorized import QAOAvectorizedBackendSimulator
 
 from .devices_core import DeviceBase, DeviceLocal
+
+from .qaoa_device import create_device

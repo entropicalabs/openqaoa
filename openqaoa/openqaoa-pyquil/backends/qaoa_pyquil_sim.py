@@ -20,8 +20,8 @@ from pyquil.api import WavefunctionSimulator
 
 from openqaoa.backends.basebackend import QAOABaseBackendStatevector
 from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
-from openqaoa.qaoa_parameters.gatemap import (RXGateMap, RYGateMap, RZGateMap)
-from openqaoa.cost_function import cost_function
+from openqaoa.qaoa_components.ansatz_constructor.gatemap import (RXGateMap, RYGateMap, RZGateMap)
+from openqaoa.backends.cost_function import cost_function
 from openqaoa.utilities import generate_uuid
 
 

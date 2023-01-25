@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 # General Imports
-from openqaoa.basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
+from openqaoa.backends.basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
 from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
 from openqaoa.utilities import flip_counts, generate_uuid
 from openqaoa.backends.cost_function import cost_function

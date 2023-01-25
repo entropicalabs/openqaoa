@@ -20,7 +20,7 @@ from .rqaoa_parameters import RqaoaParameters
 from ..baseworkflow import Optimizer
 from ..qaoa import QAOA
 from ..qaoa.qaoa_parameters import CircuitProperties
-from ...backends.devices import DeviceLocal, DeviceBase
+from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...problems import QUBO
 from ...qaoa_components import Hamiltonian
 from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise
