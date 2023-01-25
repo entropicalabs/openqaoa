@@ -59,8 +59,6 @@ for each_package_name in packages_import:
             updated_packages.append(each_package_name.replace(each_folder_name, package_names[_index]))
             continue
 
-print(updated_packages)
-        
 setup(
     name="openqaoa",
     python_requires='>=3.8, <3.11',
