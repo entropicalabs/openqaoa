@@ -385,7 +385,7 @@ class Result:
         if len(label) != len(param_to_plot) or (color != None and len(color) != len(param_to_plot)):
             raise ValueError(f'`param_to_plot`, `label` and `color` must have the same length, `param_to_plot` is a list of {len(param_to_plot)} elements')
 
-        #check if linestyle is a string, if not convert to list
+        # linestyle must be a string or a list of strings, if it is a string, convert it to a list of strings
         if type(linestyle) != str and type(linestyle) != list:
             raise TypeError('`linestyle` must be str or list')
         elif type(linestyle) == str:
