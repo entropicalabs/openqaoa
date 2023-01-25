@@ -19,7 +19,7 @@ import json
 import numpy as np
 import scipy
 
-from ..qaoa_parameters.operators import Hamiltonian
+from ..qaoa_components import Hamiltonian
 from ..utilities import delete_keys_from_dict, convert2serialize
 
 
