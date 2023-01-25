@@ -27,7 +27,7 @@ from openqaoa.optimizers import get_optimizer, Result
 from openqaoa.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
 from openqaoa.qfim import qfim
-from openqaoa.problems.problem import MinimumVertexCover
+from openqaoa.problems import MinimumVertexCover
 """
 Unittest based testing of custom optimizers.
 """
