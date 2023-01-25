@@ -49,12 +49,14 @@ requirements_test = [
     "cplex>=22.1.0.0"
 ]
 
+package_names = ['openqaoa', 'openqaoa_braket', 'openqaoa_qiskit', 'openqaoa_pyquil', 'openqaoa_azure']
+
 setup(
     name="openqaoa",
     python_requires='>=3.8, <3.11',
     version= version,
     author="Entropica Labs",
-    packages=find_namespace_packages(where="./openqaoa"),
+    packages=find_namespace_packages(where="./openqaoa")+package_names,
     package_dir={'':'openqaoa', 'openqaoa':'openqaoa/openqaoa-core', 
     'openqaoa_braket': 'openqaoa/openqaoa-braket', 
     'openqaoa_qiskit': 'openqaoa/openqaoa-qiskit',
@@ -65,7 +67,7 @@ setup(
     install_requires= requirements,
     license="Apache 2.0",
     description= "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators",
-    long_description=long_descriptionini,
+    long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3.8",
