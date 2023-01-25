@@ -1,16 +1,16 @@
 import unittest
+
 import networkx as nx
 import numpy as np
 from docplex.mp.model import Model
 
+from openqaoa import QAOA
 from openqaoa.problems import MinimumVertexCover
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian
-from openqaoa.optimizers.result import Result
-from openqaoa.optimizers.result import most_probable_bitstring
+from openqaoa.qaoa_components import PauliOp, Hamiltonian
+from openqaoa.optimizers.result import Result, most_probable_bitstring
 from openqaoa.utilities import qaoa_probabilities
-from openqaoa.workflows.optimizer import QAOA
 from openqaoa.problems.converters import FromDocplex2IsingModel
-from openqaoa.devices import create_device
+from openqaoa.backends import create_device
 
 class TestingLoggerClass(unittest.TestCase):
     def test_attribute_existence(self):

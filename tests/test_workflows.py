@@ -14,29 +14,34 @@
 
 from argparse import SUPPRESS
 from threading import local
-from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
-from openqaoa.workflows.optimizer import QAOA, RQAOA
-from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
-                                            DEVICE_ACCESS_OBJECT_MAPPER)
-from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS, DeviceLocal, DevicePyquil, DeviceQiskit
-from openqaoa.qaoa_parameters import (Hamiltonian, QAOACircuitParams, QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams, 
-QAOAVariationalExtendedParams, QAOAVariationalFourierParams, 
-QAOAVariationalFourierExtendedParams, QAOAVariationalFourierWithBiasParams)
-from openqaoa.backends.simulators.qaoa_pyquil_sim import QAOAPyQuilWavefunctionSimulatorBackend
-from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
-from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
-from openqaoa.optimizers.qaoa_optimizer import available_optimizers
-from openqaoa.problems import MinimumVertexCover, QUBO
-from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
+import json, os, gzip
 import unittest
+
 import networkx as nw
 import numpy as np
-import json, os, gzip
-
 from qiskit import Aer
 from qiskit.test.mock import FakeVigo
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer import QasmSimulator
+
+from openqaoa import QAOA, RQAOA
+from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
+from openqaoa.backends import create_device, DeviceLocal
+from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
+from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
+                                            DEVICE_ACCESS_OBJECT_MAPPER)
+from openqaoa.qaoa_components import (Hamiltonian, QAOACircuitParams, QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams, 
+QAOAVariationalExtendedParams, QAOAVariationalFourierParams, 
+QAOAVariationalFourierExtendedParams, QAOAVariationalFourierWithBiasParams)
+from openqaoa.backends import QAOAvectorizedBackendSimulator
+from openqaoa.problems import MinimumVertexCover, QUBO
+from openqaoa.optimizers.qaoa_optimizer import available_optimizers
+from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
+from openqaoa_pyquil.backends import DevicePyquil
+from openqaoa_pyquil.backends import QAOAPyQuilWavefunctionSimulatorBackend
+from openqaoa_qiskit.backends import DeviceQiskit
+from openqaoa_qiskit.backends import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
+
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']

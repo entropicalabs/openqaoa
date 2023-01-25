@@ -18,14 +18,14 @@ import unittest
 from unittest.mock import Mock
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
-from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
+from openqaoa.qaoa_components import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.devices import create_device
+from openqaoa.backends import create_device
 from openqaoa.optimizers import get_optimizer, Result
-from openqaoa.derivative_functions import derivative
+from openqaoa.derivatives.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
-from openqaoa.qfim import qfim
+from openqaoa.derivatives.qfim import qfim
 """
 Unittest based testing of custom optimizers.
 """

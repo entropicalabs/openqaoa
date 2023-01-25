@@ -16,14 +16,15 @@
 """
 Test and validate the creation of variational parameters and circuit parameters. 
 """
-import numpy as np
 import unittest
+
+import numpy as np
 from scipy.fft import dst, dct
 
-from openqaoa.qaoa_parameters import *
+from openqaoa.qaoa_components import *
 from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian
 
-from openqaoa.qaoa_parameters.qaoa_params import create_qaoa_variational_params, PARAMS_CLASSES_MAPPER
+from openqaoa.qaoa_components.variational_parameters.variational_params_factory import PARAMS_CLASSES_MAPPER
 
 register = [0, 1, 2]
 terms = [[0, 1], [2], [0, 2]]

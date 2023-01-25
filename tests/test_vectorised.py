@@ -12,17 +12,18 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import unittest
+
 import numpy as np
 from scipy.linalg import expm
 from scipy.sparse import csc_matrix, kron, diags
-import unittest
 
 # RX and CHPHASE are never used
-from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator, _permute_qubits, _get_perm, RX, RZ, CPHASE
+from openqaoa.backends.qaoa_vectorized import QAOAvectorizedBackendSimulator, _permute_qubits, _get_perm, RX, RZ, CPHASE
 from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees
-from openqaoa.qaoa_parameters import QAOAVariationalExtendedParams, QAOAVariationalStandardParams, Hamiltonian, PauliOp
-from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
-from openqaoa.qaoa_parameters.qaoa_params import create_qaoa_variational_params
+from openqaoa.qaoa_components import (QAOAVariationalExtendedParams, 
+                                      QAOAVariationalStandardParams, Hamiltonian, 
+                                      PauliOp, QAOACircuitParams, create_qaoa_variational_params)
 
 """
 A set of tests for FastQAOA: see the notebook Test_Examples.ipynb for explanations of how the

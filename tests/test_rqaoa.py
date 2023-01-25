@@ -16,11 +16,11 @@ import numpy as np
 import unittest
 import networkx as nx
 
-from openqaoa.qaoa_parameters import Hamiltonian
+from openqaoa import RQAOA
+from openqaoa.qaoa_components import Hamiltonian
 from openqaoa.rqaoa import *
 from openqaoa.problems import MaximumCut
-from openqaoa.workflows.optimizer import RQAOA
-from openqaoa.devices import create_device
+from openqaoa.backends import create_device
 
 """
 Unittest based testing of current implementation of the RQAOA Algorithm

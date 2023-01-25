@@ -15,15 +15,15 @@
 import unittest
 from unittest.mock import Mock
 import json
+
 import numpy as np
 from qiskit import QuantumCircuit, IBMQ
 import pytest
 
-from openqaoa.qaoa_parameters import create_qaoa_variational_params, PauliOp, Hamiltonian, QAOACircuitParams
-from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
-from openqaoa.devices import DeviceQiskit
-from openqaoa.backends.qpus.qaoa_qiskit_qpu import QAOAQiskitQPUBackend
-from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendStatevecSimulator
+from openqaoa.qaoa_components import (create_qaoa_variational_params, PauliOp, 
+                                      Hamiltonian, QAOACircuitParams, QAOAVariationalStandardParams) 
+from openqaoa_qiskit.backends import (DeviceQiskit, QAOAQiskitQPUBackend, 
+                                      QAOAQiskitBackendStatevecSimulator) 
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.problems import NumberPartition
 

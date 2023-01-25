@@ -13,16 +13,15 @@
 #   limitations under the License.
 
 import unittest
+
 import numpy as np
 from qiskit import QuantumCircuit
 
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
-from openqaoa.qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
-from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
-from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator
-from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
+from openqaoa.qaoa_components import (PauliOp, Hamiltonian, QAOACircuitParams, 
+                                      QAOAVariationalExtendedParams, QAOAVariationalStandardParams)
+from openqaoa_qiskit.backends import QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator
+from openqaoa.backends import DeviceLocal, QAOAvectorizedBackendSimulator
 from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees
-from openqaoa.devices import DeviceLocal
 
 
 class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):

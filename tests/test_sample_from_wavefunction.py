@@ -16,10 +16,9 @@ import unittest
 import numpy as np
 
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.qaoa_parameters import QAOAVariationalStandardParams, Hamiltonian
-from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
+from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalStandardParams, Hamiltonian
 from openqaoa.utilities import random_classical_hamiltonian, X_mixer_hamiltonian
-from openqaoa.devices import DeviceLocal
+from openqaoa.backends import DeviceLocal
 
 
 class TestGetSamplesMethod(unittest.TestCase):

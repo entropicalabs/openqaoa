@@ -13,10 +13,11 @@
 #   limitations under the License.
 
 import unittest
-from openqaoa.workflows.optimizer import QAOA
+
+from openqaoa import QAOA
 from openqaoa.problems import QUBO
-from openqaoa.devices import create_device
-from openqaoa.devices import SUPPORTED_LOCAL_SIMULATORS
+from openqaoa.backends import create_device
+from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 
 
 class TestSimulators(unittest.TestCase):

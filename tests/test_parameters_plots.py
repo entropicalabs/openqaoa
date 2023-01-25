@@ -16,18 +16,19 @@
 """
 Test the plot functionalities in qaoa_parameters 
 """
+
 # import the standard modules from python
-import numpy as np
 import unittest
+
+import numpy as np
 import matplotlib.pyplot as plt
 
 # import the OpenQAOA Parameterisation classes manually: Manual Mode
-from openqaoa.qaoa_parameters.qaoa_params import create_qaoa_variational_params
-from openqaoa.qaoa_parameters.extendedparams import QAOAVariationalExtendedParams
-from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
+from openqaoa.qaoa_components import (create_qaoa_variational_params, PauliOp, Hamiltonian, 
+                                      QAOACircuitParams, QAOAVariationalExtendedParams,
+                                      QAOAVariationalStandardParams)
 
 # import the other OpenQAOA modules required for this example
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams
 from openqaoa.utilities import X_mixer_hamiltonian
 
 from openqaoa.problems import MaximumCut

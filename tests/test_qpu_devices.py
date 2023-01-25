@@ -15,15 +15,18 @@
 import unittest
 import json
 import os
-import pytest
 import itertools
 import subprocess
 import logging
 
+import pytest
 from qiskit import IBMQ
 
-from openqaoa.devices import (DeviceQiskit, DeviceLocal, DeviceAWS, DeviceAzure, 
-                              SUPPORTED_LOCAL_SIMULATORS)
+from openqaoa.backends import DeviceLocal
+from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
+from openqaoa_qiskit.backends import DeviceQiskit
+from openqaoa_braket.backends import DeviceAWS
+from openqaoa_azure.backends import DeviceAzure
 
 
 class TestingDeviceQiskit(unittest.TestCase):

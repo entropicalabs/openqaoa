@@ -15,16 +15,16 @@
 import unittest
 from unittest.mock import Mock
 import json
+
 import numpy as np
 from braket.circuits import Circuit
 import pytest
 
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
-from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParams
-from openqaoa.devices import DeviceAWS
-from openqaoa.backends.qpus.qaoa_braket_qpu import QAOAAWSQPUBackend
+from openqaoa.qaoa_components import (PauliOp, Hamiltonian, QAOACircuitParams, 
+                                      create_qaoa_variational_params, QAOAVariationalStandardParams) 
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.problems import NumberPartition
+from openqaoa_braket.backends import (DeviceAWS, QAOAAWSQPUBackend)
 
 
 class TestingQAOABraketQPUBackend(unittest.TestCase):

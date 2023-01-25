@@ -12,18 +12,20 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from openqaoa.workflows.optimizer import QAOA, RQAOA
+import unittest
+import itertools
+
+import networkx as nw
+import numpy as np
+
+from openqaoa import QAOA, RQAOA
 from openqaoa.optimizers.result import Result
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
-from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS
-import unittest
-import networkx as nw
-import numpy as np
-import itertools
-
+from openqaoa.backends import create_device
+from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.problems import MinimumVertexCover, QUBO
-from openqaoa.qaoa_parameters.operators import Hamiltonian
+from openqaoa.qaoa_components import Hamiltonian
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS

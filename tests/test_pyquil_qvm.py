@@ -13,19 +13,19 @@
 #   limitations under the License.
 
 import unittest
+
 import numpy as np
 from pyquil import Program, quilbase
 from pyquil.gates import RX, RY, RZ
-
-from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
-from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa.devices import DevicePyquil
-from openqaoa.backends import QAOAPyQuilQPUBackend
-from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
-from openqaoa.problems import NumberPartition, QUBO
-from openqaoa.workflows.optimizer import QAOA
-from openqaoa.devices import create_device
 import pytest
+
+from openqaoa import QAOA
+from openqaoa.qaoa_components import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
+from openqaoa.utilities import X_mixer_hamiltonian
+from openqaoa.backends import QAOAvectorizedBackendSimulator, create_device
+from openqaoa.problems import NumberPartition, QUBO
+from openqaoa_pyquil.backends import DevicePyquil, QAOAPyQuilQPUBackend
+
 
 class TestingQAOACostPyquilQVM(unittest.TestCase):
     
