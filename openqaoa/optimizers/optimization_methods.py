@@ -20,9 +20,6 @@ Collection of custom optimization algorithms to be used by Scipy `minimize`. Ext
 import numpy as np
 from scipy.optimize import OptimizeResult
 
-import time
-
-
 def grad_descent(fun, x0, args=(), maxfev=None, stepsize=0.01,
                  maxiter=100, tol=10**(-6), jac=None, callback=None, **options):
     '''    
