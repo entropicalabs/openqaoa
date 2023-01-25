@@ -16,7 +16,7 @@ import numpy as np
 from sympy import Symbol
 import unittest
 
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian
+from openqaoa.qaoa_components import PauliOp, Hamiltonian
 
 """
 Unittest based testing of the PauliOp and Hamiltonian classes

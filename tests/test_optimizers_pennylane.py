@@ -7,7 +7,7 @@ import openqaoa.optimizers.pennylane as pl
 import copy
 import inspect
 
-from openqaoa.workflows.optimizer import QAOA
+from openqaoa import QAOA
 from openqaoa.devices import create_device
 from openqaoa.optimizers.training_vqa import PennyLaneOptimizer
 from openqaoa.optimizers.pennylane.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS

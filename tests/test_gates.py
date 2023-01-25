@@ -13,6 +13,7 @@
 #   limitations under the License.
 
 import unittest
+
 import numpy as np
 from qiskit import QuantumCircuit
 from pyquil import Program, quilbase
@@ -27,8 +28,8 @@ from braket.circuits import gates as braketgates
 from braket.circuits import Circuit
 from braket.circuits.free_parameter import FreeParameter
 
-from openqaoa.qaoa_parameters.gates import RY, RX, RZ, CZ, CX, RXX, RYY, RZZ, RZX, CPHASE, RiSWAP
-from openqaoa.qaoa_parameters.rotationangle import RotationAngle
+from openqaoa.qaoa_components.gates import RY, RX, RZ, CZ, CX, RXX, RYY, RZZ, RZX, CPHASE, RiSWAP
+from openqaoa.qaoa_components.rotationangle import RotationAngle
 
 class TestingGate(unittest.TestCase):
     

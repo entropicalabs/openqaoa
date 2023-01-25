@@ -17,12 +17,11 @@ import numpy as np
 import unittest
 
 # OpenQAOA imports
-from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
-from openqaoa.qaoa_parameters import Hamiltonian, create_qaoa_variational_params
-from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
+from openqaoa.backends import QAOAvectorizedBackendSimulator
+from openqaoa.qaoa_components import QAOACircuitParams, Hamiltonian, create_qaoa_variational_params
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.optimizers.logger_vqa import Logger
-from openqaoa.derivative_functions import derivative
+from openqaoa.derivatives.derivative_functions import derivative
 
 """
 Unittest based testing of derivative computations.
