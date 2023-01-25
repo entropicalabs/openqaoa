@@ -247,13 +247,8 @@ class TestingRQAOA(unittest.TestCase):
         Test the function that reconstructs the final solution by backtracking the
         elimination history and computing the energy of the final states.
 
-<<<<<<< HEAD
-        The test consists in reconstructing a set of states for a given elimination history 
-        and computing their energies.
-=======
         The test consists in reconstructing a set of states for a given elimination history
         amnd computing their energies.
->>>>>>> dev
         """
 
         ## Problem definition

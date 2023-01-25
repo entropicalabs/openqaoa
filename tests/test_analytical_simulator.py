@@ -16,19 +16,11 @@
 import unittest
 import numpy as np
 
-from openqaoa.backends.simulators.qaoa_analytical_sim import (
-    QAOABackendAnalyticalSimulator,
-)
-
-# from openqaoa.utilities import random_k_regular_graph
+from openqaoa.backends.simulators.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from openqaoa.workflows.optimizer import QAOA, RQAOA
-from openqaoa.problems.problem import QUBO, MaximumCut
+from openqaoa.problems import QUBO, MaximumCut
 from openqaoa.devices import create_device
-from openqaoa.utilities import (
-    X_mixer_hamiltonian,
-    ring_of_disagrees,
-    random_k_regular_graph,
-)
+from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees, random_k_regular_graph
 from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
 from openqaoa.qaoa_parameters import QAOAVariationalStandardParams
 
