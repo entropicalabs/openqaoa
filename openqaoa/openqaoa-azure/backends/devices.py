@@ -4,7 +4,7 @@ import logging
 
 from azure.quantum.qiskit import AzureQuantumProvider
 
-from ..backends import DeviceBase
+from openqaoa.backends import DeviceBase
 
 class DeviceAzure(DeviceBase):
 

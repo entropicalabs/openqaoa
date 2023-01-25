@@ -20,10 +20,10 @@ from qiskit.providers.ibmq.job import (IBMQJobApiError, IBMQJobInvalidStateError
                                        IBMQJobFailureError, IBMQJobTimeoutError)
 from qiskit.circuit import Parameter
 
-from ...devices import DeviceQiskit
-from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
-from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts
+from .devices import DeviceQiskit
+from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
+from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.utilities import flip_counts
 
 
 # add support to perform error mitigation for a future version

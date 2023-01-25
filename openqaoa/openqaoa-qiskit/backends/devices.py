@@ -1,6 +1,6 @@
 from qiskit import IBMQ
 
-from ..backends import DeviceBase
+from openqaoa.backends import DeviceBase
 
 class DeviceQiskit(DeviceBase):
     """

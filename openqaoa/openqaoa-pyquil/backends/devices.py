@@ -2,7 +2,7 @@ from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
 
-from ..backends import DeviceBase
+from openqaoa.backends import DeviceBase
 
 class DevicePyquil(DeviceBase):
     """

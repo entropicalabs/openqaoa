@@ -21,9 +21,9 @@ from braket.circuits.result_types import Probability
 from braket.circuits.free_parameter import FreeParameter
 from braket.jobs.metrics import log_metric
 
-from ...devices import DeviceAWS
-from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
-from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
+from .devices import DeviceAWS
+from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
+from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
 
 class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
     """

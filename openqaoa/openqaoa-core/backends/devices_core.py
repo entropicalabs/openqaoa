@@ -19,6 +19,11 @@ import logging
 
 import numpy as np
 
+from openqaoa_braket.backends import DeviceAWS
+from openqaoa_qiskit.backends import DeviceQiskit
+from openqaoa_pyquil.backends import DevicePyquil
+from openqaoa_azure.backends import DeviceAzure
+
 logging.getLogger().setLevel(logging.ERROR)
 
 SUPPORTED_LOCAL_SIMULATORS = [

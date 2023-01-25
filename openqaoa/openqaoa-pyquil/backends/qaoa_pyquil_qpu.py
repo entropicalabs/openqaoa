@@ -16,11 +16,11 @@ from collections import Counter
 import numpy as np
 from pyquil import Program, gates, quilbase
 
-from ...basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
-from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...devices import DevicePyquil
-from ...qaoa_parameters.gatemap import RZZGateMap, SWAPGateMap
-from ...utilities import generate_uuid
+from .devices import DevicePyquil
+from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
+from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.qaoa_components.gatemap import RZZGateMap, SWAPGateMap
+from openqaoa.utilities import generate_uuid
 
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
 

@@ -13,12 +13,12 @@
 #   limitations under the License.
 
 # General Imports
-from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
-from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts, generate_uuid
-from ...cost_function import cost_function
-from ...qaoa_parameters.gatemap import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
-                                          RYYGateMap, RZZGateMap, RZXGateMap)
+from openqaoa.basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
+from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.utilities import flip_counts, generate_uuid
+from openqaoa.backends.cost_function import cost_function
+from openqaoa.qaoa_components.ansatz_constructor import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap, 
+RYYGateMap, RZZGateMap, RZXGateMap)
 
 import numpy as np
 from typing import Union, List, Tuple, Optional

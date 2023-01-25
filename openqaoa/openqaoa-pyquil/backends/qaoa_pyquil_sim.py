@@ -18,12 +18,11 @@ import numpy as np
 from pyquil import Program, gates
 from pyquil.api import WavefunctionSimulator
 
-from ...basebackend import QAOABaseBackendStatevector
-from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...qaoa_parameters.gatemap import (
-    RXGateMap, RYGateMap, RZGateMap)
-from ...cost_function import cost_function
-from ...utilities import generate_uuid
+from openqaoa.backends.basebackend import QAOABaseBackendStatevector
+from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.qaoa_parameters.gatemap import (RXGateMap, RYGateMap, RZGateMap)
+from openqaoa.cost_function import cost_function
+from openqaoa.utilities import generate_uuid
 
 
 class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
