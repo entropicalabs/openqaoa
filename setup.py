@@ -50,14 +50,24 @@ requirements_test = [
 ]
 
 package_names = ['openqaoa', 'openqaoa_braket', 'openqaoa_qiskit', 'openqaoa_pyquil', 'openqaoa_azure']
+folder_names = ['openqaoa-core', 'openqaoa-braket', 'openqaoa-qiskit', 'openqaoa-pyquil', 'openqaoa-azure']
+packages_import = find_namespace_packages(where="./openqaoa")
+updated_packages = []
+for each_package_name in packages_import:
+    for _index, each_folder_name in enumerate(folder_names):
+        if each_folder_name in each_package_name:
+            updated_packages.append(each_package_name.replace(each_folder_name, package_names[_index]))
+            continue
 
+print(updated_packages)
+        
 setup(
     name="openqaoa",
     python_requires='>=3.8, <3.11',
     version= version,
     author="Entropica Labs",
-    packages=find_namespace_packages(where="./openqaoa")+package_names,
-    package_dir={'':'openqaoa', 'openqaoa':'openqaoa/openqaoa-core', 
+    packages=updated_packages,
+    package_dir={'openqaoa':'openqaoa/openqaoa-core', 
     'openqaoa_braket': 'openqaoa/openqaoa-braket', 
     'openqaoa_qiskit': 'openqaoa/openqaoa-qiskit',
     'openqaoa_pyquil': 'openqaoa/openqaoa-pyquil',
