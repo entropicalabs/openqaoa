@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from os import getcwd
 
 current_path = getcwd()
@@ -54,7 +54,13 @@ setup(
     python_requires='>=3.8, <3.11',
     version= version,
     author="Entropica Labs",
-    packages=find_packages(where="."),
+    packages=find_namespace_packages(where="./openqaoa"),
+    package_dir={'openqaoa':'openqaoa/openqaoa-core', 
+    'openqaoa_braket': 'openqaoa/openqaoa-braket', 
+    'openqaoa_qiskit': 'openqaoa/openqaoa-qiskit',
+    'openqaoa_pyquil': 'openqaoa/openqaoa-pyquil',
+    'openqaoa_azure': 'openqaoa/openqaoa-azure',
+    },
     url="https://github.com/entropicalabs/openqaoa",
     install_requires= requirements,
     license="Apache 2.0",
