@@ -9,7 +9,6 @@ import inspect
 
 from openqaoa.workflows.optimizer import QAOA
 from openqaoa.devices import create_device
-from openqaoa.problems.problem import MinimumVertexCover
 from openqaoa.optimizers.training_vqa import PennyLaneOptimizer
 from openqaoa.optimizers.pennylane.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS
 from openqaoa.derivative_functions import derivative
@@ -19,7 +18,7 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers import get_optimizer
 from openqaoa.qfim import qfim as Qfim
-from openqaoa.problems.problem import QUBO
+from openqaoa.problems import QUBO, MinimumVertexCover
 
 
 #list of optimizers to test, pennylane optimizers
@@ -177,8 +176,8 @@ class TestPennylaneOptimizers(unittest.TestCase):
             vector_optimizer()
 
             # formatting the data
-            y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
-            if pennylane_method in ['pennylane_rotosolve']: y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][4:40:12]
+            y_opt = vector_optimizer.qaoa_result.intermediate['cost'][1:4]
+            if pennylane_method in ['pennylane_rotosolve']: y_opt = vector_optimizer.qaoa_result.intermediate['cost'][4:40:12]
 
             # get optimizer to try
             optimizer = AVAILABLE_OPTIMIZERS[pennylane_method]

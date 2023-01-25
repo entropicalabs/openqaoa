@@ -12,79 +12,72 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-def convert2serialize(obj):
-    if isinstance(obj, dict):
-        return {k: convert2serialize(v) for k, v in obj.items() if v is not None}
-    elif hasattr(obj, "_ast"):
-        return convert2serialize(obj._ast())
-    elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
-        return [convert2serialize(v) for v in obj if v is not None]
-    elif hasattr(obj, "__dict__"):
-        return {
-            k: convert2serialize(v)
-            for k, v in obj.__dict__.items()
-            if not callable(v) and v is not None
-        }
-    else:
-        return obj
+import networkx as nx
+import inspect
 
-def convert2serialize_complex(obj):
+from .problem import Problem
+from .knapsack import Knapsack, SlackFreeKnapsack
+from .maximumcut import MaximumCut
+from .minimumvertexcover import MinimumVertexCover
+from .numberpartition import NumberPartition
+from .shortestpath import ShortestPath
+from .tsp import TSP
+from .converters import FromDocplex2IsingModel
+from .qubo import QUBO
+
+
+def create_problem_from_dict(problem_instance: dict) -> Problem:
     """
-    Converts object to dictinary with complex numbers converted to strings, so the result can be serialized to JSON.
+    Creates an object of the class corresponding to the problem type in the input instance, with the same attributes as the input instance.
+    
+    Parameters
+    ----------
+    problem_instance: dict
+        The input instance.
+        
+    Returns
+    -------
+        An object of the class corresponding to the problem type in the input instance.
     """
-    if isinstance(obj, dict):
-        return {k: convert2serialize_complex(v) for k, v in obj.items() if v is not None}
-    elif hasattr(obj, "_ast"):
-        return convert2serialize_complex(obj._ast())
-    elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
-        return [convert2serialize_complex(v) for v in obj if v is not None]
-    elif hasattr(obj, "__dict__"):
-        return {
-            k: convert2serialize_complex(v)
-            for k, v in obj.__dict__.items()
-            if not callable(v) and v is not None
-        }
-    elif isinstance(obj, complex):
-        return str(obj)
-    else:
-        return obj
 
+    # copy the instance to avoid modifying the original instance
+    problem_instance = problem_instance.copy()
 
-def check_kwargs(list_expected_params, list_default_values, **kwargs):
-    """
-    Checks that the given list of expected parameters can be found in the
-    kwargs given as input. If so, it returns the parameters from kwargs, else
-    it raises an exception.
+    # mapper from problem type to class
+    problem_mapper = {
+        "generic_qubo": QUBO,
+        "tsp": TSP,
+        "number_partition": NumberPartition,
+        "maximum_cut": MaximumCut,
+        "knapsack": Knapsack,
+        "slack_free_knapsack": SlackFreeKnapsack,
+        "minimum_vertex_cover": MinimumVertexCover,
+        "shortest_path": ShortestPath,
+    }
 
-    Args:
-        list_expected_params: List[str]
-            List of string containing the name of the expected parameters in 
-            kwargs
-        list_default_values: List
-            List containing the deafult values of the expected parameters in 
-            kwargs
-        **kwargs:
-            Keyword arguments where keys are supposed to be the expected params
+    # check if the problem type is in the mapper
+    assert (
+        problem_instance["problem_type"] in problem_mapper
+    ), f"Problem type {problem_instance['problem_type']} not supported."
 
-    Returns:
-        A tuple with the actual expected parameters if they are found in kwargs.
+    # get the class corresponding to the problem type
+    problem_class = problem_mapper[problem_instance.pop("problem_type", "generic_qubo")]
 
-    Raises:
-        ValueError: 
-            If one of the expected arguments is not found in kwargs and its 
-            default value is not specified.
-    """
-    def check_kwarg(expected_param, default_value, **kwargs):
-        param = kwargs.pop(expected_param, default_value)
+    # check if the problem type is QUBO, if so, raise an exception
+    if problem_class is QUBO:
+        raise Exception(
+            "This method does not work for generic QUBO. The input instance has type `generic_qubo`. You can use the `from_dict` method of the `QUBO` class instead."
+        )
 
-        if param is None:
-            raise ValueError(
-                f"Parameter '{expected_param}' should be specified")
+    # if the instance has a graph, convert it to a networkx graph
+    if "G" in problem_instance:
+        problem_instance["G"] = nx.node_link_graph(problem_instance["G"])
 
-        return param
+    # erase the keys that are not arguments of the class
+    arguments = inspect.getfullargspec(problem_class).args[1:]
+    for key in problem_instance.copy():
+        if key not in arguments:
+            del problem_instance[key]
 
-    params = []
-    for expected_param, default_value in zip(list_expected_params, list_default_values):
-        params.append(check_kwarg(expected_param, default_value, **kwargs))
-
-    return tuple(params)
+    # create the problem instance and return it
+    return problem_class(**problem_instance)
