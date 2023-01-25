@@ -5,7 +5,7 @@ from botocore.exceptions import NoRegionError
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
 
-from openqaoa.backends import DeviceBase
+from openqaoa.backends.devices_core import DeviceBase
 
 class DeviceAWS(DeviceBase):
     
