@@ -861,7 +861,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         os.remove(f'{experiment_uuid}--{atomic_uuid}.json')
 
         # check QAOA dump deleting some keys
-        exclude_keys = ['schedule', 'pair']
+        exclude_keys = ['schedule', 'singlet']
         qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
         with open(full_name, 'r') as file:
@@ -1212,7 +1212,7 @@ class TestingRQAOA(unittest.TestCase):
         os.remove(f'{experiment_uuid}--{atomic_uuid}.json')
 
         # check RQAOA dump deleting some keys
-        exclude_keys = ['schedule', 'pair']
+        exclude_keys = ['schedule', 'singlet']
         rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
         with open(full_name, 'r') as file:
@@ -1233,7 +1233,7 @@ class TestingRQAOA(unittest.TestCase):
         """
 
         #create a dictionary with all the expected keys and set them to False
-        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 'init_type', 'p', 'rqaoa_type', 'rqaoa_n_max', 'rqaoa_n_cutoff', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'results', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'number_steps', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number', 'exp_vals_z', 'corr_matrix', 'atomic_uuids']
+        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 'init_type', 'p', 'rqaoa_type', 'rqaoa_n_max', 'rqaoa_n_cutoff', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'results', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'singlet', 'exp_val', 'schedule', 'number_steps', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number', 'exp_vals_z', 'corr_matrix', 'atomic_uuids']
         expected_keys = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found

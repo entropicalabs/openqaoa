@@ -327,7 +327,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         results_dict = results.asdict()
 
         #create a list of expected keys
-        expected_keys = ['solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'intermediate_steps', 'problem', 'terms', 'weights', 'constant', 'n', 'qaoa_results', 'method', 'cost_hamiltonian', 'n_qubits', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'exp_vals_z', 'corr_matrix', 'number_steps']
+        expected_keys = ['solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'singlet', 'exp_val', 'schedule', 'intermediate_steps', 'problem', 'terms', 'weights', 'constant', 'n', 'qaoa_results', 'method', 'cost_hamiltonian', 'n_qubits', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'exp_vals_z', 'corr_matrix', 'number_steps']
 
         #we append all the keys that we find in rqaoa.results, so if we introduce a new key, we will know that we need to update the result.asdict method
         for key in results.keys():

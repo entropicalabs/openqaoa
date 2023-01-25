@@ -268,18 +268,18 @@ class TestingRQAOA(unittest.TestCase):
         # Trial elimination history and ouput of classical solver
         max_terms_and_stats_list = [
             [
-                {"pair": (0, 1), "correlation": -1.0},
-                {"pair": (0, 9), "correlation": -1.0},
+                {'singlet': (0, 1), 'exp_val': -1.0},
+                {'singlet': (0, 9), 'exp_val': -1.0},
             ],
             [
-                {"pair": (0, 1), "correlation": 1.0},
-                {"pair": (0, 7), "correlation": 1.0},
+                {'singlet': (0, 1), 'exp_val': 1.0},
+                {'singlet': (0, 7), 'exp_val': 1.0},
             ],
             [
-                {"pair": (0, 1), "correlation": -1.0},
-                {"pair": (0, 5), "correlation": -1.0},
+                {'singlet': (0, 1), 'exp_val': -1.0},
+                {'singlet': (0, 5), 'exp_val': -1.0},
             ],
-            [{"pair": (0, 1), "correlation": 1.0}],
+            [{'singlet': (0, 1), 'exp_val': 1.0}],
         ]
 
         classical_states = [[0, 1, 0], [1, 0, 1]]

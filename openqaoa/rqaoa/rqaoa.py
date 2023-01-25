@@ -593,8 +593,8 @@ def final_solution(
             for term_stat in terms_and_stats:
 
                 # Extract qubits, by definition i<j
-                i, j = term_stat["pair"]
-                val = term_stat["correlation"]
+                i, j = term_stat['singlet']
+                val = term_stat['exp_val']
 
                 # If i (parent spin) is None, j is fixed to cost
                 if i is None:
