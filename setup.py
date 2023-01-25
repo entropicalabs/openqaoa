@@ -6,7 +6,7 @@ current_path = getcwd()
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("openqaoa/_version.py") as f:
+with open("openqaoa/openqaoa-core/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
@@ -55,7 +55,7 @@ setup(
     version= version,
     author="Entropica Labs",
     packages=find_namespace_packages(where="./openqaoa"),
-    package_dir={'openqaoa':'openqaoa/openqaoa-core', 
+    package_dir={'':'openqaoa', 'openqaoa':'openqaoa/openqaoa-core', 
     'openqaoa_braket': 'openqaoa/openqaoa-braket', 
     'openqaoa_qiskit': 'openqaoa/openqaoa-qiskit',
     'openqaoa_pyquil': 'openqaoa/openqaoa-pyquil',
@@ -65,7 +65,7 @@ setup(
     install_requires= requirements,
     license="Apache 2.0",
     description= "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators",
-    long_description=long_description,
+    long_description=long_descriptionini,
     long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3.8",
