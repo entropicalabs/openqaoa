@@ -277,7 +277,7 @@ class TestingRQAOA(unittest.TestCase):
             ],
             [
                 {'pair': (0, 1), 'correlation': -1.0},
-                {'pair': (0, 5), 'correlation': -1.0},
+                {'singlet': (5, ), 'bias': 1.0},
             ],
             [{'pair': (0, 1), 'correlation': 1.0}],
         ]
