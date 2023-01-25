@@ -257,7 +257,7 @@ class TestingRQAOA(unittest.TestCase):
         n_qubits = 10
 
         # Terms and weights of the graph
-        edges = [(i, i + 1) for i in range(n_qubits - 1)] + [(0, n_qubits - 1)]
+        edges = [(i, i + 1) for i in range(n_qubits - 1)] + [(0, n_qubits - 1)] + [(0, )]
         weights = [1 for _ in range(len(edges))]
 
         # Hamiltonian
@@ -268,7 +268,7 @@ class TestingRQAOA(unittest.TestCase):
         # Trial elimination history and ouput of classical solver
         max_terms_and_stats_list = [
             [
-                {'pair': (0, 1), 'correlation': -1.0},
+                {'singlet': (1, ), 'bias': 1.0},
                 {'pair': (0, 9), 'correlation': -1.0},
             ],
             [
@@ -282,11 +282,11 @@ class TestingRQAOA(unittest.TestCase):
             [{'pair': (0, 1), 'correlation': 1.0}],
         ]
 
-        classical_states = [[0, 1, 0], [1, 0, 1]]
+        classical_states = [[1, 0, 1]]
 
         # Correct solutions
-        states = ["0101010101", "1010101010"]
-        energies = [-10, -10]
+        states = ["1010101010"]
+        energies = [-11]
         correct_full_solution = dict(zip(states, energies))
 
         # Compute solutions
