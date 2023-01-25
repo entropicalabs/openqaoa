@@ -592,21 +592,25 @@ def final_solution(
             # Back track elimination from the specific step
             for term_stat in terms_and_stats:
 
-                # Extract qubits, by definition i<j
-                i, j = term_stat['singlet']
-                val = term_stat['exp_val']
+                # If we have a singlet, which is fixed to cost
+                if 'singlet' in term_stat:
 
-                # If i (parent spin) is None, j is fixed to cost
-                if i is None:
+                    # Extract qubit and cost
+                    i, = term_stat['singlet']
+                    val = term_stat['bias']
 
                     # Basis change
                     binary_val = int((1 - val) / 2)
 
-                    # Insert fixed value of j
-                    state.insert(j, binary_val)
+                    # Insert fixed value of i
+                    state.insert(i, binary_val)
 
-                # If j unfixed, it is enslaved to i
+                # If we have a pair
                 else:
+
+                    # Extract qubits, by definition i<j
+                    i, j = term_stat['pair']
+                    val = term_stat['correlation']
 
                     # Insert new value in position j according to correlation with i
                     prev_corr = state[i]
