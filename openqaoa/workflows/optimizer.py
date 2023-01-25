@@ -16,7 +16,7 @@ from abc import ABC
 import numpy as np
 import time
 import json
-from typing import List
+from typing import List, Callable, Optional
 import gzip
 import requests
 
@@ -31,6 +31,68 @@ from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.basebackend import QAOABaseBackendStatevector
 import openqaoa.rqaoa as rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
+
+
+def circuit_routing(device: DeviceBase,
+    problem: QUBO,
+    initial_mapping: List[int],
+    routing_algo: str = 'greedy'
+) -> tuple:
+    """Post the HTTP request to the routing API and retrieve routed 
+    circuit
+    
+    Parameters
+    ----------
+    device: DeviceBase
+        The device for which to route the circuit
+    problem: QUBO
+        The QUBO problem to be run on QPU
+    initial_mapping: List[int]
+        The initial selection of qubits, if provided by the user.
+        Defaults to the first n-qubits on the device if `None`
+    routing_algo: str
+        The algorithm to generate an optimal SWAP network
+    
+    Returns
+    -------
+    tuple[List[List],List[bool],List[int]]
+        The first list specifies the qubit indices for operations,
+        the second list differentiates between Ising and SWAP gates,
+        and the final list returns the final qubit mapping.
+    """
+    device_connecivity = device.connectivity()
+    problem_as_list_of_lists = [list(term) for term in problem.terms if len(term) == 2]
+    
+    #params for MCTS        
+    params= {"max_depth_simulation":10, 
+            "max_iterations":10, 
+            "n_simulations":64, 
+            "exploration_constant":2,
+            "max_tree_depth":5} if routing_algo.lower() == 'mcts' else {}
+    query = {
+        "algorithm": routing_algo,
+        "device": device_connecivity,
+        "problem": problem_as_list_of_lists,
+        "initial_mapping": initial_mapping,
+        "params": params}
+    
+    # print(query)
+    
+    #post the query via HTTP
+    r = requests.post(url='http://127.0.0.1:8000/qubit_routing', json=query)
+    
+    results = r.json()
+    
+    gate_indices_list = results['gates_list']
+    final_mapping = results['mapping']
+    swap_mask = results['swap_mask']
+    
+    assert len(gate_indices_list) == len(swap_mask), \
+        "Incorrect output from qubit routing algorithm"
+    assert len(final_mapping) == problem.n ,\
+        "Incorrect number of qubits in the final qubit layout"
+    
+    return (gate_indices_list,swap_mask,final_mapping)
 
 
 class Optimizer(ABC):
@@ -273,62 +335,6 @@ class Optimizer(ABC):
 
         self.classical_optimizer = ClassicalOptimizer(**kwargs)
         return None
-    
-    def circuit_routing(self, problem:QUBO,
-                        routing_algo:str = 'greedy',
-                        initial_mapping: List[int] = None):
-        """Post the HTTP request to the routing API and retrieve routed 
-        circuit
-        
-        Parameters
-        ----------
-        problem: QUBO
-            The QUBO problem to be run on QPU
-        routing_algo: str
-            The algorithm to generate an optimal SWAP network
-        
-        Returns
-        -------
-        tuple[List[List],List[int]]
-            The first list specifies the qubit indices for operations, the second list
-            differentiates between whether the gate is Ising or SWAP
-        """
-        
-        initial_mapping = list(range(problem.n)) if initial_mapping is None\
-                          else list(initial_mapping)
-        device_connecivity = self.device.connectivity()
-        problem_as_list_of_lists = [list(term) for term in problem.terms if len(term) == 2]
-        
-        #params for MCTS        
-        params= {"max_depth_simulation":10, 
-                "max_iterations":10, 
-                "n_simulations":64, 
-                "exploration_constant":2,
-                "max_tree_depth":5} if routing_algo.lower() == 'mcts' else {}
-        query = {
-            "algorithm": routing_algo,
-            "device": device_connecivity,
-            "problem": problem_as_list_of_lists,
-            "initial_mapping": initial_mapping,
-            "params": params}
-        
-        # print(query)
-        
-        #post the query via HTTP
-        r = requests.post(url='http://127.0.0.1:8000/qubit_routing', json=query)
-        
-        results = r.json()
-        
-        gate_indices_list = results['gates_list']
-        gate_type_list = results['mapping']
-        swap_mask = results['swap_mask']
-        
-        assert len(gate_indices_list) == len(gate_type_list), \
-            "Incorrect output from qubit routing algorithm"
-        assert len(swap_mask) == problem.n ,\
-            "Incorrect number of qubits in the final qubit layout"
-        
-        return (gate_indices_list,gate_type_list,swap_mask)
 
     def compile(self, problem:QUBO):   
         """
@@ -352,6 +358,9 @@ class Optimizer(ABC):
 
         # header is updated with the qubit number of the problem
         self.header['qubit_number'] = self.problem.n
+        
+        #make sure user can connect to the device 
+        self.device.check_connection()
 
     def optimize():
         raise NotImplementedError
@@ -593,8 +602,8 @@ class QAOA(Optimizer):
                 `'custom'`: User specified initial circuit parameters
             mixer_hamiltonian: `str`
                 Parameterisation of the mixer hamiltonian:
-                `'x'`: Randomly initialise circuit parameters
-                `'xy'`: Linear ramp from Hamiltonian initialisation of circuit 
+                `'x'`: Standard X-mixer for QAOA
+                `'xy'`: Mixer based on XY interaction. Preservers the excitation numbers
             mixer_qubit_connectivity: `[Union[List[list],List[tuple], str]]`
                 The connectivity of the qubits in the mixer Hamiltonian. Use only if `mixer_hamiltonian = xy`. The user can specify the 
                 connectivity as a list of lists, a list of tuples, or a string chosen from ['full', 'chain', 'star'].
@@ -619,7 +628,7 @@ class QAOA(Optimizer):
 
         return None
 
-    def compile(self, problem: QUBO = None, verbose: bool = False, routing_algo:str = 'greedy'):
+    def compile(self, problem: QUBO = None, verbose: bool = False, routing_function: Optional[Callable] = circuit_routing):
         """
         Initialise the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement
@@ -636,23 +645,45 @@ class QAOA(Optimizer):
             QUBO problem to be solved by QAOA
         verbose: bool
             Set True to have a summary of QAOA to displayed after compilation
+        routing_function: `Callable`
+            A callable function that performs routing on the problem and
+            returns the expected output to continue with the rest of the 
+            workflow.
         """
 
         # we compile the method of the parent class to genereate the uuid and check the problem is a QUBO object and save it
         super().compile(problem=problem)
-        #connect to the device 
-        self.device.check_connection()
-        
-        list_gates_indices, swap_mask, final_mapping = self.circuit_routing(problem, routing_algo, None)
-        final_qubit_layout = final_mapping if self.circuit_properties.p%2 == 0 else None
-        original_term_weight_pairing = {tuple(term):weight for term,weight in zip(problem.terms,problem.weights)}
-        
-        sorted_problem_pairing = {tuple(term):original_term_weight_pairing[tuple(term)] for term in problem.terms if len(term) != 2}
-        sorted_problem_pairing.update({tuple(gate_indices):original_term_weight_pairing[tuple(gate_indices)]
-                                       for gate_indices,mask in zip(list_gates_indices, swap_mask) if mask == False})
-        sorted_problem = QUBO(problem.n, list(sorted_problem_pairing.keys()), list(sorted_problem_pairing.values()), problem.constant)
-        self.cost_hamil = Hamiltonian.classical_hamiltonian(
-            terms=sorted_problem.terms, coeffs=sorted_problem.weights, constant=sorted_problem.constant)
+        self.qubit_register = list(range(problem.n)) if self.qubit_register in [[], None]\
+            else list(self.qubit_register)
+        final_qubit_layout = self.qubit_register
+        if type(routing_function) == Callable:
+            try:
+                list_gates_indices, swap_mask, final_mapping = circuit_routing(device = self.device,
+                                                                               problem = problem,
+                                                                               initial_mapping = self.qubit_register)
+                
+                final_qubit_layout = final_mapping if self.circuit_properties.p%2 == 0 else final_qubit_layout
+                original_term_weight_pairing = {tuple(term):weight for term,weight in zip(problem.terms,problem.weights)}
+                
+                sorted_problem_pairing = {tuple(term):original_term_weight_pairing[tuple(term)]
+                                          for term in problem.terms if len(term) != 2}
+                sorted_problem_pairing.update({tuple(gate_indices):original_term_weight_pairing[tuple(gate_indices)]
+                                               for gate_indices,mask in zip(list_gates_indices, swap_mask)
+                                               if mask == False})
+                sorted_problem = QUBO(problem.n, list(sorted_problem_pairing.keys()),
+                                      list(sorted_problem_pairing.values()), problem.constant)
+                self.cost_hamil = Hamiltonian.classical_hamiltonian(terms=sorted_problem.terms,
+                                                                    coeffs=sorted_problem.weights,
+                                                                    constant=sorted_problem.constant)
+            except:
+                raise TypeError("The specified function can has a set signature that accepts"
+                                "device, problem, and initial_mapping")
+        elif routing_function is None:
+            self.cost_hamil = Hamiltonian.classical_hamiltonian(terms=problem.terms,
+                                                                coeffs=problem.weights,
+                                                                constant=problem.constant)
+        else:
+            raise ValueError(f"Routing function can only be a Callable not {type(routing_function)}")
         
         self.mixer_hamil = get_mixer_hamiltonian(n_qubits=self.cost_hamil.n_qubits,
                                                  mixer_type=self.circuit_properties.mixer_hamiltonian,
@@ -676,7 +707,7 @@ class QAOA(Optimizer):
 
         self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
                                         device=self.device,
-                                        initial_qubit_layout = list(range(problem.n)),
+                                        initial_qubit_layout = self.qubit_register,
                                         final_qubit_layout = final_qubit_layout,
                                         **self.backend_properties.__dict__)
 
