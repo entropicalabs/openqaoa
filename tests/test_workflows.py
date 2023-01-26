@@ -861,7 +861,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         os.remove(f'{experiment_uuid}--{atomic_uuid}.json')
 
         # check QAOA dump deleting some keys
-        exclude_keys = ['schedule', 'pair']
+        exclude_keys = ['schedule', 'singlet']
         qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
         with open(full_name, 'r') as file:
@@ -1212,7 +1212,7 @@ class TestingRQAOA(unittest.TestCase):
         os.remove(f'{experiment_uuid}--{atomic_uuid}.json')
 
         # check RQAOA dump deleting some keys
-        exclude_keys = ['schedule', 'pair']
+        exclude_keys = ['schedule', 'singlet']
         rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
         assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
         with open(full_name, 'r') as file:
