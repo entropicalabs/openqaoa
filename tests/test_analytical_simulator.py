@@ -16,11 +16,17 @@
 import unittest
 import numpy as np
 
-from openqaoa.backends.simulators.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
+from openqaoa.backends.simulators.qaoa_analytical_sim import (
+    QAOABackendAnalyticalSimulator,
+)
 from openqaoa.workflows.optimizer import QAOA, RQAOA
 from openqaoa.problems import QUBO, MaximumCut
 from openqaoa.devices import create_device
-from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees, random_k_regular_graph
+from openqaoa.utilities import (
+    X_mixer_hamiltonian,
+    ring_of_disagrees,
+    random_k_regular_graph,
+)
 from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
 from openqaoa.qaoa_parameters import QAOAVariationalStandardParams
 
@@ -114,6 +120,12 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         """
         Testing if the analytical backend fails if the parametrization of the circuit is extended or fourier.
         """
+        # Create a 3-regular weighted graph and a qubo problem
+        g = random_k_regular_graph(
+            degree=3, nodes=range(8), seed=2642, weighted=True, biases=False
+        )
+        maxcut_qubo = MaximumCut(g).get_qubo_problem()
+
         exception = False
         try:
             q = QAOA()
@@ -152,14 +164,11 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         """
         Testing the whole rqaoa workflow if the device is set to 'analytical_simulator'.
         """
-        # Create a 3-regular weighted graph
+        # Create a 3-regular weighted graph and a qubo problem
         g = random_k_regular_graph(
             degree=3, nodes=range(8), seed=2642, weighted=True, biases=False
         )
-
-        # Define te problem and translate it into a binary Qubo.
-        maxcut_prob = MaximumCut(g)
-        maxcut_qubo = maxcut_prob.get_qubo_problem()
+        maxcut_qubo = MaximumCut(g).get_qubo_problem()
 
         # Define the RQAOA object
         r = RQAOA()
