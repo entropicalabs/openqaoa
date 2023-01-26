@@ -223,7 +223,7 @@ def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivi
 ################################################################################
 def round_value(function) -> float:
     """
-    Round a value to a given precision of 8 decimal places.
+    Round a value to a given precision.
     This function will be used as a decorator to round the values given by the
     ``expectation`` and ``expectation_w_uncertainty`` methods.
 
@@ -238,7 +238,7 @@ def round_value(function) -> float:
         
     """
 
-    PRECISION = 8
+    PRECISION = 10
 
     def wrapper(*args, **kwargs):
         values = function(*args, **kwargs)
