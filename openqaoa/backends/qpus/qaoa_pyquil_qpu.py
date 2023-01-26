@@ -230,7 +230,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         return parametric_circuit
 
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Execute the circuit and obtain the counts.
 
@@ -239,6 +239,8 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         params: QAOAVariationalBaseParams
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
+        n_shots: int
+            The number of times to run the circuit. If None, n_shots is set to the default: self.n_shots
 
         Returns
         -------
@@ -247,6 +249,9 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         """
 
         executable_program = self.qaoa_circuit(params)
+
+        # if n_shots is given change the number of shots
+        if n_shots is not None: executable_program.wrap_in_numshots_loop(n_shots)
 
         result = self.device.quantum_computer.run(executable_program)
 

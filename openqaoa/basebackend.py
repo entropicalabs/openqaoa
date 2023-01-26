@@ -230,14 +230,22 @@ class QAOABaseBackend(VQABaseBackend):
         pass
 
     @abstractmethod
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         This method will be implemented in the child classes according to the type
         of backend used.
+        
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+            The QAOA parameters - an object of one of the parameter classes, containing 
+            variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
         """
         pass
 
-    def expectation(self, params: QAOAVariationalBaseParams) -> float:
+    def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
         """
         Compute the expectation value w.r.t the Cost Hamiltonian
 
@@ -246,19 +254,22 @@ class QAOABaseBackend(VQABaseBackend):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
 
         Returns
         -------
         float:
             Expectation value of cost operator wrt to quantum state produced by QAOA circuit
         """
-        counts = self.get_counts(params)
+        counts = self.get_counts(params, n_shots)
         cost = cost_function(
             counts, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
         return cost
 
     def expectation_w_uncertainty(self,
-                                  params: QAOAVariationalBaseParams) -> Tuple[float, float]:
+                                  params: QAOAVariationalBaseParams,
+                                  n_shots=None) -> Tuple[float, float]:
         """
         Compute the expectation value w.r.t the Cost Hamiltonian and its uncertainty
 
@@ -267,6 +278,8 @@ class QAOABaseBackend(VQABaseBackend):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
 
         Returns
         -------
@@ -274,7 +287,7 @@ class QAOABaseBackend(VQABaseBackend):
             expectation value and its uncertainty of cost operator wrt 
             to quantum state produced by QAOA circuit.
         """
-        counts = self.get_counts(params)
+        counts = self.get_counts(params, n_shots)
         cost = cost_function(
             counts, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
         cost_sq = cost_function(counts,
@@ -495,7 +508,7 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
         self.n_shots = n_shots
 
     @abstractmethod
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Measurement outcome vs frequency information from a circuit execution
         represented as a python dictionary
@@ -505,6 +518,8 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters as a 1D array (derived from an object of one of the
             parameter classes, containing hyperparameters and variable parameters).
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
 
         Returns
         -------
