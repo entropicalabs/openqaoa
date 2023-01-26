@@ -203,9 +203,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         hessian_fd = derivative(backend, params, 
                                 self.log,'hessian', 'finite_difference', 
-                                {'stepsize': 0.0001})
+                                {'stepsize': 0.001})
 
-        test_points = [[0, 0], [np.pi/2, np.pi/3], [1, 2]]
+        test_points = np.round([[0, 0], [np.pi/2, np.pi/3], [1, 2]], 12)
 
         for point in test_points:
             beta, gamma = point[0], point[1]

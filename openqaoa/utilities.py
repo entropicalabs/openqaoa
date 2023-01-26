@@ -238,7 +238,7 @@ def round_value(function) -> float:
         
     """
 
-    PRECISION = 10
+    PRECISION = 12
 
     def wrapper(*args, **kwargs):
         values = function(*args, **kwargs)
