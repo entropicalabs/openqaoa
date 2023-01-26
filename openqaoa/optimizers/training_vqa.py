@@ -24,6 +24,7 @@ from scipy.optimize._minimize import minimize, MINIMIZE_METHODS
 from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 
 from ..basebackend import VQABaseBackend
+from ..backends import QAOAvectorizedBackendSimulator
 from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
 from .pennylane import optimization_methods_pennylane as ompl
@@ -151,11 +152,16 @@ class OptimizeVQA(ABC):
                            {
                                'history_update_bool': True,
                                'best_update_string': 'Replace'
+                           }, 
+                           'n_shots':
+                           {
+                               'history_update_bool': True,
+                               'best_update_string': 'Replace'
                            }
                           }, 
                           {
                               'root_nodes': ['cost', 'func_evals', 'jac_func_evals', 
-                                             'qfim_func_evals'],
+                                             'qfim_func_evals','n_shots'],
                               'best_update_structure': (['cost', 'param_log'], 
                                                         ['cost', 'measurement_outcomes'], 
                                                         ['cost', 'job_ids'],
@@ -184,7 +190,7 @@ class OptimizeVQA(ABC):
 
     # def evaluate_jac(self, x):
 
-    def optimize_this(self, x):
+    def optimize_this(self, x, n_shots=None):
         '''
         A function wrapper to execute the circuit in the backend. This function 
         will be passed as argument to be optimized by scipy optimize.
@@ -193,6 +199,8 @@ class OptimizeVQA(ABC):
         ----------
         x: 
             Parameters (a list of floats) over which optimization is performed.
+        n_shots:
+            Number of shots to be used for the backend when computing the expectation. If None, nothing is passed to the backend.
 
         Returns 
         -------
@@ -218,7 +226,9 @@ class OptimizeVQA(ABC):
         if self.save_to_csv:
             save_parameter('param_log', deepcopy(x))
         
-        callback_cost = self.vqa.expectation(self.variational_params)        
+        n_shots_dict = {'n_shots':n_shots} if n_shots else {}
+        callback_cost = self.vqa.expectation(self.variational_params, **n_shots_dict)
+        
         log_dict.update({'cost': callback_cost})
 
         current_eval = self.log.func_evals.best[0]
@@ -470,8 +480,14 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``
 
     """
-    CUSTOM_GRADIENT_OPTIMIZERS = ['vgd', 'newton',
-                                  'rmsprop', 'natural_grad_descent', 'spsa']
+    CUSTOM_GRADIENT_OPTIMIZERS_MAPPER = {   'vgd': om.grad_descent, 
+                                            'newton': om.newton_descent, 
+                                            'rmsprop': om.rmsprop, 
+                                            'natural_grad_descent': om.natural_grad_descent, 
+                                            'spsa': om.SPSA,
+                                            'cans': om.CANS,
+                                            'icans': om.iCANS   }
+    CUSTOM_GRADIENT_OPTIMIZERS = list(CUSTOM_GRADIENT_OPTIMIZERS_MAPPER.keys())
 
     def __init__(self,
                  vqa_object: Type[VQABaseBackend],
@@ -502,9 +518,12 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
                 "Please specify either a string or provide callable gradient in order to use gradient based methods")
         else:
             if isinstance(jac, str):
-                self.jac = derivative(
-                    self.vqa_object, self.variational_params, self.log, 
-                    'gradient', jac, jac_options)
+                if not self.method in ['icans', 'cans']:
+                    self.jac = derivative(self.vqa_object, self.variational_params, self.log, 'gradient', jac, jac_options)
+                else:
+                    self.jac = None
+                    self.jac_w_variance = derivative(self.vqa_object, self.variational_params, self.log, 'gradient_w_variance', jac, jac_options)
+                
             else:
                 self.jac = jac
 
@@ -562,19 +581,18 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             Returns self after the optimization process is completed. The optimized result is assigned to the attribute ``opt_result``
         '''
 
-        if self.method == 'vgd':
-            method = om.grad_descent
-        elif self.method == 'newton':
-            method = om.newton_descent
-        elif self.method == 'rmsprop':
-            method = om.rmsprop
-        elif self.method == 'natural_grad_descent':
-            method = om.natural_grad_descent
-            self.options['qfim'] = qfim(self.vqa_object,
-                self.variational_params, self.log)
+        # set the optimizer function to the `method` variable based on the input
+        
+        method = CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS_MAPPER[self.method]
+                    
+        if self.method == 'natural_grad_descent':
+            self.options['qfim'] = qfim(self.vqa_object, self.variational_params, self.log)
         elif self.method == 'spsa':
             print("Warning : SPSA is an experimental feature.")
-            method = om.SPSA
+        elif self.method in ['cans', 'icans']:
+            self.options['jac_w_variance'] = self.jac_w_variance
+            self.options['coeffs'] = self.vqa_object.cost_hamiltonian.coeffs
+            self.options['n_shots_cost'] = self.vqa_object.n_shots if not isinstance(self.vqa_object, QAOAvectorizedBackendSimulator) else 0
         
         try:
             if self.hess == None:
@@ -622,9 +640,7 @@ class PennyLaneOptimizer(OptimizeVQA):
         * 'optimizer_options': dictionary of optimiser-specific arguments, defaults to ``None``. Used also for the pennylande optimizers (and step function) arguments.
 
     """
-    PENNYLANE_OPTIMIZERS = ['pennylane_adagrad', 'pennylane_adam', 'pennylane_vgd', 
-                                  'pennylane_momentum', 'pennylane_nesterov_momentum',
-                                  'pennylane_rmsprop', 'pennylane_rotosolve', 'pennylane_spsa']
+    PENNYLANE_OPTIMIZERS = list(ompl.AVAILABLE_OPTIMIZERS.keys())
 
     def __init__(self,
                  vqa_object: Type[VQABaseBackend],
@@ -705,11 +721,9 @@ class PennyLaneOptimizer(OptimizeVQA):
         method = ompl.pennylane_optimizer
 
         # set the method to be used for the optimization
-        self.options['pennylane_method'] = self.method.replace("pennylane_", "") 
+        self.options['pennylane_method'] = self.method
 
-        if self.options['pennylane_method'] == 'natural_grad_descent': 
-            self.options['qfim'] = qfim(self.vqa_object, self.variational_params, self.log)
-        elif self.options['pennylane_method'] in ['spsa', 'rotosolve']:    
+        if self.options['pennylane_method'] in ['pennylane_spsa', 'pennylane_rotosolve']:    
             self.jac = None 
         
         try:

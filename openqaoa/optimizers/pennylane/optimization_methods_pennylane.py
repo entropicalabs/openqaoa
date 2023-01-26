@@ -25,14 +25,14 @@ from scipy.optimize import OptimizeResult
 import numpy as np
 
 AVAILABLE_OPTIMIZERS = {  # optimizers implemented
-                            'adagrad': pl.AdagradOptimizer, 
-                            'adam': pl.AdamOptimizer, 
-                            'vgd': pl.GradientDescentOptimizer, 
-                            'momentum':  pl.MomentumOptimizer,
-                            'nesterov_momentum': pl.NesterovMomentumOptimizer,
-                            'rmsprop': pl.RMSPropOptimizer,
-                            'rotosolve': pl.RotosolveOptimizer, 
-                            'spsa': pl.SPSAOptimizer,
+                            'pennylane_adagrad': pl.AdagradOptimizer, 
+                            'pennylane_adam': pl.AdamOptimizer, 
+                            'pennylane_vgd': pl.GradientDescentOptimizer, 
+                            'pennylane_momentum':  pl.MomentumOptimizer,
+                            'pennylane_nesterov_momentum': pl.NesterovMomentumOptimizer,
+                            'pennylane_rmsprop': pl.RMSPropOptimizer,
+                            'pennylane_rotosolve': pl.RotosolveOptimizer, 
+                            'pennylane_spsa': pl.SPSAOptimizer,
                         }
 
 
@@ -119,9 +119,9 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd',
         improved = False
 
         # compute step (depends on the optimizer)
-        if pennylane_method in ['adagrad', 'adam', 'vgd', 'momentum', 'nesterov_momentum', 'rmsprop']:
+        if pennylane_method in ['pennylane_adagrad', 'pennylane_adam', 'pennylane_vgd', 'pennylane_momentum', 'pennylane_nesterov_momentum', 'pennylane_rmsprop']:
             testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac)
-        elif pennylane_method in ['rotosolve']: 
+        elif pennylane_method in ['pennylane_rotosolve']: 
             testx, testy = optimizer.step_and_cost(
                                                     cost, bestx, *args,
                                                     nums_frequency={'params': {(i,):1 for i in range(bestx.size)}} if not nums_frequency else nums_frequency,
@@ -129,7 +129,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd',
                                                     shifts=shifts,
                                                     full_output=False,
                                                   )
-        elif pennylane_method in ['spsa']:       
+        elif pennylane_method in ['pennylane_spsa']:       
             testx, testy = optimizer.step_and_cost(cost, bestx, *args)
 
         # check if stable
