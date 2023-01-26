@@ -6,7 +6,7 @@ current_path = getcwd()
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("openqaoa/openqaoa-core/_version.py") as f:
+with open("src/openqaoa-core/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
@@ -51,7 +51,7 @@ requirements_test = [
 
 package_names = ['openqaoa', 'openqaoa_braket', 'openqaoa_qiskit', 'openqaoa_pyquil', 'openqaoa_azure']
 folder_names = ['openqaoa-core', 'openqaoa-braket', 'openqaoa-qiskit', 'openqaoa-pyquil', 'openqaoa-azure']
-packages_import = find_namespace_packages(where="./openqaoa")
+packages_import = find_namespace_packages(where="./src")
 updated_packages = []
 for each_package_name in packages_import:
     for _index, each_folder_name in enumerate(folder_names):
@@ -65,11 +65,11 @@ setup(
     version= version,
     author="Entropica Labs",
     packages=updated_packages,
-    package_dir={'openqaoa':'openqaoa/openqaoa-core', 
-    'openqaoa_braket': 'openqaoa/openqaoa-braket', 
-    'openqaoa_qiskit': 'openqaoa/openqaoa-qiskit',
-    'openqaoa_pyquil': 'openqaoa/openqaoa-pyquil',
-    'openqaoa_azure': 'openqaoa/openqaoa-azure',
+    package_dir={'': 'src', 'openqaoa':'src/openqaoa-core', 
+    'openqaoa_braket': 'src/openqaoa-braket', 
+    'openqaoa_qiskit': 'src/openqaoa-qiskit',
+    'openqaoa_pyquil': 'src/openqaoa-pyquil',
+    'openqaoa_azure': 'src/openqaoa-azure',
     },
     url="https://github.com/entropicalabs/openqaoa",
     install_requires= requirements,
