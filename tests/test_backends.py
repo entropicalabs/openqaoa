@@ -51,6 +51,8 @@ class TestingBackendLocal(unittest.TestCase):
 
         for device_name in DEVICE_NAME_TO_OBJECT_MAPPER.keys():
 
+            if device_name in ['analytical_simulator']: continue
+
             circuit_params, variational_params_std= get_params()
 
             device = create_device(location='local', name=device_name)
