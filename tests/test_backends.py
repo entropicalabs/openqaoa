@@ -50,18 +50,21 @@ class TestingBackendLocal(unittest.TestCase):
         """
 
         for device_name in DEVICE_NAME_TO_OBJECT_MAPPER.keys():
+            
+            # Analytical device doesn't have any of those so we are skipping it in the tests.
+            if device_name != "analytical_simulator": 
 
-            circuit_params, variational_params_std= get_params()
+                circuit_params, variational_params_std= get_params()
 
-            device = create_device(location='local', name=device_name)
-            backend = get_qaoa_backend(circuit_params=circuit_params, device=device, n_shots=1000)
-                        
-            assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values())==58, "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=58).".format(device_name)
-            if isinstance(backend, QAOABaseBackendShotBased): 
-                try: backend.expectation(params=variational_params_std, n_shots=58)
-                except Exception: raise Exception("backend.expectation does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
-                try: backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
-                except Exception: raise Exception("backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
+                device = create_device(location='local', name=device_name)
+                backend = get_qaoa_backend(circuit_params=circuit_params, device=device, n_shots=1000)
+
+                assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values())==58, "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=58).".format(device_name)
+                if isinstance(backend, QAOABaseBackendShotBased): 
+                    try: backend.expectation(params=variational_params_std, n_shots=58)
+                    except Exception: raise Exception("backend.expectation does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
+                    try: backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
+                    except Exception: raise Exception("backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
 
 class TestingBackendQPUs(unittest.TestCase): 
     """ 
