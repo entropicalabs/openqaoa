@@ -212,11 +212,11 @@ class OptimizeVQA(ABC):
         :
             Cost Value evaluated on the declared backed or on the Wavefunction Simulator if specified so
         '''
-        
+
         log_dict = {}
-        log_dict.update({'param_log': deepcopy(x)})
         
         self.variational_params.update_from_raw(deepcopy(x))
+        log_dict.update({'param_log': self.variational_params.raw()})
         
         if hasattr(self.vqa, 'log_with_backend') and callable(getattr(self.vqa, 'log_with_backend')):
             self.vqa.log_with_backend(metric_name="variational_params",
