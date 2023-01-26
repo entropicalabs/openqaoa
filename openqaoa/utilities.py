@@ -221,7 +221,7 @@ def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivi
 ################################################################################
 # decorators
 ################################################################################
-def round_value(function) -> float:
+def round_value(function):
     """
     Round a value to a given precision.
     This function will be used as a decorator to round the values given by the
