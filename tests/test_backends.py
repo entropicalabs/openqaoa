@@ -50,7 +50,8 @@ class TestingBackendLocal(unittest.TestCase):
         """
 
         for device_name in DEVICE_NAME_TO_OBJECT_MAPPER.keys():
-
+            
+            # Analytical device doesn't have any of those so we are skipping it in the tests.
             if device_name in ['analytical_simulator']: continue
 
             circuit_params, variational_params_std= get_params()
@@ -64,6 +65,7 @@ class TestingBackendLocal(unittest.TestCase):
                 except Exception: raise Exception("backend.expectation does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
                 try: backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
                 except Exception: raise Exception("backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the local simulator `{}`.".format(device_name))
+
 
 class TestingBackendQPUs(unittest.TestCase): 
     """ 
