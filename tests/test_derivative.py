@@ -144,7 +144,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
         backend, params = self.__backend_params(terms=[[0, 1]], weights=[1], p=1, nqubits=2)
         
         gradients_types_list = ['finite_difference', 'param_shift', 'stoch_param_shift']
-        gradients_fun_list = [derivative(backend, params, self.log, 'gradient', type_, {'stepsize': 0.00000001}) for type_ in gradients_types_list]
+        gradients_fun_list = [derivative(backend, params, self.log, 'gradient', type_, {'stepsize': 0.0000001}) for type_ in gradients_types_list]
 
         test_points = [[0, 0], [np.pi/2, np.pi/3], [1, 2]]
 
@@ -165,7 +165,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
         backend, params = self.__backend_params(terms=[[0, 1]], weights=[1], p=1, nqubits=2)
 
         gradients_types_list = ['finite_difference', 'param_shift', 'stoch_param_shift']
-        gradients_fun_list = [derivative(backend, params, self.log, 'gradient_w_variance', type_, {'stepsize': 0.00000001}) for type_ in gradients_types_list]
+        gradients_fun_list = [derivative(backend, params, self.log, 'gradient_w_variance', type_, {'stepsize': 0.0000001}) for type_ in gradients_types_list]
 
         test_points = [[0, 0], [np.pi/2, np.pi/3], [1, 2]]
 
@@ -203,9 +203,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         hessian_fd = derivative(backend, params, 
                                 self.log,'hessian', 'finite_difference', 
-                                {'stepsize': 0.0001})
+                                {'stepsize': 0.001})
 
-        test_points = [[0, 0], [np.pi/2, np.pi/3], [1, 2]]
+        test_points = np.round([[0, 0], [np.pi/2, np.pi/3], [1, 2]], 12)
 
         for point in test_points:
             beta, gamma = point[0], point[1]

@@ -218,6 +218,36 @@ def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivi
 
     return mixer
 
+################################################################################
+# decorators
+################################################################################
+def round_value(function):
+    """
+    Round a value to a given precision.
+    This function will be used as a decorator to round the values given by the
+    ``expectation`` and ``expectation_w_uncertainty`` methods.
+
+    Parameters
+    ----------
+    function: `Callable`
+        The function to be decorated
+        
+    Returns
+    -------
+        The rounded value(s)
+        
+    """
+
+    PRECISION = 12
+
+    def wrapper(*args, **kwargs):
+        values = function(*args, **kwargs)
+        if isinstance(values, dict):
+            return {k: round(v, PRECISION) for k, v in values.items()}
+        else:
+            return np.round(values, PRECISION)
+
+    return wrapper
 
 ################################################################################
 # METHODS FOR PRINTING HAMILTONIANS AND GRAPHS, AND PRINTING ONE FROM EACH OTHER
@@ -1313,6 +1343,7 @@ def flip_counts(counts_dictionary: dict) -> dict:
 
     return output_counts_dictionary
 
+@round_value
 def qaoa_probabilities(statevector) -> dict:
     """
     Return a qiskit-style probability dictionary from a statevector.
@@ -1498,3 +1529,6 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
         params.append(check_kwarg(expected_param, default_value, **kwargs))
 
     return tuple(params)
+
+
+    

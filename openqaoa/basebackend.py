@@ -27,11 +27,12 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import Union, List, Type, Dict, Optional, Any, Tuple
 import numpy as np
 from copy import deepcopy
+from collections.abc import Iterable
 
 from .devices import DeviceBase
 from .qaoa_parameters.gatemap import RotationGateMap, TwoQubitRotationGateMap
 from .qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from .utilities import qaoa_probabilities
+from .utilities import qaoa_probabilities, round_value
 from .cost_function import cost_function
 
 class QuantumCircuitBase:
@@ -245,6 +246,7 @@ class QAOABaseBackend(VQABaseBackend):
         """
         pass
 
+    @round_value
     def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
         """
         Compute the expectation value w.r.t the Cost Hamiltonian
@@ -267,6 +269,7 @@ class QAOABaseBackend(VQABaseBackend):
             counts, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
         return cost
 
+    @round_value
     def expectation_w_uncertainty(self,
                                   params: QAOAVariationalBaseParams,
                                   n_shots=None) -> Tuple[float, float]:

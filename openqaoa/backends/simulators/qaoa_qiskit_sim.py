@@ -15,7 +15,7 @@
 # General Imports
 from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts, generate_uuid
+from ...utilities import flip_counts, generate_uuid, round_value
 from ...cost_function import cost_function
 from ...qaoa_parameters.gatemap import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
                                           RYYGateMap, RZZGateMap, RZXGateMap)
@@ -361,6 +361,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
         self.measurement_outcomes = wf
         return wf
 
+    @round_value
     def expectation(self,
                     params: QAOAVariationalBaseParams) -> float:
         """
@@ -383,6 +384,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
         cost = np.real(output_wf.expectation_value(self.qiskit_cost_hamil))
         return cost
 
+    @round_value
     def expectation_w_uncertainty(self, 
                                   params: QAOAVariationalBaseParams) -> Tuple[float, float]:
         """

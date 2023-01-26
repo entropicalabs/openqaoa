@@ -22,7 +22,7 @@ from ...basebackend import QAOABaseBackend, QuantumCircuitBase
 from ...qaoa_parameters.baseparams import QAOAVariationalBaseParams, QAOACircuitParams
 from ...qaoa_parameters.standardparams import QAOAVariationalStandardParams
 from ...qaoa_parameters.operators import Hamiltonian
-from openqaoa.utilities import energy_expectation_analytical, generate_uuid
+from openqaoa.utilities import energy_expectation_analytical, generate_uuid, round_value
 
 
 class QAOABackendAnalyticalSimulator(QAOABaseBackend):
@@ -93,6 +93,7 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
     def get_counts(self):
         raise NotImplementedError("This method is irrelevant for this backend")
 
+    @round_value
     def expectation(self, params: QAOAVariationalBaseParams) -> float:
         """
         Compute the expectation value w.r.t the Cost Hamiltonian analytically.

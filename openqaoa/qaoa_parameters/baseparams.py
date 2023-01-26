@@ -88,7 +88,7 @@ class shapedArray:
     def __set__(self, obj, values):
         """The setter with input checking."""
         try:
-            setattr(obj, f"__{self.name}", np.reshape(values, self.shape(obj)))
+            setattr(obj, f"__{self.name}", np.round(np.reshape(values, self.shape(obj)), 12)) # also round to 12 decimal places to avoid floating point errors
         except ValueError:
             raise ValueError(f"{self.name} must have shape {self.shape(obj)}")
 
