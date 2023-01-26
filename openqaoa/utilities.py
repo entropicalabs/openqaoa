@@ -1031,12 +1031,12 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
             # If bias term compute expectation value
             if len(term) == 1:
                 i = term.qubit_indices[0]
-                exp_vals_z[i] = round(exp_val_single(i, counts_dict), 8)
+                exp_vals_z[i] = exp_val_single(i, counts_dict)
 
             # If two-body term compute correlation
             elif len(term) == 2:
                 i, j = term.qubit_indices
-                corr_matrix[i][j] = round(exp_val_pair((i, j), counts_dict), 8)
+                corr_matrix[i][j] = exp_val_pair((i, j), counts_dict)
 
             # If constant term, ignore
             if len(term) == 0:
