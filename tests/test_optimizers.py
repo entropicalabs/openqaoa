@@ -12,10 +12,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import warnings
-import numpy as np
 import unittest
 from unittest.mock import Mock
+import warnings
+import os
+
+import numpy as np
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
 from openqaoa.qaoa_components import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
@@ -398,6 +400,16 @@ class TestQAOACostBaseClass(unittest.TestCase):
         
         # Check that QAOA Result exists
         self.assertEqual(type(vector_optimizer.qaoa_result), Result)
+    
+    @classmethod
+    def tearDownClass(cls):
+        
+        output_csv = ['oq_saved_info_job_ids.csv', 'oq_saved_info_param_log.csv']
+        for each_csv in output_csv:
+            if (os.path.exists(each_csv)):
+                os.remove(each_csv)
+            else:
+                raise FileNotFoundError('Unable to remove the generated csv file: {}'.format(each_csv))
         
 
 if __name__ == "__main__":
