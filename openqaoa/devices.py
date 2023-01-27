@@ -34,7 +34,7 @@ logging.getLogger().setLevel(logging.ERROR)
 SUPPORTED_LOCAL_SIMULATORS = [
     'qiskit.qasm_simulator', 'qiskit.shot_simulator',
     'qiskit.statevector_simulator','vectorized',
-    'pyquil.statevector_simulator'
+    'pyquil.statevector_simulator', 'analytical_simulator'
 ]
 
 

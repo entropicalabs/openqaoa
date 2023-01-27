@@ -24,6 +24,7 @@ from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize, delete_keys_from_dict
 from ..basebackend import QAOABaseBackend, QAOABaseBackendStatevector
+from openqaoa.backends import QAOABackendAnalyticalSimulator
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -54,10 +55,10 @@ class Result:
     """
 
     def __init__(
-        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], backend: Type[QAOABaseBackend]
+        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], type_backend: Type[QAOABaseBackend]
     ):
 
-        self.__backend = backend
+        self.__type_backend = type_backend
         self.method = method
         self.cost_hamiltonian = cost_hamiltonian
 
@@ -92,11 +93,10 @@ class Result:
                 log.eval_number.best[0] 
                 if len(log.eval_number.best) != 0 else [],
         }
-
+        
         self.most_probable_states = most_probable_bitstring(
-            cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-        ) if log.measurement_outcomes.best != [] else []
-
+                cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
+            ) if type_backend != QAOABackendAnalyticalSimulator and log.measurement_outcomes.best != [] else [] 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
     #     Todo
@@ -148,7 +148,7 @@ class Result:
         complx_to_str = lambda x: str(x) if isinstance(x, np.complex128) or isinstance(x, complex) else x
         
         # if the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
-        if complex_to_string and issubclass(self.__backend, QAOABaseBackendStatevector):
+        if complex_to_string and issubclass(self.__type_backend, QAOABaseBackendStatevector):
             return_dict['intermediate'] = {}
             for key, value in self.intermediate.items():
                 if intermediate_mesurements == False and 'measurement' in key: # if intermediate_mesurements is false, the intermediate measurements are not included in the dump

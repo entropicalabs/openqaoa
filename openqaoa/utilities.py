@@ -218,6 +218,36 @@ def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivi
 
     return mixer
 
+################################################################################
+# decorators
+################################################################################
+def round_value(function):
+    """
+    Round a value to a given precision.
+    This function will be used as a decorator to round the values given by the
+    ``expectation`` and ``expectation_w_uncertainty`` methods.
+
+    Parameters
+    ----------
+    function: `Callable`
+        The function to be decorated
+        
+    Returns
+    -------
+        The rounded value(s)
+        
+    """
+
+    PRECISION = 12
+
+    def wrapper(*args, **kwargs):
+        values = function(*args, **kwargs)
+        if isinstance(values, dict):
+            return {k: round(v, PRECISION) for k, v in values.items()}
+        else:
+            return np.round(values, PRECISION)
+
+    return wrapper
 
 ################################################################################
 # METHODS FOR PRINTING HAMILTONIANS AND GRAPHS, AND PRINTING ONE FROM EACH OTHER
@@ -993,7 +1023,7 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)
     corr_matrix = np.zeros((n_qubits, n_qubits))
-
+    
     # If single layer ansatz use analytical results
     if (analytical == True and p == 1 and mixer_type == 'x' and
         isinstance(qaoa_optimized_angles, list)):
@@ -1313,6 +1343,7 @@ def flip_counts(counts_dictionary: dict) -> dict:
 
     return output_counts_dictionary
 
+@round_value
 def qaoa_probabilities(statevector) -> dict:
     """
     Return a qiskit-style probability dictionary from a statevector.
