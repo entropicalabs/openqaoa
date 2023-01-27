@@ -32,6 +32,7 @@ from .qaoa_parameters.gatemap import RotationGateMap, TwoQubitRotationGateMap
 from .qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
 from .utilities import qaoa_probabilities, round_value
 from .cost_function import cost_function
+from copy import deepcopy
 
 class QuantumCircuitBase:
     """

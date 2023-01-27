@@ -28,7 +28,6 @@ from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa
 from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, is_valid_uuid, generate_uuid, bitstring_energy
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
-from openqaoa.basebackend import QAOABaseBackendStatevector
 from openqaoa.backends import QAOABackendAnalyticalSimulator
 import openqaoa.rqaoa as rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
