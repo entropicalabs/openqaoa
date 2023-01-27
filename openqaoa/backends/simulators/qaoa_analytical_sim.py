@@ -15,13 +15,9 @@
 """
 Energy expectation as a function of angles computed accordingly to the analytical expression for p=1.
 """
-import numpy as np
-from typing import Union, List, Tuple, Type, Optional
-
-from ...basebackend import QAOABaseBackend, QuantumCircuitBase
+from ...basebackend import QAOABaseBackend
 from ...qaoa_parameters.baseparams import QAOAVariationalBaseParams, QAOACircuitParams
 from ...qaoa_parameters.standardparams import QAOAVariationalStandardParams
-from ...qaoa_parameters.operators import Hamiltonian
 from openqaoa.utilities import energy_expectation_analytical, generate_uuid, round_value
 
 

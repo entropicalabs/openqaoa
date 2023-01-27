@@ -1529,6 +1529,3 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
         params.append(check_kwarg(expected_param, default_value, **kwargs))
 
     return tuple(params)
-
-
-    

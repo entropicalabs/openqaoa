@@ -24,10 +24,8 @@
 #                                            wavefunction_expectation)
 """
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Union, List, Type, Dict, Optional, Any, Tuple
+from typing import Union, List, Dict, Optional, Any, Tuple
 import numpy as np
-from copy import deepcopy
-from collections.abc import Iterable
 
 from .devices import DeviceBase
 from .qaoa_parameters.gatemap import RotationGateMap, TwoQubitRotationGateMap
