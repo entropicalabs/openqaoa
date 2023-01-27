@@ -24,6 +24,7 @@ from openqaoa.problems import QUBO, MaximumCut
 from openqaoa.devices import create_device
 from openqaoa.utilities import (
     X_mixer_hamiltonian,
+    XY_mixer_hamiltonian,
     ring_of_disagrees,
     random_k_regular_graph,
 )
@@ -80,16 +81,16 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         """
         Testing if the analytical backend fails if the number of layers, p, is different than 1.
         """
+        n_qubits = 8
+        p = 2
+        mixer_hamil = X_mixer_hamiltonian(n_qubits)
+        betas = [np.pi / 8, np.pi / 8]
+        gammas = [np.pi / 4, np.pi / 4]
+        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(
+            n_qubits, p, mixer_hamil, betas, gammas
+        )
         exception = False
         try:
-            n_qubits = 8
-            p = 2
-            mixer_hamil = X_mixer_hamiltonian(n_qubits)
-            betas = [np.pi / 8, np.pi / 8]
-            gammas = [np.pi / 4, np.pi / 4]
-            register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(
-                n_qubits, p, mixer_hamil, betas, gammas
-            )
             backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
         except:
             exception = True
@@ -101,15 +102,15 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         Testing if the analytical backend fails if the mixer hamiltonian is different than X.
         """
         exception = False
+        n_qubits = 8
+        p = 1
+        mixer_hamil = XY_mixer_hamiltonian(n_qubits)
+        betas = [np.pi / 8]
+        gammas = [np.pi / 4]
+        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(
+            n_qubits, p, mixer_hamil, betas, gammas
+        )
         try:
-            n_qubits = 8
-            p = 1
-            mixer_hamil = XY_mixer_hamiltonian(n_qubits)
-            betas = [np.pi / 8]
-            gammas = [np.pi / 4]
-            register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(
-                n_qubits, p, mixer_hamil, betas, gammas
-            )
             backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
         except:
             exception = True
@@ -126,35 +127,28 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         )
         maxcut_qubo = MaximumCut(g).get_qubo_problem()
 
+        # Testing for Extended params
         exception = False
+        q = QAOA()
+        q.set_circuit_properties(
+            p=1, param_type="extended", init_type="rand", mixer_hamiltonian="x"
+        )
+        q.set_classical_optimizer(method="nelder-mead", maxiter=10)
+        analytical_device = create_device(location="local", name="analytical_simulator")
+        q.set_device(analytical_device)
+        q.compile(maxcut_qubo)
         try:
-            q = QAOA()
-            analytical_device = create_device(
-                location="local", name="analytical_simulator"
-            )
-            q.set_device(analytical_device)
-            q.set_circuit_properties(
-                p=1, param_type="extended", init_type="rand", mixer_hamiltonian="x"
-            )
-            q.set_classical_optimizer(method="nelder-mead", maxiter=10)
-            q.compile(maxcut_qubo)
             q.optimize()
         except:
             exception = True
         assert exception, "Extended params didn't fail"
 
+        # Testing for Fourier params
+        q.set_circuit_properties(
+            p=1, param_type="fourier", init_type="rand", mixer_hamiltonian="x"
+        )
         exception = False
         try:
-            q = QAOA()
-            analytical_device = create_device(
-                location="local", name="analytical_simulator"
-            )
-            q.set_device(analytical_device)
-            q.set_circuit_properties(
-                p=1, param_type="fourier", init_type="rand", mixer_hamiltonian="x"
-            )
-            q.set_classical_optimizer(method="nelder-mead", maxiter=10)
-            q.compile(maxcut_qubo)
             q.optimize()
         except:
             exception = True
@@ -170,19 +164,13 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         )
         maxcut_qubo = MaximumCut(g).get_qubo_problem()
 
-        # Define the RQAOA object
+        # Define the RQAOA object and set its params
         r = RQAOA()
-
-        # Set parameters for RQAOA, in this case we fix the n_max to 1 (default), the final cutoff value to 3
         r.set_rqaoa_parameters(steps=1, n_cutoff=3)
-
-        ## Setting up the QAOA properties
-        init_beta = 0.26
-        init_gamma = 0.42
         r.set_circuit_properties(
             p=1,
             init_type="custom",
-            variational_params_dict={"betas": [init_beta], "gammas": [init_gamma]},
+            variational_params_dict={"betas": [0.26], "gammas": [0.42]},
             mixer_hamiltonian="x",
         )
 
@@ -190,7 +178,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         device = create_device(location="local", name="analytical_simulator")
         r.set_device(device)
 
-        # Set the classical method used to optimiza over QAOA angles and its properties
+        # Set the classical method used to optimize over QAOA angles and its properties
         r.set_classical_optimizer(
             method="rmsprop",
             optimizer_options={"stepsize": 10 ** (-10)},
@@ -208,20 +196,14 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         r.optimize()
 
         opt_results = r.results
-
         opt_solution = opt_results["solution"]
-
         opt_solution_string = list(opt_solution.keys())[0]
 
         assert opt_solution_string == "01011010"
 
     def test_exact_solution(self):
         """
-        NOTE:Since the implementation of exact solution is backend agnostic
-            Checking it once should be okay.
-
-        Nevertheless, for the sake of completeness it will be tested for all backend
-        instances.
+        Testing the exact solution which is a property of every backend.
 
         """
 
