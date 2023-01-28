@@ -23,14 +23,9 @@ from datetime import datetime
 from scipy.optimize._minimize import minimize, MINIMIZE_METHODS
 from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 
-<<<<<<< HEAD:src/openqaoa-core/optimizers/training_vqa.py
 from ..backends.basebackend import VQABaseBackend
+from ..backends.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from ..qaoa_components import QAOAVariationalBaseParams
-=======
-from ..basebackend import VQABaseBackend
-from ..backends import QAOAvectorizedBackendSimulator
-from ..qaoa_parameters.baseparams import QAOAVariationalBaseParams
->>>>>>> dev:openqaoa/optimizers/training_vqa.py
 from . import optimization_methods as om
 from .pennylane import optimization_methods_pennylane as ompl
 

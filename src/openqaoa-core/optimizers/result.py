@@ -23,12 +23,8 @@ import matplotlib.pyplot as plt
 from .logger_vqa import Logger
 from ..qaoa_components import Hamiltonian
 from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize, delete_keys_from_dict
-<<<<<<< HEAD:src/openqaoa-core/optimizers/result.py
 from ..backends.basebackend import QAOABaseBackend, QAOABaseBackendStatevector
-=======
-from ..basebackend import QAOABaseBackend, QAOABaseBackendStatevector
-from openqaoa.backends import QAOABackendAnalyticalSimulator
->>>>>>> dev:openqaoa/optimizers/result.py
+from ..backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):

@@ -28,14 +28,6 @@ Currently Supported:
 		Fast numpy native Statevector Simulator
 """
 from .qaoa_vectorized import QAOAvectorizedBackendSimulator
-
-<<<<<<< HEAD:src/openqaoa-core/backends/__init__.py
+from .qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from .devices_core import DeviceBase, DeviceLocal
-
 from .qaoa_device import create_device
-=======
-from .simulators.qaoa_qiskit_sim import *
-from .simulators.qaoa_pyquil_sim import *
-from .simulators.qaoa_vectorized import *
-from .simulators.qaoa_analytical_sim import *
->>>>>>> dev:openqaoa/backends/__init__.py
