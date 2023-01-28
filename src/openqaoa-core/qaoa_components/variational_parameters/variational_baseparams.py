@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Union
+from typing import Union, Iterable
 from abc import ABC
 
 import numpy as np
@@ -248,3 +248,77 @@ class QAOAVariationalBaseParams(ABC):
 
         """
         raise NotImplementedError()
+
+    
+class QAOAParameterIterator:
+    """An iterator to sweep one parameter over a range in a QAOAParameter object.
+
+    Parameters
+    ----------
+    qaoa_params:
+        The initial QAOA parameters, where one of them is swept over
+    the_parameter:
+        A string specifying, which parameter should be varied. It has to be
+        of the form ``<attr_name>[i]`` where ``<attr_name>`` is the name
+        of the _internal_ list and ``i`` the index, at which it sits. E.g.
+        if ``qaoa_params`` is of type ``AnnealingParams``
+        and  we want to vary over the second timestep, it is
+        ``the_parameter = "times[1]"``.
+    the_range:
+        The range, that ``the_parameter`` should be varied over
+
+    Todo
+    ----
+    - Add checks, that the number of indices in ``the_parameter`` matches
+      the dimensions of ``the_parameter``
+    - Add checks, that the index is not too large
+
+    Example
+    -------
+    Assume qaoa_params is of type ``StandardWithBiasParams`` and
+    has `p >= 2`. Then the following code produces a loop that
+    sweeps ``gammas_singles[1]`` over the range ``(0, 1)`` in 4 layers:
+
+    .. code-block:: python
+
+        the_range = np.arange(0, 1, 0.4)
+        the_parameter = "gammas_singles[1]"
+        param_iterator = QAOAParameterIterator(qaoa_params, the_parameter, the_range)
+        for params in param_iterator:
+            # do what ever needs to be done.
+            # we have type(params) == type(qaoa_params)
+    """
+
+    def __init__(self,
+                 variational_params: QAOAVariationalBaseParams,
+                 the_parameter: str,
+                 the_range: Iterable[float]):
+        """See class documentation for details"""
+        self.params = variational_params
+        self.iterator = iter(the_range)
+        self.the_parameter, *indices = the_parameter.split("[")
+        indices = [i.replace(']', '') for i in indices]
+        if len(indices) == 1:
+            self.index0 = int(indices[0])
+            self.index1 = False
+        elif len(indices) == 2:
+            self.index0 = int(indices[0])
+            self.index1 = int(indices[1])
+        else:
+            raise ValueError("the_parameter has to many indices")
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        # get next value from the_range
+        value = next(self.iterator)
+
+        # 2d list or 1d list?
+        if self.index1 is not False:
+            getattr(self.params, self.the_parameter)[
+                self.index0][self.index1] = value
+        else:
+            getattr(self.params, self.the_parameter)[self.index0] = value
+
+        return self.params

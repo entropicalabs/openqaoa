@@ -160,7 +160,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         return parametric_circuit
 
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Execute the circuit and obtain the counts
 
@@ -169,12 +169,16 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         params: QAOAVariationalBaseParams
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
+        n_shots: int
+            The number of times to run the circuit. If None, n_shots is set to the default: self.n_shots
 
         Returns
         -------
             A dictionary with the bitstring as the key and the number of counts 
             as its value.
         """
+
+        n_shots = self.n_shots if n_shots == None else n_shots
 
         circuit = self.qaoa_circuit(params)
 
@@ -185,7 +189,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         while job_state == False:
             
             # initial_layout only passed if not azure device
-            input_items = {'shots':self.n_shots, 'initial_layout':self.qubit_layout}
+            input_items = {'shots':n_shots, 'initial_layout':self.qubit_layout}
             if type(self.device).__name__ == 'DeviceAzure':
                 input_items.pop('initial_layout')
             job = self.backend_qpu.run(circuit, **input_items)

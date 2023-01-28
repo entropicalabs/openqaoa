@@ -18,11 +18,20 @@ import numpy as np
 from pyquil import Program, gates
 from pyquil.api import WavefunctionSimulator
 
+<<<<<<< HEAD:src/openqaoa-pyquil/backends/qaoa_pyquil_sim.py
 from openqaoa.backends.basebackend import QAOABaseBackendStatevector
 from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import (RXGateMap, RYGateMap, RZGateMap)
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.utilities import generate_uuid
+=======
+from ...basebackend import QAOABaseBackendStatevector
+from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
+from ...qaoa_parameters.gatemap import (
+    RXGateMap, RYGateMap, RZGateMap)
+from ...cost_function import cost_function
+from ...utilities import generate_uuid, round_value
+>>>>>>> dev:openqaoa/backends/simulators/qaoa_pyquil_sim.py
 
 
 class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
@@ -112,6 +121,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         self.measurement_outcomes = wf.amplitudes
         return wf
 
+    @round_value
     def expectation(self, params: QAOAVariationalBaseParams) -> float:
         """
         Compute the expectation value w.r.t the Cost Hamiltonian
@@ -132,6 +142,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
             prob_dict, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
         return cost
 
+    @round_value
     def expectation_w_uncertainty(self,
                                   params: QAOAVariationalBaseParams) -> Tuple[float, float]:
         """

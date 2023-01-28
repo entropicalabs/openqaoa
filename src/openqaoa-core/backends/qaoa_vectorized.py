@@ -25,7 +25,7 @@ from scipy.sparse.linalg import expm
 from .basebackend import QAOABaseBackendStatevector
 from ..qaoa_components import (QAOACircuitParams, QAOAVariationalBaseParams, 
 Hamiltonian)
-from ..utilities import generate_uuid
+from ..utilities import generate_uuid, round_value
 
 
 # Pauli gates
@@ -758,6 +758,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         return wf
 
+    @round_value
     def expectation(self, params: Type[QAOAVariationalBaseParams]) -> float:
         """
         Call the execute function on the circuit to compute the
@@ -784,6 +785,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         return out
 
+    @round_value
     def expectation_w_uncertainty(self,
                                   params: Type[QAOAVariationalBaseParams]) -> Tuple[float, float]:
         """
