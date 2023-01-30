@@ -1,13 +1,12 @@
 import warnings
 import unittest
-
 import numpy as np
 import networkx as nx
-import openqaoa.optimizers.pennylane as pl
 import copy
 import inspect
 
 from openqaoa import QAOA
+import openqaoa.optimizers.pennylane as pl
 from openqaoa.backends import create_device
 from openqaoa.optimizers.training_vqa import PennyLaneOptimizer
 from openqaoa.optimizers.pennylane.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS

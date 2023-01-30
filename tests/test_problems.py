@@ -1,4 +1,3 @@
-from math import dist
 import unittest
 import networkx as nx
 import numpy as np
@@ -7,7 +6,6 @@ from openqaoa.problems import (
     NumberPartition, QUBO, TSP, Knapsack, ShortestPath,
     SlackFreeKnapsack, MaximumCut, MinimumVertexCover
 )
-from openqaoa.problems.problem import Problem
 from openqaoa.utilities import convert2serialize
 from openqaoa.problems.helper_functions import create_problem_from_dict
 

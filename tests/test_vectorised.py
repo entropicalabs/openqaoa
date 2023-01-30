@@ -1,19 +1,4 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
 import unittest
-
 import numpy as np
 from scipy.linalg import expm
 from scipy.sparse import csc_matrix, kron, diags
@@ -24,11 +9,6 @@ from openqaoa.utilities import X_mixer_hamiltonian, ring_of_disagrees
 from openqaoa.qaoa_components import (QAOAVariationalExtendedParams, 
                                       QAOAVariationalStandardParams, Hamiltonian, 
                                       PauliOp, QAOACircuitParams, create_qaoa_variational_params)
-
-"""
-A set of tests for FastQAOA: see the notebook Test_Examples.ipynb for explanations of how the
-expected answers are derived.
-"""
 
 ######################################################
 # TESTS OF SIMPLE PERMUTATION AND RESHAPING OPERATIONS
@@ -707,48 +687,3 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-######################################
-# TEST CONSISTENCY WITH ENTROPICA_QAOA
-######################################
-
-# def test_consistent_entropica_qaoa():
-
-#     """
-#     Compare the outcome of VectorSim from FastQAOA with that of EntropicaQAOA
-#     Tests the outcome with two sets of initial parameters: linear ramp (for the problem at hand), and random params
-#     We check that the expectation values and standard deviations are all consistent
-#     """
-
-#     n = 4
-#     p = 3
-#     ham = PauliSum.from_compact_str('(0.1)*Z0*Z1 + (1)*Z0*Z2 + (-0.5)*Z0*Z3 + (0.2)*Z3*Z0 + (3)*Z1*Z3')
-
-#     # Define the random parameters
-#     np.random.seed(123)
-#     rand_params = np.random.uniform(0, 2 * np.pi, size=2 * p)
-
-#     # VectorSim
-#     stand_params_vec = StandardParams.linear_ramp_from_hamiltonian(hamiltonian=ham, n_steps=p)
-#     sim_vec = QAOASim_Vector(n)
-#     vec_cf = CostFunction(hamiltonian=ham, params=stand_params_vec, backend=sim_vec)
-
-#     # Expectations and standard deviations for vector sim for both sets of parameters
-#     #vec_exp_ramp, vec_dev_ramp = vec_cf(stand_params_vec.raw())
-#     #vec_exp_rand, vec_dev_rand = vec_cf(rand_params)
-#     vec_exp_ramp = vec_cf(stand_params_vec.raw())
-#     vec_exp_rand = vec_cf(rand_params)
-
-#     # Similarly for EntropicaQAOA
-#     stand_params_ent = StandardParams.linear_ramp_from_hamiltonian(hamiltonian=ham, n_steps=p)
-#     sim_ent = WavefunctionSimulator()
-#     ent_cf = QAOACostFunctionOnWFSim(hamiltonian=ham, params=stand_params_ent, sim=sim_ent)
-
-#     ent_exp_ramp = ent_cf(stand_params_ent.raw())
-#     ent_exp_rand = ent_cf(rand_params)
-
-#     # Check consistency
-#     assert np.isclose(ent_exp_ramp, vec_exp_ramp)
-#     assert np.isclose(vec_exp_rand, ent_exp_rand)
-    #assert np.isclose(ent_dev_ramp, vec_dev_ramp)
-    #assert np.isclose(vec_dev_rand, ent_dev_rand)

@@ -1,27 +1,9 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
-
 """
 Test the plot functionalities in qaoa_parameters 
 """
 
 # import the standard modules from python
 import unittest
-
-import numpy as np
-import matplotlib.pyplot as plt
 
 # import the OpenQAOA Parameterisation classes manually: Manual Mode
 from openqaoa.qaoa_components import (create_qaoa_variational_params, PauliOp, Hamiltonian, 
@@ -30,7 +12,6 @@ from openqaoa.qaoa_components import (create_qaoa_variational_params, PauliOp, H
 
 # import the other OpenQAOA modules required for this example
 from openqaoa.utilities import X_mixer_hamiltonian
-
 from openqaoa.problems import MaximumCut
 
 
@@ -47,7 +28,6 @@ Term3 = PauliOp('Z', (0, ))
 hamiltonian2 = Hamiltonian([Term1, Term2, Term3], [0.7, 1.2, -0.5], 0.0)
 mixer_hamiltonian2 = X_mixer_hamiltonian(n_qubits = 3)
 qaoa_circuit_params2 = QAOACircuitParams(cost_hamiltonian = hamiltonian2, mixer_block = mixer_hamiltonian2, p=4)
-
 
 
 class TestingQAOAParametersPlots(unittest.TestCase):
