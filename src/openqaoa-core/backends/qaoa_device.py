@@ -1,10 +1,5 @@
 from __future__ import annotations
 
-import abc
-import logging
-
-import numpy as np
-
 from .devices_core import DeviceBase, DeviceLocal
 from openqaoa_braket.backends import DeviceAWS
 from openqaoa_qiskit.backends import DeviceQiskit

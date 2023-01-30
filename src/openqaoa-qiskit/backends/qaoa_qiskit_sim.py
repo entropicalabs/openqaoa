@@ -1,25 +1,3 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
-# General Imports
-from openqaoa.backends.basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
-from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
-from openqaoa.utilities import flip_counts, generate_uuid, round_value
-from openqaoa.backends.cost_function import cost_function
-from openqaoa.qaoa_components.ansatz_constructor import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap, 
-RYYGateMap, RZZGateMap, RZXGateMap)
-
 import numpy as np
 from typing import Union, List, Tuple, Optional
 
@@ -31,11 +9,13 @@ from qiskit.opflow.primitive_ops import PauliSumOp
 from qiskit.quantum_info import Statevector
 from qiskit.circuit import Parameter
 
-"""
-QASM Simluator can be used for different simulation purposes with different Simulation methods
-    - supports different error models
-    - supports incluing real IBM backend error models
-"""
+from openqaoa.backends.basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
+from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.utilities import flip_counts, generate_uuid, round_value
+from openqaoa.backends.cost_function import cost_function
+from openqaoa.qaoa_components.ansatz_constructor import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap, 
+RYYGateMap, RZZGateMap, RZXGateMap)
+
 
 class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBackendParametric):
     """

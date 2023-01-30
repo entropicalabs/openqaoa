@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from copy import deepcopy
-
 import numpy as np
 
 from ..backends.basebackend import QAOABaseBackend, QAOABaseBackendShotBased

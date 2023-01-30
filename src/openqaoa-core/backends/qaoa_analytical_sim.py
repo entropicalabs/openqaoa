@@ -1,17 +1,3 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
 """
 Energy expectation as a function of angles computed accordingly to the analytical expression for p=1.
 """
@@ -22,8 +8,10 @@ from ..utilities import energy_expectation_analytical, generate_uuid, round_valu
 
 class QAOABackendAnalyticalSimulator(QAOABaseBackend):
     r"""
-    A simulator class, specific for QAOA with a single layer, p=1, starting with a layer of Hadamards and using the X mixer.
-    Works by calculating the expectation value of the given quantum circuit (specificied with beta and gamma angles) from the analytical formula derived in arXiv:2011.13420v2.
+    A simulator class, specific for QAOA with a single layer, p=1, starting with
+    a layer of Hadamards and using the X mixer. Works by calculating the expectation value
+    of the given quantum circuit (specificied with beta and gamma angles) from the
+    analytical formula derived in arXiv:2011.13420v2.
 
     Parameters
     ----------
