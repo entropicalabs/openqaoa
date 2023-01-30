@@ -12,8 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from argparse import SUPPRESS
-from threading import local
 import json, os, gzip
 import unittest
 
@@ -28,11 +26,10 @@ from openqaoa import QAOA, RQAOA
 from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
 from openqaoa.backends import create_device, DeviceLocal
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
-from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
-                                            DEVICE_ACCESS_OBJECT_MAPPER)
-from openqaoa.qaoa_components import (Hamiltonian, QAOACircuitParams, QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams, 
-QAOAVariationalExtendedParams, QAOAVariationalFourierParams, 
-QAOAVariationalFourierExtendedParams, QAOAVariationalFourierWithBiasParams)
+from openqaoa.qaoa_components import (
+    Hamiltonian, QAOACircuitParams, QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams, 
+    QAOAVariationalExtendedParams, QAOAVariationalFourierParams, 
+    QAOAVariationalFourierExtendedParams, QAOAVariationalFourierWithBiasParams)
 from openqaoa.backends import QAOAvectorizedBackendSimulator
 from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
