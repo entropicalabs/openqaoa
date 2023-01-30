@@ -24,7 +24,7 @@ from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...problems import QUBO
 from ...qaoa_components import Hamiltonian
 from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise
-from ...backends.basebackend import QAOABaseBackendStatevector
+from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from ...rqaoa import rqaoa
 from ...rqaoa.rqaoa_results import RQAOAResults
 
@@ -440,7 +440,7 @@ class RQAOA(Optimizer):
         p = q.circuit_properties.p
         qaoa_optimized_angles = q.results.optimized['angles']
         qaoa_optimized_counts = q.results.get_counts(q.results.optimized['measurement_outcomes'])
-        analytical = isinstance(qaoa_backend, QAOABaseBackendStatevector)
+        analytical = isinstance(qaoa_backend, QAOABackendAnalyticalSimulator)
     
         return exp_val_hamiltonian_termwise(variational_params, 
                 qaoa_backend, cost_hamiltonian, mixer_type, p, qaoa_optimized_angles, 
