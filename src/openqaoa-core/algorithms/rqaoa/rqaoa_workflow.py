@@ -363,9 +363,12 @@ class RQAOA(Optimizer):
                 break
             
             # Extract final set of eliminations with correct dependencies and update tracker
-            eliminations = [{'pair': (spin_map[spin][1],spin), 'correlation': spin_map[spin][0]} for spin in sorted(spin_map.keys()) if spin != spin_map[spin][1]]
+            eliminations = [    {'singlet': (spin,), 'bias': spin_map[spin][0]} 
+                                if spin_map[spin][1] is None else 
+                                {'pair': (spin_map[spin][1],spin), 'correlation': spin_map[spin][0]} 
+                                for spin in sorted(spin_map.keys()) 
+                                if spin != spin_map[spin][1]    ]
             elimination_tracker.append(eliminations)
-
             # add the metadata to the problem
             new_problem.metadata = problem_metadata
 

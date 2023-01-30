@@ -1,19 +1,6 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-import numpy as np
 from time import time
 from typing import Optional, List
+
 # IBM Qiskit imports
 from qiskit import QuantumCircuit, QuantumRegister, execute
 from qiskit.providers.ibmq.job import (IBMQJobApiError, IBMQJobInvalidStateError,
@@ -24,11 +11,6 @@ from .devices import DeviceQiskit
 from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
 from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
 from openqaoa.utilities import flip_counts
-
-
-# add support to perform error mitigation for a future version
-# from qiskit.ignis.mitigation.measurement import (complete_meas_cal,
-#                                                  CompleteMeasFitter)
 
 
 class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):

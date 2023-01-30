@@ -1,9 +1,4 @@
-import abc
-import numpy as np
-import logging
-
 from azure.quantum.qiskit import AzureQuantumProvider
-
 from openqaoa.backends.devices_core import DeviceBase
 
 class DeviceAzure(DeviceBase):
