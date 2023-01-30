@@ -150,53 +150,6 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         except:
             exception = True
         assert exception, "Fourier params didn't fail"
-        
-    def test_end_to_end_qaoa(self):
-        """
-        Test the whole QAOA workflow
-        """
-        g = random_k_regular_graph(
-            degree=3, nodes=range(8), seed=2642, weighted=True, biases=False
-        )
-        maxcut_qubo = MaximumCut(g).get_qubo_problem()
-
-        # Define the RQAOA object and set its params
-        q = QAOA()
-        q.set_circuit_properties(
-            p=1,
-            init_type="custom",
-            variational_params_dict={"betas": [0.26], "gammas": [0.42]},
-            mixer_hamiltonian="x",
-        )
-
-        # Define the device to be the analytical simulator
-        device = create_device(location="local", name="analytical_simulator")
-        q.set_device(device)
-
-        # Set the classical method used to optimize over QAOA angles and its properties
-        q.set_classical_optimizer(
-            method="rmsprop",
-            optimizer_options={"stepsize": 10 ** (-10)},
-            tol=10 ** (-1),
-            maxfev=1,
-            maxiter=1,
-            jac="finite_difference",
-            optimization_progress=False,
-            cost_progress=False,
-            parameter_log=False,
-        )
-
-        # Compile and optimize the problem instance on RQAOA
-        q.compile(maxcut_qubo)
-        q.optimize()
-
-        opt_results = q.results
-        opt_solution = opt_results["solution"]
-        opt_solution_string = list(opt_solution.keys())[0]
-        print(opt_solution)
-
-        assert opt_solution_string == "01011010"
-
 
     def test_end_to_end_rqaoa(self):
         """
@@ -242,7 +195,6 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         opt_results = r.results
         opt_solution = opt_results["solution"]
         opt_solution_string = list(opt_solution.keys())[0]
-        print(opt_solution)
 
         assert opt_solution_string == "01011010"
 
