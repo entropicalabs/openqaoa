@@ -3,11 +3,11 @@ from typing import Type, List
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .logger_vqa import Logger
-from ..qaoa_components import Hamiltonian
-from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize, delete_keys_from_dict
-from ..backends.basebackend import QAOABaseBackend, QAOABaseBackendStatevector
-from ..backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
+from ...optimizers.logger_vqa import Logger
+from ...qaoa_components import Hamiltonian
+from ...utilities import qaoa_probabilities, bitstring_energy, convert2serialize, delete_keys_from_dict
+from ...backends.basebackend import QAOABaseBackend, QAOABaseBackendStatevector
+from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -25,7 +25,7 @@ def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
     }
 
 
-class Result:
+class QAOAResult:
     """
     A class to handle the results of QAOA workflows
 

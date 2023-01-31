@@ -4,7 +4,7 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 
 from .variational_baseparams import QAOAVariationalBaseParams
-from ..ansatz_constructor import QAOACircuitParams
+from ..ansatz_constructor import QAOADescriptor
 from ..ansatz_constructor.baseparams import shapedArray
 
 class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
@@ -21,8 +21,8 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     
     Parameters
     ----------
-    qaoa_circuit_params:
-        QAOACircuitParams object containing circuit instructions
+    qaoa_descriptor:
+        QAOADescriptor object containing circuit instructions
     total_annealing_time: float
         Total annealing time for the schedule
     schedule: list
@@ -43,11 +43,11 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     """
 
     def __init__(self,
-                 qaoa_circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  total_annealing_time: float,
                  schedule: List[Union[float, int]]):
         # setup reg, qubits_singles and qubits_pairs
-        super().__init__(qaoa_circuit_params)
+        super().__init__(qaoa_descriptor)
         assert total_annealing_time is not None, f"Please specify total_annealing_time to use {type(self).__name__}"
         self.total_annealing_time = total_annealing_time
         self.schedule = np.array(schedule)
@@ -101,7 +101,7 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
 
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_circuit_params: QAOACircuitParams,
+                                     qaoa_descriptor: QAOADescriptor,
                                      total_annealing_time: float = None,
                                      time: float = None):
         """
@@ -111,18 +111,18 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
             An ``AnnealingParams`` object corresponding to
             a linear ramp schedule.
         """
-        p = qaoa_circuit_params.p
+        p = qaoa_descriptor.p
         total_annealing_time = 0.7 * \
             p if total_annealing_time is None else total_annealing_time
         schedule = np.linspace(0.5 / p, 1 - 0.5 / p, p)
 
         # wrap it all nicely in a qaoa_parameters object
         #params = cls((register, terms, weights, p, time), (schedule))
-        params = cls(qaoa_circuit_params, total_annealing_time, schedule)
+        params = cls(qaoa_descriptor, total_annealing_time, schedule)
         return params
 
     @classmethod
-    def random(cls, qaoa_circuit_params: QAOACircuitParams,
+    def random(cls, qaoa_descriptor: QAOADescriptor,
                total_annealing_time: float, seed: int = None):
         """
         Returns
@@ -132,14 +132,14 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
         """
         if seed is not None:
             np.random.seed(seed)
-        schedule = np.random.uniform(0, 1, qaoa_circuit_params.p)
+        schedule = np.random.uniform(0, 1, qaoa_descriptor.p)
 
-        return cls(qaoa_circuit_params, total_annealing_time, schedule)
+        return cls(qaoa_descriptor, total_annealing_time, schedule)
 
     @classmethod
-    def empty(cls, qaoa_circuit_params: QAOACircuitParams, total_annealing_time: float):
-        schedule = np.empty((qaoa_circuit_params.p))
-        return cls(qaoa_circuit_params, total_annealing_time, schedule)
+    def empty(cls, qaoa_descriptor: QAOADescriptor, total_annealing_time: float):
+        schedule = np.empty((qaoa_descriptor.p))
+        return cls(qaoa_descriptor, total_annealing_time, schedule)
 
     def plot(self, ax=None, **kwargs):
         if ax is None:

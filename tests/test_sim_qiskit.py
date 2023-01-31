@@ -3,7 +3,7 @@ import numpy as np
 
 from qiskit import QuantumCircuit
 
-from openqaoa.qaoa_components import (PauliOp, Hamiltonian, QAOACircuitParams, 
+from openqaoa.qaoa_components import (PauliOp, Hamiltonian, QAOADescriptor, 
                                       QAOAVariationalExtendedParams, QAOAVariationalStandardParams)
 from openqaoa_qiskit.backends import QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator
 from openqaoa.backends import QAOAvectorizedBackendSimulator
@@ -41,11 +41,11 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                       PauliOp('ZZ', (0, 2))], weights[i], constants[i])
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-            variate_params = QAOAVariationalStandardParams(circuit_params, 
+            qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+            variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                            betas, gammas)
 
-            qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+            qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                                 None, 
                                                                 None, 
                                                                 False)
@@ -91,11 +91,11 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                       PauliOp('ZZ', (0, 2))], weights[i], constants[i])
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-            variate_params = QAOAVariationalStandardParams(circuit_params, 
+            qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+            variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                            betas, gammas)
 
-            qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+            qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                                 None, 
                                                                 None, 
                                                                 True)
@@ -140,15 +140,15 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params, 
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                        betas, gammas)
 
-        qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+        qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                             prepend_circuit, 
                                                             None, 
                                                             True)
-        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(circuit_params,
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(qaoa_descriptor,
                                                                   shots,
                                                                   prepend_circuit, 
                                                                   None, 
@@ -193,15 +193,15 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params, 
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                        betas, gammas)
         
-        qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+        qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                             None, 
                                                             append_circuit, 
                                                             True)
-        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(circuit_params,
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(qaoa_descriptor,
                                                                   shots,
                                                                   None, 
                                                                   append_circuit, 
@@ -246,12 +246,12 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                       PauliOp('ZZ', (0, 2))], weights, 1)
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-            variate_params = QAOAVariationalStandardParams(circuit_params, 
+            qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+            variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                            betas[i], 
                                                            gammas[i])
 
-            qiskit_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+            qiskit_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                                 None, 
                                                                 None, 
                                                                 True)
@@ -259,7 +259,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             qiskit_wavefunction = qiskit_backend.wavefunction(variate_params)
             qiskit_expectation = qiskit_backend.expectation(variate_params)
 
-            vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
+            vector_backend = QAOAvectorizedBackendSimulator(qaoa_descriptor, 
                                                            None, 
                                                            None, 
                                                            True)
@@ -297,12 +297,12 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
 
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
             
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-            variate_params = QAOAVariationalStandardParams(circuit_params, 
+            qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+            variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                            betas[i], 
                                                            gammas[i])
 
-            qiskit_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+            qiskit_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                                 None, 
                                                                 None, 
                                                                 True)
@@ -310,7 +310,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             qiskit_wavefunction = qiskit_backend.wavefunction(variate_params)
             qiskit_expectation = qiskit_backend.expectation(variate_params)
             
-            vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
+            vector_backend = QAOAvectorizedBackendSimulator(qaoa_descriptor, 
                                                        None, 
                                                        None, 
                                                        True)
@@ -351,12 +351,12 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
 
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits, coeffs = [1,2,3])
             
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-            variate_params = QAOAVariationalStandardParams(circuit_params, 
+            qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+            variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                            betas[i], 
                                                            gammas[i])
 
-            qiskit_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+            qiskit_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                                 None, 
                                                                 None, 
                                                                 True)
@@ -364,7 +364,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             qiskit_wavefunction = qiskit_backend.wavefunction(variate_params)
             qiskit_expectation = qiskit_backend.expectation(variate_params)
             
-            vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
+            vector_backend = QAOAvectorizedBackendSimulator(qaoa_descriptor, 
                                                        None, 
                                                        None, 
                                                        True)
@@ -404,12 +404,12 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
                                       PauliOp('ZZ', (0, 2))], weights, 1)
             mixer_hamil = Hamiltonian([PauliOp('Y', (0,)), PauliOp('YY', (0,1)), PauliOp('XX', (1,2)), PauliOp('XZ', (1,2))], [1,2,3,4], 1)
             
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-            variate_params = QAOAVariationalStandardParams(circuit_params, 
+            qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+            variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                            betas[i], 
                                                            gammas[i])
 
-            qiskit_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+            qiskit_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                                 None, 
                                                                 None, 
                                                                 True)
@@ -417,7 +417,7 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             qiskit_wavefunction = qiskit_backend.wavefunction(variate_params)
             qiskit_expectation = qiskit_backend.expectation(variate_params)
             
-            vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
+            vector_backend = QAOAvectorizedBackendSimulator(qaoa_descriptor, 
                                                        None, 
                                                        None, 
                                                        True)
@@ -448,10 +448,10 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         gammas = [np.pi/4]
         cost_hamiltonian = ring_of_disagrees(register)
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-        qaoa_circuit_params = QAOACircuitParams(cost_hamiltonian, mixer_hamiltonian, p)
-        variational_params_std = QAOAVariationalStandardParams(qaoa_circuit_params, betas, gammas) 
+        qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas) 
 
-        backend_qiskit_statevec = QAOAQiskitBackendStatevecSimulator(qaoa_circuit_params,prepend_state=None,
+        backend_qiskit_statevec = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor,prepend_state=None,
                                                             append_state=None,init_hadamard=True)
 
         exp_qiskit_statevec = backend_qiskit_statevec.expectation((variational_params_std))
@@ -472,14 +472,14 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         
         cost_hamiltonian = Hamiltonian.classical_hamiltonian(terms=terms, coeffs=weights, constant=0)
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-        qaoa_circuit_params = QAOACircuitParams(cost_hamiltonian, mixer_hamiltonian, p)
-        variational_params_std = QAOAVariationalExtendedParams(qaoa_circuit_params,
+        qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = QAOAVariationalExtendedParams(qaoa_descriptor,
                                                                betas_singles=betas_singles,
                                                                betas_pairs=betas_pairs,
                                                                gammas_singles=gammas_singles,
                                                                gammas_pairs=gammas_pairs) 
 
-        backend_qiskit_statevec = QAOAQiskitBackendStatevecSimulator(qaoa_circuit_params,prepend_state=None,
+        backend_qiskit_statevec = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor,prepend_state=None,
                                                             append_state=None,init_hadamard=True)
 
         wf_qiskit_statevec = backend_qiskit_statevec.wavefunction((variational_params_std))
@@ -514,11 +514,11 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
 
         cost_hamiltonian = ring_of_disagrees(register)
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-        qaoa_circuit_params = QAOACircuitParams(cost_hamiltonian, mixer_hamiltonian, p)
-        variational_params_std = QAOAVariationalStandardParams(qaoa_circuit_params,
+        qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = QAOAVariationalStandardParams(qaoa_descriptor,
                                                                betas, gammas)
         
-        backend_qiskit_statevec = QAOAQiskitBackendStatevecSimulator(qaoa_circuit_params,prepend_state=None,
+        backend_qiskit_statevec = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor,prepend_state=None,
                                                             append_state=None,init_hadamard=True)
 
         #exact solution is defined as the property of the cost function
@@ -544,10 +544,10 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         gammas = [np.pi/4]
         cost_hamiltonian = ring_of_disagrees(register)
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-        qaoa_circuit_params = QAOACircuitParams(cost_hamiltonian, mixer_hamiltonian, p)
-        variational_params_std = QAOAVariationalStandardParams(qaoa_circuit_params, betas, gammas) 
+        qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas) 
 
-        backend_qiskit_statevec = QAOAQiskitBackendStatevecSimulator(qaoa_circuit_params,prepend_state=None,
+        backend_qiskit_statevec = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor,prepend_state=None,
                                                             append_state=None,init_hadamard=True)
 
         exp_qiskit_statevec, exp_unc_qiskit_statevec = backend_qiskit_statevec.expectation_w_uncertainty(variational_params_std)
@@ -609,19 +609,19 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
                                       PauliOp('ZZ', (1, 2)), PauliOp('ZZ', (0, 2))], 
                                      weights[i], constants[i])
             mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-            circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p[i])
-            variate_params = QAOAVariationalStandardParams(circuit_params, 
+            qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p[i])
+            variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                            betas, 
                                                            gammas)
 
-            qiskit_backend = QAOAQiskitBackendStatevecSimulator(circuit_params, 
+            qiskit_backend = QAOAQiskitBackendStatevecSimulator(qaoa_descriptor, 
                                                                 None, 
                                                                 None, 
                                                                 init_hadamards[i])
 
             qiskit_expectation = qiskit_backend.expectation(variate_params)
 
-            vector_backend = QAOAvectorizedBackendSimulator(circuit_params, 
+            vector_backend = QAOAvectorizedBackendSimulator(qaoa_descriptor, 
                                                            None, 
                                                            None, 
                                                            init_hadamards[i])
@@ -645,11 +645,11 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params, 
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                        betas, gammas)
         
-        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(circuit_params,
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(qaoa_descriptor,
                                                                   shots,
                                                                   None, 
                                                                   None, 
@@ -675,11 +675,11 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), 
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params, 
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                        betas, gammas)
         
-        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(circuit_params,
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(qaoa_descriptor,
                                                                   shots,
                                                                   None, 
                                                                   None, 
@@ -715,19 +715,19 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('XY', (0, 1)), PauliOp('XY', (1, 2)), 
                                   PauliOp('XY', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits = nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params, 
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, 
                                                        betas, gammas)
         
         self.assertRaises(NotImplementedError, QAOAQiskitBackendShotBasedSimulator, 
-                          circuit_params,
+                          qaoa_descriptor,
                           shots,
                           None, 
                           None, 
                           True, 1.0)
         
         self.assertRaises(NotImplementedError, QAOAQiskitBackendStatevecSimulator, 
-                          circuit_params,
+                          qaoa_descriptor,
                           None, 
                           None, 
                           True)

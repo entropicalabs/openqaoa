@@ -9,7 +9,7 @@ from scipy.sparse import csc_matrix, kron, diags
 from scipy.sparse.linalg import expm
 
 from .basebackend import QAOABaseBackendStatevector
-from ..qaoa_components import (QAOACircuitParams, QAOAVariationalBaseParams, 
+from ..qaoa_components import (QAOADescriptor, QAOAVariationalBaseParams, 
 Hamiltonian)
 from ..utilities import generate_uuid, round_value
 
@@ -200,8 +200,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
     Parameters
     ----------
-    circuit_params: QAOACircuitParams
-        An object of the class ``QAOACircuitParams`` which contains information on 
+    qaoa_descriptor: QAOADescriptor
+        An object of the class ``QAOADescriptor`` which contains information on 
         circuit construction and depth of the circuit.
     prepend_state: np.array
         The initial state of the circuit (before Hadamards). An array of shape :math:`(2^{n_qubits},)` or (2, 2, ..., 2). Defaults to ``[1,0,...,0]`` if ``None``.
@@ -215,7 +215,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         https://arxiv.org/abs/1907.04769 for further details.
     """
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  prepend_state: Optional[Union[np.ndarray, List[complex]]],
                  append_state: Optional[Union[np.ndarray, List[complex]]],
                  init_hadamard: bool,
@@ -223,7 +223,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         
         assert cvar_alpha == 1,  "Please use the shot-based simulator for simulations with cvar_alpha < 1"
         
-        QAOABaseBackendStatevector.__init__(self, circuit_params,
+        QAOABaseBackendStatevector.__init__(self, qaoa_descriptor,
                                          prepend_state,
                                          append_state,
                                          init_hadamard,

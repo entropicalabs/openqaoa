@@ -133,7 +133,7 @@ def derivative(backend_obj: QAOABaseBackend,
 
     # cost_std = derivative_dict['cost_std']
     # cost_ext = derivative_dict['cost_ext']
-    params_ext = QAOAVariationalExtendedParams.empty(backend_obj.circuit_params)
+    params_ext = QAOAVariationalExtendedParams.empty(backend_obj.qaoa_descriptor)
 
     derivative_types = ['gradient', 'gradient_w_variance', 'hessian']
     assert derivative_type in derivative_types,\
@@ -303,7 +303,7 @@ def __gradient(args, backend_obj, params, logger, variance):
 
         # get value of eta, the function to get counts, hamiltonian, and alpha
         fun = update_and_get_counts(backend_obj, params, logger)
-        hamiltonian = backend_obj.circuit_params.cost_hamiltonian
+        hamiltonian = backend_obj.qaoa_descriptor.cost_hamiltonian
         alpha = backend_obj.cvar_alpha
 
         # get counts f(x+eta/2) and f(x-eta/2)

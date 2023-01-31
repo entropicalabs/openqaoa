@@ -1,16 +1,16 @@
 import time
 
-from .qaoa_parameters import CircuitProperties
-from ..baseworkflow import Optimizer
+from ..workflow_properties import CircuitProperties
+from ..baseworkflow import Workflow
 from ...backends.devices_core import DeviceLocal
 from ...backends.qaoa_backend import get_qaoa_backend
 from ...problems import QUBO
-from ...qaoa_components import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
+from ...qaoa_components import Hamiltonian, QAOADescriptor, create_qaoa_variational_params
 from ...utilities import get_mixer_hamiltonian
 from ...optimizers.qaoa_optimizer import get_optimizer
 
 
-class QAOA(Optimizer):
+class QAOA(Workflow):
     """
     A class implementing a QAOA workflow end to end.
 
@@ -43,7 +43,7 @@ class QAOA(Optimizer):
             The desired mixer hamiltonian
         cost_hamil: Hamiltonian
             The desired mixer hamiltonian
-        circuit_params: QAOACircuitParams
+        qaoa_descriptor: QAOADescriptor
             the abstract and backend-agnostic representation of the underlying QAOA parameters
         variate_params: QAOAVariationalBaseParams
             The variational parameters. These are the parameters to be optimised by the classical optimiser
@@ -177,9 +177,9 @@ class QAOA(Optimizer):
                                                  qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
                                                  coeffs=self.circuit_properties.mixer_coeffs)
 
-        self.circuit_params = QAOACircuitParams(
+        self.qaoa_descriptor = QAOADescriptor(
             self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p)
-        self.variate_params = create_qaoa_variational_params(qaoa_circuit_params=self.circuit_params,
+        self.variate_params = create_qaoa_variational_params(qaoa_descriptor=self.qaoa_descriptor,
                                                              params_type=self.circuit_properties.param_type,
                                                              init_type=self.circuit_properties.init_type, 
                                                              variational_params_dict=self.circuit_properties.variational_params_dict,
@@ -188,7 +188,7 @@ class QAOA(Optimizer):
                                                              seed=self.circuit_properties.seed,
                                                              total_annealing_time=self.circuit_properties.annealing_time)
 
-        self.backend = get_qaoa_backend(circuit_params=self.circuit_params,
+        self.backend = get_qaoa_backend(qaoa_descriptor=self.qaoa_descriptor,
                                         device=self.device,
                                         **self.backend_properties.__dict__)
 

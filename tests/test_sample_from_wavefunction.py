@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalStandardParams, Hamiltonian
+from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalStandardParams, Hamiltonian
 from openqaoa.utilities import random_classical_hamiltonian, X_mixer_hamiltonian
 from openqaoa.backends import DeviceLocal
 
@@ -31,15 +31,15 @@ class TestGetSamplesMethod(unittest.TestCase):
         cost_hamiltonian = Hamiltonian.classical_hamiltonian(
             terms, weights, constant=0)
         mixer_hamiltonian = X_mixer_hamiltonian(len(reg))
-        qaoa_circuit_params = QAOACircuitParams(
+        qaoa_descriptor = QAOADescriptor(
             cost_hamiltonian, mixer_hamiltonian, p)
         variational_params_std = QAOAVariationalStandardParams(
-            qaoa_circuit_params, betas, gammas)
+            qaoa_descriptor, betas, gammas)
 
         backend_vectorized = get_qaoa_backend(
-            qaoa_circuit_params, DeviceLocal('vectorized'))
+            qaoa_descriptor, DeviceLocal('vectorized'))
         backend_qiskit_statevec = get_qaoa_backend(
-            qaoa_circuit_params, DeviceLocal('qiskit.statevector_simulator'))
+            qaoa_descriptor, DeviceLocal('qiskit.statevector_simulator'))
 
         shot_results_vec = backend_vectorized.sample_from_wavefunction(
             variational_params_std, n_samples=15)
@@ -72,15 +72,15 @@ class TestGetSamplesMethod(unittest.TestCase):
         cost_hamiltonian = random_classical_hamiltonian(reg)
         n_qubits = cost_hamiltonian.n_qubits
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-        qaoa_circuit_params = QAOACircuitParams(
+        qaoa_descriptor = QAOADescriptor(
             cost_hamiltonian, mixer_hamiltonian, p)
         variational_params_std = QAOAVariationalStandardParams(
-            qaoa_circuit_params, betas, gammas)
+            qaoa_descriptor, betas, gammas)
 
         backend_vectorized = get_qaoa_backend(
-            qaoa_circuit_params, DeviceLocal('vectorized'))
+            qaoa_descriptor, DeviceLocal('vectorized'))
         backend_qiskit_statevec = get_qaoa_backend(
-            qaoa_circuit_params, DeviceLocal('qiskit.statevector_simulator'))
+            qaoa_descriptor, DeviceLocal('qiskit.statevector_simulator'))
 
         # wf_vec = backend_vectorized.wavefunction(variational_params_std)
         prob_wf_vec = np.array(list(backend_vectorized.probability_dict(

@@ -4,7 +4,7 @@ import unittest
 
 # OpenQAOA imports
 from openqaoa.backends import QAOAvectorizedBackendSimulator
-from openqaoa.qaoa_components import QAOACircuitParams, Hamiltonian, create_qaoa_variational_params
+from openqaoa.qaoa_components import QAOADescriptor, Hamiltonian, create_qaoa_variational_params
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.optimizers.logger_vqa import Logger
 from openqaoa.derivatives.derivative_functions import derivative
@@ -30,12 +30,12 @@ class TestQAOACostBaseClass(unittest.TestCase):
         cost_hamiltonian = Hamiltonian.classical_hamiltonian(
             terms, weights, constant=0)
         mixer_hamiltonian = X_mixer_hamiltonian(nqubits)
-        qaoa_circuit_params = QAOACircuitParams(
+        qaoa_qaoa_descriptor = QAOADescriptor(
             cost_hamiltonian, mixer_hamiltonian, p)
         variational_params_std = create_qaoa_variational_params(
-            qaoa_circuit_params, 'standard', 'ramp')
+            qaoa_qaoa_descriptor, 'standard', 'ramp')
         backend_vectorized = QAOAvectorizedBackendSimulator(
-            qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
+            qaoa_qaoa_descriptor, prepend_state=None, append_state=None, init_hadamard=True)
         
         grad_stepsize = 0.00000001
         gradient_ps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'param_shift')
@@ -63,12 +63,12 @@ class TestQAOACostBaseClass(unittest.TestCase):
         cost_hamiltonian = Hamiltonian.classical_hamiltonian(
             terms, weights, constant=0.8)
         mixer_hamiltonian = X_mixer_hamiltonian(nqubits)
-        qaoa_circuit_params = QAOACircuitParams(
+        qaoa_qaoa_descriptor = QAOADescriptor(
             cost_hamiltonian, mixer_hamiltonian, p)
         variational_params_std = create_qaoa_variational_params(
-            qaoa_circuit_params, 'standard', 'ramp')
+            qaoa_qaoa_descriptor, 'standard', 'ramp')
         backend_vectorized = QAOAvectorizedBackendSimulator(
-            qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
+            qaoa_qaoa_descriptor, prepend_state=None, append_state=None, init_hadamard=True)
         
         grad_stepsize = 0.00000001
         gradient_ps = backend_vectorized.derivative_function(variational_params_std, 'gradient', 'param_shift')
@@ -116,9 +116,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
     def __backend_params(self, terms:list, weights:list, p:int, nqubits:int):
         cost_hamiltonian = Hamiltonian.classical_hamiltonian(terms, weights, constant=0)
         mixer_hamiltonian = X_mixer_hamiltonian(nqubits)
-        qaoa_circuit_params = QAOACircuitParams(cost_hamiltonian, mixer_hamiltonian, p)
-        variational_params_std = create_qaoa_variational_params(qaoa_circuit_params, 'standard', 'ramp')
-        backend_vectorized = QAOAvectorizedBackendSimulator(qaoa_circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
+        qaoa_qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p)
+        variational_params_std = create_qaoa_variational_params(qaoa_qaoa_descriptor, 'standard', 'ramp')
+        backend_vectorized = QAOAvectorizedBackendSimulator(qaoa_qaoa_descriptor, prepend_state=None, append_state=None, init_hadamard=True)
         return backend_vectorized, variational_params_std
 
     def test_gradient_computation(self):

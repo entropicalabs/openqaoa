@@ -16,7 +16,7 @@ from . import optimization_methods as om
 from .pennylane import optimization_methods_pennylane as ompl
 
 from .logger_vqa import Logger
-from .result import Result
+from ..algorithms.qaoa.qaoa_result import QAOAResult
 
 from ..derivatives.derivative_functions import derivative
 from ..derivatives.qfim import qfim
@@ -282,7 +282,7 @@ class OptimizeVQA(ABC):
         date_time = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         file_name = f'opt_results_{date_time}' if file_name is None else file_name
         
-        self.qaoa_result = Result(self.log, self.method, self.vqa.cost_hamiltonian, type(self.vqa))
+        self.qaoa_result = QAOAResult(self.log, self.method, self.vqa.cost_hamiltonian, type(self.vqa))
         
         if(file_path and os.path.isdir(file_path)):
             print('Saving results locally')

@@ -9,7 +9,7 @@ from qiskit.circuit import Parameter
 
 from .devices import DeviceQiskit
 from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
-from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 from openqaoa.utilities import flip_counts
 
 
@@ -22,8 +22,8 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
     device: `DeviceQiskit`
         An object of the class ``DeviceQiskit`` which contains the credentials
         for accessing the QPU via cloud and the name of the device.
-    circuit_params: `QAOACircuitParams`
-        An object of the class ``QAOACircuitParams`` which contains information on 
+    qaoa_descriptor: `QAOADescriptor`
+        An object of the class ``QAOADescriptor`` which contains information on 
         circuit construction and depth of the circuit.
     n_shots: `int`
         The number of shots to be taken for each circuit.
@@ -39,7 +39,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
     """
 
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  device: DeviceQiskit,
                  n_shots: int,
                  prepend_state: Optional[QuantumCircuit],
@@ -49,7 +49,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  cvar_alpha: float = 1):
 
         QAOABaseBackendShotBased.__init__(self,
-                                          circuit_params,
+                                          qaoa_descriptor,
                                           n_shots,
                                           prepend_state,
                                           append_state,
@@ -58,7 +58,7 @@ class QAOAQiskitQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         QAOABaseBackendCloud.__init__(self, device)
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.circuit_params.qureg if qubit_layout == [] else qubit_layout
+        self.qubit_layout = self.qaoa_descriptor.qureg if qubit_layout == [] else qubit_layout
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit" \

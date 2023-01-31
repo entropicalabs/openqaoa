@@ -18,14 +18,14 @@ import json
 import gzip
 from os.path import exists
 
-from .qaoa.qaoa_parameters import BackendProperties, ClassicalOptimizer
+from .workflow_properties import BackendProperties, ClassicalOptimizer
 from ..backends import DeviceLocal, DeviceBase
 from ..problems import QUBO
 from ..utilities import delete_keys_from_dict, is_valid_uuid, generate_uuid
 from ..backends.qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 
 
-class Optimizer(ABC):
+class Workflow(ABC):
     """
     Abstract class to represent an optimizer
 

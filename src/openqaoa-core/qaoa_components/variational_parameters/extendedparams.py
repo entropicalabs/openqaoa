@@ -5,7 +5,7 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 
 from .variational_baseparams import QAOAVariationalBaseParams
-from ..ansatz_constructor import QAOACircuitParams
+from ..ansatz_constructor import QAOADescriptor
 from ..ansatz_constructor.baseparams import shapedArray
 
 class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
@@ -29,7 +29,7 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
 
     Attributes
     ----------
-    qaoa_circuit_params: QAOACircuitParams
+    qaoa_descriptor: QAOADescriptor
 		Specify the circuit parameters to construct circuit angles to be 
 		used for training
     betas_singles: list
@@ -41,13 +41,13 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
     """
 
     def __init__(self,
-                 qaoa_circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  betas_singles:List[Union[float,int]],
                  betas_pairs:List[Union[float,int]],
                  gammas_singles:List[Union[float,int]],
                  gammas_pairs:List[Union[float,int]]):
         # setup reg, qubits_singles and qubits_pairs
-        super().__init__(qaoa_circuit_params)
+        super().__init__(qaoa_descriptor)
         
 
         self.betas_singles = betas_singles if self.mixer_1q_coeffs else []
@@ -136,7 +136,7 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
 
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_circuit_params:QAOACircuitParams,
+                                     qaoa_descriptor:QAOADescriptor,
                                      time: float = None):
         """
 
@@ -151,16 +151,16 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
         Refactor this s.t. it supers from __init__
         """
         # create evenly spaced timelayers at the centers of p intervals
-        p = qaoa_circuit_params.p
+        p = qaoa_descriptor.p
         if time is None:
             time = float(0.7 * p)
 
         dt = time / p
 
-        n_gamma_singles = len(qaoa_circuit_params.cost_single_qubit_coeffs)
-        n_gamma_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
-        n_beta_singles = len(qaoa_circuit_params.mixer_single_qubit_coeffs)
-        n_beta_pairs = len(qaoa_circuit_params.mixer_pair_qubit_coeffs)
+        n_gamma_singles = len(qaoa_descriptor.cost_single_qubit_coeffs)
+        n_gamma_pairs = len(qaoa_descriptor.cost_pair_qubit_coeffs)
+        n_beta_singles = len(qaoa_descriptor.mixer_single_qubit_coeffs)
+        n_beta_pairs = len(qaoa_descriptor.mixer_pair_qubit_coeffs)
 
         betas = np.linspace((dt / time) * (time * (1 - 0.5 / p)),
                             (dt / time) * (time * 0.5 / p), p)
@@ -171,11 +171,11 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
         gammas_singles = gammas.repeat(n_gamma_singles).reshape(p, n_gamma_singles)
         gammas_pairs = gammas.repeat(n_gamma_pairs).reshape(p, n_gamma_pairs)
 
-        params = cls(qaoa_circuit_params,betas_singles, betas_pairs, gammas_singles, gammas_pairs)
+        params = cls(qaoa_descriptor,betas_singles, betas_pairs, gammas_singles, gammas_pairs)
         return params
     
     @classmethod
-    def random(cls, qaoa_circuit_params:QAOACircuitParams, seed:int = None):
+    def random(cls, qaoa_descriptor:QAOADescriptor, seed:int = None):
         """
         Returns
         -------
@@ -185,38 +185,38 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
         if seed is not None:
             np.random.seed(seed)
 
-        p=qaoa_circuit_params.p
-        n_gamma_singles = len(qaoa_circuit_params.cost_single_qubit_coeffs)
-        n_gamma_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
-        n_beta_singles = len(qaoa_circuit_params.mixer_single_qubit_coeffs)
-        n_beta_pairs = len(qaoa_circuit_params.mixer_pair_qubit_coeffs)
+        p=qaoa_descriptor.p
+        n_gamma_singles = len(qaoa_descriptor.cost_single_qubit_coeffs)
+        n_gamma_pairs = len(qaoa_descriptor.cost_pair_qubit_coeffs)
+        n_beta_singles = len(qaoa_descriptor.mixer_single_qubit_coeffs)
+        n_beta_pairs = len(qaoa_descriptor.mixer_pair_qubit_coeffs)
 
         betas_singles = np.random.uniform(0,np.pi,(p,n_beta_singles))
         betas_pairs = np.random.uniform(0,np.pi,(p,n_beta_pairs))
         gammas_singles = np.random.uniform(0,np.pi,(p,n_gamma_singles))
         gammas_pairs = np.random.uniform(0,np.pi,(p,n_gamma_pairs))
 
-        params = cls(qaoa_circuit_params,betas_singles, betas_pairs, gammas_singles, gammas_pairs)
+        params = cls(qaoa_descriptor,betas_singles, betas_pairs, gammas_singles, gammas_pairs)
         return params
     
     @classmethod
-    def empty(cls, qaoa_circuit_params: QAOACircuitParams):
+    def empty(cls, qaoa_descriptor: QAOADescriptor):
         """
         Initialise Extended parameters with empty arrays
         """        
 
-        p=qaoa_circuit_params.p
-        n_gamma_singles = len(qaoa_circuit_params.cost_single_qubit_coeffs)
-        n_gamma_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
-        n_beta_singles = len(qaoa_circuit_params.mixer_single_qubit_coeffs)
-        n_beta_pairs = len(qaoa_circuit_params.mixer_pair_qubit_coeffs)
+        p=qaoa_descriptor.p
+        n_gamma_singles = len(qaoa_descriptor.cost_single_qubit_coeffs)
+        n_gamma_pairs = len(qaoa_descriptor.cost_pair_qubit_coeffs)
+        n_beta_singles = len(qaoa_descriptor.mixer_single_qubit_coeffs)
+        n_beta_pairs = len(qaoa_descriptor.mixer_pair_qubit_coeffs)
 
         betas_singles = np.empty((p,n_beta_singles))
         betas_pairs = np.empty((p,n_beta_pairs))
         gammas_singles = np.empty((p,n_gamma_singles))
         gammas_pairs = np.empty((p,n_gamma_pairs))
 
-        params = cls(qaoa_circuit_params,betas_singles, betas_pairs, gammas_singles, gammas_pairs)
+        params = cls(qaoa_descriptor,betas_singles, betas_pairs, gammas_singles, gammas_pairs)
         return params
     
     def get_constraints(self):

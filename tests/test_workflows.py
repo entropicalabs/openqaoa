@@ -8,21 +8,33 @@ from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer import QasmSimulator
 
 from openqaoa import QAOA, RQAOA
-from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
+from openqaoa.utilities import (
+    X_mixer_hamiltonian,
+    XY_mixer_hamiltonian,
+    is_valid_uuid
+)
 from openqaoa.backends import create_device, DeviceLocal
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.qaoa_components import (
-    Hamiltonian, QAOACircuitParams, QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams, 
-    QAOAVariationalExtendedParams, QAOAVariationalFourierParams, 
-    QAOAVariationalFourierExtendedParams, QAOAVariationalFourierWithBiasParams)
+    Hamiltonian, QAOADescriptor, QAOAVariationalStandardParams,
+    QAOAVariationalStandardWithBiasParams, QAOAVariationalExtendedParams,
+    QAOAVariationalFourierParams, QAOAVariationalFourierExtendedParams,
+    QAOAVariationalFourierWithBiasParams
+)
 from openqaoa.backends import QAOAvectorizedBackendSimulator
 from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
-from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
+from openqaoa.optimizers.training_vqa import (
+    ScipyOptimizer, CustomScipyGradientOptimizer,
+    PennyLaneOptimizer
+)
 from openqaoa_pyquil.backends import DevicePyquil
 from openqaoa_pyquil.backends import QAOAPyQuilWavefunctionSimulatorBackend
 from openqaoa_qiskit.backends import DeviceQiskit
-from openqaoa_qiskit.backends import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
+from openqaoa_qiskit.backends import (
+    QAOAQiskitBackendShotBasedSimulator,
+    QAOAQiskitBackendStatevecSimulator
+)
 
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
@@ -136,7 +148,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.compile(problem = qubo_problem)
         
         self.assertEqual(q.cost_hamil.expression, test_hamil.expression)
-        self.assertEqual(q.circuit_params.cost_hamiltonian.expression, 
+        self.assertEqual(q.qaoa_descriptor.cost_hamiltonian.expression, 
                          test_hamil.expression)
         
     def test_set_circuit_properties_fourier_q(self):
@@ -179,7 +191,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.circuit_properties.linear_ramp_time, 0.7*2)
         
             
-    def test_set_circuit_properties_circuit_params_mixer_x(self):
+    def test_set_circuit_properties_qaoa_descriptor_mixer_x(self):
         
         """
         Checks if the X mixer created by the X_mixer_hamiltonian method and the automated methods in workflows do the same thing.
@@ -197,23 +209,23 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         q.compile(problem = problem.get_qubo_problem())
 
-        self.assertEqual(type(q.circuit_params), QAOACircuitParams)
-        self.assertEqual(q.circuit_params.p, 2)
+        self.assertEqual(type(q.qaoa_descriptor), QAOADescriptor)
+        self.assertEqual(q.qaoa_descriptor.p, 2)
 
         mixer_hamil = X_mixer_hamiltonian(n_qubits = nodes)
 
         self.assertEqual(q.mixer_hamil.expression, mixer_hamil.expression)
         
-        self.assertEqual(len(q.circuit_params.mixer_qubits_singles), 6)
-        self.assertEqual(len(q.circuit_params.mixer_qubits_pairs), 0)
-        for each_gatemap_name in q.circuit_params.mixer_qubits_singles:    
+        self.assertEqual(len(q.qaoa_descriptor.mixer_qubits_singles), 6)
+        self.assertEqual(len(q.qaoa_descriptor.mixer_qubits_pairs), 0)
+        for each_gatemap_name in q.qaoa_descriptor.mixer_qubits_singles:    
             self.assertEqual(each_gatemap_name, 'RXGateMap')
 
         for j in range(2):
             for i in range(6):
-                self.assertEqual(q.circuit_params.mixer_block[j][i].qubit_1, i)
+                self.assertEqual(q.qaoa_descriptor.mixer_block[j][i].qubit_1, i)
 
-    def test_set_circuit_properties_circuit_params_mixer_xy(self):
+    def test_set_circuit_properties_qaoa_descriptor_mixer_xy(self):
         
         """
         Checks if the XY mixer created by the XY_mixer_hamiltonian method and the automated methods in workflows do the same thing.
@@ -239,17 +251,17 @@ class TestingVanillaQAOA(unittest.TestCase):
 
             q.compile(problem = problems[i].get_qubo_problem())
 
-            self.assertEqual(type(q.circuit_params), QAOACircuitParams)
-            self.assertEqual(q.circuit_params.p, 2)
+            self.assertEqual(type(q.qaoa_descriptor), QAOADescriptor)
+            self.assertEqual(q.qaoa_descriptor.p, 2)
 
             mixer_hamil = XY_mixer_hamiltonian(n_qubits = 6, qubit_connectivity = qubit_connectivity_name[i])
             
             self.assertEqual(q.mixer_hamil.expression, mixer_hamil.expression)
             
-            self.assertEqual(len(q.circuit_params.mixer_qubits_singles), 0)
-            for i in range(0, len(q.circuit_params.mixer_qubits_pairs), 2):
-                self.assertEqual(q.circuit_params.mixer_qubits_pairs[i], 'RXXGateMap')
-                self.assertEqual(q.circuit_params.mixer_qubits_pairs[i+1], 'RYYGateMap')
+            self.assertEqual(len(q.qaoa_descriptor.mixer_qubits_singles), 0)
+            for i in range(0, len(q.qaoa_descriptor.mixer_qubits_pairs), 2):
+                self.assertEqual(q.qaoa_descriptor.mixer_qubits_pairs[i], 'RXXGateMap')
+                self.assertEqual(q.qaoa_descriptor.mixer_qubits_pairs[i+1], 'RYYGateMap')
         
     def test_set_circuit_properties_variate_params(self):
         

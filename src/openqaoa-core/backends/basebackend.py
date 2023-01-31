@@ -15,8 +15,10 @@ from copy import deepcopy
 import numpy as np
 
 from .devices_core import DeviceBase
-from ..qaoa_components import (RotationGateMap, TwoQubitRotationGateMap, 
-QAOACircuitParams, QAOAVariationalBaseParams)
+from ..qaoa_components import (
+    RotationGateMap, TwoQubitRotationGateMap, 
+    QAOADescriptor, QAOAVariationalBaseParams
+)
 from ..utilities import qaoa_probabilities, round_value
 from .cost_function import cost_function
 from copy import deepcopy
@@ -94,7 +96,7 @@ class QAOABaseBackend(VQABaseBackend):
 
     Parameters
     ----------
-    circuit_params: `QAOACircuitParams`
+    qaoa_descriptor: `QAOADescriptor`
         This object handles the information to design the QAOA circuit ansatz
     prepend_state: `Union[QuantumCircuitBase, List[complex]]` 
         Warm Starting the QAOA problem with some initial state other than the regular
@@ -106,7 +108,7 @@ class QAOABaseBackend(VQABaseBackend):
     """
 
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
                  append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
                  init_hadamard: bool,
@@ -114,13 +116,13 @@ class QAOABaseBackend(VQABaseBackend):
 
         super().__init__(prepend_state, append_state)
 
-        self.circuit_params = circuit_params
-        self.cost_hamiltonian = circuit_params.cost_hamiltonian
+        self.qaoa_descriptor = qaoa_descriptor
+        self.cost_hamiltonian = qaoa_descriptor.cost_hamiltonian
         self.n_qubits = self.cost_hamiltonian.n_qubits
         self.init_hadamard = init_hadamard
         self.cvar_alpha = cvar_alpha
 
-        self.abstract_circuit = deepcopy(self.circuit_params.abstract_circuit)
+        self.abstract_circuit = deepcopy(self.qaoa_descriptor.abstract_circuit)
 
     def assign_angles(self, params: QAOAVariationalBaseParams) -> None:
 
@@ -252,7 +254,7 @@ class QAOABaseBackend(VQABaseBackend):
         """
         counts = self.get_counts(params, n_shots)
         cost = cost_function(
-            counts, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
+            counts, self.qaoa_descriptor.cost_hamiltonian, self.cvar_alpha)
         return cost
 
     @round_value
@@ -278,9 +280,9 @@ class QAOABaseBackend(VQABaseBackend):
         """
         counts = self.get_counts(params, n_shots)
         cost = cost_function(
-            counts, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
+            counts, self.qaoa_descriptor.cost_hamiltonian, self.cvar_alpha)
         cost_sq = cost_function(counts,
-                                self.circuit_params.cost_hamiltonian.hamiltonian_squared,
+                                self.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
                                 self.cvar_alpha)
 
         uncertainty = np.sqrt(cost_sq - cost**2)
@@ -307,7 +309,7 @@ class QAOABaseBackend(VQABaseBackend):
             - The minimum energy eigenvector as a binary array
               configuration: qubit-0 as the first element in the sequence    
         """
-        register = self.circuit_params.qureg
+        register = self.qaoa_descriptor.qureg
         terms = self.cost_hamiltonian.terms
         coeffs = self.cost_hamiltonian.coeffs
         constant_energy = self.cost_hamiltonian.constant
@@ -480,14 +482,14 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
     """
 
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  n_shots: int,
                  prepend_state: Optional[QuantumCircuitBase],
                  append_state: Optional[QuantumCircuitBase],
                  init_hadamard: bool,
                  cvar_alpha: float = 1):
 
-        super().__init__(circuit_params, prepend_state,
+        super().__init__(qaoa_descriptor, prepend_state,
                          append_state, init_hadamard, cvar_alpha)
 
         # assert self.n_qubits >= len(prepend_state.qubits), \

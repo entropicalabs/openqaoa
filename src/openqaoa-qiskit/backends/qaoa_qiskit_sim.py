@@ -10,7 +10,7 @@ from qiskit.quantum_info import Statevector
 from qiskit.circuit import Parameter
 
 from openqaoa.backends.basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
-from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 from openqaoa.utilities import flip_counts, generate_uuid, round_value
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.qaoa_components.ansatz_constructor import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap, 
@@ -23,8 +23,8 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
 
     Parameters
     ----------
-    circuit_params: `QAOACircuitParams`
-        An object of the class ``QAOACircuitParams`` which contains information on 
+    qaoa_descriptor: `QAOADescriptor`
+        An object of the class ``QAOADescriptor`` which contains information on 
         circuit construction and depth of the circuit.
     
     n_shots: `int`
@@ -57,7 +57,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
 
 
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  n_shots: int,
                  prepend_state: Optional[QuantumCircuit],
                  append_state: Optional[QuantumCircuit],
@@ -67,7 +67,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
                  seed_simulator: Optional[int] = None,
                  noise_model: Optional[NoiseModel] = None):
         
-        QAOABaseBackendShotBased.__init__(self,circuit_params,
+        QAOABaseBackendShotBased.__init__(self,qaoa_descriptor,
                                           n_shots,
                                           prepend_state,
                                           append_state,
@@ -75,7 +75,7 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
                                           cvar_alpha)
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.circuit_params.qureg
+        self.qubit_layout = self.qaoa_descriptor.qureg
         
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit " \
@@ -187,8 +187,8 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
 
     Parameters
     ----------
-    circuit_params: `QAOACircuitParams`
-        An object of the class ``QAOACircuitParams`` which contains information on 
+    qaoa_descriptor: `QAOADescriptor`
+        An object of the class ``QAOADescriptor`` which contains information on 
         circuit construction and depth of the circuit.
     
     n_shots: `int`
@@ -211,13 +211,13 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
                                 RYYGateMap, RZZGateMap, RZXGateMap]
 
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  prepend_state: Optional[Union[np.ndarray,QuantumCircuit]],
                  append_state: Optional[Union[np.ndarray,QuantumCircuit]],
                  init_hadamard: bool,
                  cvar_alpha: float = 1):
         
-        QAOABaseBackendStatevector.__init__(self, circuit_params,
+        QAOABaseBackendStatevector.__init__(self, qaoa_descriptor,
                                             prepend_state,
                                             append_state,
                                             init_hadamard,
@@ -226,7 +226,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
         assert cvar_alpha == 1,  "Please use the shot-based simulator for simulations with cvar_alpha < 1"
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.circuit_params.qureg
+        self.qubit_layout = self.qaoa_descriptor.qureg
         
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit " \

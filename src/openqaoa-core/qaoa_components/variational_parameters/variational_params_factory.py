@@ -7,7 +7,7 @@ from .fourierparams import (QAOAVariationalFourierParams, QAOAVariationalFourier
                             QAOAVariationalFourierWithBiasParams)
 from .extendedparams import QAOAVariationalExtendedParams
 from .standardparams import QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams
-from ..ansatz_constructor import QAOACircuitParams
+from ..ansatz_constructor import QAOADescriptor
 
 VARIATIONAL_PARAMS_DICT_KEYS = {'standard': ['betas', 'gammas'],
                                 'standard_w_bias': ['betas', 'gammas_singles', 'gammas_pairs'],
@@ -101,7 +101,7 @@ def _qaoa_variational_params_args(params_type: str,
     return final_variational_params
 
 
-def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
+def create_qaoa_variational_params(qaoa_descriptor: QAOADescriptor,
                                    params_type: str,
                                    init_type: str,
                                    variational_params_dict: dict = {},
@@ -114,7 +114,7 @@ def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
 
     Parameters
     ----------
-    qaoa_circuit_params: ``QAOACircuitParams``
+    qaoa_descriptor: ``QAOADescriptor``
         QAOA Circuit Parameters containing information on
         mixer and cost Hamiltonians.
     params_type: ``str``
@@ -150,7 +150,7 @@ def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
     if init_type == 'custom':
         try:
             qaoa_variational_params = params_class(
-                qaoa_circuit_params, *variational_params_args)
+                qaoa_descriptor, *variational_params_args)
         except:
             raise ValueError(f"For the selected {params_type} parameterisation, please specify a"
                              f" dictionary with correct {VARIATIONAL_PARAMS_DICT_KEYS[params_type]} keys")
@@ -163,11 +163,11 @@ def create_qaoa_variational_params(qaoa_circuit_params: QAOACircuitParams,
         else:
             raise ValueError(f"Please specify a numeric value for linear_ramp_time.")
             
-        qaoa_variational_params = params_class.linear_ramp_from_hamiltonian(qaoa_circuit_params,
+        qaoa_variational_params = params_class.linear_ramp_from_hamiltonian(qaoa_descriptor,
                                                                             *variational_params_args,
                                                                             time = linear_ramp_time)
     elif init_type == 'rand':
-        qaoa_variational_params = params_class.random(qaoa_circuit_params,
+        qaoa_variational_params = params_class.random(qaoa_descriptor,
                                                       *variational_params_args,
                                                       seed = seed)
     else:

@@ -9,7 +9,7 @@ from braket.jobs.metrics import log_metric
 
 from .devices import DeviceAWS
 from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
-from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 
 class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
     """
@@ -20,8 +20,8 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
     device: `DeviceAWS`
         An object of the class ``DeviceAWS`` which contains the credentials
         for accessing the QPU via cloud and the name of the device.
-    circuit_params: `QAOACircuitParams`
-        An object of the class ``QAOACircuitParams`` which contains information on 
+    qaoa_descriptor: `QAOADescriptor`
+        An object of the class ``QAOADescriptor`` which contains information on 
         circuit construction and depth of the circuit.
     n_shots: `int`
         The number of shots to be taken for each circuit.
@@ -40,7 +40,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
     """
 
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  device: DeviceAWS,
                  n_shots: int,
                  prepend_state: Optional[Circuit],
@@ -51,7 +51,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                  disable_qubit_rewiring: bool = False):
 
         QAOABaseBackendShotBased.__init__(self,
-                                          circuit_params,
+                                          qaoa_descriptor,
                                           n_shots,
                                           prepend_state,
                                           append_state,
@@ -59,7 +59,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
                                           cvar_alpha)
         QAOABaseBackendCloud.__init__(self, device)
 
-        self.qureg = self.circuit_params.qureg
+        self.qureg = self.qaoa_descriptor.qureg
         self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout
         self.disable_qubit_rewiring = disable_qubit_rewiring
 

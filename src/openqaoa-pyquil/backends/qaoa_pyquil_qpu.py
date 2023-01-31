@@ -4,7 +4,7 @@ from pyquil import Program, gates, quilbase
 
 from .devices import DevicePyquil
 from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
-from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap
 from openqaoa.utilities import generate_uuid
 
@@ -46,8 +46,8 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
     ----------
     device: `DevicePyquil`
         The device object to access pyquil devices with credentials.
-    circuit_params: `QAOACircuitParams`
-        An object of the class ``QAOACircuitParams`` which contains information on 
+    qaoa_descriptor: `QAOADescriptor`
+        An object of the class ``QAOADescriptor`` which contains information on 
         circuit construction and depth of the circuit.
     n_shots: `int`
         The number of shots to be taken for each circuit.
@@ -73,7 +73,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
     def __init__(self,
                  device: DevicePyquil,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  n_shots: int,
                  prepend_state: Program,
                  append_state: Program,
@@ -85,7 +85,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
                  ):
 
         QAOABaseBackendShotBased.__init__(self,
-                                          circuit_params,
+                                          qaoa_descriptor,
                                           n_shots,
                                           prepend_state,
                                           append_state,
@@ -95,7 +95,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
 
         self.active_reset = active_reset
         self.rewiring = rewiring
-        self.qureg = self.circuit_params.qureg
+        self.qureg = self.qaoa_descriptor.qureg
 
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
         self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout

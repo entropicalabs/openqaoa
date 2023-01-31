@@ -6,7 +6,7 @@ from pyquil import Program, quilbase
 from pyquil.gates import RX, RY, RZ
 
 from openqaoa import QAOA
-from openqaoa.qaoa_components import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
+from openqaoa.qaoa_components import create_qaoa_variational_params, QAOADescriptor, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends import QAOAvectorizedBackendSimulator, create_device
 from openqaoa.problems import NumberPartition, QUBO
@@ -49,12 +49,12 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         device_pyquil = DevicePyquil(device_name = "2q-qvm", as_qvm=True, execution_timeout = 3, compiler_timeout=3)
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,))], [1,2], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
         
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, active_reset = True)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, active_reset = True)
         assert 'RESET' in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
         
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, active_reset = False)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, active_reset = False)
         assert 'RESET' not in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
         
     @pytest.mark.qvm
@@ -68,17 +68,17 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         device_pyquil = DevicePyquil(device_name = "2q-qvm", as_qvm=True, execution_timeout = 3, compiler_timeout=3)
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,))], [1,2], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
         
         # Test if error is raised correctly
-        self.assertRaises(ValueError, lambda : QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'illegal string')) 
+        self.assertRaises(ValueError, lambda : QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'illegal string')) 
         
         # Test when rewiring = 'PRAGMA INITIAL_REWIRING "NAIVE"'
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'PRAGMA INITIAL_REWIRING "NAIVE"')
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'PRAGMA INITIAL_REWIRING "NAIVE"')
         assert 'PRAGMA INITIAL_REWIRING "NAIVE"' in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
         
         # Test when rewiring = 'PRAGMA INITIAL_REWIRING "PARTIAL"'
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'PRAGMA INITIAL_REWIRING "PARTIAL"')
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1, rewiring = 'PRAGMA INITIAL_REWIRING "PARTIAL"')
         assert 'PRAGMA INITIAL_REWIRING "PARTIAL"' in [str(instr) for instr in backend_obj_pyquil.parametric_circuit]
         
     @pytest.mark.qvm
@@ -93,13 +93,13 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         # Without interaction terms
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,))], [1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        variate_params = create_qaoa_variational_params(circuit_params,'standard','ramp')
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor,'standard','ramp')
 
         args = [np.pi/4, np.pi/4] # beta, gamma
         variate_params.update_from_raw(args)
         
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
         backend_obj_pyquil.expectation(variate_params)
 
         assert np.isclose(backend_obj_pyquil.expectation(variate_params), -1)
@@ -116,8 +116,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         # Without interaction terms
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,))], [1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
 
         gate_names = [instr.name for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Gate]
         assert gate_names == ['RZ','RX','RZ','RX','RZ','RX','RZ','RX', 'RZ', 'RZ', 'RX', 'RX']
@@ -128,8 +128,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         # With interaction terms
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)
 
         gate_names = [instr.name for instr in backend_obj_pyquil.parametric_circuit if type(instr) == quilbase.Gate]
         assert gate_names == ['RZ', 'RX', 'RZ', 'RX', 'RZ', 'RX', 'RZ', 'RX', 'RZ', 'RZ', 'RZ', 'RZ', 'CPHASE', 'RX', 'RX']
@@ -149,8 +149,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         # With hadamard
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        pyquil_backend = QAOAPyQuilQPUBackend(device_pyquil, circuit_params, 
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        pyquil_backend = QAOAPyQuilQPUBackend(device_pyquil, qaoa_descriptor, 
                                               n_shots = 10, prepend_state = None, 
                                               append_state = None, init_hadamard = True, cvar_alpha = 1)
 
@@ -159,8 +159,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         # Without hadamard
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        pyquil_backend = QAOAPyQuilQPUBackend(device_pyquil, circuit_params, 
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        pyquil_backend = QAOAPyQuilQPUBackend(device_pyquil, qaoa_descriptor, 
                                               n_shots = 10, prepend_state = None, 
                                               append_state = None, init_hadamard = False, cvar_alpha = 1)
 
@@ -178,12 +178,12 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         # With append_state
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
 
         append_circuit = Program().inst(RX(np.pi, 0), RY(np.pi/2, 1), RZ(np.pi, 0))
 
 
-        pyquil_backend = QAOAPyQuilQPUBackend(device_pyquil, circuit_params, 
+        pyquil_backend = QAOAPyQuilQPUBackend(device_pyquil, qaoa_descriptor, 
                                               n_shots = 10, prepend_state = None, 
                                               append_state = append_circuit, init_hadamard = False, cvar_alpha = 1)
 
@@ -201,12 +201,12 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         # With prepend_state
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
 
         prepend_circuit = Program().inst(RX(np.pi, 0), RY(np.pi/2, 1), RZ(np.pi, 0))
 
 
-        pyquil_backend = QAOAPyQuilQPUBackend(device_pyquil, circuit_params, 
+        pyquil_backend = QAOAPyQuilQPUBackend(device_pyquil, qaoa_descriptor, 
                                               n_shots = 10, prepend_state = prepend_circuit, 
                                               append_state = None, init_hadamard = False, cvar_alpha = 1)
 
@@ -214,7 +214,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         
         # Test if error is raised correctly
         prepend_circuit = Program().inst(RX(np.pi, 0), RY(np.pi/2, 1), RZ(np.pi, 2))
-        self.assertRaises(AssertionError, lambda : QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = prepend_circuit, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)) 
+        self.assertRaises(AssertionError, lambda : QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = prepend_circuit, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=1)) 
 
     @pytest.mark.qvm
     def test_pyquil_vectorized_agreement(self):
@@ -228,16 +228,16 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        variate_params = create_qaoa_variational_params(circuit_params,'standard','ramp')
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor,'standard','ramp')
         args = [np.pi/8, np.pi/4] # beta, gamma
 
         variate_params.update_from_raw(args)
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(circuit_params = circuit_params, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=100)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=100)
         expt_pyquil = backend_obj_pyquil.expectation(variate_params)
         
         variate_params.update_from_raw(args)
-        backend_obj_vectorized = QAOAvectorizedBackendSimulator(circuit_params, prepend_state=None, append_state=None, init_hadamard=True)
+        backend_obj_vectorized = QAOAvectorizedBackendSimulator(qaoa_descriptor, prepend_state=None, append_state=None, init_hadamard=True)
         expt_vec, std_dev_vec = backend_obj_vectorized.expectation_w_uncertainty(variate_params)
 
         self.assertAlmostEqual(expt_vec, expt_pyquil, delta = std_dev_vec)
@@ -254,12 +254,12 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         set_of_numbers = np.random.randint(1, 10, 6).tolist()
         qubo = NumberPartition(set_of_numbers).get_qubo_problem()
         mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
-        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
-        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
+        qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'rand')
         
         device_qvm = DevicePyquil(device_name = "5q-qvm", as_qvm=True, execution_timeout = 3, compiler_timeout=3)
         try:
-            qvm_backend = QAOAPyQuilQPUBackend(device_qvm, circuit_params, shots, None, None, True, 1.)
+            qvm_backend = QAOAPyQuilQPUBackend(device_qvm, qaoa_descriptor, shots, None, None, True, 1.)
             qvm_backend.expectation(variate_params)
         except Exception as e:
             self.assertEqual(str(e), 'There are lesser qubits on the device than the number of qubits required for the circuit.')

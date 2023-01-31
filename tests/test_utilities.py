@@ -5,7 +5,7 @@ import unittest
 
 from openqaoa.backends import DeviceLocal
 from openqaoa.utilities import *
-from openqaoa.qaoa_components import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
+from openqaoa.qaoa_components import PauliOp, Hamiltonian, QAOADescriptor, create_qaoa_variational_params
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.problems import MinimumVertexCover
@@ -666,13 +666,13 @@ class TestingUtilities(unittest.TestCase):
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
 
         # Define circuit and variational parameters
-        circuit_params = QAOACircuitParams(hamiltonian,mixer_hamiltonian, p = p)
-        variational_params = create_qaoa_variational_params(circuit_params, params_type = 'standard', init_type = 'ramp')
+        qaoa_descriptor = QAOADescriptor(hamiltonian,mixer_hamiltonian, p = p)
+        variational_params = create_qaoa_variational_params(qaoa_descriptor, params_type = 'standard', init_type = 'ramp')
 
         ## Testing
 
         # Perform QAOA and obtain expectation values numerically
-        qaoa_backend = get_qaoa_backend(circuit_params, device = DeviceLocal('vectorized'))
+        qaoa_backend = get_qaoa_backend(qaoa_descriptor, device = DeviceLocal('vectorized'))
         optimizer = get_optimizer(qaoa_backend, variational_params, optimizer_dict = {'method':'cobyla','maxiter':200})
         optimizer()
         qaoa_results = optimizer.qaoa_result

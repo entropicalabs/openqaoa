@@ -1,2 +1,2 @@
-from .qaoa import QAOA
-from .rqaoa import RQAOA
+from .qaoa import QAOA, QAOAResult
+from .rqaoa import RQAOA, RQAOAResults

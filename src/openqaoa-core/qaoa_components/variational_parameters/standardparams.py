@@ -4,7 +4,7 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 
 from .variational_baseparams import QAOAVariationalBaseParams
-from ..ansatz_constructor import QAOACircuitParams
+from ..ansatz_constructor import QAOADescriptor
 from ..ansatz_constructor.baseparams import shapedArray, _is_iterable_empty
 
 
@@ -25,8 +25,8 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    qaoa_circuit_params:
-        QAOACircuitParams object containing circuit instructions
+    qaoa_descriptor:
+        QAOADescriptor object containing circuit instructions
     betas: 
         List of p betas
     gammas:
@@ -41,11 +41,11 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
     """
 
     def __init__(self,
-                 qaoa_circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  betas: List[Union[float, int]],
                  gammas: List[Union[float, int]]):
         # setup reg, qubits_singles and qubits_pairs
-        super().__init__(qaoa_circuit_params)
+        super().__init__(qaoa_descriptor)
         self.betas = np.array(betas)
         self.gammas = np.array(gammas)
 
@@ -101,7 +101,7 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
 
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_circuit_params: QAOACircuitParams,
+                                     qaoa_descriptor: QAOADescriptor,
                                      time: float = None):
         """
         Returns
@@ -110,7 +110,7 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
             A ``StandardParams`` object with parameters according
             to a linear ramp schedule for the Hamiltonian specified by register, terms, weights.
         """
-        p = qaoa_circuit_params.p
+        p = qaoa_descriptor.p
 
         if time is None:
             time = float(0.7 * p)
@@ -121,12 +121,12 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
                             (dt / time) * (time * 0.5 / p), p)
         gammas = betas[::-1]
         # wrap it all nicely in a qaoa_parameters object
-        params = cls(qaoa_circuit_params, betas, gammas)
+        params = cls(qaoa_descriptor, betas, gammas)
 
         return params
 
     @classmethod
-    def random(cls, qaoa_circuit_params: QAOACircuitParams, seed: int = None):
+    def random(cls, qaoa_descriptor: QAOADescriptor, seed: int = None):
         """
         Returns
         -------
@@ -136,23 +136,23 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
         if seed is not None:
             np.random.seed(seed)
 
-        betas = np.random.uniform(0, np.pi, qaoa_circuit_params.p)
-        gammas = np.random.uniform(0, np.pi, qaoa_circuit_params.p)
+        betas = np.random.uniform(0, np.pi, qaoa_descriptor.p)
+        gammas = np.random.uniform(0, np.pi, qaoa_descriptor.p)
 
-        params = cls(qaoa_circuit_params, betas, gammas)
+        params = cls(qaoa_descriptor, betas, gammas)
 
         return params
 
     @classmethod
-    def empty(cls, qaoa_circuit_params: QAOACircuitParams):
+    def empty(cls, qaoa_descriptor: QAOADescriptor):
         """
         Initialise Standard Variational params with empty arrays
         """
-        p = qaoa_circuit_params.p
+        p = qaoa_descriptor.p
         betas = np.empty(p)
         gammas = np.empty(p)
 
-        return cls(qaoa_circuit_params, betas, gammas)
+        return cls(qaoa_descriptor, betas, gammas)
 
     def plot(self, ax=None, **kwargs):
         if ax is None:
@@ -215,8 +215,8 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    qaoa_circuit_params:
-        QAOACircuitParams object containing circuit instructions
+    qaoa_descriptor:
+        QAOADescriptor object containing circuit instructions
     betas: 
         List of p betas
     gammas_singles:
@@ -235,12 +235,12 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
     """
 
     def __init__(self,
-                 qaoa_circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  betas: List[Union[float, int]],
                  gammas_singles: List[Union[float, int]],
                  gammas_pairs: List[Union[float, int]]):
 
-        super().__init__(qaoa_circuit_params)
+        super().__init__(qaoa_descriptor)
         if not self.cost_1q_coeffs or not self.cost_2q_coeffs:
             raise RuntimeError(f"Please choose {type(self).__name__} parameterisation for "
                                "problems containing both Cost One-Qubit and Two-Qubit terms")
@@ -310,7 +310,7 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
 
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_circuit_params: QAOACircuitParams,
+                                     qaoa_descriptor: QAOADescriptor,
                                      time: float = None):
         """
         Returns
@@ -319,7 +319,7 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
             A ``StandardParams`` object with parameters according
             to a linear ramp schedule for the Hamiltonian specified by register, terms, weights.
         """
-        p = qaoa_circuit_params.p
+        p = qaoa_descriptor.p
 
         if time is None:
             time = float(0.7 * p)
@@ -331,12 +331,12 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
         gammas_singles = betas[::-1]
         gammas_pairs = betas[::-1]
 
-        params = cls(qaoa_circuit_params, betas, gammas_singles, gammas_pairs)
+        params = cls(qaoa_descriptor, betas, gammas_singles, gammas_pairs)
 
         return params
 
     @classmethod
-    def random(cls, qaoa_circuit_params: QAOACircuitParams, seed: int = None):
+    def random(cls, qaoa_descriptor: QAOADescriptor, seed: int = None):
         """
         Returns
         -------
@@ -346,24 +346,24 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
         if seed is not None:
             np.random.seed(seed)
 
-        betas = np.random.uniform(0, np.pi, qaoa_circuit_params.p)
-        gammas_singles = np.random.uniform(0, np.pi, qaoa_circuit_params.p)
-        gammas_pairs = np.random.uniform(0, np.pi, qaoa_circuit_params.p)
+        betas = np.random.uniform(0, np.pi, qaoa_descriptor.p)
+        gammas_singles = np.random.uniform(0, np.pi, qaoa_descriptor.p)
+        gammas_pairs = np.random.uniform(0, np.pi, qaoa_descriptor.p)
 
-        params = cls(qaoa_circuit_params, betas, gammas_singles, gammas_pairs)
+        params = cls(qaoa_descriptor, betas, gammas_singles, gammas_pairs)
         return params
 
     @classmethod
-    def empty(cls, qaoa_circuit_params: QAOACircuitParams):
+    def empty(cls, qaoa_descriptor: QAOADescriptor):
         """
         Initialise Standard Variational params with empty arrays
         """
-        p = qaoa_circuit_params.p
+        p = qaoa_descriptor.p
         betas = np.empty(p)
         gammas_singles = np.empty(p)
         gammas_pairs = np.empty(p)
 
-        return cls(qaoa_circuit_params, betas, gammas_singles, gammas_pairs)
+        return cls(qaoa_descriptor, betas, gammas_singles, gammas_pairs)
 
     def plot(self, ax=None, **kwargs):
         if ax is None:

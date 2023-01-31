@@ -5,7 +5,7 @@ from pyquil import Program, gates
 from pyquil.api import WavefunctionSimulator
 
 from openqaoa.backends.basebackend import QAOABaseBackendStatevector
-from openqaoa.qaoa_components import QAOACircuitParams, QAOAVariationalBaseParams
+from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import (RXGateMap, RYGateMap, RZGateMap)
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.utilities import generate_uuid, round_value
@@ -18,13 +18,13 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
     PYQUIL_PAULIGATE_LIBRARY = [RXGateMap, RYGateMap, RZGateMap]
 
     def __init__(self,
-                 circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  prepend_state: Program = None,
                  append_state: Program = None,
                  init_hadamard: bool = True,
                  cvar_alpha: float = 1):
 
-        QAOABaseBackendStatevector.__init__(self, circuit_params, prepend_state,
+        QAOABaseBackendStatevector.__init__(self, qaoa_descriptor, prepend_state,
                                             append_state, init_hadamard,
                                             cvar_alpha)
 
@@ -116,7 +116,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         """
         prob_dict = self.probability_dict(params)
         cost = cost_function(
-            prob_dict, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
+            prob_dict, self.qaoa_descriptor.cost_hamiltonian, self.cvar_alpha)
         return cost
 
     @round_value
@@ -139,9 +139,9 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         """
         prob_dict = self.probability_dict(params)
         cost = cost_function(
-            prob_dict, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
+            prob_dict, self.qaoa_descriptor.cost_hamiltonian, self.cvar_alpha)
         cost_sq = cost_function(prob_dict,
-                                self.circuit_params.cost_hamiltonian.hamiltonian_squared,
+                                self.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
                                 self.cvar_alpha)
 
         uncertainty = np.sqrt(cost_sq - cost**2)

@@ -1,8 +1,8 @@
 import numpy as np
 
-from ..qaoa_components import Hamiltonian
-from ..utilities import bitstring_energy
-from ..problems import QUBO
+from ...qaoa_components import Hamiltonian
+from ...utilities import bitstring_energy
+from ...problems import QUBO
 
 
 def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):

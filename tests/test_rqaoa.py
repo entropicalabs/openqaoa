@@ -4,7 +4,7 @@ import networkx as nx
 
 from openqaoa import RQAOA
 from openqaoa.qaoa_components import Hamiltonian
-from openqaoa.rqaoa import *
+from openqaoa.algorithms.rqaoa.rqaoa_utils import *
 from openqaoa.problems import MaximumCut, QUBO
 from openqaoa.backends import create_device
 

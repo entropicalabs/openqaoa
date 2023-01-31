@@ -2,7 +2,7 @@
 Energy expectation as a function of angles computed accordingly to the analytical expression for p=1.
 """
 from .basebackend import QAOABaseBackend
-from ..qaoa_components import QAOAVariationalBaseParams, QAOACircuitParams, QAOAVariationalStandardParams
+from ..qaoa_components import QAOAVariationalBaseParams, QAOADescriptor, QAOAVariationalStandardParams
 from ..utilities import energy_expectation_analytical, generate_uuid, round_value
 
 
@@ -15,14 +15,14 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
 
     Parameters
     ----------
-    circuit_params: QAOACircuitParams
-        An object of the class ``QAOACircuitParams`` which contains information on
+    qaoa_descriptor: QAOADescriptor
+        An object of the class ``QAOADescriptor`` which contains information on
         circuit construction and depth of the circuit. Note that it only works for p=1 and the X Mixer.
     """
 
     def __init__(
         self,
-        circuit_params: QAOACircuitParams,
+        qaoa_descriptor: QAOADescriptor,
         prepend_state=None,
         append_state=None,
         init_hadamard=True,
@@ -43,7 +43,7 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
 
         QAOABaseBackend.__init__(
             self,
-            circuit_params,
+            qaoa_descriptor,
             prepend_state=None,
             append_state=None,
             init_hadamard=True,
@@ -55,13 +55,13 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
         )  # passing empty dict for the logger since measurements are irrelevant for this backend.
 
         # check if conditions for the analytical formula are met
-        assert self.circuit_params.p == 1, "Analytical formula only holds for p=1."
+        assert self.qaoa_descriptor.p == 1, "Analytical formula only holds for p=1."
 
-        for gatemap in self.circuit_params.mixer_qubits_singles:
+        for gatemap in self.qaoa_descriptor.mixer_qubits_singles:
             assert gatemap == "RXGateMap", "Analytical formula only holds for X mixer."
 
         assert (
-            self.circuit_params.mixer_qubits_pairs == []
+            self.qaoa_descriptor.mixer_qubits_pairs == []
         ), "Analytical formula only holds for X mixer."
 
     def assign_angles(self):

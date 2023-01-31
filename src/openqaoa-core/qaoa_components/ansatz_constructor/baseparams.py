@@ -1,8 +1,6 @@
 from __future__ import annotations
-
 from abc import ABC
 from typing import List, Union, Tuple, Any, Callable, Iterable
-
 import numpy as np
 
 from .operators import Hamiltonian
@@ -82,7 +80,7 @@ class shapedArray:
         return getattr(obj, f"__{self.name}")
 
 
-class VQACircuitParams(ABC):
+class AnsatzDescriptor(ABC):
     """
     Parameters class to construct a specific quantum ansatz to attack
     a problem
@@ -101,7 +99,7 @@ class VQACircuitParams(ABC):
         self.algorithm = algorithm
 
         
-class QAOACircuitParams(VQACircuitParams):
+class QAOADescriptor(AnsatzDescriptor):
 
     """
     Create the problem attributes consisting of the Hamiltonian, QAOA 'p' value and other specific parameters.

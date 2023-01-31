@@ -7,7 +7,7 @@ from docplex.mp.model import Model
 from openqaoa import QAOA
 from openqaoa.problems import MinimumVertexCover
 from openqaoa.qaoa_components import PauliOp, Hamiltonian
-from openqaoa.optimizers.result import Result, most_probable_bitstring
+from openqaoa.algorithms.qaoa.qaoa_result import QAOAResult, most_probable_bitstring
 from openqaoa.utilities import qaoa_probabilities
 from openqaoa.problems.converters import FromDocplex2IsingModel
 from openqaoa.backends import create_device
@@ -229,10 +229,10 @@ class TestingLoggerClass(unittest.TestCase):
             "1011": 115,
         }
 
-        assert optimized_measurement_outcomes_shot == Result.get_counts(
+        assert optimized_measurement_outcomes_shot == QAOAResult.get_counts(
             optimized_measurement_outcomes_shot
         )
-        assert counts_from_sv == Result.get_counts(optimized_measurement_outcomes_sv)
+        assert counts_from_sv == QAOAResult.get_counts(optimized_measurement_outcomes_sv)
 
     def test_best_result(self):
         """Test lowest_cost_bitstring attribute and FromDocplex2IsingModel model generation"""

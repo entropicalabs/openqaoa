@@ -1,12 +1,12 @@
 from typing import Union
 
-from ..parameters import Parameters
+from ..workflow_properties import WorkflowProperties
 from ...qaoa_components import Hamiltonian
+
 
 ALLOWED_RQAOA_TYPES = ['adaptive', 'custom']
 
-
-class RqaoaParameters(Parameters):
+class RqaoaParameters(WorkflowProperties):
     """
     Parameter class to initialise parameters to run a desired RQAOA program.
 

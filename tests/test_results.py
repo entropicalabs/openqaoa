@@ -4,14 +4,14 @@ import networkx as nw
 import numpy as np
 
 from openqaoa import QAOA, RQAOA
-from openqaoa.optimizers.result import Result
+from openqaoa.algorithms.qaoa.qaoa_result import QAOAResult
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
 from openqaoa.backends import create_device
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.qaoa_components import Hamiltonian
-from openqaoa.rqaoa.rqaoa_results import RQAOAResults
+from openqaoa.algorithms.rqaoa.rqaoa_results import RQAOAResults
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 
@@ -94,7 +94,7 @@ class TestingResultOutputs(unittest.TestCase):
         
         #we append all the keys that we find in rqaoa.results, so if we introduce a new key, we will know that we need to update the result.asdict method
         for key in vars(qaoa.results).keys():
-            if not key in expected_keys and not '_Result__' in key: expected_keys.append(key)
+            if not key in expected_keys and not '_QAOAResult__' in key: expected_keys.append(key)
 
         #create a dictionary with all the expected keys and set them to False
         expected_keys_dict = {item: False for item in expected_keys}
@@ -239,7 +239,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
         for step in results['intermediate_steps']:
             assert isinstance(step['problem'], QUBO), 'problem is not of type QUBO'
-            assert isinstance(step['qaoa_results'], Result), 'QAOA_results is not of type QAOA Results'
+            assert isinstance(step['qaoa_results'], QAOAResult), 'QAOA_results is not of type QAOA Results'
             assert isinstance(step['exp_vals_z'], np.ndarray), 'exp_vals_z is not of type numpy array'
             assert isinstance(step['corr_matrix'], np.ndarray), 'corr_matrix is not of type numpy array'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'
@@ -258,7 +258,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         assert sum(results['schedule']) + n_cutoff == n_qubits, 'Schedule is not correct'
         for step in results['intermediate_steps']:
             assert isinstance(step['problem'], QUBO), 'QUBO is not of type QUBO'
-            assert isinstance(step['qaoa_results'], Result), 'QAOA_results is not of type QAOA Results'
+            assert isinstance(step['qaoa_results'], QAOAResult), 'QAOA_results is not of type QAOA Results'
             assert isinstance(step['exp_vals_z'], np.ndarray), 'exp_vals_z is not of type numpy array'
             assert isinstance(step['corr_matrix'], np.ndarray), 'corr_matrix is not of type numpy array'
         assert isinstance(results['number_steps'], int), 'Number of steps is not an integer'

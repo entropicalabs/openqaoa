@@ -5,7 +5,7 @@ import pytest
 
 from braket.circuits import Circuit
 
-from openqaoa.qaoa_components import (PauliOp, Hamiltonian, QAOACircuitParams, 
+from openqaoa.qaoa_components import (PauliOp, Hamiltonian, QAOADescriptor, 
                                       create_qaoa_variational_params, QAOAVariationalStandardParams) 
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.problems import NumberPartition
@@ -39,13 +39,13 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params,
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor,
                                                        betas, gammas)
 
         aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
 
-        aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+        aws_backend = QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                                         shots, None, None, False, 1.)
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
 
@@ -96,13 +96,13 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params,
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor,
                                                        betas, gammas)
 
         aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
 
-        aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+        aws_backend = QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                                         shots, None, None, True, 1.)
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
 
@@ -162,13 +162,13 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params,
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor,
                                                        betas, gammas)
 
         aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
 
-        aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+        aws_backend = QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                                         shots, prepend_circuit, None, True, 1.)
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
 
@@ -220,13 +220,13 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params,
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor,
                                                        betas, gammas)
 
         aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
 
-        aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+        aws_backend = QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                                         shots, None, append_circuit, True, 1.)
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
 
@@ -279,14 +279,14 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params,
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor,
                                                        betas, gammas)
 
         aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
         
         try:
-            aws_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+            aws_backend = QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                                             shots, prepend_circuit, None, True, 1.)
         except Exception as e:
             self.assertEqual(str(e), "Cannot attach a bigger circuit to the QAOA routine")
@@ -308,8 +308,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
                                   PauliOp('ZZ', (0, 2))], weights, 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(circuit_params,
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor,
                                                        betas, gammas)
 
         # If the user's aws credentials is not correct.
@@ -320,7 +320,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                                       'n_qubits': 3})
         
         try:
-            QAOAAWSQPUBackend(circuit_params, mock_device, 
+            QAOAAWSQPUBackend(qaoa_descriptor, mock_device, 
                                  shots, None, None, True, 1.)
         except Exception as e:
             self.assertEqual(str(e), 'Error connecting to AWS.')
@@ -329,7 +329,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/invalid_backend_arn')
         
         try:
-            QAOAAWSQPUBackend(circuit_params, aws_device, 
+            QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                                  shots, None, None, True, 1.)
         except Exception as e:
             self.assertEqual(str(e), 'Connection to AWS was made. Error connecting to the specified backend.')
@@ -338,7 +338,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         aws_device = DeviceAWS('')
         
         try:
-            QAOAAWSQPUBackend(circuit_params, aws_device, 
+            QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                                  shots, None, None, True, 1.)
         except Exception as e:
             self.assertEqual(str(e), 'Connection to AWS was made. A device name was not specified.')
@@ -346,7 +346,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         # Correct device arn (Errorless)
         aws_device = DeviceAWS('arn:aws:braket:::device/quantum-simulator/amazon/sv1')
         
-        QAOAAWSQPUBackend(circuit_params, aws_device, shots, None, None, True, 1.)
+        QAOAAWSQPUBackend(qaoa_descriptor, aws_device, shots, None, None, True, 1.)
     
     @pytest.mark.qpu            
     def test_remote_qubit_overflow(self):
@@ -363,13 +363,13 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         qubo = NumberPartition(set_of_numbers).get_qubo_problem()
 
         mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
-        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
-        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
+        qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'rand')
 
         aws_device = DeviceAWS("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
         
         try:
-            braket_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+            braket_backend = QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                                  shots, None, None, True, 1.)
             braket_backend.expectation(variate_params)
         except Exception as e:
@@ -389,12 +389,12 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         qubo = NumberPartition(set_of_numbers).get_qubo_problem()
 
         mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
-        circuit_params = QAOACircuitParams(qubo.hamiltonian, mixer_hamil, p=1)
-        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'rand')
+        qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'rand')
 
         aws_device = DeviceAWS("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
         
-        braket_backend = QAOAAWSQPUBackend(circuit_params, aws_device, 
+        braket_backend = QAOAAWSQPUBackend(qaoa_descriptor, aws_device, 
                              shots, None, None, True, 1.)
         braket_backend.expectation(variate_params)
 

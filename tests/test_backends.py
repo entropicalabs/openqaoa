@@ -6,7 +6,7 @@ import pytest
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.qaoa_components import (
     Hamiltonian, create_qaoa_variational_params,
-    QAOACircuitParams
+    QAOADescriptor
 )
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_device import create_device
@@ -19,10 +19,10 @@ def get_params():
     cost_hamil = Hamiltonian.classical_hamiltonian([[0, 1]], [1], constant=0)
     mixer_hamil = X_mixer_hamiltonian(2)
 
-    circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-    variational_params_std = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
+    qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+    variational_params_std = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'ramp')
 
-    return circuit_params, variational_params_std
+    return qaoa_descriptor, variational_params_std
 
 class TestingBackendLocal(unittest.TestCase):
     """
@@ -40,10 +40,10 @@ class TestingBackendLocal(unittest.TestCase):
             # Analytical device doesn't have any of those so we are skipping it in the tests.
             if device_name in ['analytical_simulator']: continue
 
-            circuit_params, variational_params_std= get_params()
+            qaoa_descriptor, variational_params_std= get_params()
 
             device = create_device(location='local', name=device_name)
-            backend = get_qaoa_backend(circuit_params=circuit_params, device=device, n_shots=1000)
+            backend = get_qaoa_backend(qaoa_descriptor=qaoa_descriptor, device=device, n_shots=1000)
                         
             assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values())==58, "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=58).".format(device_name)
             if isinstance(backend, QAOABaseBackendShotBased): 
@@ -109,7 +109,7 @@ class TestingBackendQPUs(unittest.TestCase):
 
         for (device, backend), device_attributes in zip(DEVICE_ACCESS_OBJECT_MAPPER.items(), list_device_attributes):
 
-            circuit_params, variational_params_std = get_params()
+            qaoa_descriptor, variational_params_std = get_params()
 
             QPU_name = device_attributes.pop('QPU')
             print("Testing {} backend.".format(QPU_name))
@@ -121,7 +121,7 @@ class TestingBackendQPUs(unittest.TestCase):
 
             try: 
                 device = device(**device_attributes)
-                backend = backend(circuit_params = circuit_params, device = device, cvar_alpha = 1, n_shots=100, prepend_state = None, append_state = None, init_hadamard = True)
+                backend = backend(qaoa_descriptor = qaoa_descriptor, device = device, cvar_alpha = 1, n_shots=100, prepend_state = None, append_state = None, init_hadamard = True)
 
                 # Check that the .get_counts, .expectation and .expectation_w_variance methods admit n_shots as an argument
                 assert sum(backend.get_counts(params=variational_params_std, n_shots=58).values()) == 58, "`n_shots` is not being respected when calling .get_counts(n_shots=58).".format(QPU_name)

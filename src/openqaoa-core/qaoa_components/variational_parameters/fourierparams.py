@@ -5,7 +5,7 @@ import numpy as np
 from scipy.fftpack import dct, dst
 
 from .variational_baseparams import QAOAVariationalBaseParams
-from ..ansatz_constructor import QAOACircuitParams
+from ..ansatz_constructor import QAOADescriptor
 from ..ansatz_constructor.baseparams import shapedArray, _is_iterable_empty
 
 
@@ -18,8 +18,8 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    qaoa_circuit_params:
-        QAOACircuitParams object with circuit instructions
+    qaoa_descriptor:
+        QAOADescriptor object with circuit instructions
     q : int
         The number of coefficients for the discrete sine and cosine transforms
         below
@@ -47,12 +47,12 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
     """
 
     def __init__(self,
-                 qaoa_circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  q: int,
                  v: List[Union[int, float]],
                  u: List[Union[int, float]]):
         # setup reg, qubits_singles and qubits_pairs
-        super().__init__(qaoa_circuit_params)
+        super().__init__(qaoa_descriptor)
         assert q is not None, f"Depth q for {type(self).__name__} must be specified"
         self.q = q
         self.u = u
@@ -118,7 +118,7 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
 
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_circuit_params: QAOACircuitParams,
+                                     qaoa_descriptor: QAOADescriptor,
                                      q: int,
                                      time: float = None):
         """
@@ -128,8 +128,8 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
 
         Parameters
         ----------
-        qaoa_circuit_params:
-                        QAOACircuitParams object containing information about terms,weights,register and p
+        qaoa_descriptor:
+                        QAOADescriptor object containing information about terms,weights,register and p
 
         time:
             total time. Set to ``0.7*p`` if ``None`` is passed.
@@ -150,20 +150,20 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
         
         # Set default time
         if time is None:
-            time = 0.7 * qaoa_circuit_params.p
+            time = 0.7 * qaoa_descriptor.p
 
         # fill x_rotation_angles, z_rotation_angles and zz_rotation_angles
         # Todo make this an easier expresssion
         v = np.zeros(q)
-        v[0] = 0.5 * time / qaoa_circuit_params.p
+        v[0] = 0.5 * time / qaoa_descriptor.p
         u = np.copy(v)
 
         # wrap it all nicely in a qaoa_parameters object
-        params = cls(qaoa_circuit_params, q, v, u)
+        params = cls(qaoa_descriptor, q, v, u)
         return params
 
     @classmethod
-    def random(cls, qaoa_circuit_params: QAOACircuitParams, q: int, seed: int = None):
+    def random(cls, qaoa_descriptor: QAOADescriptor, q: int, seed: int = None):
         """
         Returns
         -------
@@ -176,17 +176,17 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
         v = np.random.uniform(0, np.pi, q)
         u = np.random.uniform(0, np.pi, q)
 
-        params = cls(qaoa_circuit_params, q, v, u)
+        params = cls(qaoa_descriptor, q, v, u)
         return params
 
     @classmethod
-    def empty(cls, qaoa_circuit_params: QAOACircuitParams, q: int):
+    def empty(cls, qaoa_descriptor: QAOADescriptor, q: int):
         """
         Initialise the Fourier Params u,v with empty arrays
         """
         u = np.empty((q))
         v = np.empty((q))
-        return cls(qaoa_circuit_params, q, v, u)
+        return cls(qaoa_descriptor, q, v, u)
 
     def plot(self, ax=None, **kwargs):
         # warnings.warn("Plotting the gammas and x_rotation_angles through DCT "
@@ -222,8 +222,8 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    qaoa_circuit_params:
-        QAOACircuitParams object with circuit instructions
+    qaoa_descriptor:
+        QAOADescriptor object with circuit instructions
     q : int
         The number of coefficients for the discrete sine and cosine transforms
         below
@@ -257,14 +257,14 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
     """
 
     def __init__(self,
-                 qaoa_circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  q: int,
                  v: List[Union[float, int]],
                  u_singles: List[Union[float, int]],
                  u_pairs: List[Union[float, int]]):
 
         # setup reg, qubits_singles and qubits_pairs
-        super().__init__(qaoa_circuit_params)
+        super().__init__(qaoa_descriptor)
         if not self.cost_1q_coeffs or not self.cost_2q_coeffs:
             raise RuntimeError(f"Please choose {type(self).__name__} parameterisation for problems "
                                "containing both Cost One-Qubit and Two-Qubit terms")
@@ -350,14 +350,14 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
 
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_circuit_params: QAOACircuitParams,
+                                     qaoa_descriptor: QAOADescriptor,
                                      q: int,
                                      time: float = None):
         """
         Parameters
         ----------
-        qaoa_circuit_params:
-            Hyper Parameters passed as an object of ``Type[QAOACircuitParams]``
+        qaoa_descriptor:
+            Hyper Parameters passed as an object of ``Type[QAOADescriptor]``
 
         time: 
             Time for creating the linear ramp schedule.
@@ -378,18 +378,18 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
         assert q is not None, f"Depth q for {cls.__name__} must be specified"
 
         if time is None:
-            time = 0.7 * qaoa_circuit_params.p
+            time = 0.7 * qaoa_descriptor.p
 
         v = np.zeros(q)
-        v[0] = 0.5 * time / qaoa_circuit_params.p
+        v[0] = 0.5 * time / qaoa_descriptor.p
         u_singles = np.copy(v)
         u_pairs = np.copy(v)
         # wrap it all nicely in a qaoa_parameters object
-        params = cls(qaoa_circuit_params, q, v, u_singles, u_pairs)
+        params = cls(qaoa_descriptor, q, v, u_singles, u_pairs)
         return params
 
     @classmethod
-    def random(cls, qaoa_circuit_params: QAOACircuitParams, q: int, seed: int = None):
+    def random(cls, qaoa_descriptor: QAOADescriptor, q: int, seed: int = None):
         """
         Returns
         -------
@@ -403,18 +403,18 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
         u_singles = np.random.uniform(0, np.pi, q)
         u_pairs = np.random.uniform(0, np.pi, q)
 
-        params = cls(qaoa_circuit_params, q, v, u_singles, u_pairs)
+        params = cls(qaoa_descriptor, q, v, u_singles, u_pairs)
         return params
 
     @classmethod
-    def empty(cls, qaoa_circuit_params: QAOACircuitParams, q: int):
+    def empty(cls, qaoa_descriptor: QAOADescriptor, q: int):
         """
         Initialise Fourier parameters with bias with an empty array
         """
         v = np.empty((q))
         u_singles = np.empty((q))
         u_pairs = np.empty((q))
-        return cls(qaoa_circuit_params, q, v, u_singles, u_pairs)
+        return cls(qaoa_descriptor, q, v, u_singles, u_pairs)
 
     def plot(self, ax=None, **kwargs):
         # warnings.warn("Plotting the gammas and x_rotation_angles through DCT "
@@ -452,7 +452,7 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
 
     Parameters
     ----------
-    qaoa_circuit_params: ``QAOACircuitParams``
+    qaoa_descriptor: ``QAOADescriptor``
         object containing information about terms,weights,register and p
     q: ``int``
         The parameter depth for u and v Fourier params
@@ -485,7 +485,7 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
     """
 
     def __init__(self,
-                 qaoa_circuit_params: QAOACircuitParams,
+                 qaoa_descriptor: QAOADescriptor,
                  q: int,
                  v_singles: List[Union[float, int]],
                  v_pairs: List[Union[float, int]],
@@ -493,7 +493,7 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
                  u_pairs: List[Union[float, int]]):
 
         # setup reg, qubits_singles and qubits_pairs
-        super().__init__(qaoa_circuit_params)
+        super().__init__(qaoa_descriptor)
         assert q is not None, f"Depth q for {type(self).__name__} must be specified"
         self.q = q
         self.v_singles = v_singles
@@ -604,13 +604,13 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
 
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_circuit_params: QAOACircuitParams,
+                                     qaoa_descriptor: QAOADescriptor,
                                      q: int,
                                      time: float = None):
         """
         Parameters
         ----------
-        qaoa_circuit_params: ``QAOACircuitParams``
+        qaoa_descriptor: ``QAOADescriptor``
             an object containing information about the QAOA circuit
 
         q: ``int``
@@ -631,18 +631,18 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
         assert q is not None, f"Depth q for {cls.__name__} must be specified"
         
         # create evenly spaced timelayers at the centers of p intervals
-        p = qaoa_circuit_params.p
+        p = qaoa_descriptor.p
 
         if time is None:
             time = float(0.7 * p)
 
         n_u_singles = len(
-            qaoa_circuit_params.cost_single_qubit_coeffs)
-        n_u_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
+            qaoa_descriptor.cost_single_qubit_coeffs)
+        n_u_pairs = len(qaoa_descriptor.cost_pair_qubit_coeffs)
         n_v_singles = len(
-            qaoa_circuit_params.mixer_single_qubit_coeffs)
+            qaoa_descriptor.mixer_single_qubit_coeffs)
         n_v_pairs = len(
-            qaoa_circuit_params.mixer_pair_qubit_coeffs)
+            qaoa_descriptor.mixer_pair_qubit_coeffs)
 
         v = np.zeros(q)
         v[0] = 0.5 * time / p
@@ -654,12 +654,12 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
         u_pairs = u.repeat(n_u_pairs).reshape(q, n_u_pairs)
 
         # wrap it all nicely in a qaoa_parameters object
-        params = cls(qaoa_circuit_params, q,
+        params = cls(qaoa_descriptor, q,
                      v_singles, v_pairs, u_singles, u_pairs)
         return params
 
     @classmethod
-    def random(cls, qaoa_circuit_params: QAOACircuitParams, q: int, seed: int = None):
+    def random(cls, qaoa_descriptor: QAOADescriptor, q: int, seed: int = None):
         """
         Returns
         -------
@@ -669,37 +669,37 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
         if seed is not None:
             np.random.seed(seed)
 
-        p = qaoa_circuit_params.p
-        n_u_singles = len(qaoa_circuit_params.cost_single_qubit_coeffs)
-        n_u_pairs = len(qaoa_circuit_params.cost_pair_qubit_coeffs)
-        n_v_singles = len(qaoa_circuit_params.mixer_single_qubit_coeffs)
-        n_v_pairs = len(qaoa_circuit_params.mixer_pair_qubit_coeffs)
+        p = qaoa_descriptor.p
+        n_u_singles = len(qaoa_descriptor.cost_single_qubit_coeffs)
+        n_u_pairs = len(qaoa_descriptor.cost_pair_qubit_coeffs)
+        n_v_singles = len(qaoa_descriptor.mixer_single_qubit_coeffs)
+        n_v_pairs = len(qaoa_descriptor.mixer_pair_qubit_coeffs)
 
         v_singles = np.random.uniform(0, np.pi, (q, n_v_singles))
         v_pairs = np.random.uniform(0, np.pi, (q, n_v_pairs))
         u_singles = np.random.uniform(0, np.pi, (q, n_u_singles))
         u_pairs = np.random.uniform(0, np.pi, (q, n_u_pairs))
 
-        params = cls(qaoa_circuit_params, q,
+        params = cls(qaoa_descriptor, q,
                      v_singles, v_pairs, u_singles, u_pairs)
         return params
 
     @classmethod
-    def empty(cls, qaoa_circuit_params: QAOACircuitParams, q: int):
+    def empty(cls, qaoa_descriptor: QAOADescriptor, q: int):
         """
         Initialise Fourier extended parameters with empty arrays
         """
 
         v_singles = np.empty(
-            (q, len(qaoa_circuit_params.mixer_single_qubit_coeffs)))
+            (q, len(qaoa_descriptor.mixer_single_qubit_coeffs)))
         v_pairs = np.empty(
-            (q, len(qaoa_circuit_params.mixer_pair_qubit_coeffs)))
+            (q, len(qaoa_descriptor.mixer_pair_qubit_coeffs)))
         u_singles = np.empty(
-            (q, len(qaoa_circuit_params.cost_single_qubit_coeffs)))
+            (q, len(qaoa_descriptor.cost_single_qubit_coeffs)))
         u_pairs = np.empty(
-            (q, len(qaoa_circuit_params.cost_pair_qubit_coeffs)))
+            (q, len(qaoa_descriptor.cost_pair_qubit_coeffs)))
 
-        return cls(qaoa_circuit_params, q,
+        return cls(qaoa_descriptor, q,
                    v_singles, v_pairs, u_singles, u_pairs)
 
     def plot(self, ax=None, **kwargs):

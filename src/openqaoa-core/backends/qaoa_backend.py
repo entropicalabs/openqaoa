@@ -5,7 +5,7 @@ from .qaoa_vectorized import QAOAvectorizedBackendSimulator
 from .qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from .devices_core import DeviceBase, DeviceLocal
 from .basebackend import QuantumCircuitBase, QAOABaseBackend
-from ..qaoa_components import QAOACircuitParams
+from ..qaoa_components import QAOADescriptor
 from openqaoa_braket.backends import DeviceAWS, QAOAAWSQPUBackend
 from openqaoa_qiskit.backends import (DeviceQiskit, QAOAQiskitQPUBackend, 
                                       QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator)
@@ -92,7 +92,7 @@ def device_to_backend_mapper(device: DeviceBase) -> QAOABaseBackend:
 
     return backend_class
 
-def get_qaoa_backend(circuit_params: QAOACircuitParams,
+def get_qaoa_backend(qaoa_descriptor: QAOADescriptor,
                      device: DeviceBase,
                      prepend_state: Optional[Union[QuantumCircuitBase,
                                                    List[complex], np.ndarray]] = None,
@@ -106,8 +106,8 @@ def get_qaoa_backend(circuit_params: QAOACircuitParams,
 
     Parameters
     ----------
-    circuit_params: `QAOACircuitParams`
-        An object of the class ``QAOACircuitParams`` which contains information on 
+    qaoa_descriptor: `QAOADescriptor`
+        An object of the class ``QAOADescriptor`` which contains information on 
         circuit construction along with depth of the circuit.
     device: `DeviceBase`
         The device to be used: Specified as an object of the class `DeviceBase`.
@@ -138,12 +138,12 @@ def get_qaoa_backend(circuit_params: QAOACircuitParams,
 
     try:
         if isinstance(device, DeviceLocal):
-            backend_obj = backend_class(circuit_params=circuit_params, prepend_state=prepend_state,
+            backend_obj = backend_class(qaoa_descriptor=qaoa_descriptor, prepend_state=prepend_state,
                                         append_state=append_state, init_hadamard=init_hadamard,
                                         cvar_alpha=cvar_alpha, **backend_kwargs)
 
         else:
-            backend_obj = backend_class(circuit_params=circuit_params, device=device,
+            backend_obj = backend_class(qaoa_descriptor=qaoa_descriptor, device=device,
                                         prepend_state=prepend_state, append_state=append_state,
                                         init_hadamard=init_hadamard, cvar_alpha=cvar_alpha,
                                         **backend_kwargs)

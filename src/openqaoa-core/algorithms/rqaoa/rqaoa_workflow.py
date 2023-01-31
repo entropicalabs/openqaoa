@@ -1,20 +1,19 @@
 import time
 import numpy as np
 
-from .rqaoa_parameters import RqaoaParameters
-from ..baseworkflow import Optimizer
+from .rqaoa_workflow_properties import RqaoaParameters
+from ..baseworkflow import Workflow
 from ..qaoa import QAOA
-from ..qaoa.qaoa_parameters import CircuitProperties
+from ..workflow_properties import CircuitProperties
 from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...problems import QUBO
-from ...qaoa_components import Hamiltonian
 from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise
 from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
-from ...rqaoa import rqaoa
-from ...rqaoa.rqaoa_results import RQAOAResults
+from . import rqaoa_utils
+from .rqaoa_results import RQAOAResults
 
 
-class RQAOA(Optimizer):
+class RQAOA(Workflow):
     """
     A class implementing a RQAOA workflow end to end.
 
@@ -24,16 +23,18 @@ class RQAOA(Optimizer):
     3. Optimization
 
     .. note::
-        The attributes of the RQAOA class should be initialized using the set methods of QAOA. For example, to set the qaoa circuit's depth to 10 you should run `set_circuit_properties(p=10)`
+        The attributes of the RQAOA class should be initialized using the set methods of QAOA.
+        For example, to set the qaoa circuit's depth to 10 you should run `set_circuit_properties(p=10)`
 
     Attributes
     ----------
         device: `DeviceBase`
             Device to be used by the optimizer
         backend_properties: `BackendProperties`
-            The backend properties of the RQAOA workflow. These properties will be used to run QAOA at each RQAOA step.
-            Use to set the backend properties such as the number of shots and the cvar values.
-            For a complete list of its parameters and usage please see the method set_backend_properties
+            The backend properties of the RQAOA workflow. These properties will be used to
+            run QAOA at each RQAOA step. Use to set the backend properties such as the
+            number of shots and the cvar values. For a complete list of its parameters and
+            usage please see the method set_backend_properties
         classical_optimizer: `ClassicalOptimizer`
             The classical optimiser properties of the RQAOA workflow. 
             Use to set the classical optimiser needed for the classical optimisation part of the QAOA routine.
@@ -311,9 +312,9 @@ class RQAOA(Optimizer):
 
         # create a different max_terms function for each type 
         if self.rqaoa_parameters.rqaoa_type == "adaptive":
-            f_max_terms = rqaoa.ada_max_terms  
+            f_max_terms = rqaoa_utils.ada_max_terms  
         else:
-            f_max_terms = rqaoa.max_terms  
+            f_max_terms = rqaoa_utils.max_terms
 
         # timestamp for the start of the optimization
         self.header['execution_time_start'] = int(time.time())
@@ -338,9 +339,9 @@ class RQAOA(Optimizer):
             # Retrieve highest expectation values according to adaptive method or schedule in custom method
             max_terms_and_stats = f_max_terms(exp_vals_z, corr_matrix, self.__n_step(n_qubits, n_cutoff, counter))
             # Generate spin map
-            spin_map = rqaoa.spin_mapping(problem, max_terms_and_stats)
+            spin_map = rqaoa_utils.spin_mapping(problem, max_terms_and_stats)
             # Eliminate spins and redefine problem
-            new_problem, spin_map = rqaoa.redefine_problem(problem, spin_map)
+            new_problem, spin_map = rqaoa_utils.redefine_problem(problem, spin_map)
 
             # In case eliminations cancel out the whole graph, break the loop before reaching the predefined cutoff.
             if new_problem == problem:
@@ -379,13 +380,13 @@ class RQAOA(Optimizer):
 
         if total_elimination:
             # Solve the smallest non-vanishing problem by fixing spins arbitrarily or according to the correlations
-            cl_energy, cl_ground_states = rqaoa.solution_for_vanishing_instances(problem.hamiltonian, spin_map)
+            cl_energy, cl_ground_states = rqaoa_utils.solution_for_vanishing_instances(problem.hamiltonian, spin_map)
         else: 
             # Solve the new problem classically
             cl_energy, cl_ground_states = ground_state_hamiltonian(problem.hamiltonian)
 
         # Retrieve full solutions including eliminated spins and their energies
-        full_solutions = rqaoa.final_solution(
+        full_solutions = rqaoa_utils.final_solution(
             elimination_tracker, cl_ground_states, self.problem.hamiltonian)
 
         # timestamp for the end of the optimization

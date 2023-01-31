@@ -1,1 +1,1 @@
-from .algorithms import QAOA, RQAOA
+from .algorithms import QAOA, RQAOA, QAOAResult, RQAOAResults

@@ -12,7 +12,7 @@ from openqaoa.optimizers.training_vqa import PennyLaneOptimizer
 from openqaoa.optimizers.pennylane.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS
 from openqaoa.derivatives.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
-from openqaoa.qaoa_components import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
+from openqaoa.qaoa_components import create_qaoa_variational_params, QAOADescriptor, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers import get_optimizer
@@ -73,10 +73,10 @@ class TestPennylaneOptimizers(unittest.TestCase):
 
         cost_hamil = problem.hamiltonian
         mixer_hamil = X_mixer_hamiltonian(n_qubits=problem.n)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=2)
         device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
+        backend_obj_vectorized = get_qaoa_backend(qaoa_descriptor,device)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'ramp')
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
@@ -143,10 +143,10 @@ class TestPennylaneOptimizers(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
             'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=2)
         device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
+        backend_obj_vectorized = get_qaoa_backend(qaoa_descriptor,device)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'ramp')
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001

@@ -3,7 +3,7 @@ from typing import Union, Iterable
 from abc import ABC
 import numpy as np
 
-from ..ansatz_constructor import QAOACircuitParams
+from ..ansatz_constructor import QAOADescriptor
 
 class QAOAVariationalBaseParams(ABC):
     """
@@ -12,13 +12,13 @@ class QAOAVariationalBaseParams(ABC):
 
     Parameters
     ----------
-    qaoa_circuit_params: `QAOACircuitParams`
+    qaoa_descriptor: `QAOADescriptor`
         Specify the circuit parameters to construct circuit angles to be 
         used for training
 
     Attributes
     ----------
-    qaoa_circuit_params: `QAOACircuitParams`
+    qaoa_descriptor: `QAOADescriptor`
     p: `int`
     cost_1q_coeffs
     cost_2q_coeffs
@@ -26,21 +26,21 @@ class QAOAVariationalBaseParams(ABC):
     mixer_2q_coeffs
     """
 
-    def __init__(self, qaoa_circuit_params: QAOACircuitParams):
+    def __init__(self, qaoa_descriptor: QAOADescriptor):
 
-        self.qaoa_circuit_params = qaoa_circuit_params
-        self.p = self.qaoa_circuit_params.p
+        self.qaoa_descriptor = qaoa_descriptor
+        self.p = self.qaoa_descriptor.p
         
         try:
-            self.cost_1q_coeffs = qaoa_circuit_params.cost_single_qubit_coeffs
-            self.cost_2q_coeffs = qaoa_circuit_params.cost_pair_qubit_coeffs
-            self.mixer_1q_coeffs = qaoa_circuit_params.mixer_single_qubit_coeffs
-            self.mixer_2q_coeffs = qaoa_circuit_params.mixer_pair_qubit_coeffs
+            self.cost_1q_coeffs = qaoa_descriptor.cost_single_qubit_coeffs
+            self.cost_2q_coeffs = qaoa_descriptor.cost_pair_qubit_coeffs
+            self.mixer_1q_coeffs = qaoa_descriptor.mixer_single_qubit_coeffs
+            self.mixer_2q_coeffs = qaoa_descriptor.mixer_pair_qubit_coeffs
         except AttributeError:
-            self.cost_1q_coeffs = qaoa_circuit_params.cost_hamiltonian.single_qubit_coeffs
-            self.cost_2q_coeffs = qaoa_circuit_params.cost_hamiltonian.pair_qubit_coeffs
-            self.mixer_1q_coeffs = qaoa_circuit_params.mixer_hamiltonian.single_qubit_coeffs
-            self.mixer_2q_coeffs = qaoa_circuit_params.mixer_hamiltonian.pair_qubit_coeffs
+            self.cost_1q_coeffs = qaoa_descriptor.cost_hamiltonian.single_qubit_coeffs
+            self.cost_2q_coeffs = qaoa_descriptor.cost_hamiltonian.pair_qubit_coeffs
+            self.mixer_1q_coeffs = qaoa_descriptor.mixer_hamiltonian.single_qubit_coeffs
+            self.mixer_2q_coeffs = qaoa_descriptor.mixer_hamiltonian.pair_qubit_coeffs
 
     def __len__(self):
         """
@@ -132,7 +132,7 @@ class QAOAVariationalBaseParams(ABC):
 
     @classmethod
     def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_circuit_params: QAOACircuitParams,
+                                     qaoa_descriptor: QAOADescriptor,
                                      time: float = None):
         """Alternative to ``__init__`` that already fills ``parameters``.
 
@@ -141,8 +141,8 @@ class QAOAVariationalBaseParams(ABC):
 
         Parameters
         ----------
-        qaoa_circuit_params: `QAOACircuitParams`
-            QAOACircuitParams object containing information about terms,weights,register and p
+        qaoa_descriptor: `QAOADescriptor`
+            QAOADescriptor object containing information about terms,weights,register and p
 
         time: `float`
             Total annealing time. Defaults to ``0.7*p``.
@@ -156,14 +156,14 @@ class QAOAVariationalBaseParams(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def random(cls, qaoa_circuit_params: QAOACircuitParams, seed: int = None):
+    def random(cls, qaoa_descriptor: QAOADescriptor, seed: int = None):
         """
         Initialise parameters randomly
 
         Parameters
         ----------
-        qaoa_circuit_params: `QAOACircuitParams`
-            QAOACircuitParams object containing information about terms, 
+        qaoa_descriptor: `QAOADescriptor`
+            QAOADescriptor object containing information about terms, 
             weights, register and p.
 
         seed: `int`
@@ -177,15 +177,15 @@ class QAOAVariationalBaseParams(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def empty(cls, qaoa_circuit_params: QAOACircuitParams):
+    def empty(cls, qaoa_descriptor: QAOADescriptor):
         """
-        Alternative to ``__init__`` that only takes ``qaoa_circuit_params`` and
+        Alternative to ``__init__`` that only takes ``qaoa_descriptor`` and
         fills ``parameters`` via ``np.empty``
 
         Parameters
         ----------
-        qaoa_circuit_params: `QAOACircuitParams`
-            QAOACircuitParams object containing information about terms,weights,register and p
+        qaoa_descriptor: `QAOADescriptor`
+            QAOADescriptor object containing information about terms,weights,register and p
 
         Returns
         -------

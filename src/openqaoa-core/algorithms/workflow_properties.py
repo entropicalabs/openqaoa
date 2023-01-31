@@ -1,30 +1,49 @@
 from typing import List, Optional, Union
-
 import numpy as np
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
-from ...backends.basebackend import QuantumCircuitBase
-from ...backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
-from ..parameters import Parameters
-from ...optimizers.training_vqa import CustomScipyGradientOptimizer, PennyLaneOptimizer
-
+from ..optimizers.training_vqa import (
+    CustomScipyGradientOptimizer,
+    PennyLaneOptimizer
+)
+from ..backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
+from ..backends.basebackend import QuantumCircuitBase
+from ..utilities import convert2serialize
 
 
 ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
                        'fourier_extended', 'fourier_w_bias', 'annealing']
 ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
 ALLOWED_MIXERS = ['x', 'xy']
-ALLOWED_MINIMIZATION_METHODS = MINIMIZE_METHODS + CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS + PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
+
+ALLOWED_MINIMIZATION_METHODS = (
+    MINIMIZE_METHODS +
+    CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS +
+    PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
+)
 
 ALLOWED_QVM_DEVICES = ['Aspen-11', 'Aspen-M-1']
 ALLOWED_QVM_DEVICES.extend(f'{n}q-qvm' for n in range(2, 80))
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
-ALLOWED_IMBQ_GLOBAL =  ['ibmq_qasm_simulator', 'ibmq_armonk', 'ibmq_santiago', 'ibmq_bogota', 'ibmq_lima', 'ibmq_belem', 'ibmq_quito', 'simulator_statevector', 'simulator_mps', 'simulator_extended_stabilizer', 'simulator_stabilizer', 'ibmq_manila']
+ALLOWED_IMBQ_GLOBAL =  ['ibmq_qasm_simulator', 'ibmq_armonk', 'ibmq_santiago',
+                        'ibmq_bogota', 'ibmq_lima', 'ibmq_belem', 'ibmq_quito',
+                        'simulator_statevector', 'simulator_mps', 'simulator_extended_stabilizer',
+                        'simulator_stabilizer', 'ibmq_manila']
 ALLOWED_DEVICES  = ALLOWED_LOCAL_SIMUALTORS + ALLOWED_QVM_DEVICES + ALLOWED_IMBQ_GLOBAL
 
 
-class CircuitProperties(Parameters):
+class WorkflowProperties:
+    def __iter__(self):
+        for key, value in self.__dict__.items():
+            # remove "_" from the beginning of the key if it exists
+            yield (key[1:] if key.startswith("_") else key, value)
+
+    def asdict(self):
+        return convert2serialize(dict(self))
+    
+
+class CircuitProperties(WorkflowProperties):
     """
     Tunable properties of the QAOA circuit to be specified by the user
     """
@@ -130,7 +149,8 @@ class CircuitProperties(Parameters):
     #         print(value)
     #         self._mixer_qubit_connectivity = value
 
-class BackendProperties(Parameters):
+
+class BackendProperties(WorkflowProperties):
     """
     Choose the backend on which to run the QAOA circuits
 
@@ -210,7 +230,7 @@ class BackendProperties(Parameters):
     #     self._cvar_alpha = value
 
 
-class ClassicalOptimizer(Parameters):
+class ClassicalOptimizer(WorkflowProperties):
     """
     The classical optimizer for the QAOA optimization routine 
     of the QAOA circuit parameters.
