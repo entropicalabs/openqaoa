@@ -13,13 +13,14 @@ from .qubo import QUBO
 
 def create_problem_from_dict(problem_instance: dict) -> Problem:
     """
-    Creates an object of the class corresponding to the problem type in the input instance, with the same attributes as the input instance.
-    
+    Creates an object of the class corresponding to the problem type
+    in the input instance, with the same attributes as the input instance.
+
     Parameters
     ----------
     problem_instance: dict
         The input instance.
-        
+
     Returns
     -------
         An object of the class corresponding to the problem type in the input instance.
@@ -51,7 +52,9 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
     # check if the problem type is QUBO, if so, raise an exception
     if problem_class is QUBO:
         raise Exception(
-            "This method does not work for generic QUBO. The input instance has type `generic_qubo`. You can use the `from_dict` method of the `QUBO` class instead."
+            "This method does not work for generic QUBO."
+            "The input instance has type `generic_qubo`."
+            "You can use the `from_dict` method of the `QUBO` class instead."
         )
 
     # if the instance has a graph, convert it to a networkx graph

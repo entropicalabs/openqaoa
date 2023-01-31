@@ -37,7 +37,8 @@ def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
     # Find the n_max+1 largest correlation pairs
     for _ in range(n_elim):
 
-        # Obtain max_spin, its Z expectation value, and store it - round to suppress errors from numbers approximating 0
+        # Obtain max_spin, its Z expectation value, and store it - round to
+        # suppress errors from numbers approximating 0
         max_spin = np.unravel_index(abs(Z).argmax(), Z.shape)
         max_val = np.round(Z[max_spin], 10)
 
@@ -45,7 +46,8 @@ def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
         max_term = np.unravel_index(abs(M).argmax(), M.shape)
         max_corr = np.round(M[max_term], 10)
 
-        # Eliminate the expectation value with highest absolute value - round to suppress errors from numbers approximating 0
+        # Eliminate the expectation value with highest absolute value - round to
+        # suppress errors from numbers approximating 0
         if np.abs(max_corr) > np.abs(max_val):
             max_terms_and_stats.update({max_term: max_corr})
 
@@ -104,7 +106,8 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
     # Find the n_max+1 largest correlation pairs
     for _ in range(n_max + 1):
 
-        # Obtain max_spin, its Z expectation value, and store it - round to suppress errors from numbers approximating 0
+        # Obtain max_spin, its Z expectation value, and store it - round to
+        # suppress errors from numbers approximating 0
         max_spin = np.unravel_index(abs(Z).argmax(), Z.shape)
         max_val = np.round(Z[max_spin], 10)
 
@@ -112,7 +115,8 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
         max_term = np.unravel_index(abs(M).argmax(), M.shape)
         max_corr = np.round(M[max_term], 10)
 
-        # Eliminate the expectation value with highest absolute value - round to suppress errors from numbers approximating 0
+        # Eliminate the expectation value with highest absolute value - round to
+        # suppress errors from numbers approximating 0
         if np.abs(max_corr) > np.abs(max_val):
             max_terms_and_stats.update({max_term: max_corr})
 
@@ -145,7 +149,8 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
         if np.abs(value) >= avg_mag_stats
     }
 
-    # Cut down the number of eliminations if, due to symmetry, they exceed the number allowed - relevant for unweighted graphs
+    # Cut down the number of eliminations if, due to symmetry, they exceed
+    # the number allowed - relevant for unweighted graphs
     if len(max_terms_and_stats) > n_max:
 
         max_keys = list(max_terms_and_stats.keys())[0:n_max]
@@ -396,7 +401,7 @@ def redefine_problem(problem: QUBO, spin_map: dict):
 
     # Define new QUBO problem as a dictionary
     old_register = set([spin for term in problem.terms for spin in term])
-    new_problem_dict = {}
+
     
     # get a set of all the spins to be eliminated
     eliminated_spins = set()
@@ -496,12 +501,16 @@ def redefine_problem(problem: QUBO, spin_map: dict):
     )
 
     # Check for isolated nodes after constructing the new problem
-    there_is_isolated_nodes = False
-    
-    if len(new_register) != len(new_quadratic_register):  # If lengths do not match, there are isolated nodes
+
+    # If lengths do not match, there are isolated nodes
+    if len(new_register) != len(
+        new_quadratic_register
+    ):  
         isolated_nodes = new_register.difference(new_quadratic_register)
-        there_is_isolated_nodes = True
-    elif old_register - new_register != eliminated_spins: # If too few eliminations, there are isolated nodes; only important for bias-free problems.
+    # If too few eliminations, there are isolated nodes; only important for bias-free problems.
+    elif (
+        old_register - new_register != eliminated_spins
+    ):  
         isolated_nodes = old_register.difference(new_register)
         there_is_isolated_nodes = True
 
@@ -522,9 +531,11 @@ def redefine_problem(problem: QUBO, spin_map: dict):
                 # Delete isolated node from new problem
                 new_problem_dict.pop((node,))
 
-    # For some unweighted graphs specific eliminations can lead to eliminating the whole instance before reaching cutoff.
+    # For some unweighted graphs specific eliminations can lead to eliminating
+    # the whole instance before reaching cutoff.
     if new_problem_dict == {}:
-        new_problem = problem  # set the problem to the old problem and solve classically for the smallest non-vanishing instance.
+        # set the problem to the old problem and solveclassically for the smallest non-vanishing instance.
+        new_problem = problem
 
     else:
         # Redefine new QUBO problem from the dictionary
@@ -537,8 +548,9 @@ def final_solution(
     elimination_tracker: list, cl_states: list, hamiltonian: Hamiltonian
 ):
     """
-    Constructs the final solution to the problem by obtaining the final states from adding the removed
-    spins into the classical results and computing the corresponding energy.
+    Constructs the final solution to the problem by obtaining the final states 
+    from adding the removed spins into the classical results and
+    computing the corresponding energy.
 
     Parameters
     ----------
@@ -579,11 +591,11 @@ def final_solution(
             # Back track elimination from the specific step
             for term_stat in terms_and_stats:
 
-                # If we have a singlet, which is fixed to cost
+                if "singlet" in term_stat:
                 if 'singlet' in term_stat:
 
-                    # Extract qubit and cost
-                    i, = term_stat['singlet']
+                    (i,) = term_stat["singlet"]
+                    val = term_stat["bias"]
                     val = term_stat['bias']
 
                     # Basis change
@@ -595,8 +607,8 @@ def final_solution(
                 # If we have a pair
                 else:
 
-                    # Extract qubits, by definition i<j
-                    i, j = term_stat['pair']
+                    i, j = term_stat["pair"]
+                    val = term_stat["correlation"]
                     val = term_stat['correlation']
 
                     # Insert new value in position j according to correlation with i
@@ -616,13 +628,16 @@ def final_solution(
 
 def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     """
-    Constructs the final solution of the smallest non vanishing problem by obtaining the final states by generating all permutations of the spins which can be fixe arbitrarily while obeying the correlations identified by the last run of QAOA before the problem vanished.
+    Constructs the final solution of the smallest non vanishing problem by obtaining the final
+    states by generating all permutations of the spins which can be fixe arbitrarily while obeying
+    the correlations identified by the last run of QAOA before the problem vanished.
     Computing the corresponding energy only of the first string, assuming they are degenerate.
 
     Parameters
     ----------
     spin_map: `dict`
-        Spin map containing the correlations and eliminations of the smallest non vanishing problem statement.
+        Spin map containing the correlations and eliminations of the smallest non-vanishing
+        problem statement.
     hamiltonian: `Hamiltonian`
         Hamiltonian object containing the smallest non vanishing problem statement.
 
@@ -631,7 +646,8 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     cl_energy: `float`
         The energy of the first solution wrt the cost Hamiltonian.
     cl_ground_states: `list`
-        List of strings of binary values representing the classical solution of the problem respecting the spin map.
+        List of strings of binary values representing the classical solution of the
+        problem respecting the spin map.
     """
     cl_ground_states = [""]
 

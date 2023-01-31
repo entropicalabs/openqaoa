@@ -22,45 +22,51 @@ from .workflow_properties import BackendProperties, ClassicalOptimizer
 from ..backends import DeviceLocal, DeviceBase
 from ..problems import QUBO
 from ..utilities import delete_keys_from_dict, is_valid_uuid, generate_uuid
-from ..backends.qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
+from ..backends.qaoa_backend import (
+    DEVICE_NAME_TO_OBJECT_MAPPER,
+    DEVICE_ACCESS_OBJECT_MAPPER,
+)
 
 
 class Workflow(ABC):
     """
     Abstract class to represent an optimizer
 
-    It's basic usage consists of 
+    It's basic usage consists of
 
      #. Initialization
      #. Compilation
      #. Optimization
-    
+
     Attributes
     ----------
-        device: `DeviceBase`
-            Device to be used by the optimizer
-        backend_properties: `BackendProperties`
-            The backend properties of the optimizer workflow. Use to set the backend properties such as the number of shots and the cvar values.
-            For a complete list of its parameters and usage please see the method set_backend_properties
-        classical_optimizer: `ClassicalOptimizer`
-            The classical optimiser properties of the optimizer workflow. Use to set the classical optimiser needed for the classical optimisation part of the optimizer routine.
-            For a complete list of its parameters and usage please see the method set_classical_optimizer
-        local_simulators: `list[str]`
-            A list containing the available local simulators
-        cloud_provider: `list[str]`
-            A list containing the available cloud providers
-        compiled: `Bool`
-            A boolean flag to check whether the optimizer object has been correctly compiled at least once     
-        id: TODO
-        exp_tags: `dict`
-            A dictionary containing the tags of the optimizer object. The user can set this value using the set_exp_tags method.
-        problem: `Problem`
-            The problem object that the optimizer will be optimizing.
-        results: `Results`
-            The results object that will contain the results of the optimization routine.
+    device: `DeviceBase`
+        Device to be used by the optimizer
+    backend_properties: `BackendProperties`
+        The backend properties of the optimizer workflow. Use to set the
+        backend properties such as the number of shots and the cvar values.
+        For a complete list of its parameters and usage please see the method `set_backend_properties`
+    classical_optimizer: `ClassicalOptimizer`
+        The classical optimiser properties of the optimizer workflow.
+        Use to set the classical optimiser needed for the classical optimisation part of the optimizer routine.
+        For a complete list of its parameters and usage please see the method `set_classical_optimizer`
+    local_simulators: `list[str]`
+        A list containing the available local simulators
+    cloud_provider: `list[str]`
+        A list containing the available cloud providers
+    compiled: `Bool`
+        A boolean flag to check whether the optimizer object has been correctly compiled at least once
+    id: TODO
+    exp_tags: `dict`
+        A dictionary containing the tags of the optimizer object. The user can set this
+        value using the set_exp_tags method.
+    problem: `Problem`
+        The problem object that the optimizer will be optimizing.
+    results: `Results`
+        The results object that will contain the results of the optimization routine.
     """
 
-    def __init__(self, device=DeviceLocal('vectorized')):  
+    def __init__(self, device=DeviceLocal("vectorized")):
         """
         Initialize the optimizer class.
 
@@ -69,7 +75,7 @@ class Workflow(ABC):
         device: `DeviceBase`
             Device to be used by the optimizer. Default is using the local 'vectorized' simulator.
         """
-        
+
         self.device = device
         self.backend_properties = BackendProperties()
         self.classical_optimizer = ClassicalOptimizer()
@@ -79,42 +85,54 @@ class Workflow(ABC):
 
         # Initialize the identifier stamps, we initialize all the stamps needed to None
         self.header = {
-            "atomic_uuid": None, # the uuid of the run it is generated automatically in the compilation
-            "experiment_uuid": generate_uuid(), # the uuid of the experiment it is generated automatically here
-            "project_uuid": None, 
-            "algorithm": None, # qaoa or rqaoa
+            "atomic_uuid": None,  # the uuid of the run it is generated automatically in the compilation
+            "experiment_uuid": generate_uuid(),  # the uuid of the experiment it is generated automatically here
+            "project_uuid": None,
+            "algorithm": None,  # qaoa or rqaoa
             "name": None,
-            "run_by": None,  
+            "run_by": None,
             "provider": None,
             "target": None,
             "cloud": None,
             "client": None,
-            "qubit_number": None, #it is set automatically in the compilation from the problem object
+            "qubit_number": None,  # it is set automatically in the compilation from the problem object
             "qubit_routing": None,
             "error_mitigation": None,
             "error_correction": None,
             "execution_time_start": None,
-            "execution_time_end": None
+            "execution_time_end": None,
         }
 
         # Initialize the experiment tags
-        self.exp_tags = {} 
-        
+        self.exp_tags = {}
+
         # Initialize the results and problem objects
         self.problem = None
         self.results = None
 
     def __setattr__(self, __name, __value):
         # check the attribute exp_tags is json serializable
-        if __name == 'exp_tags':
+        if __name == "exp_tags":
             try:
                 json.dumps(__value)
             except:
-                raise ValueError('The exp_tags attribute is not json serializable')
+                raise ValueError("The exp_tags attribute is not json serializable")
 
         return super().__setattr__(__name, __value)
 
-    def set_header(self, project_uuid:str, name:str, run_by:str, provider:str, target:str, cloud:str, client:str, qubit_routing:str, error_mitigation:str, error_correction:str):
+    def set_header(
+        self,
+        project_uuid: str,
+        name: str,
+        run_by: str,
+        provider: str,
+        target: str,
+        cloud: str,
+        client: str,
+        qubit_routing: str,
+        error_mitigation: str,
+        error_correction: str,
+    ):
         """
         Method to set the identification stamps of the optimizer object in self.header.
 
@@ -124,36 +142,42 @@ class Workflow(ABC):
         """
 
         if not is_valid_uuid(project_uuid):
-            raise ValueError('The project_uuid is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b')
-        
-        self.header['project_uuid'] = project_uuid 
-        self.header['name'] = name
-        self.header['run_by'] = run_by
-        self.header['provider'] = provider
-        self.header['target'] = target
-        self.header['cloud'] = cloud
-        self.header['client'] = client
-        self.header['qubit_routing'] = qubit_routing
-        self.header['error_mitigation'] = error_mitigation
-        self.header['error_correction'] = error_correction
+            raise ValueError(
+                "The project_uuid is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+            )
 
-    def set_exp_tags(self, tags:dict):
+        self.header["project_uuid"] = project_uuid
+        self.header["name"] = name
+        self.header["run_by"] = run_by
+        self.header["provider"] = provider
+        self.header["target"] = target
+        self.header["cloud"] = cloud
+        self.header["client"] = client
+        self.header["qubit_routing"] = qubit_routing
+        self.header["error_mitigation"] = error_mitigation
+        self.header["error_correction"] = error_correction
+
+    def set_exp_tags(self, tags: dict):
         """
-        Method to add tags to the experiment. Tags are stored in a dictionary (self.exp_tags) and can be used to identify the experiment.
-        Name is a special tag that is used to identify the experiment in the results object, it will also be stored in the dictionary, and will overwrite any previous name.
+        Method to add tags to the experiment. Tags are stored in a dictionary
+        (self.exp_tags) and can be used to identify the experiment.
+        Name is a special tag that is used to identify the experiment in the results object,
+        it will also be stored in the dictionary, and will overwrite any previous name.
 
         Parameters
         ----------
         name: `str`
-            Name of the experiment. If None, the name will not be changed. If not None, the name will be changed to the new one.
+            Name of the experiment. If None, the name will not be changed.
+            If not None, the name will be changed to the new one.
         tags: `dict`
-            Dictionary containing the tags to be added to the experiment. If the tag already exists, it will be overwritten.
+            Dictionary containing the tags to be added to the experiment.
+            If the tag already exists, it will be overwritten.
         """
-        
+
         self.exp_tags = {**self.exp_tags, **tags}
 
     def set_device(self, device: DeviceBase):
-        """"
+        """ "
         Specify the device to be used by the QAOA.
 
         Parameters
@@ -178,7 +202,7 @@ class Workflow(ABC):
             append_state: [Union[QuantumCircuitBase,List[complex], np.ndarray]
                 The state prepended to the circuit.
             init_hadamard: bool
-            Whether to apply a Hadamard gate to the beginning of the 
+            Whether to apply a Hadamard gate to the beginning of the
                 QAOA part of the circuit.. Defaults to `True`
             n_shots: int
             Optional argument to specify the number of shots required to run QAOA computations
@@ -194,8 +218,8 @@ class Workflow(ABC):
             active_reset:
                 #TODO
             rewiring:
-                Rewiring scheme to be used for Pyquil. 
-                Either 'PRAGMA INITIAL_REWIRING "NAIVE"' or 
+                Rewiring scheme to be used for Pyquil.
+                Either 'PRAGMA INITIAL_REWIRING "NAIVE"' or
                 'PRAGMA INITIAL_REWIRING "PARTIAL"'. If None, defaults to NAIVE
             disable_qubit_rewiring: `bool`
                 Disable automatic qubit rewiring on AWS braket backend
@@ -203,10 +227,11 @@ class Workflow(ABC):
 
         for key, value in kwargs.items():
             if hasattr(self.backend_properties, key):
-                pass# setattr(self.backend_properties, key, value)
+                pass  # setattr(self.backend_properties, key, value)
             else:
                 raise ValueError(
-                    f'Specified argument `{value}` for `{key}` in set_backend_properties is not supported')
+                    f"Specified argument `{value}` for `{key}` in set_backend_properties is not supported"
+                )
 
         self.backend_properties = BackendProperties(**kwargs)
         return None
@@ -226,11 +251,11 @@ class Workflow(ABC):
                 Maximum number of function evaluations.
             jac: str
                 Method to compute the gradient vector. Choose from:
-                    - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']        
+                    - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
             hess: str
                 Method to compute the hessian. Choose from:
                     - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
-            constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints  
+            constraints: scipy.optimize.LinearConstraints, scipy.optimize.NonlinearConstraints
                 Scipy-based constraints on parameters of optimization. Will be available soon
             bounds: scipy.optimize.Bounds
                 Scipy-based bounds on parameters of optimization. Will be available soon
@@ -256,154 +281,205 @@ class Workflow(ABC):
             optimization_progress : bool
                 Returns history of measurement outcomes/wavefunction if `True`. Defaults to `False`.
             cost_progress : bool
-                Returns history of cost values if `True`. Defaults to `True`. 
+                Returns history of cost values if `True`. Defaults to `True`.
             parameter_log : bool
                 Returns history of angles if `True`. Defaults to `True`.
             save_intermediate: bool
-                If True, the intermediate parameters of the optimization and job ids, if available, are saved throughout the run. This is set to False by default.
+                If True, the intermediate parameters of the optimization and job ids,
+                if available, are saved throughout the run. This is set to False by default.
         """
         for key, value in kwargs.items():
             if hasattr(self.classical_optimizer, key):
-                pass #setattr(self.classical_optimizer, key, value)
+                pass  # setattr(self.classical_optimizer, key, value)
             else:
                 raise ValueError(
-                    'Specified argument is not supported by the Classical Optimizer')
+                    "Specified argument is not supported by the Classical Optimizer"
+                )
 
         self.classical_optimizer = ClassicalOptimizer(**kwargs)
         return None
 
-    def compile(self, problem:QUBO):   
+    def compile(self, problem: QUBO):
         """
-        Method that will make sure that the problem is in the correct form for the optimizer to run. And generate the atomic uuid
-        This method should be extended by the child classes to include the compilation of the problem into the correct form for the optimizer to run.
+        Method that will make sure that the problem is in the correct form for
+        the optimizer to run and generate the atomic uuid.
+        This method should be extended by the child classes to include
+        the compilation of the problem into the correct form for the optimizer to run.
 
         Parameters
         ----------
         problem: QUBO
             The problem to be optimized. Must be in QUBO form.
-        """   
+        """
 
         # check and set problem
         assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
         self.problem = problem
 
         # the atomic uuid is generated every time that it is compiled
-        self.header['atomic_uuid'] = generate_uuid()
+        self.header["atomic_uuid"] = generate_uuid()
 
         # header is updated with the qubit number of the problem
-        self.header['qubit_number'] = self.problem.n
+        self.header["qubit_number"] = self.problem.n
 
     def optimize():
         raise NotImplementedError
 
-    def _serializable_dict(self, complex_to_string:bool=False, intermediate_mesurements:bool=True):
+    def _serializable_dict(
+        self, complex_to_string: bool = False, intermediate_mesurements: bool = True
+    ):
         """
-        Returns a dictionary with all values and attributes of the object that we want to return in `asdict` and `dump(s)` methods in a dictionary.
-        The returned dictionary has two keys: header and data. The header contains all the data that can identify the experiment, while the data contains all the input and output data of the experiment (also the experiment tags).
+        Returns a dictionary with all values and attributes of the object that we want to
+        return in `asdict` and `dump(s)` methods in a dictionary.
+        The returned dictionary has two keys: header and data. The header contains all the data
+        that can identify the experiment, while the data contains all the input and output data
+        of the experiment (also the experiment tags).
 
         Parameters
         ----------
         complex_to_string: bool
-            If True, converts all complex numbers to strings. This is useful for JSON serialization, for the `dump(s)` methods.
+            If True, converts all complex numbers to strings. This is useful for
+            JSON serialization, for the `dump(s)` methods.
         intermediate_mesurements: bool
-            If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
+            If True, intermediate measurements are included in the dump.
+            If False, intermediate measurements are not included in the dump.
             Default is True.
         """
-        
+
         # create the final data dictionary
         data = {}
-        data['exp_tags'] = self.exp_tags.copy()
-        data['input_problem'] = dict(self.problem)
-        data['input_parameters'] = {
-                                    'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
-                                    'backend_properties': dict(self.backend_properties),
-                                    'classical_optimizer': dict(self.classical_optimizer),
-                                    }
-        # change the parameters that aren't serializable to strings 
-        for item in ['noise_model' , 'append_state', 'prepend_state']:
-            if data['input_parameters']['backend_properties'][item] is not None:                                                                     
-                data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
-        
-        data['results'] = self.results.asdict(False, complex_to_string, intermediate_mesurements)
+        data["exp_tags"] = self.exp_tags.copy()
+        data["input_problem"] = dict(self.problem)
+        data["input_parameters"] = {
+            "device": {
+                "device_location": self.device.device_location,
+                "device_name": self.device.device_name,
+            },
+            "backend_properties": dict(self.backend_properties),
+            "classical_optimizer": dict(self.classical_optimizer),
+        }
+        # change the parameters that aren't serializable to strings
+        for item in ["noise_model", "append_state", "prepend_state"]:
+            if data["input_parameters"]["backend_properties"][item] is not None:
+                data["input_parameters"]["backend_properties"][item] = str(
+                    data["input_parameters"]["backend_properties"][item]
+                )
+
+        data["results"] = self.results.asdict(
+            False, complex_to_string, intermediate_mesurements
+        )
 
         # create the final header dictionary
         header = self.header.copy()
-        header['metadata'] = {
+        header["metadata"] = {
             **self.exp_tags.copy(),
-            **{'problem_type': data['input_problem']['problem_instance']['problem_type']},
-            **data['input_problem']['metadata'].copy(),
-            **{'n_shots': data['input_parameters']['backend_properties']['n_shots'] },
-            **{prepend+key: data['input_parameters']['classical_optimizer'][key] 
-                                    for prepend, key in zip(['optimizer_', "", ""], ['method', 'jac', 'hess']) 
-                                    if not data['input_parameters']['classical_optimizer'][key] is None}, 
-        }   
+            **{
+                "problem_type": data["input_problem"]["problem_instance"][
+                    "problem_type"
+                ]
+            },
+            **data["input_problem"]["metadata"].copy(),
+            **{"n_shots": data["input_parameters"]["backend_properties"]["n_shots"]},
+            **{
+                prepend + key: data["input_parameters"]["classical_optimizer"][key]
+                for prepend, key in zip(
+                    ["optimizer_", "", ""], ["method", "jac", "hess"]
+                )
+                if not data["input_parameters"]["classical_optimizer"][key] is None
+            },
+        }
 
         # we return a dictionary (serializable_dict) that will have two keys: header and data
         serializable_dict = {
-            "header": header, # header is a dictionary containing all the data that can identify the experiment
-            "data": data, # data is a dictionary containing all the input and output data of the experiment (also the experiment tags)
+            # header is a dictionary containing all the data that can identify the experiment
+            "header": header,
+            # data is a dictionary containing all the input and output data of the experiment (also the experiment tags)
+            "data": data,
         }
 
         return serializable_dict
 
-    def asdict(self, exclude_keys:List[str]=[], options:dict={}):
+    def asdict(self, exclude_keys: List[str] = [], options: dict = {}):
         """
         Returns a dictionary of the Optimizer object, where all objects are converted to dictionaries.
 
         Parameters
         ----------
         exclude_keys : List[str]
-            A list of keys to exclude from the returned dictionary.         
+            A list of keys to exclude from the returned dictionary.
         options : dict
             A dictionary of options to pass to the method that creates the dictionary to dump.
                 complex_to_string : bool
-                    If True, converts complex numbers to strings. If False, complex numbers are not converted to strings.
+                    If True, converts complex numbers to strings. If False,
+                    complex numbers are not converted to strings.
                 intermediate_mesurements : bool
-                    If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
+                    If True, includes the intermediate measurements in the results.
+                    If False, only the final measurements are included.
 
         Returns
         -------
         dict
         """
 
-        options = {**{'complex_to_string': False}, **options}
+        options = {**{"complex_to_string": False}, **options}
 
         if exclude_keys == []:
             return self._serializable_dict(**options)
         else:
-            return delete_keys_from_dict(obj= self._serializable_dict(**options), keys_to_delete= exclude_keys)
+            return delete_keys_from_dict(
+                obj=self._serializable_dict(**options), keys_to_delete=exclude_keys
+            )
 
-    def dumps(self, indent:int=2, exclude_keys:List[str]=[], options:dict={}):
+    def dumps(self, indent: int = 2, exclude_keys: List[str] = [], options: dict = {}):
         """
         Returns a json string of the Optimizer object.
 
         Parameters
         ----------
         indent : int
-            The number of spaces to indent the result in the json file. If None, the result is not indented.
+            The number of spaces to indent the result in the json file.
+            If None, the result is not indented.
         exclude_keys : List[str]
             A list of keys to exclude from the json string.
         options : dict
-            A dictionary of options to pass to the method that creates the dictionary to dump.
+            A dictionary of options to pass to the method that creates
+            the dictionary to dump.
         intermediate_mesurements : bool
-            If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
+            If True, includes the intermediate measurements in the results.
+            If False, only the final measurements are included.
 
         Returns
         -------
         str
         """
 
-        options = {**options, **{'complex_to_string': True}}
+        options = {**options, **{"complex_to_string": True}}
 
         if exclude_keys == []:
             return json.dumps(self._serializable_dict(**options), indent=indent)
         else:
-            return json.dumps(delete_keys_from_dict(obj= self._serializable_dict(**options), keys_to_delete= exclude_keys), indent=indent)
+            return json.dumps(
+                delete_keys_from_dict(
+                    obj=self._serializable_dict(**options), keys_to_delete=exclude_keys
+                ),
+                indent=indent,
+            )
 
-    def dump(self, file_name:str = "", file_path:str="", prepend_id:bool=True, indent:int=2, compresslevel:int=0, exclude_keys:List[str]=[], overwrite:bool=False, options:dict={}):
+    def dump(
+        self,
+        file_name: str = "",
+        file_path: str = "",
+        prepend_id: bool = True,
+        indent: int = 2,
+        compresslevel: int = 0,
+        exclude_keys: List[str] = [],
+        overwrite: bool = False,
+        options: dict = {},
+    ):
         """
-        Saves the Optimizer object as json file (if compresslevel is 0). 
-        If compresslevel is not 0, saves the Optimizer object as a .gz file (which should be decompressed before use).
+        Saves the Optimizer object as json file (if compresslevel is 0).
+        If compresslevel is not 0, saves the Optimizer object as a .gz file
+        (which should be decompressed before use).
 
         Parameters
         ----------
@@ -412,53 +488,91 @@ class Workflow(ABC):
         file_path : str
             The path where the json file will be saved.
         indent : int
-            The number of spaces to indent the result in the json file. If None, the result is not indented.
+            The number of spaces to indent the result in the json file.
+            If None, the result is not indented.
         compresslevel : int
             The compression level to use. If 0, no compression is used and a json file is saved.
-            If 1, the fastest compression method is used. If 9, the slowest but most effective compression method is used. And a .gz file is saved.
+            If 1, the fastest compression method is used. If 9, the slowest
+            but most effective compression method is used. And a .gz file is saved.
         exclude_keys : List[str]
             A list of keys that should not be included in the json file.
         overwrite : bool
-            If True, overwrites the file if it already exists. If False, raises an error if the file already exists.
+            If True, overwrites the file if it already exists. If False,
+            raises an error if the file already exists.
         options : dict
             A dictionary of options to pass to the method that creates the dictionary to dump.
         intermediate_mesurements : bool
-            If True, includes the intermediate measurements in the results. If False, only the final measurements are included.
+            If True, includes the intermediate measurements in the results.
+            If False, only the final measurements are included.
         """
 
-        options = {**options, **{'complex_to_string': True}}
+        options = {**options, **{"complex_to_string": True}}
 
-        # get the full name 
+        # get the full name
         if prepend_id == False and file_name == "":
-            raise ValueError("If prepend_id is False, file_name must be specified.") 
+            raise ValueError("If prepend_id is False, file_name must be specified.")
         elif prepend_id == False:
             file = file_path + file_name
         elif file_name == "":
-            file = file_path + self.header['experiment_uuid'] + '--' + self.header['atomic_uuid']
+            file = (
+                file_path
+                + self.header["experiment_uuid"]
+                + "--"
+                + self.header["atomic_uuid"]
+            )
         else:
-            file = file_path + self.header['experiment_uuid'] + '--' + self.header['atomic_uuid'] + '--' + file_name
+            file = (
+                file_path
+                + self.header["experiment_uuid"]
+                + "--"
+                + self.header["atomic_uuid"]
+                + "--"
+                + file_name
+            )
 
         # adding .json extension if not present and adding .gz extension if compresslevel is not 0 and not present
-        file = file + '.json' if '.json' != file[-5:] else file
-        if compresslevel != 0: file = file + '.gz' if '.gz' != file[-3:] else file
+        file = file + ".json" if ".json" != file[-5:] else file
+        if compresslevel != 0:
+            file = file + ".gz" if ".gz" != file[-3:] else file
 
         # checking if the file already exists, and raising an error if it does and overwrite is False
         if overwrite == False and exists(file):
-                raise FileExistsError(f"The file {file} already exists. Please change the name of the file or set overwrite=True.")
+            raise FileExistsError(
+                f"The file {file} already exists. Please change the name of the file or set overwrite=True."
+            )
 
         ## saving the file
-        if compresslevel == 0: # if compresslevel is 0, save as json file
-            with open(file, 'w') as f:
+        if compresslevel == 0:  # if compresslevel is 0, save as json file
+            with open(file, "w") as f:
                 if exclude_keys == []:
                     json.dump(self._serializable_dict(**options), f, indent=indent)
                 else:
-                    json.dump(delete_keys_from_dict(obj= self._serializable_dict(**options), keys_to_delete= exclude_keys), f, indent=indent)
-        else: # if compresslevel is not 0, save as .gz file (which should be decompressed before use)
-            with gzip.open(file, 'w', compresslevel=compresslevel) as f:
-                f.write(self.dumps(indent=indent, exclude_keys=exclude_keys, options=options).encode('utf-8'))
+                    json.dump(
+                        delete_keys_from_dict(
+                            obj=self._serializable_dict(**options),
+                            keys_to_delete=exclude_keys,
+                        ),
+                        f,
+                        indent=indent,
+                    )
+        else:  # if compresslevel is not 0, save as .gz file (which should be decompressed before use)
+            with gzip.open(file, "w", compresslevel=compresslevel) as f:
+                f.write(
+                    self.dumps(
+                        indent=indent, exclude_keys=exclude_keys, options=options
+                    ).encode("utf-8")
+                )
 
         # print the file path and name
         if file_path == "":
-            print('Results saved as "{}" in the current directory.'.format(file[len(file_path):]))
+            print(
+                'Results saved as "{}" in the current directory.'.format(
+                    file[len(file_path) :]
+                )
+            )
         else:
-            print('Results saved as "{}" in the folder "{}".'.format(file[len(file_path):], file_path))
+            print(
+                'Results saved as "{}" in the folder "{}".'.format(
+                    file[len(file_path) :], file_path
+                )
+            )

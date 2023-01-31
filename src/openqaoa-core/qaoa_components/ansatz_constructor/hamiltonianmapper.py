@@ -6,8 +6,9 @@ from .operators import Hamiltonian
 
 
 class HamiltonianMapper(object):
-
-    def get_gate_maps(hamil_obj: Hamiltonian, input_label: List = []) -> List[RotationGateMap]:
+    def get_gate_maps(
+        hamil_obj: Hamiltonian, input_label: List = []
+    ) -> List[RotationGateMap]:
         """
         This method gets the pauli gates based on the input Hamiltonian into the Mapper
 
@@ -24,11 +25,15 @@ class HamiltonianMapper(object):
             List of RotationGateMap objects defining part of the circuit
         """
 
-        assert type(input_label) is list, 'input_label must be of type list'
+        assert type(input_label) is list, "input_label must be of type list"
 
-        return RotationGateMapFactory.convert_hamiltonian_to_gate_maps(hamil_obj, input_label)
+        return RotationGateMapFactory.convert_hamiltonian_to_gate_maps(
+            hamil_obj, input_label
+        )
 
-    def repeat_gate_maps(hamil_obj: Hamiltonian, tag: str, n_repetitions: int) -> List[List[RotationGateMap]]:
+    def repeat_gate_maps(
+        hamil_obj: Hamiltonian, tag: str, n_repetitions: int
+    ) -> List[List[RotationGateMap]]:
         """
         Repeat the gates for n_repetitions layers based on the input Hamiltonian into the Mapper.
 
@@ -39,45 +44,52 @@ class HamiltonianMapper(object):
         tag : `str`
             The tag to be used for the repeated gates
         n_repetitions: `int`
-            The number of times the layer of gates have to be repeated. 
+            The number of times the layer of gates have to be repeated.
         """
         output_gate_list = []
 
         for each_repetition in range(n_repetitions):
-            output_gate_list.append(HamiltonianMapper.get_gate_maps(
-                hamil_obj, [tag.lower(), each_repetition]))
+            output_gate_list.append(
+                HamiltonianMapper.get_gate_maps(
+                    hamil_obj, [tag.lower(), each_repetition]
+                )
+            )
 
         return output_gate_list
-    
-    def remap_gate_map_labels(gatemap_list: List[RotationGateMap], input_label: List = []) -> List[RotationGateMap]:
-        
+
+    def remap_gate_map_labels(
+        gatemap_list: List[RotationGateMap], input_label: List = []
+    ) -> List[RotationGateMap]:
+
         """
         This method reassigns the pauli_label of all the gates in the
         RotationGateMap list. The newly assigned labels help the circuit
         identify which variational angles fit into which gate.
-        
+
         Parameters
         ----------
         gatemap_list: `list[RotationGateMap]`
             The list of RotationGateMap objects that needs the pauli_label attribute to be remapped.
         input_label : `list`
             Input label defining the type of gate
-            
+
         Return
         ------
         `list[RotationGateMap]`
             List of RotationGateMap objects defining part of the circuit
         """
-        
-        assert type(input_label) is list, 'input_label must be of type list'
+
+        assert type(input_label) is list, "input_label must be of type list"
 
         return RotationGateMapFactory.remap_gate_map_labels(gatemap_list, input_label)
-    
-    def repeat_gate_maps_from_gate_map_list(gatemap_list: List[RotationGateMap], tag: str, n_repetitions: int) -> List[List[RotationGateMap]]:
-        
+
+    def repeat_gate_maps_from_gate_map_list(
+        gatemap_list: List[RotationGateMap], tag: str, n_repetitions: int
+    ) -> List[List[RotationGateMap]]:
+
         """
         Repeat the gates for n_repetitions layers based on the input list of RotationGateMap objects.
-        
+
         Parameters
         ----------
         gatemap_list: `list[RotationGateMap]`
@@ -87,11 +99,16 @@ class HamiltonianMapper(object):
         n_repetitions: `int`
             The number of times to clone the RotationGateMap objects in the list.
         """
-        
+
         output_gate_list = []
-        
+
         for each_repetition in range(n_repetitions):
-            output_gate_list.append(deepcopy(HamiltonianMapper.remap_gate_map_labels(
-                gatemap_list, [tag.lower(), each_repetition])))
-            
+            output_gate_list.append(
+                deepcopy(
+                    HamiltonianMapper.remap_gate_map_labels(
+                        gatemap_list, [tag.lower(), each_repetition]
+                    )
+                )
+            )
+
         return output_gate_list

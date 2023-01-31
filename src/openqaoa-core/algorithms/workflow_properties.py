@@ -2,35 +2,49 @@ from typing import List, Optional, Union
 import numpy as np
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
-from ..optimizers.training_vqa import (
-    CustomScipyGradientOptimizer,
-    PennyLaneOptimizer
-)
+from ..optimizers.training_vqa import CustomScipyGradientOptimizer, PennyLaneOptimizer
 from ..backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from ..backends.basebackend import QuantumCircuitBase
 from ..utilities import convert2serialize
 
 
-ALLOWED_PARAM_TYPES = ['standard', 'standard_w_bias', 'extended', 'fourier',
-                       'fourier_extended', 'fourier_w_bias', 'annealing']
-ALLOWED_INIT_TYPES = ['rand', 'ramp', 'custom']
-ALLOWED_MIXERS = ['x', 'xy']
+ALLOWED_PARAM_TYPES = [
+    "standard",
+    "standard_w_bias",
+    "extended",
+    "fourier",
+    "fourier_extended",
+    "fourier_w_bias",
+    "annealing",
+]
+ALLOWED_INIT_TYPES = ["rand", "ramp", "custom"]
+ALLOWED_MIXERS = ["x", "xy"]
 
 ALLOWED_MINIMIZATION_METHODS = (
-    MINIMIZE_METHODS +
-    CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS +
-    PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
+    MINIMIZE_METHODS
+    + CustomScipyGradientOptimizer.CUSTOM_GRADIENT_OPTIMIZERS
+    + PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
 )
 
-ALLOWED_QVM_DEVICES = ['Aspen-11', 'Aspen-M-1']
-ALLOWED_QVM_DEVICES.extend(f'{n}q-qvm' for n in range(2, 80))
+ALLOWED_QVM_DEVICES = ["Aspen-11", "Aspen-M-1"]
+ALLOWED_QVM_DEVICES.extend(f"{n}q-qvm" for n in range(2, 80))
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
-ALLOWED_IMBQ_GLOBAL =  ['ibmq_qasm_simulator', 'ibmq_armonk', 'ibmq_santiago',
-                        'ibmq_bogota', 'ibmq_lima', 'ibmq_belem', 'ibmq_quito',
-                        'simulator_statevector', 'simulator_mps', 'simulator_extended_stabilizer',
-                        'simulator_stabilizer', 'ibmq_manila']
-ALLOWED_DEVICES  = ALLOWED_LOCAL_SIMUALTORS + ALLOWED_QVM_DEVICES + ALLOWED_IMBQ_GLOBAL
+ALLOWED_IMBQ_GLOBAL = [
+    "ibmq_qasm_simulator",
+    "ibmq_armonk",
+    "ibmq_santiago",
+    "ibmq_bogota",
+    "ibmq_lima",
+    "ibmq_belem",
+    "ibmq_quito",
+    "simulator_statevector",
+    "simulator_mps",
+    "simulator_extended_stabilizer",
+    "simulator_stabilizer",
+    "ibmq_manila",
+]
+ALLOWED_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ALLOWED_QVM_DEVICES + ALLOWED_IMBQ_GLOBAL
 
 
 class WorkflowProperties:
@@ -41,39 +55,52 @@ class WorkflowProperties:
 
     def asdict(self):
         return convert2serialize(dict(self))
-    
+
 
 class CircuitProperties(WorkflowProperties):
     """
     Tunable properties of the QAOA circuit to be specified by the user
     """
 
-    def __init__(self,
-                 param_type: str = 'standard',
-                 init_type: str = 'ramp',
-                 qubit_register: List = [],
-                 p: int = 1,
-                 q: Optional[int] = 1,
-                 annealing_time: Optional[float] = None,
-                 linear_ramp_time: Optional[float] = None,
-                 variational_params_dict: Optional[dict] = {},
-                 mixer_hamiltonian: Optional[str] = 'x',
-                 mixer_qubit_connectivity: Optional[Union[List[list],
-                                                          List[tuple], str]] = None,
-                 mixer_coeffs: Optional[float] = None,
-                 seed: Optional[int] = None):
+    def __init__(
+        self,
+        param_type: str = "standard",
+        init_type: str = "ramp",
+        qubit_register: List = [],
+        p: int = 1,
+        q: Optional[int] = 1,
+        annealing_time: Optional[float] = None,
+        linear_ramp_time: Optional[float] = None,
+        variational_params_dict: Optional[dict] = {},
+        mixer_hamiltonian: Optional[str] = "x",
+        mixer_qubit_connectivity: Optional[Union[List[list], List[tuple], str]] = None,
+        mixer_coeffs: Optional[float] = None,
+        seed: Optional[int] = None,
+    ):
 
         self.param_type = param_type
         self.init_type = init_type
         self.qubit_register = qubit_register
         self.p = p
-        self.q = q if param_type.lower() in ['fourier','fourier_extended', 'fourier_w_bias'] else None
+        self.q = (
+            q
+            if param_type.lower() in ["fourier", "fourier_extended", "fourier_w_bias"]
+            else None
+        )
         self.variational_params_dict = variational_params_dict
-        self.annealing_time = annealing_time if annealing_time is not None else 0.7*self.p
-        self.linear_ramp_time = linear_ramp_time if linear_ramp_time is not None else 0.7*self.p
+        self.annealing_time = (
+            annealing_time if annealing_time is not None else 0.7 * self.p
+        )
+        self.linear_ramp_time = (
+            linear_ramp_time if linear_ramp_time is not None else 0.7 * self.p
+        )
         self.mixer_hamiltonian = mixer_hamiltonian
-        if self.mixer_hamiltonian.lower() == 'xy':
-            self.mixer_qubit_connectivity = mixer_qubit_connectivity if mixer_qubit_connectivity is not None else 'full'
+        if self.mixer_hamiltonian.lower() == "xy":
+            self.mixer_qubit_connectivity = (
+                mixer_qubit_connectivity
+                if mixer_qubit_connectivity is not None
+                else "full"
+            )
         else:
             self.mixer_qubit_connectivity = None
         self.mixer_coeffs = mixer_coeffs
@@ -87,7 +114,8 @@ class CircuitProperties(WorkflowProperties):
     def param_type(self, value):
         if value not in ALLOWED_PARAM_TYPES:
             raise ValueError(
-                f"param_type {value} is not recognised. Please use {ALLOWED_PARAM_TYPES}")
+                f"param_type {value} is not recognised. Please use {ALLOWED_PARAM_TYPES}"
+            )
         self._param_type = value
 
     @property
@@ -98,7 +126,8 @@ class CircuitProperties(WorkflowProperties):
     def init_type(self, value):
         if value not in ALLOWED_INIT_TYPES:
             raise ValueError(
-                f"init_type {value} is not recognised. Please use {ALLOWED_INIT_TYPES}")
+                f"init_type {value} is not recognised. Please use {ALLOWED_INIT_TYPES}"
+            )
         self._init_type = value
 
     @property
@@ -109,7 +138,8 @@ class CircuitProperties(WorkflowProperties):
     def mixer_hamiltonian(self, value):
         if value not in ALLOWED_MIXERS:
             raise ValueError(
-                f"mixer_hamiltonian {value} is not recognised. Please use {ALLOWED_MIXERS}")
+                f"mixer_hamiltonian {value} is not recognised. Please use {ALLOWED_MIXERS}"
+            )
         self._mixer_hamiltonian = value
 
     @property
@@ -120,7 +150,8 @@ class CircuitProperties(WorkflowProperties):
     def p(self, value):
         if value <= 0:
             raise ValueError(
-                f"Number of layers `p` cannot be smaller or equal to zero. Value {value} was provided")
+                f"Number of layers `p` cannot be smaller or equal to zero. Value {value} was provided"
+            )
         self._p = value
 
     @property
@@ -131,9 +162,9 @@ class CircuitProperties(WorkflowProperties):
     def annealing_time(self, value):
         if value <= 0:
             raise ValueError(
-                f"The annealing time `annealing_time` cannot be smaller or equal to zero. Value {value} was provided")
+                f"The annealing time `annealing_time` cannot be smaller or equal to zero. Value {value} was provided"
+            )
         self._annealing_time = value
-
 
     # @property
     # def mixer_qubit_connectivity(self):
@@ -163,7 +194,7 @@ class BackendProperties(WorkflowProperties):
     append_state: Union[QuantumCircuitBase,numpy.ndarray(complex)]
         The state appended to the circuit.
     init_hadamard: bool
-        Whether to apply a Hadamard gate to the beginning of the 
+        Whether to apply a Hadamard gate to the beginning of the
         QAOA part of the circuit.
     n_shots: int
         The number of shots to be used for the shot-based computation.
@@ -172,9 +203,9 @@ class BackendProperties(WorkflowProperties):
     noise_model: NoiseModel
         The `qiskit` noise model to be used for the shot-based simulator.
     qubit_layout: Union[List[int], numpy.ndarray]
-        Mapping from physical to logical qubit indices, used to eventually 
+        Mapping from physical to logical qubit indices, used to eventually
         construct the quantum circuit.  For example, for a system composed by 3 qubits
-       `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit 
+       `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit
         and the right hand side is the logical qubits
     qiskit_simulation_method: str
         Specify the simulation method to use with the `qiskit.AerSimulator`
@@ -188,23 +219,24 @@ class BackendProperties(WorkflowProperties):
         enable/disbale qubit rewiring when accessing QPUs via the AWS `braket`
     """
 
-    def __init__(self,
-                 prepend_state: Optional[Union[QuantumCircuitBase,
-                                               List[complex], np.ndarray]] = None,
-                 append_state: Optional[Union[QuantumCircuitBase,
-                                              np.ndarray]] = None,
-                 init_hadamard: bool = True,
-                 n_shots: int = 100,
-                 cvar_alpha: float = 1,
-                 noise_model = None,
-                 qubit_layout: Optional[Union[List[int], np.ndarray]] = None,
-                 qiskit_simulation_method: Optional[str] = None,
-                 seed_simulator: Optional[int] = None,
-                 active_reset: Optional[bool] = None,
-                 rewiring: Optional[str] = None,
-                 disable_qubit_rewiring: Optional[bool] = None
-                 ):
-        
+    def __init__(
+        self,
+        prepend_state: Optional[
+            Union[QuantumCircuitBase, List[complex], np.ndarray]
+        ] = None,
+        append_state: Optional[Union[QuantumCircuitBase, np.ndarray]] = None,
+        init_hadamard: bool = True,
+        n_shots: int = 100,
+        cvar_alpha: float = 1,
+        noise_model=None,
+        qubit_layout: Optional[Union[List[int], np.ndarray]] = None,
+        qiskit_simulation_method: Optional[str] = None,
+        seed_simulator: Optional[int] = None,
+        active_reset: Optional[bool] = None,
+        rewiring: Optional[str] = None,
+        disable_qubit_rewiring: Optional[bool] = None,
+    ):
+
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state
@@ -217,7 +249,7 @@ class BackendProperties(WorkflowProperties):
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.disable_qubit_rewiring = disable_qubit_rewiring
-        
+
     # @property
     # def cvar_alpha(self):
     #     return self._cvar_alpha
@@ -232,7 +264,7 @@ class BackendProperties(WorkflowProperties):
 
 class ClassicalOptimizer(WorkflowProperties):
     """
-    The classical optimizer for the QAOA optimization routine 
+    The classical optimizer for the QAOA optimization routine
     of the QAOA circuit parameters.
 
     Parameters
@@ -247,14 +279,14 @@ class ClassicalOptimizer(WorkflowProperties):
         Maximum number of function evaluations.
     jac: str
         Method to compute the gradient vector. Choose from:
-            - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']       
+            - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
     hess:
         Method to compute the hessian. Choose from:
             - ['finite_difference', 'param_shift', 'stoch_param_shift', 'grad_spsa']
-    constraints: `scipy.optimize.LinearConstraints`, `scipy.optimize.NonlinearConstraints` 
-        Scipy-based constraints on parameters of optimization 
+    constraints: `scipy.optimize.LinearConstraints`, `scipy.optimize.NonlinearConstraints`
+        Scipy-based constraints on parameters of optimization
     bounds: `scipy.scipy.optimize.Bounds`
-        Scipy-based bounds on parameters of optimization 
+        Scipy-based bounds on parameters of optimization
     tol : float
         Tolerance before the optimizer terminates; if `tol` is larger than
         the difference between two steps, terminate optimization.
@@ -275,30 +307,33 @@ class ClassicalOptimizer(WorkflowProperties):
     optimization_progress : bool
         Returns history of measurement outcomes/wavefunction if `True`. Defaults to `False`.
     cost_progress : bool
-        Returns history of cost values if `True`. Defaults to `True`. 
+        Returns history of cost values if `True`. Defaults to `True`.
     parameter_log : bool
         Returns history of angles if `True`. Defaults to `True`.
     save_intermediate: bool
-        Outputs the jobids and parameters used for each circuit into seperate csv files. Defaults to `False`.
+        Outputs the jobids and parameters used for each circuit into
+        seperate csv files. Defaults to `False`.
     """
 
-    def __init__(self,
-                 optimize: bool = True,
-                 method: str = 'cobyla',
-                 maxiter: int = 100,
-                 maxfev : int = None,
-                 jac: str = None,
-                 hess: str = None,
-                 constraints=None,
-                 bounds=None,
-                 tol=None,
-                 optimizer_options: dict = None,
-                 jac_options: dict = None,
-                 hess_options: dict = None,
-                 optimization_progress: bool = False,
-                 cost_progress: bool = True,
-                 parameter_log: bool = True, 
-                 save_intermediate: bool = False):
+    def __init__(
+        self,
+        optimize: bool = True,
+        method: str = "cobyla",
+        maxiter: int = 100,
+        maxfev: int = None,
+        jac: str = None,
+        hess: str = None,
+        constraints=None,
+        bounds=None,
+        tol=None,
+        optimizer_options: dict = None,
+        jac_options: dict = None,
+        hess_options: dict = None,
+        optimization_progress: bool = False,
+        cost_progress: bool = True,
+        parameter_log: bool = True,
+        save_intermediate: bool = False,
+    ):
         self.optimize = optimize
         self.method = method.lower()
         self.maxiter = maxiter
@@ -327,4 +362,3 @@ class ClassicalOptimizer(WorkflowProperties):
     #         raise ValueError(
     #             f"method `{value}` is not supported. Please choose between {ALLOWED_MINIMIZATION_METHODS}")
     #     self._method = value
-

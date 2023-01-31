@@ -3,23 +3,30 @@ import numpy as np
 from pyquil import Program, gates, quilbase
 
 from .devices import DevicePyquil
-from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
+from openqaoa.backends.basebackend import (
+    QAOABaseBackendShotBased,
+    QAOABaseBackendCloud,
+    QAOABaseBackendParametric,
+)
 from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap
 from openqaoa.utilities import generate_uuid
 
+
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
     '''
-    Check that the program does not contain 2-qubit terms that is not present in the QPU's topology (to prevent quilc from crashing).
-    
+    Check that the program does not contain 2-qubit terms that is not present
+    in the QPU's topology (to prevent quilc from crashing).
+
     Parameters
     ----------
     executable: `Program`
         pyQuil executable program.
     device: `DevicePyquil`
-        An object of the class ``DevicePyquil`` which contains information on pyQuil's `QuantumComputer` object, used to extract the selected QPU's topology.
-    
+        An object of the class ``DevicePyquil`` which contains information on
+        pyQuil's `QuantumComputer` object, used to extract the selected QPU's topology.
+
     Returns
     -------
         None
@@ -27,18 +34,23 @@ def check_edge_connectivity(executable: Program, device: DevicePyquil):
     '''
 
     qpu_graph = device.quantum_computer.qubit_topology()
-    
+
     instrs = [instr for instr in executable if type(instr) == quilbase.Gate]
-    pair_instrs = [list(instr.get_qubits()) for instr in instrs if len(instr.get_qubits()) == 2]
+    pair_instrs = [
+        list(instr.get_qubits()) for instr in instrs if len(instr.get_qubits()) == 2
+    ]
 
     for term in pair_instrs:
         if len(term) == 2:
 
-            assert term in qpu_graph.edges(), f"Term {term} is not an edge on the QPU graph of {device.device_name}."
-    
-    
+            assert (
+                term in qpu_graph.edges()
+            ), f"Term {term} is not an edge on the QPU graph of {device.device_name}."
 
-class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
+
+class QAOAPyQuilQPUBackend(
+    QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased
+):
     """
     A QAOA backend object for real Rigetti QPUs
 
@@ -47,7 +59,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
     device: `DevicePyquil`
         The device object to access pyquil devices with credentials.
     qaoa_descriptor: `QAOADescriptor`
-        An object of the class ``QAOADescriptor`` which contains information on 
+        An object of the class ``QAOADescriptor`` which contains information on
         circuit construction and depth of the circuit.
     n_shots: `int`
         The number of shots to be taken for each circuit.
@@ -61,36 +73,40 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         Conditional Value-at-Risk (CVaR) – a measure that takes into account only the tail of the
         probability distribution arising from the circut's count dictionary. Must be between 0 and 1. Check
         https://arxiv.org/abs/1907.04769 for further details.
-    active_reset: 
-        Whether to use the pyQuil's active reset scheme to reset qubits between shots. 
+    active_reset:
+        Whether to use the pyQuil's active reset scheme to reset qubits between shots.
     rewiring:
-        Rewiring scheme to be used for Pyquil. 
-        Either PRAGMA INITIAL_REWIRING "NAIVE" or PRAGMA INITIAL_REWIRING "PARTIAL". 
+        Rewiring scheme to be used for Pyquil.
+        Either PRAGMA INITIAL_REWIRING "NAIVE" or PRAGMA INITIAL_REWIRING "PARTIAL".
         If None, pyquil defaults according to:
-        NAIVE: The qubits used in all instructions in the program satisfy the topological constraints of the device.
+        NAIVE: The qubits used in all instructions in the program satisfy the
+        topological constraints of the device.
         PARTIAL: Otherwise.
     """
 
-    def __init__(self,
-                 device: DevicePyquil,
-                 qaoa_descriptor: QAOADescriptor,
-                 n_shots: int,
-                 prepend_state: Program,
-                 append_state: Program,
-                 init_hadamard: bool,
-                 cvar_alpha: float,
-                 active_reset: bool = False,
-                 rewiring: str = '',
-                 qubit_layout: list = []
-                 ):
+    def __init__(
+        self,
+        device: DevicePyquil,
+        qaoa_descriptor: QAOADescriptor,
+        n_shots: int,
+        prepend_state: Program,
+        append_state: Program,
+        init_hadamard: bool,
+        cvar_alpha: float,
+        active_reset: bool = False,
+        rewiring: str = "",
+        qubit_layout: list = [],
+    ):
 
-        QAOABaseBackendShotBased.__init__(self,
-                                          qaoa_descriptor,
-                                          n_shots,
-                                          prepend_state,
-                                          append_state,
-                                          init_hadamard,
-                                          cvar_alpha)
+        QAOABaseBackendShotBased.__init__(
+            self,
+            qaoa_descriptor,
+            n_shots,
+            prepend_state,
+            append_state,
+            init_hadamard,
+            cvar_alpha,
+        )
         QAOABaseBackendCloud.__init__(self, device)
 
         self.active_reset = active_reset
@@ -100,25 +116,29 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
         self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout
         self.qubit_mapping = dict(zip(self.qureg, self.qubit_layout))
-        
+
         if self.prepend_state:
-            assert self.n_qubits >= len(prepend_state.get_qubits()), "Cannot attach a bigger circuit " \
-                                                                "to the QAOA routine"
-            
+            assert self.n_qubits >= len(prepend_state.get_qubits()), (
+                "Cannot attach a bigger circuit " "to the QAOA routine"
+            )
+
         if self.device.n_qubits < self.n_qubits:
-            raise Exception('There are lesser qubits on the device than the number of qubits required for the circuit.')
+            raise Exception(
+                "There are lesser qubits on the device than the number of qubits required for the circuit."
+            )
 
         self.parametric_circuit = self.parametric_qaoa_circuit
         native_prog = self.device.quantum_computer.compiler.quil_to_native_quil(
-            self.parametric_circuit)
+            self.parametric_circuit
+        )
         self.prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
-            native_prog)
-        
+            native_prog
+        )
+
         # Check program connectivity against QPU connectivity
         # TODO: reconcile with PRAGMA PRESERVE
 
         # check_edge_connectivity(self.prog_exe, device)
-
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
         """
@@ -133,27 +153,29 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         `pyquil.Program`
             A pyquil.Program (executable) object.
         """
-        angles_list = np.array(self.obtain_angles_for_pauli_list(
-            self.abstract_circuit, params), dtype=float)
+        angles_list = np.array(
+            self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
+            dtype=float,
+        )
         angle_declarations = list(self.parametric_circuit.declarations.keys())
-        angle_declarations.remove('ro')
+        angle_declarations.remove("ro")
         for i, param_name in enumerate(angle_declarations):
-            self.prog_exe.write_memory(
-                region_name=param_name, value=angles_list[i])
+            self.prog_exe.write_memory(region_name=param_name, value=angles_list[i])
 
         return self.prog_exe
 
     @property
     def parametric_qaoa_circuit(self) -> Program:
         """
-        Creates a parametric QAOA circuit (pyquil.Program object), given the qubit pairs, single qubits with biases,
+        Creates a parametric QAOA circuit (pyquil.Program object),
+        given the qubit pairs, single qubits with biases,
         and a set of circuit angles. Note that this function does not actually run
-        the circuit. 
+        the circuit.
 
         Parameters
         ----------
         params: `QAOAVariationalBaseParams`
-        
+
         Returns
         -------
         `pyquil.Program`
@@ -163,51 +185,62 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
             parametric_circuit = Program(gates.RESET())
         else:
             parametric_circuit = Program()
-        
+
         if self.rewiring != None:
-            if self.rewiring in ['PRAGMA INITIAL_REWIRING "NAIVE"', 'PRAGMA INITIAL_REWIRING "PARTIAL"', '']:
+            if self.rewiring in [
+                'PRAGMA INITIAL_REWIRING "NAIVE"',
+                'PRAGMA INITIAL_REWIRING "PARTIAL"',
+                "",
+            ]:
                 parametric_circuit += Program(self.rewiring)
             else:
-                raise ValueError('Rewiring command not recognized. Please use ''PRAGMA INITIAL_REWIRING "NAIVE"'' or ''PRAGMA INITIAL_REWIRING "PARTIAL"''')
-        
+                raise ValueError(
+                    "Rewiring command not recognized. Please use "
+                    'PRAGMA INITIAL_REWIRING "NAIVE"'
+                    " or "
+                    'PRAGMA INITIAL_REWIRING "PARTIAL"'
+                    ""
+                )
+
         # declare the read-out register
-        ro = parametric_circuit.declare('ro', 'BIT', self.n_qubits)
+        ro = parametric_circuit.declare("ro", "BIT", self.n_qubits)
 
         if self.prepend_state:
             parametric_circuit += self.prepend_state
-            
+
         # Initial state is all |+>
         if self.init_hadamard:
             for i in self.qureg:
-                parametric_circuit += gates.RZ(np.pi, self.qubit_mapping[i]) 
-                parametric_circuit += gates.RX(np.pi/2, self.qubit_mapping[i]) 
-                parametric_circuit += gates.RZ(np.pi/2, self.qubit_mapping[i]) 
-                parametric_circuit += gates.RX(-np.pi/2, self.qubit_mapping[i]) 
+                parametric_circuit += gates.RZ(np.pi, self.qubit_mapping[i])
+                parametric_circuit += gates.RX(np.pi / 2, self.qubit_mapping[i])
+                parametric_circuit += gates.RZ(np.pi / 2, self.qubit_mapping[i])
+                parametric_circuit += gates.RX(-np.pi / 2, self.qubit_mapping[i])
 
         # create a list of gates in order of application on quantum circuit
         for each_gate in self.abstract_circuit:
-            gate_label = ''.join(str(label) for label in each_gate.pauli_label)
-            angle_param = parametric_circuit.declare(
-                f'pauli{gate_label}', 'REAL', 1)
+            gate_label = "".join(str(label) for label in each_gate.pauli_label)
+            angle_param = parametric_circuit.declare(f"pauli{gate_label}", "REAL", 1)
             each_gate.rotation_angle = angle_param
             if isinstance(each_gate, RZZGateMap) or isinstance(each_gate, SWAPGateMap):
-                decomposition = each_gate.decomposition('standard2')
+                decomposition = each_gate.decomposition("standard2")
             else:
-                decomposition = each_gate.decomposition('standard')
-                
+                decomposition = each_gate.decomposition("standard")
+
             # using the list above, construct the circuit
             for each_tuple in decomposition:
                 gate = each_tuple[0]()
                 qubits, rotation_angle = each_tuple[1]
-                if isinstance(qubits,list):
+                if isinstance(qubits, list):
                     new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
                 else:
                     new_qubits = self.qubit_mapping[qubits]
-                parametric_circuit = gate.apply_pyquil_gate(new_qubits,rotation_angle,parametric_circuit)
+                parametric_circuit = gate.apply_pyquil_gate(
+                    new_qubits, rotation_angle, parametric_circuit
+                )
 
         if self.append_state:
             parametric_circuit += self.append_state
-            
+
         # Measurement instructions
         for i, qubit in enumerate(self.qureg):
             parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], ro[i])
@@ -223,7 +256,7 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         Parameters
         ----------
         params: QAOAVariationalBaseParams
-            The QAOA parameters - an object of one of the parameter classes, containing 
+            The QAOA parameters - an object of one of the parameter classes, containing
             variable parameters.
         n_shots: int
             The number of times to run the circuit. If None, n_shots is set to the default: self.n_shots
@@ -237,7 +270,8 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         executable_program = self.qaoa_circuit(params)
 
         # if n_shots is given change the number of shots
-        if n_shots is not None: executable_program.wrap_in_numshots_loop(n_shots)
+        if n_shots is not None:
+            executable_program.wrap_in_numshots_loop(n_shots)
 
         result = self.device.quantum_computer.run(executable_program)
 
@@ -245,9 +279,11 @@ class QAOAPyQuilQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOA
         self.job_id = generate_uuid()
 
         # TODO: check the endian (big or little) ordering of measurement outcomes
-        meas_list = [''.join(str(bit) for bit in bitstring)
-                     for bitstring in result.readout_data['ro']]
-        
+        meas_list = [
+            "".join(str(bit) for bit in bitstring)
+            for bitstring in result.readout_data["ro"]
+        ]
+
         # Expose counts
         counts = Counter(list(meas_list))
         self.measurement_outcomes = counts

@@ -2,6 +2,7 @@ from qiskit import IBMQ
 
 from openqaoa.backends.devices_core import DeviceBase
 
+
 class DeviceQiskit(DeviceBase):
     """
     Contains the required information and methods needed to access remote
@@ -20,28 +21,29 @@ class DeviceQiskit(DeviceBase):
         qpu and provider is established.
     """
 
-    def __init__(self, device_name: str, hub: str = None, group: str = None, 
-                 project: str = None):
-        """The user's IBMQ account has to be authenticated through qiskit in 
+    def __init__(
+        self, device_name: str, hub: str = None, group: str = None, project: str = None
+    ):
+        """The user's IBMQ account has to be authenticated through qiskit in
         order to use this backend. This can be done through `IBMQ.save_account`.
-        
+
         See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq
 
         Parameters
         ----------
-		device_name: `str`
-			The name of the IBMQ device to be used
+                device_name: `str`
+                        The name of the IBMQ device to be used
         hub: `str`
             Valid IBMQ hub name.
         group: `str`
-            Valid IBMQ group name. 
+            Valid IBMQ group name.
         project: `str`
-            The name of the project for which the experimental data will be 
+            The name of the project for which the experimental data will be
             saved in on IBMQ's end.
         """
-        
+
         self.device_name = device_name
-        self.device_location = 'ibmq'
+        self.device_location = "ibmq"
         self.hub = hub
         self.group = group
         self.project = project
@@ -62,9 +64,9 @@ class DeviceQiskit(DeviceBase):
         Returns
         -------
         bool
-			True if successfully connected to IBMQ or IBMQ and the QPU backend
-			if it was specified. False if unable to connect to IBMQ or failure
-			in the attempt to connect to the specified backend.
+                        True if successfully connected to IBMQ or IBMQ and the QPU backend
+                        if it was specified. False if unable to connect to IBMQ or failure
+                        in the attempt to connect to the specified backend.
         """
 
         self.provider_connected = self._check_provider_connection()
@@ -72,10 +74,9 @@ class DeviceQiskit(DeviceBase):
         if self.provider_connected == False:
             return self.provider_connected
 
-        self.available_qpus = [backend.name()
-                               for backend in self.provider.backends()]
+        self.available_qpus = [backend.name() for backend in self.provider.backends()]
 
-        if self.device_name == '':
+        if self.device_name == "":
             return self.provider_connected
 
         self.qpu_connected = self._check_backend_connection()
@@ -86,16 +87,14 @@ class DeviceQiskit(DeviceBase):
             return False
 
     def _check_backend_connection(self) -> bool:
-        """Private method for checking connection with backend(s).
-        """
+        """Private method for checking connection with backend(s)."""
 
         if self.device_name in self.available_qpus:
             self.backend_device = self.provider.get_backend(self.device_name)
             self.n_qubits = self.backend_device.configuration().n_qubits
             return True
         else:
-            print(
-                f"Please choose from {self.available_qpus} for this provider")
+            print(f"Please choose from {self.available_qpus} for this provider")
             return False
 
     def _check_provider_connection(self) -> bool:
@@ -106,8 +105,15 @@ class DeviceQiskit(DeviceBase):
         try:
             self.provider = IBMQ.load_account()
             if any([self.hub, self.group, self.project]):
-                self.provider = IBMQ.get_provider(hub=self.hub, group=self.group, project=self.project)
+                self.provider = IBMQ.get_provider(
+                    hub=self.hub, group=self.group, project=self.project
+                )
             return True
         except Exception as e:
-            print('An Exception has occured when trying to connect with the provider. Please note that you are required to set up your IBMQ account locally first. See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq for how to save your IBMQ account locally: {}'.format(e))
+            print(
+                "An Exception has occured when trying to connect with the provider."
+                "Please note that you are required to set up your IBMQ account locally first."
+                "See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq"
+                "for how to save your IBMQ account locally: {}".format(e)
+            )
             return False

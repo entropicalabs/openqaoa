@@ -12,18 +12,21 @@ class QUBO(object):
     """
     Creates an instance of Quadratic Unconstrained Binary Optimization (QUBO)
     class, which offers a way to encode optimization problems.
-    
+
     Parameters
     ----------
     n: int
         The number of variables in the representation.
     terms: List[Tuple[int, ...],List]
-        The different terms in the QUBO encoding, indicating the different interactions between variables.
+        The different terms in the QUBO encoding, indicating the
+        different interactions between variables.
     weights: List[float]
-        The list of weights (or coefficients) corresponding to each interaction defined in `terms`.
+        The list of weights (or coefficients) corresponding to each
+        interaction defined in `terms`.
     clean_terms_and_weights: bool
-        Boolean indicating whether terms and weights can be cleaned by combining similar terms.
-        
+        Boolean indicating whether terms and weights can be cleaned
+
+
     Returns
     -------
         An instance of the Quadratic Unconstrained Binary Optimization (QUBO) class.
@@ -83,7 +86,8 @@ class QUBO(object):
         self.constant = constant
         self.n = n
 
-        # attribute to store the problem instance, it will be checked if it is json serializable in the __setattr__ method
+        # attribute to store the problem instance, it will be checked
+        # if it is json serializable in the __setattr__ method
         self.problem_instance = problem_instance
 
         # Initialize the metadata dictionary
@@ -95,7 +99,8 @@ class QUBO(object):
             yield (key[1:] if key.startswith("_") else key, value)
 
     def __setattr__(self, __name, __value):
-        # check if problem_instance is json serializable, also check if metadata is json serializable
+        # check if problem_instance is json serializable, also check if
+        # metadata is json serializable
         if __name == "problem_instance" or __name == "metadata":
             try:
                 _ = json.dumps(__value)
@@ -123,15 +128,17 @@ class QUBO(object):
 
     def set_metadata(self, metadata: dict = {}):
         """
-        Sets the metadata of the problem.
-        
+
+
         Parameters
         ----------
         metadata: dict
-            The metadata of the problem. All keys and values will be stored in the metadata dictionary.
+            The metadata of the problem. All keys and values will
+            be stored in the metadata dictionary.
         """
 
-        # update the metadata (it will be checked if it is json serializable in the __setattr__ method)
+        # update the metadata (it will be checked if it is json
+        # serializable in the __setattr__ method)
         self.metadata = {**self.metadata, **metadata}
 
     def asdict(self, exclude_keys: List[str] = []):
@@ -141,8 +148,8 @@ class QUBO(object):
         Parameters
         ----------
         exclude_keys: List[str]
-            A list of keys that should not be included in the serialization.
-            
+
+
         Returns
         -------
             A dictionary containing the serialization of the class.
@@ -158,15 +165,15 @@ class QUBO(object):
     @staticmethod
     def from_dict(dict: dict, clean_terms_and_weights=False):
         """
-        Returns a QUBO object from a dictionary. The dictionary should be comparable to the output of the asdict method.
-        
+
+
         Parameters
         ----------
         dict: dict
             The dictionary containing the serialization of the QUBO object.
         clean_terms_and_weights: bool
-            Boolean indicating whether terms and weights can be cleaned by combining similar terms.
-            
+
+
         Returns
         -------
             A QUBO object.

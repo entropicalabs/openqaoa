@@ -2,7 +2,11 @@
 Energy expectation as a function of angles computed accordingly to the analytical expression for p=1.
 """
 from .basebackend import QAOABaseBackend
-from ..qaoa_components import QAOAVariationalBaseParams, QAOADescriptor, QAOAVariationalStandardParams
+from ..qaoa_components import (
+    QAOAVariationalBaseParams,
+    QAOADescriptor,
+    QAOAVariationalStandardParams,
+)
 from ..utilities import energy_expectation_analytical, generate_uuid, round_value
 
 
@@ -17,7 +21,8 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
     ----------
     qaoa_descriptor: QAOADescriptor
         An object of the class ``QAOADescriptor`` which contains information on
-        circuit construction and depth of the circuit. Note that it only works for p=1 and the X Mixer.
+        circuit construction and depth of the circuit.
+        Note that it only works for p=1 and the X Mixer.
     """
 
     def __init__(
@@ -90,7 +95,8 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
         Returns
         -------
         float:
-            Expectation value of cost operator wrt to the QAOA parameters according to the analytical expression for p=1.
+            Expectation value of cost operator wrt to the QAOA parameters
+            according to the analytical expression for p=1.
         """
         # generate a job id
         self.job_id = generate_uuid()

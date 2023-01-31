@@ -7,6 +7,7 @@ from .variational_baseparams import QAOAVariationalBaseParams
 from ..ansatz_constructor import QAOADescriptor
 from ..ansatz_constructor.baseparams import shapedArray
 
+
 class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     """
     QAOA parameters that implement a state preparation circuit of the form
@@ -18,7 +19,7 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     where the :math:`s(t_i) =: s_i` are the variable parameters and
     :math:`\\Delta t= \\frac{T}{N}`.
     So the schedule is specified by specifying s(t) at evenly spaced timelayers.
-    
+
     Parameters
     ----------
     qaoa_descriptor:
@@ -27,7 +28,7 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
         Total annealing time for the schedule
     schedule: list
         List specifying the annealing schedule
-        
+
     Attributes
     ----------
     schedule: np.array
@@ -42,13 +43,17 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
         schedule for cost application
     """
 
-    def __init__(self,
-                 qaoa_descriptor: QAOADescriptor,
-                 total_annealing_time: float,
-                 schedule: List[Union[float, int]]):
+    def __init__(
+        self,
+        qaoa_descriptor: QAOADescriptor,
+        total_annealing_time: float,
+        schedule: List[Union[float, int]],
+    ):
         # setup reg, qubits_singles and qubits_pairs
         super().__init__(qaoa_descriptor)
-        assert total_annealing_time is not None, f"Please specify total_annealing_time to use {type(self).__name__}"
+        assert (
+            total_annealing_time is not None
+        ), f"Please specify total_annealing_time to use {type(self).__name__}"
         self.total_annealing_time = total_annealing_time
         self.schedule = np.array(schedule)
         self.schedule = np.array(schedule)
@@ -89,8 +94,7 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
 
     def update_from_raw(self, new_values):
         if len(new_values) != self.p:
-            raise RuntimeWarning(
-                "the new times should have length p")
+            raise RuntimeWarning("the new times should have length p")
         self.schedule = np.array(new_values)
         # udpate mixer_time and cost_time too
         self.mixer_time = (1 - self.schedule) * self.dt
@@ -100,10 +104,12 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
         return self.schedule
 
     @classmethod
-    def linear_ramp_from_hamiltonian(cls,
-                                     qaoa_descriptor: QAOADescriptor,
-                                     total_annealing_time: float = None,
-                                     time: float = None):
+    def linear_ramp_from_hamiltonian(
+        cls,
+        qaoa_descriptor: QAOADescriptor,
+        total_annealing_time: float = None,
+        time: float = None,
+    ):
         """
         Returns
         -------
@@ -112,18 +118,23 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
             a linear ramp schedule.
         """
         p = qaoa_descriptor.p
-        total_annealing_time = 0.7 * \
-            p if total_annealing_time is None else total_annealing_time
+        total_annealing_time = (
+            0.7 * p if total_annealing_time is None else total_annealing_time
+        )
         schedule = np.linspace(0.5 / p, 1 - 0.5 / p, p)
 
         # wrap it all nicely in a qaoa_parameters object
-        #params = cls((register, terms, weights, p, time), (schedule))
+        # params = cls((register, terms, weights, p, time), (schedule))
         params = cls(qaoa_descriptor, total_annealing_time, schedule)
         return params
 
     @classmethod
-    def random(cls, qaoa_descriptor: QAOADescriptor,
-               total_annealing_time: float, seed: int = None):
+    def random(
+        cls,
+        qaoa_descriptor: QAOADescriptor,
+        total_annealing_time: float,
+        seed: int = None,
+    ):
         """
         Returns
         -------

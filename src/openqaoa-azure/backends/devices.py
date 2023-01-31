@@ -1,10 +1,11 @@
 from azure.quantum.qiskit import AzureQuantumProvider
 from openqaoa.backends.devices_core import DeviceBase
 
+
 class DeviceAzure(DeviceBase):
 
     """
-    Contains the required information and methods needed to access remote 
+    Contains the required information and methods needed to access remote
     Azure QPUs and Simulators.
     Parameters
     ----------
@@ -17,9 +18,9 @@ class DeviceAzure(DeviceBase):
 
     def __init__(self, device_name: str, resource_id: str, az_location: str):
         """
-        Input parameters required for this can be found in the user's Azure 
+        Input parameters required for this can be found in the user's Azure
         Quantum Workspace.
-        
+
         Parameters
         ----------
         device_name: `str`
@@ -27,28 +28,26 @@ class DeviceAzure(DeviceBase):
         resource_id: `str`
         az_location: `str`
         """
-        
+
         self.resource_id = resource_id
         self.location = az_location
         self.device_name = device_name
-        self.device_location = 'azure'
+        self.device_location = "azure"
 
         self.provider_connected = None
         self.qpu_connected = None
 
     def check_connection(self):
-        """
-        """
+        """ """
 
         self.provider_connected = self._check_provider_connection()
 
         if self.provider_connected == False:
             return self.provider_connected
 
-        self.available_qpus = [backend.name()
-                               for backend in self.provider.backends()]
+        self.available_qpus = [backend.name() for backend in self.provider.backends()]
 
-        if self.device_name == '':
+        if self.device_name == "":
             return self.provider_connected
 
         self.qpu_connected = self._check_backend_connection()
@@ -59,16 +58,14 @@ class DeviceAzure(DeviceBase):
             return False
 
     def _check_backend_connection(self) -> bool:
-        """Private method for checking connection with backend(s).
-        """
+        """Private method for checking connection with backend(s)."""
 
         if self.device_name in self.available_qpus:
             self.backend_device = self.provider.get_backend(self.device_name)
             self.n_qubits = self.backend_device.configuration().n_qubits
             return True
         else:
-            print(
-                f"Please choose from {self.available_qpus} for this provider")
+            print(f"Please choose from {self.available_qpus} for this provider")
             return False
 
     def _check_provider_connection(self) -> bool:
@@ -77,16 +74,23 @@ class DeviceAzure(DeviceBase):
         """
 
         try:
-            self.provider = AzureQuantumProvider(resource_id=self.resource_id, 
-                                                 location=self.location)
+            self.provider = AzureQuantumProvider(
+                resource_id=self.resource_id, location=self.location
+            )
 
             return True
 
         except ValueError as e:
-            print('Either the resource id or location specified was invalid: {}'.format(e))
+            print(
+                "Either the resource id or location specified was invalid: {}".format(e)
+            )
             return False
 
         except Exception as e:
-            print('An Exception has occured when trying to connect with the \
-            provider: {}'.format(e))
+            print(
+                "An Exception has occured when trying to connect with the \
+            provider: {}".format(
+                    e
+                )
+            )
             return False

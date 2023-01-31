@@ -8,12 +8,12 @@ from .qubo import QUBO
 class MaximumCut(Problem):
     """
     Creates an instance of the Maximum Cut problem.
-    
+
     Parameters
     ----------
     G: nx.Graph
         The input graph as NetworkX graph instance.
-        
+
     Returns
     -------
         An instance of the Maximum Cut problem.
@@ -48,17 +48,17 @@ class MaximumCut(Problem):
         """
         Creates a random instance of the Maximum Cut problem, whose graph is
         random following the Erdos-Renyi model.
-        
+
         Parameters
         ----------
         **kwargs:
             Required keyword arguments are:
-            
+
             n_nodes: int
                 The number of nodes (vertices) in the graph.
             edge_probability: float
                 The probability with which an edge is added to the graph.
-            
+
         Returns
         -------
             A random instance of the Maximum Cut problem.
@@ -76,7 +76,7 @@ class MaximumCut(Problem):
     def get_qubo_problem(self):
         """
         Returns the QUBO encoding of this problem.
-        
+
         Returns
         -------
             The QUBO encoding of this problem.

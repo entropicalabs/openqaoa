@@ -8,10 +8,17 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.jobs.metrics import log_metric
 
 from .devices import DeviceAWS
-from openqaoa.backends.basebackend import QAOABaseBackendShotBased, QAOABaseBackendCloud, QAOABaseBackendParametric
+from openqaoa.backends.basebackend import (
+    QAOABaseBackendShotBased,
+    QAOABaseBackendCloud,
+    QAOABaseBackendParametric,
+)
 from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 
-class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased):
+
+class QAOAAWSQPUBackend(
+    QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABaseBackendShotBased
+):
     """
     A QAOA simulator as well as for real QPU using Amazon Braket as backend
 
@@ -21,7 +28,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         An object of the class ``DeviceAWS`` which contains the credentials
         for accessing the QPU via cloud and the name of the device.
     qaoa_descriptor: `QAOADescriptor`
-        An object of the class ``QAOADescriptor`` which contains information on 
+        An object of the class ``QAOADescriptor`` which contains information on
         circuit construction and depth of the circuit.
     n_shots: `int`
         The number of shots to be taken for each circuit.
@@ -30,33 +37,37 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
     append_state: `QuantumCircuit`
         The state appended to the circuit.
     init_hadamard: `bool`
-        Whether to apply a Hadamard gate to the beginning of the 
+        Whether to apply a Hadamard gate to the beginning of the
         QAOA part of the circuit.
     cvar_alpha: `float`
         The value of alpha for the CVaR method.
     disable_qubit_rewiring: `bool`
-        A boolean that determines whether qubit routing on the provider's end is 
+        A boolean that determines whether qubit routing on the provider's end is
         used. This is False by default. Not all providers provide this feature.
     """
 
-    def __init__(self,
-                 qaoa_descriptor: QAOADescriptor,
-                 device: DeviceAWS,
-                 n_shots: int,
-                 prepend_state: Optional[Circuit],
-                 append_state: Optional[Circuit],
-                 init_hadamard: bool,
-                 cvar_alpha: float,
-                 qubit_layout: List[int] = [], 
-                 disable_qubit_rewiring: bool = False):
+    def __init__(
+        self,
+        qaoa_descriptor: QAOADescriptor,
+        device: DeviceAWS,
+        n_shots: int,
+        prepend_state: Optional[Circuit],
+        append_state: Optional[Circuit],
+        init_hadamard: bool,
+        cvar_alpha: float,
+        qubit_layout: List[int] = [],
+        disable_qubit_rewiring: bool = False,
+    ):
 
-        QAOABaseBackendShotBased.__init__(self,
-                                          qaoa_descriptor,
-                                          n_shots,
-                                          prepend_state,
-                                          append_state,
-                                          init_hadamard,
-                                          cvar_alpha)
+        QAOABaseBackendShotBased.__init__(
+            self,
+            qaoa_descriptor,
+            n_shots,
+            prepend_state,
+            append_state,
+            init_hadamard,
+            cvar_alpha,
+        )
         QAOABaseBackendCloud.__init__(self, device)
 
         self.qureg = self.qaoa_descriptor.qureg
@@ -64,23 +75,33 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         self.disable_qubit_rewiring = disable_qubit_rewiring
 
         if self.prepend_state:
-            assert self.n_qubits >= len(prepend_state.qubits), "Cannot attach a bigger circuit" \
-                                                               " to the QAOA routine"
+            assert self.n_qubits >= len(prepend_state.qubits), (
+                "Cannot attach a bigger circuit" " to the QAOA routine"
+            )
 
         if self.device.provider_connected and self.device.qpu_connected:
             self.backend_qpu = self.device.backend_device
-        elif self.device.provider_connected is True and self.device.qpu_connected is False:
+        elif (
+            self.device.provider_connected is True
+            and self.device.qpu_connected is False
+        ):
             raise Exception(
-                'Connection to AWS was made. Error connecting to the specified backend.')
-        elif self.device.provider_connected is True and self.device.qpu_connected is None:
+                "Connection to AWS was made. Error connecting to the specified backend."
+            )
+        elif (
+            self.device.provider_connected is True and self.device.qpu_connected is None
+        ):
             raise Exception(
-                'Connection to AWS was made. A device name was not specified.')
+                "Connection to AWS was made. A device name was not specified."
+            )
         else:
-            raise Exception('Error connecting to AWS.')
-            
+            raise Exception("Error connecting to AWS.")
+
         if self.device.n_qubits < self.n_qubits:
-            raise Exception('There are lesser qubits on the device than the number of qubits required for the circuit.')
-            
+            raise Exception(
+                "There are lesser qubits on the device than the number of qubits required for the circuit."
+            )
+
         self.parametric_circuit = self.parametric_qaoa_circuit
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Circuit:
@@ -96,12 +117,18 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         qaoa_circuit: `Circuit`
             The final QAOA circuit constructed using the angles from variational params.
         """
-        
-        angles_list = self.obtain_angles_for_pauli_list(
-            self.abstract_circuit, params)
-        memory_map = dict(zip([each_free_param_obj.name for each_free_param_obj in self.braket_parameter_list], angles_list))
-        new_parametric_circuit = self.parametric_circuit.make_bound_circuit(
-            memory_map)
+
+        angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
+        memory_map = dict(
+            zip(
+                [
+                    each_free_param_obj.name
+                    for each_free_param_obj in self.braket_parameter_list
+                ],
+                angles_list,
+            )
+        )
+        new_parametric_circuit = self.parametric_circuit.make_bound_circuit(memory_map)
         return new_parametric_circuit
 
     @property
@@ -110,11 +137,11 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         Creates a parametric QAOA circuit, given the qubit pairs, single qubits with biases,
         and a set of circuit angles. Note that this function does not actually run
         the circuit.
-        """ 
+        """
         parametric_circuit = Circuit()
         if self.prepend_state:
             parametric_circuit += self.prepend_state
-            
+
         # Initial state is all |+>
         if self.init_hadamard:
             for each_qubit in self.qubit_layout:
@@ -125,15 +152,17 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
             angle_param = FreeParameter(str(each_gate.pauli_label))
             self.braket_parameter_list.append(angle_param)
             each_gate.rotation_angle = angle_param
-            decomposition = each_gate.decomposition('standard')
+            decomposition = each_gate.decomposition("standard")
             # using the list above, construct the circuit
             for each_tuple in decomposition:
                 gate = each_tuple[0]()
-                parametric_circuit = gate.apply_braket_gate(*each_tuple[1], parametric_circuit)
+                parametric_circuit = gate.apply_braket_gate(
+                    *each_tuple[1], parametric_circuit
+                )
 
         if self.append_state:
             parametric_circuit += self.append_state
-            
+
         parametric_circuit += Probability.probability()
 
         return parametric_circuit
@@ -145,18 +174,18 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         Parameters
         ----------
         params: QAOAVariationalBaseParams
-            The QAOA parameters - an object of one of the parameter classes, containing 
+            The QAOA parameters - an object of one of the parameter classes, containing
             variable parameters.
         n_shots: int
             The number of times to run the circuit. If None, n_shots is set to the default: self.n_shots.
 
         Returns
         -------
-            A dictionary with the bitstring as the key and the number of counts 
+            A dictionary with the bitstring as the key and the number of counts
             as its value.
         """
 
-        n_shots = self.n_shots if n_shots == None else n_shots 
+        n_shots = self.n_shots if n_shots == None else n_shots
 
         circuit = self.qaoa_circuit(params)
 
@@ -165,56 +194,60 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         max_job_retries = 5
 
         while job_state == False:
-            job = self.backend_qpu.run(circuit, 
-                                       (self.device.s3_bucket_name, 
-                                        self.device.folder_name), 
-                                       shots = n_shots, 
-                                       disable_qubit_rewiring = self.disable_qubit_rewiring)
-            
+            job = self.backend_qpu.run(
+                circuit,
+                (self.device.s3_bucket_name, self.device.folder_name),
+                shots=n_shots,
+                disable_qubit_rewiring=self.disable_qubit_rewiring,
+            )
+
             try:
                 self.job_id = job.id
-                
+
                 job_result = job.result()
-                
+
                 # If there was an issue with the job sent, send again.
-                if job.state() in ['FAILED', 'CANCELLED'] or job_result == None:
+                if job.state() in ["FAILED", "CANCELLED"] or job_result == None:
                     raise ValueError
-                    
+
                 counts = job_result.measurement_counts
-                    
+
             except ValueError:
-                print('The task has failed or was cancelled by AWS. Resending task.')
+                print("The task has failed or was cancelled by AWS. Resending task.")
                 no_of_job_retries += 1
-                    
+
             except Exception as e:
-                print(e, '\n')
-                print("An unknown error occurred while trying to retrieve task results. Resending task.")
+                print(e, "\n")
+                print(
+                    "An unknown error occurred while trying to retrieve task results. Resending task."
+                )
                 no_of_job_retries += 1
-                
+
             else:
                 job_state = True
-                
+
             finally:
                 if no_of_job_retries >= max_job_retries:
                     raise ConnectionError(
-                        "An Error Occurred with the Task(s) sent to AWS.")
+                        "An Error Occurred with the Task(s) sent to AWS."
+                    )
 
         # Expose counts
         self.measurement_outcomes = counts
         return counts
-    
+
     def log_with_backend(self, metric_name: str, value, iteration_number) -> None:
-        
+
         """
         If using AWS Jobs, these values will be logged.
         """
-        
+
         try:
             if os.environ["AMZN_BRAKET_JOB_NAME"] is not None:
                 in_jobs = True
         except KeyError:
             in_jobs = False
-        
+
         if in_jobs:
             log_metric(
                 metric_name=metric_name,
@@ -224,7 +257,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
 
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
         """
-        A method to convert the entire QAOA `QuantumCircuit` object into 
+        A method to convert the entire QAOA `QuantumCircuit` object into
         a OpenQASM string
         """
         raise NotImplementedError()

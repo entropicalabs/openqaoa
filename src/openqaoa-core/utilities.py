@@ -14,8 +14,7 @@ from .qaoa_components import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 from .qaoa_components.ansatz_constructor.gatemap import TwoQubitRotationGateMap
 
 
-def X_mixer_hamiltonian(n_qubits: int,
-                        coeffs: List[float] = None) -> Hamiltonian:
+def X_mixer_hamiltonian(n_qubits: int, coeffs: List[float] = None) -> Hamiltonian:
     """Construct a Hamiltonian object to implement the X mixer.
 
     Parameters
@@ -31,7 +30,7 @@ def X_mixer_hamiltonian(n_qubits: int,
         The Hamiltonian object corresponding to the X mixer.
     """
     # If no coefficients provided, set all to -1
-    coeffs = [-1]*n_qubits if coeffs is None else coeffs
+    coeffs = [-1] * n_qubits if coeffs is None else coeffs
 
     # Initialize list of terms
     terms = []
@@ -39,17 +38,18 @@ def X_mixer_hamiltonian(n_qubits: int,
     # Generate terms in the X mixer
     for i in range(n_qubits):
         terms.append(PauliOp.X(i))
-    
+
     # Define mixer Hamiltonian
     hamiltonian = Hamiltonian(pauli_terms=terms, coeffs=coeffs, constant=0)
 
     return hamiltonian
 
 
-def XY_mixer_hamiltonian(n_qubits: int,
-                         qubit_connectivity: Union[List[list],
-                                                   List[tuple], str] = 'full',
-                         coeffs: List[float] = None) -> Hamiltonian:
+def XY_mixer_hamiltonian(
+    n_qubits: int,
+    qubit_connectivity: Union[List[list], List[tuple], str] = "full",
+    coeffs: List[float] = None,
+) -> Hamiltonian:
     r"""
     Construct a Hamiltonian object to implement the XY mixer.
 
@@ -71,9 +71,11 @@ def XY_mixer_hamiltonian(n_qubits: int,
         The Hamiltonian object corresponding to the XY mixer.
     """
     # Set of topologies supported by default
-    connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
-                                  'chain': [(i, i+1) for i in range(n_qubits-1)],
-                                  'star': [(0, i+1) for i in range(n_qubits-1)]}
+    connectivity_topology_dict = {
+        "full": list(itertools.combinations(range(n_qubits), 2)),
+        "chain": [(i, i + 1) for i in range(n_qubits - 1)],
+        "star": [(0, i + 1) for i in range(n_qubits - 1)],
+    }
 
     # Check if input connectivity is a default value
     if isinstance(qubit_connectivity, str):
@@ -82,7 +84,8 @@ def XY_mixer_hamiltonian(n_qubits: int,
             qubit_connectivity = connectivity_topology_dict[qubit_connectivity]
         except KeyError:
             raise ValueError(
-                f'Please choose connection topology from {list(connectivity_topology_dict.keys())}')
+                f"Please choose connection topology from {list(connectivity_topology_dict.keys())}"
+            )
 
     # Define connectivty according to user input
     else:
@@ -90,12 +93,13 @@ def XY_mixer_hamiltonian(n_qubits: int,
         indices = set([qubit for term in qubit_connectivity for qubit in term])
 
         # Ensure all indices are defined within the range of number of qubits
-        assert max(indices) <= n_qubits - \
-            1, 'Qubit index in connectivity list is out of range'
-        assert min(indices) >= 0, 'Qubit index should be a positive integer'
+        assert (
+            max(indices) <= n_qubits - 1
+        ), "Qubit index in connectivity list is out of range"
+        assert min(indices) >= 0, "Qubit index should be a positive integer"
 
     # If no coefficients provided, set all to the number of terms
-    coeffs = [0.5]*2*len(qubit_connectivity) if coeffs is None else coeffs
+    coeffs = [0.5] * 2 * len(qubit_connectivity) if coeffs is None else coeffs
 
     # Initialize list of terms
     terms = []
@@ -103,23 +107,26 @@ def XY_mixer_hamiltonian(n_qubits: int,
     # Generate terms in the XY mixer
     for pair in qubit_connectivity:
         i, j = pair
-        terms.append(PauliOp.X(i)@PauliOp.X(j))
-        terms.append(PauliOp.Y(i)@PauliOp.Y(j))
+        terms.append(PauliOp.X(i) @ PauliOp.X(j))
+        terms.append(PauliOp.Y(i) @ PauliOp.Y(j))
 
     # Define mixer Hamiltonian
     hamiltonian = Hamiltonian(pauli_terms=terms, coeffs=coeffs, constant=0)
 
     return hamiltonian
 
-def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap, 
-                       n_qubits: int, 
-                       qubit_connectivity: Union[List[list],List[tuple], str] = 'full', 
-                       coeffs: List[float] = None) -> Tuple[List[TwoQubitRotationGateMap], List[float]]:
-    
+
+def quick_create_mixer_for_topology(
+    input_gatemap: TwoQubitRotationGateMap,
+    n_qubits: int,
+    qubit_connectivity: Union[List[list], List[tuple], str] = "full",
+    coeffs: List[float] = None,
+) -> Tuple[List[TwoQubitRotationGateMap], List[float]]:
+
     """
     Quickly generates a gatemap list and coeffs for a specific topology.
     Can only be used with 2-Qubit Gates.
-    
+
     Parameters
     ----------
     input_gatemap: `TwoQubitRotationGateMap`
@@ -130,17 +137,21 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
         The connectivity of the qubits in the mixer.
     coeffs: `List[float]`, optional
         The coefficients of the GateMap in the Mixer Blocks.
-    
+
     Returns
     -------
     `Tuple[List[TwoQubitRotationGateMap], List[float]]`
-        Returns tuple containing the list of gatemaps and their associated coefficients. If no coefficients were on initialisation provided, a default of 1.0 is used for all gatemap objects.
+        Returns tuple containing the list of gatemaps and their associated coefficients.
+        If no coefficients were on initialisation provided,
+        a default of 1.0 is used for all gatemap objects.
     """
-    
+
     # Set of topologies supported by default
-    connectivity_topology_dict = {'full': list(itertools.combinations(range(n_qubits), 2)),
-                                  'chain': [(i, i+1) for i in range(n_qubits-1)],
-                                  'star': [(0, i+1) for i in range(n_qubits-1)]}
+    connectivity_topology_dict = {
+        "full": list(itertools.combinations(range(n_qubits), 2)),
+        "chain": [(i, i + 1) for i in range(n_qubits - 1)],
+        "star": [(0, i + 1) for i in range(n_qubits - 1)],
+    }
 
     # Check if input connectivity is a default value
     if isinstance(qubit_connectivity, str):
@@ -149,7 +160,8 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
             qubit_connectivity = connectivity_topology_dict[qubit_connectivity]
         except KeyError:
             raise ValueError(
-                f'Please choose connection topology from {list(connectivity_topology_dict.keys())}')
+                f"Please choose connection topology from {list(connectivity_topology_dict.keys())}"
+            )
 
     # Define connectivty according to user input
     else:
@@ -157,12 +169,13 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
         indices = set([qubit for term in qubit_connectivity for qubit in term])
 
         # Ensure all indices are defined within the range of number of qubits
-        assert max(indices) <= n_qubits - \
-            1, 'Qubit index in connectivity list is out of range'
-        assert min(indices) >= 0, 'Qubit index should be a positive integer'
+        assert (
+            max(indices) <= n_qubits - 1
+        ), "Qubit index in connectivity list is out of range"
+        assert min(indices) >= 0, "Qubit index should be a positive integer"
 
     # If no coefficients provided, set all to the number of terms
-    coeffs = [1.0]*len(qubit_connectivity) if coeffs is None else coeffs
+    coeffs = [1.0] * len(qubit_connectivity) if coeffs is None else coeffs
 
     # Initialize list of terms
     gatemaps = []
@@ -173,10 +186,14 @@ def quick_create_mixer_for_topology(input_gatemap: TwoQubitRotationGateMap,
         gatemaps.append(input_gatemap(i, j))
 
     return gatemaps, coeffs
-        
 
 
-def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivity: Union[List[list],List[tuple], str] = None, coeffs: List[float] = None) -> Hamiltonian:
+def get_mixer_hamiltonian(
+    n_qubits: int,
+    mixer_type: str = "x",
+    qubit_connectivity: Union[List[list], List[tuple], str] = None,
+    coeffs: List[float] = None,
+) -> Hamiltonian:
     """
     Parameters
     ----------
@@ -196,12 +213,13 @@ def get_mixer_hamiltonian(n_qubits: int, mixer_type: str = 'x', qubit_connectivi
     """
 
     # Return mixer Hamiltonian according to specified type
-    if mixer_type == 'x':
+    if mixer_type == "x":
         mixer = X_mixer_hamiltonian(n_qubits, coeffs)
     else:
         mixer = XY_mixer_hamiltonian(n_qubits, qubit_connectivity, coeffs)
 
     return mixer
+
 
 ################################################################################
 # decorators
@@ -216,11 +234,11 @@ def round_value(function):
     ----------
     function: `Callable`
         The function to be decorated
-        
+
     Returns
     -------
         The rounded value(s)
-        
+
     """
 
     PRECISION = 12
@@ -233,6 +251,7 @@ def round_value(function):
             return np.round(values, PRECISION)
 
     return wrapper
+
 
 ################################################################################
 # METHODS FOR PRINTING HAMILTONIANS AND GRAPHS, AND PRINTING ONE FROM EACH OTHER
@@ -259,7 +278,7 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
         two-qubit coupling coefficients,
         and the node weights being the single-qubit bias terms.
 
-    
+
 
     """
     # Define graph
@@ -276,11 +295,11 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
         term_tuple = term.qubit_indices
 
         # If term is linear add as a node with a weight attribute
-        if(len(term) == 1):
+        if len(term) == 1:
             G.add_node(term_tuple[0], weight=weight)
 
         # If term is quadratic add as an edge with a weight attribute
-        elif(len(term) == 2):
+        elif len(term) == 2:
             G.add_edge(term_tuple[0], term_tuple[1], weight=weight)
 
     return G
@@ -302,36 +321,39 @@ def hamiltonian_from_graph(G: nx.Graph) -> Hamiltonian:
         The Hamiltonian object constructed from the specified graph.
     """
     # Node bias terms
-    nodes_info = dict(G.nodes(data='weight'))
-    singlet_terms = [(node,) for node,weight in nodes_info.items() if weight is not None]
+    nodes_info = dict(G.nodes(data="weight"))
+    singlet_terms = [
+        (node,) for node, weight in nodes_info.items() if weight is not None
+    ]
     singlet_coeffs = [coeff for coeff in nodes_info.values() if coeff is not None]
 
     # Edge terms
-    pair_terms, pair_coeffs = [],[]
+    pair_terms, pair_coeffs = [], []
     for u, v, edge_weight in G.edges(data="weight"):
         pair_terms.append((u, v))
         # We expect the edge weight to be given in the attribute called
         # "weight". If it is None, assume a weight of 1.0
-        pair_coeffs.append(
-            edge_weight if edge_weight else 1
-        )
+        pair_coeffs.append(edge_weight if edge_weight else 1)
 
     # Collect all terms and coefficients
     terms = singlet_terms + pair_terms
     coeffs = singlet_coeffs + pair_coeffs
-    
+
     # Define Hamiltonian
     hamiltonian = Hamiltonian.classical_hamiltonian(
-        terms=terms, coeffs=coeffs, constant=0)
+        terms=terms, coeffs=coeffs, constant=0
+    )
 
     return hamiltonian
 
 
-def random_k_regular_graph(degree: int,
-                           nodes: List[int],
-                           seed: int = None,
-                           weighted: bool = False,
-                           biases: bool = False) -> nx.Graph:
+def random_k_regular_graph(
+    degree: int,
+    nodes: List[int],
+    seed: int = None,
+    weighted: bool = False,
+    biases: bool = False,
+) -> nx.Graph:
     """
     Produces a random graph with specified number of nodes, each having degree k.
 
@@ -371,20 +393,21 @@ def random_k_regular_graph(degree: int,
 
         # If weighted attribute is False, all weights are set to 1
         if not weighted:
-            G[edge[0]][edge[1]]['weight'] = 1
+            G[edge[0]][edge[1]]["weight"] = 1
 
         # If weighted attribute is True, weights are assigned as random integers
         else:
-            G[edge[0]][edge[1]]['weight'] = np.random.rand()
+            G[edge[0]][edge[1]]["weight"] = np.random.rand()
 
     # If biases attribute is True, add node weights as random integers
     if biases:
         for node in G.nodes():
-            G.nodes[node]['weight'] = np.random.rand()
+            G.nodes[node]["weight"] = np.random.rand()
 
     return G
 
-def plot_graph(G: nx.Graph, ax=None, colormap='seismic') -> None:
+
+def plot_graph(G: nx.Graph, ax=None, colormap="seismic") -> None:
     """
     Plots a networkx graph.
 
@@ -397,69 +420,91 @@ def plot_graph(G: nx.Graph, ax=None, colormap='seismic') -> None:
     colormap: `str`, optional
         Colormap to use for plotting. Defaults to 'seismic'.
     """
-    
+
     # Create plot figure
     fig = plt.figure(figsize=(10, 6))
-        
+
     # Extract all graph attributes
-    biases_and_nodes = nx.get_node_attributes(G, 'weight')
+    biases_and_nodes = nx.get_node_attributes(G, "weight")
     biases = list(biases_and_nodes.values())
-    edges_and_weights = nx.get_edge_attributes(G, 'weight')
+    edges_and_weights = nx.get_edge_attributes(G, "weight")
     pos = nx.shell_layout(G)
 
     # extract minimum and maximum weights for side bar limits
     weights = list(edges_and_weights.values())
     # Define color map
     cmap = plt.cm.get_cmap(colormap)
-    
+
     if len(set(weights)) > 1:
         edge_vmin = min(weights)
         edge_vmax = max(weights)
 
-
         # Define normalized color map
-        sm = plt.cm.ScalarMappable(cmap=cmap,
-                                norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax))
+        sm = plt.cm.ScalarMappable(
+            cmap=cmap, norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax)
+        )
         # Add colormap to plot
-        cbar = plt.colorbar(sm,pad=0.08)
-        cbar.ax.set_ylabel('Edge Weights', rotation=270,labelpad=15)
+        cbar = plt.colorbar(sm, pad=0.08)
+        cbar.ax.set_ylabel("Edge Weights", rotation=270, labelpad=15)
     else:
         weights = [1] * len(G.edges())
         edge_vmin = None
         edge_vmax = None
-        cmap = None    
-    
+        cmap = None
+
     # If biases are present define reference values and color map for side bar
     if len(set(biases)) > 1:
         cmap = plt.cm.get_cmap(colormap)
         vmin = min(biases)
         vmax = max(biases)
-        sm2 = plt.cm.ScalarMappable(cmap=cmap,
-                                    norm=plt.Normalize(vmin=vmin, vmax=vmax))
-        cbar2 = plt.colorbar(sm2, location='left')
-        cbar2.ax.set_ylabel('Single Qubit Biases', rotation=90)
+        sm2 = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+        cbar2 = plt.colorbar(sm2, location="left")
+        cbar2.ax.set_ylabel("Single Qubit Biases", rotation=90)
 
         # Draw graph
-        nx.draw(G, pos, node_size=500, node_color=biases, edge_color=weights, width=2.5, cmap=cmap,
-                edge_cmap=cmap, vmin=vmin, vmax=vmax, edge_vmin=edge_vmin,
-                edge_vmax=edge_vmax, with_labels=True)
+        nx.draw(
+            G,
+            pos,
+            node_size=500,
+            node_color=biases,
+            edge_color=weights,
+            width=2.5,
+            cmap=cmap,
+            edge_cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
+            edge_vmin=edge_vmin,
+            edge_vmax=edge_vmax,
+            with_labels=True,
+        )
 
     else:
         # Draw graph
-        nx.draw(G, pos, node_size=500, edge_color=weights, width=2.5,
-                edge_cmap=cmap, edge_vmin=edge_vmin,
-                edge_vmax=edge_vmax, with_labels=True)
-    
+        nx.draw(
+            G,
+            pos,
+            node_size=500,
+            edge_color=weights,
+            width=2.5,
+            edge_cmap=cmap,
+            edge_vmin=edge_vmin,
+            edge_vmax=edge_vmax,
+            with_labels=True,
+        )
+
     # Show plot
-    
+
     plt.show
     return None
 
-def random_classical_hamiltonian(reg: List[int],
-                                 seed: int = None,
-                                 weighted: bool = True,
-                                 biases: bool = True,
-                                 constant: int = 0) -> Hamiltonian:
+
+def random_classical_hamiltonian(
+    reg: List[int],
+    seed: int = None,
+    weighted: bool = True,
+    biases: bool = True,
+    constant: int = 0,
+) -> Hamiltonian:
     """
     Creates a random classical cost hamiltonian.
 
@@ -471,7 +516,7 @@ def random_classical_hamiltonian(reg: List[int],
         A seed for the random number generator. Defaults to None.
     weighted: `bool`, optional
         Whether the edge weights should be uniform or different. If false, all
-        weights are set to 1. If true, the weight is set to a random number 
+        weights are set to 1. If true, the weight is set to a random number
         drawn from the uniform distribution in the interval 0 to 1. Defaults to
         True.
     biases: `bool`, optional
@@ -484,7 +529,7 @@ def random_classical_hamiltonian(reg: List[int],
     Returns
     -------
     random_hamil: `Hamiltonian`
-        A random hamiltonian with randomly selected terms and coefficients and 
+        A random hamiltonian with randomly selected terms and coefficients and
         with the specified constant term.
 
     .. Important::
@@ -506,14 +551,13 @@ def random_classical_hamiltonian(reg: List[int],
         bias_qubits = np.random.choice(reg, n_biases)
 
         # Generate coefficients for linear terms
-        bias_coeffs = np.random.rand(
-            n_biases) if weighted else np.ones(n_biases)
+        bias_coeffs = np.random.rand(n_biases) if weighted else np.ones(n_biases)
 
         # Store linear terms and coefficients
         for qubit, coeff in zip(bias_qubits, bias_coeffs):
             terms.append([qubit])
             weights.append(coeff)
-    
+
     # Generate quiadratic terms, scanning all possible combinations
     for q1, q2 in itertools.combinations(reg, 2):
 
@@ -527,12 +571,10 @@ def random_classical_hamiltonian(reg: List[int],
             weights.append(couple_coeff)
 
     # Ensure each term has an associated weight
-    assert len(terms) == len(
-        weights), "Each term should have an associated weight"
+    assert len(terms) == len(weights), "Each term should have an associated weight"
 
     # Define classical Hamiltonian
-    hamiltonian = Hamiltonian.classical_hamiltonian(
-        terms, weights, constant=constant)
+    hamiltonian = Hamiltonian.classical_hamiltonian(terms, weights, constant=constant)
 
     return hamiltonian
 
@@ -542,9 +584,12 @@ def random_classical_hamiltonian(reg: List[int],
 ################################################################################
 
 
-def ground_state_hamiltonian(hamiltonian: Hamiltonian, bounded = True) -> Tuple[float, list]:
+def ground_state_hamiltonian(
+    hamiltonian: Hamiltonian, bounded=True
+) -> Tuple[float, list]:
     """
-    Computes the exact ground state and ground state energy of a classical Hamiltonian. Uses standard numpy module.
+    Computes the exact ground state and ground state energy of a classical Hamiltonian.
+    Uses standard numpy module.
 
     Parameters
     ----------
@@ -564,18 +609,21 @@ def ground_state_hamiltonian(hamiltonian: Hamiltonian, bounded = True) -> Tuple[
         The minimum energy eigenvector as a binary array
         configuration: qubit-0 as the first element in the sequence.
     """
-    # Extract number of qubits 
+    # Extract number of qubits
     n_qubits = hamiltonian.n_qubits
-    
+
     # If number of qubits is too high warn the user
     if bounded and n_qubits > 25:
-        raise ValueError("The number of qubits is too high, computation could take a long time. If still want to proceed set argument `bounded` to False")
+        raise ValueError(
+            "The number of qubits is too high, computation could take a long time.
+            If still want to proceed set argument `bounded` to False"
+        )
 
     # Generate qubit register
     register = range(n_qubits)
 
     # Intialize energies
-    energies = np.zeros(2**len(register))
+    energies = np.zeros(2 ** len(register))
 
     # Obtain spectrum, scanning term by term
     for i, term in enumerate(hamiltonian.terms):
@@ -592,7 +640,7 @@ def ground_state_hamiltonian(hamiltonian: Hamiltonian, bounded = True) -> Tuple[
 
         # Add energy contribution of the term
         energies += out
-    
+
     # Add constant term to the spectrum
     energies += hamiltonian.constant
 
@@ -603,14 +651,14 @@ def ground_state_hamiltonian(hamiltonian: Hamiltonian, bounded = True) -> Tuple[
     indices = np.where(energies == min_energy)[0]
 
     # Generate ground states
-    config_strings = [np.binary_repr(index, len(register))[::-1]
-                      for index in indices]
+    config_strings = [np.binary_repr(index, len(register))[::-1] for index in indices]
 
     return min_energy, config_strings
 
 
-def bitstring_energy(hamiltonian: Hamiltonian,
-                     bitstring: Union[List[int], str]) -> float:
+def bitstring_energy(
+    hamiltonian: Hamiltonian, bitstring: Union[List[int], str]
+) -> float:
     """
     Computes the energy of a given bitstring with respect to a classical cost Hamiltonian.
 
@@ -628,26 +676,28 @@ def bitstring_energy(hamiltonian: Hamiltonian,
     """
     # Initialize energy value
     energy = 0
-    
+
     # Compute energy contribution term by term
     for i, term in enumerate(hamiltonian.terms):
 
         # Compute sign of spin interaction term
-        variables_product = np.prod([(-1)**int(bitstring[k]) for k in term.qubit_indices])
+        variables_product = np.prod(
+            [(-1) ** int(bitstring[k]) for k in term.qubit_indices]
+        )
 
         # Add energy contribution
-        energy += hamiltonian.coeffs[i]*variables_product
-    
+        energy += hamiltonian.coeffs[i] * variables_product
+
     # Add constant contribution
     energy += hamiltonian.constant
 
     return energy
 
 
-def energy_expectation(hamiltonian: Hamiltonian,
-                       measurement_counts: dict) -> float:
+def energy_expectation(hamiltonian: Hamiltonian, measurement_counts: dict) -> float:
     """
-    Computes the energy expectation value from a set of measurement counts, with respect to a classical cost Hamiltonian.
+    Computes the energy expectation value from a set of measurement counts,
+    with respect to a classical cost Hamiltonian.
 
     Parameters
     ----------
@@ -671,19 +721,28 @@ def energy_expectation(hamiltonian: Hamiltonian,
     # Compute average energy adding one by one the contribution from each state
     for state, prob in measurement_counts.items():
 
-        # Number of ones (spins pointing down) from the specific configuration for each Hamiltonian term
-        num_ones_list = [sum([int(state[i]) for i in term.qubit_indices])
-                         for term in hamiltonian.terms]
+        # Number of ones (spins pointing down) from the specific
+        # configuration for each Hamiltonian term
+        num_ones_list = [
+            sum([int(state[i]) for i in term.qubit_indices])
+            for term in hamiltonian.terms
+        ]
 
         # Compute configuration energy
-        config_energy = sum([hamiltonian.coeffs[i] if num_ones % 2 == 0 else -1*hamiltonian.coeffs[i]
-                            for i, num_ones in enumerate(num_ones_list)])
+        config_energy = sum(
+            [
+                hamiltonian.coeffs[i]
+                if num_ones % 2 == 0
+                else -1 * hamiltonian.coeffs[i]
+                for i, num_ones in enumerate(num_ones_list)
+            ]
+        )
 
         # Add contribution to total energy
-        energy += prob*config_energy
+        energy += prob * config_energy
 
     # Normalize with respect to the number of shots
-    energy *= (1/shots)
+    energy *= 1 / shots
 
     return energy
 
@@ -691,7 +750,7 @@ def energy_expectation(hamiltonian: Hamiltonian,
 def energy_spectrum_hamiltonian(hamiltonian: Hamiltonian) -> np.ndarray:
     """
     Computes exactly the energy spectrum of the hamiltonian defined by terms
-    and weights and its corresponding configuration of variables. Uses 
+    and weights and its corresponding configuration of variables. Uses
     standard numpy module.
 
     Parameters
@@ -711,7 +770,7 @@ def energy_spectrum_hamiltonian(hamiltonian: Hamiltonian) -> np.ndarray:
     register = range(n_qubits)
 
     # Intialize energies
-    energies = np.zeros((2**len(register)))
+    energies = np.zeros((2 ** len(register)))
 
     # Obtain spectrum, scanning term by term
     for i, term in enumerate(hamiltonian.terms):
@@ -719,7 +778,7 @@ def energy_spectrum_hamiltonian(hamiltonian: Hamiltonian) -> np.ndarray:
         # Extract coefficients
         out = np.real(hamiltonian.coeffs[i])
 
-        # Compute tensor product 
+        # Compute tensor product
         for qubit in register:
             if qubit in term.qubit_indices:
                 out = np.kron([1, -1], out)
@@ -735,11 +794,13 @@ def energy_spectrum_hamiltonian(hamiltonian: Hamiltonian) -> np.ndarray:
     return energies
 
 
-def plot_energy_spectrum(hamiltonian: Hamiltonian,
-                         high_k_states: Optional[int] = None,
-                         low_k_states: Optional[int] = None,
-                         ax=None,
-                         cmap='winter') -> None:
+def plot_energy_spectrum(
+    hamiltonian: Hamiltonian,
+    high_k_states: Optional[int] = None,
+    low_k_states: Optional[int] = None,
+    ax=None,
+    cmap="winter",
+) -> None:
     """
     Compute and plot the energy spectrum of a given hamiltonian on
     a matplotlib figure.
@@ -765,9 +826,15 @@ def plot_energy_spectrum(hamiltonian: Hamiltonian,
 
     # If required extract highest or lowest k energy levels
     if high_k_states is not None:
-        unique_energies, degeneracy = unique_energies[-high_k_states:], degeneracy[-high_k_states:]
+        unique_energies, degeneracy = (
+            unique_energies[-high_k_states:],
+            degeneracy[-high_k_states:],
+        )
     elif low_k_states is not None:
-        unique_energies, degeneracy = unique_energies[:low_k_states], degeneracy[:low_k_states]
+        unique_energies, degeneracy = (
+            unique_energies[:low_k_states],
+            degeneracy[:low_k_states],
+        )
 
     # Define colormap
     cmap = plt.cm.get_cmap(cmap, len(unique_energies))
@@ -778,34 +845,39 @@ def plot_energy_spectrum(hamiltonian: Hamiltonian,
 
     # Plot energy levels
     for i, energy in enumerate(unique_energies):
-        ax.axhline(energy, label=f'Degeneracy={degeneracy[i]}', color=cmap(i))
+        ax.axhline(energy, label=f"Degeneracy={degeneracy[i]}", color=cmap(i))
 
     # Set axis attributes and legend
-    ax.set(xticks=[], yticks=unique_energies, ylabel='Energy[a.u.]',
-           title='Hamiltonian Energy spectrum')
-    ax.legend(loc='center left', fontsize=8)
+    ax.set(
+        xticks=[],
+        yticks=unique_energies,
+        ylabel="Energy[a.u.]",
+        title="Hamiltonian Energy spectrum",
+    )
+    ax.legend(loc="center left", fontsize=8)
 
     return None
 
 
-def low_energy_states(hamiltonian: Hamiltonian,
-                      threshold_per: float) -> Tuple[float, list]:
+def low_energy_states(
+    hamiltonian: Hamiltonian, threshold_per: float
+) -> Tuple[float, list]:
     """
     Return threshold energy and the low energy states of the
-    specified hamiltonian which are below this threshold. 
+    specified hamiltonian which are below this threshold.
 
     Parameters
     ----------
     hamiltonian: `Hamiltonian`
         Compute the low energy states of this Hamiltonian
     threshold_per: `float`
-        Threshold percentage away from the ground state, defining the energy we window we search
-        in for low energy states.
+        Threshold percentage away from the ground state,
+        defining the energy we window we search in for low energy states.
 
     Returns
     -------
     low_energy_threshold: `float`
-        The energy threshold below which we retrieve states. 
+        The energy threshold below which we retrieve states.
     states: `list`
         The list of low energy states that lie below the low
         energy threshold.
@@ -826,8 +898,9 @@ def low_energy_states(hamiltonian: Hamiltonian,
     highest_state_energy = np.max(energies)
 
     # Compute the low energy threshols
-    low_energy_threshold = ground_state_energy + threshold_per * \
-        np.abs(highest_state_energy-ground_state_energy)
+    low_energy_threshold = ground_state_energy + threshold_per * np.abs(
+        highest_state_energy - ground_state_energy
+    )
 
     # Initilize inndices for low energy states
     low_energy_indices = []
@@ -836,31 +909,33 @@ def low_energy_states(hamiltonian: Hamiltonian,
     for idx in range(len(energies)):
         if energies[idx] <= low_energy_threshold:
             low_energy_indices.append(idx)
-    
+
     # Extract states from the Hamiltonian spectrum
-    states = [np.binary_repr(index, hamiltonian.n_qubits)[::-1]
-              for index in low_energy_indices]
+    states = [
+        np.binary_repr(index, hamiltonian.n_qubits)[::-1]
+        for index in low_energy_indices
+    ]
 
     return low_energy_threshold, states
 
 
-def low_energy_states_overlap(hamiltonian: Hamiltonian,
-                              threshold_per: float,
-                              prob_dict: dict) -> float:
+def low_energy_states_overlap(
+    hamiltonian: Hamiltonian, threshold_per: float, prob_dict: dict
+) -> float:
     """
     Calculates the overlap between the low energy states of a Hamiltonian,
     below a specific threshold away from the ground state energy, and an input
-    state, expressed in terms of a probability dictionary. 
+    state, expressed in terms of a probability dictionary.
 
     Parameters
     ----------
     hamiltonian: `Hamiltonian`
         Compute overlap with respect to energies of this Hamiltonian
     threshold_per: `float`
-        Threshold percentage away from the ground state, defining the energy we window we search
-        in for low energy states.
+        Threshold percentage away from the ground state, defining the
+        energy we window we search in for low energy states.
     prob_dict: `dict`
-        The measurement outcome dictionary generated from the 
+        The measurement outcome dictionary generated from the
         circuit execution.
 
     Returns
@@ -869,21 +944,25 @@ def low_energy_states_overlap(hamiltonian: Hamiltonian,
         The total overlap with the low-energy states.
 
     .. Important::
-        The threshold is calculated as `threshold_per` factors away from the ground state of the Hamiltonain.
+        The threshold is calculated as `threshold_per` factors away
+        from the ground state of the Hamiltonain.
         For `threshold_per=0` the function returns the ground state overlap of the QAOA output.
     """
     # Extract number of qubits from probability dictionary
     n_qubits = len(list(prob_dict.keys())[0])
 
     # Ensure number of qubits matches the number of qubits registered in the Hamiltonian
-    assert n_qubits == hamiltonian.n_qubits, "Number of qubits in the Hamiltonian does not match the probabilities specified"
+    assert (
+        n_qubits == hamiltonian.n_qubits
+    ), "Number of qubits in the Hamiltonian does not match the probabilities specified"
 
     # Extract low energy states
     _, states = low_energy_states(hamiltonian, threshold_per)
 
     # Compute overlap
-    total_overlap = sum([prob_dict[state]
-                        for state in states])/sum(list(prob_dict.values()))
+    total_overlap = sum([prob_dict[state] for state in states]) / sum(
+        list(prob_dict.values())
+    )
 
     return total_overlap
 
@@ -908,7 +987,7 @@ def exp_val_single(spin: int, prob_dict: dict):
     # Initialize expectation value
     exp_val = 0
     norm = sum(prob_dict.values())
-    
+
     # Compute correlation
     for bitstring, prob in prob_dict.items():
 
@@ -916,20 +995,20 @@ def exp_val_single(spin: int, prob_dict: dict):
         Z = int(bitstring[spin])
 
         # Add contribution if spin points up or subtract if points down
-        exp_val += -prob/norm if Z > 0 else prob/norm
+        exp_val += -prob / norm if Z > 0 else prob / norm
 
     return exp_val
 
 
 def exp_val_pair(spins: tuple, prob_dict: dict):
     r"""
-    Computes the correlation :math:`Mij = <Z_{i}Z_{j}>` between qubits i,j using the QAOA optimized 
+    Computes the correlation :math:`Mij = <Z_{i}Z_{j}>` between qubits i,j using the QAOA optimized
     wavefunction.
 
     .. Important::
         In the presence of linear terms the :math:`<Z_{i}><Z_{j}>` contribution needs to be
-        subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a 
-        wrapper for this function. 
+        subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a
+        wrapper for this function.
 
     Parameters
     ----------
@@ -947,7 +1026,7 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
 
     # Initialize correlation
     corr = 0
-    
+
     norm = sum(prob_dict.values())
     # Compute correlation
     for bitstring, prob in prob_dict.items():
@@ -956,19 +1035,21 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
         num_ones = sum([int(bitstring[i]) for i in spins])
 
         # Add contribution if spins aligned or subtract if anti-aligned
-        corr += prob/norm if num_ones % 2 == 0 else -prob/norm
+        corr += prob / norm if num_ones % 2 == 0 else -prob / norm
 
     return corr
 
 
-def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
-                                qaoa_backend,
-                                hamiltonian: Hamiltonian, 
-                                mixer_type:str, 
-                                p: int,
-                                qaoa_optimized_angles: Optional[list] = None,
-                                qaoa_optimized_counts: Optional[dict] = None,
-                                analytical: bool = True):
+def exp_val_hamiltonian_termwise(
+    variational_params: QAOAVariationalBaseParams,
+    qaoa_backend,
+    hamiltonian: Hamiltonian,
+    mixer_type: str,
+    p: int,
+    qaoa_optimized_angles: Optional[list] = None,
+    qaoa_optimized_counts: Optional[dict] = None,
+    analytical: bool = True,
+):
     """
     Computes the single spin expectation values <Z_{i}> and the correlation matrix Mij = <Z_{i}Z_{j}>,
     using the optimization results obtained from QAOA tranining the specified QAOA cost backend.
@@ -1004,14 +1085,18 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
 
     # Extract Hamiltonian terms
     terms = list(hamiltonian.terms)
-    
+
     # Initialize the z expectation values and correlation matrix with 0s
     exp_vals_z = np.zeros(n_qubits)
     corr_matrix = np.zeros((n_qubits, n_qubits))
-    
+
     # If single layer ansatz use analytical results
-    if (analytical == True and p == 1 and mixer_type == 'x' and
-        isinstance(qaoa_optimized_angles, list)):
+    if (
+        analytical == True
+        and p == 1
+        and mixer_type == "x"
+        and isinstance(qaoa_optimized_angles, list)
+    ):
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
@@ -1020,13 +1105,15 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
             if len(term) == 1:
                 i = term.qubit_indices[0]
                 exp_vals_z[i] = exp_val_single_analytical(
-                    i, hamiltonian, qaoa_optimized_angles)
+                    i, hamiltonian, qaoa_optimized_angles
+                )
 
             # If two-body term compute correlation
             elif len(term) == 2:
                 i, j = term.qubit_indices
                 corr_matrix[i][j] = exp_val_pair_analytical(
-                    (i, j), hamiltonian, qaoa_optimized_angles)
+                    (i, j), hamiltonian, qaoa_optimized_angles
+                )
 
             # If constant term, ignore
             else:
@@ -1038,7 +1125,9 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
         if isinstance(qaoa_optimized_counts, dict):
             counts_dict = qaoa_optimized_counts
         else:
-            raise ValueError("Please specify optimized counts to compute expectation values.")
+            raise ValueError(
+                "Please specify optimized counts to compute expectation values."
+            )
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
@@ -1071,8 +1160,8 @@ def exp_val_hamiltonian_termwise(variational_params: QAOAVariationalBaseParams,
 def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: tuple):
     """
     Computes the single spin expectation value :math:`<Z>` from an analytically
-    derived expression for a single layer QAOA Ansatz. 
-    
+    derived expression for a single layer QAOA Ansatz.
+
     .. Important::
         Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
 
@@ -1112,11 +1201,10 @@ def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: 
     beta, gamma = qaoa_angles
 
     # Spin register as a list without the spin we focus on
-    iter_qubits = [j for j in range(0, spin)] + \
-        [j for j in range(spin+1, n_qubits)]
+    iter_qubits = [j for j in range(0, spin)] + [j for j in range(spin + 1, n_qubits)]
 
     # Initialize products
-    exp_val = -np.sin(2*beta) * np.sin(2*gamma*h_u)
+    exp_val = -np.sin(2 * beta) * np.sin(2 * gamma * h_u)
 
     # Loop over edges connecting u and v to other spins
     for n in iter_qubits:
@@ -1128,19 +1216,20 @@ def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: 
         J_un = 0 if hamil_graph.get(edge) is None else hamil_graph[edge]
 
         # Add factor to the products
-        exp_val *= np.cos(2*gamma*J_un)
+        exp_val *= np.cos(2 * gamma * J_un)
 
     return exp_val
 
 
 def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles: tuple):
     """
-    Computes :math:`<Z_{i}Z_{j}>` correlation between apair of spins analytically. It is an extension from the 
-    expression derived by Bravyi et al. in https://arxiv.org/abs/1910.08980 which includes the effect of biases. 
+    Computes :math:`<Z_{i}Z_{j}>` correlation between apair of spins analytically.
+    It is an extension from the expression derived by
+    Bravyi et al. in https://arxiv.org/abs/1910.08980 which includes the effect of biases.
 
     .. Important::
         * Only valid for single layer QAOA Ansatz with X mixer Hamiltonian.
-        * In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a wrapper for this function. 
+        * In the presence of linear terms the <Z_{i}><Z_{j}> contribution needs to be subtracted later. This is done in the exp_val_hamiltonian_termwise() function used as a wrapper for this function.
         * OpenQAOA uses a different sign convention for the QAOA Ansatz than Bravy et al. - there is a relative minus sign between the cost function and the mixer in OpenQAOA, which is accounted for in this implementation. Additionally, the result below is valid for a Hadamard state initialization and in the absence of bias terms in the Hamiltonian.
 
     Parameters
@@ -1186,18 +1275,21 @@ def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles:
     beta, gamma = qaoa_angles
 
     # Factors in the expression
-    s = np.sin(2*beta)
-    c = np.cos(2*beta)
+    s = np.sin(2 * beta)
+    c = np.cos(2 * beta)
 
     # Spin register as a list without u,v spins
-    iter_qubits = [j for j in range(0, min(u, v))] + [j for j in range(
-        min(u, v)+1, max(u, v))] + [j for j in range(max(u, v)+1, n_qubits)]
+    iter_qubits = (
+        [j for j in range(0, min(u, v))]
+        + [j for j in range(min(u, v) + 1, max(u, v))]
+        + [j for j in range(max(u, v) + 1, n_qubits)]
+    )
 
     # Initialize products
-    prod1 = s**2/2 * np.cos(2*gamma*(h_u - h_v))
-    prod2 = -s**2/2 * np.cos(2*gamma*(h_u + h_v))
-    prod3 = -c*s*np.sin(2*gamma*J_uv) * np.cos(2*gamma*h_u)
-    prod4 = -c*s*np.sin(2*gamma*J_uv) * np.cos(2*gamma*h_v)
+    prod1 = s**2 / 2 * np.cos(2 * gamma * (h_u - h_v))
+    prod2 = -(s**2) / 2 * np.cos(2 * gamma * (h_u + h_v))
+    prod3 = -c * s * np.sin(2 * gamma * J_uv) * np.cos(2 * gamma * h_u)
+    prod4 = -c * s * np.sin(2 * gamma * J_uv) * np.cos(2 * gamma * h_v)
 
     # Loop over edges connecting u and v to other spins
     for n in iter_qubits:
@@ -1211,10 +1303,10 @@ def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles:
         J_vn = 0 if hamil_graph.get(edge2) is None else hamil_graph[edge2]
 
         # Add factor to the products
-        prod1 *= np.cos(2*gamma*(J_un - J_vn))
-        prod2 *= np.cos(2*gamma*(J_un + J_vn))
-        prod3 *= np.cos(2*gamma*J_un)
-        prod4 *= np.cos(2*gamma*J_vn)
+        prod1 *= np.cos(2 * gamma * (J_un - J_vn))
+        prod2 *= np.cos(2 * gamma * (J_un + J_vn))
+        prod3 *= np.cos(2 * gamma * J_un)
+        prod4 *= np.cos(2 * gamma * J_vn)
 
     # Add the contribution from each product term
     corr = prod1 + prod2 + prod3 + prod4
@@ -1222,7 +1314,7 @@ def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles:
     return corr
 
 
-def energy_expectation_analytical(angles:Union[list,tuple],hamiltonian:Hamiltonian):
+def energy_expectation_analytical(angles: Union[list, tuple], hamiltonian: Hamiltonian):
     """
     Computes the expectation value of the Hamiltonian for an analytical expression.
 
@@ -1237,29 +1329,29 @@ def energy_expectation_analytical(angles:Union[list,tuple],hamiltonian:Hamiltoni
     hamiltonian: `Hamiltonian`
         Classical Hamiltonian from which the expectation value is computed.
     """
-    
+
     # Extract terms and coefficients from the Hamiltonian
     terms = [pauli_term.qubit_indices for pauli_term in hamiltonian.terms]
     coeffs = hamiltonian.coeffs
-    
+
     energy = 0
-    
+
     # Compute the expectation value of each term and add its local energy contribution
-    for coeff,term in zip(coeffs,terms):
-        
+    for coeff, term in zip(coeffs, terms):
+
         if len(term) == 2:
-        
-            local_energy = exp_val_pair_analytical(term,hamiltonian,angles)
-            
+
+            local_energy = exp_val_pair_analytical(term, hamiltonian, angles)
+
         else:
-            
-            local_energy = exp_val_single_analytical(term[0],hamiltonian,angles)
-        
+
+            local_energy = exp_val_single_analytical(term[0], hamiltonian, angles)
+
         energy += coeff * local_energy
-    
+
     # Add constant shift contribution
     energy += hamiltonian.constant
-    
+
     return energy
 
 
@@ -1285,17 +1377,16 @@ def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
     n_qubits = len(reg)
 
     # Define terms for the ring structure
-    terms = [(reg[i], reg[(i+1) % n_qubits]) for i in range(n_qubits)]
+    terms = [(reg[i], reg[(i + 1) % n_qubits]) for i in range(n_qubits)]
 
     # Define coefficients as in original formulation of the model
-    coeffs = [0.5]*len(terms)
+    coeffs = [0.5] * len(terms)
 
     # Constant term as in original formulation of the model
-    constant = -len(terms)*0.5
+    constant = -len(terms) * 0.5
 
     # Define Hamiltonian
-    ring_hamil = Hamiltonian.classical_hamiltonian(terms, coeffs,
-                                                   constant=constant)
+    ring_hamil = Hamiltonian.classical_hamiltonian(terms, coeffs, constant=constant)
     return ring_hamil
 
 
@@ -1307,14 +1398,14 @@ def ring_of_disagrees(reg: List[int]) -> Hamiltonian:
 def flip_counts(counts_dictionary: dict) -> dict:
     """
     Returns a counts/probability dictionary that have their keys flipped. This
-    formats the bit-strings from a right-most bit representing being the first 
+    formats the bit-strings from a right-most bit representing being the first
     qubit to the left-most bit representing the first qubit.
 
     Parameters
     ----------
     counts_dictionary: `dict`
         Count dictionary whose keys are flipped.
-        
+
     Returns
     -------
     output_counts_dictionary: `dict`
@@ -1327,6 +1418,7 @@ def flip_counts(counts_dictionary: dict) -> dict:
         output_counts_dictionary[key[::-1]] = value
 
     return output_counts_dictionary
+
 
 @round_value
 def qaoa_probabilities(statevector) -> dict:
@@ -1345,7 +1437,7 @@ def qaoa_probabilities(statevector) -> dict:
         as keys and their probabilities as their corresponding values.
     """
     # Define list of probabilities from wavefunction amplitudes
-    prob_vec = np.real(np.conjugate(statevector)*statevector)
+    prob_vec = np.real(np.conjugate(statevector) * statevector)
 
     # Extract number of qubits from size of probability
     n_qubits = int(np.log2(len(prob_vec)))
@@ -1367,7 +1459,7 @@ def qaoa_probabilities(statevector) -> dict:
 ################################################################################
 # DICTIONARY MANIPULATION and SERIALIZATION
 ################################################################################
-def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
+def delete_keys_from_dict(obj: Union[list, dict], keys_to_delete: List[str]):
     """
     Recursively delete all the keys keys_to_delete from a object (or list of dictionaries)
     Parameters
@@ -1376,7 +1468,7 @@ def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
         dictionary or list of dictionaries from which we want to delete keys
     keys_to_delete: list
         list of keys to delete from the dictionaries
-        
+
     Returns
     -------
     obj: dict or list[dict]
@@ -1388,7 +1480,7 @@ def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
                 del obj[key]
         for key in obj:
             if isinstance(obj[key], dict):
-                delete_keys_from_dict(obj[key], keys_to_delete)                    
+                delete_keys_from_dict(obj[key], keys_to_delete)
             elif isinstance(obj[key], list):
                 for item in obj[key]:
                     delete_keys_from_dict(item, keys_to_delete)
@@ -1398,7 +1490,8 @@ def delete_keys_from_dict(obj:Union[list, dict], keys_to_delete:List[str]):
 
     return obj
 
-def convert2serialize(obj, complex_to_string:bool=False):
+
+def convert2serialize(obj, complex_to_string: bool = False):
     """
     Recursively converts object to dictionary.
 
@@ -1415,11 +1508,17 @@ def convert2serialize(obj, complex_to_string:bool=False):
         Dictionary representation of the object.
     """
     if isinstance(obj, dict):
-        return {k: convert2serialize(v, complex_to_string) for k, v in obj.items() if v is not None}
+        return {
+            k: convert2serialize(v, complex_to_string)
+            for k, v in obj.items()
+            if v is not None
+        }
     elif hasattr(obj, "_ast"):
         return convert2serialize(obj._ast(), complex_to_string)
     elif isinstance(obj, tuple):
-        return tuple(convert2serialize(v, complex_to_string) for v in obj if v is not None)
+        return tuple(
+            convert2serialize(v, complex_to_string) for v in obj if v is not None
+        )
     elif not isinstance(obj, str) and hasattr(obj, "__iter__"):
         return [convert2serialize(v, complex_to_string) for v in obj if v is not None]
     elif hasattr(obj, "__dict__"):
@@ -1438,6 +1537,7 @@ def convert2serialize(obj, complex_to_string:bool=False):
 # UUID
 ################################################################################
 
+
 def generate_uuid() -> str:
     """
     Generate a UUID string.
@@ -1448,6 +1548,7 @@ def generate_uuid() -> str:
         String representation of a UUID.
     """
     return str(uuid.uuid4())
+
 
 def is_valid_uuid(uuid_to_test: str) -> bool:
     """
@@ -1472,10 +1573,12 @@ def is_valid_uuid(uuid_to_test: str) -> bool:
         # If it's a value error, then the string is not a valid string for a UUID.
         return False
 
+
 ################################################################################
 # CHECKING FUNCTION
 ################################################################################
-    
+
+
 def check_kwargs(list_expected_params, list_default_values, **kwargs):
     """
     Checks that the given list of expected parameters can be found in the
@@ -1515,9 +1618,11 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
 
     return tuple(params)
 
+
 ###
 # QAOALIB
 ###
+
 
 def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
     """
@@ -1525,7 +1630,7 @@ def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
 
     Parameters
     ----------
-    excitations: 
+    excitations:
         Number of excitations in the basis vector
     n_qubits:
         Total number of qubits in the system
@@ -1534,17 +1639,20 @@ def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
     -------
     total_basis_comp:
         Total basis states present in the expected Dicke vector in the computational basis
-        np.ndarray[str] 
+        np.ndarray[str]
 
     """
-    assert n_qubits >= excitations, "Excitations cannot be larger than total qubits in system"
+    assert (
+        n_qubits >= excitations
+    ), "Excitations cannot be larger than total qubits in system"
     sub_sys_excitations = np.ones(excitations, dtype=int)
-    sub_sys_ground = np.zeros(n_qubits-excitations, dtype=int)
+    sub_sys_ground = np.zeros(n_qubits - excitations, dtype=int)
 
     total_state = np.concatenate((sub_sys_ground, sub_sys_excitations))
     total_basis_comp = set(itertools.permutations(total_state))
     total_basis_comp = np.array(
-        [''.join(str(i) for i in basis_comp) for basis_comp in total_basis_comp])
+        ["".join(str(i) for i in basis_comp) for basis_comp in total_basis_comp]
+    )
 
     return total_basis_comp
 
@@ -1564,8 +1672,13 @@ def dicke_wavefunction(excitations, n_qubits):
 
     k_dicke = dicke_basis(excitations, n_qubits)
     k_dicke_ints = [int(state, 2) for state in k_dicke]
-    wavefunction = np.array([1.+0.j if num in k_dicke_ints else 0.+0.j for num in range(
-        2**n_qubits)], dtype=complex)/np.sqrt(len(k_dicke_ints))
+    wavefunction = np.array(
+        [
+            1.0 + 0.0j if num in k_dicke_ints else 0.0 + 0.0j
+            for num in range(2**n_qubits)
+        ],
+        dtype=complex,
+    ) / np.sqrt(len(k_dicke_ints))
     return wavefunction
 
 
@@ -1576,7 +1689,7 @@ def k_cumulative_excitations(k: int, n_qubits: int):
 
     Parameters
     ----------
-    k: 
+    k:
         Upper bound on number of excitations in the basis vector
     n_qubits:
         Total number of qubits in the system
@@ -1587,22 +1700,29 @@ def k_cumulative_excitations(k: int, n_qubits: int):
         The wavefunction vector for a given cumulative Dicke states with <=k excitations
 
     """
-    cumulative_dicke_bases = np.array(['0'*n_qubits])
-    for exc in range(1, k+1):
+    cumulative_dicke_bases = np.array(["0" * n_qubits])
+    for exc in range(1, k + 1):
         cumulative_dicke_bases = np.concatenate(
-            (cumulative_dicke_bases, dicke_basis(exc, n_qubits)))
+            (cumulative_dicke_bases, dicke_basis(exc, n_qubits))
+        )
 
     wavefn_locs = [int(basis, 2) for basis in cumulative_dicke_bases]
-    wavefunction = np.array([1 if loc in wavefn_locs else 0 for loc in range(
-        2**n_qubits)], dtype=complex)/np.sqrt(len(wavefn_locs))
+    wavefunction = np.array(
+        [1 if loc in wavefn_locs else 0 for loc in range(2**n_qubits)], dtype=complex
+    ) / np.sqrt(len(wavefn_locs))
 
     return wavefunction
 
 
-def knapsack_balanced_basis(weight_capacity: int, weights_list: List, decision_register: List, slack_register: List):
+def knapsack_balanced_basis(
+    weight_capacity: int,
+    weights_list: List,
+    decision_register: List,
+    slack_register: List,
+):
     """
     Generates the basis where the system register is balanced for Knapsack Hamiltonian, i.e. Slack register
-    compensating the decision register state to cancel the penalty term in Hamiltonian. 
+    compensating the decision register state to cancel the penalty term in Hamiltonian.
     NOTE: Cannot cancel the penalty term if decision register weight exceeds the weight capacity of the sack
 
     Parameters
@@ -1614,7 +1734,7 @@ def knapsack_balanced_basis(weight_capacity: int, weights_list: List, decision_r
     decision_register:
         The qubit regsiter of the decision bits
     slack_register:
-        The qubit regsiter of the slack bits 
+        The qubit regsiter of the slack bits
 
     Returns
     -------
@@ -1629,11 +1749,29 @@ def knapsack_balanced_basis(weight_capacity: int, weights_list: List, decision_r
         binary_form = bin(number)[2:].zfill(n_qubits)
         return binary_form
 
-    decision_config_weights = {to_bin(dec_i, n_decision_qubits): sum([weight*int(to_bin(dec_i, n_decision_qubits)[i])
-                                                                      for i, weight in enumerate(weights_list)]) for dec_i in range(2**n_decision_qubits)}
+    decision_config_weights = {
+        to_bin(dec_i, n_decision_qubits): sum(
+            [
+                weight * int(to_bin(dec_i, n_decision_qubits)[i])
+                for i, weight in enumerate(weights_list)
+            ]
+        )
+        for dec_i in range(2**n_decision_qubits)
+    }
 
-    decision_slack_configs = {to_bin(dec_i, n_decision_qubits): (to_bin(weight_capacity-decision_config_weights[to_bin(dec_i, n_decision_qubits)], n_slack_qubits)
-                                                                 if decision_config_weights[to_bin(dec_i, n_decision_qubits)] < weight_capacity else to_bin(0, n_slack_qubits)) for dec_i in range(2**n_decision_qubits)}
+    decision_slack_configs = {
+        to_bin(dec_i, n_decision_qubits): (
+            to_bin(
+                weight_capacity
+                - decision_config_weights[to_bin(dec_i, n_decision_qubits)],
+                n_slack_qubits,
+            )
+            if decision_config_weights[to_bin(dec_i, n_decision_qubits)]
+            < weight_capacity
+            else to_bin(0, n_slack_qubits)
+        )
+        for dec_i in range(2**n_decision_qubits)
+    }
 
     all_configs = []
     for dec_config, slack_config in decision_slack_configs.items():
@@ -1643,14 +1781,17 @@ def knapsack_balanced_basis(weight_capacity: int, weights_list: List, decision_r
         for i, loc in enumerate(slack_register[::-1]):
             config[loc] = slack_config[i]
 
-        config_str = ''.join(i for i in config)
+        config_str = "".join(i for i in config)
         all_configs.append(config_str[::-1])
 
     wavefn_locs = [int(basis, 2) for basis in all_configs]
-    wavefunction = np.array([1 if loc in wavefn_locs else 0 for loc in range(
-        2**n_total_qubits)], dtype=complex)/np.sqrt(len(wavefn_locs))
+    wavefunction = np.array(
+        [1 if loc in wavefn_locs else 0 for loc in range(2**n_total_qubits)],
+        dtype=complex,
+    ) / np.sqrt(len(wavefn_locs))
 
     return wavefunction
+
 
 # ############################################################################
 # Lightcone QAOA building blocks

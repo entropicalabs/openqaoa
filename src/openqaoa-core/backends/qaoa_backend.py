@@ -7,107 +7,130 @@ from .devices_core import DeviceBase, DeviceLocal
 from .basebackend import QuantumCircuitBase, QAOABaseBackend
 from ..qaoa_components import QAOADescriptor
 from openqaoa_braket.backends import DeviceAWS, QAOAAWSQPUBackend
-from openqaoa_qiskit.backends import (DeviceQiskit, QAOAQiskitQPUBackend, 
-                                      QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator)
+from openqaoa_qiskit.backends import (
+    DeviceQiskit,
+    QAOAQiskitQPUBackend,
+    QAOAQiskitBackendShotBasedSimulator,
+    QAOAQiskitBackendStatevecSimulator,
+)
 from openqaoa_azure.backends import DeviceAzure
-from openqaoa_pyquil.backends import (DevicePyquil, QAOAPyQuilQPUBackend, 
-                                      QAOAPyQuilWavefunctionSimulatorBackend)
+from openqaoa_pyquil.backends import (
+    DevicePyquil,
+    QAOAPyQuilQPUBackend,
+    QAOAPyQuilWavefunctionSimulatorBackend,
+)
 
 
 DEVICE_NAME_TO_OBJECT_MAPPER = {
-    'qiskit.qasm_simulator': QAOAQiskitBackendShotBasedSimulator,
-    'qiskit.shot_simulator': QAOAQiskitBackendShotBasedSimulator,
-    'qiskit.statevector_simulator': QAOAQiskitBackendStatevecSimulator,
-    'vectorized': QAOAvectorizedBackendSimulator,
-    'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend,
-    'analytical_simulator': QAOABackendAnalyticalSimulator,
+    "qiskit.qasm_simulator": QAOAQiskitBackendShotBasedSimulator,
+    "qiskit.shot_simulator": QAOAQiskitBackendShotBasedSimulator,
+    "qiskit.statevector_simulator": QAOAQiskitBackendStatevecSimulator,
+    "vectorized": QAOAvectorizedBackendSimulator,
+    "pyquil.statevector_simulator": QAOAPyQuilWavefunctionSimulatorBackend,
+    "analytical_simulator": QAOABackendAnalyticalSimulator,
 }
 
 DEVICE_ACCESS_OBJECT_MAPPER = {
     DeviceQiskit: QAOAQiskitQPUBackend,
-    DevicePyquil: QAOAPyQuilQPUBackend, 
+    DevicePyquil: QAOAPyQuilQPUBackend,
     DeviceAWS: QAOAAWSQPUBackend,
-    DeviceAzure: QAOAQiskitQPUBackend
+    DeviceAzure: QAOAQiskitQPUBackend,
 }
 
 
-def _backend_arg_mapper(backend_obj: QAOABaseBackend,
-                        n_shots: Optional[int] = None,
-                        seed_simulator: Optional[int] = None,
-                        qiskit_simulation_method: Optional[str] = None,
-                        noise_model = None,
-                        active_reset: Optional[bool] = None,
-                        rewiring = None,
-                        qubit_layout = None, 
-                        disable_qubit_rewiring: Optional[bool] = None):
+def _backend_arg_mapper(
+    backend_obj: QAOABaseBackend,
+    n_shots: Optional[int] = None,
+    seed_simulator: Optional[int] = None,
+    qiskit_simulation_method: Optional[str] = None,
+    noise_model=None,
+    active_reset: Optional[bool] = None,
+    rewiring=None,
+    qubit_layout=None,
+    disable_qubit_rewiring: Optional[bool] = None,
+):
 
     BACKEND_ARGS_MAPPER = {
         QAOABackendAnalyticalSimulator: {},
         QAOAvectorizedBackendSimulator: {},
         QAOAQiskitBackendStatevecSimulator: {},
         QAOAPyQuilWavefunctionSimulatorBackend: {},
-        QAOAQiskitBackendShotBasedSimulator: {'n_shots': n_shots,
-                                              'seed_simulator':seed_simulator,
-                                              'qiskit_simulation_method': qiskit_simulation_method,
-                                              'noise_model': noise_model},
-        QAOAQiskitQPUBackend: {'n_shots': n_shots,
-                               'qubit_layout':qubit_layout},
-        QAOAPyQuilQPUBackend: {'n_shots': n_shots,
-                               'active_reset': active_reset,
-                               'rewiring': rewiring,
-                               'qubit_layout':qubit_layout},
-        QAOAAWSQPUBackend: {'n_shots': n_shots, 
-                            'qubit_layout': qubit_layout, 
-                            'disable_qubit_rewiring': disable_qubit_rewiring}
+        QAOAQiskitBackendShotBasedSimulator: {
+            "n_shots": n_shots,
+            "seed_simulator": seed_simulator,
+            "qiskit_simulation_method": qiskit_simulation_method,
+            "noise_model": noise_model,
+        },
+        QAOAQiskitQPUBackend: {"n_shots": n_shots, "qubit_layout": qubit_layout},
+        QAOAPyQuilQPUBackend: {
+            "n_shots": n_shots,
+            "active_reset": active_reset,
+            "rewiring": rewiring,
+            "qubit_layout": qubit_layout,
+        },
+        QAOAAWSQPUBackend: {
+            "n_shots": n_shots,
+            "qubit_layout": qubit_layout,
+            "disable_qubit_rewiring": disable_qubit_rewiring,
+        },
     }
 
-    final_backend_kwargs = {key: value for key, value in BACKEND_ARGS_MAPPER[backend_obj].items()
-                            if value is not None}
+    final_backend_kwargs = {
+        key: value
+        for key, value in BACKEND_ARGS_MAPPER[backend_obj].items()
+        if value is not None
+    }
     return final_backend_kwargs
 
 
 def device_to_backend_mapper(device: DeviceBase) -> QAOABaseBackend:
     """
-    Return the correct `QAOABaseBackend` object corresponding to the 
+    Return the correct `QAOABaseBackend` object corresponding to the
     requested device
     """
     if isinstance(device, DeviceLocal):
         try:
             backend_class = DEVICE_NAME_TO_OBJECT_MAPPER[device.device_name]
         except KeyError:
-            raise ValueError(f"The device {device} is not supported."
-                             f"Please choose from {DEVICE_NAME_TO_OBJECT_MAPPER.keys()}")
+            raise ValueError(
+                f"The device {device} is not supported."
+                f"Please choose from {DEVICE_NAME_TO_OBJECT_MAPPER.keys()}"
+            )
         except:
-            raise Exception(
-                f"The device name {device} raised an unknown error")
+            raise Exception(f"The device name {device} raised an unknown error")
 
     else:
         try:
             backend_class = DEVICE_ACCESS_OBJECT_MAPPER[type(device)]
         except KeyError:
-            raise ValueError(f"The device {device} is not supported."
-                             f"Please choose from {DEVICE_ACCESS_OBJECT_MAPPER.keys()}")
+            raise ValueError(
+                f"The device {device} is not supported."
+                f"Please choose from {DEVICE_ACCESS_OBJECT_MAPPER.keys()}"
+            )
         except:
             raise Exception(f"The specified {device} raised an unknown error")
 
     return backend_class
 
-def get_qaoa_backend(qaoa_descriptor: QAOADescriptor,
-                     device: DeviceBase,
-                     prepend_state: Optional[Union[QuantumCircuitBase,
-                                                   List[complex], np.ndarray]] = None,
-                     append_state: Optional[Union[QuantumCircuitBase,
-                                                  np.ndarray]] = None,
-                     init_hadamard: bool = True,
-                     cvar_alpha: float = 1,
-                     **kwargs):
+
+def get_qaoa_backend(
+    qaoa_descriptor: QAOADescriptor,
+    device: DeviceBase,
+    prepend_state: Optional[
+        Union[QuantumCircuitBase, List[complex], np.ndarray]
+    ] = None,
+    append_state: Optional[Union[QuantumCircuitBase, np.ndarray]] = None,
+    init_hadamard: bool = True,
+    cvar_alpha: float = 1,
+    **kwargs,
+):
     """
     A wrapper function to return a QAOA backend object.
 
     Parameters
     ----------
     qaoa_descriptor: `QAOADescriptor`
-        An object of the class ``QAOADescriptor`` which contains information on 
+        An object of the class ``QAOADescriptor`` which contains information on
         circuit construction along with depth of the circuit.
     device: `DeviceBase`
         The device to be used: Specified as an object of the class `DeviceBase`.
@@ -116,7 +139,7 @@ def get_qaoa_backend(qaoa_descriptor: QAOADescriptor,
     append_state: `Union[QuantumCircuitBase,np.ndarray(complex)]`
         The state appended to the circuit.
     init_hadamard: `bool`
-        Whether to apply a Hadamard gate to the beginning of the 
+        Whether to apply a Hadamard gate to the beginning of the
         QAOA part of the circuit.
     cvar_alpha: `float`
         The value of the CVaR parameter.
@@ -138,15 +161,25 @@ def get_qaoa_backend(qaoa_descriptor: QAOADescriptor,
 
     try:
         if isinstance(device, DeviceLocal):
-            backend_obj = backend_class(qaoa_descriptor=qaoa_descriptor, prepend_state=prepend_state,
-                                        append_state=append_state, init_hadamard=init_hadamard,
-                                        cvar_alpha=cvar_alpha, **backend_kwargs)
+            backend_obj = backend_class(
+                qaoa_descriptor=qaoa_descriptor,
+                prepend_state=prepend_state,
+                append_state=append_state,
+                init_hadamard=init_hadamard,
+                cvar_alpha=cvar_alpha,
+                **backend_kwargs,
+            )
 
         else:
-            backend_obj = backend_class(qaoa_descriptor=qaoa_descriptor, device=device,
-                                        prepend_state=prepend_state, append_state=append_state,
-                                        init_hadamard=init_hadamard, cvar_alpha=cvar_alpha,
-                                        **backend_kwargs)
+            backend_obj = backend_class(
+                qaoa_descriptor=qaoa_descriptor,
+                device=device,
+                prepend_state=prepend_state,
+                append_state=append_state,
+                init_hadamard=init_hadamard,
+                cvar_alpha=cvar_alpha,
+                **backend_kwargs,
+            )
     except Exception as e:
         raise ValueError(f"The backend returned an error: {e}")
 

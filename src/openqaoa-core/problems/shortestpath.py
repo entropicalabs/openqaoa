@@ -8,7 +8,7 @@ from .qubo import QUBO
 class ShortestPath(Problem):
     """
     Creates an instance of the Shortest Path problem.
-    
+
     Parameters
     ----------
     G: nx.Graph
@@ -17,7 +17,7 @@ class ShortestPath(Problem):
         The index of the source node.
     dest: int
         The index of the destination node.
-        
+
     Returns
     -------
         An instance of the Shortest Path problem.
@@ -46,17 +46,17 @@ class ShortestPath(Problem):
         Creates a random instance of the Shortest problem, whose graph is
         random following the Erdos-Renyi model. By default the node and edge
         weights are set to 1.0 and the default constraint is taken to be as large.
-        
+
         Parameters
         ----------
         **kwargs:
             Required keyword arguments are:
-        
+
             n_nodes: int
                 The number of nodes (vertices) in the graph.
             edge_probability: float
                 The probability with which an edge is added to the graph.
-            
+
         Returns
         -------
         A random instance of the Shortest Path problem.
@@ -83,7 +83,7 @@ class ShortestPath(Problem):
     def terms_and_weights(self):
         """
         Creates the terms and weights for the Shortest Path problem
-        
+
         Returns
         -------
         terms_weights: tuple(list[list],list[float])
@@ -190,7 +190,7 @@ class ShortestPath(Problem):
     def get_qubo_problem(self):
         """
         Returns the QUBO encoding of this problem.
-        
+
         Returns
         -------
         The QUBO encoding of this problem.

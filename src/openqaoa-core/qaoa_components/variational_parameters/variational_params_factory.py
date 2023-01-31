@@ -3,67 +3,68 @@ import numpy as np
 
 from .variational_baseparams import QAOAVariationalBaseParams
 from .annealingparams import QAOAVariationalAnnealingParams
-from .fourierparams import (QAOAVariationalFourierParams, QAOAVariationalFourierExtendedParams,
-                            QAOAVariationalFourierWithBiasParams)
+from .fourierparams import (
+    QAOAVariationalFourierParams,
+    QAOAVariationalFourierExtendedParams,
+    QAOAVariationalFourierWithBiasParams,
+)
 from .extendedparams import QAOAVariationalExtendedParams
-from .standardparams import QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams
+from .standardparams import (
+    QAOAVariationalStandardParams,
+    QAOAVariationalStandardWithBiasParams,
+)
 from ..ansatz_constructor import QAOADescriptor
 
-VARIATIONAL_PARAMS_DICT_KEYS = {'standard': ['betas', 'gammas'],
-                                'standard_w_bias': ['betas', 'gammas_singles', 'gammas_pairs'],
-                                'extended': ['betas_singles', 'betas_pairs', 'gammas_singles', 'gammas_pairs'],
-                                'fourier': ['q', 'v', 'u'],
-                                'fourier_extended': ['q', 'v_singles', 'v_pairs', 'u_singles', 'u_pairs'],
-                                'fourier_w_bias': ['q', 'v', 'u_singles', 'u_pairs'],
-                                'annealing': ['total_annealing_time', 'schedule']}
+VARIATIONAL_PARAMS_DICT_KEYS = {
+    "standard": ["betas", "gammas"],
+    "standard_w_bias": ["betas", "gammas_singles", "gammas_pairs"],
+    "extended": ["betas_singles", "betas_pairs", "gammas_singles", "gammas_pairs"],
+    "fourier": ["q", "v", "u"],
+    "fourier_extended": ["q", "v_singles", "v_pairs", "u_singles", "u_pairs"],
+    "fourier_w_bias": ["q", "v", "u_singles", "u_pairs"],
+    "annealing": ["total_annealing_time", "schedule"],
+}
 
-PARAMS_CLASSES_MAPPER = {'standard': QAOAVariationalStandardParams,
-                         'standard_w_bias': QAOAVariationalStandardWithBiasParams,
-                         'extended': QAOAVariationalExtendedParams,
-                         'fourier': QAOAVariationalFourierParams,
-                         'fourier_extended': QAOAVariationalFourierExtendedParams,
-                         'fourier_w_bias': QAOAVariationalFourierWithBiasParams,
-                         'annealing': QAOAVariationalAnnealingParams
-                         }
+PARAMS_CLASSES_MAPPER = {
+    "standard": QAOAVariationalStandardParams,
+    "standard_w_bias": QAOAVariationalStandardWithBiasParams,
+    "extended": QAOAVariationalExtendedParams,
+    "fourier": QAOAVariationalFourierParams,
+    "fourier_extended": QAOAVariationalFourierExtendedParams,
+    "fourier_w_bias": QAOAVariationalFourierWithBiasParams,
+    "annealing": QAOAVariationalAnnealingParams,
+}
 
-SUPPORTED_INITIALIZATION_TYPES = ['rand', 'ramp', 'custom']
+SUPPORTED_INITIALIZATION_TYPES = ["rand", "ramp", "custom"]
 
 
-def _qaoa_variational_params_args(params_type: str,
-                                  init_type: str,
-                                  betas: Optional[Union[List,
-                                                        np.ndarray]] = None,
-                                  gammas: Optional[Union[List,
-                                                         np.ndarray]] = None,
-                                  betas_singles: Optional[Union[List,
-                                                                np.ndarray]] = None,
-                                  betas_pairs: Optional[Union[List,
-                                                              np.ndarray]] = None,
-                                  gammas_singles: Optional[Union[List,
-                                                                 np.ndarray]] = None,
-                                  gammas_pairs: Optional[Union[List,
-                                                               np.ndarray]] = None,
-                                  q: Optional[int] = None,
-                                  v: Optional[Union[List, np.ndarray]] = None,
-                                  u: Optional[Union[List, np.ndarray]] = None,
-                                  v_singles: Optional[Union[List,
-                                                            np.ndarray]] = None,
-                                  v_pairs: Optional[Union[List,
-                                                          np.ndarray]] = None,
-                                  u_singles: Optional[Union[List,
-                                                            np.ndarray]] = None,
-                                  u_pairs: Optional[Union[List,
-                                                          np.ndarray]] = None,
-                                  total_annealing_time: Optional[float] = None,
-                                  schedule: Optional[float] = None) -> Tuple[Union[List, np.ndarray]]:
+def _qaoa_variational_params_args(
+    params_type: str,
+    init_type: str,
+    betas: Optional[Union[List, np.ndarray]] = None,
+    gammas: Optional[Union[List, np.ndarray]] = None,
+    betas_singles: Optional[Union[List, np.ndarray]] = None,
+    betas_pairs: Optional[Union[List, np.ndarray]] = None,
+    gammas_singles: Optional[Union[List, np.ndarray]] = None,
+    gammas_pairs: Optional[Union[List, np.ndarray]] = None,
+    q: Optional[int] = None,
+    v: Optional[Union[List, np.ndarray]] = None,
+    u: Optional[Union[List, np.ndarray]] = None,
+    v_singles: Optional[Union[List, np.ndarray]] = None,
+    v_pairs: Optional[Union[List, np.ndarray]] = None,
+    u_singles: Optional[Union[List, np.ndarray]] = None,
+    u_pairs: Optional[Union[List, np.ndarray]] = None,
+    total_annealing_time: Optional[float] = None,
+    schedule: Optional[float] = None,
+) -> Tuple[Union[List, np.ndarray]]:
     """
-    Provided the given parameterisation type return the 
+    Provided the given parameterisation type return the
     variational parameters arguments as a tuple
 
     Parameters
     ----------
     params_type: ``str``
-        Chosen QAOA parameterisation strategy 
+        Chosen QAOA parameterisation strategy
     gammas: ``Union[List, np.ndarray]``
     betas: ``Union[List, np.ndarray]``
     gammas_singles: ``Union[List, np.ndarray]``
@@ -85,30 +86,34 @@ def _qaoa_variational_params_args(params_type: str,
     variational_params_args: ``Tuple[Union[List,np.ndarray]]``
         Tuple object containing the correct angles for the specified parameterisation type
     """
-    VARIATIONAL_PARAMS_MAPPER = {'standard': (betas, gammas),
-                                 'standard_w_bias': (betas, gammas_singles, gammas_pairs),
-                                 'extended': (betas_singles, betas_pairs, gammas_singles, gammas_pairs),
-                                 'fourier': (q, v, u),
-                                 'fourier_extended': (q, v_singles, v_pairs, u_singles, u_pairs),
-                                 'fourier_w_bias': (q, v, u_singles, u_pairs),
-                                 'annealing': (total_annealing_time, schedule)
-                                 }
+    VARIATIONAL_PARAMS_MAPPER = {
+        "standard": (betas, gammas),
+        "standard_w_bias": (betas, gammas_singles, gammas_pairs),
+        "extended": (betas_singles, betas_pairs, gammas_singles, gammas_pairs),
+        "fourier": (q, v, u),
+        "fourier_extended": (q, v_singles, v_pairs, u_singles, u_pairs),
+        "fourier_w_bias": (q, v, u_singles, u_pairs),
+        "annealing": (total_annealing_time, schedule),
+    }
     final_variational_params = VARIATIONAL_PARAMS_MAPPER[params_type.lower()]
-    if init_type != 'custom':
-        final_variational_params = tuple(param for param in final_variational_params
-                                         if param is not None)
+    if init_type != "custom":
+        final_variational_params = tuple(
+            param for param in final_variational_params if param is not None
+        )
 
     return final_variational_params
 
 
-def create_qaoa_variational_params(qaoa_descriptor: QAOADescriptor,
-                                   params_type: str,
-                                   init_type: str,
-                                   variational_params_dict: dict = {},
-                                   linear_ramp_time: Optional[float] = None,
-                                   q: Optional[int] = None,
-                                   total_annealing_time: Optional[float] = None,
-                                   seed: int = None) -> QAOAVariationalBaseParams:
+def create_qaoa_variational_params(
+    qaoa_descriptor: QAOADescriptor,
+    params_type: str,
+    init_type: str,
+    variational_params_dict: dict = {},
+    linear_ramp_time: Optional[float] = None,
+    q: Optional[int] = None,
+    total_annealing_time: Optional[float] = None,
+    seed: int = None,
+) -> QAOAVariationalBaseParams:
     """
     Create QAOA Variational Parameters of the specified type.
 
@@ -134,50 +139,60 @@ def create_qaoa_variational_params(qaoa_descriptor: QAOADescriptor,
 
     params_type = params_type.lower()
     init_type = init_type.lower()
-    variational_params_dict.update({'q': q})
-    variational_params_dict.update(
-        {'total_annealing_time': total_annealing_time})
-    variational_params_args = _qaoa_variational_params_args(params_type,
-                                                            init_type,
-                                                            **variational_params_dict)
+    variational_params_dict.update({"q": q})
+    variational_params_dict.update({"total_annealing_time": total_annealing_time})
+    variational_params_args = _qaoa_variational_params_args(
+        params_type, init_type, **variational_params_dict
+    )
 
     try:
         params_class = PARAMS_CLASSES_MAPPER[params_type]
     except KeyError:
-        raise ValueError(f"{params_type} Parameterisation is not supported."
-                         f" Choose from {PARAMS_CLASSES_MAPPER.keys()}")
+        raise ValueError(
+            f"{params_type} Parameterisation is not supported."
+            f" Choose from {PARAMS_CLASSES_MAPPER.keys()}"
+        )
 
-    if init_type == 'custom':
+    if init_type == "custom":
         try:
             qaoa_variational_params = params_class(
-                qaoa_descriptor, *variational_params_args)
+                qaoa_descriptor, *variational_params_args
+            )
         except:
-            raise ValueError(f"For the selected {params_type} parameterisation, please specify a"
-                             f" dictionary with correct {VARIATIONAL_PARAMS_DICT_KEYS[params_type]} keys")
-    elif init_type == 'ramp':
+            raise ValueError(
+                f"For the selected {params_type} parameterisation, please specify a"
+                f" dictionary with correct {VARIATIONAL_PARAMS_DICT_KEYS[params_type]} keys"
+            )
+    elif init_type == "ramp":
 
         if isinstance(linear_ramp_time, float) or isinstance(linear_ramp_time, int):
-            assert linear_ramp_time > 0, "Please specify the linear ramp time. Only positive values are allowed."
+            assert (
+                linear_ramp_time > 0
+            ), "Please specify the linear ramp time. Only positive values are allowed."
         elif linear_ramp_time is None:
             pass
         else:
             raise ValueError(f"Please specify a numeric value for linear_ramp_time.")
-            
-        qaoa_variational_params = params_class.linear_ramp_from_hamiltonian(qaoa_descriptor,
-                                                                            *variational_params_args,
-                                                                            time = linear_ramp_time)
-    elif init_type == 'rand':
-        qaoa_variational_params = params_class.random(qaoa_descriptor,
-                                                      *variational_params_args,
-                                                      seed = seed)
+
+        qaoa_variational_params = params_class.linear_ramp_from_hamiltonian(
+            qaoa_descriptor, *variational_params_args, time=linear_ramp_time
+        )
+    elif init_type == "rand":
+        qaoa_variational_params = params_class.random(
+            qaoa_descriptor, *variational_params_args, seed=seed
+        )
     else:
-        raise ValueError(f"{init_type} Initialisation strategy is not yet supported."
-                         f" Please choose from {SUPPORTED_INITIALIZATION_TYPES}")
+        raise ValueError(
+            f"{init_type} Initialisation strategy is not yet supported."
+            f" Please choose from {SUPPORTED_INITIALIZATION_TYPES}"
+        )
 
     return qaoa_variational_params
 
-def qaoa_variational_params_converter(target_params_type: str,
-                                      current_params_obj: QAOAVariationalBaseParams) -> QAOAVariationalBaseParams:
+
+def qaoa_variational_params_converter(
+    target_params_type: str, current_params_obj: QAOAVariationalBaseParams
+) -> QAOAVariationalBaseParams:
     """
     Convert the current variational parameters object to the target variational parameters object.
 
@@ -197,8 +212,10 @@ def qaoa_variational_params_converter(target_params_type: str,
     try:
         new_params_class = PARAMS_CLASSES_MAPPER[target_params_type]
     except KeyError:
-        raise ValueError(f"{target_params_type} Parameterisation is not supported."
-                         f" Choose from {PARAMS_CLASSES_MAPPER.keys()}")
+        raise ValueError(
+            f"{target_params_type} Parameterisation is not supported."
+            f" Choose from {PARAMS_CLASSES_MAPPER.keys()}"
+        )
 
     converted_params_obj = new_params_class.from_other_parameters(current_params_obj)
 

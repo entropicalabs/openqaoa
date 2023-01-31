@@ -9,21 +9,24 @@ from .qubo import QUBO
 
 class TSP(Problem):
     """
-    The Traveling Salesman Problem (TSP) requires to find, given a list of cities and the distances between each pair of cities (or the cities coordinates), the shortest possible path that visits each city exactly once and returns to the origin city. Additionally, one can also specify how cities are connected together.
+    The Traveling Salesman Problem (TSP) requires to find, given a list of cities and
+    the distances between each pair of cities (or the cities coordinates),
+    the shortest possible path that visits each city exactly once and returns to the origin city.
+    Additionally, one can also specify how cities are connected together.
     Our implementation accepts three different kind of inputs:
-    
+
     #. A list of the cities' coordinates and, optionally, a (directed) graph specifiying the connectivity between cities
     #. A distance matrix encoding distances between each pair of cities and, optionally, a (directed) graph specifiying the connectivity between cities
     #. A weighted (directed) graph specifiying the connectivity and the distance between cities
-        
+
     Initializes a TSP object via three different methods:
-    
+
     #. Give a list of coordinates for the cities and optionally the connectivity between them via a (directed) graph.
     #. Give a distance matrix and optionally the connectivity between cities via a (directed) graph.
     #. Directly give a (directed) weighted graph, where edge weights are interpreted as distances between cities
-    
+
     Whenever no graph connectivity is specified, it is assumed that all cities are connected.
-    
+
     Parameters
     ----------
     city_coordinates : Optional[List[Tuple[float, float]]]
@@ -36,7 +39,7 @@ class TSP(Problem):
         Quadratic penalty coefficient to enforce that a path is a Hamiltonian cycle.
     B: Optional[float]
         Penalty coefficient which accounts for the path cost.
-        
+
     Returns
     -------
     None
@@ -104,12 +107,12 @@ class TSP(Problem):
     def validate_coordinates(city_coordinates):
         """
         Makes the necessary check given some city coordinates.
-        
+
         Parameters
         ----------
         input_coordinates : List[Tuple[float, float]]
             List containing the coordinates of each city.
-            
+
         Returns
         -------
             None
@@ -131,12 +134,12 @@ class TSP(Problem):
     def validate_distance_matrix(distance_matrix):
         """
         Makes the necessary check given some distance matrix.
-        
+
         Parameters
         ----------
         distance_matrix : List[List[float]]
             Distance between cities given as list of list representing a matrix
-            
+
         Returns
         -------
             None
@@ -163,12 +166,12 @@ class TSP(Problem):
     def validate_graph(G):
         """
         Makes the necessary check given some (weighted) graph.
-        
+
         Parameters
         ----------
         G: nx.Graph
             Graph encoding the connectivity between cities (can be directed)
-            
+
         Returns
         -------
             None
@@ -187,12 +190,12 @@ class TSP(Problem):
         """
         Creates a random instance of the Traveling Salesman problem with
         fully connected cities.
-        
+
         Parameters
         ----------
         n_cities: int
             The number of cities in the TSP instance. This is a required keyword argument.
-            
+
         Returns
         -------
             A random instance of the Traveling Salesman problem.
@@ -215,7 +218,7 @@ class TSP(Problem):
         The QUBO formulation used is the one presented in Section 7.2 in
         https://arxiv.org/pdf/1302.5843.pdf, and sets the first city to be visited to be
         the first city in order to reduce the number of variables.
-        
+
         Returns
         -------
         Tuple[List[List[int]], List[float]]
@@ -335,7 +338,7 @@ class TSP(Problem):
     def get_qubo_problem(self):
         """
         Returns the QUBO encoding of this problem.
-        
+
         Returns
         -------
             The QUBO encoding of this problem.

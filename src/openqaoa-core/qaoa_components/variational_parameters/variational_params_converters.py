@@ -18,22 +18,26 @@ from copy import deepcopy
 import numpy as np
 from scipy.fftpack import dct, dst
 
-from . import (annealingparams,
-               standardparams,
-               fourierparams,
-               extendedparams)
+from . import annealingparams, standardparams, fourierparams, extendedparams
 
 QAOAVariationalAnnealingParams = annealingparams.QAOAVariationalAnnealingParams
 QAOAVariationalStandardParams = standardparams.QAOAVariationalStandardParams
 QAOAVariationalExtendedParams = extendedparams.QAOAVariationalExtendedParams
-QAOAVariationalStandardWithBiasParams = standardparams.QAOAVariationalStandardWithBiasParams
+QAOAVariationalStandardWithBiasParams = (
+    standardparams.QAOAVariationalStandardWithBiasParams
+)
 QAOAVariationalFourierParams = fourierparams.QAOAVariationalFourierParams
-QAOAVariationalFourierWithBiasParams = fourierparams.QAOAVariationalFourierWithBiasParams
-QAOAVariationalFourierExtendedParams = fourierparams.QAOAVariationalFourierExtendedParams
+QAOAVariationalFourierWithBiasParams = (
+    fourierparams.QAOAVariationalFourierWithBiasParams
+)
+QAOAVariationalFourierExtendedParams = (
+    fourierparams.QAOAVariationalFourierExtendedParams
+)
 
 
 def annealing_to_standard(
-		params: QAOAVariationalAnnealingParams) -> QAOAVariationalStandardParams:
+    params: QAOAVariationalAnnealingParams,
+) -> QAOAVariationalStandardParams:
     out = deepcopy(params)
     out.__class__ = QAOAVariationalStandardParams
     out.betas = params._annealing_time * (1 - params.schedule) / params.p
@@ -47,7 +51,8 @@ def annealing_to_standard(
 
 
 def standard_to_standard_w_bias(
-        params: QAOAVariationalStandardParams) -> QAOAVariationalStandardWithBiasParams:
+    params: QAOAVariationalStandardParams,
+) -> QAOAVariationalStandardWithBiasParams:
     out = deepcopy(params)
     out.__class__ = QAOAVariationalStandardWithBiasParams
     out.gammas_singles = params.gammas
@@ -60,21 +65,25 @@ def standard_to_standard_w_bias(
 
 
 def standard_w_bias_to_extended(
-		params: QAOAVariationalStandardWithBiasParams) -> QAOAVariationalExtendedParams:
-	out = deepcopy(params)
-	out.__class__ = QAOAVariationalExtendedParams
-	out.betas_singles = np.outer(params.betas, np.ones(len(params.mixer_1q_coeffs)))
-	out.betas_pairs = np.outer(params.betas, np.ones(len(params.mixer_2q_coeffs)))
+    params: QAOAVariationalStandardWithBiasParams,
+) -> QAOAVariationalExtendedParams:
+    out = deepcopy(params)
+    out.__class__ = QAOAVariationalExtendedParams
+    out.betas_singles = np.outer(params.betas, np.ones(len(params.mixer_1q_coeffs)))
+    out.betas_pairs = np.outer(params.betas, np.ones(len(params.mixer_2q_coeffs)))
 
-	out.gammas_singles = np.outer(params.gammas_singles,
-									np.ones(len(params.cost_1q_coeffs)))
-	out.gammas_pairs = np.outer(params.gammas_pairs,
-								np.ones(len(params.cost_2q_coeffs)))
-	return out
+    out.gammas_singles = np.outer(
+        params.gammas_singles, np.ones(len(params.cost_1q_coeffs))
+    )
+    out.gammas_pairs = np.outer(
+        params.gammas_pairs, np.ones(len(params.cost_2q_coeffs))
+    )
+    return out
 
 
 def fourier_to_standard(
-	params: QAOAVariationalFourierParams) -> QAOAVariationalStandardParams:
+    params: QAOAVariationalFourierParams,
+) -> QAOAVariationalStandardParams:
     out = deepcopy(params)
     out.__class__ = QAOAVariationalStandardParams
     out.betas = dct(params.v, n=out.p)
@@ -89,7 +98,8 @@ def fourier_to_standard(
 
 
 def fourier_w_bias_to_standard_w_bias(
-        params: QAOAVariationalFourierWithBiasParams) -> QAOAVariationalStandardWithBiasParams:
+    params: QAOAVariationalFourierWithBiasParams,
+) -> QAOAVariationalStandardWithBiasParams:
     out = deepcopy(params)
     out.__class__ = QAOAVariationalStandardWithBiasParams
     out.betas = dct(params.v, n=out.p)
@@ -106,7 +116,8 @@ def fourier_w_bias_to_standard_w_bias(
 
 
 def fourier_to_fourier_w_bias(
-		params: QAOAVariationalFourierParams) -> QAOAVariationalFourierWithBiasParams:
+    params: QAOAVariationalFourierParams,
+) -> QAOAVariationalFourierWithBiasParams:
     out = deepcopy(params)
     out.__class__ = QAOAVariationalFourierWithBiasParams
     out.u_singles = params.u
@@ -119,38 +130,38 @@ def fourier_to_fourier_w_bias(
 
 
 def fourier_w_bias_to_fourier_extended(
-		params: QAOAVariationalFourierWithBiasParams) -> QAOAVariationalFourierExtendedParams:
-	out = deepcopy(params)
-	out.__class__ = QAOAVariationalFourierExtendedParams
-	out.v_singles = np.outer(params.v, np.ones(len(params.mixer_1q_coeffs)))
-	out.v_pairs = np.outer(params.v, np.ones(len(params.mixer_2q_coeffs)))
-	out.u_singles = np.outer(params.u_singles,
-								np.ones(len(params.cost_1q_coeffs)))
-	out.u_pairs = np.outer(params.u_pairs,
-							np.ones(len(params.cost_2q_coeffs)))
+    params: QAOAVariationalFourierWithBiasParams,
+) -> QAOAVariationalFourierExtendedParams:
+    out = deepcopy(params)
+    out.__class__ = QAOAVariationalFourierExtendedParams
+    out.v_singles = np.outer(params.v, np.ones(len(params.mixer_1q_coeffs)))
+    out.v_pairs = np.outer(params.v, np.ones(len(params.mixer_2q_coeffs)))
+    out.u_singles = np.outer(params.u_singles, np.ones(len(params.cost_1q_coeffs)))
+    out.u_pairs = np.outer(params.u_pairs, np.ones(len(params.cost_2q_coeffs)))
 
-	del out.__v
+    del out.__v
 
-	return out
+    return out
 
 
 def fourier_extended_to_extended(
-        params: QAOAVariationalFourierExtendedParams) -> QAOAVariationalExtendedParams:
-	out = deepcopy(params)
-	out.__class__ = QAOAVariationalExtendedParams
-	out.betas_singles = dct(params.v_singles, n=out.p, axis=0)
-	out.betas_pairs = dct(params.v_pairs, n=out.p, axis=0)
-	out.gammas_singles = dst(params.u_singles, n=out.p, axis=0)
-	out.gammas_pairs = dst(params.u_pairs, n=out.p, axis=0)
+    params: QAOAVariationalFourierExtendedParams,
+) -> QAOAVariationalExtendedParams:
+    out = deepcopy(params)
+    out.__class__ = QAOAVariationalExtendedParams
+    out.betas_singles = dct(params.v_singles, n=out.p, axis=0)
+    out.betas_pairs = dct(params.v_pairs, n=out.p, axis=0)
+    out.gammas_singles = dst(params.u_singles, n=out.p, axis=0)
+    out.gammas_pairs = dst(params.u_pairs, n=out.p, axis=0)
 
     # and clean up
-	del out.__u_singles
-	del out.__u_pairs
-	del out.__v_singles
-	del out.__v_pairs
-	del out.q
+    del out.__u_singles
+    del out.__u_pairs
+    del out.__v_singles
+    del out.__v_pairs
+    del out.q
 
-	return out
+    return out
 
 
 # #############################################################################
@@ -158,65 +169,107 @@ def fourier_extended_to_extended(
 # Todo: Create this code automatically by traversing the tree?
 # #############################################################################
 
+
 def annealing_to_standard_w_bias(
-        params: QAOAVariationalAnnealingParams) -> QAOAVariationalStandardWithBiasParams:
+    params: QAOAVariationalAnnealingParams,
+) -> QAOAVariationalStandardWithBiasParams:
     return standard_to_standard_w_bias(annealing_to_standard(params))
 
 
 def annealing_to_extended(
-        params: QAOAVariationalAnnealingParams) -> QAOAVariationalExtendedParams:
+    params: QAOAVariationalAnnealingParams,
+) -> QAOAVariationalExtendedParams:
     return standard_w_bias_to_extended(annealing_to_standard_w_bias(params))
 
 
 def standard_to_extended(
-        params: QAOAVariationalStandardParams) -> QAOAVariationalExtendedParams:
+    params: QAOAVariationalStandardParams,
+) -> QAOAVariationalExtendedParams:
     return standard_w_bias_to_extended(standard_to_standard_w_bias(params))
 
 
 def fourier_to_fourier_extended(
-        params: QAOAVariationalFourierParams) -> QAOAVariationalFourierExtendedParams:
-    return fourier_w_bias_to_fourier_extended(
-                fourier_to_fourier_w_bias(params))
+    params: QAOAVariationalFourierParams,
+) -> QAOAVariationalFourierExtendedParams:
+    return fourier_w_bias_to_fourier_extended(fourier_to_fourier_w_bias(params))
 
 
 def fourier_to_standard_w_bias(
-        params: QAOAVariationalFourierParams) -> QAOAVariationalStandardWithBiasParams:
+    params: QAOAVariationalFourierParams,
+) -> QAOAVariationalStandardWithBiasParams:
     return standard_to_standard_w_bias(fourier_to_standard(params))
 
 
 def fourier_to_extended(
-        params: QAOAVariationalFourierParams) -> QAOAVariationalExtendedParams:
+    params: QAOAVariationalFourierParams,
+) -> QAOAVariationalExtendedParams:
     return standard_w_bias_to_extended(fourier_to_standard_w_bias(params))
 
 
 def fourier_w_bias_to_extended(
-        params: QAOAVariationalFourierWithBiasParams) -> QAOAVariationalExtendedParams:
-    return standard_w_bias_to_extended(
-            fourier_w_bias_to_standard_w_bias(params))
+    params: QAOAVariationalFourierWithBiasParams,
+) -> QAOAVariationalExtendedParams:
+    return standard_w_bias_to_extended(fourier_w_bias_to_standard_w_bias(params))
 
 
 # A dict with all the conversion functions accessible by
 # (input_type, output_type)
-conversion_functions =\
-    {
-     (QAOAVariationalFourierExtendedParams, QAOAVariationalExtendedParams): fourier_extended_to_extended,
-     (QAOAVariationalFourierWithBiasParams, QAOAVariationalStandardWithBiasParams):\
-     fourier_w_bias_to_standard_w_bias,
-     (QAOAVariationalFourierParams, QAOAVariationalStandardParams): fourier_to_standard,
-     (QAOAVariationalAnnealingParams, QAOAVariationalStandardParams): annealing_to_standard,
-     (QAOAVariationalStandardParams, QAOAVariationalStandardWithBiasParams): standard_to_standard_w_bias,
-     (QAOAVariationalStandardWithBiasParams, QAOAVariationalExtendedParams): standard_w_bias_to_extended,
-     (QAOAVariationalFourierParams, QAOAVariationalFourierWithBiasParams): fourier_to_fourier_w_bias,
-     (QAOAVariationalFourierWithBiasParams, QAOAVariationalFourierExtendedParams):\
-     fourier_w_bias_to_fourier_extended,
-     (QAOAVariationalAnnealingParams, QAOAVariationalStandardWithBiasParams): annealing_to_standard_w_bias,
-     (QAOAVariationalAnnealingParams, QAOAVariationalExtendedParams): annealing_to_extended,
-     (QAOAVariationalStandardParams, QAOAVariationalExtendedParams): standard_to_extended,
-     (QAOAVariationalFourierParams, QAOAVariationalFourierExtendedParams): fourier_to_fourier_extended,
-     (QAOAVariationalFourierParams, QAOAVariationalStandardWithBiasParams): fourier_to_standard_w_bias,
-     (QAOAVariationalFourierParams, QAOAVariationalExtendedParams): fourier_to_extended,
-     (QAOAVariationalFourierWithBiasParams, QAOAVariationalExtendedParams): fourier_w_bias_to_extended,
-    }
+conversion_functions = {
+    (
+        QAOAVariationalFourierExtendedParams,
+        QAOAVariationalExtendedParams,
+    ): fourier_extended_to_extended,
+    (
+        QAOAVariationalFourierWithBiasParams,
+        QAOAVariationalStandardWithBiasParams,
+    ): fourier_w_bias_to_standard_w_bias,
+    (QAOAVariationalFourierParams, QAOAVariationalStandardParams): fourier_to_standard,
+    (
+        QAOAVariationalAnnealingParams,
+        QAOAVariationalStandardParams,
+    ): annealing_to_standard,
+    (
+        QAOAVariationalStandardParams,
+        QAOAVariationalStandardWithBiasParams,
+    ): standard_to_standard_w_bias,
+    (
+        QAOAVariationalStandardWithBiasParams,
+        QAOAVariationalExtendedParams,
+    ): standard_w_bias_to_extended,
+    (
+        QAOAVariationalFourierParams,
+        QAOAVariationalFourierWithBiasParams,
+    ): fourier_to_fourier_w_bias,
+    (
+        QAOAVariationalFourierWithBiasParams,
+        QAOAVariationalFourierExtendedParams,
+    ): fourier_w_bias_to_fourier_extended,
+    (
+        QAOAVariationalAnnealingParams,
+        QAOAVariationalStandardWithBiasParams,
+    ): annealing_to_standard_w_bias,
+    (
+        QAOAVariationalAnnealingParams,
+        QAOAVariationalExtendedParams,
+    ): annealing_to_extended,
+    (
+        QAOAVariationalStandardParams,
+        QAOAVariationalExtendedParams,
+    ): standard_to_extended,
+    (
+        QAOAVariationalFourierParams,
+        QAOAVariationalFourierExtendedParams,
+    ): fourier_to_fourier_extended,
+    (
+        QAOAVariationalFourierParams,
+        QAOAVariationalStandardWithBiasParams,
+    ): fourier_to_standard_w_bias,
+    (QAOAVariationalFourierParams, QAOAVariationalExtendedParams): fourier_to_extended,
+    (
+        QAOAVariationalFourierWithBiasParams,
+        QAOAVariationalExtendedParams,
+    ): fourier_w_bias_to_extended,
+}
 
 
 def converter(params, target_type: type):
@@ -241,5 +294,6 @@ def converter(params, target_type: type):
         out = conversion_functions[(type(params), target_type)](params)
         return out
     except KeyError:
-        raise TypeError(f"Conversion from {type(params)} to {target_type} "
-                        "not supported.")
+        raise TypeError(
+            f"Conversion from {type(params)} to {target_type} " "not supported."
+        )

@@ -9,49 +9,57 @@ from scipy.sparse import csc_matrix, kron, diags
 from scipy.sparse.linalg import expm
 
 from .basebackend import QAOABaseBackendStatevector
-from ..qaoa_components import (QAOADescriptor, QAOAVariationalBaseParams, 
-Hamiltonian)
+from ..qaoa_components import QAOADescriptor, QAOAVariationalBaseParams, Hamiltonian
 from ..utilities import generate_uuid, round_value
 
 
 # Pauli gates
 constI = csc_matrix(np.eye(2))
-constX = csc_matrix(np.array([[0,1], [1,0]]))
+constX = csc_matrix(np.array([[0, 1], [1, 0]]))
 constY = csc_matrix(np.array([[0, -1j], [1j, 0]]))
-constZ = csc_matrix(np.array([[1,0], [0,-1]]))
+constZ = csc_matrix(np.array([[1, 0], [0, -1]]))
 
 # Single qubit gates
-constH = csc_matrix((1/np.sqrt(2))*np.array([[1, 1], [1, -1]]))
+constH = csc_matrix((1 / np.sqrt(2)) * np.array([[1, 1], [1, -1]]))
 constS = csc_matrix(np.array([[1, 0], [0, 1j]]))
-constT = csc_matrix(np.array([[1, 0], [0, np.exp(1j*np.pi/4)]]))
+constT = csc_matrix(np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]]))
 
 # Two-qubit gates
-constCNOT = csc_matrix(np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]))
-constCZ = csc_matrix(np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]))
+constCNOT = csc_matrix(
+    np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+)
+constCZ = csc_matrix(
+    np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]])
+)
 
 # Projection (measurement) operators
-P0 = csc_matrix(np.array([[1, 0],[0, 0]]))
-P1 = csc_matrix(np.array([[0, 0],[0, 1]]))
+P0 = csc_matrix(np.array([[1, 0], [0, 0]]))
+P1 = csc_matrix(np.array([[0, 0], [0, 1]]))
 
 # Parametrised rotations
 def RX(theta: float) -> csc_matrix:
-        return csc_matrix(expm(-1j*theta*constX/2))
-            
+    return csc_matrix(expm(-1j * theta * constX / 2))
+
+
 def RY(theta: float) -> csc_matrix:
-    return csc_matrix(expm(-1j*theta*constY/2))
+    return csc_matrix(expm(-1j * theta * constY / 2))
+
 
 def RZ(theta: float) -> csc_matrix:
-    return csc_matrix(expm(-1j*theta*constZ/2))
+    return csc_matrix(expm(-1j * theta * constZ / 2))
+
 
 def CR_Z(theta: float) -> csc_matrix:
-    return kron(P0, constI, format='csc') + kron(P1, RZ(theta), format='csc') 
+    return kron(P0, constI, format="csc") + kron(P1, RZ(theta), format="csc")
+
 
 def ZZ(theta: float) -> csc_matrix:
-    return diags([1,np.exp(-1j*theta),np.exp(-1j*theta),1],0,format='csc')
+    return diags([1, np.exp(-1j * theta), np.exp(-1j * theta), 1], 0, format="csc")
+
 
 def CPHASE(theta: float) -> csc_matrix:
-    return diags([1,1,1,np.exp(1j*theta)],0,format='csc')
-    
+    return diags([1, 1, 1, np.exp(1j * theta)], 0, format="csc")
+
 
 def _get_perm(n_qubits: int, qubits: list) -> list:
     """
@@ -72,7 +80,8 @@ def _get_perm(n_qubits: int, qubits: list) -> list:
         active qubits to the start of the register
 
     perminv:
-        the inverse permutation, taking them back to where they belong from the beginning
+        the inverse permutation, taking them back to where they belong
+        from the beginning
     """
 
     # Get modified indices of qubits to coincide with indexing from the right
@@ -88,7 +97,8 @@ def _get_perm(n_qubits: int, qubits: list) -> list:
 
 def _permute_qubits(wavefn: np.ndarray, perm: list) -> np.ndarray:
     """
-    Reorganises the wavefunction components according to the specified qubit permutation.
+    Reorganises the wavefunction components according
+    to the specified qubit permutation.
 
     Parameters
     ----------
@@ -96,7 +106,8 @@ def _permute_qubits(wavefn: np.ndarray, perm: list) -> np.ndarray:
         The current wavefunction of the register
 
     perm:
-        The permutation according to which the register is to be reorganised.
+        The permutation according to which the
+        register is to be reorganised.
 
     Returns
     -------
@@ -110,11 +121,13 @@ def _permute_qubits(wavefn: np.ndarray, perm: list) -> np.ndarray:
     return wavefn
 
 
-def _build_cost_hamiltonian(n_qubits: int,
-                            cost_hamiltonian: Type[Hamiltonian]) -> np.array:
+def _build_cost_hamiltonian(
+    n_qubits: int, cost_hamiltonian: Type[Hamiltonian]
+) -> np.array:
     """
     Builds the cost Hamiltonian as a vector, since it is diagonal.
-    Output is an ndarray of shape [2]*n_qubits, for use in the run_measure_exp_val value method.
+    Output is an ndarray of shape [2]*n_qubits,
+    for use in the `expectation_value` method.
 
     Parameters
     ----------
@@ -122,15 +135,17 @@ def _build_cost_hamiltonian(n_qubits: int,
         number of qubits
 
     cost_hamiltonian:
-        Hamiltonian object containing information about single/2-qubit terms and their weights.
+        Hamiltonian object containing information about
+        single/2-qubit terms and their weights.
 
     Returns
     -------
     ham_op:
-        the Hamiltonian as a diagonal matrix reshaped to a [2]*n_qubits dimensional array
+        the Hamiltonian as a diagonal matrix reshaped
+        to a [2]*n_qubits dimensional array
 
     """
-    
+
     bias_qubits = cost_hamiltonian.qubits_singles
     biases = cost_hamiltonian.single_qubit_coeffs
     pairs = cost_hamiltonian.qubits_pairs
@@ -138,13 +153,16 @@ def _build_cost_hamiltonian(n_qubits: int,
 
     terms = cost_hamiltonian.terms
     weights = cost_hamiltonian.coeffs
-    
+
     # Check for non-classical terms
     cost_ham_pauli_str_lst = [term.pauli_str for term in terms]
     for term in cost_ham_pauli_str_lst:
-        if str(term) != 'Z' and str(term) != 'ZZ':
-            raise Exception(f"Currently, only classical cost Hamiltonians that consists of 'Z' and 'ZZ' terms are supported, but a '{term}' term was encountered.")
-        
+        if str(term) != "Z" and str(term) != "ZZ":
+            raise Exception(
+                f"Currently, only classical cost Hamiltonians"
+                "that consists of 'Z' and 'ZZ' terms are supported,"
+                "but a '{term}' term was encountered."
+            )
 
     ## ZZ operator on first two qubits, identity on all others to the right
     # Diagonal matrix (vector) for cost function
@@ -154,7 +172,12 @@ def _build_cost_hamiltonian(n_qubits: int,
     ZZ_op.shape = [2] * n_qubits
 
     ## Z operator on first qubit, identity on all others to the right
-    Z_op = np.hstack((np.ones(2 ** (n_qubits - 1), dtype=int), -1 * np.ones(2 ** (n_qubits - 1), dtype=int)))
+    Z_op = np.hstack(
+        (
+            np.ones(2 ** (n_qubits - 1), dtype=int),
+            -1 * np.ones(2 ** (n_qubits - 1), dtype=int),
+        )
+    )
     Z_op.shape = [2] * n_qubits
 
     ham_op = np.zeros([2] * n_qubits)
@@ -174,7 +197,7 @@ def _build_cost_hamiltonian(n_qubits: int,
 
         Z_op = _permute_qubits(Z_op, perm)
 
-    #add the constant term from the hamiltonian
+    # add the constant term from the hamiltonian
     ham_op += cost_hamiltonian.constant
 
     return ham_op
@@ -182,18 +205,24 @@ def _build_cost_hamiltonian(n_qubits: int,
 
 class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
     r"""
-    A simulator class for quantum circuits, oriented to QAOA, and more generally unitaries generated by Hamiltonians which consists of sums of Pauli strings.
-    Works by translating the actions of single and two-Pauli rotation gates into permutations of wavefunction coefficients, 
+    A simulator class for quantum circuits, oriented to QAOA,
+    and more generally unitaries generated by Hamiltonians which
+    consists of sums of Pauli strings. Works by translating the actions
+    of single and two-Pauli rotation gates into permutations of wavefunction coefficients,
     obtained by slicing the (2, 2, ..., 2)-shaped wavefunction.
 
     Procedure:
 
         * Decompose rotation matrices into sum of identity and Pauli matrices with Euler's formula.
         * Compute the action of the Pauli matrices
-            * Pauli X matrix : Flip coefficients with 0 at i-th qubit with coefficients with 1 at i-th qubit
-            * Pauli Y matrx : Multiply 1j to everything. Flip coefficients with 0 at i-th qubit with coefficients with 1 at i-th qubit, and multiply -1 to coefficients with 0 at i-th qubit.
+            * Pauli X matrix : Flip coefficients with 0 at i-th qubit with
+              coefficients with 1 at i-th qubit
+            * Pauli Y matrx : Multiply 1j to everything. Flip coefficients with 0
+              at i-th qubit with coefficients with 1 at i-th qubit, and
+              multiply -1 to coefficients with 0 at i-th qubit.
             * Pauli Z matrix : multiply -1 to coefficients with 0 at i-th qubit.
-        * Obtain final wavefunction by summing up :math:`\sin(\theta/2)* \textit{original wavefunction} - 1j*\cos(\theta/2)*\textit{processed wavefunction}`.
+        * Obtain final wavefunction by summing up
+          :math:`\sin(\theta/2)* \textit{original wavefunction} - 1j*\cos(\theta/2)*\textit{processed wavefunction}`.
 
     Qubit labelling begins from the right, so that the right-most qubit has label 0,
     and the left-most has label n_qubits-1.
@@ -201,77 +230,102 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
     Parameters
     ----------
     qaoa_descriptor: QAOADescriptor
-        An object of the class ``QAOADescriptor`` which contains information on 
+        An object of the class ``QAOADescriptor`` which contains information on
         circuit construction and depth of the circuit.
     prepend_state: np.array
-        The initial state of the circuit (before Hadamards). An array of shape :math:`(2^{n_qubits},)` or (2, 2, ..., 2). Defaults to ``[1,0,...,0]`` if ``None``.
+        The initial state of the circuit (before Hadamards).
+        An array of shape :math:`(2^{n_qubits},)` or (2, 2, ..., 2).
+        Defaults to ``[1,0,...,0]`` if ``None``.
     append_state: np.array
-        A unitary matrix of shape :math:`(2^{self.n_qubits}, 2^{self.n_qubits})`, to be multiplied to the output state.
+        A unitary matrix of shape :math:`(2^{self.n_qubits}, 2^{self.n_qubits})`,
+        to be multiplied to the output state.
     init_hadamard: bool
         Whether to apply Hadamard gates to the beginning of the QAOA part of the circuit.
     cvar_alpha: float
-        Conditional Value-at-Risk (CVaR) - a measure that takes into account only the tail of the
-        probability distribution arising from the circut's count dictionary. Must be between 0 and 1. Check
-        https://arxiv.org/abs/1907.04769 for further details.
+        Conditional Value-at-Risk (CVaR) - a measure that takes into account
+        only the tail of the probability distribution arising from the circut's
+        count dictionary. Must be between 0 and 1.
+        Check https://arxiv.org/abs/1907.04769 for further details.
     """
-    def __init__(self,
-                 qaoa_descriptor: QAOADescriptor,
-                 prepend_state: Optional[Union[np.ndarray, List[complex]]],
-                 append_state: Optional[Union[np.ndarray, List[complex]]],
-                 init_hadamard: bool,
-                 cvar_alpha: float = 1):
-        
-        assert cvar_alpha == 1,  "Please use the shot-based simulator for simulations with cvar_alpha < 1"
-        
-        QAOABaseBackendStatevector.__init__(self, qaoa_descriptor,
-                                         prepend_state,
-                                         append_state,
-                                         init_hadamard,
-                                         cvar_alpha)
-        
+
+    def __init__(
+        self,
+        qaoa_descriptor: QAOADescriptor,
+        prepend_state: Optional[Union[np.ndarray, List[complex]]],
+        append_state: Optional[Union[np.ndarray, List[complex]]],
+        init_hadamard: bool,
+        cvar_alpha: float = 1,
+    ):
+
+        assert (
+            cvar_alpha == 1
+        ), "Please use the shot-based simulator for simulations with cvar_alpha < 1"
+
+        QAOABaseBackendStatevector.__init__(
+            self,
+            qaoa_descriptor,
+            prepend_state,
+            append_state,
+            init_hadamard,
+            cvar_alpha,
+        )
+
         # Build the Hamiltonian operator as an array
         self.ham_op = _build_cost_hamiltonian(self.n_qubits, self.cost_hamiltonian)
 
         if self.n_qubits > 0:
-            self.wavefn = np.zeros((2**self.n_qubits,),dtype=complex)
+            self.wavefn = np.zeros((2**self.n_qubits,), dtype=complex)
             self.wavefn[0] = 1
             self.wavefn = self.wavefn.reshape([2] * self.n_qubits)
         else:
             self.wavefn = []
-            
+
         # Handle prepend state
         if self.prepend_state is not None:
 
             if isinstance(self.prepend_state, np.ndarray):
-                
+
                 if np.shape(self.prepend_state) == np.shape(self.wavefn):
                     self.wavefn = self.prepend_state
                 elif np.shape(self.prepend_state) == (2**self.n_qubits,):
                     self.wavefn = self.prepend_state.reshape([2] * self.n_qubits)
                 else:
-                    raise ValueError('Error : Unsupported prepend_state specified. Not of shape (2**n,) or (2, 2, ..., 2)).')
+                    raise ValueError(
+                        "Error : Unsupported prepend_state specified."
+                        "Not of shape (2**n,) or (2, 2, ..., 2))."
+                    )
 
             else:
-                raise ValueError('Error : Unsupported prepend_state specified. Not an ndarray.')
-        
+                raise ValueError(
+                    "Error : Unsupported prepend_state specified. Not an ndarray."
+                )
+
         # Handle append state
         if self.append_state is not None:
-            
-            if isinstance(self.append_state, np.ndarray) and np.shape(self.append_state) == (2**self.n_qubits, 2**self.n_qubits):
-                
+
+            if isinstance(self.append_state, np.ndarray) and np.shape(
+                self.append_state
+            ) == (2**self.n_qubits, 2**self.n_qubits):
+
                 # check unitarity of append_state matrix
-                if not np.allclose(np.eye(2**self.n_qubits), self.append_state.dot(self.append_state.conj().T)):
-                    raise ValueError('append_state is not a unitary matrix')
-                    
+                if not np.allclose(
+                    np.eye(2**self.n_qubits),
+                    self.append_state.dot(self.append_state.conj().T),
+                ):
+                    raise ValueError("append_state is not a unitary matrix")
+
             else:
-                raise ValueError('Unsupported append_state specified (Not an ndarray, or not of shape (2**n, 2**n).')
-                
+                raise ValueError(
+                    "Unsupported append_state specified (Not an ndarray,"
+                    "or not of shape (2**n, 2**n)."
+                )
+
         # Handle init_hadamard
         if self.init_hadamard:
             for i in range(self.n_qubits):
                 self.apply_hadamard(i)
 
-        #store the initialisation part of wavefunction
+        # store the initialisation part of wavefunction
         self.wavefn_init = copy(self.wavefn)
 
     # Apply gate methods
@@ -302,9 +356,11 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
             None
         """
 
-        C = np.cos(rotation_angle/2)
-        S = -1j * np.sin(rotation_angle/2)
-        wfn = (C * self.wavefn) + (S * np.flip(self.wavefn, self.n_qubits - qubit_1 - 1))
+        C = np.cos(rotation_angle / 2)
+        S = -1j * np.sin(rotation_angle / 2)
+        wfn = (C * self.wavefn) + (
+            S * np.flip(self.wavefn, self.n_qubits - qubit_1 - 1)
+        )
 
         self.wavefn = wfn
 
@@ -336,19 +392,25 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         """
 
         wfn = copy(self.wavefn)
-    
+
         # multiply slices with i/-i
-        slc_0 = tuple(0 if i == self.n_qubits - qubit_1 - 1
-                       else slice(None) for i in range(self.n_qubits))
-        slc_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
-                       else slice(None) for i in range(self.n_qubits))
+        slc_0 = tuple(
+            0 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_1 = tuple(
+            1 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
         wfn[slc_0] *= -1j
         wfn[slc_1] *= 1j
 
-        C = np.cos(rotation_angle/2)
-        S = 1j * np.sin(rotation_angle/2)
-        
-        self.wavefn =  (C * self.wavefn) + (S * np.flip(wfn, self.n_qubits - qubit_1 - 1))
+        C = np.cos(rotation_angle / 2)
+        S = 1j * np.sin(rotation_angle / 2)
+
+        self.wavefn = (C * self.wavefn) + (
+            S * np.flip(wfn, self.n_qubits - qubit_1 - 1)
+        )
 
     def apply_rz(self, qubit_1: int, rotation_angle: float):
         r"""
@@ -377,13 +439,17 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
             None
         """
 
-        slc_0 = tuple(0 if i == self.n_qubits - qubit_1 - 1
-                       else slice(None) for i in range(self.n_qubits))
-        slc_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
-                       else slice(None) for i in range(self.n_qubits))
+        slc_0 = tuple(
+            0 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_1 = tuple(
+            1 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
 
-        self.wavefn[slc_0] *= np.exp(-1j * rotation_angle/2)
-        self.wavefn[slc_1] *= np.exp(1j * rotation_angle/2)
+        self.wavefn[slc_0] *= np.exp(-1j * rotation_angle / 2)
+        self.wavefn[slc_1] *= np.exp(1j * rotation_angle / 2)
 
     def apply_rxx(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         r"""
@@ -417,12 +483,18 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         -------
             None
         """
-        
-        # SH TODO : investigate if slicing 01 and 10 coefficients and swapping once them is faster than flipping twice 
-        C = np.cos(rotation_angle/2)
-        S = -1j * np.sin(rotation_angle/2)
-        
-        wfn = (C * self.wavefn) + (S * np.flip(np.flip(self.wavefn, self.n_qubits - qubit_1 - 1), self.n_qubits - qubit_2 - 1))
+
+        # SH TODO : investigate if slicing 01 and 10 coefficients and swapping once them is faster than flipping twice
+        C = np.cos(rotation_angle / 2)
+        S = -1j * np.sin(rotation_angle / 2)
+
+        wfn = (C * self.wavefn) + (
+            S
+            * np.flip(
+                np.flip(self.wavefn, self.n_qubits - qubit_1 - 1),
+                self.n_qubits - qubit_2 - 1,
+            )
+        )
         self.wavefn = wfn
 
     def apply_ryy(self, qubit_1: int, qubit_2: int, rotation_angle: float):
@@ -460,14 +532,22 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         wfn = copy(self.wavefn)
 
-        slc_q1_0 = tuple(0 if i == self.n_qubits - qubit_1 - 1
-                         else slice(None) for i in range(self.n_qubits))
-        slc_q1_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
-                         else slice(None) for i in range(self.n_qubits))
-        slc_q2_0 = tuple(0 if i == self.n_qubits - qubit_2 - 1
-                         else slice(None) for i in range(self.n_qubits))
-        slc_q2_1 = tuple(1 if i == self.n_qubits - qubit_2 - 1
-                         else slice(None) for i in range(self.n_qubits))
+        slc_q1_0 = tuple(
+            0 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_q1_1 = tuple(
+            1 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_q2_0 = tuple(
+            0 if i == self.n_qubits - qubit_2 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_q2_1 = tuple(
+            1 if i == self.n_qubits - qubit_2 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
 
         wfn[slc_q1_0] *= 1j
         wfn[slc_q1_1] *= -1j
@@ -477,8 +557,13 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         C = np.cos(rotation_angle / 2)
         S = 1j * np.sin(rotation_angle / 2)
-        
-        self.wavefn = (C * self.wavefn) + (S * np.flip(np.flip(wfn, self.n_qubits - qubit_1 - 1), self.n_qubits - qubit_2 - 1))
+
+        self.wavefn = (C * self.wavefn) + (
+            S
+            * np.flip(
+                np.flip(wfn, self.n_qubits - qubit_1 - 1), self.n_qubits - qubit_2 - 1
+            )
+        )
 
     def apply_rzz(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         r"""
@@ -511,8 +596,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         -------
             None
         """
-        
-        '''
+
+        """
         # Note : one can also slice the 01 and 10 elements:
         slc_pair01 = tuple(1 if i == self.n_qubits - qubit_1 - 1
                            else 0 if i == self.n_qubits - qubit_2 - 1
@@ -520,17 +605,32 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         slc_pair10 = tuple(1 if i == self.n_qubits - qubit_2 - 1
                            else 0 if i == self.n_qubits - qubit_1 - 1
                            else slice(None) for i in range(self.n_qubits))
-        '''
-            
-        slc_pair00 = tuple(0 if i in [self.n_qubits - qubit_1 - 1, self.n_qubits - qubit_2 - 1, ]
-                           else slice(None) for i in range(self.n_qubits))
-        slc_pair11 = tuple(1 if i in [self.n_qubits - qubit_1 - 1, self.n_qubits - qubit_2 - 1, ]
-                           else slice(None) for i in range(self.n_qubits))
-        
+        """
+
+        slc_pair00 = tuple(
+            0
+            if i
+            in [
+                self.n_qubits - qubit_1 - 1,
+                self.n_qubits - qubit_2 - 1,
+            ]
+            else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_pair11 = tuple(
+            1
+            if i
+            in [
+                self.n_qubits - qubit_1 - 1,
+                self.n_qubits - qubit_2 - 1,
+            ]
+            else slice(None)
+            for i in range(self.n_qubits)
+        )
+
         self.wavefn[slc_pair00] *= np.exp(-1j * rotation_angle)
         self.wavefn[slc_pair11] *= np.exp(-1j * rotation_angle)
-        self.wavefn *= np.exp(1j * rotation_angle/2)
-        
+        self.wavefn *= np.exp(1j * rotation_angle / 2)
 
     def apply_rxy(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         """
@@ -540,7 +640,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         ----------
         qubit_1:
             First qubit index to apply gate.
-            
+
         qubit_2:
             Second qubit index to apply gate.
 
@@ -551,20 +651,29 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         -------
             None
         """
-        
+
         wfn = copy(self.wavefn)
 
         # Action of Y part
-        slc_q2_0 = tuple(0 if i == self.n_qubits - qubit_2 - 1
-                         else slice(None) for i in range(self.n_qubits))
-        slc_q2_1 = tuple(1 if i == self.n_qubits - qubit_2 - 1
-                         else slice(None) for i in range(self.n_qubits))
+        slc_q2_0 = tuple(
+            0 if i == self.n_qubits - qubit_2 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_q2_1 = tuple(
+            1 if i == self.n_qubits - qubit_2 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
         wfn[slc_q2_0] *= -1j
         wfn[slc_q2_1] *= 1j
 
         C = np.cos(rotation_angle / 2)
         S = 1j * np.sin(rotation_angle / 2)
-        self.wavefn = (C * self.wavefn) + (S * np.flip(np.flip(wfn, self.n_qubits - qubit_1 - 1), self.n_qubits - qubit_2 - 1))
+        self.wavefn = (C * self.wavefn) + (
+            S
+            * np.flip(
+                np.flip(wfn, self.n_qubits - qubit_1 - 1), self.n_qubits - qubit_2 - 1
+            )
+        )
 
     def apply_rzx(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         """
@@ -574,7 +683,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         ----------
         qubit_1:
             First qubit index to apply gate.
-            
+
         qubit_2:
             Second qubit index to apply gate.
 
@@ -585,20 +694,26 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         -------
             None
         """
-        
+
         wfn = copy(self.wavefn)
 
         # Action of Z part
-        slc_q2_0 = tuple(0 if i == self.n_qubits - qubit_1 - 1
-                      else slice(None) for i in range(self.n_qubits))
-        slc_q2_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
-                      else slice(None) for i in range(self.n_qubits))
+        slc_q2_0 = tuple(
+            0 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_q2_1 = tuple(
+            1 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
         wfn[slc_q2_0] *= 1
         wfn[slc_q2_1] *= -1
 
         C = np.cos(rotation_angle / 2)
         S = -1j * np.sin(rotation_angle / 2)
-        self.wavefn = (C * self.wavefn) + (S * np.flip(wfn, self.n_qubits - qubit_2 - 1))
+        self.wavefn = (C * self.wavefn) + (
+            S * np.flip(wfn, self.n_qubits - qubit_2 - 1)
+        )
 
     def apply_ryz(self, qubit_1: int, qubit_2: int, rotation_angle: float):
         """
@@ -608,7 +723,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         ----------
         qubit_1:
             First qubit index to apply gate.
-            
+
         qubit_2:
             Second qubit index to apply gate.
 
@@ -619,30 +734,40 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         -------
             None
         """
-        
+
         wfn = copy(self.wavefn)
 
         # Action of Y part
-        slc_q1_0 = tuple(0 if i == self.n_qubits - qubit_1 - 1
-                         else slice(None) for i in range(self.n_qubits))
-        slc_q1_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
-                         else slice(None) for i in range(self.n_qubits))
+        slc_q1_0 = tuple(
+            0 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_q1_1 = tuple(
+            1 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
         wfn[slc_q1_0] *= -1j
         wfn[slc_q1_1] *= 1j
 
         # Action of Z part
-        slc_q2_0 = tuple(0 if i == self.n_qubits - qubit_2 - 1
-                         else slice(None) for i in range(self.n_qubits))
-        slc_q2_1 = tuple(1 if i == self.n_qubits - qubit_2 - 1
-                         else slice(None) for i in range(self.n_qubits))
+        slc_q2_0 = tuple(
+            0 if i == self.n_qubits - qubit_2 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_q2_1 = tuple(
+            1 if i == self.n_qubits - qubit_2 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
         wfn[slc_q2_0] *= 1
         wfn[slc_q2_1] *= -1
 
         C = np.cos(rotation_angle / 2)
         S = 1j * np.sin(rotation_angle / 2)
-        self.wavefn = (C * self.wavefn) + (S * np.flip(wfn, self.n_qubits - qubit_1 - 1))
-        
-    def apply_hadamard(self, qubit_1:int):
+        self.wavefn = (C * self.wavefn) + (
+            S * np.flip(wfn, self.n_qubits - qubit_1 - 1)
+        )
+
+    def apply_hadamard(self, qubit_1: int):
         """
         Applies the Hadamard gate on ``qubit_1`` in a vectorized way. Only used when ``init_hadamard`` is true.
 
@@ -659,18 +784,21 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # vectorized hadamard gate, for when init_hadamard = True
         wfn = copy(self.wavefn)
 
-        slc_0 = tuple(0 if i == self.n_qubits - qubit_1 - 1
-                       else slice(None) for i in range(self.n_qubits))
-        slc_1 = tuple(1 if i == self.n_qubits - qubit_1 - 1
-                       else slice(None) for i in range(self.n_qubits))
+        slc_0 = tuple(
+            0 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
+        slc_1 = tuple(
+            1 if i == self.n_qubits - qubit_1 - 1 else slice(None)
+            for i in range(self.n_qubits)
+        )
         wfn[slc_1] *= -1
         wfn[slc_0] += self.wavefn[slc_1]
         wfn[slc_1] += self.wavefn[slc_0]
 
-        self.wavefn = wfn/np.sqrt(2)
+        self.wavefn = wfn / np.sqrt(2)
 
-    def qaoa_circuit(self,
-                     params: Type[QAOAVariationalBaseParams]):
+    def qaoa_circuit(self, params: Type[QAOAVariationalBaseParams]):
         """
         Executes the entire QAOA circuit, with angles specified within ``params``.
         Steps:
@@ -690,33 +818,31 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
             None
         """
         # generate a job id for the wavefunction evaluation
-        self.job_id = generate_uuid() 
+        self.job_id = generate_uuid()
 
         # reset the wavefunction back to its initialisation state
         self.reset_circuit()
-        
+
         # Assign angles and apply gates
         self.assign_angles(params)
-        
+
         low_level_gate_list = []
         for each_gate in self.abstract_circuit:
-            low_level_gate_list.extend(each_gate.decomposition('trivial'))
+            low_level_gate_list.extend(each_gate.decomposition("trivial"))
 
         for each_tuple in low_level_gate_list:
             gate = each_tuple[0]()
-            gate.apply_vector_gate(*each_tuple[1],self)
+            gate.apply_vector_gate(*each_tuple[1], self)
 
         # Handle append state
         if self.append_state is not None:
-            
+
             # Flatten (2,...,2) shaped wfn into a 2**n-dim column vector before multiplying with unitary matrix, ...
             self.wavefn = np.matmul(self.append_state, self.wavefn.flatten())
             # then re-shape it back to (2,...,2)
             self.wavefn = self.wavefn.reshape([2] * self.n_qubits)
 
-                
-    def wavefunction(self,
-                     params: Type[QAOAVariationalBaseParams] = None) -> list:
+    def wavefunction(self, params: Type[QAOAVariationalBaseParams] = None) -> list:
 
         """
         Get the wavefunction of the state produced by the parametric circuit.
@@ -735,10 +861,10 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         self.qaoa_circuit(params)
 
-        self.wavefn.shape = 2 ** self.n_qubits
-        
+        self.wavefn.shape = 2**self.n_qubits
+
         self.measurement_outcomes = self.wavefn.flatten()
-        
+
         # Make format same as ProjectQ
         wf = [(component) for component in self.wavefn]
 
@@ -760,7 +886,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         # Reshape wavefunction
         wavefn_ = self.wavefn
-        
+
         self.measurement_outcomes = self.wavefn.flatten()
 
         # Compute the expectation value and its standard deviation
@@ -772,8 +898,9 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         return out
 
     @round_value
-    def expectation_w_uncertainty(self,
-                                  params: Type[QAOAVariationalBaseParams]) -> Tuple[float, float]:
+    def expectation_w_uncertainty(
+        self, params: Type[QAOAVariationalBaseParams]
+    ) -> Tuple[float, float]:
         """
         Call the execute function on the circuit to compute the
         expectation value of the ``QuantumCircuit`` w.r.t cost operator
@@ -799,7 +926,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         exp_val = np.real(np.vdot(wavefn_, ham_wf))
 
         exp_val_sq = np.real(np.vdot(ham_wf, ham_wf))
-        std_dev = (exp_val_sq - exp_val ** 2) ** 0.5
+        std_dev = (exp_val_sq - exp_val**2) ** 0.5
         out = exp_val, std_dev
 
         return out
@@ -809,10 +936,10 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         Reset the circuit by resetting the wavefunction.
         """
         self.wavefn = copy(self.wavefn_init)
-            
+
     def circuit_to_qasm(self):
         """
-        A method to convert the entire QAOA ``QuantumCircuit`` object into 
+        A method to convert the entire QAOA ``QuantumCircuit`` object into
         a OpenQASM string
         """
         raise NotImplementedError()
