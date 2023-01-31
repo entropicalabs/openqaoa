@@ -23,12 +23,3 @@ class Parameters:
 
     def asdict(self):
         return convert2serialize(dict(self))
-
-    @classmethod
-    def from_dict(cls, dictionary={}):
-
-        obj = cls()
-        for key, value in dictionary.items():
-            if hasattr(obj, key):
-                setattr(obj, key, value)
-        return obj

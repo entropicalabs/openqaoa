@@ -520,14 +520,14 @@ class Optimizer(ABC):
 
         # input parameters
         map_inputs = {
-            'backend_properties': BackendProperties,
-            'circuit_properties': CircuitProperties,
-            'classical_optimizer': ClassicalOptimizer,
-            'rqaoa_parameters': RqaoaParameters,
+            'backend_properties': obj.set_backend_properties,
+            'circuit_properties': obj.set_circuit_properties,
+            'classical_optimizer': obj.set_classical_optimizer,
+            'rqaoa_parameters': obj.set_rqaoa_parameters if algorithm == 'rqaoa' else None,
         }
         for key, value in dict['data']['input_parameters'].items():
             if key == 'device': continue
-            setattr(obj, key, map_inputs[key].from_dict(value))
+            map_inputs[key](**value)
 
         # results
         if algorithm == 'qaoa':
