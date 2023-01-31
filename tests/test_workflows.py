@@ -969,7 +969,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             q = QAOA()
             q.set_device(device)
             q.set_circuit_properties(p=1, param_type='extended', init_type='rand', mixer_hamiltonian='x')
-            q.set_backend_properties(prepend_state=None, append_state=None)
+            q.set_backend_properties(n_shots=50)
             q.set_classical_optimizer(maxiter=10, optimization_progress=True)
             q.set_exp_tags({'add_tag': 'test'})
             q.set_header(
@@ -1495,7 +1495,7 @@ class TestingRQAOA(unittest.TestCase):
             r = RQAOA()
             r.set_device(device)
             r.set_circuit_properties(p=1, param_type='extended', init_type='rand', mixer_hamiltonian='x')
-            r.set_backend_properties(prepend_state=None, append_state=None)
+            r.set_backend_properties(n_shots=50)
             r.set_classical_optimizer(maxiter=10, optimization_progress=True)
             r.set_rqaoa_parameters(rqaoa_type='adaptive', n_cutoff=3)
             r.set_exp_tags({'tag1': 'value1', 'tag2': 'value2'})            
