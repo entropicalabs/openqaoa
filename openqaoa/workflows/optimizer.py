@@ -28,6 +28,7 @@ from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa
 from openqaoa.utilities import get_mixer_hamiltonian, ground_state_hamiltonian, exp_val_hamiltonian_termwise, delete_keys_from_dict, is_valid_uuid, generate_uuid, bitstring_energy
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
+from openqaoa.optimizers.result import Result
 from openqaoa.backends import QAOABackendAnalyticalSimulator
 import openqaoa.rqaoa as rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
@@ -105,10 +106,8 @@ class Optimizer(ABC):
             "execution_time_end": None,
         }
 
-        # Initialize the experiment tags
+        # Initialize the experiment tags, the results and problem objects
         self.exp_tags = {}
-
-        # Initialize the results and problem objects
         self.problem = None
         self.results = None
 
@@ -487,6 +486,97 @@ class Optimizer(ABC):
         else:
             print('Results saved as "{}" in the folder "{}".'.format(file[len(file_path):], file_path))
 
+    @classmethod
+    def from_dict(cls, dict:dict):
+        """
+        Creates an Optimizer object from a dictionary (which is the output of the asdict method)
+
+        Parameters
+        ----------
+        dict : dict
+            A dictionary with the information of the Optimizer object.
+
+        Returns
+        -------
+        QAOA or RQAOA
+        """
+
+        # check if the class is corret
+        algorithm = dict['header']['algorithm']
+        assert algorithm.lower() == cls.__name__.lower(), f"The class {cls.__name__} does not match the algorithm ({algorithm}) of the dictionary."
+
+        # create the object
+        obj = cls()
+
+        # header
+        obj.header = dict['header'].copy()
+        obj.header.pop('metadata', None) # remove the metadata from the header 
+
+        # tags
+        obj.exp_tags = dict['data']['exp_tags'].copy()
+
+        # problem
+        obj.problem = QUBO.from_dict(dict['data']['input_problem'])
+
+        # input parameters
+        map_inputs = {
+            'backend_properties': BackendProperties,
+            'circuit_properties': CircuitProperties,
+            'classical_optimizer': ClassicalOptimizer,
+            'rqaoa_parameters': RqaoaParameters,
+        }
+        for key, value in dict['data']['input_parameters'].items():
+            if key == 'device': continue
+            setattr(obj, key, map_inputs[key].from_dict(value))
+
+        # results
+        if algorithm == 'qaoa':
+            obj.results = Result.from_dict(dict['data']['results'], cost_hamiltonian=obj.problem.hamiltonian)
+        elif algorithm == 'rqaoa':
+            obj.results = RQAOAResults.from_dict(dict['data']['results'])
+        
+        return obj
+
+    @classmethod
+    def loads(cls, string:str):
+        """
+        Creates an Optimizer object from a string (which is the output of the dumps method)
+
+        Parameters
+        ----------
+        string : str
+            A string with the information of the Optimizer object.
+
+        Returns
+        -------
+        QAOA or RQAOA
+        """
+        return cls.from_dict(json.loads(string))
+
+    @classmethod
+    def load(cls, file_name:str, file_path:str=""):
+        """
+        Creates an Optimizer object from a file (which is the output of the dump method)
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file.
+        file_path : str
+            The path of the file.
+
+        Returns
+        -------
+        QAOA or RQAOA
+        """
+        file = file_path + file_name
+        if '.gz' == file_name[-3:]:
+            with gzip.open(file, 'r') as f:
+                return cls.loads(f.read().decode('utf-8'))
+        else:
+            with open(file, 'r') as f:
+                return cls.loads(f.read())
+
 
 class QAOA(Optimizer):
     """
@@ -766,6 +856,23 @@ class QAOA(Optimizer):
 
         return serializable_dict
 
+    # @classmethod
+    # def from_dict(cls, dictionary:dict):
+    #     """
+    #     A class method to create a QAOA object from a dictionary.
+
+    #     Parameters
+    #     ----------
+    #     dictionary: dict
+    #         A dictionary containing all the values and attributes of the object that we want to return in `asdict` methods.
+
+    #     Returns
+    #     -------
+    #     QAOA object created from the dictionary.
+    #     """
+
+    #     # we call the from_dict method of the parent class
+    #     return Optimizer.from_dict(cls, dictionary)
 
 class RQAOA(Optimizer):
     """
@@ -1259,3 +1366,21 @@ class RQAOA(Optimizer):
         serializable_dict['header']['metadata']['rqaoa_n_cutoff'] = serializable_dict['data']['input_parameters']['rqaoa_parameters']['n_cutoff']
 
         return serializable_dict
+
+    # @classmethod
+    # def from_dict(cls, dictionary:dict):
+    #     """
+    #     A class method to create a RQAOA object from a dictionary.
+
+    #     Parameters
+    #     ----------
+    #     dictionary: dict
+    #         A dictionary containing all the values and attributes of the object that we want to return in `asdict` methods.
+
+    #     Returns
+    #     -------
+    #     RQAOA object created from the dictionary.
+    #     """
+
+    #     # we call the from_dict method of the parent class
+    #     return Optimizer.from_dict(cls, dictionary)

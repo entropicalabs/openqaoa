@@ -15,7 +15,7 @@
 from argparse import SUPPRESS
 from threading import local
 from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
-from openqaoa.workflows.optimizer import QAOA, RQAOA
+from openqaoa.workflows.optimizer import QAOA, RQAOA, Optimizer
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
 from openqaoa.devices import create_device,SUPPORTED_LOCAL_SIMULATORS, DeviceLocal, DevicePyquil, DeviceQiskit
@@ -25,9 +25,15 @@ QAOAVariationalFourierExtendedParams, QAOAVariationalFourierWithBiasParams)
 from openqaoa.backends.simulators.qaoa_pyquil_sim import QAOAPyQuilWavefunctionSimulatorBackend
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
+from openqaoa.basebackend import QAOABaseBackendStatevector
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
-from openqaoa.problems import MinimumVertexCover, QUBO
+from openqaoa.problems import MinimumVertexCover, QUBO, MaximumCut
 from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
+from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
+from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
+from openqaoa.problems import QUBO
+from openqaoa.optimizers.result import Result
+from openqaoa.rqaoa.rqaoa_results import RQAOAResults
 import unittest
 import networkx as nw
 import numpy as np
@@ -40,6 +46,34 @@ from qiskit.providers.aer import QasmSimulator
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']
+
+
+
+def _compare_qaoa_results(dict_old, dict_new):
+    
+    for key in dict_old.keys():
+        if key == "cost_hamiltonian":  ## CHECK WHAT DO WITH THIS
+            pass
+        elif key == "_Result__type_backend": 
+            if issubclass(dict_old[key], QAOABaseBackendStatevector):
+                assert dict_new[key] == QAOABaseBackendStatevector, "Type of backend is not correct."
+            else:
+                assert dict_new[key] == "", "Type of backend should be empty string."
+        elif key == "optimized":
+            for key2 in dict_old[key].keys():
+                if key2 == "measurement_outcomes":
+                    assert np.all(dict_old[key][key2] == dict_new[key][key2]), "Optimized params are not the same."
+                else:
+                    assert dict_old[key][key2] == dict_new[key][key2], "Optimized params are not the same."
+        elif key == "intermediate":
+            for key2 in dict_old[key].keys():
+                if key2 == "measurement_outcomes":
+                    for step in range(len(dict_old[key][key2])):
+                        assert np.all(dict_old[key][key2][step] == dict_new[key][key2][step]), "Intermediate params are not the same."
+                else:
+                    assert dict_old[key][key2] == dict_new[key][key2], "Intermediate params are not the same."
+        else:
+            assert dict_old[key] == dict_new[key], f"{key} is not the same"
 
 
 def _test_keys_in_dict(obj, expected_keys):
@@ -918,6 +952,107 @@ class TestingVanillaQAOA(unittest.TestCase):
             print(expected_keys)
         """
 
+    def test_qaoa_from_dict_and_load(self):        
+        """
+        test loading the QAOA object from a dictionary
+        methods: from_dict, load, loads
+        """
+
+        # problem
+        maxcut_qubo = MaximumCut(nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)).get_qubo_problem()
+
+        
+        # run rqaoa with different devices, and save the objcets in a list  
+        qaoas = []
+        for device in [create_device(location='local', name='qiskit.shot_simulator'), create_device(location='local', name='vectorized')]:
+
+            q = QAOA()
+            q.set_device(device)
+            q.set_circuit_properties(p=1, param_type='extended', init_type='rand', mixer_hamiltonian='x')
+            q.set_backend_properties(prepend_state=None, append_state=None)
+            q.set_classical_optimizer(maxiter=10, optimization_progress=True)
+            q.set_exp_tags({'add_tag': 'test'})
+            q.set_header(
+                project_uuid="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+                name="test", 
+                run_by="raul", 
+                provider="-", 
+                target="-", 
+                cloud="local", 
+                client="-", 
+                qubit_routing="-", 
+                error_mitigation="-", 
+                error_correction="-"
+                )
+
+            q.compile(maxcut_qubo) 
+
+            q.optimize() 
+
+            qaoas.append(q)
+        
+        # for each rqaoa object, create a new rqaoa object from dict, json string, json file, and compressed json file and compare them with the original object
+        for q in qaoas:
+
+            new_q_list = []
+
+            #get new qaoa from dict
+            new_q_list.append(QAOA.from_dict(q.asdict()))
+            #get new qaoa from json string
+            new_q_list.append(QAOA.loads(q.dumps()))
+            #get new qaoa from json file
+            q.dump("test.json", prepend_id=False)
+            new_q_list.append(QAOA.load("test.json"))
+            os.remove("test.json")    #delete file test.json
+            #get new qaoa from compressed json file
+            q.dump("test.json", prepend_id=False, compresslevel=3)
+            new_q_list.append(QAOA.load("test.json.gz"))
+            os.remove("test.json.gz")    #delete file test.json
+
+
+            for new_q in new_q_list:
+
+                # check that the new object is an QAOA object
+                assert isinstance(new_q, QAOA), "new_r is not an RQAOA object"
+
+                # check that the attributes of the new object are of the correct type
+                attributes_types = [ ("header", dict), ("exp_tags", dict), ("problem", QUBO), ("results", Result), 
+                                    ("backend_properties", BackendProperties), ("classical_optimizer", ClassicalOptimizer), ("circuit_properties", CircuitProperties) ]
+                for attribute, type_ in attributes_types:
+                    assert isinstance(getattr(new_q, attribute), type_), f"attribute {attribute} is not type {type_}"
+
+                # get the two objects (old and new) as dictionaries
+                q_asdict = q.asdict()
+                new_q_asdict = new_q.asdict()
+
+                # compare the two dictionaries
+                for key, value in q_asdict.items():
+                    if key == "header":
+                        assert value == new_q_asdict[key], "Header is not the same"
+
+                    elif key == "data":
+                        for key2, value2 in value.items():
+                            if key2 == "input_parameters": 
+                                #pop key device since it is not returned completely when using asdict/dump(s)
+                                value2.pop("device")
+                                new_q_asdict[key][key2].pop("device")
+                            if key2 == "results":
+                                _compare_qaoa_results(value2, new_q_asdict[key][key2])
+                            else:
+                                assert value2==new_q_asdict[key][key2], "{} not the same".format(key2)
+                
+                # compile and optimize the new qaoa, to check if everything is working
+                new_q.compile(maxcut_qubo)
+                new_q.optimize()
+    
+        # check that the RQAOA.from_dict method raises an error when using a QAOA dictionary
+        error = False
+        try:
+            RQAOA.from_dict(q.asdict())
+        except Exception:
+            error = True
+        assert error, "RQAOA.from_dict should raise an error when using a QAOA dictionary"
+
 
 class TestingRQAOA(unittest.TestCase):
     """
@@ -1342,6 +1477,113 @@ class TestingRQAOA(unittest.TestCase):
         # erease the files
         for file_name in file_names.values():
             os.remove(file_name)
+
+
+    def test_rqaoa_from_dict_and_load(self):
+        """
+        test loading the RQAOA object from a dictionary
+        methods: from_dict, load, loads
+        """
+
+        # problem
+        maxcut_qubo = MaximumCut(nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)).get_qubo_problem()
+
+        # run rqaoa with different devices, and save the objcets in a list
+        rqaoas = []
+        for device in [create_device(location='local', name='qiskit.shot_simulator'), create_device(location='local', name='vectorized')]:
+
+            r = RQAOA()
+            r.set_device(device)
+            r.set_circuit_properties(p=1, param_type='extended', init_type='rand', mixer_hamiltonian='x')
+            r.set_backend_properties(prepend_state=None, append_state=None)
+            r.set_classical_optimizer(maxiter=10, optimization_progress=True)
+            r.set_rqaoa_parameters(rqaoa_type='adaptive', n_cutoff=3)
+            r.set_exp_tags({'tag1': 'value1', 'tag2': 'value2'})            
+            r.set_header(
+                project_uuid="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+                name="test", 
+                run_by="raul", 
+                provider="-", 
+                target="-", 
+                cloud="local", 
+                client="-", 
+                qubit_routing="-", 
+                error_mitigation="-", 
+                error_correction="-"
+                )
+
+            r.compile(maxcut_qubo) 
+
+            r.optimize() 
+
+            rqaoas.append(r)
+
+        # for each rqaoa object, create a new rqaoa object from dict, json string, json file, and compressed json file and compare them with the original object
+        for r in rqaoas:
+
+            new_r_list = []
+
+            #get new qaoa from dict
+            new_r_list.append(RQAOA.from_dict(r.asdict()))
+            #get new qaoa from json string
+            new_r_list.append(RQAOA.loads(r.dumps()))
+            #get new qaoa from json file
+            r.dump("test.json", prepend_id=False)
+            new_r_list.append(RQAOA.load("test.json"))
+            os.remove("test.json")    #delete file test.json
+            #get new qaoa from compressed json file
+            r.dump("test.json", prepend_id=False, compresslevel=3)
+            new_r_list.append(RQAOA.load("test.json.gz"))
+            os.remove("test.json.gz")    #delete file test.json
+
+            for new_r in new_r_list:
+
+                # check that the new object is an RQAOA object
+                assert isinstance(new_r, RQAOA), "new_r is not an RQAOA object"
+
+                # check that the attributes of the new object are of the correct type
+                attributes_types = [ ("header", dict), ("exp_tags", dict), ("problem", QUBO), ("results", RQAOAResults), 
+                                    ("backend_properties", BackendProperties), ("classical_optimizer", ClassicalOptimizer), 
+                                    ("circuit_properties", CircuitProperties), ("rqaoa_parameters", RqaoaParameters) ]
+                for attribute, type_ in attributes_types:
+                    assert isinstance(getattr(new_r, attribute), type_), f"attribute {attribute} is not type {type_}"
+
+                # get the two objects (old and new) as dictionaries
+                r_asdict = r.asdict()
+                new_r_asdict = new_r.asdict()
+
+                # compare the two dictionaries
+                for key, value in r_asdict.items():
+                    if key == "header":
+                        assert value == new_r_asdict[key], "Header is not the same"
+
+                    elif key == "data":
+                        for key2, value2 in value.items():
+                            if key2 == "input_parameters": 
+                                #pop key device
+                                value2.pop("device")
+                                new_r_asdict[key][key2].pop("device")
+                            if key2 == "results":
+                                for step in range(len(value2['intermediate_steps'])):
+                                    for key3 in value2['intermediate_steps'][step].keys():
+                                        if key3 == "qaoa_results":
+                                            _compare_qaoa_results(value2['intermediate_steps'][step]['qaoa_results'], new_r_asdict[key][key2]['intermediate_steps'][step]['qaoa_results'])
+                                        else:
+                                            assert value2['intermediate_steps'][step][key3] == new_r_asdict[key][key2]['intermediate_steps'][step][key3], f"{key3} is not the same"
+                            else:
+                                assert value2==new_r_asdict[key][key2], "{} not the same".format(key2)
+                
+                # compile and optimize the new rqaoa, to check if everything is working
+                new_r.compile(maxcut_qubo)
+                new_r.optimize()
+
+        # check that the Optimizer.from_dict method raises an error when using a RQAOA dictionary
+        error = False
+        try:
+            Optimizer.from_dict(r.asdict())
+        except Exception:
+            error = True
+        assert error, "Optimizer.from_dict should raise an error when using a RQAOA dictionary"
 
 
 if __name__ == '__main__':
