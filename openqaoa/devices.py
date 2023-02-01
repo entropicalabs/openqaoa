@@ -381,11 +381,13 @@ class DeviceAWS(DeviceBase):
         qpu and provider is established.
     """
     
-    def __init__(self, device_name: str, s3_bucket_name: str = None, 
+    def __init__(self, 
+                 device_name: str, 
+                 s3_bucket_name: str = None, 
                  aws_region: str = None, 
-                 folder_name: str = 'openqaoa'):
-        
-        """Input the device arn and the name of the folder in which all the
+                 folder_name: str = 'openqaoa'):       
+        """
+        Input the device arn and the name of the folder in which all the
         results for the QPU runs would be saved on the pre-defined s3 bucket. 
         Note that the user is required to authenticate through the AWS CLI 
         before being able to use this Device object.
@@ -394,14 +396,14 @@ class DeviceAWS(DeviceBase):
 
         Parameters
         ----------
-		device_name: `str`
-			The ARN string of the braket QPU/simulator to be used
-        s3_bucket_name: `str`
+          device_name: `str`
+            The ARN string of the braket QPU/simulator to be used
+          s3_bucket_name: `str`
             The name of S3 Bucket where the Braket run results will be saved.
-        aws_region: `str`
+          aws_region: `str`
             The aws region in which the QPU/simulator is located. Defaults to the
             region set in aws cli config.
-        folder_name: `str`
+          folder_name: `str`
             The name of the folder in the s3 bucket that will contain the results
             from the tasks performed in this run.
         """

@@ -95,6 +95,7 @@ class RQAOAResults(dict):
         
         return results
 
+
     def get_solution(self):
         """
         Returns the solution of the optimization.

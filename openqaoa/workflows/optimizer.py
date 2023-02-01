@@ -32,6 +32,7 @@ from openqaoa.optimizers.result import Result
 from openqaoa.backends import QAOABackendAnalyticalSimulator
 import openqaoa.rqaoa as rqaoa
 from openqaoa.rqaoa.rqaoa_results import RQAOAResults
+from openqaoa.optimizers.result import Result
 
 
 class Optimizer(ABC):
@@ -332,24 +333,23 @@ class Optimizer(ABC):
             If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
             Default is True.
         """
-
         # create the final data dictionary
-        data = {}
-        data['exp_tags'] = self.exp_tags.copy()
-        data['input_problem'] = dict(self.problem) if self.problem is not None else None
-        data['input_parameters'] = {
-                                    'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
-                                    'backend_properties': dict(self.backend_properties),
-                                    'classical_optimizer': dict(self.classical_optimizer),
-                                    }
+        #data = {}
+        #data['exp_tags'] = self.exp_tags.copy()
+        #data['input_problem'] = dict(self.problem) if self.problem is not None else None
+        #data['input_parameters'] = {
+        #                            'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
+        #                            'backend_properties': dict(self.backend_properties),
+        #                            'classical_optimizer': dict(self.classical_optimizer),
+        #                            }
         # change the parameters that aren't serializable to strings 
-        for item in ['noise_model' , 'append_state', 'prepend_state']:
-            if data['input_parameters']['backend_properties'][item] is not None:                                                                     
-                data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
+        #for item in ['noise_model' , 'append_state', 'prepend_state']:
+        #    if data['input_parameters']['backend_properties'][item] is not None:                                                                     
+        #        data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
         # add the results only if they are not empty
         data['results'] = self.results.asdict(False, complex_to_string, intermediate_mesurements) if not self.results in [None, {}] else None
-
+        
         # create the final header dictionary
         header = self.header.copy()
         header['metadata'] = {
@@ -664,6 +664,7 @@ class QAOA(Optimizer):
         """
         super().__init__(device)
         self.circuit_properties = CircuitProperties()
+        self.algorithm = 'qaoa'
 
         # change header algorithm to qaoa
         self.header["algorithm"] = "qaoa"
@@ -960,9 +961,7 @@ class RQAOA(Optimizer):
         super().__init__(device)  # use the parent class to initialize
         self.circuit_properties = CircuitProperties()
         self.rqaoa_parameters = RqaoaParameters()
-
-        # varaible that will store results object (when optimize is called)
-        self.results = RQAOAResults()
+        self.algorithm = 'rqaoa'
 
         # change algorithm name to rqaoa
         self.header["algorithm"] = "rqaoa"
@@ -1250,7 +1249,8 @@ class RQAOA(Optimizer):
         # timestamp for the end of the optimization
         self.header["execution_time_end"] = int(time.time())
 
-        # Compute description dictionary containing all the information            
+        # Compute description dictionary containing all the information
+        self.results = RQAOAResults()             
         self.results['solution'] = full_solutions
         self.results['classical_output'] = {'minimum_energy': cl_energy, 'optimal_states': cl_ground_states}
         self.results['elimination_rules'] = elimination_tracker

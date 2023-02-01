@@ -1158,7 +1158,6 @@ class TestingRQAOA(unittest.TestCase):
             exception = True
         
         assert exception, 'RQAOA should not be able to optimize without compilation'
-
         
         r.compile(problem)        
         r.optimize()

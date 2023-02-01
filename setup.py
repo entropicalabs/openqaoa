@@ -46,7 +46,8 @@ requirements_test = [
     "nbconvert>=6.5.1",
     "pandas>=1.4.3",
     "plotly>=5.9.0",
-    "cplex>=22.1.0.0"
+    "cplex>=22.1.0.0",
+    "ipykernel>6.0.0"
 ]
 
 setup(

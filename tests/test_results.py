@@ -368,7 +368,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         """
         Test the plot_corr_matrix method for the RQAOAResult class
         """
-
         # run the RQAOA
         results = self.__run_rqaoa()
 
