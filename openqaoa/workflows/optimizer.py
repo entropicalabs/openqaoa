@@ -863,23 +863,6 @@ class QAOA(Optimizer):
 
         return serializable_dict
 
-    # @classmethod
-    # def from_dict(cls, dictionary:dict):
-    #     """
-    #     A class method to create a QAOA object from a dictionary.
-
-    #     Parameters
-    #     ----------
-    #     dictionary: dict
-    #         A dictionary containing all the values and attributes of the object that we want to return in `asdict` methods.
-
-    #     Returns
-    #     -------
-    #     QAOA object created from the dictionary.
-    #     """
-
-    #     # we call the from_dict method of the parent class
-    #     return Optimizer.from_dict(cls, dictionary)
 
 class RQAOA(Optimizer):
     """
@@ -1373,21 +1356,3 @@ class RQAOA(Optimizer):
         serializable_dict['header']['metadata']['rqaoa_n_cutoff'] = serializable_dict['data']['input_parameters']['rqaoa_parameters']['n_cutoff']
 
         return serializable_dict
-
-    # @classmethod
-    # def from_dict(cls, dictionary:dict):
-    #     """
-    #     A class method to create a RQAOA object from a dictionary.
-
-    #     Parameters
-    #     ----------
-    #     dictionary: dict
-    #         A dictionary containing all the values and attributes of the object that we want to return in `asdict` methods.
-
-    #     Returns
-    #     -------
-    #     RQAOA object created from the dictionary.
-    #     """
-
-    #     # we call the from_dict method of the parent class
-    #     return Optimizer.from_dict(cls, dictionary)

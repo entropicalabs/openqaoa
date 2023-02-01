@@ -116,9 +116,6 @@ class Result:
         if log.n_shots.history != []:
             self.n_shots = log.n_shots.history
 
-    def x(self):
-        print(self.__type_backend)
-
 
     def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, intermediate_mesurements:bool=True, exclude_keys:List[str]=[]):
         """
