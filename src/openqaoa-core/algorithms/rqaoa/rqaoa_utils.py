@@ -401,8 +401,8 @@ def redefine_problem(problem: QUBO, spin_map: dict):
 
     # Define new QUBO problem as a dictionary
     old_register = set([spin for term in problem.terms for spin in term])
+    new_problem_dict = {}
 
-    
     # get a set of all the spins to be eliminated
     eliminated_spins = set()
     for spin in spin_map.keys():
@@ -501,16 +501,14 @@ def redefine_problem(problem: QUBO, spin_map: dict):
     )
 
     # Check for isolated nodes after constructing the new problem
-
+    there_is_isolated_nodes = False
+    
     # If lengths do not match, there are isolated nodes
-    if len(new_register) != len(
-        new_quadratic_register
-    ):  
+    if len(new_register) != len(new_quadratic_register):
         isolated_nodes = new_register.difference(new_quadratic_register)
+        there_is_isolated_nodes = True
     # If too few eliminations, there are isolated nodes; only important for bias-free problems.
-    elif (
-        old_register - new_register != eliminated_spins
-    ):  
+    elif old_register - new_register != eliminated_spins:
         isolated_nodes = old_register.difference(new_register)
         there_is_isolated_nodes = True
 
@@ -548,7 +546,7 @@ def final_solution(
     elimination_tracker: list, cl_states: list, hamiltonian: Hamiltonian
 ):
     """
-    Constructs the final solution to the problem by obtaining the final states 
+    Constructs the final solution to the problem by obtaining the final states
     from adding the removed spins into the classical results and
     computing the corresponding energy.
 
@@ -592,11 +590,10 @@ def final_solution(
             for term_stat in terms_and_stats:
 
                 if "singlet" in term_stat:
-                if 'singlet' in term_stat:
 
                     (i,) = term_stat["singlet"]
                     val = term_stat["bias"]
-                    val = term_stat['bias']
+                    val = term_stat["bias"]
 
                     # Basis change
                     binary_val = int((1 - val) / 2)
@@ -609,7 +606,7 @@ def final_solution(
 
                     i, j = term_stat["pair"]
                     val = term_stat["correlation"]
-                    val = term_stat['correlation']
+                    val = term_stat["correlation"]
 
                     # Insert new value in position j according to correlation with i
                     prev_corr = state[i]

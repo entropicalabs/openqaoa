@@ -615,8 +615,7 @@ def ground_state_hamiltonian(
     # If number of qubits is too high warn the user
     if bounded and n_qubits > 25:
         raise ValueError(
-            "The number of qubits is too high, computation could take a long time.
-            If still want to proceed set argument `bounded` to False"
+            "The number of qubits is too high, computation could take a long time. If still want to proceed set argument `bounded` to False"
         )
 
     # Generate qubit register
