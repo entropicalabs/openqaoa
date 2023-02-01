@@ -22,9 +22,8 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.devices import DevicePyquil
 from openqaoa.backends import QAOAPyQuilQPUBackend
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
-from openqaoa.problems.problem import NumberPartition
+from openqaoa.problems import NumberPartition, QUBO
 from openqaoa.workflows.optimizer import QAOA
-from openqaoa.problems.problem import QUBO
 from openqaoa.devices import create_device
 import pytest
 

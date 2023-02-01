@@ -15,7 +15,7 @@
 # General Imports
 from ...basebackend import QAOABaseBackendParametric, QAOABaseBackendShotBased, QAOABaseBackendStatevector
 from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBaseParams
-from ...utilities import flip_counts, generate_uuid
+from ...utilities import flip_counts, generate_uuid, round_value
 from ...cost_function import cost_function
 from ...qaoa_parameters.gatemap import (RXGateMap, RYGateMap, RZGateMap, RXXGateMap,
                                           RYYGateMap, RZZGateMap, RZXGateMap)
@@ -161,13 +161,16 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
 
         return parametric_circuit
 
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Returns the counts of the final QAOA circuit after binding angles from variational parameters.
 
         Parameters
         ----------
         params: `QAOAVariationalBaseParams`
+            The QAOA parameters - an object of one of the parameter classes, containing variable parameters.
+        n_shots: `int`
+            The number of times to run the circuit. If None, n_shots is set to the default: self.n_shots
         
         Returns
         -------
@@ -177,8 +180,11 @@ class QAOAQiskitBackendShotBasedSimulator(QAOABaseBackendShotBased, QAOABaseBack
         # generate a job id for the wavefunction evaluation
         self.job_id = generate_uuid()
 
+        # set the number of shots, if not specified take the default
+        n_shots = self.n_shots if n_shots == None else n_shots 
+
         qaoa_circuit = self.qaoa_circuit(params)
-        counts = self.backend_simulator.run(qaoa_circuit, shots=self.n_shots).result().get_counts()
+        counts = self.backend_simulator.run(qaoa_circuit, shots=n_shots).result().get_counts()
         flipped_counts = flip_counts(counts)
         self.measurement_outcomes = flipped_counts
         return flipped_counts
@@ -355,6 +361,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
         self.measurement_outcomes = wf
         return wf
 
+    @round_value
     def expectation(self,
                     params: QAOAVariationalBaseParams) -> float:
         """
@@ -377,6 +384,7 @@ class QAOAQiskitBackendStatevecSimulator(QAOABaseBackendStatevector, QAOABaseBac
         cost = np.real(output_wf.expectation_value(self.qiskit_cost_hamil))
         return cost
 
+    @round_value
     def expectation_w_uncertainty(self, 
                                   params: QAOAVariationalBaseParams) -> Tuple[float, float]:
         """

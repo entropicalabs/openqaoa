@@ -24,7 +24,7 @@ from openqaoa.qaoa_parameters.standardparams import QAOAVariationalStandardParam
 from openqaoa.devices import DeviceAWS
 from openqaoa.backends.qpus.qaoa_braket_qpu import QAOAAWSQPUBackend
 from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa.problems.problem import NumberPartition
+from openqaoa.problems import NumberPartition
 
 
 class TestingQAOABraketQPUBackend(unittest.TestCase):

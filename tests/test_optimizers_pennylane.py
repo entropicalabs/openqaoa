@@ -9,7 +9,6 @@ import inspect
 
 from openqaoa.workflows.optimizer import QAOA
 from openqaoa.devices import create_device
-from openqaoa.problems.problem import MinimumVertexCover
 from openqaoa.optimizers.training_vqa import PennyLaneOptimizer
 from openqaoa.optimizers.pennylane.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS
 from openqaoa.derivative_functions import derivative
@@ -19,7 +18,7 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers import get_optimizer
 from openqaoa.qfim import qfim as Qfim
-from openqaoa.problems.problem import QUBO
+from openqaoa.problems import QUBO, MinimumVertexCover
 
 
 #list of optimizers to test, pennylane optimizers
@@ -126,19 +125,14 @@ class TestPennylaneOptimizers(unittest.TestCase):
     def _pennylane_step(self, params_array, cost, optimizer, method, jac, qfim):
         " helper function to run a setp of the pennylane optimizer"
         params_array = pl.numpy.array(params_array, requires_grad=True)
-        if method in ['natural_grad_descent']: 
-            x, y = optimizer.step_and_cost(cost, params_array, grad_fn=jac, metric_tensor_fn=qfim) 
-        if method in ['adagrad', 'adam', 'vgd', 'momentum', 'nesterov_momentum', 'rmsprop']:
+        if method in ['pennylane_adagrad', 'pennylane_adam', 'pennylane_vgd', 'pennylane_momentum', 'pennylane_nesterov_momentum', 'pennylane_rmsprop']:
             x, y = optimizer.step_and_cost(cost, params_array, grad_fn=jac)
-        if method in ['rotosolve']: 
+        if method in ['pennylane_rotosolve']: 
             x, y = optimizer.step_and_cost(
-                                                    cost, params_array,
-                                                    nums_frequency={'params': {(i,):1 for i in range(params_array.size)}},
-                                                    # spectra=spectra,
-                                                    # shifts=shifts,
-                                                    # full_output=False,
-                                                )
-        if method in ['spsa']:       
+                                            cost, params_array,
+                                            nums_frequency={'params': {(i,):1 for i in range(params_array.size)}},
+                                           )
+        if method in ['pennylane_spsa']:       
             x, y = optimizer.step_and_cost(cost, params_array)
 
         return x, y
@@ -170,7 +164,7 @@ class TestPennylaneOptimizers(unittest.TestCase):
         i = 0
         for method in list_optimizers:
         
-            pennylane_method = method.replace('pennylane_', '')
+            pennylane_method = method
 
             # copy the parameters
             x0 = copy.deepcopy(variate_params.raw().copy())
@@ -183,7 +177,7 @@ class TestPennylaneOptimizers(unittest.TestCase):
 
             # formatting the data
             y_opt = vector_optimizer.qaoa_result.intermediate['cost'][1:4]
-            if pennylane_method in ['rotosolve']: y_opt = vector_optimizer.qaoa_result.intermediate['cost'][4:40:12]
+            if pennylane_method in ['pennylane_rotosolve']: y_opt = vector_optimizer.qaoa_result.intermediate['cost'][4:40:12]
 
             # get optimizer to try
             optimizer = AVAILABLE_OPTIMIZERS[pennylane_method]
@@ -212,7 +206,7 @@ class TestPennylaneOptimizers(unittest.TestCase):
             y = [y1, y2, y3]
 
             # check that the results are ok
-            if pennylane_method in ['spsa']: 
+            if pennylane_method in ['pennylane_spsa']: 
                 assert np.sum(np.abs(np.array(y)) >= 0) == 3
             else:
                 for yi, y_opt_i in zip(y, y_opt):

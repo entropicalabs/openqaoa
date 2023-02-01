@@ -11,7 +11,9 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+
 from typing import Tuple
+
 import numpy as np
 from pyquil import Program, gates
 from pyquil.api import WavefunctionSimulator
@@ -21,7 +23,7 @@ from ...qaoa_parameters.baseparams import QAOACircuitParams, QAOAVariationalBase
 from ...qaoa_parameters.gatemap import (
     RXGateMap, RYGateMap, RZGateMap)
 from ...cost_function import cost_function
-from ...utilities import generate_uuid
+from ...utilities import generate_uuid, round_value
 
 
 class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
@@ -111,6 +113,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         self.measurement_outcomes = wf.amplitudes
         return wf
 
+    @round_value
     def expectation(self, params: QAOAVariationalBaseParams) -> float:
         """
         Compute the expectation value w.r.t the Cost Hamiltonian
@@ -131,6 +134,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
             prob_dict, self.circuit_params.cost_hamiltonian, self.cvar_alpha)
         return cost
 
+    @round_value
     def expectation_w_uncertainty(self,
                                   params: QAOAVariationalBaseParams) -> Tuple[float, float]:
         """

@@ -1,8 +1,9 @@
 from typing import Union, List, Tuple
 from abc import ABC, abstractmethod
+from copy import deepcopy
+
 import numpy as np
 import networkx as nx
-from copy import deepcopy
     
 class UpdateMethod(ABC):
     

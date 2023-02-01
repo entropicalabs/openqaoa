@@ -22,7 +22,12 @@ requirements = [
     "docplex>=2.23.1",
     "autograd>=1.4",
     "semantic_version>=2.10",
-    "autoray>=0.3.1"
+    "autoray>=0.3.1",
+    "azure-quantum",
+    "qdk",
+    "qiskit-qir",
+    "qiskit-ionq",
+    "azure-quantum[qiskit]"    
 ]
 
 requirements_docs = [
