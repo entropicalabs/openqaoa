@@ -536,7 +536,11 @@ class Optimizer(ABC):
                 obj.results = Result.from_dict(dictionary['data']['results'], cost_hamiltonian=obj.problem.hamiltonian)
             elif algorithm == 'rqaoa':
                 obj.results = RQAOAResults.from_dict(dictionary['data']['results'])
-            obj.results = RQAOAResults.from_dict(dict['data']['results'])
+
+        # print a message when the object is loaded
+        print(f"Loaded {cls.__name__} object.")
+        print("The device has to be set manually using the set_device method.")
+        print(f"Name of the device used was: {dictionary['data']['input_parameters']['device']}")
         
         return obj
 
