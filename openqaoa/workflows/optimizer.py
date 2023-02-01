@@ -332,11 +332,11 @@ class Optimizer(ABC):
             If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
             Default is True.
         """
-        
+
         # create the final data dictionary
         data = {}
         data['exp_tags'] = self.exp_tags.copy()
-        data['input_problem'] = dict(self.problem)
+        data['input_problem'] = dict(self.problem) if self.problem is not None else None
         data['input_parameters'] = {
                                     'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
                                     'backend_properties': dict(self.backend_properties),
@@ -347,14 +347,15 @@ class Optimizer(ABC):
             if data['input_parameters']['backend_properties'][item] is not None:                                                                     
                 data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
-        data['results'] = self.results.asdict(False, complex_to_string, intermediate_mesurements)
+        # add the results only if they are not empty
+        data['results'] = self.results.asdict(False, complex_to_string, intermediate_mesurements) if not self.results in [None, {}] else None
 
         # create the final header dictionary
         header = self.header.copy()
         header['metadata'] = {
             **self.exp_tags.copy(),
-            **{'problem_type': data['input_problem']['problem_instance']['problem_type']},
-            **data['input_problem']['metadata'].copy(),
+            **({'problem_type': data['input_problem']['problem_instance']['problem_type'] } if data['input_problem'] is not None else {}),
+            **(data['input_problem']['metadata'].copy() if data['input_problem'] is not None else {}),
             **{'n_shots': data['input_parameters']['backend_properties']['n_shots'] },
             **{prepend+key: data['input_parameters']['classical_optimizer'][key] 
                                     for prepend, key in zip(['optimizer_', "", ""], ['method', 'jac', 'hess']) 
@@ -487,13 +488,13 @@ class Optimizer(ABC):
             print('Results saved as "{}" in the folder "{}".'.format(file[len(file_path):], file_path))
 
     @classmethod
-    def from_dict(cls, dict:dict):
+    def from_dict(cls, dictionary:dict):
         """
         Creates an Optimizer object from a dictionary (which is the output of the asdict method)
 
         Parameters
         ----------
-        dict : dict
+        dictionary : dict
             A dictionary with the information of the Optimizer object.
 
         Returns
@@ -502,21 +503,21 @@ class Optimizer(ABC):
         """
 
         # check if the class is corret
-        algorithm = dict['header']['algorithm']
+        algorithm = dictionary['header']['algorithm']
         assert algorithm.lower() == cls.__name__.lower(), f"The class {cls.__name__} does not match the algorithm ({algorithm}) of the dictionary."
 
         # create the object
         obj = cls()
 
         # header
-        obj.header = dict['header'].copy()
+        obj.header = dictionary['header'].copy()
         obj.header.pop('metadata', None) # remove the metadata from the header 
 
         # tags
-        obj.exp_tags = dict['data']['exp_tags'].copy()
+        obj.exp_tags = dictionary['data']['exp_tags'].copy()
 
         # problem
-        obj.problem = QUBO.from_dict(dict['data']['input_problem'])
+        obj.problem = QUBO.from_dict(dictionary['data']['input_problem']) if dictionary['data']['input_problem'] is not None else None
 
         # input parameters
         map_inputs = {
@@ -525,14 +526,16 @@ class Optimizer(ABC):
             'classical_optimizer': obj.set_classical_optimizer,
             'rqaoa_parameters': obj.set_rqaoa_parameters if algorithm == 'rqaoa' else None,
         }
-        for key, value in dict['data']['input_parameters'].items():
+        for key, value in dictionary['data']['input_parameters'].items():
             if key == 'device': continue
             map_inputs[key](**value)
 
         # results
-        if algorithm == 'qaoa':
-            obj.results = Result.from_dict(dict['data']['results'], cost_hamiltonian=obj.problem.hamiltonian)
-        elif algorithm == 'rqaoa':
+        if dictionary['data']['results'] != None:
+            if algorithm == 'qaoa':
+                obj.results = Result.from_dict(dictionary['data']['results'], cost_hamiltonian=obj.problem.hamiltonian)
+            elif algorithm == 'rqaoa':
+                obj.results = RQAOAResults.from_dict(dictionary['data']['results'])
             obj.results = RQAOAResults.from_dict(dict['data']['results'])
         
         return obj

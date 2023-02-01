@@ -985,8 +985,14 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error_correction="-"
                 )
 
-            q.compile(maxcut_qubo) 
+            # test that you can convert the rqaoa object to a dictionary and then load it before optimization
+            _ = QAOA.from_dict(q.asdict())
+            _.compile(maxcut_qubo)
+            _.optimize()
+            assert isinstance(_, QAOA), 'The object loaded from a dictionary is not an RQAOA object.'
 
+            # compile and optimize the original rqaoa object
+            q.compile(maxcut_qubo) 
             q.optimize() 
 
             qaoas.append(q)
@@ -1510,10 +1516,16 @@ class TestingRQAOA(unittest.TestCase):
                 qubit_routing="-", 
                 error_mitigation="-", 
                 error_correction="-"
-                )
+            )
 
+            # test that you can convert the rqaoa object to a dictionary and then load it before optimization
+            _ = RQAOA.from_dict(r.asdict())
+            _.compile(maxcut_qubo)
+            _.optimize()
+            assert isinstance(_, RQAOA), 'The object loaded from a dictionary is not an RQAOA object.'
+
+            # compile and optimize the original rqaoa object
             r.compile(maxcut_qubo) 
-
             r.optimize() 
 
             rqaoas.append(r)
