@@ -13,11 +13,11 @@
 #   limitations under the License.
 
 import os
-import json
 
 from openqaoa.devices import DeviceAWS
 from openqaoa.workflows.optimizer import Optimizer, QAOA, RQAOA
-from openqaoa.problems.problem import QUBO
+from openqaoa.devices import create_device
+from openqaoa.problems.helper_functions import create_problem_from_dict
 
 
 class AWSJobs(Optimizer):
@@ -70,7 +70,7 @@ class AWSJobs(Optimizer):
         self.algorithm = algorithm.lower()
         self.completed = False
 
-    def load_input_data(self):
+    def load_compile_data(self):
         """
         A helper method to load the parameters.
 
@@ -78,65 +78,29 @@ class AWSJobs(Optimizer):
             Note tha this function is executed within the AWS job-docker
         """
 
-        path = os.path.join(self.input_dir, "input_data", "openqaoa_params.json")
+        path = os.path.join(self.input_dir, "input_data/")
 
-        with open(path, "r") as f:
-            input_data = json.load(f)
-
-        self.input_data = input_data
-
-    def extract_qubo(self):
-        """
-        A helper method to load the parameters.
-
-        .. note::
-            Note tha this function is executed within the AWS job-docker
-        """
-        self.qubo = QUBO.from_dict(self.input_data["qubo"])
-
-    def aws_jobs_load_workflow(self):
-        """
-        Given a input directory and a file name loads the json representing the QAOA workflow and returns a
-        valid OpenQAOA workflow
-
-        .. note::
-            Note tha this function is executed within the AWS job-docker
-        """
 
         if "qaoa" == self.algorithm.lower():
             workflow = QAOA()
         elif "rqaoa" == self.algorithm.lower():
             workflow = RQAOA()
-            workflow.set_rqaoa_parameters(**self.input_data['data']['input_parameters']["rqaoa_parameters"])
         else:
             raise ValueError(
                 f"Specified algorithm {self.algorithm} is not supported. Please choose between [QAOA, RQAOA]"
             )
 
-        workflow.set_circuit_properties(**self.input_data['data']['input_parameters']["circuit_properties"])
-        workflow.set_classical_optimizer(**self.input_data['data']['input_parameters']["classical_optimizer"])
-        workflow.set_backend_properties(**self.input_data['data']['input_parameters']["backend_properties"])
+        self.workflow = workflow.load(file_name='openqaoa_params.json', file_path=path)
 
-        self.qubo = QUBO.from_dict(self.input_data['data']['input_problem'])
+        #Extract the original uuid
+        self.atomic_uuid = self.workflow.asdict()['header']['atomic_uuid']
+        self.workflow.set_device(create_device('aws', self.device_arn))
 
-        workflow.compile(self.qubo)
+        self.problem = create_problem_from_dict(self.workflow.asdict()['data']['input_problem']['problem_instance'])
+        self.workflow.compile(self.problem.get_qubo_problem())
 
-        # Set the braket device
-        workflow.set_device(self.device)
-        self.workflow = workflow
+        self.workflow.header['atomic_uuid'] = self.atomic_uuid
 
-    def set_up(self):
-        """
-        The role of this function is to unpack all the raw data incoming from the aws job
-        and create the desired workflow
-
-        .. note::
-            Note tha this function is executed within the AWS job-docker
-        """
-
-        # self.extract_qubo()
-        self.aws_jobs_load_workflow()
-        self.set_device(self.device)
 
     def run_workflow(self):
         """
@@ -146,12 +110,10 @@ class AWSJobs(Optimizer):
             Note tha this function is executed within the AWS job-docker
         """
 
-        # Run the Workflow hybrid loop
-        self.workflow.compile(self.qubo)
         try:
             self.workflow.optimize()
             self.completed = True
             print("Job completed!!!!")
         except Exception as e:
-            print("An Exception has occured when to run the workflow: {}".format(e))
+            print("An Exception has occurred when to run the workflow: {}".format(e))
             return False

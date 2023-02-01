@@ -335,21 +335,22 @@ class Optimizer(ABC):
             Default is True.
         """
         # create the final data dictionary
-        #data = {}
-        #data['exp_tags'] = self.exp_tags.copy()
-        #data['input_problem'] = dict(self.problem) if self.problem is not None else None
-        #data['input_parameters'] = {
-        #                            'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
-        #                            'backend_properties': dict(self.backend_properties),
-        #                            'classical_optimizer': dict(self.classical_optimizer),
-        #                            }
+        data = {}
+        data['exp_tags'] = self.exp_tags.copy()
+        data['input_problem'] = dict(self.problem) if self.problem is not None else None
+        data['input_parameters'] = {
+                                   'device': {'device_location': self.device.device_location, 'device_name': self.device.device_name},
+                                   'backend_properties': dict(self.backend_properties),
+                                   'classical_optimizer': dict(self.classical_optimizer),
+                                   }
         # change the parameters that aren't serializable to strings 
-        #for item in ['noise_model' , 'append_state', 'prepend_state']:
-        #    if data['input_parameters']['backend_properties'][item] is not None:                                                                     
-        #        data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
+        for item in ['noise_model' , 'append_state', 'prepend_state']:
+           if data['input_parameters']['backend_properties'][item] is not None:                                                                     
+               data['input_parameters']['backend_properties'][item] = str(data['input_parameters']['backend_properties'][item]) 
         
         # add the results only if they are not empty
-        data['results'] = self.results.asdict(False, complex_to_string, intermediate_mesurements) if not self.results in [None, {}] else None
+        if not self.results is None:
+            data['results'] = self.results.asdict(False, complex_to_string, intermediate_mesurements) if not self.results in [None, {}] else None
         
         # create the final header dictionary
         header = self.header.copy()
@@ -503,7 +504,7 @@ class Optimizer(ABC):
         QAOA or RQAOA
         """
 
-        # check if the class is corret
+        # check if the class is correct
         algorithm = dictionary['header']['algorithm']
         assert algorithm.lower() == cls.__name__.lower(), f"The class {cls.__name__} does not match the algorithm ({algorithm}) of the dictionary."
 
@@ -532,7 +533,7 @@ class Optimizer(ABC):
             map_inputs[key](**value)
 
         # results
-        if dictionary['data']['results'] != None:
+        if 'results' in dictionary['data'].keys():
             if algorithm == 'qaoa':
                 obj.results = Result.from_dict(dictionary['data']['results'], cost_hamiltonian=obj.problem.hamiltonian)
             elif algorithm == 'rqaoa':

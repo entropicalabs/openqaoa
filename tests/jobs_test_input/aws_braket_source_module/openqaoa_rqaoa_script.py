@@ -9,8 +9,7 @@ def main():
     """
 
     job = AWSJobs(algorithm="RQAOA")
-    job.load_input_data()
-    job.set_up()
+    job.load_compile_data()
     job.run_workflow()
 
     save_job_result({"result": job.workflow.asdict()})
