@@ -27,7 +27,7 @@ from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBa
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.basebackend import QAOABaseBackendStatevector
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
-from openqaoa.problems import MinimumVertexCover, QUBO, MaximumCut
+from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
 from openqaoa.workflows.parameters.qaoa_parameters import CircuitProperties, BackendProperties, ClassicalOptimizer
 from openqaoa.workflows.parameters.rqaoa_parameters import RqaoaParameters
