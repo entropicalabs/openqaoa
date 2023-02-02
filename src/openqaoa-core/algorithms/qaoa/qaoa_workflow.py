@@ -1,5 +1,6 @@
 import time
 
+# from ...algorithms import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
 from ...backends.devices_core import DeviceLocal
@@ -11,7 +12,7 @@ from ...qaoa_components import (
     create_qaoa_variational_params,
 )
 from ...utilities import get_mixer_hamiltonian
-from ...optimizers.qaoa_optimizer import get_optimizer
+from ...optimizers.qaoa_optimizer import get_optimizer, QAOAResult
 
 
 class QAOA(Workflow):
@@ -96,6 +97,8 @@ class QAOA(Workflow):
     >>> q_custom.compile(qubo_problem)
     >>> q_custom.optimize()
     """
+
+    results_class = QAOAResult
 
     def __init__(self, device=DeviceLocal("vectorized")):
         """

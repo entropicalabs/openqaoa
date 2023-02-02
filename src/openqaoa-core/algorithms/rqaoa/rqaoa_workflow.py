@@ -127,6 +127,8 @@ class RQAOA(Workflow):
     >>> r_adaptive.optimize()
     """
 
+    results_class = RQAOAResults
+
     def __init__(self, device: DeviceBase = DeviceLocal("vectorized")):
         """
         Initialize the RQAOA class.
@@ -139,9 +141,6 @@ class RQAOA(Workflow):
         super().__init__(device)  # use the parent class to initialize
         self.circuit_properties = CircuitProperties()
         self.rqaoa_parameters = RqaoaParameters()
-
-        # varaible that will store results object (when optimize is called)
-        self.results = RQAOAResults()
 
         # change algorithm name to rqaoa
         self.header["algorithm"] = "rqaoa"
@@ -454,6 +453,7 @@ class RQAOA(Workflow):
         self.header["execution_time_end"] = int(time.time())
 
         # Compute description dictionary containing all the information
+        self.results = self.results_class() 
         self.results["solution"] = full_solutions
         self.results["classical_output"] = {
             "minimum_energy": cl_energy,

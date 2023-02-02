@@ -2,6 +2,7 @@ from .training_vqa import (
     ScipyOptimizer,
     CustomScipyGradientOptimizer,
     PennyLaneOptimizer,
+    QAOAResult
 )
 from ..qaoa_components import QAOAVariationalBaseParams
 from ..backends.basebackend import VQABaseBackend
