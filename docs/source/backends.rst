@@ -98,7 +98,7 @@ Local Backend and Devices --- Simulators
 Local Device
 ------------
 
-.. autoclass:: openqaoa.backends.devices.DeviceLocal
+.. autoclass:: openqaoa.backends.devices_core.DeviceLocal
     :members:
     :undoc-members:
     :inherited-members:

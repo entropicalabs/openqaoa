@@ -3,10 +3,10 @@ from openqaoa.backends.devices_core import DeviceBase
 
 
 class DeviceAzure(DeviceBase):
-
     """
     Contains the required information and methods needed to access remote
     Azure QPUs and Simulators.
+
     Parameters
     ----------
     available_qpus: `list`
@@ -26,7 +26,9 @@ class DeviceAzure(DeviceBase):
         device_name: `str`
             The name of the Azure remote QPU/Simulator to be used
         resource_id: `str`
+            resource_id
         az_location: `str`
+            az_location
         """
 
         self.resource_id = resource_id

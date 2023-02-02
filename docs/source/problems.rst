@@ -39,7 +39,7 @@ Built-in problems
     :show-inheritance:
     :inherited-members:
 
-.. autoclass:: openqaoa.problems.slackfreeknapsack.SlackFreeKnapsack
+.. autoclass:: openqaoa.problems.knapsack.SlackFreeKnapsack
     :members:
     :undoc-members:
     :show-inheritance:

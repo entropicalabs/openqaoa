@@ -26,6 +26,11 @@ Workflow Properties
     :undoc-members:
     :inherited-members:
 
+.. autoclass:: openqaoa.algorithms.workflow_properties.CircuitProperties
+    :members:
+    :undoc-members:
+    :inherited-members:
+
 
 QAOA
 ----
@@ -35,19 +40,7 @@ QAOA
     :inherited-members:
 
 
-QAOA Workflow Properties
-------------------------
-.. autoclass:: openqaoa.algorithms.qaoa.qaoa_workflow_properties.CircuitProperties
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-
-RQAOA
------
-Recursive QAOA (RQAOA) is an iterative variant of QAOA, first introduced by Bravyi et. al in [1]. It runs QAOA recursively and uses the expectation values of the Hamiltonian terms to impose constraints and eliminate qubits for the problem at each step. Once the reduced problem reaches a preset cutoff size, it is solved exactly solved via classical methods. The final answer is then reconstructed by re-inserting the eliminated qubits in the classical solution in the appropriate order.
-
-We currently offer two flavors of RQAOA, both of which can be found in the ``rqaoa`` module:
+flavors of RQAOA, both of which can be found in the ``rqaoa`` module:
 
  * The ``Custom`` (default) strategy allows the user to define the number of eliminations to be performed at each step. This defined by the parameter ``steps``. If the parameter is set as an integer, the algorithm will use this number as the number of qubits to be eliminated at each step. Alternatively, it is possible to pass a list, which specifies the number of qubits to be eliminated at each step. For ``steps = 1``, the algorithm reduces to the original form of RQAOA presented in [1].
 

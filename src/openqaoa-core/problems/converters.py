@@ -35,9 +35,9 @@ class FromDocplex2IsingModel(object):
             Usually lambda_2 < lambda_1. Please refere to the paper:
                 Unbalanced penalizations: A novel approach of inequality constraints
                 codification in quantum optimization problems.
-
         """
-        # assign the docplex Model
+        
+
         self.model = model.copy()
 
         # save the index in a dict
@@ -60,8 +60,8 @@ class FromDocplex2IsingModel(object):
         ----------
         expr : model.objective_expr
             A docplex model attribute.
-
         """
+
         for x, weight in expr.get_linear_part().iter_terms():
             self.qubo_dict[(self.idx_terms[x],)] += weight
 
@@ -102,9 +102,9 @@ class FromDocplex2IsingModel(object):
         -------
         penalty : docplex.mp.quad.QuadExpr
             Penalty that will be added to the cost function.
-
         """
-        penalty = multiplier * (expression) ** 2
+        
+
         return penalty
 
     @staticmethod
@@ -173,7 +173,6 @@ class FromDocplex2IsingModel(object):
         -------
         new_exp : docplex.mp.linear.LinearExpr
             The equality constraint representation of the inequality constraint.
-
         """
 
         if constraint.sense_string == "LE":  # Less or equal inequality constraint
@@ -213,9 +212,8 @@ class FromDocplex2IsingModel(object):
     def inequality_to_unbalanced_penalty(self, constraint):
         """
         Inequality constraint based on an unbalanced penality function described in
-        detail in the paper:
-            "Unbalanced penalizations: A novel approach of inequality constraints
-            codification in quantum optimization problems""
+        detail in the paper: "Unbalanced penalizations: A novel approach of
+        inequality constraints codification in quantum optimization problems""
 
         Parameters
         ----------
@@ -226,8 +224,8 @@ class FromDocplex2IsingModel(object):
         -------
         penalty : DOcplex term
             Quadratic programing penalization term.
-
         """
+
         if constraint.sense_string == "LE":  # Less or equal inequality constraint
             new_exp = constraint.get_right_expr() + -1 * constraint.get_left_expr()
         elif constraint.sense_string == "GE":  # Great or equal inequality constriant
@@ -250,8 +248,8 @@ class FromDocplex2IsingModel(object):
         -------
         float
             the multiplier resized by the cost function limits.
-
         """
+
         cost_func = self.model.objective_expr
         l_bound_linear, u_bound_linear = self.bounds(cost_func.get_linear_part())
         l_bound_quad, u_bound_quad = self.quadratic_bounds(
@@ -271,7 +269,6 @@ class FromDocplex2IsingModel(object):
         Returns
         -------
         None.
-
         """
 
         constraints_list = list(self.model.iter_linear_constraints())
@@ -335,8 +332,8 @@ class FromDocplex2IsingModel(object):
         Returns
         -------
         Ising Model stored on QUBO class
-
         """
+
         ising_terms, ising_weights = [], []
         linear_terms = np.zeros(n_variables)
 

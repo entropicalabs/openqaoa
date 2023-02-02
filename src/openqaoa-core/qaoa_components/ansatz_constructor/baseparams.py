@@ -296,7 +296,7 @@ class QAOADescriptor(AnsatzDescriptor):
         return string
 
     @property
-    def abstract_circuit(self) -> List[RotationGateMap]:
+    def abstract_circuit(self):
 
         _abstract_circuit = []
         for each_p in range(self.p):
