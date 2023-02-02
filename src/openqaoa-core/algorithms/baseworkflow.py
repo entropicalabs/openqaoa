@@ -85,9 +85,9 @@ class Workflow(ABC):
 
         # Initialize the identifier stamps, we initialize all the stamps needed to None
         self.header = {
-            "atomic_uuid": None,  # the uuid of the run it is generated automatically in the compilation
-            "experiment_uuid": generate_uuid(),  # the uuid of the experiment it is generated automatically here
-            "project_uuid": None,
+            "atomic_id": None,  # the id of the run it is generated automatically in the compilation
+            "experiment_id": generate_uuid(),  # the id of the experiment it is generated automatically here
+            "project_id": None,
             "algorithm": None,  # qaoa or rqaoa
             "name": None,
             "run_by": None,
@@ -122,7 +122,7 @@ class Workflow(ABC):
 
     def set_header(
         self,
-        project_uuid: str,
+        project_id: str,
         name: str,
         run_by: str,
         provider: str,
@@ -141,12 +141,12 @@ class Workflow(ABC):
         TODO : document the parameters
         """
 
-        if not is_valid_uuid(project_uuid):
+        if not is_valid_uuid(project_id):
             raise ValueError(
-                "The project_uuid is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+                "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
             )
 
-        self.header["project_uuid"] = project_uuid
+        self.header["project_id"] = project_id
         self.header["name"] = name
         self.header["run_by"] = run_by
         self.header["provider"] = provider
@@ -302,7 +302,7 @@ class Workflow(ABC):
     def compile(self, problem: QUBO):
         """
         Method that will make sure that the problem is in the correct form for
-        the optimizer to run and generate the atomic uuid.
+        the optimizer to run and generate the atomic id.
         This method should be extended by the child classes to include
         the compilation of the problem into the correct form for the optimizer to run.
 
@@ -316,8 +316,8 @@ class Workflow(ABC):
         assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
         self.problem = problem
 
-        # the atomic uuid is generated every time that it is compiled
-        self.header["atomic_uuid"] = generate_uuid()
+        # the atomic id is generated every time that it is compiled
+        self.header["atomic_id"] = generate_uuid()
 
         # header is updated with the qubit number of the problem
         self.header["qubit_number"] = self.problem.n
@@ -518,16 +518,16 @@ class Workflow(ABC):
         elif file_name == "":
             file = (
                 file_path
-                + self.header["experiment_uuid"]
+                + self.header["experiment_id"]
                 + "--"
-                + self.header["atomic_uuid"]
+                + self.header["atomic_id"]
             )
         else:
             file = (
                 file_path
-                + self.header["experiment_uuid"]
+                + self.header["experiment_id"]
                 + "--"
-                + self.header["atomic_uuid"]
+                + self.header["atomic_id"]
                 + "--"
                 + file_name
             )

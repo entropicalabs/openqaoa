@@ -263,7 +263,7 @@ class RQAOA(Workflow):
             !NotYetImplemented! Set true to have a summary of QAOA first step to displayed after compilation
         """
 
-        # we compile the method of the parent class to genereate the uuid
+        # we compile the method of the parent class to genereate the id
         # and check the problem is a QUBO object and save it
         super().compile(problem=problem)
 
@@ -341,13 +341,13 @@ class RQAOA(Workflow):
         ), "RQAOA object has not been compiled. Please run the compile method first."
 
         # lists to append the eliminations, the problems, the qaoa results objects,
-        # the correlation matrix, the expectation values z and a dictionary for the atomic uuids
+        # the correlation matrix, the expectation values z and a dictionary for the atomic ids
         elimination_tracker = []
         q_results_steps = []
         problem_steps = []
         exp_vals_z_steps = []
         corr_matrix_steps = []
-        atomic_uuid_steps = {}
+        atomic_id_steps = {}
 
         # get variables
         problem = self.problem
@@ -420,7 +420,7 @@ class RQAOA(Workflow):
             corr_matrix_steps.append(corr_matrix)
             exp_vals_z_steps.append(exp_vals_z)
             problem_steps.append(problem)
-            atomic_uuid_steps[counter] = q.header["atomic_uuid"]
+            atomic_id_steps[counter] = q.header["atomic_id"]
 
             # Extract new number of qubits
             n_qubits = new_problem.n
@@ -480,7 +480,7 @@ class RQAOA(Workflow):
                 corr_matrix_steps,
             )
         ]
-        self.results["atomic_uuids"] = atomic_uuid_steps
+        self.results["atomic_ids"] = atomic_id_steps
 
         # set compiled to false
         self.compiled = False
