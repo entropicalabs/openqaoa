@@ -1,9 +1,9 @@
 {
   "header": {
-    "atomic_uuid": "7a20c358-5b8e-42df-ba56-e164dbe2b917",
-    "experiment_uuid": "02a1528c-e0a1-4314-a5aa-c86d8951e953",
-    "project_uuid": null,
-    "algorithm": "qaoa",
+    "atomic_id": "077777dc-dedb-4d43-8fdd-022a9c1b44fc",
+    "experiment_id": "d831008a-6f69-4c3d-ada5-015a92105825",
+    "project_id": null,
+    "algorithm": "rqaoa",
     "name": null,
     "run_by": null,
     "provider": null,
@@ -22,7 +22,10 @@
       "optimizer_method": "cobyla",
       "param_type": "standard",
       "init_type": "ramp",
-      "p": 1
+      "p": 1,
+      "rqaoa_type": "custom",
+      "rqaoa_n_max": 1,
+      "rqaoa_n_cutoff": 6
     }
   },
   "data": {
@@ -232,7 +235,7 @@
       "classical_optimizer": {
         "optimize": true,
         "method": "cobyla",
-        "maxiter": 100,
+        "maxiter": 3,
         "maxfev": null,
         "jac": null,
         "hess": null,
@@ -263,7 +266,21 @@
         "mixer_qubit_connectivity": null,
         "mixer_coeffs": null,
         "seed": null
+      },
+      "rqaoa_parameters": {
+        "rqaoa_type": "custom",
+        "n_max": 1,
+        "steps": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "n_cutoff": 6,
+        "original_hamiltonian": null,
+        "counter": 0
       }
-    }
+    },
+    "results": null
   }
 }
