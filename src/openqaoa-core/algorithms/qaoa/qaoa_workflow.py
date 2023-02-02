@@ -1,6 +1,6 @@
 import time
 
-# from ...algorithms import QAOAResult
+from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
 from ...backends.devices_core import DeviceLocal
@@ -12,7 +12,7 @@ from ...qaoa_components import (
     create_qaoa_variational_params,
 )
 from ...utilities import get_mixer_hamiltonian
-from ...optimizers.qaoa_optimizer import get_optimizer, QAOAResult
+from ...optimizers.qaoa_optimizer import get_optimizer
 
 
 class QAOA(Workflow):
