@@ -365,9 +365,10 @@ class Workflow(ABC):
                     data["input_parameters"]["backend_properties"][item]
                 )
 
-        data["results"] = self.results.asdict(
-            False, complex_to_string, intermediate_mesurements
-        )
+        if not self.results is None:
+            data["results"] = self.results.asdict(
+                False, complex_to_string, intermediate_mesurements
+            )
 
         # create the final header dictionary
         header = self.header.copy()

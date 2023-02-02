@@ -5,6 +5,7 @@ import numpy as np
 
 from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
+from .gatemap import RotationGateMap
 
 
 def _is_iterable_empty(in_iterable):
@@ -112,7 +113,7 @@ class QAOADescriptor(AnsatzDescriptor):
     cost_hamiltonian: `Hamiltonian`
         The cost hamiltonian of the problem the user is trying to solve.
 
-    mixer_block: `Union[List[RotationGateMap], Hamiltonian]`
+    mixer_block: Union[List[RotationGateMap], Hamiltonian]
         The mixer hamiltonian or a list of initialised RotationGateMap objects
         that defines the gates to be used within the "mixer part" of the circuit.
 
