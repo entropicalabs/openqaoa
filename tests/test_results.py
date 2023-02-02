@@ -449,12 +449,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
     def test_rqaoa_results_from_dict(self):
         """
-        Test the from_dict method for the RQAOAResult class
-        """
-
-        
-    def test_rqaoa_results_from_dict(self):
-        """
         test loading the QAOA Result object from a dictionary
         methods: from_dict
         """
