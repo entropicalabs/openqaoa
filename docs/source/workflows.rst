@@ -6,34 +6,38 @@ Workflows are a simple reference API to build complex quantum optimisations prob
 Workflows are designed to aid the user to focus on the optimisation problem, while delegating the construction and the execution of the specific algorithm to `OpenQAOA`
 
 
-Workflows - ABC
+Workflow - ABC
 ---------------
-.. autoclass:: openqaoa.workflows.optimizer.Optimizer
+.. autoclass:: openqaoa.algorithms.baseworkflow.Workflow
     :members:
     :undoc-members:
     :inherited-members:
+
+
+Workflow Properties
+-------------------
+.. autoclass:: openqaoa.algorithms.workflow_properties.BackendProperties
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+.. autoclass:: openqaoa.algorithms.workflow_properties.ClassicalOptimizer
+    :members:
+    :undoc-members:
+    :inherited-members:
+
 
 QAOA
 ----
-.. autoclass:: openqaoa.workflows.optimizer.QAOA
+.. autoclass:: openqaoa.algorithms.qaoa.qaoa_workflow.QAOA
     :members:
     :undoc-members:
     :inherited-members:
 
 
-Workflow QAOA Parameters
+QAOA Workflow Properties
 ------------------------
-.. autoclass:: openqaoa.workflows.parameters.qaoa_parameters.CircuitProperties
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-.. autoclass:: openqaoa.workflows.parameters.qaoa_parameters.BackendProperties
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-.. autoclass:: openqaoa.workflows.parameters.qaoa_parameters.ClassicalOptimizer
+.. autoclass:: openqaoa.algorithms.qaoa.qaoa_workflow_properties.CircuitProperties
     :members:
     :undoc-members:
     :inherited-members:
@@ -53,15 +57,15 @@ The development of this method is associated with an internal research project a
 
 To choose the strategy, set the parameter ``rqaoa_type`` using the `set_rqaoa_parameters` method. To use the ``Adaptive`` strategy, pass ``rqaoa_type = 'adaptive'``. The default strategy is ``Custom``.
 
-.. autoclass:: openqaoa.workflows.optimizer.RQAOA
+.. autoclass:: openqaoa.algorithms.rqaoa.rqaoa_workflow.RQAOA
     :members:
     :undoc-members:
     :inherited-members:
     
 
-Workflow RQAOA Parameters
+RQAOA Workflow Properties
 -------------------------
-.. autoclass:: openqaoa.workflows.parameters.rqaoa_parameters.RqaoaParameters
+.. autoclass:: openqaoa.algorithms.rqaoa.rqaoa_workflow_properties.RqaoaParameters
     :members:
     :undoc-members:
     :inherited-members:
