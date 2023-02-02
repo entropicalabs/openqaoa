@@ -1,7 +1,11 @@
+import copy
+import numpy as np
 from typing import List
 import matplotlib.pyplot as plt
 
 from ...utilities import delete_keys_from_dict
+from .. import QAOAResult
+from ...problems import QUBO
 
 
 class RQAOAResults(dict):
@@ -62,6 +66,42 @@ class RQAOAResults(dict):
             if exclude_keys == []
             else delete_keys_from_dict(results, exclude_keys)
         )
+
+    @classmethod
+    def from_dict(
+        cls, 
+        dictionary:dict
+    ):
+        """
+        Creates a RQAOAResults object from a dictionary (which is the output of the asdict method).
+        Parameters
+        ----------
+        dictionary : dict
+            The input dictionary.
+        Returns
+        -------
+        RQAOAResults
+            The RQAOAResults object.
+        """
+
+        # deepcopy the dictionary, so that the original dictionary is not changed
+        dictionary = copy.deepcopy(dictionary)
+
+        # create a new RQAOAResults object
+        results = cls()
+
+        # add the keys of the dictionary to the RQAOAResults object
+        for key, value in dictionary.items():
+            results[key] = value
+
+        # convert the intermediate steps to objects
+        for step in results['intermediate_steps']:
+            step['problem'] = QUBO.from_dict(step['problem'])
+            step['qaoa_results'] = QAOAResult.from_dict(step['qaoa_results'], cost_hamiltonian=step['problem'].hamiltonian)
+            step['exp_vals_z'] = np.array(step['exp_vals_z'])
+            step['corr_matrix'] = np.array(step['corr_matrix'])
+
+        return results
 
     def get_solution(self):
         """

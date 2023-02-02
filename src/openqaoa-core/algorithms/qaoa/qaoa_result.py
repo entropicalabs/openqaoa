@@ -1,9 +1,10 @@
-from typing import Type, List
+from __future__ import annotations
+from typing import Type, List, Union
 
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ...optimizers.logger_vqa import Logger
 from ...qaoa_components import Hamiltonian
 from ...utilities import (
     qaoa_probabilities,
@@ -48,7 +49,7 @@ class QAOAResult:
 
     def __init__(
         self,
-        log: Type[Logger],
+        log: Logger,
         method: Type[str],
         cost_hamiltonian: Type[Hamiltonian],
         type_backend: Type[QAOABaseBackend],
@@ -204,6 +205,62 @@ class QAOAResult:
             if exclude_keys == []
             else delete_keys_from_dict(return_dict, exclude_keys)
         )
+
+    @classmethod
+    def from_dict(
+        cls, dictionary: dict, cost_hamiltonian: Union[Hamiltonian, None] = None
+    ):
+        """
+        Creates a Results object from a dictionary (which is the output of the asdict method)
+        Parameters
+        ----------
+        dictionary: `dict`
+            The dictionary to create the QAOA Result object from
+        Returns
+        -------
+        `Result`
+            The Result object created from the dictionary
+        """
+
+        # deepcopy the dictionary, so that the original dictionary is not changed
+        dictionary = copy.deepcopy(dictionary)
+
+        # create a new instance of the class
+        result = cls.__new__(cls)
+
+        # set the attributes of the new instance, using the dictionary
+        for key, value in dictionary.items():
+            setattr(result, key, value)
+
+        # if there is an input cost hamiltonian, it is added to the result
+        if cost_hamiltonian != None:
+            result.cost_hamiltonian = cost_hamiltonian
+
+        # if the measurement_outcomes are strings, they are converted to complex numbers
+        if not isinstance(
+            result.optimized["measurement_outcomes"], dict
+        ) and isinstance(result.optimized["measurement_outcomes"][0], str):
+            for i in range(len(result.optimized["measurement_outcomes"])):
+                result.optimized["measurement_outcomes"][i] = complex(
+                    result.optimized["measurement_outcomes"][i]
+                )
+
+            for i in range(len(result.intermediate["measurement_outcomes"])):
+                for j in range(len(result.intermediate["measurement_outcomes"][i])):
+                    result.intermediate["measurement_outcomes"][i][j] = complex(
+                        result.intermediate["measurement_outcomes"][i][j]
+                    )
+
+        # if the measurement_outcomes are complex numbers, the backend is set to QAOABaseBackendStatevector
+        if not isinstance(
+            result.optimized["measurement_outcomes"], dict
+        ) and isinstance(result.optimized["measurement_outcomes"][0], complex):
+            setattr(result, "_QAOAResult__type_backend", QAOABaseBackendStatevector)
+        else:
+            setattr(result, "_QAOAResult__type_backend", "")
+
+        # return the object
+        return result
 
     @staticmethod
     def get_counts(measurement_outcomes):

@@ -4,17 +4,44 @@ import networkx as nw
 import numpy as np
 
 from openqaoa import QAOA, RQAOA
-from openqaoa.algorithms.qaoa.qaoa_result import QAOAResult
+from openqaoa.algorithms import QAOAResult, RQAOAResults
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
 from openqaoa.backends import create_device
+from openqaoa.backends.basebackend import QAOABaseBackendStatevector
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
-from openqaoa.problems import MinimumVertexCover, QUBO
+from openqaoa.problems import MinimumVertexCover, QUBO, MaximumCut
 from openqaoa.qaoa_components import Hamiltonian
 from openqaoa.algorithms.rqaoa.rqaoa_results import RQAOAResults
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 
+
+def _compare_qaoa_results(dict_old, dict_new, bool_cmplx_str):
+
+    for key in dict_old.keys():
+        if key == "cost_hamiltonian":  ## CHECK WHAT DO WITH THIS
+            pass
+        elif key == "_QAOAResult__type_backend": 
+            if issubclass(dict_old[key], QAOABaseBackendStatevector):
+                assert dict_new[key] == QAOABaseBackendStatevector, "Type of backend is not correct, complex_to_string = {}".format(bool_cmplx_str)
+            else:
+                assert dict_new[key] == "", "Type of backend should be empty string, complex_to_string = {}".format(bool_cmplx_str)
+        elif key == "optimized":
+            for key2 in dict_old[key].keys():
+                if key2 == "measurement_outcomes":
+                    assert np.all(dict_old[key][key2] == dict_new[key][key2]), "Optimized params are not the same, complex_to_string = {}".format(bool_cmplx_str)
+                else:
+                    assert dict_old[key][key2] == dict_new[key][key2], "Optimized params are not the same, complex_to_string = {}".format(bool_cmplx_str)
+        elif key == "intermediate":
+            for key2 in dict_old[key].keys():
+                if key2 == "measurement_outcomes":
+                    for step in range(len(dict_old[key][key2])):
+                        assert np.all(dict_old[key][key2][step] == dict_new[key][key2][step]), "Intermediate params are not the same, complex_to_string = {}".format(bool_cmplx_str)
+                else:
+                    assert dict_old[key][key2] == dict_new[key][key2], "Intermediate params are not the same, complex_to_string = {}".format(bool_cmplx_str)
+        else:
+            assert dict_old[key] == dict_new[key], f"{key} is not the same, complex_to_string = {bool_cmplx_str}"
 
 def _test_keys_in_dict(obj, expected_keys):
     """
@@ -184,6 +211,41 @@ class TestingResultOutputs(unittest.TestCase):
             # test the eval_number method
             assert q.results.intermediate['cost'].index(min(q.results.intermediate['cost'])) + 1 == q.results.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation, when using {} method'.format(method)
 
+    def test_qaoa_results_from_dict(self):
+        """
+        test loading the QAOA Result object from a dictionary
+        methods: from_dict
+        """
+
+        # problem
+        maxcut_qubo = MaximumCut(nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)).get_qubo_problem()
+
+
+        # run qaoa with different devices, and save the objcets in a list  
+        qaoas = []
+        for device in [create_device(location='local', name='qiskit.shot_simulator'), create_device(location='local', name='vectorized')]:
+
+            q = QAOA()
+            q.set_device(device)
+            q.set_circuit_properties(p=1, param_type='extended', init_type='rand', mixer_hamiltonian='x')
+            q.set_backend_properties(prepend_state=None, append_state=None)
+            q.set_classical_optimizer(maxiter=10, optimization_progress=True)
+
+            q.compile(maxcut_qubo) 
+
+            q.optimize() 
+
+            qaoas.append(q)
+
+        for q in qaoas:
+            results = q.results
+            for bool_cmplx_str in [True, False]:
+                results_from_dict = QAOAResult.from_dict(results.asdict(complex_to_string=bool_cmplx_str))
+
+                # assert that results_from_dict is intance of Result
+                assert isinstance(results_from_dict, QAOAResult), 'results_from_dict is not an instance of Result'
+
+                _compare_qaoa_results(results.__dict__, results_from_dict.__dict__, bool_cmplx_str)
 
 
 
@@ -373,6 +435,54 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
             get_keys(rqaoa.results.asdict(), expected_keys)
             print(expected_keys)
         """
+
+    def test_rqaoa_results_from_dict(self):
+        """
+        test loading the QAOA Result object from a dictionary
+        methods: from_dict
+        """
+
+        # problem
+        maxcut_qubo = MaximumCut(nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)).get_qubo_problem()
+
+
+        # run rqaoa with different devices, and save the objcets in a list  
+        rqaoas = []
+        for device in [create_device(location='local', name='qiskit.shot_simulator'), create_device(location='local', name='vectorized')]:
+
+            r = RQAOA()
+            r.set_device(device)
+            r.set_circuit_properties(p=1, param_type='extended', init_type='rand', mixer_hamiltonian='x')
+            r.set_backend_properties(prepend_state=None, append_state=None)
+            r.set_classical_optimizer(maxiter=10, optimization_progress=True)
+
+            r.compile(maxcut_qubo) 
+
+            r.optimize() 
+
+            rqaoas.append(r)
+
+        # for each rqaoa object, we check that we can create a new results object from the dictionary of the old one
+        for r in rqaoas:
+
+            new_results = RQAOAResults.from_dict(r.results.asdict())
+            old_results = r.results
+
+            #assert that new_results is an instance of RQAOAResults
+            assert isinstance(new_results, RQAOAResults), "new_results is not an instance of RQAOAResults"
+
+            for key in old_results:
+                if key == "intermediate_steps":
+                    for i in range(len(old_results[key])):
+                        for key2 in old_results[key][i]:
+                            if key2 == "problem":
+                                assert old_results[key][i][key2].asdict() == new_results[key][i][key2].asdict(), f"{key2} is not the same"
+                            elif key2 == "qaoa_results":
+                                _compare_qaoa_results(old_results[key][i][key2].asdict(), new_results[key][i][key2].asdict(), None)
+                            else:
+                                assert np.all(old_results[key][i][key2] == new_results[key][i][key2]), f"{key2} is not the same"
+                else:
+                    assert old_results[key] == new_results[key], f"{key} is not the same"
 
 if __name__ == "__main__":
 	unittest.main()

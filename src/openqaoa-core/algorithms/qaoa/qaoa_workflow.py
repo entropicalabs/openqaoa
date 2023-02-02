@@ -1,5 +1,6 @@
 import time
 
+from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
 from ...backends.devices_core import DeviceLocal
@@ -97,6 +98,8 @@ class QAOA(Workflow):
     >>> q_custom.optimize()
     """
 
+    results_class = QAOAResult
+
     def __init__(self, device=DeviceLocal("vectorized")):
         """
         Initialize the QAOA class.
@@ -190,7 +193,7 @@ class QAOA(Workflow):
             Set True to have a summary of QAOA to displayed after compilation
         """
 
-        # we compile the method of the parent class to genereate the uuid and
+        # we compile the method of the parent class to genereate the id and
         # check the problem is a QUBO object and save it
         super().compile(problem=problem)
 
