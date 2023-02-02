@@ -36,7 +36,6 @@ class FromDocplex2IsingModel(object):
                 Unbalanced penalizations: A novel approach of inequality constraints
                 codification in quantum optimization problems.
         """
-        
 
         self.model = model.copy()
 
@@ -103,8 +102,8 @@ class FromDocplex2IsingModel(object):
         penalty : docplex.mp.quad.QuadExpr
             Penalty that will be added to the cost function.
         """
-        
 
+        penalty = multiplier * (expression) ** 2
         return penalty
 
     @staticmethod
