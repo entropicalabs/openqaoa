@@ -143,7 +143,7 @@ class QAOADescriptor(AnsatzDescriptor):
         p: int,
         mixer_coeffs: List[float] = [],
         routed_gate_list_indices:List = None,
-        swap_mask:List[bool] = None)
+        swap_mask:List[bool] = None
     ):
         """
         Parameters

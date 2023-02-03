@@ -14,7 +14,7 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendParametric,
 )
 from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
-from ...utilities import permute_counts_dictionary
+from openqaoa.utilities import permute_counts_dictionary
 
 
 class QAOAAWSQPUBackend(
