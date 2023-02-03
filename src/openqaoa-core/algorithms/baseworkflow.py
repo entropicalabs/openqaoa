@@ -144,7 +144,7 @@ class Workflow(ABC):
         if experiment_id != None:
             if not is_valid_uuid(experiment_id):
                 raise ValueError(
-                    "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+                    "The experiment_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
                 )
             else:
                 self.header["experiment_id"] = experiment_id
