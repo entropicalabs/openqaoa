@@ -28,6 +28,68 @@ from ..backends.qaoa_backend import (
 )
 
 
+def circuit_routing(device: DeviceBase,
+    problem: QUBO,
+    initial_mapping: List[int],
+    routing_algo: str = 'greedy'
+) -> tuple:
+    """Post the HTTP request to the routing API and retrieve routed 
+    circuit
+    
+    Parameters
+    ----------
+    device: DeviceBase
+        The device for which to route the circuit
+    problem: QUBO
+        The QUBO problem to be run on QPU
+    initial_mapping: List[int]
+        The initial selection of qubits, if provided by the user.
+        Defaults to the first n-qubits on the device if `None`
+    routing_algo: str
+        The algorithm to generate an optimal SWAP network
+    
+    Returns
+    -------
+    tuple[List[List],List[bool],List[int]]
+        The first list specifies the qubit indices for operations,
+        the second list differentiates between Ising and SWAP gates,
+        and the final list returns the final qubit mapping.
+    """
+    device_connecivity = device.connectivity()
+    problem_as_list_of_lists = [list(term) for term in problem.terms if len(term) == 2]
+    
+    #params for MCTS        
+    params= {"max_depth_simulation":10, 
+            "max_iterations":10, 
+            "n_simulations":64, 
+            "exploration_constant":2,
+            "max_tree_depth":5} if routing_algo.lower() == 'mcts' else {}
+    query = {
+        "algorithm": routing_algo,
+        "device": device_connecivity,
+        "problem": problem_as_list_of_lists,
+        "initial_mapping": initial_mapping,
+        "params": params}
+    
+    # print(query)
+    
+    #post the query via HTTP
+    r = requests.post(url='http://127.0.0.1:8000/qubit_routing', json=query)
+    
+    results = r.json()
+    
+    gate_indices_list = results['gates_list']
+    final_mapping = results['mapping']
+    swap_mask = results['swap_mask']
+    
+    assert len(gate_indices_list) == len(swap_mask), \
+        "Incorrect output from qubit routing algorithm"
+    assert len(final_mapping) == problem.n ,\
+        "Incorrect number of qubits in the final qubit layout"
+    
+    return (gate_indices_list,swap_mask,final_mapping)
+
+
 class Workflow(ABC):
     """
     Abstract class to represent an optimizer

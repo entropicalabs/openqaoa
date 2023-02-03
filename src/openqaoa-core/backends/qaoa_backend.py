@@ -122,6 +122,8 @@ def get_qaoa_backend(
     append_state: Optional[Union[QuantumCircuitBase, np.ndarray]] = None,
     init_hadamard: bool = True,
     cvar_alpha: float = 1,
+    initial_qubit_layout: List[int] = None,
+    final_qubit_layout: List[int] = None,
     **kwargs,
 ):
     """
@@ -143,6 +145,10 @@ def get_qaoa_backend(
         QAOA part of the circuit.
     cvar_alpha: `float`
         The value of the CVaR parameter.
+    initial_qubit_layout: List
+        The initial chosen qubits
+    final_qubit_layout: List
+        Updated qubit order changed due to SWAPs application
     kwargs:
     Additional keyword arguments for the backend.
         qubit_layout: `list`
@@ -167,6 +173,8 @@ def get_qaoa_backend(
                 append_state=append_state,
                 init_hadamard=init_hadamard,
                 cvar_alpha=cvar_alpha,
+                initial_qubit_layout=initial_qubit_layout,
+                final_qubit_layout=final_qubit_layout,
                 **backend_kwargs,
             )
 
@@ -178,6 +186,8 @@ def get_qaoa_backend(
                 append_state=append_state,
                 init_hadamard=init_hadamard,
                 cvar_alpha=cvar_alpha,
+                initial_qubit_layout=initial_qubit_layout,
+                final_qubit_layout=final_qubit_layout,
                 **backend_kwargs,
             )
     except Exception as e:

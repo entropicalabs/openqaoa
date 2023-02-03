@@ -18,7 +18,7 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendParametric,
 )
 from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
-from openqaoa.utilities import flip_counts
+from openqaoa.utilities import flip_counts, permute_counts_dictionary
 
 
 class QAOAQiskitQPUBackend(
@@ -48,27 +48,27 @@ class QAOAQiskitQPUBackend(
         The value of alpha for the CVaR method.
     """
 
-    def __init__(
-        self,
-        qaoa_descriptor: QAOADescriptor,
-        device: DeviceQiskit,
-        n_shots: int,
-        prepend_state: Optional[QuantumCircuit],
-        append_state: Optional[QuantumCircuit],
-        init_hadamard: bool,
-        qubit_layout: List[int] = [],
-        cvar_alpha: float = 1,
-    ):
+    def __init__(self,
+                 qaoa_descriptor: QAOADescriptor,
+                 device: DeviceQiskit,
+                 n_shots: int,
+                 prepend_state: Optional[QuantumCircuit],
+                 append_state: Optional[QuantumCircuit],
+                 init_hadamard: bool,
+                 qubit_layout: List[int] = [],
+                 initial_qubit_layout: List[int] = None,
+                 final_qubit_layout: List[int] = None,
+                 cvar_alpha: float = 1):
 
-        QAOABaseBackendShotBased.__init__(
-            self,
-            qaoa_descriptor,
-            n_shots,
-            prepend_state,
-            append_state,
-            init_hadamard,
-            cvar_alpha,
-        )
+        QAOABaseBackendShotBased.__init__(self,
+                                          qaoa_descriptor,
+                                          n_shots,
+                                          prepend_state,
+                                          append_state,
+                                          init_hadamard,
+                                          cvar_alpha,
+                                          initial_qubit_layout,
+                                          final_qubit_layout)
         QAOABaseBackendCloud.__init__(self, device)
 
         self.qureg = QuantumRegister(self.n_qubits)
@@ -150,10 +150,12 @@ class QAOAQiskitQPUBackend(
 
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
-            angle_param = Parameter(str(each_gate.pauli_label))
-            self.qiskit_parameter_list.append(angle_param)
-            each_gate.rotation_angle = angle_param
-            decomposition = each_gate.decomposition("standard")
+            #if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ['mixer','cost']:
+                angle_param = Parameter(each_gate.gate_label.__repr__()) 
+                self.qiskit_parameter_list.append(angle_param)
+                each_gate.angle_value = angle_param
+            decomposition = each_gate.decomposition('standard')
             # using the list above, construct the circuit
             for each_tuple in decomposition:
                 gate = each_tuple[0]()
@@ -230,9 +232,13 @@ class QAOAQiskitQPUBackend(
                 raise ConnectionError("An Error Occurred with the Job(s) sent to IBMQ.")
 
         # Expose counts
-        counts_flipped = flip_counts(counts)
-        self.measurement_outcomes = counts_flipped
-        return counts_flipped
+        final_counts = flip_counts(counts)
+        #check whether SWAP gates changed the final layout of qubits
+        if self.initial_qubit_layout != self.final_qubit_layout:
+            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
+                                                    self.final_qubit_layout)
+        self.measurement_outcomes = final_counts
+        return final_counts
 
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
         """

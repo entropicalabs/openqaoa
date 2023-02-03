@@ -10,7 +10,7 @@ from openqaoa.backends.basebackend import (
 )
 from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap
-from openqaoa.utilities import generate_uuid
+from openqaoa.utilities import generate_uuid, permute_counts_dictionary
 
 
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
@@ -84,29 +84,30 @@ class QAOAPyQuilQPUBackend(
         PARTIAL: Otherwise.
     """
 
-    def __init__(
-        self,
-        device: DevicePyquil,
-        qaoa_descriptor: QAOADescriptor,
-        n_shots: int,
-        prepend_state: Program,
-        append_state: Program,
-        init_hadamard: bool,
-        cvar_alpha: float,
-        active_reset: bool = False,
-        rewiring: str = "",
-        qubit_layout: list = [],
-    ):
+    def __init__(self,
+                 device: DevicePyquil,
+                 qaoa_descriptor: QAOADescriptor,
+                 n_shots: int,
+                 prepend_state: Program,
+                 append_state: Program,
+                 init_hadamard: bool,
+                 cvar_alpha: float,
+                 active_reset: bool = False,
+                 rewiring: str = '',
+                 qubit_layout: list = [],
+                 initial_qubit_layout: list = None,
+                 final_qubit_layout: list = None
+                 ):
 
-        QAOABaseBackendShotBased.__init__(
-            self,
-            qaoa_descriptor,
-            n_shots,
-            prepend_state,
-            append_state,
-            init_hadamard,
-            cvar_alpha,
-        )
+        QAOABaseBackendShotBased.__init__(self,
+                                          qaoa_descriptor,
+                                          n_shots,
+                                          prepend_state,
+                                          append_state,
+                                          init_hadamard,
+                                          cvar_alpha,
+                                          initial_qubit_layout,
+                                          final_qubit_layout)
         QAOABaseBackendCloud.__init__(self, device)
 
         self.active_reset = active_reset
@@ -218,9 +219,14 @@ class QAOAPyQuilQPUBackend(
 
         # create a list of gates in order of application on quantum circuit
         for each_gate in self.abstract_circuit:
-            gate_label = "".join(str(label) for label in each_gate.pauli_label)
-            angle_param = parametric_circuit.declare(f"pauli{gate_label}", "REAL", 1)
-            each_gate.rotation_angle = angle_param
+            #if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ['mixer','cost']:
+                angle_param = parametric_circuit.declare(
+                    each_gate.gate_label.__repr__(),
+                    'REAL',
+                    1
+                )
+                each_gate.angle_value = angle_param
             if isinstance(each_gate, RZZGateMap) or isinstance(each_gate, SWAPGateMap):
                 decomposition = each_gate.decomposition("standard2")
             else:
@@ -274,7 +280,6 @@ class QAOAPyQuilQPUBackend(
             executable_program.wrap_in_numshots_loop(n_shots)
 
         result = self.device.quantum_computer.run(executable_program)
-
         # we create an uuid for the job
         self.job_id = generate_uuid()
 
@@ -285,10 +290,13 @@ class QAOAPyQuilQPUBackend(
         ]
 
         # Expose counts
-        counts = Counter(list(meas_list))
-        self.measurement_outcomes = counts
-        return counts
-
+        final_counts = Counter(list(meas_list))
+        if self.initial_qubit_layout != self.final_qubit_layout:
+            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
+                                                    self.final_qubit_layout)
+        self.measurement_outcomes = final_counts
+        return final_counts
+        
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
         """
         A method to convert the pyQuil program to a OpenQASM string.
