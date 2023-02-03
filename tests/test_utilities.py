@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import itertools
 import unittest
+import datetime
 
 from openqaoa.backends import DeviceLocal
 from openqaoa.utilities import *
@@ -875,6 +876,26 @@ class TestingUtilities(unittest.TestCase):
 
         # Test that the uuid has been generated correctly
         assert is_valid_uuid(generated_uuid), f'UUID has not been generated correctly'
+
+    def test_generate_timestamp(self):
+        """
+        Tests the function that generates a timestamp: generate_timestamp.
+        It checks if the reutned string is a valid timestamp of format YYYY-MM-DDTHH:MM:SS.
+        """
+
+        def is_valid_timestamp(s):
+            try:
+                datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%S")
+                return True
+            except ValueError:
+                return False
+            
+        # Generate a timestamp
+        generated_timestamp = generate_timestamp()
+
+        # Test that the timestamp has been generated correctly
+        assert is_valid_timestamp(generated_timestamp), f'Timestamp has not been generated correctly'
+
 
         
 if __name__ == "__main__":

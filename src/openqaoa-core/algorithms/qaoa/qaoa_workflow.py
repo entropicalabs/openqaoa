@@ -1,5 +1,3 @@
-import time
-
 from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
@@ -11,7 +9,7 @@ from ...qaoa_components import (
     QAOADescriptor,
     create_qaoa_variational_params,
 )
-from ...utilities import get_mixer_hamiltonian
+from ...utilities import get_mixer_hamiltonian, generate_timestamp
 from ...optimizers.qaoa_optimizer import get_optimizer
 
 
@@ -272,14 +270,14 @@ class QAOA(Workflow):
             raise ValueError("Please compile the QAOA before optimizing it!")
 
         # timestamp for the start of the optimization
-        self.header["execution_time_start"] = time.time_ns()
+        self.header["execution_time_start"] = generate_timestamp()
 
         self.optimizer.optimize()
         # TODO: results and qaoa_results will differ
         self.results = self.optimizer.qaoa_result
 
         # timestamp for the end of the optimization
-        self.header["execution_time_end"] = time.time_ns()
+        self.header["execution_time_end"] = generate_timestamp()
 
         if verbose:
             print(f"optimization completed.")
