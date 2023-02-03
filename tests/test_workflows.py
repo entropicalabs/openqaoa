@@ -789,6 +789,23 @@ class TestingVanillaQAOA(unittest.TestCase):
             error = True
         assert error, "The project_id is not valid string, but no error was raised."
 
+        # test if an error is raised when the experiment_id is not a valid string
+        error = False
+        try:
+            qaoa.set_header(
+                project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
+                experiment_id="test",
+                description="test", 
+                run_by="raul", 
+                provider="-", 
+                target="-", 
+                cloud="local", 
+                client="-", 
+            )
+        except:
+            error = True
+        assert error, "The experiment_id is not valid string, but no error was raised."
+
     def test_set_exp_tags(self):
         """
         Test the set_exp_tags method of the QAOA class.
