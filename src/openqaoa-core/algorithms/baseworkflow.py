@@ -151,16 +151,13 @@ class Workflow(ABC):
             "experiment_id": generate_uuid(),  # the id of the experiment it is generated automatically here
             "project_id": None,
             "algorithm": None,  # qaoa or rqaoa
-            "name": None,
+            "description": None,
             "run_by": None,
             "provider": None,
             "target": None,
             "cloud": None,
             "client": None,
             "qubit_number": None,  # it is set automatically in the compilation from the problem object
-            "qubit_routing": None,
-            "error_mitigation": None,
-            "error_correction": None,
             "execution_time_start": None,
             "execution_time_end": None,
         }
@@ -185,15 +182,13 @@ class Workflow(ABC):
     def set_header(
         self,
         project_id: str,
-        name: str,
+        description: str,
         run_by: str,
         provider: str,
         target: str,
         cloud: str,
         client: str,
-        qubit_routing: str,
-        error_mitigation: str,
-        error_correction: str,
+        experiment_id: str = None,
     ):
         """
         Method to set the identification stamps of the optimizer object in self.header.
@@ -208,16 +203,21 @@ class Workflow(ABC):
                 "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
             )
 
+        if experiment_id != None:
+            if not is_valid_uuid(experiment_id):
+                raise ValueError(
+                    "The experiment_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+                )
+            else:
+                self.header["experiment_id"] = experiment_id
+
         self.header["project_id"] = project_id
-        self.header["name"] = name
+        self.header["description"] = description
         self.header["run_by"] = run_by
         self.header["provider"] = provider
         self.header["target"] = target
         self.header["cloud"] = cloud
         self.header["client"] = client
-        self.header["qubit_routing"] = qubit_routing
-        self.header["error_mitigation"] = error_mitigation
-        self.header["error_correction"] = error_correction
 
     def set_exp_tags(self, tags: dict):
         """
