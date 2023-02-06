@@ -36,9 +36,9 @@ class GateMapLabel:
         n_qubits: `int`
             Number of qubits in the gate
         """
-        if (isinstance(layer_number,Union[int,None]) and isinstance(application_sequence,Union[int,None]) \
-            and isinstance(gatemap_type,Union[GateMapType,None])
-        ):
+        if  (  isinstance(layer_number, (int, type(None))) and \
+               isinstance(application_sequence, (int, type(None))) and \
+               isinstance(gatemap_type, (GateMapType, type(None)))   ):
             self.layer = layer_number
             self.sequence = application_sequence
             self.type = gatemap_type

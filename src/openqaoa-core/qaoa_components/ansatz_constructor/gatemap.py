@@ -429,8 +429,8 @@ class RotationGateMapFactory(object):
                 gate_class = RotationGateMapFactory.GATE_GENERATOR_GATEMAP_MAPPER[
                     pauli_str
                 ]
-            except:
-                raise Error("Generating gates from Hamiltonian terms failed")
+            except Exception:
+                raise Exception("Generating gates from Hamiltonian terms failed")
 
             if len(each_term.qubit_indices) == 2:
                 gate = gate_class(qubit_indices[0], qubit_indices[1])
