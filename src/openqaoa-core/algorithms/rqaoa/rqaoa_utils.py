@@ -510,6 +510,7 @@ def redefine_problem(problem: QUBO, spin_map: dict):
     # If too few eliminations, there are isolated nodes; only important for bias-free problems.
     elif old_register - new_register != eliminated_spins:
         isolated_nodes = old_register.difference(new_register)
+        isolated_nodes = isolated_nodes.difference(eliminated_spins)
         there_is_isolated_nodes = True
 
     if there_is_isolated_nodes:
@@ -646,42 +647,32 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
         List of strings of binary values representing the classical solution of the
         problem respecting the spin map.
     """
-    cl_ground_states = [""]
+    print(spin_map)
+    cl_ground_state = ""
 
     for spin in spin_map.keys():
-        new_cl_ground_states = []
-
         if spin_map[spin][1] == None:
-            # add 0 or 1 arbitrarily
-
-            for ground_state in cl_ground_states:
-                first_new_ground_state = ground_state + "0"
-                second_new_ground_state = ground_state + "1"
-
-                new_cl_ground_states.append(first_new_ground_state)
-                new_cl_ground_states.append(second_new_ground_state)
-
-            cl_ground_states = new_cl_ground_states
-
+            cl_ground_state += "1"
         else:
             # fix according to correlation factor
             factor = spin_map[spin][0]
             parent = spin_map[spin][1]
 
-            for ground_state in cl_ground_states:
-                if factor == 1.0:
-                    # correlated
-                    new_value_spin = ground_state[parent]
-                else:
-                    # anticorrelated
-                    new_value_spin = str(int(not bool(int(ground_state[parent]))))
+            if factor == 1.0:
+                # correlated
+                cl_ground_state += cl_ground_state[parent]
+            else:
+                # anticorrelated
+                cl_ground_state += str(int(not bool(int(cl_ground_state[parent]))))
 
-                new_ground_state = ground_state + new_value_spin
-                new_cl_ground_states.append(new_ground_state)
-
-            cl_ground_states = new_cl_ground_states
-
+    print(cl_ground_state)
+    print(hamiltonian.terms)
     # computing the energy of the first one only, assuming degeneracy
-    cl_energy = bitstring_energy(hamiltonian, cl_ground_states[0])
+    cl_energy = bitstring_energy(hamiltonian, cl_ground_state)
+    
+    print(bitstring_energy(hamiltonian, cl_ground_state))
+    
+    cl_ground_state_list = []
+    cl_ground_state_list.append(cl_ground_state)
 
-    return cl_energy, cl_ground_states
+    return cl_energy, cl_ground_state_list
