@@ -36,7 +36,6 @@ def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
 
     # Find the n_max+1 largest correlation pairs
     for _ in range(n_elim):
-
         # Obtain max_spin, its Z expectation value, and store it - round to
         # suppress errors from numbers approximating 0
         max_spin = np.unravel_index(abs(Z).argmax(), Z.shape)
@@ -55,7 +54,6 @@ def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
             M[max_term] = 0
 
         else:
-
             # If maximum value is 0, all expectation values are vanishing
             if max_val == 0:
                 break
@@ -105,7 +103,6 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
 
     # Find the n_max+1 largest correlation pairs
     for _ in range(n_max + 1):
-
         # Obtain max_spin, its Z expectation value, and store it - round to
         # suppress errors from numbers approximating 0
         max_spin = np.unravel_index(abs(Z).argmax(), Z.shape)
@@ -124,7 +121,6 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
             M[max_term] = 0
 
         else:
-
             # If maximum value is 0, all expectation values are vanishing
             if max_val == 0:
                 break
@@ -152,7 +148,6 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
     # Cut down the number of eliminations if, due to symmetry, they exceed
     # the number allowed - relevant for unweighted graphs
     if len(max_terms_and_stats) > n_max:
-
         max_keys = list(max_terms_and_stats.keys())[0:n_max]
         max_terms_and_stats = {key: max_terms_and_stats[key] for key in max_keys}
 
@@ -238,10 +233,8 @@ def spin_mapping(problem: QUBO, max_terms_and_stats: dict):
 
     # Build spin map from all expectation values
     for term, stat in sorted_max_ts:
-
         # Single spin expectation value
         if len(term) == 1:
-
             # Select spin
             spin = term[0]
 
@@ -254,7 +247,6 @@ def spin_mapping(problem: QUBO, max_terms_and_stats: dict):
 
         # Correlation terms
         else:
-
             # Select spins
             spin_keep, spin_remove = term
 
@@ -264,7 +256,6 @@ def spin_mapping(problem: QUBO, max_terms_and_stats: dict):
 
             # If neither spin has been fixed, store relation
             if parent_keep is not None and parent_remove is not None:
-
                 # Ensure we keep the spin with lowest label for future state reconstruction
                 if parent_remove < parent_keep:
                     parent_keep, parent_remove = parent_remove, parent_keep
@@ -291,7 +282,6 @@ def spin_mapping(problem: QUBO, max_terms_and_stats: dict):
 
             # If one spin has been fixed, fix the second one according to correlation value
             else:
-
                 # Extract fixed and unfixed spins
                 spin_fixed, factor_fixed = (
                     (parent_keep, factor_keep)
@@ -355,7 +345,6 @@ def problem_from_dict(problem_dict: dict):
 
     # Edges mapping
     for edge in edges:
-
         # Map linear term to linear term
         if len(edge) == 1:
             label_edges_mapping.update({edge: (label_mapping.get(edge[0]),)})
@@ -411,10 +400,8 @@ def redefine_problem(problem: QUBO, spin_map: dict):
 
     # Scan all terms and weights
     for term, weight in zip(problem.terms, problem.weights):
-
         # Bias terms
         if len(term) == 1:
-
             # Extract spin from the map
             spin = term[0]
 
@@ -440,7 +427,6 @@ def redefine_problem(problem: QUBO, spin_map: dict):
 
         # Quadratic terms
         else:
-
             # Extract spins from term
             spin1, spin2 = term
 
@@ -454,7 +440,6 @@ def redefine_problem(problem: QUBO, spin_map: dict):
 
             # If neither parent spin is fixed and they are different, define new quadratic term
             elif parent_spin1 is not None and parent_spin2 is not None:
-
                 # Define new edge through the spin map and order them
                 new_edge = [parent_spin1, parent_spin2]
                 new_edge = tuple([min(new_edge), max(new_edge)])
@@ -472,7 +457,6 @@ def redefine_problem(problem: QUBO, spin_map: dict):
 
             # If only one spin is fixed, quadratic term becomes a bias term
             else:
-
                 # Define new bias term keeping the unfixed spin
                 new_edge = (parent_spin1,) if parent_spin2 is None else (parent_spin2,)
                 new_weight = factor_spin1 * factor_spin2 * weight
@@ -502,7 +486,7 @@ def redefine_problem(problem: QUBO, spin_map: dict):
 
     # Check for isolated nodes after constructing the new problem
     there_is_isolated_nodes = False
-    
+
     # If lengths do not match, there are isolated nodes
     if len(new_register) != len(new_quadratic_register):
         isolated_nodes = new_register.difference(new_quadratic_register)
@@ -580,18 +564,14 @@ def final_solution(
 
     # Re-construct each solution
     for cl_state in cl_states:
-
         # Transform every string solution into binary integer
         state = [int(bit) for bit in cl_state]
 
         # Extract terms and costs from each elimination step
         for terms_and_stats in elimination_tracker:
-
             # Back track elimination from the specific step
             for term_stat in terms_and_stats:
-
                 if "singlet" in term_stat:
-
                     (i,) = term_stat["singlet"]
                     val = term_stat["bias"]
                     val = term_stat["bias"]
@@ -604,7 +584,6 @@ def final_solution(
 
                 # If we have a pair
                 else:
-
                     i, j = term_stat["pair"]
                     val = term_stat["correlation"]
                     val = term_stat["correlation"]
@@ -647,7 +626,6 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
         List of strings of binary values representing the classical solution of the
         problem respecting the spin map.
     """
-    print(spin_map)
     cl_ground_state = ""
 
     for spin in spin_map.keys():
@@ -665,13 +643,9 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
                 # anticorrelated
                 cl_ground_state += str(int(not bool(int(cl_ground_state[parent]))))
 
-    print(cl_ground_state)
-    print(hamiltonian.terms)
     # computing the energy of the first one only, assuming degeneracy
     cl_energy = bitstring_energy(hamiltonian, cl_ground_state)
-    
-    print(bitstring_energy(hamiltonian, cl_ground_state))
-    
+
     cl_ground_state_list = []
     cl_ground_state_list.append(cl_ground_state)
 
