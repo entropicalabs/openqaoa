@@ -605,10 +605,8 @@ def final_solution(
 
 def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     """
-    Constructs the final solution of the smallest non vanishing problem by obtaining the final
-    states by generating all permutations of the spins which can be fixe arbitrarily while obeying
-    the correlations identified by the last run of QAOA before the problem vanished.
-    Computing the corresponding energy only of the first string, assuming they are degenerate.
+    Constructs the final solution of the smallest non vanishing problem by fixing the vanishing spins arbitrarily to 1 while obeying the correlations identified by the last run of QAOA before the problem vanished.
+    Computing the classical energy of the egenerated string.
 
     Parameters
     ----------
@@ -621,10 +619,10 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     Returns
     -------
     cl_energy: `float`
-        The energy of the first solution wrt the cost Hamiltonian.
+        The energy of the solution wrt the cost Hamiltonian.
     cl_ground_states: `list`
-        List of strings of binary values representing the classical solution of the
-        problem respecting the spin map.
+        List of a string of binary values representing the classical solution of the
+        problem in correspondance with the spin map.
     """
     cl_ground_state = ""
 
@@ -646,6 +644,7 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     # computing the energy of the first one only, assuming degeneracy
     cl_energy = bitstring_energy(hamiltonian, cl_ground_state)
 
+    # to match the expected format: list of strings
     cl_ground_state_list = []
     cl_ground_state_list.append(cl_ground_state)
 
