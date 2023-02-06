@@ -48,6 +48,8 @@ def _backend_arg_mapper(
     rewiring=None,
     qubit_layout=None,
     disable_qubit_rewiring: Optional[bool] = None,
+    initial_qubit_layout=None,
+    final_qubit_layout=None,
 ):
 
     BACKEND_ARGS_MAPPER = {
@@ -60,18 +62,29 @@ def _backend_arg_mapper(
             "seed_simulator": seed_simulator,
             "qiskit_simulation_method": qiskit_simulation_method,
             "noise_model": noise_model,
+            "initial_qubit_layout": initial_qubit_layout,
+            "final_qubit_layout": final_qubit_layout,
         },
-        QAOAQiskitQPUBackend: {"n_shots": n_shots, "qubit_layout": qubit_layout},
+        QAOAQiskitQPUBackend: {
+            "n_shots": n_shots,
+            "qubit_layout": qubit_layout,
+            "initial_qubit_layout": initial_qubit_layout,
+            "final_qubit_layout": final_qubit_layout,
+        },
         QAOAPyQuilQPUBackend: {
             "n_shots": n_shots,
             "active_reset": active_reset,
             "rewiring": rewiring,
             "qubit_layout": qubit_layout,
+            "initial_qubit_layout": initial_qubit_layout,
+            "final_qubit_layout": final_qubit_layout,
         },
         QAOAAWSQPUBackend: {
             "n_shots": n_shots,
             "qubit_layout": qubit_layout,
             "disable_qubit_rewiring": disable_qubit_rewiring,
+            "initial_qubit_layout": initial_qubit_layout,
+            "final_qubit_layout": final_qubit_layout,
         },
     }
 
@@ -173,8 +186,6 @@ def get_qaoa_backend(
                 append_state=append_state,
                 init_hadamard=init_hadamard,
                 cvar_alpha=cvar_alpha,
-                initial_qubit_layout=initial_qubit_layout,
-                final_qubit_layout=final_qubit_layout,
                 **backend_kwargs,
             )
 
@@ -186,8 +197,6 @@ def get_qaoa_backend(
                 append_state=append_state,
                 init_hadamard=init_hadamard,
                 cvar_alpha=cvar_alpha,
-                initial_qubit_layout=initial_qubit_layout,
-                final_qubit_layout=final_qubit_layout,
                 **backend_kwargs,
             )
     except Exception as e:

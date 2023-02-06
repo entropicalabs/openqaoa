@@ -19,7 +19,7 @@ from openqaoa.utilities import (
     flip_counts,
     generate_uuid,
     round_value,
-    permute_counts_dictionary
+    permute_counts_dictionary,
 )
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.qaoa_components.ansatz_constructor import (
@@ -81,27 +81,32 @@ class QAOAQiskitBackendShotBasedSimulator(
         RZXGateMap,
     ]
 
-    def __init__(self,
-                 qaoa_descriptor: QAOADescriptor,
-                 n_shots: int,
-                 prepend_state: Optional[QuantumCircuit],
-                 append_state: Optional[QuantumCircuit],
-                 init_hadamard: bool,
-                 cvar_alpha: float,
-                 qiskit_simulation_method: str = 'automatic',
-                 seed_simulator: Optional[int] = None,
-                 noise_model: Optional[NoiseModel] = None,
-                 initial_qubit_layout: List[int] = None,
-                 final_qubit_layout: List[int] = None):
-        
-        QAOABaseBackendShotBased.__init__(self,qaoa_descriptor,
-                                          n_shots,
-                                          prepend_state,
-                                          append_state,
-                                          init_hadamard,
-                                          cvar_alpha,
-                                          initial_qubit_layout,
-                                          final_qubit_layout)
+    def __init__(
+        self,
+        qaoa_descriptor: QAOADescriptor,
+        n_shots: int,
+        prepend_state: Optional[QuantumCircuit],
+        append_state: Optional[QuantumCircuit],
+        init_hadamard: bool,
+        cvar_alpha: float,
+        qiskit_simulation_method: str = "automatic",
+        seed_simulator: Optional[int] = None,
+        noise_model: Optional[NoiseModel] = None,
+        initial_qubit_layout: List[int] = None,
+        final_qubit_layout: List[int] = None,
+    ):
+
+        QAOABaseBackendShotBased.__init__(
+            self,
+            qaoa_descriptor,
+            n_shots,
+            prepend_state,
+            append_state,
+            init_hadamard,
+            cvar_alpha,
+            initial_qubit_layout,
+            final_qubit_layout,
+        )
 
         self.qureg = QuantumRegister(self.n_qubits)
         self.qubit_layout = self.qaoa_descriptor.qureg
@@ -156,15 +161,18 @@ class QAOAQiskitBackendShotBasedSimulator(
 
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
-            #if gate is of type mixer or cost gate, assign parameter to it
-            if each_gate.gate_label.type.value in ['mixer','cost']:
-                angle_param = Parameter(each_gate.gate_label.__repr__()) 
+            # if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ["mixer", "cost"]:
+                angle_param = Parameter(each_gate.gate_label.__repr__())
                 self.qiskit_parameter_list.append(angle_param)
                 each_gate.angle_value = angle_param
-            if type(each_gate) in QAOAQiskitBackendShotBasedSimulator.QISKIT_GATEMAP_LIBRARY:
-                decomposition = each_gate.decomposition('trivial')
-            else: 
-                decomposition = each_gate.decomposition('standard')
+            if (
+                type(each_gate)
+                in QAOAQiskitBackendShotBasedSimulator.QISKIT_GATEMAP_LIBRARY
+            ):
+                decomposition = each_gate.decomposition("trivial")
+            else:
+                decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
                 low_gate = each_tuple[0]()
@@ -201,12 +209,17 @@ class QAOAQiskitBackendShotBasedSimulator(
         n_shots = self.n_shots if n_shots == None else n_shots
 
         qaoa_circuit = self.qaoa_circuit(params)
-        counts = self.backend_simulator.run(qaoa_circuit, shots=self.n_shots).result().get_counts()
-        
+        counts = (
+            self.backend_simulator.run(qaoa_circuit, shots=n_shots)
+            .result()
+            .get_counts()
+        )
+
         final_counts = flip_counts(counts)
         if self.initial_qubit_layout != self.final_qubit_layout:
-            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
-                                                    self.final_qubit_layout)
+            final_counts = permute_counts_dictionary(
+                final_counts, self.initial_qubit_layout, self.final_qubit_layout
+            )
         self.measurement_outcomes = final_counts
         return final_counts
 
@@ -368,15 +381,18 @@ class QAOAQiskitBackendStatevecSimulator(
 
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
-            #if gate is of type mixer or cost gate, assign parameter to it
-            if each_gate.gate_label.type.value in ['mixer','cost']:
-                angle_param = Parameter(each_gate.gate_label.__repr__()) 
+            # if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ["mixer", "cost"]:
+                angle_param = Parameter(each_gate.gate_label.__repr__())
                 self.qiskit_parameter_list.append(angle_param)
                 each_gate.angle_value = angle_param
-            if type(each_gate) in QAOAQiskitBackendStatevecSimulator.QISKIT_GATEMAP_LIBRARY:
-                decomposition = each_gate.decomposition('trivial')
-            else: 
-                decomposition = each_gate.decomposition('standard')
+            if (
+                type(each_gate)
+                in QAOAQiskitBackendStatevecSimulator.QISKIT_GATEMAP_LIBRARY
+            ):
+                decomposition = each_gate.decomposition("trivial")
+            else:
+                decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
                 low_gate = each_tuple[0]()

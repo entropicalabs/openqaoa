@@ -256,7 +256,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         for j in range(2):
             for i in range(6):
-                self.assertEqual(q.qaoa_descriptor.mixer_block[j][i].qubit_1, i)
+                self.assertEqual(q.qaoa_descriptor.mixer_blocks[j][i].qubit_1, i)
 
     def test_set_circuit_properties_qaoa_descriptor_mixer_xy(self):
         
