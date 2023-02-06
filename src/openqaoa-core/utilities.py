@@ -9,6 +9,7 @@ import numpy as np
 import uuid
 import matplotlib.pyplot as plt
 import networkx as nx
+import datetime
 
 from .qaoa_components import Hamiltonian, PauliOp, QAOAVariationalBaseParams
 from .qaoa_components.ansatz_constructor.gatemap import TwoQubitRotationGateMap
@@ -1533,9 +1534,20 @@ def convert2serialize(obj, complex_to_string: bool = False):
 
 
 ################################################################################
-# UUID
+# UUID and Timestamp
 ################################################################################
 
+def generate_timestamp() -> str:
+    """
+    Generate a timestamp string in UTC+0. Format: YYYY-MM-DDTHH:MM:SS.
+
+    Returns
+    -------
+    timestamp: `str`
+        String representation of a timestamp.
+    """
+    return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+    
 
 def generate_uuid() -> str:
     """

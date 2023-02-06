@@ -7,7 +7,7 @@ from ..qaoa import QAOA
 from ..workflow_properties import CircuitProperties
 from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...problems import QUBO
-from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise
+from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise, generate_timestamp
 from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from . import rqaoa_utils
 from .rqaoa_results import RQAOAResults
@@ -366,7 +366,7 @@ class RQAOA(Workflow):
             f_max_terms = rqaoa_utils.max_terms
 
         # timestamp for the start of the optimization
-        self.header["execution_time_start"] = int(time.time())
+        self.header["execution_time_start"] = generate_timestamp()
 
         # flag, set to true if the problem vanishes due to elimination before reaching cutoff
         total_elimination = False
@@ -450,7 +450,7 @@ class RQAOA(Workflow):
         )
 
         # timestamp for the end of the optimization
-        self.header["execution_time_end"] = int(time.time())
+        self.header["execution_time_end"] = generate_timestamp()
 
         # Compute description dictionary containing all the information
         self.results = self.results_class() 
