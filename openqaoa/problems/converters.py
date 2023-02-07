@@ -16,6 +16,8 @@ from collections import defaultdict
 from typing import Union
 
 import numpy as np
+from docplex.mp.model import Model
+
 
 from .qubo import QUBO
 
@@ -45,11 +47,15 @@ class FromDocplex2IsingModel(object):
             implement a novel approach that do not required slack variables.
         strength_ineq: List[float, float]
             Lagrange multipliers of the penalization term using the unbalanced
-            constrained method.
-            For the penalty => \lambda_2 * \zeta**2 - \lambda_1 * \zeta  || strength_ineq = [a, b]
-            Usually lambda_2 < lambda_1. Please refere to the paper:
-                Unbalanced penalizations: A novel approach of inequality constraints
-                codification in quantum optimization problems.
+            penalization method.
+            
+            For the unbalnaced penalization => - \lambda_1 h(x) ** 2 + \lambda_2 * h(x)**2
+            where h(x) >= 0 is the inequality constraint.
+            strength_ineq = [\lambda_1, \lambda_2]
+            Usually \lambda_2 < \lambda_1. Please refere to the paper:
+                Unbalanced penalization: A new approach to encode inequality constraints
+                of combinatorial problems for quantum optimization algorithms
+                https://arxiv.org/abs/2211.13914
 
         """
         # assign the docplex Model
@@ -196,7 +202,7 @@ class FromDocplex2IsingModel(object):
         elif constraint.sense_string == "GE":  # Great or equal inequality constriant
             new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
         else:
-            AttributeError(
+            raise AttributeError(
                 f"It is not possible to implement constraint {constraint.sense_string}."
             )
 
@@ -248,11 +254,11 @@ class FromDocplex2IsingModel(object):
         elif constraint.sense_string == "GE":  # Great or equal inequality constriant
             new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
         else:
-            AttributeError(
+            raise AttributeError(
                 f"It is not possible to implement constraint {constraint.sense_string}."
             )
         strength = self.strength_ineq
-        penalty = strength[0] * new_exp**2 - strength[1] * new_exp
+        penalty = - strength[0] * new_exp + strength[1] * new_exp**2
         return penalty
 
     def multipliers_generators(self):
@@ -301,7 +307,7 @@ class FromDocplex2IsingModel(object):
             multipliers = n_constraints * [multipliers]
 
         elif type(multipliers) not in [list, np.ndarray]:
-            TypeError(f"{type(multipliers)} is not a accepted format")
+            raise TypeError(f"{type(multipliers)} is not a accepted format")
 
         for cn, constraint in enumerate(constraints_list):
             if (
@@ -317,14 +323,14 @@ class FromDocplex2IsingModel(object):
             ]:  # Inequality constraint added as a penalty with additional slack variables.
                 constraint.name = f"C{cn}"
                 if self.unbalanced:
-                    penalty = multipliers[cn] * self.inequality_to_unbalanced_penalty(
+                    penalty = self.inequality_to_unbalanced_penalty(
                         constraint
                     )
                 else:
                     ineq2eq = self.inequality_to_equality(constraint)
                     penalty = self.equality_to_penalty(ineq2eq, multipliers[cn])
             else:
-                TypeError("This is not a valid constraint.")
+                raise TypeError("This is not a valid constraint.")
 
             self.linear_expr(penalty)
             self.quadratic_expr(penalty)
@@ -377,7 +383,7 @@ class FromDocplex2IsingModel(object):
             elif len(term) == 0:
                 constant_term += weight
             else:
-                TypeError(f"Term {term} is not recognized!")
+                raise TypeError(f"Term {term} is not recognized!")
 
         for variable, linear_term in enumerate(linear_terms):
             ising_terms.append([variable])
@@ -438,9 +444,7 @@ class FromDocplex2IsingModel(object):
 
         n_variables = self.model.number_of_variables
         # QUBO docplex
-        qubo_docplex = self.model.copy()
-        qubo_docplex.clear_constraints()
-        qubo_docplex.remove_objective()
+        qubo_docplex = Model(self.model.name)
         qubo_docplex.minimize(self.objective_qubo)
         # Ising Hamiltonian of the QUBO
         ising_model = self.qubo_to_ising(n_variables, terms, weights)
