@@ -60,7 +60,7 @@ class FromDocplex2IsingModel(object):
         """
         # assign the docplex Model
         self.model = model.copy()
-
+        self.model_name = model.name
         # save the index in a dict
         self.idx_terms = {}
         for x in self.model.iter_variables():
@@ -444,7 +444,10 @@ class FromDocplex2IsingModel(object):
 
         n_variables = self.model.number_of_variables
         # QUBO docplex
-        qubo_docplex = Model(self.model.name)
+        qubo_docplex = self.model.copy()
+        qubo_docplex.name = self.model_name
+        qubo_docplex.clear_constraints()
+        qubo_docplex.remove_objective()
         qubo_docplex.minimize(self.objective_qubo)
         # Ising Hamiltonian of the QUBO
         ising_model = self.qubo_to_ising(n_variables, terms, weights)
