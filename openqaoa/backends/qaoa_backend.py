@@ -17,9 +17,9 @@ import numpy as np
 from ..backends import (QAOAQiskitQPUBackend, QAOAPyQuilQPUBackend, QAOAAWSQPUBackend, 
                         QAOAPyQuilWavefunctionSimulatorBackend,
                         QAOAQiskitBackendStatevecSimulator, QAOAQiskitBackendShotBasedSimulator, 
-                        QAOAvectorizedBackendSimulator)
+                        QAOAvectorizedBackendSimulator, QAOABackendAnalyticalSimulator)
 
-from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS
+from ..devices import DeviceBase, DeviceLocal, DevicePyquil, DeviceQiskit, DeviceAWS, DeviceAzure
 from ..qaoa_parameters.baseparams import QAOACircuitParams
 from ..basebackend import QuantumCircuitBase, QAOABaseBackend
 
@@ -28,13 +28,15 @@ DEVICE_NAME_TO_OBJECT_MAPPER = {
     'qiskit.shot_simulator': QAOAQiskitBackendShotBasedSimulator,
     'qiskit.statevector_simulator': QAOAQiskitBackendStatevecSimulator,
     'vectorized': QAOAvectorizedBackendSimulator,
-    'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend
+    'pyquil.statevector_simulator': QAOAPyQuilWavefunctionSimulatorBackend,
+    'analytical_simulator': QAOABackendAnalyticalSimulator,
 }
 
 DEVICE_ACCESS_OBJECT_MAPPER = {
     DeviceQiskit: QAOAQiskitQPUBackend,
     DevicePyquil: QAOAPyQuilQPUBackend, 
-    DeviceAWS: QAOAAWSQPUBackend
+    DeviceAWS: QAOAAWSQPUBackend,
+    DeviceAzure: QAOAQiskitQPUBackend
 }
 
 
@@ -49,6 +51,7 @@ def _backend_arg_mapper(backend_obj: QAOABaseBackend,
                         disable_qubit_rewiring: Optional[bool] = None):
 
     BACKEND_ARGS_MAPPER = {
+        QAOABackendAnalyticalSimulator: {},
         QAOAvectorizedBackendSimulator: {},
         QAOAQiskitBackendStatevecSimulator: {},
         QAOAPyQuilWavefunctionSimulatorBackend: {},

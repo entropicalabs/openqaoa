@@ -104,6 +104,13 @@ Vectorised
     :members:
     :undoc-members:
     :inherited-members:
+    
+Analytical Simulator
+----------------------------------
+.. autoclass:: openqaoa.backends.simulators.qaoa_analytical_sim.QAOABackendAnalyticalSimulator
+    :members:
+    :undoc-members:
+    :inherited-members:
 
 Qiskit
 ----------------------------------

@@ -152,7 +152,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
 
         return parametric_circuit
 
-    def get_counts(self, params: QAOAVariationalBaseParams) -> dict:
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
         """
         Execute the circuit and obtain the counts
 
@@ -161,12 +161,16 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
         params: QAOAVariationalBaseParams
             The QAOA parameters - an object of one of the parameter classes, containing 
             variable parameters.
+        n_shots: int
+            The number of times to run the circuit. If None, n_shots is set to the default: self.n_shots.
 
         Returns
         -------
             A dictionary with the bitstring as the key and the number of counts 
             as its value.
         """
+
+        n_shots = self.n_shots if n_shots == None else n_shots 
 
         circuit = self.qaoa_circuit(params)
 
@@ -178,7 +182,7 @@ class QAOAAWSQPUBackend(QAOABaseBackendParametric, QAOABaseBackendCloud, QAOABas
             job = self.backend_qpu.run(circuit, 
                                        (self.device.s3_bucket_name, 
                                         self.device.folder_name), 
-                                       shots = self.n_shots, 
+                                       shots = n_shots, 
                                        disable_qubit_rewiring = self.disable_qubit_rewiring)
             
             try:

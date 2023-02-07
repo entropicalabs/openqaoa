@@ -16,14 +16,15 @@ from functools import update_wrapper
 from logging.config import dictConfig
 from re import I
 import matplotlib.pyplot as plt
-from typing import Type
+from typing import Type, List
 import numpy as np
 import json
 
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
-from ..utilities import qaoa_probabilities, bitstring_energy
-from openqaoa.problems.helper_functions import convert2serialize, convert2serialize_complex
+from ..utilities import qaoa_probabilities, bitstring_energy, convert2serialize, delete_keys_from_dict
+from ..basebackend import QAOABaseBackend, QAOABaseBackendStatevector
+from openqaoa.backends import QAOABackendAnalyticalSimulator
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -54,46 +55,48 @@ class Result:
     """
 
     def __init__(
-        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian]
+        self, log: Type[Logger], method: Type[str], cost_hamiltonian: Type[Hamiltonian], type_backend: Type[QAOABaseBackend]
     ):
 
+        self.__type_backend = type_backend
         self.method = method
-
         self.cost_hamiltonian = cost_hamiltonian
 
         self.evals = {
-            "number of evals": log.func_evals.best[0],
-            "jac evals": log.jac_func_evals.best[0],
-            "qfim evals": log.qfim_func_evals.best[0],
+            "number_of_evals": log.func_evals.best[0],
+            "jac_evals": log.jac_func_evals.best[0],
+            "qfim_evals": log.qfim_func_evals.best[0],
         }
 
         self.intermediate = {
-            'angles log': np.array(log.param_log.history).tolist(),
-            'intermediate cost': log.cost.history,
-            'intermediate measurement outcomes':
+            'angles': np.array(log.param_log.history).tolist(),
+            'cost': log.cost.history,
+            'measurement_outcomes':
                 log.measurement_outcomes.history,
-            'intermediate runs job id': log.job_ids.history
+            'job_id': log.job_ids.history
         }
 
         self.optimized = {
-            'optimized angles':
+            'angles':
                 np.array(log.param_log.best[0]).tolist()
                 if log.param_log.best != [] else [],
-            'optimized cost':
+            'cost':
                 log.cost.best[0]
                 if log.cost.best != [] else None,
-            'optimized measurement outcomes':
+            'measurement_outcomes':
                 log.measurement_outcomes.best[0]
                 if log.measurement_outcomes.best != [] else {},
-            'optimized run job id': 
+            'job_id': 
                 log.job_ids.best[0] 
-                if len(log.job_ids.best) != 0 else []
+                if len(log.job_ids.best) != 0 else [],
+            'eval_number': 
+                log.eval_number.best[0] 
+                if len(log.eval_number.best) != 0 else [],
         }
-
+        
         self.most_probable_states = most_probable_bitstring(
-            cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
-        ) if log.measurement_outcomes.best != [] else []
-
+                cost_hamiltonian, self.get_counts(log.measurement_outcomes.best[0])
+            ) if type_backend != QAOABackendAnalyticalSimulator and log.measurement_outcomes.best != [] else [] 
     # def __repr__(self):
     #     """Return an overview over the parameters and hyperparameters
     #     Todo
@@ -104,9 +107,73 @@ class Result:
     #     string = "Optimization Results:\n"
     #     string += "\tThe solution is " + str(self.solution['degeneracy']) + " degenerate" "\n"
     #     string += "\tThe most probable bitstrings are: " + str(self.solution['bitstring']) + "\n"
-    #     string += "\tThe associated cost is: " + str(self.optimized['optimized cost']) + "\n"
+    #     string += "\tThe associated cost is: " + str(self.optimized['cost']) + "\n"
 
     #     return (string)
+    
+        # if we are using a shot adaptive optimizer, we need to add the number of shots to the result   
+        if log.n_shots.history != []:
+            self.n_shots = log.n_shots.history
+
+
+    def asdict(self, keep_cost_hamiltonian:bool=True, complex_to_string:bool=False, intermediate_mesurements:bool=True, exclude_keys:List[str]=[]):
+        """
+        Returns a dictionary with the results of the optimization, where the dictionary is serializable. 
+        If the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
+
+        Parameters
+        ----------
+        keep_cost_hamiltonian: `bool`
+            If True, the cost hamiltonian is kept in the dictionary. If False, it is removed.
+        complex_to_string: `bool`
+            If True, the complex numbers are converted to strings. If False, they are kept as complex numbers. This is useful for the JSON serialization. 
+        intermediate_mesurements: bool, optional
+            If True, intermediate measurements are included in the dump. If False, intermediate measurements are not included in the dump.
+            Default is True.
+        exclude_keys: `list[str]`
+            A list of keys to exclude from the returned dictionary.
+
+        Returns
+        -------
+        return_dict: `dict`
+            A dictionary with the results of the optimization, where the dictionary is serializable.
+        """
+
+        return_dict = {}
+        return_dict['method'] = self.method
+        if keep_cost_hamiltonian: return_dict['cost_hamiltonian'] = convert2serialize(self.cost_hamiltonian)
+        return_dict['evals'] = self.evals
+        return_dict['most_probable_states'] = self.most_probable_states
+
+        complx_to_str = lambda x: str(x) if isinstance(x, np.complex128) or isinstance(x, complex) else x
+        
+        # if the backend is a statevector backend, the measurement outcomes will be the statevector, meaning that it is a list of complex numbers, which is not serializable. If that is the case, and complex_to_string is true the complex numbers are converted to strings.
+        if complex_to_string and issubclass(self.__type_backend, QAOABaseBackendStatevector):
+            return_dict['intermediate'] = {}
+            for key, value in self.intermediate.items():
+                if intermediate_mesurements == False and 'measurement' in key: # if intermediate_mesurements is false, the intermediate measurements are not included in the dump
+                    return_dict['intermediate'][key] = []
+                elif 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)):
+                    return_dict['intermediate'][key] = [[complx_to_str(item) for item in list_] for list_ in value if (isinstance(list_, list) or isinstance(list_, np.ndarray))]
+                else:
+                    return_dict['intermediate'][key] = value 
+
+            return_dict['optimized'] = {}
+            for key, value in self.optimized.items():
+                if 'measurement' in key and (isinstance(value, list) or isinstance(value, np.ndarray)):
+                    return_dict['optimized'][key] = [complx_to_str(item) for item in value] 
+                else:
+                    return_dict['optimized'][key] = value
+        else:
+            return_dict['intermediate'] = self.intermediate
+            return_dict['optimized'] = self.optimized
+
+        # if we are using a shot adaptive optimizer, we need to add the number of shots to the result, so if attribute n_shots is not empty, it is added to the dictionary
+        if getattr(self, 'n_shots', None) != None:
+            return_dict['n_shots'] = self.n_shots
+
+        return return_dict if exclude_keys == [] else delete_keys_from_dict(return_dict, exclude_keys)
+
 
     @staticmethod
     def get_counts(measurement_outcomes):
@@ -117,6 +184,7 @@ class Result:
         ----------
         measurement_outcomes: `Union[np.array, dict]`
             The measurement outcome as returned by the Logger. It can either be a statevector or a count dictionary
+            
         Returns
         -------
         `dict`
@@ -150,11 +218,12 @@ class Result:
 
         ax.plot(
             range(
-                self.evals["number of evals"]
-                - self.evals["jac evals"]
-                - self.evals["qfim evals"]
+                1,
+                self.evals["number_of_evals"]
+                - self.evals["jac_evals"]
+                - self.evals["qfim_evals"] + 1
             ),
-            self.intermediate["intermediate cost"],
+            self.intermediate["cost"],
             label=label,
             linestyle=linestyle,
             color=color,
@@ -187,7 +256,7 @@ class Result:
             Axis on which to plot the graph. Deafults to None
         """
 
-        outcome = self.optimized['optimized measurement outcomes']
+        outcome = self.optimized['measurement_outcomes']
 
         # converting to counts dictionary if outcome is statevector
         if type(outcome) == type(np.array([])):
@@ -251,6 +320,97 @@ class Result:
         print('states kept:', n_states_to_keep)
         return
 
+    def plot_n_shots(self, figsize = (10,8), param_to_plot=None, label=None, linestyle="--", color=None, ax=None, xlabel="Iterations", ylabel="Number of shots", title="Evolution of number of shots for gradient estimation"):
+        """
+        Helper function to plot the evolution of the number of shots used for each evaluation of the cost function when computing the gradient.
+        It only works for shot adaptive optimizers: cans and icans. 
+        If cans was used, the number of shots will be the same for each parameter at each iteration.
+        If icans was used, the number of shots could be different for each parameter at each iteration.
+
+        Parameters
+        ----------
+        figsize: `tuple`
+            The size of the figure to be plotted. Defaults to (10,8).
+        param_to_plot: `list[int]` or `int`
+            The parameteres to plot. If None, all parameters will be plotted. Defaults to None.
+            If a int is given, only the parameter with that index will be plotted.
+            If a list of ints is given, the parameters with those indexes will be plotted.
+        label: `list[str]` or `str`
+            The label for each parameter. Defaults to Parameter {i}. 
+            If only one parameter is plot the label can be a string, otherwise it must be a list of strings.
+        linestyle: `list[str]` or `str`
+            The linestyle for each parameter. Defaults to '--' for all parameters. 
+            If it is a string all parameters will use it, if it a list of strings the linestyle of each parameter will depend on one string of the list.
+        color: `list[str]` or `str`
+            The color for each parameter. Defaults to None for all parameters (matplotlib will choose the colors). 
+            If only one parameter is plot the color can be a string, otherwise it must be a list of strings.
+        ax: 'matplotlib.axes._subplots.AxesSubplot'
+            Axis on which to plot the graph. If none is given, a new figure will be created.
+
+        """
+
+        if ax is None:
+            ax = plt.subplots(figsize=figsize)[1]
+
+        ## creating a list of parameters to plot
+        # if param_to_plot is not given, plot all the parameters 
+        if param_to_plot is None: param_to_plot = list(range(len(self.n_shots[0]))) 
+        # if param_to_plot is a single value, convert to list
+        elif type(param_to_plot) == int: param_to_plot = [param_to_plot]
+        # if param_to_plot is not a list, raise error
+        if type(param_to_plot) != list: raise ValueError('`param_to_plot` must be a list of integers or a single integer')
+        else: 
+            for param in param_to_plot:
+                assert param < len(self.n_shots[0]) , f'`param_to_plot` must be a list of integers between 0 and {len(self.n_shots[0]) - 1}'
+
+        # if label is not given, create a list of labels for each parameter (only if there is more than 1 parameter)
+        if len(self.n_shots[0]) > 1: label = [f'Parameter {i}' for i in param_to_plot] if label is None else label
+        else: label = ['n. shots per parameter']
+
+        # if only one parameter is plotted, convert label and color to list if they are string
+        if len(param_to_plot) == 1:
+            if type(label) == str: label = [label]
+            if type(color) == str: color = [color]
+
+        # if param_top_plot is a list and label or color are not lists, raise error
+        if (type(label) != list) or (type(color) != list and color != None):
+            raise TypeError('`label` and `color` must be list of str')
+        # if label is a list, check that all the elements are strings
+        for l in label: assert type(l) == str, '`label` must be a list of strings'
+        # if color is a list, check that all the elements are strings
+        if color != None: 
+            for c in color: assert type(c) == str, '`color` must be a list of strings'
+
+        # if label and color are lists, check if they have the same length as param_to_plot
+        if len(label) != len(param_to_plot) or (color != None and len(color) != len(param_to_plot)):
+            raise ValueError(f'`param_to_plot`, `label` and `color` must have the same length, `param_to_plot` is a list of {len(param_to_plot)} elements')
+
+        # linestyle must be a string or a list of strings, if it is a string, convert it to a list of strings
+        if type(linestyle) != str and type(linestyle) != list:
+            raise TypeError('`linestyle` must be str or list')
+        elif type(linestyle) == str:
+            linestyle = [linestyle for _ in range(len(param_to_plot))]
+        elif len(linestyle) != len(param_to_plot):
+            raise ValueError(f'`linestyle` must have the same length as param_to_plot (length of `param_to_plot` is {len(param_to_plot)}), or be a string')
+        else:
+            for ls in linestyle: assert type(ls) == str, '`linestyle` must be a list of strings'
+            
+
+        # plot the evolution of the number of shots for each parameter that is in param_to_plot
+        transposed_n_shots = np.array(self.n_shots).T
+        for i, values in enumerate([transposed_n_shots[j] for j in param_to_plot]):
+            if color is None:
+                ax.plot(values, label=label[i], linestyle=linestyle[i])
+            else:
+                ax.plot(values, label=label[i], linestyle=linestyle[i], color=color[i])
+
+
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel(xlabel)
+        ax.legend()
+        ax.set_title(title)
+
+
 
     def lowest_cost_bitstrings(self, n_bitstrings: int = 1) -> dict:
         """
@@ -270,17 +430,17 @@ class Result:
 
         """
 
-        if isinstance(self.optimized["optimized measurement outcomes"], dict):
-            measurement_outcomes = self.optimized["optimized measurement outcomes"]
+        if isinstance(self.optimized["measurement_outcomes"], dict):
+            measurement_outcomes = self.optimized["measurement_outcomes"]
             solution_bitstring = list(measurement_outcomes.keys())
-        elif isinstance(self.optimized["optimized measurement outcomes"], np.ndarray):
+        elif isinstance(self.optimized["measurement_outcomes"], np.ndarray):
             measurement_outcomes = self.get_counts(
-                self.optimized["optimized measurement outcomes"]
+                self.optimized["measurement_outcomes"]
             )
             solution_bitstring = list(measurement_outcomes.keys())
         else:
             raise TypeError(
-                f"The measurement outcome {type(self.optimized['optimized measurement outcomes'])} is not valid."
+                f"The measurement outcome {type(self.optimized['measurement_outcomes'])} is not valid."
             )
         energies = [
             bitstring_energy(self.cost_hamiltonian, bitstring)
@@ -303,51 +463,3 @@ class Result:
             ]
         }
         return best_results
-
-    def as_dict(self):
-        """
-        Returns a dictionary with the attributes of the class.
-
-        Returns
-        -------
-        dict
-            A dictionary with the attributes of the class.
-        """
-        return convert2serialize(self)
-
-    def dumps(self, indent:int=2):
-        """
-        Returns a json string of the QAOA results.
-
-        Parameters
-        ----------
-        indent : int
-            The number of spaces to indent the result in the json file. If None, the result is not indented.
-
-        Returns
-        -------
-        str
-        """
-
-        return json.dumps(convert2serialize_complex(self), indent=indent)
-
-    def dump(self, file_path:str, indent:int=2):
-        """
-        Saves a json file with the QAOA results.
-
-        Parameters
-        ----------
-        file_path : str
-            The name and path of the file to save the result. 
-        indent : int
-            The number of spaces to indent the result in the json file. If None, the result is not indented.
-        """
-
-        # adding .json extension if not present
-        file_path = file_path + '.json' if '.json' != file_path[-5:] else file_path
-
-        # saving the result in a json file
-        with open(file_path, 'w') as f:
-            json.dump(convert2serialize_complex(self), f, indent=indent)
-
-        print('Results saved as {}'.format(file_path))

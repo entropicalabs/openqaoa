@@ -25,7 +25,7 @@ from openqaoa.devices import DeviceQiskit
 from openqaoa.backends.qpus.qaoa_qiskit_qpu import QAOAQiskitQPUBackend
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendStatevecSimulator
 from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa.problems.problem import NumberPartition
+from openqaoa.problems import NumberPartition
 
 
 class TestingQAOAQiskitQPUBackend(unittest.TestCase):

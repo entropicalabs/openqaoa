@@ -14,7 +14,7 @@
 
 from argparse import SUPPRESS
 from threading import local
-from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian
+from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
 from openqaoa.workflows.optimizer import QAOA, RQAOA
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
@@ -26,15 +26,39 @@ from openqaoa.backends.simulators.qaoa_pyquil_sim import QAOAPyQuilWavefunctionS
 from openqaoa.backends.simulators.qaoa_qiskit_sim import QAOAQiskitBackendShotBasedSimulator, QAOAQiskitBackendStatevecSimulator
 from openqaoa.backends.simulators.qaoa_vectorized import QAOAvectorizedBackendSimulator
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
+from openqaoa.problems import MinimumVertexCover, QUBO
 from openqaoa.optimizers.training_vqa import ScipyOptimizer, CustomScipyGradientOptimizer, PennyLaneOptimizer
 import unittest
 import networkx as nw
 import numpy as np
+import json, os, gzip
 
-from openqaoa.problems.problem import MinimumVertexCover, QUBO
+from qiskit import Aer
+from qiskit.test.mock import FakeVigo
+from qiskit.providers.aer.noise import NoiseModel
+from qiskit.providers.aer import QasmSimulator
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']
+
+
+def _test_keys_in_dict(obj, expected_keys):
+    """
+    private function to test the keys. It recursively tests the keys of the nested dictionaries, or lists of dictionaries
+    """
+
+    if isinstance(obj, dict):
+        for key in obj:
+            if key in expected_keys.keys(): expected_keys[key] = True
+
+            if isinstance(obj[key], dict):
+                _test_keys_in_dict(obj[key], expected_keys)
+            elif isinstance(obj[key], list):
+                for item in obj[key]:
+                    _test_keys_in_dict(item, expected_keys)
+    elif isinstance(obj, list):
+        for item in obj:
+            _test_keys_in_dict(item, expected_keys)
 
 
 class TestingVanillaQAOA(unittest.TestCase):
@@ -622,12 +646,285 @@ class TestingVanillaQAOA(unittest.TestCase):
             self.assertEqual(isinstance(q.optimizer, CustomScipyGradientOptimizer), False)
             self.assertEqual(isinstance(q.optimizer, PennyLaneOptimizer), True)
 
+    def test_set_header(self):
+        """
+        Test the test_set_header method of the QAOA class. Step by step it is checked that the header is set correctly.
+        """
+
+        # create a QAOA object
+        qaoa:QAOA = QAOA()
+
+        #check if the header values are set to None, except for the experiment_uuid and algorithm
+        for key, value in qaoa.header.items():
+            if key == 'experiment_uuid':
+                assert is_valid_uuid(qaoa.header['experiment_uuid']), "The experiment_uuid is not a valid uuid."
+            elif key == 'algorithm':
+                assert qaoa.header['algorithm']=='qaoa'
+            else:
+                assert value == None, "The value of the key {} (of the dictionary qaoa.header) is not None, when it should be.".format(key)
+
+        # save the experiment_uuid
+        experiment_uuid = qaoa.header['experiment_uuid']
+
+        # set the header
+        qaoa.set_header(
+            project_uuid="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+            name="test", 
+            run_by="raul", 
+            provider="-", 
+            target="-", 
+            cloud="local", 
+            client="-", 
+            qubit_routing="-", 
+            error_mitigation="-", 
+            error_correction="-"
+            )
+
+        # check if the header values are set to the correct values, except for the qubit_number, atomic_uuid, execution_time_start, and execution_time_end (which are set to None)
+        dict_values = {
+            'experiment_uuid': experiment_uuid,
+            'project_uuid': '8353185c-b175-4eda-9628-b4e58cb0e41b',
+            'algorithm': 'qaoa',
+            'name': 'test',
+            'run_by': 'raul',
+            'provider': '-',
+            'target': '-',
+            'cloud': 'local',
+            'client': '-',
+            'qubit_routing': '-',
+            'error_mitigation': '-',
+            'error_correction': '-',
+            'qubit_number': None,
+            'atomic_uuid': None,
+            'execution_time_start': None,
+            'execution_time_end': None
+        }
+        for key, value in qaoa.header.items():
+            assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
+
+        # compile the QAOA object
+        qaoa.compile(problem = QUBO.random_instance(n=8))
+
+        #check if the header values are still set to the correct values, except for execution_time_start, and execution_time_end (which are set to None). 
+        # Now atomic_uuid should be set to a valid uuid. And qubit_number should be set to 8 (number of qubits of the problem)
+        dict_values['qubit_number'] = 8
+        for key, value in qaoa.header.items():
+            if key not in ['atomic_uuid']:
+                assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
+        assert is_valid_uuid(qaoa.header['atomic_uuid']), "The atomic_uuid is not a valid uuid."
+
+        # save the atomic_uuid
+        atomic_uuid = qaoa.header['atomic_uuid']
+
+        # optimize the QAOA object
+        qaoa.optimize()
+
+        #check if the header values are still set to the correct values, now everything should be set to a valid value (execution_time_start and execution_time_end should be integers>1672933928)
+        dict_values['atomic_uuid'] = atomic_uuid
+        for key, value in qaoa.header.items():
+            if key not in ['execution_time_start', 'execution_time_end']:
+                assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
+        assert qaoa.header['execution_time_start'] > 1672933928, "The execution_time_start is not a valid integer."
+        assert qaoa.header['execution_time_end'] > 1672933928, "The execution_time_end is not a valid integer."
+
+
+        # test if an error is raised when the project_uuid is not a valid string
+        error = False
+        try:
+            qaoa.set_header(project_uuid="test")
+        except:
+            error = True
+        assert error, "The project_uuid is not valid string, but no error was raised."
+
+    def test_set_exp_tags(self):
+        """
+        Test the set_exp_tags method of the QAOA class.
+        """
+
+        qaoa = QAOA()
+        qaoa.set_exp_tags(tags={'tag1': 'value1', 'tag2': 'value2'})
+        qaoa.set_exp_tags(tags={'tag1': 'value9'})
+        qaoa.compile(problem = QUBO.random_instance(n=8))
+        qaoa.optimize()
+
+        assert qaoa.exp_tags == {'tag1':'value9', 'tag2':'value2'}, "Experiment tags are not set correctly."
+
+        error = False
+        try:
+            qaoa.set_exp_tags(tags={'tag1': complex(1,2)})
+        except:
+            error = True
+        assert error, "Experiment tag values should be primitives."
+
+        error = False
+        try:
+            qaoa.set_exp_tags(tags={(1,2): 'test'})
+        except:
+            error = True
+        assert error, "Experiment tag keys should be strings."
+    
+    def test_qaoa_asdict_with_noise(self):
+        "test to check that we can serialize a QAOA object with noise"
+        device_backend = FakeVigo()
+        device = QasmSimulator.from_backend(device_backend)
+        noise_model = NoiseModel.from_backend(device)
+        q_noisy_shot = QAOA()
+
+        # device
+        qiskit_noisy_shot = create_device(location='local', name='qiskit.qasm_simulator')
+        q_noisy_shot.set_device(qiskit_noisy_shot)
+        # circuit properties
+        q_noisy_shot.set_circuit_properties(p=2, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        # backend properties
+        q_noisy_shot.set_backend_properties(n_shots = 200, noise_model = noise_model)
+        # classical optimizer properties
+        q_noisy_shot.set_classical_optimizer(method='COBYLA', maxiter=200,
+                                            cost_progress=True, parameter_log=True)
+        q_noisy_shot.compile(QUBO.random_instance(n=8))
+        q_noisy_shot.optimize()
+        q_noisy_shot.asdict()
+
+    def test_qaoa_asdict_dumps(self):
+        """Test the asdict method of the QAOA class."""
+
+        #qaoa
+        qaoa = QAOA()
+        qaoa.compile(problem = QUBO.random_instance(n=8))
+        # set the header
+        qaoa.set_header(
+            project_uuid="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+            name="test", 
+            run_by="raul", 
+            provider="-", 
+            target="-", 
+            cloud="local", 
+            client="-", 
+            qubit_routing="-", 
+            error_mitigation="-", 
+            error_correction="-"
+            )
+        qaoa.optimize()
+
+        # check QAOA asdict
+        self.__test_expected_keys(qaoa.asdict(), method='asdict')
+
+        # check QAOA asdict deleting some keys
+        exclude_keys = ['corr_matrix', 'number_steps']
+        self.__test_expected_keys(qaoa.asdict(exclude_keys=exclude_keys), exclude_keys, method='asdict')
+
+        # check QAOA dumps
+        self.__test_expected_keys(json.loads(qaoa.dumps()), method='dumps')
+
+        # check QAOA dumps deleting some keys
+        exclude_keys = ['parent_uuid', 'counter']
+        self.__test_expected_keys(json.loads(qaoa.dumps(exclude_keys=exclude_keys)), exclude_keys, method='dumps')
+
+        # check QAOA dump
+        file_name = 'test_dump_qaoa.json'
+        experiment_uuid, atomic_uuid = qaoa.header['experiment_uuid'], qaoa.header['atomic_uuid']
+        full_name = f'{experiment_uuid}--{atomic_uuid}--{file_name}'
+
+        qaoa.dump(file_name, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist'
+        with open(full_name, 'r') as file:
+            assert file.read() == qaoa.dumps(indent=None), 'Dump file does not contain the correct data'
+        os.remove(full_name)
+
+        # check RQAOA dump whitout prepending the experiment_uuid and atomic_uuid
+        qaoa.dump(file_name, indent=None,prepend_id=False)
+        assert os.path.isfile(file_name), 'Dump file does not exist, when not prepending the experiment_uuid and atomic_uuid'
+        
+        # check RQAOA dump fails when the file already exists
+        error = False
+        try:
+            qaoa.dump(file_name, indent=None,prepend_id=False)
+        except FileExistsError:
+            error = True
+        assert error, 'Dump file does not fail when the file already exists'
+
+        # check that we can overwrite the file
+        qaoa.dump(file_name, indent=None,prepend_id=False, overwrite=True)
+        assert os.path.isfile(file_name), 'Dump file does not exist, when overwriting'
+        os.remove(file_name)
+
+        # check RQAOA dump fails when prepend_id is True and file_name is not given
+        error = False
+        try:
+            qaoa.dump(prepend_id=False)
+        except ValueError:
+            error = True
+        assert error, 'Dump file does not fail when prepend_id is True and file_name is not given'
+
+        # check you can dump to a file with no arguments
+        qaoa.dump()
+        assert os.path.isfile(f'{experiment_uuid}--{atomic_uuid}.json'), 'Dump file does not exist, when no name is given'
+        os.remove(f'{experiment_uuid}--{atomic_uuid}.json')
+
+        # check QAOA dump deleting some keys
+        exclude_keys = ['schedule', 'singlet']
+        qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
+        with open(full_name, 'r') as file:
+            assert file.read() == qaoa.dumps(exclude_keys=exclude_keys, indent=None), 'Dump file does not contain the correct data, when deleting some keys'
+        os.remove(full_name)
+
+        # check QAOA dump with compression
+        qaoa.dump(file_name, compresslevel=2, indent=None)
+        assert os.path.isfile(full_name+'.gz'), 'Dump file does not exist, when compressing'
+        with gzip.open(full_name+'.gz', 'rb') as file:
+            assert file.read() == qaoa.dumps(indent=None).encode(), 'Dump file does not contain the correct data, when compressing'
+        os.remove(full_name+'.gz')
+
+        
+        
+    def __test_expected_keys(self, obj, exclude_keys=[], method='asdict'):
+        """
+        method to test if the dictionary has all the expected keys
+        """
+
+        #create a dictionary with all the expected keys and set them to False
+        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 'init_type', 'p', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number']
+        expected_keys = {item: False for item in expected_keys}
+
+        #test the keys, it will set the keys to True if they are found
+        _test_keys_in_dict(obj, expected_keys)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys.items():
+            if key not in exclude_keys:
+                assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
+
+        """
+        to get the list of expected keys, run the following code:
+
+            def get_keys(obj, list_keys):
+                if isinstance(obj, dict):
+                    for key in obj:
+                        if not key in list_keys: list_keys.append(key)
+
+                        if isinstance(obj[key], dict):
+                            get_keys(obj[key], list_keys)
+                        elif isinstance(obj[key], list):
+                            for item in obj[key]:
+                                get_keys(item, list_keys)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        get_keys(item, list_keys)
+
+            expected_keys = []
+            get_keys(qaoa.asdict(), expected_keys)
+            print(expected_keys)
+        """
+
+
 class TestingRQAOA(unittest.TestCase):
     """
     Unit test based testing of the RQAOA workflow class
     """
 
-    def _test_default_values(self, x):
+    def _test_default_values(self, x): 
         """
         General function to check default values of rqaoa and qaoa
         """
@@ -659,7 +956,7 @@ class TestingRQAOA(unittest.TestCase):
         assert r.rqaoa_parameters.counter == 0
 
         self._test_default_values(r)
-
+       
     def test_rqaoa_compile_and_qoao_default_values(self):
         """
         Test creation of the qaoa object and its default values
@@ -667,10 +964,13 @@ class TestingRQAOA(unittest.TestCase):
         r = RQAOA()
         r.compile(QUBO.random_instance(n=7))
 
-        self._test_default_values(r._q)
+        self._test_default_values(r._RQAOA__q)
         
 
-    def _run_rqaoa(self, type, problem, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator'):
+    def __run_rqaoa(self, type, problem=None, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator', return_object=False):
+
+        if problem == None:
+            problem = QUBO.random_instance(n=8)
 
         r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)
@@ -681,22 +981,54 @@ class TestingRQAOA(unittest.TestCase):
             r.set_rqaoa_parameters(n_cutoff = n_cutoff, steps=eliminations, rqaoa_type=type)
         r.set_circuit_properties(p=p, param_type=param_type, mixer_hamiltonian=mixer)
         r.set_backend_properties(prepend_state=None, append_state=None)
-        r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)
+        r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)   
+        r.set_header(
+            project_uuid="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+            name="test", 
+            run_by="raul", 
+            provider="-", 
+            target="-", 
+            cloud="local", 
+            client="-", 
+            qubit_routing="-", 
+            error_mitigation="-", 
+            error_correction="-"
+            )
+        r.set_exp_tags(tags={'tag1': 'value1', 'tag2': 'value2'})
         r.compile(problem)
         r.optimize()
 
+        if return_object:
+            return r
         return r.results.get_solution()
 
     def test_rqaoa_optimize_multiple_times(self):
         """
-        Test that the rqaoa can be compiled multiple times
+        Test that the rqaoa can not be optimized multiple times
         """
         graph = nw.circulant_graph(10, [1])
         problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
 
         r = RQAOA()
-        r.compile(problem)
-        for _ in range(5): r.optimize()
+        exception = False
+        try:
+            r.optimize()
+        except: 
+            exception = True
+        
+        assert exception, 'RQAOA should not be able to optimize without compilation'
+
+        
+        r.compile(problem)        
+        r.optimize()
+        exception = False
+        try:
+            r.optimize()
+        except:
+            exception = True
+
+        assert exception, 'RQAOA should not be able to optimize twice without compilation'
+        
 
     def test_example_1_adaptive_custom(self):
 
@@ -723,10 +1055,10 @@ class TestingRQAOA(unittest.TestCase):
 
         # run RQAOA and append solution
         for nmax in Nmax:
-            solutions.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
+            solutions.append(self.__run_rqaoa('adaptive', problem, n_cutoff, nmax))
 
         for schedule in schedules:
-            solutions.append(self._run_rqaoa('custom', problem, n_cutoff, schedule))
+            solutions.append(self.__run_rqaoa('custom', problem, n_cutoff, schedule))
 
         # Correct solution
         exact_soutions = {'101010101010': -12, '010101010101': -12}
@@ -747,8 +1079,8 @@ class TestingRQAOA(unittest.TestCase):
 
         # run RQAOA and append solution in list
         solutions = []
-        solutions.append(self._run_rqaoa('adaptive', problem, n_cutoff))
-        solutions.append(self._run_rqaoa('custom', problem, n_cutoff))
+        solutions.append(self.__run_rqaoa('adaptive', problem, n_cutoff))
+        solutions.append(self.__run_rqaoa('custom', problem, n_cutoff))
 
         # Correct solution
         exact_soutions = {'1010101010': 5, '0101010101': 5}
@@ -771,8 +1103,8 @@ class TestingRQAOA(unittest.TestCase):
 
         # run RQAOA and append solution in list
         solutions = []
-        solutions.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
-        solutions.append(self._run_rqaoa('custom', problem, n_cutoff, step))
+        solutions.append(self.__run_rqaoa('adaptive', problem, n_cutoff, nmax))
+        solutions.append(self.__run_rqaoa('custom', problem, n_cutoff, step))
 
         # Correct solution
         exact_soutions = {'0111111111': 9, '1011111111': 9, '1101111111': 9, '1110111111': 9, '1111011111': 9,
@@ -804,10 +1136,10 @@ class TestingRQAOA(unittest.TestCase):
 
         # run RQAOA and append solution
         for nmax in Nmax:
-            solutions.append(self._run_rqaoa('adaptive', problem, n_cutoff, nmax))
+            solutions.append(self.__run_rqaoa('adaptive', problem, n_cutoff, nmax))
 
         for schedule in schedules:
-            solutions.append(self._run_rqaoa('custom', problem, n_cutoff, schedule))
+            solutions.append(self.__run_rqaoa('custom', problem, n_cutoff, schedule))
 
         # Correct solution
         exact_states = ['1111100000', '1111010000', '1110110000', '1101110000', '1011110000', '0111110000', '1111001000', '1110101000', '1101101000', '1011101000', '0111101000', '1110011000', '1101011000', '1011011000', '0111011000', '1100111000', '1010111000', '0110111000', '1001111000', '0101111000', '0011111000', '1111000100', '1110100100', '1101100100', '1011100100', '0111100100', '1110010100', '1101010100', '1011010100', '0111010100', '1100110100', '1010110100', '0110110100', '1001110100', '0101110100', '0011110100', '1110001100', '1101001100', '1011001100', '0111001100', '1100101100', '1010101100', '0110101100', '1001101100', '0101101100', '0011101100', '1100011100', '1010011100', '0110011100', '1001011100', '0101011100', '0011011100', '1000111100', '0100111100', '0010111100', '0001111100', '1111000010', '1110100010', '1101100010', '1011100010', '0111100010', '1110010010', '1101010010', '1011010010', '0111010010', '1100110010', '1010110010', '0110110010', '1001110010', '0101110010', '0011110010', '1110001010', '1101001010', '1011001010', '0111001010', '1100101010', '1010101010', '0110101010', '1001101010', '0101101010', '0011101010', '1100011010', '1010011010', '0110011010', '1001011010', '0101011010', '0011011010', '1000111010', '0100111010', '0010111010', '0001111010', '1110000110', '1101000110', '1011000110', '0111000110', '1100100110', '1010100110', '0110100110', '1001100110', '0101100110', '0011100110', '1100010110', '1010010110', '0110010110', '1001010110', '0101010110', '0011010110', '1000110110', '0100110110', '0010110110', '0001110110', '1100001110', '1010001110', '0110001110', '1001001110', '0101001110', '0011001110', '1000101110', '0100101110', '0010101110', '0001101110', '1000011110', '0100011110', '0010011110', '0001011110', '0000111110', '1111000001', '1110100001', '1101100001', '1011100001', '0111100001', '1110010001', '1101010001', '1011010001', '0111010001', '1100110001', '1010110001', '0110110001', '1001110001', '0101110001', '0011110001', '1110001001', '1101001001', '1011001001', '0111001001', '1100101001', '1010101001', '0110101001', '1001101001', '0101101001', '0011101001', '1100011001', '1010011001', '0110011001', '1001011001', '0101011001', '0011011001', '1000111001', '0100111001', '0010111001', '0001111001', '1110000101', '1101000101', '1011000101', '0111000101', '1100100101', '1010100101', '0110100101', '1001100101', '0101100101', '0011100101', '1100010101', '1010010101', '0110010101', '1001010101', '0101010101', '0011010101', '1000110101', '0100110101', '0010110101', '0001110101', '1100001101', '1010001101', '0110001101', '1001001101', '0101001101', '0011001101', '1000101101', '0100101101', '0010101101', '0001101101', '1000011101', '0100011101', '0010011101', '0001011101', '0000111101', '1110000011', '1101000011', '1011000011', '0111000011', '1100100011', '1010100011', '0110100011', '1001100011', '0101100011', '0011100011', '1100010011', '1010010011', '0110010011', '1001010011', '0101010011', '0011010011', '1000110011', '0100110011', '0010110011', '0001110011', '1100001011', '1010001011', '0110001011', '1001001011', '0101001011', '0011001011', '1000101011', '0100101011', '0010101011', '0001101011', '1000011011', '0100011011', '0010011011', '0001011011', '0000111011', '1100000111', '1010000111', '0110000111', '1001000111', '0101000111', '0011000111', '1000100111', '0100100111', '0010100111', '0001100111', '1000010111', '0100010111', '0010010111', '0001010111', '0000110111', '1000001111', '0100001111', '0010001111', '0001001111', '0000101111', '0000011111']
@@ -818,9 +1150,198 @@ class TestingRQAOA(unittest.TestCase):
             for key in solution:
                 assert solution[key] == exact_soutions[key]
 
+    def test_rqaoa_asdict_dumps(self):
+        """Test the asdict method of the RQAOA class."""
 
-    
-    # TODO : do we want to test qaoa properties through rqaoa?
+        #rqaoa
+        rqaoa = self.__run_rqaoa('custom', return_object=True)
+
+        # check RQAOA asdict
+        self.__test_expected_keys(rqaoa.asdict(), method='asdict')
+
+        # check RQAOA asdict deleting some keys
+        exclude_keys = ['corr_matrix', 'number_steps']
+        self.__test_expected_keys(rqaoa.asdict(exclude_keys=exclude_keys), exclude_keys, method='asdict')
+
+        # check RQAOA dumps
+        self.__test_expected_keys(json.loads(rqaoa.dumps()), method='dumps')
+
+        # check RQAOA dumps deleting some keys
+        exclude_keys = ['project_uuid', 'counter']
+        self.__test_expected_keys(json.loads(rqaoa.dumps(exclude_keys=exclude_keys)), exclude_keys, method='dumps')
+
+        # check RQAOA dump
+        file_name = 'test_dump_rqaoa.json'
+        experiment_uuid, atomic_uuid = rqaoa.header['experiment_uuid'], rqaoa.header['atomic_uuid']
+        full_name = f'{experiment_uuid}--{atomic_uuid}--{file_name}'
+
+        rqaoa.dump(file_name, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist'
+        with open(full_name, 'r') as file:
+            assert file.read() == rqaoa.dumps(indent=None), 'Dump file does not contain the correct data'
+        os.remove(full_name)
+
+        # check RQAOA dump whitout prepending the experiment_uuid and atomic_uuid
+        rqaoa.dump(file_name, indent=None,prepend_id=False)
+        assert os.path.isfile(file_name), 'Dump file does not exist, when not prepending the experiment_uuid and atomic_uuid'
+        
+        # check RQAOA dump fails when the file already exists
+        error = False
+        try:
+            rqaoa.dump(file_name, indent=None,prepend_id=False)
+        except FileExistsError:
+            error = True
+        assert error, 'Dump file does not fail when the file already exists'
+
+        # check that we can overwrite the file
+        rqaoa.dump(file_name, indent=None,prepend_id=False, overwrite=True)
+        assert os.path.isfile(file_name), 'Dump file does not exist, when overwriting'
+        os.remove(file_name)
+
+        # check RQAOA dump fails when prepend_id is True and file_name is not given
+        error = False
+        try:
+            rqaoa.dump(prepend_id=False)
+        except ValueError:
+            error = True
+        assert error, 'Dump file does not fail when prepend_id is True and file_name is not given'
+
+        # check you can dump to a file with no arguments
+        rqaoa.dump()
+        assert os.path.isfile(f'{experiment_uuid}--{atomic_uuid}.json'), 'Dump file does not exist, when no name is given'
+        os.remove(f'{experiment_uuid}--{atomic_uuid}.json')
+
+        # check RQAOA dump deleting some keys
+        exclude_keys = ['schedule', 'singlet']
+        rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
+        assert os.path.isfile(full_name), 'Dump file does not exist, when deleting some keys'
+        with open(full_name, 'r') as file:
+            assert file.read() == rqaoa.dumps(exclude_keys=exclude_keys, indent=None), 'Dump file does not contain the correct data, when deleting some keys'
+        os.remove(full_name)
+
+        # check RQAOA dump with compression
+        rqaoa.dump(file_name, compresslevel=2, indent=None)
+        assert os.path.isfile(full_name+'.gz'), 'Dump file does not exist, when compressing'
+        with gzip.open(full_name+'.gz', 'rb') as file:
+            assert file.read() == rqaoa.dumps(indent=None).encode(), 'Dump file does not contain the correct data, when compressing'
+        os.remove(full_name+'.gz')
+        
+
+    def __test_expected_keys(self, obj, exclude_keys=[], method='asdict'):
+        """
+        method to test if the dictionary has all the expected keys
+        """
+
+        #create a dictionary with all the expected keys and set them to False
+        expected_keys = ['header', 'atomic_uuid', 'experiment_uuid', 'project_uuid', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 'init_type', 'p', 'rqaoa_type', 'rqaoa_n_max', 'rqaoa_n_cutoff', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'results', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'number_steps', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number', 'exp_vals_z', 'corr_matrix', 'atomic_uuids']
+        expected_keys = {item: False for item in expected_keys}
+
+        #test the keys, it will set the keys to True if they are found
+        _test_keys_in_dict(obj, expected_keys)
+
+        # Check if the dictionary has all the expected keys except the ones that were not included
+        for key, value in expected_keys.items():
+            if key not in exclude_keys:
+                assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
+            else:
+                assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
+
+        """
+        to get the list of expected keys, run the following code:
+
+            def get_keys(obj, list_keys):
+                if isinstance(obj, dict):
+                    for key in obj:
+                        if not key in list_keys: list_keys.append(key)
+
+                        if isinstance(obj[key], dict):
+                            get_keys(obj[key], list_keys)
+                        elif isinstance(obj[key], list):
+                            for item in obj[key]:
+                                get_keys(item, list_keys)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        get_keys(item, list_keys)
+
+            expected_keys = []
+            get_keys(rqaoa.asdict(), expected_keys)
+            print(expected_keys)
+        """
+
+    def test_rqaoa_dumping_step_by_step(self):
+        """
+        test dumping the RQAOA object step by step
+        """
+        
+        # define the problem
+        problem = QUBO.random_instance(n=8)
+        problem.set_metadata({'metadata_key1': 'metadata_value1', 'metadata_key2': 'metadata_value2'})
+
+        # define the RQAOA object
+        r = RQAOA()
+
+        # set experimental tags
+        r.set_exp_tags({'tag1': 'value1', 'tag2': 'value2'})
+
+        # set the classical optimizer
+        r.set_classical_optimizer(optimization_progress=True)  
+
+        # compile the problem
+        r.compile(problem)
+
+        # optimize the problem while dumping the data at each step
+        r.optimize(dump=True, dump_options={'file_name': 'test_dumping_step_by_step', 'compresslevel': 2, 'indent': None})
+
+        # create list of expected file names
+        experiment_uuid, atomic_uuid = r.header['experiment_uuid'], r.header['atomic_uuid']
+        file_names = {uuid: experiment_uuid + '--' + uuid + '--' + 'test_dumping_step_by_step.json.gz' for uuid in r.results['atomic_uuids'].values()}
+        file_names[atomic_uuid] = experiment_uuid + '--' + atomic_uuid + '--' + 'test_dumping_step_by_step.json.gz'
+
+        # check if the files exist
+        for file_name in file_names.values():
+            assert os.path.isfile(file_name), f'File {file_name} does not exist.'
+
+        # put each file in a dictionary
+        files = {}
+        for atomic_uuid, file_name in file_names.items():
+            with gzip.open(file_name, 'rb') as file:
+                files[atomic_uuid] = json.loads(file.read().decode())
+
+        rqaoa_files, qaoa_files = 0, 0
+                
+        # check if the files have the expected keys
+        for atomic_uuid, dictionary in files.items():
+
+            file_name = file_names[atomic_uuid]
+
+            if r.header['atomic_uuid'] == atomic_uuid: # rqaoa files
+
+                rqaoa_files += 1
+
+                assert dictionary['header']['experiment_uuid'] == r.header['experiment_uuid'], f'File {file_name} has a different experiment_uuid than the RQAOA object.'
+                assert dictionary['header']['atomic_uuid'] == r.header['atomic_uuid'], f'File {file_name} has a different atomic_uuid than the RQAOA object.'
+                assert dictionary['header']['algorithm'] == 'rqaoa', f'File {file_name} has a different algorithm than rqaoa, which is the expected algorithm.'
+
+                #check that the intermediate mesuraments are empty
+                for step in dictionary['data']['results']['intermediate_steps']:
+                    assert step['qaoa_results']['intermediate']['measurement_outcomes'] == [], f'File {file_name} has intermediate mesuraments, but it should not have them.'
+            
+            else: # qaoa files
+
+                qaoa_files += 1
+
+                assert dictionary['header']['atomic_uuid'] == atomic_uuid, f'File {file_name} has a different atomic_uuid than expected.'
+                assert dictionary['header']['algorithm'] == 'qaoa', f'File {file_name} has a different algorithm than qaoa, which is the expected algorithm.'
+
+                #check that the intermediate mesuraments are not empty
+                assert len(dictionary['data']['results']['intermediate']['measurement_outcomes']) > 0, f'File {file_name} does not have intermediate mesuraments, but it should have them.'
+
+        assert rqaoa_files == 1, f'Expected 1 rqaoa file, but {rqaoa_files} were found.'
+        assert qaoa_files == len(r.results['atomic_uuids']), f'Expected {len(r.results["atomic_uuids"])} qaoa files, but {qaoa_files} were found.'
+
+        # erease the files
+        for file_name in file_names.values():
+            os.remove(file_name)
 
 
 if __name__ == '__main__':

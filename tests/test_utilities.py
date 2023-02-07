@@ -16,13 +16,14 @@ import networkx as nx
 import numpy as np
 import itertools
 import unittest
+import uuid
 
 from openqaoa.devices import DeviceLocal
 from openqaoa.utilities import *
 from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
-from openqaoa.problems.problem import MinimumVertexCover
+from openqaoa.problems import MinimumVertexCover
 
 """
 Unit test based testing of the utility functions
@@ -692,8 +693,8 @@ class TestingUtilities(unittest.TestCase):
         qaoa_results = optimizer.qaoa_result
         
         qaoa_results_optimized = qaoa_results.optimized 
-        qaoa_optimized_angles = qaoa_results_optimized['optimized angles']
-        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['optimized measurement outcomes'])
+        qaoa_optimized_angles = qaoa_results_optimized['angles']
+        qaoa_optimized_counts = qaoa_results.get_counts(qaoa_results_optimized['measurement_outcomes'])
         num_exp_vals_z, num_corr_matrix = exp_val_hamiltonian_termwise(variational_params, 
             qaoa_backend, hamiltonian, 'x', p, qaoa_optimized_angles, qaoa_optimized_counts, analytical=False)
 
@@ -797,6 +798,99 @@ class TestingUtilities(unittest.TestCase):
             # Check each string has the same probability associated
             for string in prob_dict.keys():
                 assert np.allclose(prob_dicts[idx][string],correct_prob_dicts[idx][string]), f'Probablity have not been generated correctly'
+
+    def test_delete_keys_from_dict(self):
+        """
+        Tests the function that deletes a set of keys from a dictionary: delete_keys_from_dict.
+        """
+
+        # Input dictionaries
+        input_dicts = [{'0':2/3, '1':1/3}, {'00':0,'01':0,'10':1/2,'11':1/2},
+                                {'000':0,'001':1/3,'010':0,'100':0,'011':1/3,'101':0,'110':1/3,'111':0},
+                                [{'list_0':1/3, 'list_1':1/3}, {'list_0':1/3, 'list_1':1/3}, {'list_0':1/3, 'list_1':1/3, 'list_2':1/3, 'list_3':1/3}]]
+
+        # Keys to be deleted
+        keys = ['0','00','000', 'list_0']
+
+        # Delete keys from dictionaries
+        output_dicts = delete_keys_from_dict(input_dicts,keys)
+
+        # expected output dictionaries
+        expected_dicts = [{'1':1/3}, {'01':0,'10':1/2,'11':1/2},
+                                {'001':1/3,'010':0,'100':0,'011':1/3,'101':0,'110':1/3,'111':0},
+                                [{'list_1':1/3}, {'list_1':1/3}, {'list_1':1/3, 'list_2':1/3, 'list_3':1/3}]]
+
+        # Test that each dictionary has been generated correctly
+        assert output_dicts == expected_dicts, f'Keys have not been deleted correctly'
+
+    def test_convert2serialize(self):
+        """
+        Tests the function that converts an object into a serializable dictionary: convert2serialize.
+        """
+
+        # define a new class
+        class TestClass:
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
+
+        # define a new class with _ast() method
+        class TestClass2:
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
+
+            def _ast(self):
+                return {'a':self.a,'b':self.b}
+
+        # Create an instance of the class
+        test_instance = TestClass(a = 1, b = 2)
+
+        # Convert the instance into a serializable dictionary
+        serialized_dict = convert2serialize(test_instance)
+
+        # Expected dictionary
+        expected_dict = {'a': 1, 'b': 2}
+
+        # Test that the dictionary has been generated correctly
+        assert serialized_dict == expected_dict, f'Object has not been converted correctly'
+
+        # now test with a list of instances, with attributes being list, dictionaries, complex numbers and numpy arrays
+        test_instance_list = [
+            TestClass(a = [1,2,3], b = {'x':1,'y':2}), TestClass2(a = np.array([1,2,3]), b = 1+1j)
+        ]
+
+        # Convert the instance into a serializable dictionary
+        serialized_dict = convert2serialize(test_instance_list, complex_to_string=True)
+
+        # Expected dictionary
+        expected_dict = [
+            {'a': [1,2,3], 'b': {'x':1,'y':2}}, {'a': [1,2,3], 'b': '(1+1j)'}
+        ]
+
+        # Test that the dictionary has been generated correctly
+        assert serialized_dict == expected_dict, f'Object has not been converted correctly'
+
+    def test_function_is_valid_uuid(self):
+        """
+        Tests the function that checks if a string is a valid uuid: is_valid_uuid.
+        """
+
+        # Test that the function correctly identifies valid uuids
+        assert is_valid_uuid('123e4567-e89b-12d3-a456-426655440000'), f'UUID has not been identified correctly'
+        assert is_valid_uuid('not_a_uuid') == False, f'wrong UUID has not been identified correctly'
+
+    def test_generate_uuid(self):
+        """
+        Tests the function that generates a unique identifier: generate_uuid.
+        """
+
+        # Generate a unique identifier
+        generated_uuid = generate_uuid()
+
+        # Test that the uuid has been generated correctly
+        assert is_valid_uuid(generated_uuid), f'UUID has not been generated correctly'
+
         
 if __name__ == "__main__":
 	unittest.main()

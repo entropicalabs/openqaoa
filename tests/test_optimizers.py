@@ -14,6 +14,7 @@
 
 import warnings
 import numpy as np
+import networkx as nw
 import unittest
 from unittest.mock import Mock
 from scipy.optimize._minimize import MINIMIZE_METHODS
@@ -26,10 +27,12 @@ from openqaoa.optimizers import get_optimizer, Result
 from openqaoa.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
 from openqaoa.qfim import qfim
+from openqaoa.problems import MinimumVertexCover
 """
 Unittest based testing of custom optimizers.
 """
 
+cost_hamiltonian_1 = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp('ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
 
 class TestQAOACostBaseClass(unittest.TestCase):
     
@@ -58,21 +61,19 @@ class TestQAOACostBaseClass(unittest.TestCase):
                           })
         
         self.log.log_variables({'func_evals': 0, 'jac_func_evals': 0, 'qfim_func_evals': 0})
-        
-    def test_saving_feature(self):
-        
-        """
-        Test save_intermediate in OptimizeVQA
-        """
-        
-        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
-            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
+
+    def __backend_params(self, cost_hamil, n_qubits):
+        """ Helper function to create a backend and a parameters onjects for testing. """
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
+        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
         device = create_device('local','vectorized')
         backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(
-            circuit_params, 'standard', 'ramp')
+        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
+        return backend_obj_vectorized, variate_params
+        
+    def test_saving_feature(self):
+        """ Test save_intermediate in OptimizeVQA """
+        backend_obj_vectorized, variate_params = self.__backend_params(cost_hamiltonian_1, 4)        
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
@@ -98,14 +99,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
         " Check that final value of all scipy MINIMIZE_METHODS optimizers agrees with pre-computed optimized value."
 
         # Create problem instance, cost function, and gradient functions
-        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
-            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(
-            circuit_params, 'standard', 'ramp')
+        backend_obj_vectorized, variate_params = self.__backend_params(cost_hamiltonian_1, 4)        
 
         niter = 5
         stepsize = 0.001
@@ -128,7 +122,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                 backend_obj_vectorized, variate_params, optimizer_dict=optimizer_dict)
             vector_optimizer()
 
-            y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost']
+            y_opt = vector_optimizer.qaoa_result.intermediate['cost']
 
             assert np.isclose(y_precomp[i], y_opt[-1], rtol=1e-04,
                               atol=1e-04), f"{optimizer_dict['method']} failed the test."
@@ -136,14 +130,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
     def test_gradient_optimizers_global(self):
         " Check that final value of all implemented gradient optimizers agrees with pre-computed optimized value."
 
-        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
-            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
-        device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(
-            circuit_params, 'standard', 'ramp')
+        backend_obj_vectorized, variate_params = self.__backend_params(cost_hamiltonian_1, 4)        
         niter = 10
         stepsize = 0.001
 
@@ -164,28 +151,46 @@ class TestQAOACostBaseClass(unittest.TestCase):
         for i, optimizer_dict in enumerate(optimizer_dicts):
 
             # Optimize
-            vector_optimizer = get_optimizer(
-                backend_obj_vectorized, variate_params, optimizer_dict=optimizer_dict)
+            vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict=optimizer_dict)
             vector_optimizer()
 
-            y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost']
+            y_opt = vector_optimizer.qaoa_result.intermediate['cost']
 
-            assert np.isclose(y_precomp[i], y_opt[-1], rtol=1e-04,
-                              atol=1e-04), f"{optimizer_dict['method']} method failed the test."
+            assert np.isclose(y_precomp[i], y_opt[-1], rtol=1e-04, atol=1e-04), f"{optimizer_dict['method']} method failed the test."
+
+    def test_gradient_optimizers_cans(self):
+        n_qubits = 10
+        graph = nw.circulant_graph(n_qubits, [1])
+        cost_hamil = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem().hamiltonian
+        backend_obj_vectorized, variate_params = self.__backend_params(cost_hamil, n_qubits)
+
+        optimizer_list = [  {   'method':method, 'jac':'param_shift', 'maxiter':1000, 
+                                'optimizer_options':{'stepsize': 0.0001,'n_shots_min':5, 'n_shots_max':200, 'n_shots_budget': 1000}  }    
+                            for method in ['cans', 'icans']     ]
+
+        for optimizer_dict in optimizer_list:
+            # optimize qaoa
+            vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, optimizer_dict=optimizer_dict)
+            vector_optimizer()
+
+            # check that the final cost is the optimal value
+            assert int(vector_optimizer.qaoa_result.most_probable_states['bitstring_energy']) == 5, '{} failed the test.'.format(optimizer_dict['method'])
+            # check that the number of shots are correct
+            n_shots_used = np.array(vector_optimizer.qaoa_result.n_shots)
+            assert np.sum(np.int0(n_shots_used<5) + np.int8(n_shots_used>200))==0 , 'Optimizer {} did not use the correct number of shots.'.format(optimizer_dict['method'])
+            # check n_shots_budget worked
+            assert  np.sum(20*n_shots_used[:-1].T[0] + 40*n_shots_used[:-1].T[1]) < 1000 and np.sum(20*n_shots_used.T[0] + 40*n_shots_used.T[1]) >= 1000, \
+                    'Optimizer {} did not use the correct number of shots.'.format(optimizer_dict['method'])
+
+            assert np.sum(n_shots_used<5) == 0 , 'Optimizer {} did not use the correct number of shots.'.format(optimizer_dict['method'])
+
 
     def test_gradient_descent_step(self):
         '''
         Check that implemented gradient descent takes the first two steps correctly.
         '''
-
-        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
-            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
-        device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(
-            circuit_params, 'standard', 'ramp')
+        
+        backend_obj_vectorized, variate_params = self.__backend_params(cost_hamiltonian_1, 4)        
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
@@ -200,7 +205,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'method': 'vgd', 'tol': 10**(-9), 'jac': jac, 'maxiter': niter,
                                          'optimizer_options' : {'stepsize': stepsize}})
         vector_optimizer()
-        y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
+        y_opt = vector_optimizer.qaoa_result.intermediate['cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
@@ -225,15 +230,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
         '''
         Check that implemented Newton descent takes the first two steps correctly.
         '''
-
-        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
-            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
-        variate_params = create_qaoa_variational_params(
-            circuit_params, 'standard', 'ramp')
-        device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
+        
+        backend_obj_vectorized, variate_params = self.__backend_params(cost_hamiltonian_1, 4)        
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
@@ -251,7 +249,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'method': 'newton', 'tol': 10**(-9), 'jac': jac, 'hess': hess, 'maxiter': niter,
                                          'optimizer_options' : {'stepsize': stepsize}})
         vector_optimizer()
-        y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
+        y_opt = vector_optimizer.qaoa_result.intermediate['cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
@@ -276,14 +274,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
         Check that implemented natural gradient descent takes the first two steps correctly.
         '''
 
-        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
-            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
-        device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(
-            circuit_params, 'standard', 'ramp')
+        backend_obj_vectorized, variate_params = self.__backend_params(cost_hamiltonian_1, 4)        
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
@@ -298,7 +289,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'method': 'natural_grad_descent', 'tol': 10**(-9), 'jac': jac, 'maxiter': niter,
                                          'optimizer_options' : {'stepsize': stepsize}})
         vector_optimizer()
-        y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
+        y_opt = vector_optimizer.qaoa_result.intermediate['cost'][1:4]
 
         # Stepwise optimize
         def step(x0):
@@ -323,15 +314,8 @@ class TestQAOACostBaseClass(unittest.TestCase):
         '''
         Check that implemented RMSProp takes the first two steps correctly.
         '''
-
-        cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
-            'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
-        device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(
-            circuit_params, 'standard', 'ramp')
+        
+        backend_obj_vectorized, variate_params = self.__backend_params(cost_hamiltonian_1, 4)    
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
@@ -350,7 +334,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
                                          'optimizer_options' : {'stepsize': stepsize, 'decay': decay, 'eps': eps}})
                                          
         vector_optimizer()
-        y_opt = vector_optimizer.qaoa_result.intermediate['intermediate cost'][1:4]
+        y_opt = vector_optimizer.qaoa_result.intermediate['cost'][1:4]
 
         # Stepwise optimize
         def step(x0, sqgrad0):
@@ -390,7 +374,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
         # Optimize
         vector_optimizer = get_optimizer(backend_obj_vectorized, variate_params, 
-                                         optimizer_dict = {'method': 'cobyla',
+                                         optimizer_dict = {'method': 'nelder-mead',
                                                            'maxiter': niter,
                                                           })
         vector_optimizer.vqa.expectation = Mock(side_effect = Exception("Error!"))
