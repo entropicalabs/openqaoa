@@ -81,7 +81,7 @@ def circuit_routing(
         swap_mask
     ), "Incorrect output from qubit routing algorithm"
     assert (
-        len(final_mapping) == problem.n
+        len(final_mapping) >= problem.n
     ), "Incorrect number of qubits in the final qubit layout"
 
     return (gate_indices_list, swap_mask, final_mapping)
@@ -270,6 +270,8 @@ class QAOA(Workflow):
             Set True to have a summary of QAOA to displayed after compilation
         """
 
+        # connect to the QPU specified
+        self.device.check_connection()
         # we compile the method of the parent class to genereate the id and
         # check the problem is a QUBO object and save it
         super().compile(problem=problem)
@@ -280,12 +282,12 @@ class QAOA(Workflow):
             else list(self.qubit_register)
         )
         final_qubit_layout = self.qubit_register
-        if type(routing_function) == Callable:
+        if isinstance(routing_function, Callable):
             try:
                 list_gates_indices, swap_mask, final_mapping = routing_function(
                     device=self.device,
                     problem=problem,
-                    initial_mapping=self.qubit_register,
+                    initial_mapping=list(range(self.device.n_qubits)),
                 )
 
                 final_qubit_layout = (
@@ -323,11 +325,14 @@ class QAOA(Workflow):
                     coeffs=sorted_problem.weights,
                     constant=sorted_problem.constant,
                 )
-            except:
+            except TypeError:
                 raise TypeError(
                     "The specified function can has a set signature that accepts"
-                    "device, problem, and initial_mapping"
+                    " device, problem, and initial_mapping"
                 )
+            except Exception as e:
+                raise e
+
         elif routing_function is None:
             self.cost_hamil = Hamiltonian.classical_hamiltonian(
                 terms=problem.terms, coeffs=problem.weights, constant=problem.constant
@@ -345,7 +350,11 @@ class QAOA(Workflow):
         )
 
         self.qaoa_descriptor = QAOADescriptor(
-            self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p
+            self.cost_hamil,
+            self.mixer_hamil,
+            p=self.circuit_properties.p,
+            routed_gate_list_indices=list_gates_indices,
+            swap_mask=swap_mask,
         )
         self.variate_params = create_qaoa_variational_params(
             qaoa_descriptor=self.qaoa_descriptor,

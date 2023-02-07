@@ -176,30 +176,33 @@ class QAOADescriptor(AnsatzDescriptor):
         # Needed in the BaseBackend to compute exact_solution, cost_funtion method
         # and bitstring_energy
         self.cost_hamiltonian = cost_hamiltonian
-
         self.cost_block = cost_hamiltonian
         self.mixer_block = mixer_block
-
-        self.mixer_blocks = HamiltonianMapper.repeat_gate_maps(self.mixer_block, self.p)
-        self.cost_blocks = HamiltonianMapper.repeat_gate_maps(self.cost_block, self.p)
-
-        self.routed_gate_list_indices = routed_gate_list_indices
-        self.swap_mask = swap_mask
-        self.routed = False
-
         (
             self.cost_single_qubit_coeffs,
             self.cost_pair_qubit_coeffs,
             self.cost_qubits_singles,
             self.cost_qubits_pairs,
         ) = self._assign_coefficients(self.cost_block, self.cost_block_coeffs)
-
         (
             self.mixer_single_qubit_coeffs,
             self.mixer_pair_qubit_coeffs,
             self.mixer_qubits_singles,
             self.mixer_qubits_pairs,
         ) = self._assign_coefficients(self.mixer_block, self.mixer_block_coeffs)
+
+        self.routed = False
+        # route the cost block and append SWAP gates
+        if (
+            routed_gate_list_indices is not None
+            and swap_mask is not None
+            and self.routed is False
+        ):
+            self.route_cost_block(routed_gate_list_indices, swap_mask)
+            self.routed = True
+
+        self.mixer_blocks = HamiltonianMapper.repeat_gate_maps(self.mixer_block, self.p)
+        self.cost_blocks = HamiltonianMapper.repeat_gate_maps(self.cost_block, self.p)
 
     def _assign_coefficients(
         self, input_block: List[RotationGateMap], input_coeffs: List[float]
@@ -315,30 +318,25 @@ class QAOADescriptor(AnsatzDescriptor):
     @property
     def abstract_circuit(self):
 
-        # route the cost block and append SWAP gates
-        if (
-            self.routed_gate_list_indices is not None
-            and self.swap_mask is not None
-            and self.routed is False
-        ):
-            self.route_cost_block()
-
+        # even layer inversion if the circuit contains SWAP gates
+        even_layer_inversion = -1 if self.routed == True else 1
         _abstract_circuit = []
         for each_p in range(self.p):
             # apply each cost_block with reversed order to maintain the SWAP sequence
-            _abstract_circuit.extend(self.cost_blocks[each_p][:: (-1) ** each_p])
+            _abstract_circuit.extend(
+                self.cost_blocks[each_p][:: (even_layer_inversion) ** each_p]
+            )
             _abstract_circuit.extend(self.mixer_blocks[each_p])
 
         return _abstract_circuit
 
-    def route_cost_block(self) -> List[GateMap]:
+    def route_cost_block(
+        self, routed_gate_list_indices: List[List[int]], swap_mask: List[bool]
+    ) -> List[GateMap]:
         """
         Apply qubit routing to the abstract circuit gate list
         based on device information
         """
-        for i, (gate_ind, mask) in enumerate(
-            zip(self.routed_gate_list_indices, self.swap_mask)
-        ):
+        for i, (gate_ind, mask) in enumerate(zip(routed_gate_list_indices, swap_mask)):
             if mask == True:
                 self.cost_block.insert(i, SWAPGateMap(gate_ind[0], gate_ind[1]))
-        self.routed = True

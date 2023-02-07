@@ -1,5 +1,5 @@
 from qiskit import IBMQ
-
+from typing import List
 from openqaoa.backends.devices_core import DeviceBase
 
 
@@ -117,3 +117,6 @@ class DeviceQiskit(DeviceBase):
                 "for how to save your IBMQ account locally: {}".format(e)
             )
             return False
+
+    def connectivity(self) -> List[List[int]]:
+        return self.backend_device.configuration().coupling_map
