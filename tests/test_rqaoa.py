@@ -510,9 +510,9 @@ class TestingRQAOA(unittest.TestCase):
 
     def test_isolated_nodes_whole_workflow(self):
         """
-        Testing the whole RQAOA workflow for solving the MaxCut problem on random graph instances. 
-        
-        Recreating a specific qubo and testing it with cutoff size set to 3, 2, and 1. RQAOA should be able to find the true ground state for this specific instance at all cutoffs. Note that the smaller the cutoff, the less of the degenerate solutions are recovered. 
+        Testing the whole RQAOA workflow for solving the MaxCut problem on random graph instances.
+
+        Recreating a specific qubo and testing it with cutoff size set to 3, 2, and 1. RQAOA should be able to find the true ground state for this specific instance at all cutoffs. Note that the smaller the cutoff, the less of the degenerate solutions are recovered.
         """
         terms = [
             [0, 2],
