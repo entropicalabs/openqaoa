@@ -620,9 +620,8 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     -------
     cl_energy: `float`
         The energy of the solution wrt the cost Hamiltonian.
-    cl_ground_states: `list`
-        List of a string of binary values representing the classical solution of the
-        problem in correspondance with the spin map.
+    cl_ground_state: `list`
+        The (single) classical solution to the problem reconstructed accordingly to the last spin map. Represented as a binary string and then cast to a list to match the output of the `ground_state_hamiltonian` function which is used usually.
     """
     cl_ground_state = ""
 
@@ -644,8 +643,7 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     # computing the energy of the first one only, assuming degeneracy
     cl_energy = bitstring_energy(hamiltonian, cl_ground_state)
 
-    # to match the expected format: list of strings
-    cl_ground_state_list = []
-    cl_ground_state_list.append(cl_ground_state)
+    # convert to list to match the expected format
+    cl_ground_state = [cl_ground_state]
 
-    return cl_energy, cl_ground_state_list
+    return cl_energy, cl_ground_state
