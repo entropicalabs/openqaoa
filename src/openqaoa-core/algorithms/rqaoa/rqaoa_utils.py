@@ -606,7 +606,7 @@ def final_solution(
 def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     """
     Constructs the final solution of the smallest non vanishing problem by fixing the vanishing spins arbitrarily to 1 while obeying the correlations identified by the last run of QAOA before the problem vanished.
-    Computing the classical energy of the egenerated string.
+    Computing the classical energy of the generated string.
 
     Parameters
     ----------
