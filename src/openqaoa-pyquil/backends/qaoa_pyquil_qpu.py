@@ -1,6 +1,8 @@
 from collections import Counter
 import numpy as np
 from pyquil import Program, gates, quilbase
+from typing import List, Optional
+import warnings
 
 from .devices import DevicePyquil
 from openqaoa.backends.basebackend import (
@@ -84,39 +86,44 @@ class QAOAPyQuilQPUBackend(
         PARTIAL: Otherwise.
     """
 
-    def __init__(self,
-                 device: DevicePyquil,
-                 qaoa_descriptor: QAOADescriptor,
-                 n_shots: int,
-                 prepend_state: Program,
-                 append_state: Program,
-                 init_hadamard: bool,
-                 cvar_alpha: float,
-                 active_reset: bool = False,
-                 rewiring: str = '',
-                 qubit_layout: list = [],
-                 initial_qubit_layout: list = None,
-                 final_qubit_layout: list = None
-                 ):
+    def __init__(
+        self,
+        device: DevicePyquil,
+        qaoa_descriptor: QAOADescriptor,
+        n_shots: int,
+        prepend_state: Program,
+        append_state: Program,
+        init_hadamard: bool,
+        cvar_alpha: float,
+        active_reset: bool = False,
+        rewiring: str = "",
+        initial_qubit_mapping: Optional[List[int]] = None
+    ):
 
-        QAOABaseBackendShotBased.__init__(self,
-                                          qaoa_descriptor,
-                                          n_shots,
-                                          prepend_state,
-                                          append_state,
-                                          init_hadamard,
-                                          cvar_alpha,
-                                          initial_qubit_layout,
-                                          final_qubit_layout)
+        QAOABaseBackendShotBased.__init__(
+            self,
+            qaoa_descriptor,
+            n_shots,
+            prepend_state,
+            append_state,
+            init_hadamard,
+            cvar_alpha,
+        )
         QAOABaseBackendCloud.__init__(self, device)
 
         self.active_reset = active_reset
         self.rewiring = rewiring
-        self.qureg = self.qaoa_descriptor.qureg
+        self.qureg = list(range(self.n_qubits))
+        self.problem_reg = self.qureg[0:self.problem_qubits]
 
+        if self.initial_qubit_mapping is None:
+            self.initial_qubit_mapping = initial_qubit_mapping if initial_qubit_mapping is not None else list(range(self.n_qubits))
+        else:    
+            warnings.warn("Ignoring the initial_qubit_mapping since the routing algorithm chose one")
+        
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
-        self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout
-        self.qubit_mapping = dict(zip(self.qureg, self.qubit_layout))
+        self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))
+        
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.get_qubits()), (
@@ -204,14 +211,14 @@ class QAOAPyQuilQPUBackend(
                 )
 
         # declare the read-out register
-        ro = parametric_circuit.declare("ro", "BIT", self.n_qubits)
+        ro = parametric_circuit.declare("ro", "BIT", self.problem_qubits)
 
         if self.prepend_state:
             parametric_circuit += self.prepend_state
 
         # Initial state is all |+>
         if self.init_hadamard:
-            for i in self.qureg:
+            for i in self.problem_reg:
                 parametric_circuit += gates.RZ(np.pi, self.qubit_mapping[i])
                 parametric_circuit += gates.RX(np.pi / 2, self.qubit_mapping[i])
                 parametric_circuit += gates.RZ(np.pi / 2, self.qubit_mapping[i])
@@ -219,13 +226,15 @@ class QAOAPyQuilQPUBackend(
 
         # create a list of gates in order of application on quantum circuit
         for each_gate in self.abstract_circuit:
-            #if gate is of type mixer or cost gate, assign parameter to it
-            if each_gate.gate_label.type.value in ['mixer','cost']:
-                angle_param = parametric_circuit.declare(
-                    each_gate.gate_label.__repr__(),
-                    'REAL',
-                    1
+            # if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ["MIXER", "COST"]:
+                gatelabel_pyquil = each_gate.gate_label.__repr__()
+                gatelabel_pyquil = (
+                    "one" + gatelabel_pyquil[1:]
+                    if each_gate.gate_label.n_qubits == 1
+                    else "two" + gatelabel_pyquil[1:]
                 )
+                angle_param = parametric_circuit.declare(gatelabel_pyquil, "REAL", 1)
                 each_gate.angle_value = angle_param
             if isinstance(each_gate, RZZGateMap) or isinstance(each_gate, SWAPGateMap):
                 decomposition = each_gate.decomposition("standard2")
@@ -248,8 +257,12 @@ class QAOAPyQuilQPUBackend(
             parametric_circuit += self.append_state
 
         # Measurement instructions
-        for i, qubit in enumerate(self.qureg):
-            parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], ro[i])
+        for i, qubit in enumerate(self.problem_reg):
+            if self.final_mapping is None:
+                cbit = ro[i]
+            else:
+                cbit = ro[self.final_mapping[i]]
+            parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
 
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 
@@ -291,12 +304,13 @@ class QAOAPyQuilQPUBackend(
 
         # Expose counts
         final_counts = Counter(list(meas_list))
-        if self.initial_qubit_layout != self.final_qubit_layout:
-            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
-                                                    self.final_qubit_layout)
+        if self.final_mapping is not None:
+            final_counts = permute_counts_dictionary(
+                final_counts, self.final_mapping
+            )
         self.measurement_outcomes = final_counts
         return final_counts
-        
+
     def circuit_to_qasm(self, params: QAOAVariationalBaseParams) -> str:
         """
         A method to convert the pyQuil program to a OpenQASM string.

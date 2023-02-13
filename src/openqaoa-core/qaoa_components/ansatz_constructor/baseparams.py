@@ -1,13 +1,14 @@
 from __future__ import annotations
-from abc import ABC
-from typing import List, Union, Tuple, Any, Callable, Iterable
+from abc import ABC, abstractproperty
+from typing import List, Union, Tuple, Any, Callable, Iterable, Optional
 import numpy as np
+from enum import Enum
+import copy
 
 from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
-from .gatemap import GateMap, RotationGateMap, SWAPGateMap
+from .gatemap import RotationGateMap, SWAPGateMap
 from .gatemaplabel import GateMapType
-
 
 def _is_iterable_empty(in_iterable):
     if isinstance(in_iterable, Iterable):  # Is Iterable
@@ -93,7 +94,7 @@ class AnsatzDescriptor(ABC):
     Parameters
     ----------
     algorithm: `str`
-
+        The algorithm corresponding to the ansatz
     Attributes
     ----------
     algorithm: `str`
@@ -101,8 +102,10 @@ class AnsatzDescriptor(ABC):
 
     def __init__(self, algorithm: str):
         self.algorithm = algorithm
-
-
+    
+    @abstractproperty
+    def n_qubits(self) -> int:
+        pass
 class QAOADescriptor(AnsatzDescriptor):
 
     """
@@ -142,8 +145,8 @@ class QAOADescriptor(AnsatzDescriptor):
         mixer_block: Union[List[RotationGateMap], Hamiltonian],
         p: int,
         mixer_coeffs: List[float] = [],
-        routed_gate_list_indices: List = None,
-        swap_mask: List[bool] = None,
+        routing_function: Optional[Callable] = None,
+        device: Optional[DeviceBase] = None
     ):
         """
         Parameters
@@ -159,13 +162,15 @@ class QAOADescriptor(AnsatzDescriptor):
             A list containing coefficients for each mixer GateMap. The order of the
             coefficients should follow the order of the GateMaps provided in the relevant gate block.
             This input isnt required if the input mixer block is of type Hamiltonian.
+        routing_function Optional[Callable]
+            A callable function running the routing algorithm on the problem
+        device: DeviceBase
+            The device on which to run the Quantum Circuit
         """
 
         super().__init__(algorithm="QAOA")
 
         self.p = p
-
-        self.qureg = cost_hamiltonian.qureg
         self.cost_block_coeffs = cost_hamiltonian.coeffs
 
         try:
@@ -176,106 +181,57 @@ class QAOADescriptor(AnsatzDescriptor):
         # Needed in the BaseBackend to compute exact_solution, cost_funtion method
         # and bitstring_energy
         self.cost_hamiltonian = cost_hamiltonian
-        self.cost_block = cost_hamiltonian
-        self.mixer_block = mixer_block
+        self.cost_block = self.block_setter(cost_hamiltonian, GateMapType.COST)
         (
             self.cost_single_qubit_coeffs,
             self.cost_pair_qubit_coeffs,
             self.cost_qubits_singles,
             self.cost_qubits_pairs,
         ) = self._assign_coefficients(self.cost_block, self.cost_block_coeffs)
+        
+        # route the cost block and append SWAP gates
+        if isinstance(routing_function, Callable): 
+            try:
+                (
+                self.cost_block,
+                self.initial_mapping,
+                self.final_mapping
+                ) = self.route_gates_list(self.cost_block, device, routing_function)
+                self.routed = True
+            except TypeError:
+                raise TypeError(
+                    "The specified function can has a set signature that accepts"
+                    " device, problem, and initial_mapping"
+                )
+            except Exception as e:
+                raise e
+        elif routing_function == None:
+            self.routed = False
+        else:
+            raise ValueError(
+                f"Routing function can only be a Callable not {type(routing_function)}"
+            )
+            
+        self.mixer_block = self.block_setter(mixer_block, GateMapType.MIXER)        
         (
             self.mixer_single_qubit_coeffs,
             self.mixer_pair_qubit_coeffs,
             self.mixer_qubits_singles,
             self.mixer_qubits_pairs,
         ) = self._assign_coefficients(self.mixer_block, self.mixer_block_coeffs)
-
-        self.routed = False
-        # route the cost block and append SWAP gates
-        if (
-            routed_gate_list_indices is not None
-            and swap_mask is not None
-            and self.routed is False
-        ):
-            self.route_cost_block(routed_gate_list_indices, swap_mask)
-            self.routed = True
-
+                
         self.mixer_blocks = HamiltonianMapper.repeat_gate_maps(self.mixer_block, self.p)
         self.cost_blocks = HamiltonianMapper.repeat_gate_maps(self.cost_block, self.p)
-
-    def _assign_coefficients(
-        self, input_block: List[RotationGateMap], input_coeffs: List[float]
-    ) -> None:
-
-        """
-        Splits the coefficients and gatemaps into qubit singles and qubit pairs.
-        """
-
-        single_qubit_coeffs = []
-        pair_qubit_coeffs = []
-        qubit_singles = []
-        qubit_pairs = []
-
-        if len(input_block) != len(input_coeffs):
-            raise ValueError(
-                "The number of terms/gatemaps must match the number of coefficients provided."
-            )
-        for each_gatemap, each_coeff in zip(input_block, input_coeffs):
-
-            if each_gatemap.gate_label.n_qubits == 1:
-                single_qubit_coeffs.append(each_coeff)
-                # Giving a string name to each gatemap (?)
-                qubit_singles.append(type(each_gatemap).__name__)
-            elif each_gatemap.gate_label.n_qubits == 2:
-                pair_qubit_coeffs.append(each_coeff)
-                qubit_pairs.append(type(each_gatemap).__name__)
-
-        return (single_qubit_coeffs, pair_qubit_coeffs, qubit_singles, qubit_pairs)
-
+        self.qureg = list(range(self.n_qubits))
+        
     @property
-    def cost_block(self):
-
-        return self._cost_block
-
-    @cost_block.setter
-    def cost_block(self, input_object: Hamiltonian) -> None:
-
-        self._cost_block = HamiltonianMapper.generate_gate_maps(
-            input_object, GateMapType.COST
-        )
-
+    def n_qubits(self) -> int:
+        return len(self.final_mapping)
+    
     @property
-    def mixer_block(self):
-
-        return self._mixer_block
-
-    @mixer_block.setter
-    def mixer_block(
-        self, input_object: Union[List[RotationGateMap], Hamiltonian]
-    ) -> None:
-
-        if isinstance(input_object, Hamiltonian):
-            self._mixer_block = HamiltonianMapper.generate_gate_maps(
-                input_object, GateMapType.MIXER
-            )
-        elif isinstance(input_object, list):
-            for each_gate in input_object:
-                if isinstance(each_gate, RotationGateMap):
-                    each_gate.gate_label.update_gatelabel(
-                        new_gatemap_type=GateMapType.MIXER
-                    )
-                else:
-                    raise TypeError(
-                        f"Input gate is of unsupported type {type(each_gate)}."
-                        "Only RotationGateMaps are supported"
-                    )
-            self._mixer_block = input_object
-        else:
-            raise ValueError(
-                "The input object defining mixer should be a List of RotationGateMaps or type Hamiltonian"
-            )
-
+    def problem_qubits(self) -> list:
+        return self.initial_mapping[:self.cost_hamiltonian.n_qubits]
+            
     def __repr__(self):
 
         """Return an overview over the parameters and hyperparameters
@@ -314,7 +270,146 @@ class QAOADescriptor(AnsatzDescriptor):
         )
 
         return string
+    
+    def _assign_coefficients(
+        self, input_block: List[RotationGateMap], input_coeffs: List[float]
+    ) -> None:
 
+        """
+        Splits the coefficients and gatemaps into qubit singles and qubit pairs.
+        """
+
+        single_qubit_coeffs = []
+        pair_qubit_coeffs = []
+        qubit_singles = []
+        qubit_pairs = []
+
+        if len(input_block) != len(input_coeffs):
+            raise ValueError(
+                "The number of terms/gatemaps must match the number of coefficients provided."
+            )
+        for each_gatemap, each_coeff in zip(input_block, input_coeffs):
+
+            if each_gatemap.gate_label.n_qubits == 1:
+                single_qubit_coeffs.append(each_coeff)
+                # Giving a string name to each gatemap (?)
+                qubit_singles.append(type(each_gatemap).__name__)
+            elif each_gatemap.gate_label.n_qubits == 2:
+                pair_qubit_coeffs.append(each_coeff)
+                qubit_pairs.append(type(each_gatemap).__name__)
+
+        return (single_qubit_coeffs, pair_qubit_coeffs, qubit_singles, qubit_pairs)
+    
+    @staticmethod
+    def block_setter(input_object: Union[List[GateMap], Hamiltonian], block_type:Enum):
+        
+        if isinstance(input_object, Hamiltonian):
+            block = HamiltonianMapper.generate_gate_maps(
+                input_object, block_type
+            )
+        elif isinstance(input_object, list):
+            for each_gate in input_object:
+                if isinstance(each_gate, RotationGateMap):
+                    each_gate.gate_label.update_gatelabel(
+                        new_gatemap_type=block_type
+                    )
+                else:
+                    raise TypeError(
+                        f"Input gate is of unsupported type {type(each_gate)}."
+                        "Only RotationGateMaps are supported"
+                    )
+            block = input_object
+        else:
+            raise ValueError(
+                "The input object defining mixer should be a List of RotationGateMaps or type Hamiltonian"
+            )
+        return block
+
+    def reorder_gates_block(self, gates_block, layer_number):
+        """Update the qubits that the gates are acting on after application
+        of SWAPs in the cost layer
+        """
+        for gate in gates_block:
+            
+            if layer_number%2 == 0:
+                mapping = self.final_mapping         
+                gate.qubit_1 = mapping[gate.qubit_1]
+                if gate.gate_label.n_qubits == 2:
+                    gate.qubit_2 = mapping[gate.qubit_2]
+            else:
+                pass
+            
+        return gates_block
+                      
+    @staticmethod
+    def route_gates_list(gates_to_route: List[GateMap], device:DeviceBase, routing_function: Callable) -> List[GateMap]:
+        """
+        Apply qubit routing to the abstract circuit gate list
+        based on device information
+        
+        Parameters
+        ----------
+        gates_to_route: `List[GateMap]`
+            The gates to route
+        device: `DeviceBase`
+            The device on which to run the circuit
+        routing_function: `Callable`
+            The function that accepts as input the device, problem, initial_mapping and
+            outputs the list of gates with swaps
+        """
+        problem_to_solve = [[gate.qubit_1, gate.qubit_2] for gate in gates_to_route
+                            if gate.gate_label.n_qubits == 2]
+        (
+            gate_list_indices,
+            swap_mask,
+            initial_physical_to_logical_mapping,
+            final_mapping
+        ) = routing_function(device, problem_to_solve)
+        
+        print("Initial mapping", initial_physical_to_logical_mapping)
+        print("Final mapping", final_mapping)
+        
+        # for gate in gates_to_route:
+        #     gate.qubit_1 = initial_physical_to_logical_mapping[gate.qubit_1]
+        #     if gate.gate_label.n_qubits == 2:
+        #         gate.qubit_2 = initial_physical_to_logical_mapping[gate.qubit_2]
+            
+        original_qubits_to_gate_mapping = {
+            (gate.qubit_1, gate.qubit_2): gate for gate in gates_to_route
+            if gate.gate_label.n_qubits == 2
+        }
+        # print(original_qubits_to_gate_mapping)
+
+        gates_list = [gate for gate in gates_to_route if gate.gate_label.n_qubits == 1]
+        swapped_history = []
+        for idx, pair_ij in enumerate(gate_list_indices):
+            mask = swap_mask[idx]
+            qi, qj = pair_ij 
+            if mask == True:
+                swapped_history.append(pair_ij)
+                gates_list.append(SWAPGateMap(qi, qj))
+            elif mask == False:
+                old_qi, old_qj = qi, qj
+                # traverse each SWAP application in reverse order to obtain
+                # the original location of the current qubit
+                for swap_pair in swapped_history[::-1]:
+                    if old_qi in swap_pair:
+                        old_qi = swap_pair[0] if swap_pair[1] == old_qi else swap_pair[1]
+                    if old_qj in swap_pair:
+                        old_qj = swap_pair[0] if swap_pair[1] == old_qj else swap_pair[1]
+                try:
+                    ising_gate = original_qubits_to_gate_mapping[tuple([old_qi, old_qj])]
+                except KeyError:
+                    ising_gate = original_qubits_to_gate_mapping[tuple([old_qj, old_qi])]
+                except Exception as e:
+                    raise e
+                ising_gate.qubit_1, ising_gate.qubit_2 = qi, qj
+                gates_list.append(ising_gate)
+        
+        print([[gate.qubit_1] if gate.gate_label.n_qubits == 1 else [gate.qubit_1, gate.qubit_2] for gate in gates_list])
+                
+        return gates_list, list(initial_physical_to_logical_mapping.keys()), final_mapping
+    
     @property
     def abstract_circuit(self):
 
@@ -326,17 +421,9 @@ class QAOADescriptor(AnsatzDescriptor):
             _abstract_circuit.extend(
                 self.cost_blocks[each_p][:: (even_layer_inversion) ** each_p]
             )
-            _abstract_circuit.extend(self.mixer_blocks[each_p])
-
+            mixer_block = self.reorder_gates_block(self.mixer_blocks[each_p], each_p)
+            _abstract_circuit.extend(mixer_block)
+                        
         return _abstract_circuit
-
-    def route_cost_block(
-        self, routed_gate_list_indices: List[List[int]], swap_mask: List[bool]
-    ) -> List[GateMap]:
-        """
-        Apply qubit routing to the abstract circuit gate list
-        based on device information
-        """
-        for i, (gate_ind, mask) in enumerate(zip(routed_gate_list_indices, swap_mask)):
-            if mask == True:
-                self.cost_block.insert(i, SWAPGateMap(gate_ind[0], gate_ind[1]))
+    
+        

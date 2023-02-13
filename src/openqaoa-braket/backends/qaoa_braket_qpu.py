@@ -1,5 +1,6 @@
 import os
 from typing import Optional, List
+import warnings
 
 from braket.circuits import Circuit
 from braket.circuits.gates import H
@@ -55,10 +56,8 @@ class QAOAAWSQPUBackend(
                  append_state: Optional[Circuit],
                  init_hadamard: bool,
                  cvar_alpha: float,
-                 qubit_layout: List[int] = [], 
                  disable_qubit_rewiring: bool = False,
-                 initial_qubit_layout: List[int] = None,
-                 final_qubit_layout: List[int] = None):
+                 initial_qubit_mapping: Optional[List[int]] = None):
 
         QAOABaseBackendShotBased.__init__(self,
                                           qaoa_descriptor,
@@ -67,12 +66,15 @@ class QAOAAWSQPUBackend(
                                           append_state,
                                           init_hadamard,
                                           cvar_alpha,
-                                          initial_qubit_layout,
-                                          final_qubit_layout)
+                                        )
         QAOABaseBackendCloud.__init__(self, device)
 
-        self.qureg = self.qaoa_descriptor.qureg
-        self.qubit_layout = self.qureg if qubit_layout == [] else qubit_layout
+        self.qureg = list(range(self.n_qubits))
+        self.problem_reg = self.qureg[0:self.problem_qubits]
+        if self.initial_qubit_mapping is None:
+            self.initial_qubit_mapping = initial_qubit_mapping if initial_qubit_mapping is not None else list(range(self.n_qubits))
+        else:    
+            warnings.warn("Ignoring the initial_qubit_mapping since the routing algorithm chose one")
         self.disable_qubit_rewiring = disable_qubit_rewiring
 
         if self.prepend_state:
@@ -145,7 +147,7 @@ class QAOAAWSQPUBackend(
 
         # Initial state is all |+>
         if self.init_hadamard:
-            for each_qubit in self.qubit_layout:
+            for each_qubit in self.problem_reg:
                 parametric_circuit += H.h(each_qubit)
 
         self.braket_parameter_list = []
@@ -166,6 +168,7 @@ class QAOAAWSQPUBackend(
         if self.append_state:
             parametric_circuit += self.append_state
 
+        #TODO: needs to be fixed --> measurement operations on problem qubits
         parametric_circuit += Probability.probability()
 
         return parametric_circuit
@@ -236,9 +239,9 @@ class QAOAAWSQPUBackend(
                     )
 
         final_counts = counts
-        if self.initial_qubit_layout != self.final_qubit_layout:
-            final_counts = permute_counts_dictionary(final_counts,self.initial_qubit_layout,
-                                                    self.final_qubit_layout)
+        if self.final_mapping is not None:
+            final_counts = permute_counts_dictionary(final_counts,
+                                                    self.final_mapping)
         # Expose counts
         self.measurement_outcomes = final_counts
         return final_counts

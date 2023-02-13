@@ -58,10 +58,11 @@ class VQABaseBackend(ABC):
     """
 
     @abstractmethod
-    def __init__(self,
-                 prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
-                 append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
-                ):
+    def __init__(
+        self,
+        prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
+        append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
+    ):
         """The constructor. See class docstring"""
         self.prepend_state = prepend_state
         self.append_state = append_state
@@ -109,25 +110,36 @@ class QAOABaseBackend(VQABaseBackend):
         Appending a user-defined circuit/state to the end of the QAOA routine
     init_hadamard: `bool`
         Initialises the QAOA circuit with a hadamard when ``True``
+    cvar_alpha: `float`
     """
 
-    def __init__(self,
-                 qaoa_descriptor: QAOADescriptor,
-                 prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
-                 append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
-                 init_hadamard: bool,
-                 cvar_alpha: float
-                 ):
+    def __init__(
+        self,
+        qaoa_descriptor: QAOADescriptor,
+        prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
+        append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
+        init_hadamard: bool,
+        cvar_alpha: float,
+    ):
 
         super().__init__(prepend_state, append_state)
 
         self.qaoa_descriptor = qaoa_descriptor
         self.cost_hamiltonian = qaoa_descriptor.cost_hamiltonian
-        self.n_qubits = self.cost_hamiltonian.n_qubits
+        self.n_qubits = self.qaoa_descriptor.n_qubits
         self.init_hadamard = init_hadamard
         self.cvar_alpha = cvar_alpha
+        self.problem_qubits = self.qaoa_descriptor.cost_hamiltonian.n_qubits
 
         self.abstract_circuit = deepcopy(self.qaoa_descriptor.abstract_circuit)
+        
+        #pass the generated mappings if the circuit is routed
+        if self.qaoa_descriptor.routed == True:
+            self.initial_qubit_mapping = self.qaoa_descriptor.initial_mapping
+            self.final_mapping = self.qaoa_descriptor.final_mapping if self.qaoa_descriptor.p%2!=0 else None
+        else:
+            self.initial_qubit_mapping = None
+            self.final_qubit_mapping = None
 
     def assign_angles(self, params: QAOAVariationalBaseParams) -> None:
 
@@ -147,22 +159,22 @@ class QAOABaseBackend(VQABaseBackend):
             gate_label_layer = each_gate.gate_label.layer
             gate_label_seq = each_gate.gate_label.sequence
             if each_gate.gate_label.n_qubits == 2:
-                if each_gate.gate_label.type.value == 'mixer':
-                    angle = params.mixer_2q_angles[gate_label_layer,gate_label_seq]
-                elif each_gate.gate_label.type.value == 'cost':
-                    angle = params.cost_2q_angles[gate_label_layer,gate_label_seq]
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle = params.mixer_2q_angles[gate_label_layer, gate_label_seq]
+                elif each_gate.gate_label.type.value == "COST":
+                    angle = params.cost_2q_angles[gate_label_layer, gate_label_seq]
             elif each_gate.gate_label.n_qubits == 1:
-                if each_gate.gate_label.type.value == 'mixer':
-                    angle = params.mixer_1q_angles[gate_label_layer,gate_label_seq]
-                elif each_gate.gate_label.type.value == 'cost':
-                    angle = params.cost_1q_angles[gate_label_layer,gate_label_seq]
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle = params.mixer_1q_angles[gate_label_layer, gate_label_seq]
+                elif each_gate.gate_label.type.value == "COST":
+                    angle = params.cost_1q_angles[gate_label_layer, gate_label_seq]
             each_gate.angle_value = angle
-        
+
         self.abstract_circuit = abstract_circuit
 
-    def obtain_angles_for_pauli_list(self,
-                                     input_gate_list: List[GateMap],
-                                     params: QAOAVariationalBaseParams) -> List[float]:
+    def obtain_angles_for_pauli_list(
+        self, input_gate_list: List[GateMap], params: QAOAVariationalBaseParams
+    ) -> List[float]:
         """
         This method uses the pauli gate list information to obtain the pauli angles
         from the VariationalBaseParams object. The floats in the list are in the order
@@ -185,18 +197,26 @@ class QAOABaseBackend(VQABaseBackend):
         for each_gate in input_gate_list:
             gate_label_layer = each_gate.gate_label.layer
             gate_label_seq = each_gate.gate_label.sequence
-            
+
             if each_gate.gate_label.n_qubits == 2:
-                if each_gate.gate_label.type.value == 'mixer':
-                    angle_list.append(params.mixer_2q_angles[gate_label_layer,gate_label_seq])
-                elif each_gate.gate_label.type.value == 'cost':
-                    angle_list.append(params.cost_2q_angles[gate_label_layer,gate_label_seq])
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle_list.append(
+                        params.mixer_2q_angles[gate_label_layer, gate_label_seq]
+                    )
+                elif each_gate.gate_label.type.value == "COST":
+                    angle_list.append(
+                        params.cost_2q_angles[gate_label_layer, gate_label_seq]
+                    )
             elif each_gate.gate_label.n_qubits == 1:
-                if each_gate.gate_label.type.value == 'mixer':
-                    angle_list.append(params.mixer_1q_angles[gate_label_layer,gate_label_seq])
-                elif each_gate.gate_label.type.value == 'cost':
-                    angle_list.append(params.cost_1q_angles[gate_label_layer,gate_label_seq])
-            
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle_list.append(
+                        params.mixer_1q_angles[gate_label_layer, gate_label_seq]
+                    )
+                elif each_gate.gate_label.type.value == "COST":
+                    angle_list.append(
+                        params.cost_1q_angles[gate_label_layer, gate_label_seq]
+                    )
+
         return angle_list
 
     @abstractmethod
@@ -486,25 +506,19 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
     Implementation of Backend object specific to shot-based simulators and QPUs
     """
 
-    def __init__(self,
-                 qaoa_descriptor: QAOADescriptor,
-                 n_shots: int,
-                 prepend_state: Optional[QuantumCircuitBase],
-                 append_state: Optional[QuantumCircuitBase],
-                 init_hadamard: bool,
-                 cvar_alpha: float,
-                 initial_qubit_layout: List[int],
-                 final_qubit_layout: List[int],
-                 ):
+    def __init__(
+        self,
+        qaoa_descriptor: QAOADescriptor,
+        n_shots: int,
+        prepend_state: Optional[QuantumCircuitBase],
+        append_state: Optional[QuantumCircuitBase],
+        init_hadamard: bool,
+        cvar_alpha: float,
+    ):
 
-        super().__init__(qaoa_descriptor, prepend_state,
-                         append_state, init_hadamard, cvar_alpha)
-        
-        self.initial_qubit_layout = initial_qubit_layout
-        #specify the final_qubit_layout if the qubits are reordered due to SWAPs
-        self.final_qubit_layout = final_qubit_layout if final_qubit_layout is not None\
-                                  else self.initial_qubit_layout
-
+        super().__init__(
+            qaoa_descriptor, prepend_state, append_state, init_hadamard, cvar_alpha
+        )
         # assert self.n_qubits >= len(prepend_state.qubits), \
         # "Cannot attach a bigger circuit to the QAOA routine"
         # assert self.n_qubits >= len(append_state.qubits), \

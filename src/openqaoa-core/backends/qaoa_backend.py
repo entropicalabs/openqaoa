@@ -46,10 +46,8 @@ def _backend_arg_mapper(
     noise_model=None,
     active_reset: Optional[bool] = None,
     rewiring=None,
-    qubit_layout=None,
     disable_qubit_rewiring: Optional[bool] = None,
-    initial_qubit_layout=None,
-    final_qubit_layout=None,
+    initial_qubit_mapping=None,
 ):
 
     BACKEND_ARGS_MAPPER = {
@@ -62,29 +60,22 @@ def _backend_arg_mapper(
             "seed_simulator": seed_simulator,
             "qiskit_simulation_method": qiskit_simulation_method,
             "noise_model": noise_model,
-            "initial_qubit_layout": initial_qubit_layout,
-            "final_qubit_layout": final_qubit_layout,
+            "initial_qubit_mapping": initial_qubit_mapping,
         },
         QAOAQiskitQPUBackend: {
             "n_shots": n_shots,
-            "qubit_layout": qubit_layout,
-            "initial_qubit_layout": initial_qubit_layout,
-            "final_qubit_layout": final_qubit_layout,
+            "initial_qubit_mapping": initial_qubit_mapping,
         },
         QAOAPyQuilQPUBackend: {
             "n_shots": n_shots,
             "active_reset": active_reset,
             "rewiring": rewiring,
-            "qubit_layout": qubit_layout,
-            "initial_qubit_layout": initial_qubit_layout,
-            "final_qubit_layout": final_qubit_layout,
+            "initial_qubit_mapping": initial_qubit_mapping,
         },
         QAOAAWSQPUBackend: {
             "n_shots": n_shots,
-            "qubit_layout": qubit_layout,
             "disable_qubit_rewiring": disable_qubit_rewiring,
-            "initial_qubit_layout": initial_qubit_layout,
-            "final_qubit_layout": final_qubit_layout,
+            "initial_qubit_mapping": initial_qubit_mapping,
         },
     }
 
@@ -135,8 +126,7 @@ def get_qaoa_backend(
     append_state: Optional[Union[QuantumCircuitBase, np.ndarray]] = None,
     init_hadamard: bool = True,
     cvar_alpha: float = 1,
-    initial_qubit_layout: List[int] = None,
-    final_qubit_layout: List[int] = None,
+    initial_qubit_mapping: Optional[List[int]] = None,
     **kwargs,
 ):
     """
@@ -158,10 +148,8 @@ def get_qaoa_backend(
         QAOA part of the circuit.
     cvar_alpha: `float`
         The value of the CVaR parameter.
-    initial_qubit_layout: List
+    initial_qubit_mapping: List
         The initial chosen qubits
-    final_qubit_layout: List
-        Updated qubit order changed due to SWAPs application
     kwargs:
     Additional keyword arguments for the backend.
         qubit_layout: `list`

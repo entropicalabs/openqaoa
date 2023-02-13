@@ -107,6 +107,6 @@ class DevicePyquil(DeviceBase):
 
     def connectivity(self) -> List[List[int]]:
         # returns a networkx graph of qubit topology
-        G = self.quantum_computer.qubit_topology
+        G = self.quantum_computer.qubit_topology()
         connectivity_as_list = list(G.edges())
         return connectivity_as_list

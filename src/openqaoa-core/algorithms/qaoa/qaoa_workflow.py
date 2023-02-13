@@ -17,8 +17,8 @@ from ...optimizers.qaoa_optimizer import get_optimizer
 
 def circuit_routing(
     device: DeviceBase,
-    problem: QUBO,
-    initial_mapping: List[int],
+    problem_to_solve: List[List[int]],
+    initial_mapping: Optional[List[int]] = None,
     routing_algo: str = "greedy",
 ) -> tuple:
     """Post the HTTP request to the routing API and retrieve routed
@@ -28,7 +28,7 @@ def circuit_routing(
     ----------
     device: DeviceBase
         The device for which to route the circuit
-    problem: QUBO
+    cost_block: List[GateMap]
         The QUBO problem to be run on QPU
     initial_mapping: List[int]
         The initial selection of qubits, if provided by the user.
@@ -44,7 +44,6 @@ def circuit_routing(
         and the final list returns the final qubit mapping.
     """
     device_connecivity = device.connectivity()
-    problem_as_list_of_lists = [list(term) for term in problem.terms if len(term) == 2]
 
     # params for MCTS
     params = (
@@ -61,12 +60,10 @@ def circuit_routing(
     query = {
         "algorithm": routing_algo,
         "device": device_connecivity,
-        "problem": problem_as_list_of_lists,
+        "problem": problem_to_solve,
         "initial_mapping": initial_mapping,
         "params": params,
     }
-
-    # print(query)
 
     # post the query via HTTP
     r = requests.post(url="http://127.0.0.1:8000/qubit_routing", json=query)
@@ -74,17 +71,39 @@ def circuit_routing(
     results = r.json()
 
     gate_indices_list = results["gates_list"]
-    final_mapping = results["mapping"]
+    initial_mapping = results["initial_mapping"]
+    final_mapping = results["final_mapping"]
     swap_mask = results["swap_mask"]
+    
+    all_qubits = []
+    for pair in gate_indices_list:
+        all_qubits.extend(pair)
+    all_qubits = set(all_qubits)
+    
+    #append missing qubits from the initial_mapping
+    initial_mapping.extend([qubit for qubit in all_qubits if qubit not in initial_mapping])
+    #append missing qubits from the final_mapping
+    final_mapping.extend([qubit for qubit in all_qubits if qubit not in final_mapping])
+    
+    initial_physical_to_logical_mapping = {
+        qubit:idx for idx,qubit in enumerate(initial_mapping)
+    }
+    
+    for idx,pair in enumerate(gate_indices_list):
+        i,j = pair
+        logical_i, logical_j = initial_physical_to_logical_mapping[i],initial_physical_to_logical_mapping[j] 
+        gate_indices_list[idx] = sorted([logical_i, logical_j])
+        
+    final_logical_qubit_order = [initial_physical_to_logical_mapping[q] for q in final_mapping]
 
     assert len(gate_indices_list) == len(
         swap_mask
     ), "Incorrect output from qubit routing algorithm"
-    assert (
-        len(final_mapping) >= problem.n
+    assert len(final_mapping) == len(
+        initial_mapping
     ), "Incorrect number of qubits in the final qubit layout"
 
-    return (gate_indices_list, swap_mask, final_mapping)
+    return (gate_indices_list, swap_mask, initial_physical_to_logical_mapping, final_logical_qubit_order)
 
 
 class QAOA(Workflow):
@@ -276,71 +295,9 @@ class QAOA(Workflow):
         # check the problem is a QUBO object and save it
         super().compile(problem=problem)
 
-        self.qubit_register = (
-            list(range(problem.n))
-            if self.circuit_properties.qubit_register in [[], None]
-            else list(self.qubit_register)
+        self.cost_hamil = Hamiltonian.classical_hamiltonian(
+            terms=problem.terms, coeffs=problem.weights, constant=problem.constant
         )
-        final_qubit_layout = self.qubit_register
-        if isinstance(routing_function, Callable):
-            try:
-                list_gates_indices, swap_mask, final_mapping = routing_function(
-                    device=self.device,
-                    problem=problem,
-                    initial_mapping=list(range(self.device.n_qubits)),
-                )
-
-                final_qubit_layout = (
-                    final_mapping
-                    if self.circuit_properties.p % 2 == 0
-                    else final_qubit_layout
-                )
-                original_term_weight_pairing = {
-                    tuple(term): weight
-                    for term, weight in zip(problem.terms, problem.weights)
-                }
-
-                sorted_problem_pairing = {
-                    tuple(term): original_term_weight_pairing[tuple(term)]
-                    for term in problem.terms
-                    if len(term) != 2
-                }
-                sorted_problem_pairing.update(
-                    {
-                        tuple(gate_indices): original_term_weight_pairing[
-                            tuple(gate_indices)
-                        ]
-                        for gate_indices, mask in zip(list_gates_indices, swap_mask)
-                        if mask == False
-                    }
-                )
-                sorted_problem = QUBO(
-                    problem.n,
-                    list(sorted_problem_pairing.keys()),
-                    list(sorted_problem_pairing.values()),
-                    problem.constant,
-                )
-                self.cost_hamil = Hamiltonian.classical_hamiltonian(
-                    terms=sorted_problem.terms,
-                    coeffs=sorted_problem.weights,
-                    constant=sorted_problem.constant,
-                )
-            except TypeError:
-                raise TypeError(
-                    "The specified function can has a set signature that accepts"
-                    " device, problem, and initial_mapping"
-                )
-            except Exception as e:
-                raise e
-
-        elif routing_function is None:
-            self.cost_hamil = Hamiltonian.classical_hamiltonian(
-                terms=problem.terms, coeffs=problem.weights, constant=problem.constant
-            )
-        else:
-            raise ValueError(
-                f"Routing function can only be a Callable not {type(routing_function)}"
-            )
 
         self.mixer_hamil = get_mixer_hamiltonian(
             n_qubits=self.cost_hamil.n_qubits,
@@ -353,8 +310,8 @@ class QAOA(Workflow):
             self.cost_hamil,
             self.mixer_hamil,
             p=self.circuit_properties.p,
-            routed_gate_list_indices=list_gates_indices,
-            swap_mask=swap_mask,
+            routing_function=routing_function,
+            device=self.device,
         )
         self.variate_params = create_qaoa_variational_params(
             qaoa_descriptor=self.qaoa_descriptor,

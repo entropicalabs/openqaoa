@@ -3,9 +3,9 @@ from typing import Union
 
 class GateMapType(Enum):
     
-    MIXER = 'mixer'
-    COST = 'cost'
-    FIXED = 'fixed'
+    MIXER = 'MIXER'
+    COST = 'COST'
+    FIXED = 'FIXED'
     
     @classmethod
     def supported_types(cls):
