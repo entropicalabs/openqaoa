@@ -226,12 +226,11 @@ class QAOADescriptor(AnsatzDescriptor):
         
     @property
     def n_qubits(self) -> int:
-        return len(self.final_mapping)
+        if self.routed == True:
+            return len(self.final_mapping)
+        else:
+            return self.cost_hamiltonian.n_qubits
     
-    @property
-    def problem_qubits(self) -> list:
-        return self.initial_mapping[:self.cost_hamiltonian.n_qubits]
-            
     def __repr__(self):
 
         """Return an overview over the parameters and hyperparameters
@@ -421,7 +420,11 @@ class QAOADescriptor(AnsatzDescriptor):
             _abstract_circuit.extend(
                 self.cost_blocks[each_p][:: (even_layer_inversion) ** each_p]
             )
-            mixer_block = self.reorder_gates_block(self.mixer_blocks[each_p], each_p)
+            #apply the mixer block
+            if self.routed == True:
+                mixer_block = self.reorder_gates_block(self.mixer_blocks[each_p], each_p)
+            else:
+                mixer_block = self.mixer_blocks[each_p]
             _abstract_circuit.extend(mixer_block)
                         
         return _abstract_circuit
