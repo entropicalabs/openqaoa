@@ -16,11 +16,11 @@ class DeviceAWS(DeviceBase):
 
     Attributes
     ----------
-        available_qpus: `list`
-                When connection to AWS is established, this attribute contains a list
-                of device names which can be used to access the selected device by
-                reinitialising the Access Object with the name of the available device
-                as input to the device_name parameter.
+    available_qpus: `list`
+        When connection to AWS is established, this attribute contains a list
+        of device names which can be used to access the selected device by
+        reinitialising the Access Object with the name of the available device
+        as input to the device_name parameter.
     n_qubits: `int`
         The maximum number of qubits available for the selected backend. Only
         available if check_connection method is executed and a connection to the
@@ -44,8 +44,8 @@ class DeviceAWS(DeviceBase):
 
         Parameters
         ----------
-                device_name: `str`
-                        The ARN string of the braket QPU/simulator to be used
+        device_name: `str`
+                The ARN string of the braket QPU/simulator to be used
         s3_bucket_name: `str`
             The name of S3 Bucket where the Braket run results will be saved.
         aws_region: `str`
