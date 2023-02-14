@@ -23,7 +23,6 @@ from ..qaoa_components import (
 )
 from ..utilities import qaoa_probabilities, round_value
 from .cost_function import cost_function
-from copy import deepcopy
 
 
 class QuantumCircuitBase:
