@@ -19,7 +19,7 @@ import gzip
 from os.path import exists
 
 from .workflow_properties import BackendProperties, ClassicalOptimizer
-from ..backends import DeviceLocal, DeviceBase
+from ..backends.devices_core import DeviceBase, DeviceLocal
 from ..problems import QUBO
 from ..utilities import delete_keys_from_dict, is_valid_uuid, generate_uuid
 from ..backends.qaoa_backend import (
