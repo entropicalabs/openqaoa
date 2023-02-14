@@ -2,6 +2,7 @@ import unittest
 import json
 import os
 import pytest
+import subprocess
 
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.qaoa_components import (
@@ -94,6 +95,19 @@ class TestingBackendQPUs(unittest.TestCase):
         IBMQ.save_account(token = api_token, hub=self.HUB, 
                           group=self.GROUP, project=self.PROJECT, 
                           overwrite=True)
+        
+        bashCommand = "az resource list"
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        
+        if error is not None:
+            print(error)
+            raise Exception('You must have the Azure CLI installed and must be logged in to use the Azure Quantum Backends')
+        else:
+            output_json = json.loads(output)[0]
+            self.RESOURCE_ID = output_json['id']
+            self.AZ_LOCATION = output_json['location']
+            
 
     @pytest.mark.qpu
     def test_get_counts_and_expectation_n_shots(self):
@@ -102,7 +116,8 @@ class TestingBackendQPUs(unittest.TestCase):
         list_device_attributes = [ 
                                     {'QPU': 'Qiskit', 'device_name': 'ibmq_qasm_simulator', 'hub': self.HUB, 'group': self.GROUP, 'project': self.PROJECT}, 
                                     {'QPU': 'Pyquil', 'device_name': "2q-qvm", 'as_qvm': True, 'execution_timeout': 3, 'compiler_timeout': 3},       
-                                    {'QPU': 'AWS', 'device_name': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'}
+                                    {'QPU': 'AWS', 'device_name': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'},
+                                    {'QPU': 'Azure', 'device_name': 'rigetti.sim.qvm', 'resource_id': self.RESOURCE_ID, 'az_location': self.AZ_LOCATION}
                                 ]
 
         assert len(list_device_attributes) == len(DEVICE_ACCESS_OBJECT_MAPPER), "The number of QPUs in the list of tests is not the same as the number of QPUs in the DEVICE_ACCESS_OBJECT_MAPPER. The list should be updated."
