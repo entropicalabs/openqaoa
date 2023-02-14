@@ -139,7 +139,7 @@ class QAOABaseBackend(VQABaseBackend):
             self.final_mapping = self.qaoa_descriptor.final_mapping if self.qaoa_descriptor.p%2!=0 else None
         else:
             self.initial_qubit_mapping = None
-            self.final_qubit_mapping = None
+            self.final_mapping = None
 
     def assign_angles(self, params: QAOAVariationalBaseParams) -> None:
 

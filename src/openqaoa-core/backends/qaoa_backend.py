@@ -126,7 +126,6 @@ def get_qaoa_backend(
     append_state: Optional[Union[QuantumCircuitBase, np.ndarray]] = None,
     init_hadamard: bool = True,
     cvar_alpha: float = 1,
-    initial_qubit_mapping: Optional[List[int]] = None,
     **kwargs,
 ):
     """
@@ -148,11 +147,9 @@ def get_qaoa_backend(
         QAOA part of the circuit.
     cvar_alpha: `float`
         The value of the CVaR parameter.
-    initial_qubit_mapping: List
-        The initial chosen qubits
     kwargs:
     Additional keyword arguments for the backend.
-        qubit_layout: `list`
+        initial_qubit_mapping: `list`
             A list of physical qubits to be used for the QAOA circuit.
         n_shots: `int`
             The number of shots to be used for the shot-based computation.

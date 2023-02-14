@@ -92,8 +92,6 @@ class QAOAQiskitBackendShotBasedSimulator(
         qiskit_simulation_method: str = "automatic",
         seed_simulator: Optional[int] = None,
         noise_model: Optional[NoiseModel] = None,
-        initial_qubit_layout: List[int] = None,
-        final_qubit_layout: List[int] = None,
     ):
 
         QAOABaseBackendShotBased.__init__(
@@ -104,12 +102,9 @@ class QAOAQiskitBackendShotBasedSimulator(
             append_state,
             init_hadamard,
             cvar_alpha,
-            initial_qubit_layout,
-            final_qubit_layout,
         )
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.qaoa_descriptor.qureg
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
@@ -162,7 +157,7 @@ class QAOAQiskitBackendShotBasedSimulator(
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
             # if gate is of type mixer or cost gate, assign parameter to it
-            if each_gate.gate_label.type.value in ["mixer", "cost"]:
+            if each_gate.gate_label.type.value in ["MIXER", "COST"]:
                 angle_param = Parameter(each_gate.gate_label.__repr__())
                 self.qiskit_parameter_list.append(angle_param)
                 each_gate.angle_value = angle_param
@@ -216,9 +211,9 @@ class QAOAQiskitBackendShotBasedSimulator(
         )
 
         final_counts = flip_counts(counts)
-        if self.initial_qubit_layout != self.final_qubit_layout:
+        if self.final_mapping is not None:
             final_counts = permute_counts_dictionary(
-                final_counts, self.initial_qubit_layout, self.final_qubit_layout
+                final_counts, self.final_mapping
             )
         self.measurement_outcomes = final_counts
         return final_counts
@@ -298,7 +293,6 @@ class QAOAQiskitBackendStatevecSimulator(
         ), "Please use the shot-based simulator for simulations with cvar_alpha < 1"
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.qaoa_descriptor.qureg
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
@@ -382,7 +376,7 @@ class QAOAQiskitBackendStatevecSimulator(
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
             # if gate is of type mixer or cost gate, assign parameter to it
-            if each_gate.gate_label.type.value in ["mixer", "cost"]:
+            if each_gate.gate_label.type.value in ["MIXER", "COST"]:
                 angle_param = Parameter(each_gate.gate_label.__repr__())
                 self.qiskit_parameter_list.append(angle_param)
                 each_gate.angle_value = angle_param
