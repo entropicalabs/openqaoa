@@ -239,10 +239,10 @@ class QAOAAWSQPUBackend(
                     )
 
         final_counts = counts
-        if self.final_mapping is not None:
-            final_counts = permute_counts_dictionary(final_counts,
-                                                    self.final_mapping)
-        # Expose counts
+        # if self.final_mapping is not None:
+        #     final_counts = permute_counts_dictionary(final_counts,
+        #                                             self.final_mapping)
+        # # Expose counts
         self.measurement_outcomes = final_counts
         return final_counts
     

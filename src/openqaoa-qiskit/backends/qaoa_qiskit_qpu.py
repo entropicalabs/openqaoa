@@ -247,10 +247,10 @@ class QAOAQiskitQPUBackend(
         # Expose counts
         final_counts = flip_counts(counts)
         # check whether SWAP gates changed the final layout of qubits
-        if self.final_mapping is not None:
-            final_counts = permute_counts_dictionary(
-                final_counts, self.final_mapping
-            )
+        # if self.final_mapping is not None:
+        #     final_counts = permute_counts_dictionary(
+        #         final_counts, self.final_mapping
+        #     )
         self.measurement_outcomes = final_counts
         return final_counts
 
