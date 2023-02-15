@@ -3,7 +3,7 @@ from typing import Optional, List
 import warnings
 
 # IBM Qiskit imports
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, execute
 from qiskit.providers.ibmq.job import (
     IBMQJobApiError,
     IBMQJobInvalidStateError,
@@ -74,7 +74,7 @@ class QAOAQiskitQPUBackend(
 
         self.qureg = QuantumRegister(self.n_qubits)
         self.problem_reg = self.qureg[0:self.problem_qubits]
-        if self.initial_qubit_mapping is None:
+        if initial_qubit_mapping is None:
             self.initial_qubit_mapping = initial_qubit_mapping if initial_qubit_mapping is not None else list(range(self.n_qubits))
         else:    
             warnings.warn("Ignoring the initial_qubit_mapping since the routing algorithm chose one")
@@ -212,9 +212,12 @@ class QAOAQiskitQPUBackend(
 
             # initial_layout only passed if not azure device
             input_items = {"shots": n_shots, "initial_layout": self.initial_qubit_mapping}
+            if self.qaoa_descriptor.routed == True:
+                input_items.update({"optimization_level":0})
             if type(self.device).__name__ == "DeviceAzure":
                 input_items.pop("initial_layout")
-            job = self.backend_qpu.run(circuit, **input_items)
+            # job = self.backend_qpu.run(circuit, **input_items)
+            job = execute(circuit, backend=self.backend_qpu, **input_items)
 
             api_contact = False
             no_of_api_retries = 0
@@ -231,7 +234,8 @@ class QAOAQiskitQPUBackend(
                     job_state = True
                     no_of_api_retries += 1
                     time.sleep(5)
-                except (IBMQJobFailureError, IBMQJobInvalidStateError):
+                except (IBMQJobFailureError, IBMQJobInvalidStateError) as e:
+                    raise(e)
                     print("There was an error with the state of the Job in IBMQ.")
                     no_of_job_retries += 1
                     break
