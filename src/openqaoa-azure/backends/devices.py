@@ -1,3 +1,5 @@
+from typing import List
+
 from azure.quantum.qiskit import AzureQuantumProvider
 from openqaoa.backends.devices_core import DeviceBase
 
@@ -96,3 +98,6 @@ class DeviceAzure(DeviceBase):
                 )
             )
             return False
+    
+    def connectivity(self) -> List[List[int]]:
+        return self.backend_device.configuration().coupling_map
