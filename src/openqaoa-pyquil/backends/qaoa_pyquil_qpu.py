@@ -266,7 +266,7 @@ class QAOAPyQuilQPUBackend(
             parametric_circuit += self.append_state
             
         if self.final_mapping is None:
-            parametric_circuit += gates.MEASURE(self.problem_reg, self.ro)
+            parametric_circuit += gates.MEASURE(self.problem_reg, ro)
 
         # Measurement instructions
         for qubit in self.qureg:
