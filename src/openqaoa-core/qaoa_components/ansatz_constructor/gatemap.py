@@ -79,13 +79,8 @@ class SWAPGateMap(GateMap):
             ),
             (
                 RiSWAP,
-                [
-                    [
-                        self.qubit_1,
-                        self.qubit_2,
-                        RotationAngle(lambda x: x, self.gate_label, np.pi),
-                    ]
-                ],
+                [[self.qubit_1,self.qubit_2], 
+                 RotationAngle(lambda x: x, self.gate_label, np.pi),],
             ),
             (CZ, [[self.qubit_1, self.qubit_2]]),
             # X gate decomposition

@@ -122,8 +122,7 @@ class QAOAPyQuilQPUBackend(
             warnings.warn("Ignoring the initial_qubit_mapping since the routing algorithm chose one")
         
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
-        self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))
-        
+        self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))        
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.get_qubits()), (
@@ -244,25 +243,37 @@ class QAOAPyQuilQPUBackend(
             # using the list above, construct the circuit
             for each_tuple in decomposition:
                 gate = each_tuple[0]()
-                qubits, rotation_angle = each_tuple[1]
+                if len(each_tuple[1]) == 1:
+                    qubits, rotation_angle = each_tuple[1][0], None
+                elif len(each_tuple[1]) == 2:
+                    qubits, rotation_angle = each_tuple[1]
+                else:
+                    raise ValueError(f"Specified an incorrect gate decomposition {each_tuple[1]}")
                 if isinstance(qubits, list):
                     new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
                 else:
                     new_qubits = self.qubit_mapping[qubits]
-                parametric_circuit = gate.apply_pyquil_gate(
-                    new_qubits, rotation_angle, parametric_circuit
-                )
+                if rotation_angle is None:
+                    parametric_circuit = gate.apply_pyquil_gate(
+                        new_qubits, parametric_circuit
+                    ) 
+                else:
+                    parametric_circuit = gate.apply_pyquil_gate(
+                        new_qubits, rotation_angle, parametric_circuit
+                    )
 
         if self.append_state:
             parametric_circuit += self.append_state
+            
+        if self.final_mapping is None:
+            parametric_circuit += gates.MEASURE(self.problem_reg, self.ro)
 
         # Measurement instructions
-        for i, qubit in enumerate(self.problem_reg):
-            if self.final_mapping is None:
-                cbit = ro[i]
-            else:
-                cbit = ro[self.final_mapping[i]]
-            parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
+        for qubit in self.qureg:
+            reorderd_qubit = self.final_mapping[qubit]
+            if reorderd_qubit in self.problem_reg:
+                cbit = ro[reorderd_qubit]
+                parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
 
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 

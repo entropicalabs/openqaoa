@@ -178,7 +178,7 @@ class QAOAQiskitQPUBackend(
                 reordered_qubit = self.final_mapping[idx]
                 if reordered_qubit in range(len(self.problem_reg)):
                     cbit = creg[reordered_qubit]
-                parametric_circuit.measure(qubit,cbit)
+                    parametric_circuit.measure(qubit,cbit)
 
         return parametric_circuit
 
