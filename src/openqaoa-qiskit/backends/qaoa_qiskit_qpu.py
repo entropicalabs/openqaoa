@@ -216,8 +216,9 @@ class QAOAQiskitQPUBackend(
                 input_items.update({"optimization_level":0})
             if type(self.device).__name__ == "DeviceAzure":
                 input_items.pop("initial_layout")
-            # job = self.backend_qpu.run(circuit, **input_items)
-            job = execute(circuit, backend=self.backend_qpu, **input_items)
+                job = self.backend_qpu.run(circuit, **input_items)
+            else:
+                job = execute(circuit, backend=self.backend_qpu, **input_items)
 
             api_contact = False
             no_of_api_retries = 0
