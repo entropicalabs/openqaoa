@@ -21,7 +21,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         q = QAOA()
         q.compile(vc, verbose=False)
@@ -106,7 +106,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         q = QAOA()
         q.compile(vc, verbose=False)
@@ -118,7 +118,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).qubo
 
         # first for state-vector based simulator:
         q_sv = QAOA()
@@ -143,7 +143,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         for method in ['cans', 'icans']:
             q = QAOA()

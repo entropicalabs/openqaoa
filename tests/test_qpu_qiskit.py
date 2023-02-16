@@ -404,7 +404,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         shots = 100
         
         set_of_numbers = np.random.randint(1, 10, 6).tolist()
-        qubo = NumberPartition(set_of_numbers).get_qubo_problem()
+        qubo = NumberPartition(set_of_numbers).qubo
 
         mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
         qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)

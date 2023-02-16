@@ -335,7 +335,8 @@ class TSP(Problem):
         # Unzip to retrieve terms and weights in separate sequences
         return tuple(zip(*(filtered_interaction_terms + [([], constant_term)])))
 
-    def get_qubo_problem(self):
+    @property
+    def qubo(self):
         """
         Returns the QUBO encoding of this problem.
 

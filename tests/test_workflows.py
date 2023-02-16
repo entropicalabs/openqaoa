@@ -111,7 +111,7 @@ class TestingVanillaQAOA(unittest.TestCase):
     def test_end_to_end_vectorized(self):
         
         g = nw.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).qubo
 
         q = QAOA()
         q.set_classical_optimizer(optimization_progress = True)
@@ -159,7 +159,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         Assert that compilation has to be called before optimisation
         """    
         g = nw.circulant_graph(6, [1])
-        # vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        # vc = MinimumVertexCover(g, field =1.0, penalty=10).qubo
 
         q = QAOA()
         q.set_classical_optimizer(optimization_progress = True)
@@ -170,7 +170,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         
         g = nw.circulant_graph(6, [1])
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         test_hamil = Hamiltonian.classical_hamiltonian(terms = qubo_problem.terms, 
                                                        coeffs = qubo_problem.weights, 
@@ -240,7 +240,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q = QAOA()
         q.set_circuit_properties(mixer_hamiltonian = 'x', p = 2)
 
-        q.compile(problem = problem.get_qubo_problem())
+        q.compile(problem = problem.qubo)
 
         self.assertEqual(type(q.qaoa_descriptor), QAOADescriptor)
         self.assertEqual(q.qaoa_descriptor.p, 2)
@@ -282,7 +282,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                                      mixer_qubit_connectivity = qubit_connectivity_name[i],
                                      p = 2)
 
-            q.compile(problem = problems[i].get_qubo_problem())
+            q.compile(problem = problems[i].qubo)
 
             self.assertEqual(type(q.qaoa_descriptor), QAOADescriptor)
             self.assertEqual(q.qaoa_descriptor.p, 2)
@@ -322,7 +322,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             q = QAOA()
             q.set_circuit_properties(param_type = param_type_names[i], q=1)
 
-            q.compile(problem = problem.get_qubo_problem())
+            q.compile(problem = problem.qubo)
             
             self.assertEqual(type(q.variate_params), object_types[i])
             
@@ -428,7 +428,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'vectorized'))
@@ -456,7 +456,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'vectorized'))
@@ -497,7 +497,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'vectorized'))
@@ -535,7 +535,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'qiskit.qasm_simulator'))
@@ -561,7 +561,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'qiskit.statevector_simulator'))
@@ -588,7 +588,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'pyquil.statevector_simulator'))
@@ -648,7 +648,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         for each_method in available_optimizers()['scipy']:
             q = QAOA()
@@ -959,7 +959,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         # problem
         maxcut_qubo =   MaximumCut(
                             nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)
-                        ).get_qubo_problem()
+                        ).qubo
 
         # run rqaoa with different devices, and save the objcets in a list  
         qaoas = []
@@ -1147,7 +1147,7 @@ class TestingRQAOA(unittest.TestCase):
         Test that the rqaoa can not be optimized multiple times
         """
         graph = nw.circulant_graph(10, [1])
-        problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
+        problem = MinimumVertexCover(graph, field=1, penalty=10).qubo
 
         r = RQAOA()
         exception = False
@@ -1215,7 +1215,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Define problem instance (Ring graph 10 qubits)
         graph = nw.circulant_graph(10, [1])
-        problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
+        problem = MinimumVertexCover(graph, field=1, penalty=10).qubo
 
         # run RQAOA and append solution in list
         solutions = []
@@ -1239,7 +1239,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Define problem instance (Ring graph 10 qubits)
         graph = nw.complete_graph(10)
-        problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
+        problem = MinimumVertexCover(graph, field=1, penalty=10).qubo
 
         # run RQAOA and append solution in list
         solutions = []
@@ -1492,7 +1492,7 @@ class TestingRQAOA(unittest.TestCase):
         # problem
         maxcut_qubo =   MaximumCut(
                             nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)
-                        ).get_qubo_problem()
+                        ).qubo
 
         # run rqaoa with different devices, and save the objcets in a list
         rqaoas = []

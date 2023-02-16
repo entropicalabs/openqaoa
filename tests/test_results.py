@@ -80,7 +80,7 @@ class TestingResultOutputs(unittest.TestCase):
         """
         
         g = nw.circulant_graph(3, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).qubo
         
         choice_combination = list(itertools.product([True, False], [True, False], [True, False]))
         recorded_evals = [0, 5]
@@ -218,7 +218,7 @@ class TestingResultOutputs(unittest.TestCase):
         """
 
         # problem
-        maxcut_qubo = MaximumCut(nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)).get_qubo_problem()
+        maxcut_qubo = MaximumCut(nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)).qubo
 
 
         # run qaoa with different devices, and save the objcets in a list  
@@ -262,7 +262,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         n_qubits = 6
         n_cutoff = 3
         g = nw.circulant_graph(n_qubits, [1])
-        problem = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        problem = MinimumVertexCover(g, field =1.0, penalty=10).qubo
 
         r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)
@@ -443,7 +443,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         """
 
         # problem
-        maxcut_qubo = MaximumCut(nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)).get_qubo_problem()
+        maxcut_qubo = MaximumCut(nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)).qubo
 
 
         # run rqaoa with different devices, and save the objcets in a list  
