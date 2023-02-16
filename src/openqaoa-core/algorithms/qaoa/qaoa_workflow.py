@@ -60,7 +60,7 @@ class QAOA(Workflow):
         The openQAOA representation of the backend to be used to execute the quantum circuit
     optimizer: OptimizeVQA
         The classical optimiser
-    results: `Result`
+    result: `Result`
         Contains the logs of the optimisation process
     compiled: `Bool`
         A boolean flag to check whether the QAOA object has been correctly compiled at least once

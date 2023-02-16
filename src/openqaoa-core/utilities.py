@@ -1637,7 +1637,7 @@ def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
 
     Returns
     -------
-    np.ndarray:
+    `np.ndarray`
         Total basis states present in the expected Dicke vector in the computational basis
     """
     assert (
@@ -1694,7 +1694,7 @@ def k_cumulative_excitations(k: int, n_qubits: int) -> np.ndarray:
 
     Returns
     -------
-    np.ndarray:
+    `np.ndarray`
         The wavefunction vector for a given cumulative Dicke states with <=k excitations
     """
     cumulative_dicke_bases = np.array(["0" * n_qubits])

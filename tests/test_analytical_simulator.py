@@ -177,7 +177,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         r.compile(maxcut_qubo)
         r.optimize()
 
-        opt_results = r.results
+        opt_results = r.result
         opt_solution = opt_results["solution"]
         opt_solution_string = list(opt_solution.keys())[0]
 

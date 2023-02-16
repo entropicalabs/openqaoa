@@ -490,7 +490,7 @@ class TestingRQAOA(unittest.TestCase):
 
         r.compile(qubo)
         r.optimize()
-        return r.results
+        return r.result
 
     def test_total_elimination_cutoff_1_whole_workflow(self):
         """

@@ -127,7 +127,7 @@ class RQAOA(Workflow):
     >>> r_adaptive.optimize()
     """
 
-    results_class = RQAOAResults
+    results_class = RQAOAResult
 
     def __init__(self, device: DeviceBase = DeviceLocal("vectorized")):
         """

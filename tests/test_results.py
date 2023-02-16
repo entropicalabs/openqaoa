@@ -4,7 +4,7 @@ import networkx as nw
 import numpy as np
 
 from openqaoa import QAOA, RQAOA
-from openqaoa.algorithms import QAOAResult, RQAOAResults
+from openqaoa.algorithms import QAOAResult, RQAOAResult
 from openqaoa.backends.qaoa_backend import (DEVICE_NAME_TO_OBJECT_MAPPER,
                                             DEVICE_ACCESS_OBJECT_MAPPER)
 from openqaoa.backends import create_device
@@ -12,7 +12,6 @@ from openqaoa.backends.basebackend import QAOABaseBackendStatevector
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.problems import MinimumVertexCover, QUBO, MaximumCut
 from openqaoa.qaoa_components import Hamiltonian
-from openqaoa.algorithms.rqaoa.rqaoa_results import RQAOAResults
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 
@@ -99,9 +98,9 @@ class TestingResultOutputs(unittest.TestCase):
                 q.set_device(device)
                 q.compile(vc)
                 q.optimize()
-                self.assertEqual(recorded_evals[each_choice[0]], len(q.results.intermediate['angles']))
-                self.assertEqual(recorded_evals[each_choice[1]], len(q.results.intermediate['cost']))
-                self.assertEqual(recorded_evals[each_choice[2]], len(q.results.intermediate['measurement_outcomes']))
+                self.assertEqual(recorded_evals[each_choice[0]], len(q.result.intermediate['angles']))
+                self.assertEqual(recorded_evals[each_choice[1]], len(q.result.intermediate['cost']))
+                self.assertEqual(recorded_evals[each_choice[2]], len(q.result.intermediate['measurement_outcomes']))
 
     def test_qaoa_result_asdict(self):
         """
@@ -114,13 +113,13 @@ class TestingResultOutputs(unittest.TestCase):
         qaoa.optimize()
         
         # get dict
-        results_dict = qaoa.results.asdict()
+        results_dict = qaoa.result.asdict()
 
         # list of expected keys
         expected_keys = ['method', 'cost_hamiltonian', 'n_qubits', 'terms', 'qubit_indices', 'pauli_str', 'phase', 'coeffs', 'constant', 'qubits_pairs', 'qubits_singles', 'single_qubit_coeffs', 'pair_qubit_coeffs', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'angles', 'cost', 'measurement_outcomes', 'job_id']
         
         #we append all the keys that we find in rqaoa.results, so if we introduce a new key, we will know that we need to update the result.asdict method
-        for key in vars(qaoa.results).keys():
+        for key in vars(qaoa.result).keys():
             if not key in expected_keys and not '_QAOAResult__' in key: expected_keys.append(key)
 
         #create a dictionary with all the expected keys and set them to False
@@ -137,7 +136,7 @@ class TestingResultOutputs(unittest.TestCase):
         ## now we repeat the same test but we do not include the cost hamiltonian
 
         #get dict without cost hamiltonian
-        results_dict = qaoa.results.asdict(keep_cost_hamiltonian = False)
+        results_dict = qaoa.result.asdict(keep_cost_hamiltonian = False)
 
         #expected keys 
         expected_keys_dict = {item: False for item in expected_keys}    
@@ -157,7 +156,7 @@ class TestingResultOutputs(unittest.TestCase):
         ## now we repeat the same test but we do not include some keys
 
         #get dict without some values
-        results_dict = qaoa.results.asdict(exclude_keys = ['solutions_bitstrings', 'method'])
+        results_dict = qaoa.result.asdict(exclude_keys = ['solutions_bitstrings', 'method'])
 
         #expected keys
         expected_keys_dict = {item: False for item in expected_keys}
@@ -209,7 +208,7 @@ class TestingResultOutputs(unittest.TestCase):
             q.optimize()
 
             # test the eval_number method
-            assert q.results.intermediate['cost'].index(min(q.results.intermediate['cost'])) + 1 == q.results.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation, when using {} method'.format(method)
+            assert q.result.intermediate['cost'].index(min(q.result.intermediate['cost'])) + 1 == q.result.optimized['eval_number'], 'optimized eval_number does not return the correct number of the optimized evaluation, when using {} method'.format(method)
 
     def test_qaoa_results_from_dict(self):
         """
@@ -238,7 +237,7 @@ class TestingResultOutputs(unittest.TestCase):
             qaoas.append(q)
 
         for q in qaoas:
-            results = q.results
+            results = q.result
             for bool_cmplx_str in [True, False]:
                 results_from_dict = QAOAResult.from_dict(results.asdict(complex_to_string=bool_cmplx_str))
 
@@ -277,7 +276,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         r.compile(problem)
         r.optimize()
 
-        return r.results
+        return r.result
     
     def test_rqaoa_result_outputs(self):
         """
@@ -289,7 +288,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # Test for the standard RQAOA
         results = self.__run_rqaoa()
-        assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
+        assert isinstance(results, RQAOAResult), 'Results of RQAOA are not of type RQAOAResult'
         for key in results['solution'].keys():
             assert len(key) == n_qubits, 'Number of qubits solution is not correct'
         assert isinstance(results['classical_output']['minimum_energy'], float)
@@ -308,7 +307,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
        
         # Test for the adaptive RQAOA
         results = self.__run_rqaoa(type='adaptive')
-        assert isinstance(results, RQAOAResults), 'Results of RQAOA are not of type RQAOAResults'
+        assert isinstance(results, RQAOAResult), 'Results of RQAOA are not of type RQAOAResult'
         for key in results['solution'].keys():
             assert len(key) == n_qubits, 'Number of qubits solution is not correct'
         assert isinstance(results['classical_output']['minimum_energy'], float)
@@ -465,11 +464,11 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         # for each rqaoa object, we check that we can create a new results object from the dictionary of the old one
         for r in rqaoas:
 
-            new_results = RQAOAResults.from_dict(r.results.asdict())
-            old_results = r.results
+            new_results = RQAOAResult.from_dict(r.result.asdict())
+            old_results = r.result
 
-            #assert that new_results is an instance of RQAOAResults
-            assert isinstance(new_results, RQAOAResults), "new_results is not an instance of RQAOAResults"
+            #assert that new_results is an instance of RQAOAResult
+            assert isinstance(new_results, RQAOAResult), "new_results is not an instance of RQAOAResult"
 
             for key in old_results:
                 if key == "intermediate_steps":

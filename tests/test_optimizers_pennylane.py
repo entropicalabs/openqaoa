@@ -66,7 +66,7 @@ class TestPennylaneOptimizers(unittest.TestCase):
         q.compile(problem) 
         q.optimize()
 
-        assert len(q.results.most_probable_states['solutions_bitstrings'][0]) > 0
+        assert len(q.result.most_probable_states['solutions_bitstrings'][0]) > 0
 
     def _run_method_manual(self, method, problem):
         " helper function tu run the test for any method using manual mode"

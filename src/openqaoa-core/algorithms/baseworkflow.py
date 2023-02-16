@@ -365,7 +365,7 @@ class Workflow(ABC):
                     data["input_parameters"]["backend_properties"][item]
                 )
 
-        data["results"] = self.result.asdict(
+        data["result"] = self.result.asdict(
             False, complex_to_string, intermediate_mesurements
         ) if not self.result in [None, {}] else None
 
