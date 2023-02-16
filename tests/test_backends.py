@@ -64,37 +64,11 @@ class TestingBackendQPUs(unittest.TestCase):
 
     @pytest.mark.qpu
     def setUp(self):
-        try:
-            opened_f = open('./tests/credentials.json', 'r')
-        except FileNotFoundError:
-            opened_f = open('credentials.json', 'r')
-                
-        with opened_f as f:
-            json_obj = json.load(f)['QISKIT']
-            
-            try:
-                api_token = os.environ['IBMQ_TOKEN']
-                self.HUB = os.environ['IBMQ_HUB']
-                self.GROUP = os.environ['IBMQ_GROUP']
-                self.PROJECT = os.environ['IBMQ_PROJECT']
-            except Exception:
-                api_token = json_obj['API_TOKEN']
-                self.HUB = json_obj['HUB']
-                self.GROUP = json_obj['GROUP']
-                self.PROJECT = json_obj['PROJECT']
 
-        if api_token == "YOUR_API_TOKEN_HERE":
-            raise ValueError("Please provide an appropriate API TOKEN in crendentials.json.")
-        elif self.HUB == "IBMQ_HUB":
-            raise ValueError("Please provide an appropriate IBM HUB name in crendentials.json.")
-        elif self.GROUP == "IBMQ_GROUP":
-            raise ValueError("Please provide an appropriate IBMQ GROUP name in crendentials.json.")
-        elif self.PROJECT == "IBMQ_PROJECT":
-            raise ValueError("Please provide an appropriate IBMQ Project name in crendentials.json.")
-            
-        IBMQ.save_account(token = api_token, hub=self.HUB, 
-                          group=self.GROUP, project=self.PROJECT, 
-                          overwrite=True)
+        self.HUB = 'ibm-q'
+        self.GROUP = 'open'
+        self.PROJECT = 'main'
+        IBMQ.load_account()
         
         bashCommand = "az resource list"
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
