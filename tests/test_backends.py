@@ -78,9 +78,10 @@ class TestingBackendQPUs(unittest.TestCase):
             print(error)
             raise Exception('You must have the Azure CLI installed and must be logged in to use the Azure Quantum Backends')
         else:
-            output_json = json.loads(output)[0]
-            self.RESOURCE_ID = output_json['id']
-            self.AZ_LOCATION = output_json['location']
+            output_json = json.loads(output)
+            output_json_s = [each_json for each_json in output_json if each_json['name'] == 'TestingOpenQAOA'][0]
+            self.RESOURCE_ID = output_json_s['id']
+            self.AZ_LOCATION = output_json_s['location']
             
 
     @pytest.mark.qpu
