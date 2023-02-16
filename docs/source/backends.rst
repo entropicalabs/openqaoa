@@ -4,7 +4,7 @@ Base Backends and Device
 BaseDevice
 ----------
 
-.. autoclass:: openqaoa.backends.DeviceBase
+.. autoclass:: openqaoa.backends.devices_core.DeviceBase
     :members:
     :undoc-members:
     :inherited-members:

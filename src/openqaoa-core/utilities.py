@@ -12,6 +12,8 @@ import networkx as nx
 
 from .qaoa_components import Hamiltonian, PauliOp
 
+from .qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams #ff
+from .qaoa_components.ansatz_constructor.gatemap import TwoQubitRotationGateMap #ff
 
 def X_mixer_hamiltonian(n_qubits: int, coeffs: List[float] = None) -> Hamiltonian:
     """Construct a Hamiltonian object to implement the X mixer.
@@ -1635,10 +1637,8 @@ def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
 
     Returns
     -------
-    total_basis_comp:
+    np.ndarray:
         Total basis states present in the expected Dicke vector in the computational basis
-        np.ndarray[str]
-
     """
     assert (
         n_qubits >= excitations
@@ -1680,7 +1680,7 @@ def dicke_wavefunction(excitations, n_qubits):
     return wavefunction
 
 
-def k_cumulative_excitations(k: int, n_qubits: int):
+def k_cumulative_excitations(k: int, n_qubits: int) -> np.ndarray:
     """
     Generates the Upper bound excitations basis vector |Ek>, which a superposition of all
     Dicke basis vectors upto excitation number "k"
@@ -1694,9 +1694,8 @@ def k_cumulative_excitations(k: int, n_qubits: int):
 
     Returns
     -------
-    wavefunction:
+    np.ndarray:
         The wavefunction vector for a given cumulative Dicke states with <=k excitations
-
     """
     cumulative_dicke_bases = np.array(["0" * n_qubits])
     for exc in range(1, k + 1):
@@ -1736,7 +1735,7 @@ def knapsack_balanced_basis(
 
     Returns
     -------
-    wavefunction:
+    np.ndarray
     """
     n_decision_qubits = len(decision_register)
     n_slack_qubits = len(slack_register)

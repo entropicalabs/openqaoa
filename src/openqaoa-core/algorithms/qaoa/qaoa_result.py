@@ -15,6 +15,8 @@ from ...utilities import (
 from ...backends.basebackend import QAOABaseBackend, QAOABaseBackendStatevector
 from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 
+from ...optimizers.logger_vqa import Logger #ff
+
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
 
