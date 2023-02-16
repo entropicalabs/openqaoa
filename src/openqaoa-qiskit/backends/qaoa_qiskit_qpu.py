@@ -2,7 +2,7 @@ from time import time
 from typing import Optional, List
 
 # IBM Qiskit imports
-from qiskit import QuantumCircuit, QuantumRegister
+from qiskit import QuantumCircuit, QuantumRegister, execute
 from qiskit.providers.ibmq.job import (
     IBMQJobApiError,
     IBMQJobInvalidStateError,
@@ -200,7 +200,9 @@ class QAOAQiskitQPUBackend(
             input_items = {"shots": n_shots, "initial_layout": self.qubit_layout}
             if type(self.device).__name__ == "DeviceAzure":
                 input_items.pop("initial_layout")
-            job = self.backend_qpu.run(circuit, **input_items)
+                job = self.backend_qpu.run(circuit, **input_items)
+            else:
+                job = execute(circuit, backend=self.backend_qpu, **input_items)
 
             api_contact = False
             no_of_api_retries = 0
