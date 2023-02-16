@@ -10,7 +10,7 @@ import uuid
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from .qaoa_components import Hamiltonian, PauliOp, QAOAVariationalBaseParams
+from .qaoa_components import Hamiltonian, PauliOp
 from .qaoa_components.ansatz_constructor.gatemap import TwoQubitRotationGateMap
 
 

@@ -1,4 +1,3 @@
-from .variational_baseparams import QAOAVariationalBaseParams
 from .variational_params_converters import converter
 from .variational_params_factory import (
     create_qaoa_variational_params,
