@@ -70,11 +70,8 @@ def get_optimizer(
         f"Please choose from {available_optimizers()}"
     )
 
-    try:
-        optimizer = SUPPORTED_OPTIMIZERS[selected_class](
-            vqa_object, variational_params, optimizer_dict
-        )
-    except Exception as e:
-        raise e
+    optimizer = SUPPORTED_OPTIMIZERS[selected_class](
+        vqa_object, variational_params, optimizer_dict
+    )
 
     return optimizer

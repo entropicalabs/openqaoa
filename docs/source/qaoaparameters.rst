@@ -41,6 +41,7 @@ Parameters
     :members:
     :undoc-members:
     :inherited-members:
+    :noindex:
 
 
 Standard Parameters
