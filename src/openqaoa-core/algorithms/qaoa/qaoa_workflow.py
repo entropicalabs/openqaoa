@@ -275,8 +275,8 @@ class QAOA(Workflow):
         self.header["execution_time_start"] = time.time_ns()
 
         self.optimizer.optimize()
-        # TODO: results and qaoa_results will differ
-        self.results = self.optimizer.qaoa_result
+        # TODO: result and qaoa_result will differ
+        self.result = self.optimizer.qaoa_result
 
         # timestamp for the end of the optimization
         self.header["execution_time_end"] = time.time_ns()

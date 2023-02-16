@@ -108,7 +108,7 @@ class Workflow(ABC):
 
         # Initialize the results and problem objects
         self.problem = None
-        self.results = None
+        self.result = None
 
     def __setattr__(self, __name, __value):
         # check the attribute exp_tags is json serializable
@@ -365,9 +365,9 @@ class Workflow(ABC):
                     data["input_parameters"]["backend_properties"][item]
                 )
 
-        data["results"] = self.results.asdict(
+        data["results"] = self.result.asdict(
             False, complex_to_string, intermediate_mesurements
-        ) if not self.results in [None, {}] else None
+        ) if not self.result in [None, {}] else None
 
         # create the final header dictionary
         header = self.header.copy()
@@ -623,9 +623,9 @@ class Workflow(ABC):
             map_inputs[key](**value)
 
         # results
-        if 'results' in dictionary['data'].keys() and dictionary['data']['results'] is not None:
-            obj.results = obj.results_class.from_dict(
-                                    dictionary['data']['results'], 
+        if 'result' in dictionary['data'].keys() and dictionary['data']['result'] is not None:
+            obj.result = obj.results_class.from_dict(
+                                    dictionary['data']['result'], 
                                     **({'cost_hamiltonian':obj.problem.hamiltonian} if algorithm == 'qaoa' else {})
                           )
 

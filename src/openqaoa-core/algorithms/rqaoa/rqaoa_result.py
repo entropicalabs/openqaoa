@@ -8,7 +8,7 @@ from .. import QAOAResult
 from ...problems import QUBO
 
 
-class RQAOAResults(dict):
+class RQAOAResult(dict):
     """
     A class to handle the results of RQAOA workflows
     It stores the results of the RQAOA optimization as a dictionary. With some custom methods.
