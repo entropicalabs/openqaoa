@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from .qaoa_components import Hamiltonian, PauliOp
-from .qaoa_components.ansatz_constructor.gatemap import TwoQubitRotationGateMap
 
 
 def X_mixer_hamiltonian(n_qubits: int, coeffs: List[float] = None) -> Hamiltonian:
