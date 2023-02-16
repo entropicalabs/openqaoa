@@ -136,7 +136,12 @@ class QAOABaseBackend(VQABaseBackend):
         #pass the generated mappings if the circuit is routed
         if self.qaoa_descriptor.routed == True:
             self.initial_qubit_mapping = self.qaoa_descriptor.initial_mapping
-            self.final_mapping = self.qaoa_descriptor.final_mapping if self.qaoa_descriptor.p%2!=0 else None
+            
+            if self.qaoa_descriptor.p%2!=0:
+                self.final_mapping = self.qaoa_descriptor.final_mapping
+            else:
+                # if odd, the initial mapping [0,...,n_qubits] is taken as the final mapping
+                self.final_mapping = list(range(len(self.qaoa_descriptor.final_mapping)))
         else:
             self.initial_qubit_mapping = None
             self.final_mapping = None
