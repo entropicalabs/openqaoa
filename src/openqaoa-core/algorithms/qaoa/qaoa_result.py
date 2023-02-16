@@ -15,8 +15,6 @@ from ...utilities import (
 from ...backends.basebackend import QAOABaseBackend, QAOABaseBackendStatevector
 from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 
-from ...optimizers.logger_vqa import Logger #ff
-
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
 
@@ -51,7 +49,7 @@ class QAOAResult:
 
     def __init__(
         self,
-        log: Logger,
+        log: 'Logger',
         method: Type[str],
         cost_hamiltonian: Type[Hamiltonian],
         type_backend: Type[QAOABaseBackend],
