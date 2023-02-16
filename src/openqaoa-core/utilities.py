@@ -1626,15 +1626,15 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
 
 def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
     """
-    Generates the Dicke basis state |ek> with k excitations
+    Generates the Dicke basis state \|ek\> with k excitations
 
     Parameters
     ----------
-    excitations:
+    excitations: `int`
         Number of excitations in the basis vector
-    n_qubits:
+    n_qubits: `int`
         Total number of qubits in the system
-
+        
     Returns
     -------
     `np.ndarray`
@@ -1666,6 +1666,11 @@ def dicke_wavefunction(excitations, n_qubits):
 
     n_qubits: int
         The number of qubits in the register
+        
+    Returns
+    -------
+    `np.ndarray`
+        The wavefunction vector for a given cumulative Dicke states with <=k excitations
     """
 
     k_dicke = dicke_basis(excitations, n_qubits)
@@ -1682,14 +1687,14 @@ def dicke_wavefunction(excitations, n_qubits):
 
 def k_cumulative_excitations(k: int, n_qubits: int) -> np.ndarray:
     """
-    Generates the Upper bound excitations basis vector |Ek>, which a superposition of all
-    Dicke basis vectors upto excitation number "k"
+    Generates the Upper bound excitations basis vector \|Ek\>, which a superposition of all
+    Dicke basis vectors upto excitation number \"k\"
 
     Parameters
     ----------
-    k:
+    k: `int`
         Upper bound on number of excitations in the basis vector
-    n_qubits:
+    n_qubits: `int`
         Total number of qubits in the system
 
     Returns
