@@ -5,8 +5,6 @@ import itertools
 import subprocess
 import pytest
 
-from qiskit import IBMQ
-
 from openqaoa.backends import DeviceLocal
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa_qiskit.backends import DeviceQiskit
@@ -31,7 +29,6 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.HUB = 'ibm-q'
         self.GROUP = 'open'
         self.PROJECT = 'main'
-        IBMQ.load_account()
     
     @pytest.mark.api
     def test_changing_provider(self):

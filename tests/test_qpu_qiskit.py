@@ -4,7 +4,7 @@ import json
 import numpy as np
 import pytest
 
-from qiskit import QuantumCircuit, IBMQ
+from qiskit import QuantumCircuit
 
 from openqaoa.qaoa_components import (create_qaoa_variational_params, PauliOp, 
                                       Hamiltonian, QAOADescriptor, QAOAVariationalStandardParams) 
@@ -31,7 +31,6 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         self.HUB = 'ibm-q'
         self.GROUP = 'open'
         self.PROJECT = 'main'
-        IBMQ.load_account()
     
     @pytest.mark.qpu
     def test_circuit_angle_assignment_qpu_backend(self):

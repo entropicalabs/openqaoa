@@ -13,8 +13,6 @@ from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_device import create_device
 from openqaoa.backends.basebackend import QAOABaseBackendShotBased
 
-from qiskit import IBMQ
-
 
 def get_params():
     cost_hamil = Hamiltonian.classical_hamiltonian([[0, 1]], [1], constant=0)
@@ -68,7 +66,6 @@ class TestingBackendQPUs(unittest.TestCase):
         self.HUB = 'ibm-q'
         self.GROUP = 'open'
         self.PROJECT = 'main'
-        IBMQ.load_account()
         
         bashCommand = "az resource list"
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
