@@ -7,7 +7,6 @@ from nbconvert.preprocessors import ExecutePreprocessor
 import pytest
 
 import sys, os
-import subprocess
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath + '/../')
 
@@ -61,6 +60,12 @@ def test_09_RQAOA_example():
 @pytest.mark.qpu
 def test_10_workflows_on_Amazon_braket():
     notebook_test_function("./examples/10_workflows_on_Amazon_braket.ipynb")
+    
+def test_11_Mixer_example():
+    notebook_test_function("./examples/11_Mixer_example.ipynb")
+
+def test_X_dumping_data():
+    notebook_test_function("./examples/X_dumping_data.ipynb")
        
 ### Community Tutorials
 

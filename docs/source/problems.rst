@@ -6,53 +6,59 @@ Problems
     :inherited-members:
 
 
-.. autoclass:: openqaoa.problems.problem.QUBO
+.. autoclass:: openqaoa.problems.qubo.QUBO
     :members:
     :undoc-members:
     :inherited-members:
 
 
 Built-in problems
-=================
+-----------------
 
-.. autoclass:: openqaoa.problems.problem.TSP
+.. autoclass:: openqaoa.problems.tsp.TSP
     :members:
     :undoc-members:
     :show-inheritance:
     :inherited-members:
 
-.. autoclass:: openqaoa.problems.problem.NumberPartition
+.. autoclass:: openqaoa.problems.numberpartition.NumberPartition
     :members:
     :undoc-members:
     :show-inheritance:
     :inherited-members:
 
-.. autoclass:: openqaoa.problems.problem.MaximumCut
+.. autoclass:: openqaoa.problems.maximumcut.MaximumCut
     :members:
     :undoc-members:
     :show-inheritance:
     :inherited-members:
 
-.. autoclass:: openqaoa.problems.problem.Knapsack
+.. autoclass:: openqaoa.problems.knapsack.Knapsack
     :members:
     :undoc-members:
     :show-inheritance:
     :inherited-members:
 
-.. autoclass:: openqaoa.problems.problem.SlackFreeKnapsack
+.. autoclass:: openqaoa.problems.knapsack.SlackFreeKnapsack
     :members:
     :undoc-members:
     :show-inheritance:
     :inherited-members:
 
-.. autoclass:: openqaoa.problems.problem.MinimumVertexCover
+.. autoclass:: openqaoa.problems.minimumvertexcover.MinimumVertexCover
     :members:
     :undoc-members:
     :show-inheritance:
     :inherited-members:
 
-Helper functions
-----------------
+.. autoclass:: openqaoa.problems.shortestpath.ShortestPath
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+
+Utils and Converters
+--------------------
 
 .. automodule:: openqaoa.problems.helper_functions
     :members:
@@ -60,7 +66,8 @@ Helper functions
     :show-inheritance:
     :inherited-members:
 
-.. autoclass:: openqaoa.problems.problem.ShortestPath
+.. automodule:: openqaoa.problems.converters
     :members:
+    :undoc-members:
     :show-inheritance:
     :inherited-members:

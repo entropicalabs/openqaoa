@@ -1,12 +1,13 @@
-from math import dist
 import unittest
 import networkx as nx
 import numpy as np
-from openqaoa.problems.problem import (
+from random import randint, random
+from openqaoa.problems import (
     NumberPartition, QUBO, TSP, Knapsack, ShortestPath,
     SlackFreeKnapsack, MaximumCut, MinimumVertexCover
 )
-
+from openqaoa.utilities import convert2serialize
+from openqaoa.problems.helper_functions import create_problem_from_dict
 
 def terms_list_equality(terms_list1, terms_list2):
     """
@@ -139,6 +140,49 @@ class TestProblem(unittest.TestCase):
             self.assertEqual("The input parameter terms must be of type of list or tuple",
                              str(e.exception))
 
+    def test_qubo_metadata(self):
+        """Test that metadata is correctly stored"""
+        qubo_problem = QUBO.random_instance(3)
+        qubo_problem.set_metadata({'tag1': 'value1', 'tag2': 'value2'})
+        qubo_problem.set_metadata({'tag2': 'value2.0'})
+
+        assert qubo_problem.metadata['tag1'] == 'value1', "qubo metadata is not well set"
+        assert qubo_problem.metadata['tag2'] == 'value2.0', "qubo metadata is not well set, should have overwritten previous value"
+
+        error = False
+        try:
+            qubo_problem.set_metadata({'tag10': complex(1, 2)})
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting metadata that is not json serializable"
+
+        error = False
+        try:
+            qubo_problem.set_metadata({(1,2): 'value'})
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting key metadata that is not json serializable"
+
+    def test_qubo_problem_instance_serializable(self):
+        """ test that when problem instance is not serializable, it throws an error """
+        
+        qubo = QUBO.random_instance(3)
+
+        error = False
+        try:
+            qubo.problem_instance={'tag10': complex(1, 2)}
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting qubo problem instance that is not json serializable"
+
+        error = False
+        try:
+            qubo.problem_instance={(1,2): 'value'}
+        except:
+            error = True
+        assert error, "Should have thrown an error when setting key qubo problem instance that is not json serializable"
+
+
     # TESTING NUMBER PARITION CLASS
     
     def test_number_partitioning_terms_weights_constant(self):
@@ -149,7 +193,7 @@ class TestProblem(unittest.TestCase):
         expected_constant = 14
 
         np_problem = NumberPartition(list_numbers)
-        qubo_problem = np_problem.get_qubo_problem()
+        qubo_problem = np_problem.qubo
 
         self.assertTrue(terms_list_equality(
             qubo_problem.terms, expected_terms))
@@ -162,10 +206,10 @@ class TestProblem(unittest.TestCase):
         rng = np.random.default_rng(1234)
         random_numbers_list = list(map(int, rng.integers(1, 10, size=5)))
         manual_np_prob = NumberPartition(
-            random_numbers_list).get_qubo_problem()
+            random_numbers_list).qubo
 
         np_prob_random = NumberPartition.random_instance(
-            n_numbers=5, seed=1234).get_qubo_problem()
+            n_numbers=5, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             np_prob_random.terms, manual_np_prob.terms))
@@ -203,7 +247,7 @@ class TestProblem(unittest.TestCase):
         gr_edges = [list(edge) for edge in gr.edges()]
         gr_weights = [1]*len(gr_edges)
 
-        maxcut_prob_qubo = MaximumCut(gr).get_qubo_problem()
+        maxcut_prob_qubo = MaximumCut(gr).qubo
 
         self.assertTrue(terms_list_equality(gr_edges, maxcut_prob_qubo.terms))
         self.assertEqual(gr_weights, maxcut_prob_qubo.weights)
@@ -215,11 +259,11 @@ class TestProblem(unittest.TestCase):
         seed = 1234
         gr = nx.generators.random_graphs.fast_gnp_random_graph(
             n=10, p=0.8, seed=seed)
-        maxcut_manual_prob = MaximumCut(gr).get_qubo_problem()
+        maxcut_manual_prob = MaximumCut(gr).qubo
 
         np.random.seed(1234)
         maxcut_random_prob = MaximumCut.random_instance(
-            n_nodes=10, edge_probability=0.8, seed=seed).get_qubo_problem()
+            n_nodes=10, edge_probability=0.8, seed=seed).qubo
 
         self.assertTrue(terms_list_equality(
             maxcut_manual_prob.terms, maxcut_random_prob.terms))
@@ -264,7 +308,7 @@ class TestProblem(unittest.TestCase):
         knap_constant = 563.0
 
         knapsack_prob_qubo = Knapsack(
-            values, weights, weight_capacity, penalty).get_qubo_problem()
+            values, weights, weight_capacity, penalty).qubo
 
         self.assertTrue(terms_list_equality(
             knap_terms, knapsack_prob_qubo.terms))
@@ -284,10 +328,10 @@ class TestProblem(unittest.TestCase):
         penalty = 2*np.max(values)
 
         knap_manual = Knapsack(
-            values, weights, weight_capacity, int(penalty)).get_qubo_problem()
+            values, weights, weight_capacity, int(penalty)).qubo
 
         knap_random_instance = Knapsack.random_instance(
-            n_items=n_items, seed=1234).get_qubo_problem()
+            n_items=n_items, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             knap_manual.terms, knap_random_instance.terms))
@@ -307,10 +351,10 @@ class TestProblem(unittest.TestCase):
         penalty = 2*np.max(values)
 
         knap_manual = Knapsack(
-            values, weights, weight_capacity, int(penalty)).get_qubo_problem()
+            values, weights, weight_capacity, int(penalty)).qubo
 
         knap_random_instance = Knapsack.random_instance(
-            n_items=n_items, seed=1234).get_qubo_problem()
+            n_items=n_items, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             knap_manual.terms, knap_random_instance.terms))
@@ -408,7 +452,7 @@ class TestProblem(unittest.TestCase):
         slknap_constant = 613.0
 
         slknapsack_prob_qubo = SlackFreeKnapsack(
-            values, weights, weight_capacity, penalty).get_qubo_problem()
+            values, weights, weight_capacity, penalty).qubo
 
         self.assertTrue(terms_list_equality(
             slknap_terms, slknapsack_prob_qubo.terms))
@@ -428,10 +472,10 @@ class TestProblem(unittest.TestCase):
         penalty = 2*np.max(values)
 
         slknap_manual = SlackFreeKnapsack(
-            values, weights, weight_capacity, int(penalty)).get_qubo_problem()
+            values, weights, weight_capacity, int(penalty)).qubo
 
         slknap_random_instance = SlackFreeKnapsack.random_instance(
-            n_items=n_items, seed=1234).get_qubo_problem()
+            n_items=n_items, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             slknap_manual.terms, slknap_random_instance.terms))
@@ -453,7 +497,7 @@ class TestProblem(unittest.TestCase):
 
         gr = nx.generators.fast_gnp_random_graph(5, 0.8, seed=1234)
         mvc_prob = MinimumVertexCover(
-            gr, field=1.0, penalty=5).get_qubo_problem()
+            gr, field=1.0, penalty=5).qubo
 
         self.assertTrue(terms_list_equality(mvc_terms, mvc_prob.terms))
         self.assertEqual(mvc_weights, mvc_prob.weights)
@@ -467,7 +511,7 @@ class TestProblem(unittest.TestCase):
         mvc_constant = 17.5
 
         mvc_prob_random = MinimumVertexCover.random_instance(
-            n_nodes=5, edge_probability=0.8, seed=1234).get_qubo_problem()
+            n_nodes=5, edge_probability=0.8, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(mvc_terms, mvc_prob_random.terms))
         self.assertEqual(mvc_weights, mvc_prob_random.weights)
@@ -595,7 +639,7 @@ class TestProblem(unittest.TestCase):
                             -9.797225258452029,
                             -11.038545614372802]
         expected_constant = 62.51983851122417
-        tsp_qubo = TSP(city_coordinates).get_qubo_problem()
+        tsp_qubo = TSP(city_coordinates).qubo
         print(tsp_qubo.weights)
         self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
         self.assertEqual(expected_weights, tsp_qubo.weights)
@@ -610,10 +654,10 @@ class TestProblem(unittest.TestCase):
         city_coordinates = list(
             map(tuple, box_size * rng.random(size=(n_cities, 2))))
 
-        tsp_prob = TSP(city_coordinates).get_qubo_problem()
+        tsp_prob = TSP(city_coordinates).qubo
 
         tsp_prob_random = TSP.random_instance(
-            n_cities=n_cities, seed=1234).get_qubo_problem()
+            n_cities=n_cities, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             tsp_prob_random.terms, tsp_prob.terms))
@@ -736,7 +780,7 @@ class TestProblem(unittest.TestCase):
         bin_terms, bin_weights = sp.terms_and_weights()
         terms, weights = QUBO.convert_qubo_to_ising(
             n_variables, bin_terms, bin_weights)
-        qubo = sp.get_qubo_problem()
+        qubo = sp.qubo
         print(terms)
         self.assertTrue(terms_list_equality(bin_terms, sp_terms))
         self.assertEqual(list(bin_weights), sp_weights)
@@ -759,18 +803,18 @@ class TestProblem(unittest.TestCase):
         for w in gr.nodes():
             gr.nodes[w]['weight'] = 1.0
         sp_prob = ShortestPath.random_instance(
-            n_nodes=3, edge_probability=1, seed=1234, source=0, dest=2).get_qubo_problem()
+            n_nodes=3, edge_probability=1, seed=1234, source=0, dest=2).qubo
         print(sp_prob.terms)
         self.assertTrue(terms_list_equality(sp_rand_terms, sp_prob.terms))
         self.assertEqual(sp_rand_weights, sp_prob.weights)
         self.assertEqual(sp_rand_constant, sp_prob.constant)
 
         self.assertEqual(sp_prob.terms, ShortestPath(
-            gr, 0, 2).get_qubo_problem().terms)
+            gr, 0, 2).qubo.terms)
         self.assertEqual(sp_prob.weights, ShortestPath(
-            gr, 0, 2).get_qubo_problem().weights)
+            gr, 0, 2).qubo.weights)
         self.assertEqual(sp_prob.constant, ShortestPath(
-            gr, 0, 2).get_qubo_problem().constant)
+            gr, 0, 2).qubo.constant)
 
     def test_assertion_error(self):
 
@@ -792,9 +836,99 @@ class TestProblem(unittest.TestCase):
             nx.set_node_attributes(G, values=node_dict, name='weight')
 
             shortest_path_problem = ShortestPath(G, 0, -1)
-            shortest_path_qubo = shortest_path_problem.get_qubo_problem()
+            shortest_path_qubo = shortest_path_problem.qubo
 
         self.assertRaises(Exception, test_assertion_fn)
+
+    def __generate_random_problems(self):
+        problems_random_instances = {
+            "tsp":TSP.random_instance(n_cities=randint(2, 15)),
+            "number_partition":NumberPartition.random_instance(n_numbers=randint(2, 15)),
+            "maximum_cut":MaximumCut.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "knapsack":Knapsack.random_instance(n_items=randint(2, 15)),
+            "slack_free_knapsack":SlackFreeKnapsack.random_instance(n_items=randint(2, 15)),
+            "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
+            "shortest_path":ShortestPath.random_instance(n_nodes=randint(3, 15), edge_probability=random()),
+        }
+        qubo_random_instances = {k:v.qubo for k,v in problems_random_instances.items()}
+        qubo_random_instances["generic_qubo"] = QUBO.random_instance(randint(2, 15))
+
+        return problems_random_instances, qubo_random_instances
+
+    def test_problem_instance(self):
+        """
+        Test problem instance method of the QUBO class.
+        From the random instance of all the different problems, we generate the QUBO problem out of it and then we check if the problem instance attribute is correct, by comparing the keys of the problem instance with the expected keys.
+        """
+
+        _, qubos = self.__generate_random_problems()
+
+        expected_keys = {
+            "tsp":['problem_type', 'n_cities', 'G', 'A', 'B'],
+            "number_partition":['problem_type', 'numbers', 'n_numbers'],
+            "maximum_cut":['problem_type', 'G'],
+            "knapsack":['problem_type', 'values', 'weights', 'weight_capacity', 'penalty', 'n_items'],
+            "slack_free_knapsack":['problem_type', 'values', 'weights', 'weight_capacity', 'penalty', 'n_items'],
+            "minimum_vertex_cover":['problem_type', 'G', 'field', 'penalty'],
+            "shortest_path":['problem_type', 'G', 'source', 'dest'],
+            "generic_qubo":['problem_type']
+        }
+
+        for k,v in qubos.items():
+            assert list(v.problem_instance.keys()) == expected_keys[k], "Problem instance keys are not correct for problem type {}".format(k)
+            assert k == v.problem_instance['problem_type'], "Problem type is not correct for problem type {}".format(k)
+
+
+    def test_problem_from_instance_dict(self):
+        """
+        Test problem from instance method of the problem class.
+        """
+        problem_mapper = {
+            "generic_qubo": QUBO,
+            "tsp": TSP,
+            "number_partition": NumberPartition,
+            "maximum_cut": MaximumCut,
+            "knapsack": Knapsack,
+            "slack_free_knapsack": SlackFreeKnapsack,
+            "minimum_vertex_cover": MinimumVertexCover,
+            "shortest_path": ShortestPath,
+        }
+
+        problems, qubos = self.__generate_random_problems()
+
+        for type in qubos:
+            if type == "generic_qubo":
+                continue
+
+            problem_instance = qubos[type].problem_instance.copy()
+
+            problem = create_problem_from_dict(problem_instance)
+
+            assert problem.problem_instance == problems[type].problem_instance, "Problem from instance method is not correct for problem type {}".format(type)
+            assert convert2serialize(problem) == convert2serialize(problems[type]), "Problem from instance method is not correct for problem type {}".format(type)
+
+        
+    def test_qubo_from_dict(self):
+        """
+        Test qubo from dict method of the QUBO class.
+        """
+
+        _, qubos = self.__generate_random_problems()
+        for _, qubo in qubos.items():
+
+            qubo_dict = qubo.asdict()
+
+            new_qubo = QUBO.from_dict(qubo_dict)
+
+            for term, new_term in zip(qubo.terms, new_qubo.terms):
+                assert set(term) == set(new_term), "QUBO from dict method is not correct for problem type {}, terms compared: {}, {}".format(qubo.problem_instance['problem_type'], term, new_term)
+
+                assert set(qubo.weights) == set(new_qubo.weights), "QUBO from dict method is not correct for problem type {}".format(qubo.problem_instance['problem_type'])
+
+                for key in qubo.__dict__:
+                    if key != "terms" and key != "weights":
+                        assert qubo.__dict__[key] == new_qubo.__dict__[key], "QUBO from dict method is not correct for problem type {}".format(qubo.problem_instance['problem_type'])
+        
 
 
 if __name__ == '__main__':
