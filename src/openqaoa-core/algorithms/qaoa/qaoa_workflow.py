@@ -58,7 +58,7 @@ class QAOA(Workflow):
         The openQAOA representation of the backend to be used to execute the quantum circuit
     optimizer: OptimizeVQA
         The classical optimiser
-    results: `Result`
+    result: `Result`
         Contains the logs of the optimisation process
     compiled: `Bool`
         A boolean flag to check whether the QAOA object has been correctly compiled at least once
@@ -273,8 +273,8 @@ class QAOA(Workflow):
         self.header["execution_time_start"] = generate_timestamp()
 
         self.optimizer.optimize()
-        # TODO: results and qaoa_results will differ
-        self.results = self.optimizer.qaoa_result
+        # TODO: result and qaoa_result will differ
+        self.result = self.optimizer.qaoa_result
 
         # timestamp for the end of the optimization
         self.header["execution_time_end"] = generate_timestamp()

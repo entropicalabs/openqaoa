@@ -717,7 +717,7 @@ class TestingUtilities(unittest.TestCase):
         # QUBO instance of the problem
         field = 1.0
         penalty = 10.0
-        mvc = MinimumVertexCover(G, field=field, penalty=penalty).get_qubo_problem()
+        mvc = MinimumVertexCover(G, field=field, penalty=penalty).qubo
 
         # Minimum Vertex Cover Hamiltonian
         hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)

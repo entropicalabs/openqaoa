@@ -9,7 +9,7 @@ from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer import QasmSimulator
 
 from openqaoa import QAOA, RQAOA
-from openqaoa.algorithms import QAOAResult, RQAOAResults
+from openqaoa.algorithms import QAOAResult, RQAOAResult
 from openqaoa.algorithms.baseworkflow import Workflow
 from openqaoa.utilities import (
     X_mixer_hamiltonian,
@@ -112,14 +112,14 @@ class TestingVanillaQAOA(unittest.TestCase):
     def test_end_to_end_vectorized(self):
         
         g = nw.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).qubo
 
         q = QAOA()
         q.set_classical_optimizer(optimization_progress = True)
         q.compile(vc)
         q.optimize()
 
-        result = q.results.most_probable_states['solutions_bitstrings'][0]
+        result = q.result.most_probable_states['solutions_bitstrings'][0]
         assert '010101' == result or '101010' == result
 
     def test_set_device_local(self):
@@ -160,7 +160,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         Assert that compilation has to be called before optimisation
         """    
         g = nw.circulant_graph(6, [1])
-        # vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        # vc = MinimumVertexCover(g, field =1.0, penalty=10).qubo
 
         q = QAOA()
         q.set_classical_optimizer(optimization_progress = True)
@@ -171,7 +171,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         
         g = nw.circulant_graph(6, [1])
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         test_hamil = Hamiltonian.classical_hamiltonian(terms = qubo_problem.terms, 
                                                        coeffs = qubo_problem.weights, 
@@ -241,7 +241,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q = QAOA()
         q.set_circuit_properties(mixer_hamiltonian = 'x', p = 2)
 
-        q.compile(problem = problem.get_qubo_problem())
+        q.compile(problem = problem.qubo)
 
         self.assertEqual(type(q.qaoa_descriptor), QAOADescriptor)
         self.assertEqual(q.qaoa_descriptor.p, 2)
@@ -283,7 +283,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                                      mixer_qubit_connectivity = qubit_connectivity_name[i],
                                      p = 2)
 
-            q.compile(problem = problems[i].get_qubo_problem())
+            q.compile(problem = problems[i].qubo)
 
             self.assertEqual(type(q.qaoa_descriptor), QAOADescriptor)
             self.assertEqual(q.qaoa_descriptor.p, 2)
@@ -323,7 +323,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             q = QAOA()
             q.set_circuit_properties(param_type = param_type_names[i], q=1)
 
-            q.compile(problem = problem.get_qubo_problem())
+            q.compile(problem = problem.qubo)
             
             self.assertEqual(type(q.variate_params), object_types[i])
             
@@ -429,7 +429,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'vectorized'))
@@ -457,7 +457,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'vectorized'))
@@ -498,7 +498,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'vectorized'))
@@ -536,7 +536,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'qiskit.qasm_simulator'))
@@ -562,7 +562,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'qiskit.statevector_simulator'))
@@ -589,7 +589,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         q = QAOA()
         q.set_device(create_device(location = 'local', name = 'pyquil.statevector_simulator'))
@@ -649,7 +649,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes,p=edge_probability)
         problem = MinimumVertexCover(g, field =1.0, penalty=10)
-        qubo_problem = problem.get_qubo_problem()
+        qubo_problem = problem.qubo
         
         for each_method in available_optimizers()['scipy']:
             q = QAOA()
@@ -994,7 +994,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         # problem
         maxcut_qubo =   MaximumCut(
                             nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)
-                        ).get_qubo_problem()
+                        ).qubo
 
         # run rqaoa with different devices, and save the objcets in a list  
         qaoas = []
@@ -1053,7 +1053,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                 assert isinstance(new_q, QAOA), "new_r is not an RQAOA object"
 
                 # check that the attributes of the new object are of the correct type
-                attributes_types = [ ("header", dict), ("exp_tags", dict), ("problem", QUBO), ("results", QAOAResult), 
+                attributes_types = [ ("header", dict), ("exp_tags", dict), ("problem", QUBO), ("result", QAOAResult), 
                                     ("backend_properties", BackendProperties), ("classical_optimizer", ClassicalOptimizer), ("circuit_properties", CircuitProperties) ]
                 for attribute, type_ in attributes_types:
                     assert isinstance(getattr(new_q, attribute), type_), f"attribute {attribute} is not type {type_}"
@@ -1073,7 +1073,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                                 #pop key device since it is not returned completely when using asdict/dump(s)
                                 value2.pop("device")
                                 new_q_asdict[key][key2].pop("device")
-                            if key2 == "results":
+                            if key2 == "result":
                                 _compare_qaoa_results(value2, new_q_asdict[key][key2])
                             else:
                                 assert value2==new_q_asdict[key][key2], "{} not the same".format(key2)
@@ -1169,14 +1169,14 @@ class TestingRQAOA(unittest.TestCase):
 
         if return_object:
             return r
-        return r.results.get_solution()
+        return r.result.get_solution()
 
     def test_rqaoa_optimize_multiple_times(self):
         """
         Test that the rqaoa can not be optimized multiple times
         """
         graph = nw.circulant_graph(10, [1])
-        problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
+        problem = MinimumVertexCover(graph, field=1, penalty=10).qubo
 
         r = RQAOA()
         exception = False
@@ -1244,7 +1244,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Define problem instance (Ring graph 10 qubits)
         graph = nw.circulant_graph(10, [1])
-        problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
+        problem = MinimumVertexCover(graph, field=1, penalty=10).qubo
 
         # run RQAOA and append solution in list
         solutions = []
@@ -1268,7 +1268,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # Define problem instance (Ring graph 10 qubits)
         graph = nw.complete_graph(10)
-        problem = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem()
+        problem = MinimumVertexCover(graph, field=1, penalty=10).qubo
 
         # run RQAOA and append solution in list
         solutions = []
@@ -1463,7 +1463,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # create list of expected file names
         experiment_id, atomic_id = r.header['experiment_id'], r.header['atomic_id']
-        file_names = {id: experiment_id + '--' + id + '--' + 'test_dumping_step_by_step.json.gz' for id in r.results['atomic_ids'].values()}
+        file_names = {id: experiment_id + '--' + id + '--' + 'test_dumping_step_by_step.json.gz' for id in r.result['atomic_ids'].values()}
         file_names[atomic_id] = experiment_id + '--' + atomic_id + '--' + 'test_dumping_step_by_step.json.gz'
 
         # check if the files exist
@@ -1492,7 +1492,7 @@ class TestingRQAOA(unittest.TestCase):
                 assert dictionary['header']['algorithm'] == 'rqaoa', f'File {file_name} has a different algorithm than rqaoa, which is the expected algorithm.'
 
                 #check that the intermediate mesuraments are empty
-                for step in dictionary['data']['results']['intermediate_steps']:
+                for step in dictionary['data']['result']['intermediate_steps']:
                     assert step['qaoa_results']['intermediate']['measurement_outcomes'] == [], f'File {file_name} has intermediate mesuraments, but it should not have them.'
             
             else: # qaoa files
@@ -1503,10 +1503,10 @@ class TestingRQAOA(unittest.TestCase):
                 assert dictionary['header']['algorithm'] == 'qaoa', f'File {file_name} has a different algorithm than qaoa, which is the expected algorithm.'
 
                 #check that the intermediate mesuraments are not empty
-                assert len(dictionary['data']['results']['intermediate']['measurement_outcomes']) > 0, f'File {file_name} does not have intermediate mesuraments, but it should have them.'
+                assert len(dictionary['data']['result']['intermediate']['measurement_outcomes']) > 0, f'File {file_name} does not have intermediate mesuraments, but it should have them.'
 
         assert rqaoa_files == 1, f'Expected 1 rqaoa file, but {rqaoa_files} were found.'
-        assert qaoa_files == len(r.results['atomic_ids']), f'Expected {len(r.results["atomic_ids"])} qaoa files, but {qaoa_files} were found.'
+        assert qaoa_files == len(r.result['atomic_ids']), f'Expected {len(r.result["atomic_ids"])} qaoa files, but {qaoa_files} were found.'
 
         # erease the files
         for file_name in file_names.values():
@@ -1521,7 +1521,7 @@ class TestingRQAOA(unittest.TestCase):
         # problem
         maxcut_qubo =   MaximumCut(
                             nw.generators.fast_gnp_random_graph(n=6,p=0.6, seed=42)
-                        ).get_qubo_problem()
+                        ).qubo
 
         # run rqaoa with different devices, and save the objcets in a list
         rqaoas = []
@@ -1580,7 +1580,7 @@ class TestingRQAOA(unittest.TestCase):
                 assert isinstance(new_r, RQAOA), "new_r is not an RQAOA object"
 
                 # check that the attributes of the new object are of the correct type
-                attributes_types = [ ("header", dict), ("exp_tags", dict), ("problem", QUBO), ("results", RQAOAResults), 
+                attributes_types = [ ("header", dict), ("exp_tags", dict), ("problem", QUBO), ("result", RQAOAResult), 
                                     ("backend_properties", BackendProperties), ("classical_optimizer", ClassicalOptimizer), 
                                     ("circuit_properties", CircuitProperties), ("rqaoa_parameters", RqaoaParameters) ]
                 for attribute, type_ in attributes_types:
@@ -1601,7 +1601,7 @@ class TestingRQAOA(unittest.TestCase):
                                 #pop key device
                                 value2.pop("device")
                                 new_r_asdict[key][key2].pop("device")
-                            if key2 == "results":
+                            if key2 == "result":
                                 for step in range(len(value2['intermediate_steps'])):
                                     for key3 in value2['intermediate_steps'][step].keys():
                                         if key3 == "qaoa_results":

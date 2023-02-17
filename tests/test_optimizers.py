@@ -152,7 +152,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
     def test_gradient_optimizers_cans(self):
         n_qubits = 10
         graph = nw.circulant_graph(n_qubits, [1])
-        cost_hamil = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem().hamiltonian
+        cost_hamil = MinimumVertexCover(graph, field=1, penalty=10).qubo.hamiltonian
         backend_obj_vectorized, variate_params = self.__backend_params(cost_hamil, n_qubits)
 
         optimizer_list = [  {   'method':method, 'jac':'param_shift', 'maxiter':1000, 

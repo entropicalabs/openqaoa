@@ -14,7 +14,8 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendShotBased,
     QAOABaseBackendStatevector,
 )
-from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
+from openqaoa.qaoa_components import QAOADescriptor
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
 from openqaoa.utilities import flip_counts, generate_uuid, round_value
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.qaoa_components.ansatz_constructor import (

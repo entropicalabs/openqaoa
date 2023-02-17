@@ -193,7 +193,7 @@ class TestProblem(unittest.TestCase):
         expected_constant = 14
 
         np_problem = NumberPartition(list_numbers)
-        qubo_problem = np_problem.get_qubo_problem()
+        qubo_problem = np_problem.qubo
 
         self.assertTrue(terms_list_equality(
             qubo_problem.terms, expected_terms))
@@ -206,10 +206,10 @@ class TestProblem(unittest.TestCase):
         rng = np.random.default_rng(1234)
         random_numbers_list = list(map(int, rng.integers(1, 10, size=5)))
         manual_np_prob = NumberPartition(
-            random_numbers_list).get_qubo_problem()
+            random_numbers_list).qubo
 
         np_prob_random = NumberPartition.random_instance(
-            n_numbers=5, seed=1234).get_qubo_problem()
+            n_numbers=5, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             np_prob_random.terms, manual_np_prob.terms))
@@ -247,7 +247,7 @@ class TestProblem(unittest.TestCase):
         gr_edges = [list(edge) for edge in gr.edges()]
         gr_weights = [1]*len(gr_edges)
 
-        maxcut_prob_qubo = MaximumCut(gr).get_qubo_problem()
+        maxcut_prob_qubo = MaximumCut(gr).qubo
 
         self.assertTrue(terms_list_equality(gr_edges, maxcut_prob_qubo.terms))
         self.assertEqual(gr_weights, maxcut_prob_qubo.weights)
@@ -259,11 +259,11 @@ class TestProblem(unittest.TestCase):
         seed = 1234
         gr = nx.generators.random_graphs.fast_gnp_random_graph(
             n=10, p=0.8, seed=seed)
-        maxcut_manual_prob = MaximumCut(gr).get_qubo_problem()
+        maxcut_manual_prob = MaximumCut(gr).qubo
 
         np.random.seed(1234)
         maxcut_random_prob = MaximumCut.random_instance(
-            n_nodes=10, edge_probability=0.8, seed=seed).get_qubo_problem()
+            n_nodes=10, edge_probability=0.8, seed=seed).qubo
 
         self.assertTrue(terms_list_equality(
             maxcut_manual_prob.terms, maxcut_random_prob.terms))
@@ -308,7 +308,7 @@ class TestProblem(unittest.TestCase):
         knap_constant = 563.0
 
         knapsack_prob_qubo = Knapsack(
-            values, weights, weight_capacity, penalty).get_qubo_problem()
+            values, weights, weight_capacity, penalty).qubo
 
         self.assertTrue(terms_list_equality(
             knap_terms, knapsack_prob_qubo.terms))
@@ -328,10 +328,10 @@ class TestProblem(unittest.TestCase):
         penalty = 2*np.max(values)
 
         knap_manual = Knapsack(
-            values, weights, weight_capacity, int(penalty)).get_qubo_problem()
+            values, weights, weight_capacity, int(penalty)).qubo
 
         knap_random_instance = Knapsack.random_instance(
-            n_items=n_items, seed=1234).get_qubo_problem()
+            n_items=n_items, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             knap_manual.terms, knap_random_instance.terms))
@@ -351,10 +351,10 @@ class TestProblem(unittest.TestCase):
         penalty = 2*np.max(values)
 
         knap_manual = Knapsack(
-            values, weights, weight_capacity, int(penalty)).get_qubo_problem()
+            values, weights, weight_capacity, int(penalty)).qubo
 
         knap_random_instance = Knapsack.random_instance(
-            n_items=n_items, seed=1234).get_qubo_problem()
+            n_items=n_items, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             knap_manual.terms, knap_random_instance.terms))
@@ -452,7 +452,7 @@ class TestProblem(unittest.TestCase):
         slknap_constant = 613.0
 
         slknapsack_prob_qubo = SlackFreeKnapsack(
-            values, weights, weight_capacity, penalty).get_qubo_problem()
+            values, weights, weight_capacity, penalty).qubo
 
         self.assertTrue(terms_list_equality(
             slknap_terms, slknapsack_prob_qubo.terms))
@@ -472,10 +472,10 @@ class TestProblem(unittest.TestCase):
         penalty = 2*np.max(values)
 
         slknap_manual = SlackFreeKnapsack(
-            values, weights, weight_capacity, int(penalty)).get_qubo_problem()
+            values, weights, weight_capacity, int(penalty)).qubo
 
         slknap_random_instance = SlackFreeKnapsack.random_instance(
-            n_items=n_items, seed=1234).get_qubo_problem()
+            n_items=n_items, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             slknap_manual.terms, slknap_random_instance.terms))
@@ -497,7 +497,7 @@ class TestProblem(unittest.TestCase):
 
         gr = nx.generators.fast_gnp_random_graph(5, 0.8, seed=1234)
         mvc_prob = MinimumVertexCover(
-            gr, field=1.0, penalty=5).get_qubo_problem()
+            gr, field=1.0, penalty=5).qubo
 
         self.assertTrue(terms_list_equality(mvc_terms, mvc_prob.terms))
         self.assertEqual(mvc_weights, mvc_prob.weights)
@@ -511,7 +511,7 @@ class TestProblem(unittest.TestCase):
         mvc_constant = 17.5
 
         mvc_prob_random = MinimumVertexCover.random_instance(
-            n_nodes=5, edge_probability=0.8, seed=1234).get_qubo_problem()
+            n_nodes=5, edge_probability=0.8, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(mvc_terms, mvc_prob_random.terms))
         self.assertEqual(mvc_weights, mvc_prob_random.weights)
@@ -639,7 +639,7 @@ class TestProblem(unittest.TestCase):
                             -9.797225258452029,
                             -11.038545614372802]
         expected_constant = 62.51983851122417
-        tsp_qubo = TSP(city_coordinates).get_qubo_problem()
+        tsp_qubo = TSP(city_coordinates).qubo
         print(tsp_qubo.weights)
         self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
         self.assertEqual(expected_weights, tsp_qubo.weights)
@@ -654,10 +654,10 @@ class TestProblem(unittest.TestCase):
         city_coordinates = list(
             map(tuple, box_size * rng.random(size=(n_cities, 2))))
 
-        tsp_prob = TSP(city_coordinates).get_qubo_problem()
+        tsp_prob = TSP(city_coordinates).qubo
 
         tsp_prob_random = TSP.random_instance(
-            n_cities=n_cities, seed=1234).get_qubo_problem()
+            n_cities=n_cities, seed=1234).qubo
 
         self.assertTrue(terms_list_equality(
             tsp_prob_random.terms, tsp_prob.terms))
@@ -780,7 +780,7 @@ class TestProblem(unittest.TestCase):
         bin_terms, bin_weights = sp.terms_and_weights()
         terms, weights = QUBO.convert_qubo_to_ising(
             n_variables, bin_terms, bin_weights)
-        qubo = sp.get_qubo_problem()
+        qubo = sp.qubo
         print(terms)
         self.assertTrue(terms_list_equality(bin_terms, sp_terms))
         self.assertEqual(list(bin_weights), sp_weights)
@@ -803,18 +803,18 @@ class TestProblem(unittest.TestCase):
         for w in gr.nodes():
             gr.nodes[w]['weight'] = 1.0
         sp_prob = ShortestPath.random_instance(
-            n_nodes=3, edge_probability=1, seed=1234, source=0, dest=2).get_qubo_problem()
+            n_nodes=3, edge_probability=1, seed=1234, source=0, dest=2).qubo
         print(sp_prob.terms)
         self.assertTrue(terms_list_equality(sp_rand_terms, sp_prob.terms))
         self.assertEqual(sp_rand_weights, sp_prob.weights)
         self.assertEqual(sp_rand_constant, sp_prob.constant)
 
         self.assertEqual(sp_prob.terms, ShortestPath(
-            gr, 0, 2).get_qubo_problem().terms)
+            gr, 0, 2).qubo.terms)
         self.assertEqual(sp_prob.weights, ShortestPath(
-            gr, 0, 2).get_qubo_problem().weights)
+            gr, 0, 2).qubo.weights)
         self.assertEqual(sp_prob.constant, ShortestPath(
-            gr, 0, 2).get_qubo_problem().constant)
+            gr, 0, 2).qubo.constant)
 
     def test_assertion_error(self):
 
@@ -836,7 +836,7 @@ class TestProblem(unittest.TestCase):
             nx.set_node_attributes(G, values=node_dict, name='weight')
 
             shortest_path_problem = ShortestPath(G, 0, -1)
-            shortest_path_qubo = shortest_path_problem.get_qubo_problem()
+            shortest_path_qubo = shortest_path_problem.qubo
 
         self.assertRaises(Exception, test_assertion_fn)
 
@@ -850,7 +850,7 @@ class TestProblem(unittest.TestCase):
             "minimum_vertex_cover":MinimumVertexCover.random_instance(n_nodes=randint(2, 15), edge_probability=random()),
             "shortest_path":ShortestPath.random_instance(n_nodes=randint(3, 15), edge_probability=random()),
         }
-        qubo_random_instances = {k:v.get_qubo_problem() for k,v in problems_random_instances.items()}
+        qubo_random_instances = {k:v.qubo for k,v in problems_random_instances.items()}
         qubo_random_instances["generic_qubo"] = QUBO.random_instance(randint(2, 15))
 
         return problems_random_instances, qubo_random_instances
