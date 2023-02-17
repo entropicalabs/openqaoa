@@ -288,6 +288,14 @@ class QAOA(Workflow):
         verbose: bool
             Set True to have a summary of QAOA to displayed after compilation
         """
+        # if isinstance(routing_function,Callable):
+        #     #assert that routing_function is supported only for Standard QAOA.
+        #     if (
+        #         self.backend_properties.append_state is not None or\
+        #         self.backend_properties.prepend_state is not None or\
+        #         self.circuit_properties.mixer_hamiltonian is not 'x' or\
+                
+        #     )
 
         # connect to the QPU specified
         self.device.check_connection()

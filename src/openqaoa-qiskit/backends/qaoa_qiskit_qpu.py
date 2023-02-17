@@ -3,7 +3,7 @@ from typing import Optional, List
 import warnings
 
 # IBM Qiskit imports
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, execute
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, transpile
 from qiskit.providers.ibmq.job import (
     IBMQJobApiError,
     IBMQJobInvalidStateError,
@@ -74,10 +74,8 @@ class QAOAQiskitQPUBackend(
 
         self.qureg = QuantumRegister(self.n_qubits)
         self.problem_reg = self.qureg[0:self.problem_qubits]
-        if initial_qubit_mapping is None:
+        if self.initial_qubit_mapping is None:
             self.initial_qubit_mapping = initial_qubit_mapping if initial_qubit_mapping is not None else list(range(self.n_qubits))
-        else:    
-            warnings.warn("Ignoring the initial_qubit_mapping since the routing algorithm chose one")
         
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
@@ -127,8 +125,22 @@ class QAOAQiskitQPUBackend(
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
-        return new_parametric_circuit
+        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+        if self.qaoa_descriptor.routed == True:
+            transpiled_circuit = transpile(
+                circuit_with_angles,
+                self.backend_qpu,
+                initial_layout=self.initial_qubit_mapping,
+                optimization_level = 0,
+                routing_method = 'none'
+                )
+        else:
+            transpiled_circuit = transpile(
+                circuit_with_angles,
+                self.backend_qpu,
+                initial_layout=self.initial_qubit_mapping,
+            )
+        return circuit_with_angles
 
     @property
     def parametric_qaoa_circuit(self) -> QuantumCircuit:
@@ -207,16 +219,10 @@ class QAOAQiskitQPUBackend(
         max_job_retries = 5
 
         while job_state == False:
-
             # initial_layout only passed if not azure device
-            input_items = {"shots": n_shots, "initial_layout": self.initial_qubit_mapping}
-            if self.qaoa_descriptor.routed == True:
-                input_items.update({"optimization_level":0})
-            if type(self.device).__name__ == "DeviceAzure":
-                input_items.pop("initial_layout")
-                job = self.backend_qpu.run(circuit, **input_items)
-            else:
-                job = execute(circuit, backend=self.backend_qpu, **input_items)
+            # if type(self.device).__name__ == "DeviceAzure":
+                # job = self.backend_qpu.run(circuit, **input_items)                
+            job = self.backend_qpu.run(circuit, shots = n_shots)
 
             api_contact = False
             no_of_api_retries = 0
