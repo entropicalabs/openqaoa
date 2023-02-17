@@ -31,11 +31,11 @@ requirements = [
 ]
 
 requirements_docs = [
-    "sphinx==4.5.0",
-    "sphinx-autodoc-typehints==1.18.1",
-    "sphinx-rtd-theme==1.0.0",
-    "nbsphinx==0.8.9",
-    "ipython==8.2.0",
+    "sphinx>=4.5.0",
+    "sphinx-autodoc-typehints>=1.18.1",
+    "sphinx-rtd-theme>=1.0.0",
+    "nbsphinx>=0.8.9",
+    "ipython>=8.20.0",
     "nbconvert>=6.5.1",
 ]
 
