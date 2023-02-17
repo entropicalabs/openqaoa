@@ -1,32 +1,23 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
 import warnings
 import numpy as np
 import networkx as nw
 import unittest
 from unittest.mock import Mock
+import warnings
+import os
+
+import numpy as np
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
-from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
+from openqaoa.qaoa_components import create_qaoa_variational_params, QAOADescriptor, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.devices import create_device
-from openqaoa.optimizers import get_optimizer, Result
-from openqaoa.derivative_functions import derivative
+from openqaoa.backends import create_device
+from openqaoa.optimizers import get_optimizer
+from openqaoa.algorithms.qaoa.qaoa_result import QAOAResult
+from openqaoa.derivatives.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
-from openqaoa.qfim import qfim
+from openqaoa.derivatives.qfim import qfim
 from openqaoa.problems import MinimumVertexCover
 """
 Unittest based testing of custom optimizers.
@@ -65,10 +56,10 @@ class TestQAOACostBaseClass(unittest.TestCase):
     def __backend_params(self, cost_hamil, n_qubits):
         """ Helper function to create a backend and a parameters onjects for testing. """
         mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=1)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
         device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
+        backend_obj_vectorized = get_qaoa_backend(qaoa_descriptor,device)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'ramp')
         return backend_obj_vectorized, variate_params
         
     def test_saving_feature(self):
@@ -161,7 +152,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
     def test_gradient_optimizers_cans(self):
         n_qubits = 10
         graph = nw.circulant_graph(n_qubits, [1])
-        cost_hamil = MinimumVertexCover(graph, field=1, penalty=10).get_qubo_problem().hamiltonian
+        cost_hamil = MinimumVertexCover(graph, field=1, penalty=10).qubo.hamiltonian
         backend_obj_vectorized, variate_params = self.__backend_params(cost_hamil, n_qubits)
 
         optimizer_list = [  {   'method':method, 'jac':'param_shift', 'maxiter':1000, 
@@ -365,11 +356,11 @@ class TestQAOACostBaseClass(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
             'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=2)
         device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
+        backend_obj_vectorized = get_qaoa_backend(qaoa_descriptor,device)
         variate_params = create_qaoa_variational_params(
-            circuit_params, 'standard', 'ramp')
+            qaoa_descriptor, 'standard', 'ramp')
         niter = 5
 
         # Optimize
@@ -381,7 +372,17 @@ class TestQAOACostBaseClass(unittest.TestCase):
         self.assertRaises(Exception, lambda: vector_optimizer.optimize())
         
         # Check that QAOA Result exists
-        self.assertEqual(type(vector_optimizer.qaoa_result), Result)
+        self.assertEqual(type(vector_optimizer.qaoa_result), QAOAResult)
+    
+    @classmethod
+    def tearDownClass(cls):
+        
+        output_csv = ['oq_saved_info_job_ids.csv', 'oq_saved_info_param_log.csv']
+        for each_csv in output_csv:
+            if (os.path.exists(each_csv)):
+                os.remove(each_csv)
+            else:
+                raise FileNotFoundError('Unable to remove the generated csv file: {}'.format(each_csv))
         
 
 if __name__ == "__main__":

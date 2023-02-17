@@ -1,26 +1,11 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
 import networkx as nx
 import numpy as np
 import itertools
 import unittest
-import uuid
 
-from openqaoa.devices import DeviceLocal
+from openqaoa.backends import DeviceLocal
 from openqaoa.utilities import *
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
+from openqaoa.qaoa_components import PauliOp, Hamiltonian, QAOADescriptor, create_qaoa_variational_params
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers.qaoa_optimizer import get_optimizer
 from openqaoa.problems import MinimumVertexCover
@@ -681,13 +666,13 @@ class TestingUtilities(unittest.TestCase):
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
 
         # Define circuit and variational parameters
-        circuit_params = QAOACircuitParams(hamiltonian,mixer_hamiltonian, p = p)
-        variational_params = create_qaoa_variational_params(circuit_params, params_type = 'standard', init_type = 'ramp')
+        qaoa_descriptor = QAOADescriptor(hamiltonian,mixer_hamiltonian, p = p)
+        variational_params = create_qaoa_variational_params(qaoa_descriptor, params_type = 'standard', init_type = 'ramp')
 
         ## Testing
 
         # Perform QAOA and obtain expectation values numerically
-        qaoa_backend = get_qaoa_backend(circuit_params, device = DeviceLocal('vectorized'))
+        qaoa_backend = get_qaoa_backend(qaoa_descriptor, device = DeviceLocal('vectorized'))
         optimizer = get_optimizer(qaoa_backend, variational_params, optimizer_dict = {'method':'cobyla','maxiter':200})
         optimizer()
         qaoa_results = optimizer.qaoa_result
@@ -731,7 +716,7 @@ class TestingUtilities(unittest.TestCase):
         # QUBO instance of the problem
         field = 1.0
         penalty = 10.0
-        mvc = MinimumVertexCover(G, field=field, penalty=penalty).get_qubo_problem()
+        mvc = MinimumVertexCover(G, field=field, penalty=penalty).qubo
 
         # Minimum Vertex Cover Hamiltonian
         hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)

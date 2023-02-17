@@ -1,6 +1,10 @@
 import unittest
 
-from openqaoa.optimizers.logger_vqa import Logger, LoggerVariable, LoggerVariableFactory, EmptyValue, AppendValue, ReplaceValue, IfLowerDo, IfHigherDo
+from openqaoa.optimizers.logger_vqa import (
+    Logger, LoggerVariable, LoggerVariableFactory,
+    EmptyValue, AppendValue, ReplaceValue,
+    IfLowerDo, IfHigherDo
+)
 
 class TestingLoggerClass(unittest.TestCase):
     

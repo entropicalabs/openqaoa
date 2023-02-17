@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from os import getcwd
 
 current_path = getcwd()
@@ -6,7 +6,7 @@ current_path = getcwd()
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("openqaoa/_version.py") as f:
+with open("src/openqaoa-core/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
@@ -27,16 +27,16 @@ requirements = [
     "qdk",
     "qiskit-qir",
     "qiskit-ionq",
-    "azure-quantum[qiskit]"    
+    "azure-quantum[qiskit]",
 ]
 
 requirements_docs = [
-    "sphinx==4.5.0",
-    "sphinx-autodoc-typehints==1.18.1",
-    "sphinx-rtd-theme==1.0.0",
-    "nbsphinx==0.8.9",
-    "ipython==8.2.0",
-    "nbconvert>=6.5.1"    
+    "sphinx>=4.5.0",
+    "sphinx-autodoc-typehints>=1.18.1",
+    "sphinx-rtd-theme>=1.0.0",
+    "nbsphinx>=0.8.9",
+    "ipython>=8.10.0",
+    "nbconvert>=6.5.1",
 ]
 
 requirements_test = [
@@ -46,19 +46,51 @@ requirements_test = [
     "nbconvert>=6.5.1",
     "pandas>=1.4.3",
     "plotly>=5.9.0",
-    "cplex>=22.1.0.0"
+    "cplex>=22.1.0.0",
 ]
+
+package_names = [
+    "openqaoa",
+    "openqaoa_braket",
+    "openqaoa_qiskit",
+    "openqaoa_pyquil",
+    "openqaoa_azure",
+]
+folder_names = [
+    "openqaoa-core",
+    "openqaoa-braket",
+    "openqaoa-qiskit",
+    "openqaoa-pyquil",
+    "openqaoa-azure",
+]
+packages_import = find_namespace_packages(where="./src")
+updated_packages = []
+for each_package_name in packages_import:
+    for _index, each_folder_name in enumerate(folder_names):
+        if each_folder_name in each_package_name:
+            updated_packages.append(
+                each_package_name.replace(each_folder_name, package_names[_index])
+            )
+            continue
 
 setup(
     name="openqaoa",
-    python_requires='>=3.8, <3.11',
-    version= version,
+    python_requires=">=3.8, <3.11",
+    version=version,
     author="Entropica Labs",
-    packages=find_packages(where="."),
+    packages=updated_packages,
+    package_dir={
+        "": "src",
+        "openqaoa": "src/openqaoa-core",
+        "openqaoa_braket": "src/openqaoa-braket",
+        "openqaoa_qiskit": "src/openqaoa-qiskit",
+        "openqaoa_pyquil": "src/openqaoa-pyquil",
+        "openqaoa_azure": "src/openqaoa-azure",
+    },
     url="https://github.com/entropicalabs/openqaoa",
-    install_requires= requirements,
-    license="Apache 2.0",
-    description= "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators",
+    install_requires=requirements,
+    license="MIT",
+    description="OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators",
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
@@ -68,10 +100,9 @@ setup(
         "Operating System :: OS Independent",
     ],
     keywords="quantum optimisation SDK",
-    extras_require = {
-        "docs":requirements_docs,
-        "tests":requirements_test,
-        "all": requirements_docs + requirements_test
+    extras_require={
+        "docs": requirements_docs,
+        "tests": requirements_test,
+        "all": requirements_docs + requirements_test,
     },
-
 )

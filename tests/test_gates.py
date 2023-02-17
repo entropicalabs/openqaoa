@@ -1,19 +1,6 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
 import unittest
 import numpy as np
+
 from qiskit import QuantumCircuit
 from pyquil import Program, quilbase
 from pyquil.gates import RX as p_RX
@@ -27,8 +14,10 @@ from braket.circuits import gates as braketgates
 from braket.circuits import Circuit
 from braket.circuits.free_parameter import FreeParameter
 
-from openqaoa.qaoa_parameters.gates import RY, RX, RZ, CZ, CX, RXX, RYY, RZZ, RZX, CPHASE, RiSWAP
-from openqaoa.qaoa_parameters.rotationangle import RotationAngle
+from openqaoa.qaoa_components.ansatz_constructor.gates import (RY, RX, RZ, CZ, CX, 
+                                                               RXX, RYY, RZZ, RZX, 
+                                                               CPHASE, RiSWAP)
+from openqaoa.qaoa_components.ansatz_constructor.rotationangle import RotationAngle
 
 class TestingGate(unittest.TestCase):
     

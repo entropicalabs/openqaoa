@@ -1,35 +1,17 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
-
 import unittest
 import numpy as np
 
-from openqaoa.backends.simulators.qaoa_analytical_sim import (
-    QAOABackendAnalyticalSimulator,
-)
-from openqaoa.workflows.optimizer import QAOA, RQAOA
-from openqaoa.problems import QUBO, MaximumCut
-from openqaoa.devices import create_device
+from openqaoa.backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
+from openqaoa.algorithms import QAOA, RQAOA
+from openqaoa.problems import MaximumCut
+from openqaoa.backends.qaoa_device import create_device
 from openqaoa.utilities import (
     X_mixer_hamiltonian,
     XY_mixer_hamiltonian,
     ring_of_disagrees,
     random_k_regular_graph,
 )
-from openqaoa.qaoa_parameters.baseparams import QAOACircuitParams
-from openqaoa.qaoa_parameters import QAOAVariationalStandardParams
+from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalStandardParams
 
 """
 A set of tests for the analytical simulator backend which computes the energy of a given quantum circuit as a function of beta and gamma.
@@ -44,13 +26,13 @@ def Disagrees_SetUp(n_qubits, p, mixer_hamil, betas, gammas):
     register = range(n_qubits)
     cost_hamil = ring_of_disagrees(register)
 
-    qaoa_circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p)
+    qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p)
     variational_params_std = QAOAVariationalStandardParams(
-        qaoa_circuit_params, betas, gammas
+        qaoa_descriptor, betas, gammas
     )
     # Get the part of the Hamiltonian proportional to the identity
 
-    return register, cost_hamil, qaoa_circuit_params, variational_params_std
+    return register, cost_hamil, qaoa_descriptor, variational_params_std
 
 
 class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
@@ -67,11 +49,11 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         mixer_hamil = X_mixer_hamiltonian(n_qubits)
         betas = [np.pi / 8]
         gammas = [np.pi / 4]
-        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(
+        register, cost_hamil, qaoa_descriptor, variate_params = Disagrees_SetUp(
             n_qubits, p, mixer_hamil, betas, gammas
         )
 
-        backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
+        backend_analytical = QAOABackendAnalyticalSimulator(qaoa_descriptor)
         exp_val = backend_analytical.expectation(variate_params)
 
         # Check correct expecation value
@@ -86,12 +68,12 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         mixer_hamil = X_mixer_hamiltonian(n_qubits)
         betas = [np.pi / 8, np.pi / 8]
         gammas = [np.pi / 4, np.pi / 4]
-        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(
+        register, cost_hamil, qaoa_descriptor, variate_params = Disagrees_SetUp(
             n_qubits, p, mixer_hamil, betas, gammas
         )
         exception = False
         try:
-            backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
+            backend_analytical = QAOABackendAnalyticalSimulator(qaoa_descriptor)
         except:
             exception = True
 
@@ -107,11 +89,11 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         mixer_hamil = XY_mixer_hamiltonian(n_qubits)
         betas = [np.pi / 8]
         gammas = [np.pi / 4]
-        register, cost_hamil, qaoa_circuit_params, variate_params = Disagrees_SetUp(
+        register, cost_hamil, qaoa_descriptor, variate_params = Disagrees_SetUp(
             n_qubits, p, mixer_hamil, betas, gammas
         )
         try:
-            backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
+            backend_analytical = QAOABackendAnalyticalSimulator(qaoa_descriptor)
         except:
             exception = True
 
@@ -125,7 +107,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         g = random_k_regular_graph(
             degree=3, nodes=range(8), seed=2642, weighted=True, biases=False
         )
-        maxcut_qubo = MaximumCut(g).get_qubo_problem()
+        maxcut_qubo = MaximumCut(g).qubo
 
         # Testing for Extended params
         exception = False
@@ -162,7 +144,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         g = random_k_regular_graph(
             degree=3, nodes=range(8), seed=2642, weighted=True, biases=False
         )
-        maxcut_qubo = MaximumCut(g).get_qubo_problem()
+        maxcut_qubo = MaximumCut(g).qubo
 
         # Define the RQAOA object and set its params
         r = RQAOA()
@@ -195,7 +177,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         r.compile(maxcut_qubo)
         r.optimize()
 
-        opt_results = r.results
+        opt_results = r.result
         opt_solution = opt_results["solution"]
         opt_solution_string = list(opt_solution.keys())[0]
 
@@ -220,12 +202,12 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
 
         cost_hamiltonian = ring_of_disagrees(register)
         mixer_hamiltonian = X_mixer_hamiltonian(n_qubits)
-        qaoa_circuit_params = QAOACircuitParams(cost_hamiltonian, mixer_hamiltonian, p)
+        qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p)
         variational_params_std = QAOAVariationalStandardParams(
-            qaoa_circuit_params, betas, gammas
+            qaoa_descriptor, betas, gammas
         )
 
-        backend_analytical = QAOABackendAnalyticalSimulator(qaoa_circuit_params)
+        backend_analytical = QAOABackendAnalyticalSimulator(qaoa_descriptor)
         # exact solution is defined as the property of the cost function
         energy_vec, config_vec = backend_analytical.exact_solution
 

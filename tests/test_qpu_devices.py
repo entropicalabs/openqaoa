@@ -1,29 +1,15 @@
-#   Copyright 2022 Entropica Labs
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
 import unittest
 import json
 import os
-import pytest
 import itertools
 import subprocess
-import logging
+import pytest
 
-from qiskit import IBMQ
-
-from openqaoa.devices import (DeviceQiskit, DeviceLocal, DeviceAWS, DeviceAzure, 
-                              SUPPORTED_LOCAL_SIMULATORS)
+from openqaoa.backends import DeviceLocal
+from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
+from openqaoa_qiskit.backends import DeviceQiskit
+from openqaoa_braket.backends import DeviceAWS
+from openqaoa_azure.backends import DeviceAzure
 
 
 class TestingDeviceQiskit(unittest.TestCase):
@@ -40,41 +26,9 @@ class TestingDeviceQiskit(unittest.TestCase):
     @pytest.mark.api
     def setUp(self):
 
-        try:
-            opened_f = open('./tests/credentials.json', 'r')
-        except FileNotFoundError:
-            opened_f = open('credentials.json', 'r')
-                
-        with opened_f as f:
-            json_obj = json.load(f)['QISKIT']
-            
-            try:
-                api_token = os.environ['IBMQ_TOKEN']
-                self.HUB = os.environ['IBMQ_HUB']
-                self.GROUP = os.environ['IBMQ_GROUP']
-                self.PROJECT = os.environ['IBMQ_PROJECT']
-            except Exception:
-                api_token = json_obj['API_TOKEN']
-                self.HUB = json_obj['HUB']
-                self.GROUP = json_obj['GROUP']
-                self.PROJECT = json_obj['PROJECT']
-
-        if api_token == "YOUR_API_TOKEN_HERE":
-            raise ValueError(
-                "Please provide an appropriate API TOKEN in crendentials.json.")
-        elif self.HUB == "IBMQ_HUB":
-            raise ValueError(
-                "Please provide an appropriate IBM HUB name in crendentials.json.")
-        elif self.GROUP == "IBMQ_GROUP":
-            raise ValueError(
-                "Please provide an appropriate IBMQ GROUP name in crendentials.json.")
-        elif self.PROJECT == "IBMQ_PROJECT":
-            raise ValueError(
-                "Please provide an appropriate IBMQ Project name in crendentials.json.")
-
-        IBMQ.save_account(token = api_token, hub=self.HUB, 
-                          group=self.GROUP, project=self.PROJECT, 
-                          overwrite=True)
+        self.HUB = 'ibm-q'
+        self.GROUP = 'open'
+        self.PROJECT = 'main'
     
     @pytest.mark.api
     def test_changing_provider(self):
@@ -316,9 +270,10 @@ class TestingDeviceAzure(unittest.TestCase):
             print(error)
             raise Exception('You must have the Azure CLI installed and must be logged in to use the Azure Quantum Backends')
         else:
-            output_json = json.loads(output)[0]
-            self.RESOURCE_ID = output_json['id']
-            self.AZ_LOCATION = output_json['location']
+            output_json = json.loads(output)
+            output_json_s = [each_json for each_json in output_json if each_json['name'] == 'TestingOpenQAOA'][0]
+            self.RESOURCE_ID = output_json_s['id']
+            self.AZ_LOCATION = output_json_s['location']
             
     @pytest.mark.api
     def test_check_connection_provider_no_resource_id(self):

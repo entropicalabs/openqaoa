@@ -50,14 +50,14 @@ New gradient/higher-order derivative computation methods can be added here. To a
 #. Give this function a string identifier (eg: 'param_shift'), and add this to the list `derivative_methods` of the function `derivative`, and as a possible 'out'.
 
 
-.. automodule:: openqaoa.derivative_functions
+.. automodule:: openqaoa.derivatives.derivative_functions
     :members:
     :show-inheritance:
     :inherited-members:
 
-Qfim
+QFIM
 ----
-.. automodule:: openqaoa.qfim
+.. automodule:: openqaoa.derivatives.qfim
     :members:
     :undoc-members:
     :show-inheritance:

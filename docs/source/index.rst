@@ -159,7 +159,7 @@ First, import all the necessay functions
 
 .. code-block:: python
 
-   from openqaoa.qaoa_parameters import Hamiltonian, QAOACircuitParams, create_qaoa_variational_params
+   from openqaoa.qaoa_components import Hamiltonian, QAOADescriptor, create_qaoa_variational_params
    from openqaoa.utilities import X_mixer_hamiltonian
    from openqaoa.backends.qaoa_backend import QAOAvectorizedBackendSimulator
    from openqaoa.optimizers.qaoa_optimizer import ScipyOptimizer
@@ -180,14 +180,14 @@ After having created the hamiltonians it is time to create the Circuit parameter
 
 .. code-block:: python
 
-   qaoa_circuit_params = QAOACircuitParams(cost_hamil,mixer_hamil,p=1)
-   params = create_qaoa_variational_params(qaoa_circuit_params, params_type='fourier',init_type='rand',q=1)
+   qaoa_descriptor = QAOADescriptor(cost_hamil,mixer_hamil,p=1)
+   params = create_qaoa_variational_params(qaoa_descriptor, params_type='fourier',init_type='rand',q=1)
 
 Then proceed by instantiating the backend device
 
 .. code-block:: python
    
-   backend_obj = QAOAvectorizedBackendSimulator(circuit_params = qaoa_circuit_params, append_state = None, prepend_state = None, init_hadamard = True)
+   backend_obj = QAOAvectorizedBackendSimulator(circuit_params = qaoa_descriptor, append_state = None, prepend_state = None, init_hadamard = True)
 
 And finally, create the classical optimizer and minimize the objective function
 

@@ -5,16 +5,25 @@ The result, on the other hand, formats raw results from the logger in a more hum
 
 QAOA Result
 -----------
-.. autoclass:: openqaoa.optimizers.Result
+.. autoclass:: openqaoa.algorithms.qaoa.qaoa_result.QAOAResult
     :members:
     :undoc-members:
     :show-inheritance:
     :inherited-members:
 
 
+RQAOA Result
+------------
+.. autoclass:: openqaoa.algorithms.rqaoa.rqaoa_result.RQAOAResult
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+    
+
 Logger
 ------
-.. autoclass:: openqaoa.optimizers.Logger
+.. autoclass:: openqaoa.optimizers.logger_vqa.Logger
     :members:
     :undoc-members:
     :show-inheritance:

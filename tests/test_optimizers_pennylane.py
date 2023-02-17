@@ -1,23 +1,22 @@
 import warnings
 import unittest
-
 import numpy as np
 import networkx as nx
-import openqaoa.optimizers.pennylane as pl
 import copy
 import inspect
 
-from openqaoa.workflows.optimizer import QAOA
-from openqaoa.devices import create_device
+from openqaoa import QAOA
+import openqaoa.optimizers.pennylane as pl
+from openqaoa.backends import create_device
 from openqaoa.optimizers.training_vqa import PennyLaneOptimizer
 from openqaoa.optimizers.pennylane.optimization_methods_pennylane import AVAILABLE_OPTIMIZERS
-from openqaoa.derivative_functions import derivative
+from openqaoa.derivatives.derivative_functions import derivative
 from openqaoa.optimizers.logger_vqa import Logger
-from openqaoa.qaoa_parameters import create_qaoa_variational_params, QAOACircuitParams, PauliOp, Hamiltonian
+from openqaoa.qaoa_components import create_qaoa_variational_params, QAOADescriptor, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
 from openqaoa.optimizers import get_optimizer
-from openqaoa.qfim import qfim as Qfim
+from openqaoa.derivatives.qfim import qfim as Qfim
 from openqaoa.problems import QUBO, MinimumVertexCover
 
 
@@ -27,7 +26,7 @@ list_optimizers = PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
 #create a problem
 g = nx.circulant_graph(4, [1])
 problem = MinimumVertexCover(g, field =1.0, penalty=10)
-qubo_problem_1 = problem.get_qubo_problem()
+qubo_problem_1 = problem.qubo
 qubo_problem_2 = QUBO.random_instance(5)
 qubo_problem_3 = QUBO.random_instance(6)
 
@@ -67,17 +66,17 @@ class TestPennylaneOptimizers(unittest.TestCase):
         q.compile(problem) 
         q.optimize()
 
-        assert len(q.results.most_probable_states['solutions_bitstrings'][0]) > 0
+        assert len(q.result.most_probable_states['solutions_bitstrings'][0]) > 0
 
     def _run_method_manual(self, method, problem):
         " helper function tu run the test for any method using manual mode"
 
         cost_hamil = problem.hamiltonian
         mixer_hamil = X_mixer_hamiltonian(n_qubits=problem.n)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=2)
         device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
+        backend_obj_vectorized = get_qaoa_backend(qaoa_descriptor,device)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'ramp')
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
@@ -144,10 +143,10 @@ class TestPennylaneOptimizers(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)), PauliOp(
             'ZZ', (0, 3)), PauliOp('Z', (2,)), PauliOp('Z', (1,))], [1, 1.1, 1.5, 2, -0.8], 0.8)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=4)
-        circuit_params = QAOACircuitParams(cost_hamil, mixer_hamil, p=2)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=2)
         device = create_device('local','vectorized')
-        backend_obj_vectorized = get_qaoa_backend(circuit_params,device)
-        variate_params = create_qaoa_variational_params(circuit_params, 'standard', 'ramp')
+        backend_obj_vectorized = get_qaoa_backend(qaoa_descriptor,device)
+        variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'ramp')
         niter = 5
         grad_stepsize = 0.0001
         stepsize = 0.001
