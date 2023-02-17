@@ -15,7 +15,7 @@ from openqaoa.problems import NumberPartition, QUBO
 from openqaoa_pyquil.backends import DevicePyquil, QAOAPyQuilQPUBackend
 
 
-class TestingQAOACostPyquilQVM(unittest.TestCase):
+class TestingQAOAPyquilQVM_QR(unittest.TestCase):
     
     """Tests pyquil backend compatibility with routing_function.
     
