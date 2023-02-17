@@ -140,7 +140,7 @@ class QAOABaseBackend(VQABaseBackend):
             if self.qaoa_descriptor.p%2!=0:
                 self.final_mapping = self.qaoa_descriptor.final_mapping
             else:
-                # if odd, the initial mapping [0,...,n_qubits] is taken as the final mapping
+                # if even, the initial mapping [0,...,n_qubits-1] is taken as the final mapping
                 self.final_mapping = list(range(len(self.qaoa_descriptor.final_mapping)))
         else:
             self.initial_qubit_mapping = None

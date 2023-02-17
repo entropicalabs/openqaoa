@@ -174,10 +174,8 @@ class QAOAQiskitQPUBackend(
         if self.final_mapping is None:
             parametric_circuit.measure(self.problem_reg,creg)
         else:
-            for idx,qubit in enumerate(self.qureg):
-                reordered_qubit = self.final_mapping[idx]
-                if reordered_qubit in range(len(self.problem_reg)):
-                    cbit = creg[reordered_qubit]
+            for idx,qubit in enumerate(self.final_mapping[0:len(self.problem_reg)]):
+                    cbit = creg[idx]
                     parametric_circuit.measure(qubit,cbit)
 
         return parametric_circuit

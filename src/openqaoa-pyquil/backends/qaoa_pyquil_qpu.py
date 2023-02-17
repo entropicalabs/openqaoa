@@ -265,18 +265,14 @@ class QAOAPyQuilQPUBackend(
         if self.append_state:
             parametric_circuit += self.append_state
             
-        if self.final_mapping is None:
-            
+        if self.final_mapping is None: 
             for i,qbit in enumerate(self.problem_reg):
-                parametric_circuit += gates.MEASURE(qbit, ro[i])
-        else:
-                
+                parametric_circuit += gates.MEASURE(self.qubit_mapping[qbit], ro[i])
+        else: 
             # Measurement instructions
-            for qubit in self.qureg:
-                reorderd_qubit = self.final_mapping[qubit]
-                if reorderd_qubit in self.problem_reg:
-                    cbit = ro[reorderd_qubit]
-                    parametric_circuit += gates.MEASURE(self.initial_qubit_mapping[self.final_mapping[reorderd_qubit]], cbit)
+            for i,qubit in enumerate(self.final_mapping[0:len(self.problem_reg)]):
+                    cbit = ro[i]
+                    parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
 
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 
