@@ -73,24 +73,24 @@ class RQAOAResult(dict):
         dictionary:dict
     ):
         """
-        Creates a RQAOAResults object from a dictionary (which is the output of the asdict method).
+        Creates a RQAOAResul object from a dictionary (which is the output of the asdict method).
         Parameters
         ----------
         dictionary : dict
             The input dictionary.
         Returns
         -------
-        RQAOAResults
-            The RQAOAResults object.
+        RQAOAResul
+            The RQAOAResul object.
         """
 
         # deepcopy the dictionary, so that the original dictionary is not changed
         dictionary = copy.deepcopy(dictionary)
 
-        # create a new RQAOAResults object
+        # create a new RQAOAResul object
         results = cls()
 
-        # add the keys of the dictionary to the RQAOAResults object
+        # add the keys of the dictionary to the RQAOAResul object
         for key, value in dictionary.items():
             results[key] = value
 
