@@ -51,7 +51,7 @@ class RQAOA(Workflow):
         For a complete list of its parameters and usage please see the method set_circuit_properties
     rqaoa_parameters: `RqaoaParameters`
         Set of parameters containing all the relevant information for the recursive procedure of RQAOA.
-    results: `RQAOAResul`
+    results: `RQAOAResult`
         The results of the RQAOA optimization.
         Dictionary containing all the information about the RQAOA run: the
         solution states and energies (key: 'solution'), the output of the classical
@@ -59,9 +59,9 @@ class RQAOA(Workflow):
         (key: 'elimination_rules'), the number of eliminations at each step (key: 'schedule'),
         total number of steps (key: 'number_steps'), the intermediate QUBO problems and the
         intermediate QAOA objects that have been optimized in each RQAOA step (key: 'intermediate_problems').
-        This object (`RQAOAResul`) is a dictionary with some custom methods as
-        RQAOAResul.get_hamiltonian_step(i) which get the hamiltonian of reduced problem of the i-th step.
-        To see the full list of methods please see the RQAOAResul class.
+        This object (`RQAOAResult`) is a dictionary with some custom methods as
+        RQAOAResult.get_hamiltonian_step(i) which get the hamiltonian of reduced problem of the i-th step.
+        To see the full list of methods please see the RQAOAResult class.
 
     Examples
     --------

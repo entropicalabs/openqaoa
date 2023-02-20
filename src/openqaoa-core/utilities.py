@@ -1712,7 +1712,7 @@ def dicke_wavefunction(excitations, n_qubits):
     Returns
     -------
     `np.ndarray`
-        The wavefunction vector for a given cumulative Dicke states with <=k excitations
+        The wavefunction vector for a given cumulative Dicke states with $<=k$ excitations
     """
 
     k_dicke = dicke_basis(excitations, n_qubits)
