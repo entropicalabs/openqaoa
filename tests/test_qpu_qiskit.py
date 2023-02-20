@@ -12,6 +12,58 @@ from openqaoa_qiskit.backends import (DeviceQiskit, QAOAQiskitQPUBackend,
                                       QAOAQiskitBackendStatevecSimulator) 
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.problems import NumberPartition
+from openqaoa import QAOA
+
+
+class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
+    
+    """This Object tests the QAOA Qiskit QPU Backend object with the Azure 
+    Device object. This checks that the use of qiskit to send circuits to Azure
+    is working as intended.
+    
+    The Azure CLI has to be configured beforehand to run these tests.
+    """
+    
+    @pytest.mark.qpu
+    def setUp(self):
+        
+        bashCommand = "az resource list"
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        
+        if error is not None:
+            print(error)
+            raise Exception('You must have the Azure CLI installed and must be logged in to use the Azure Quantum Backends')
+        else:
+            output_json = json.loads(output)
+            output_json_s = [each_json for each_json in output_json if each_json['name'] == 'TestingOpenQAOA'][0]
+            self.RESOURCE_ID = output_json_s['id']
+            self.AZ_LOCATION = output_json_s['location']
+            
+    @pytest.mark.qpu
+    def check_shots_tally(self):
+        
+        """There is a known bug in the qiskit backend for azure where if the shots 
+        argument might be ignored. This test checks that the output from the azure 
+        computation matches the input requirements.
+        """
+        
+        shots = 1024
+        problem_qubo = NumberPartition([1, 2, 3]).qubo
+        azure_device = create_device(location='azure', name='rigetti.sim.qvm', 
+                                     resource_id=self.RESOURCE_ID, 
+                                     az_location=self.AZ_LOCATION)
+        
+        q = QAOA()
+        q.set_device(azure_device)
+        q.set_backend_properties(n_shots=shots)
+        q.set_classical_optimizer(maxiter = 1)
+        q.compile(problem_qubo)
+        q.optimize()
+        
+        comp_shots = sum(q.result.optimized['optimized measurement outcomes'].values())
+        
+        self.assertEqual(shots, comp_shots)
 
 
 class TestingQAOAQiskitQPUBackend(unittest.TestCase):
@@ -19,10 +71,8 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
     """This Object tests the QAOA Qiskit QPU Backend objects, which is tasked with the
     creation and execution of a QAOA circuit for the selected QPU provider and
     backend.
-
-    For all of these tests, credentials.json MUST be filled with the appropriate
-    credentials. If unsure about to correctness of the current input credentials
-    , please run test_qpu_devices.py. 
+    
+    IBMQ Account has to be saved locally to run these tests.
     """
     
     @pytest.mark.qpu
