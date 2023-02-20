@@ -12,7 +12,7 @@ from openqaoa.backends.basebackend import (
 )
 from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap
-from openqaoa.utilities import generate_uuid, permute_counts_dictionary
+from openqaoa.utilities import generate_uuid
 
 
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
@@ -118,8 +118,6 @@ class QAOAPyQuilQPUBackend(
         
         if self.initial_qubit_mapping is None:
             self.initial_qubit_mapping = initial_qubit_mapping if initial_qubit_mapping is not None else list(range(self.n_qubits))
-        else:    
-            warnings.warn("Ignoring the initial_qubit_mapping since the routing algorithm chose one")
         
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
         self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))        

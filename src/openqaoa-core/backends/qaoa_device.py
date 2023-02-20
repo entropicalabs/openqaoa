@@ -12,6 +12,7 @@ def device_class_arg_mapper(
     hub: str = None,
     group: str = None,
     project: str = None,
+    as_emulator: bool = None,
     as_qvm: bool = None,
     noisy: bool = None,
     compiler_timeout: float = None,
@@ -26,7 +27,8 @@ def device_class_arg_mapper(
     az_location: str = None,
 ) -> dict:
     DEVICE_ARGS_MAPPER = {
-        DeviceQiskit: {"hub": hub, "group": group, "project": project},
+        DeviceQiskit: {"hub": hub, "group": group,
+                       "project": project, "as_emulator": as_emulator},
         DevicePyquil: {
             "as_qvm": as_qvm,
             "noisy": noisy,

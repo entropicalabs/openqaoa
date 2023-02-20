@@ -19,7 +19,7 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendParametric,
 )
 from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
-from openqaoa.utilities import flip_counts, permute_counts_dictionary
+from openqaoa.utilities import flip_counts
 
 
 class QAOAQiskitQPUBackend(

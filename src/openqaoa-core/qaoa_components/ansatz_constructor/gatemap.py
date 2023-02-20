@@ -394,7 +394,7 @@ class RotationGateMapFactory(object):
         hamil_obj: Hamiltonian, gatemap_type: GateMapType = None
     ) -> List[RotationGateMap]:
         """
-        Construcuts a list of Rotation GateMaps from the input Hamiltonian Object.
+        Constructs a list of Rotation GateMaps from the input Hamiltonian Object.
 
         Parameters
         ----------

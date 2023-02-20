@@ -1,4 +1,5 @@
 from qiskit import IBMQ
+from qiskit_aer import AerSimulator
 from typing import List
 from openqaoa.backends.devices_core import DeviceBase
 
@@ -22,7 +23,8 @@ class DeviceQiskit(DeviceBase):
     """
 
     def __init__(
-        self, device_name: str, hub: str = None, group: str = None, project: str = None
+        self, device_name: str, hub: str = None, group: str = None, project: str = None,
+        as_emulator: bool = False
     ):
         """The user's IBMQ account has to be authenticated through qiskit in
         order to use this backend. This can be done through `IBMQ.save_account`.
@@ -47,6 +49,7 @@ class DeviceQiskit(DeviceBase):
         self.hub = hub
         self.group = group
         self.project = project
+        self.as_emulator = as_emulator
 
         self.provider_connected = None
         self.qpu_connected = None
@@ -92,11 +95,13 @@ class DeviceQiskit(DeviceBase):
         if self.device_name in self.available_qpus:
             self.backend_device = self.provider.get_backend(self.device_name)
             self.n_qubits = self.backend_device.configuration().n_qubits
+            if self.as_emulator is True:
+                self.backend_device = AerSimulator.from_backend(self.backend_device)
             return True
         else:
             print(f"Please choose from {self.available_qpus} for this provider")
             return False
-
+        
     def _check_provider_connection(self) -> bool:
         """
         Private method for checking connection with provider.

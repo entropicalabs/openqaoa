@@ -28,9 +28,9 @@ def circuit_routing(
     ----------
     device: DeviceBase
         The device for which to route the circuit
-    cost_block: List[GateMap]
+    problem_to_solve: List[List[int]]
         The QUBO problem to be run on QPU
-    initial_mapping: List[int]
+    initial_mapping: Optional[List[int]]
         The initial selection of qubits, if provided by the user.
         Defaults to the first n-qubits on the device if `None`
     routing_algo: str
@@ -75,6 +75,13 @@ def circuit_routing(
     final_mapping = results["final_mapping"]
     swap_mask = results["swap_mask"]
     
+    assert len(gate_indices_list) == len(
+        swap_mask
+    ), "Incorrect output from qubit routing algorithm"
+    assert len(final_mapping) == len(
+        initial_mapping
+    ), "Incorrect number of qubits in the final qubit layout"
+    
     all_qubits = []
     for pair in gate_indices_list:
         all_qubits.extend(pair)
@@ -95,14 +102,7 @@ def circuit_routing(
         gate_indices_list[idx] = sorted([logical_i, logical_j])
         
     final_logical_qubit_order = [initial_physical_to_logical_mapping[q] for q in final_mapping]
-
-    assert len(gate_indices_list) == len(
-        swap_mask
-    ), "Incorrect output from qubit routing algorithm"
-    assert len(final_mapping) == len(
-        initial_mapping
-    ), "Incorrect number of qubits in the final qubit layout"
-
+    
     return (gate_indices_list, swap_mask, initial_physical_to_logical_mapping, final_logical_qubit_order)
 
 

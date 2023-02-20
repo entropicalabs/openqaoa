@@ -356,8 +356,11 @@ class QAOADescriptor(AnsatzDescriptor):
             The function that accepts as input the device, problem, initial_mapping and
             outputs the list of gates with swaps
         """
-        problem_to_solve = [[gate.qubit_1, gate.qubit_2] for gate in gates_to_route
-                            if gate.gate_label.n_qubits == 2]
+        original_qubits_to_gate_mapping = {
+            (gate.qubit_1, gate.qubit_2): gate for gate in gates_to_route
+            if gate.gate_label.n_qubits == 2
+        }
+        problem_to_solve = list(original_qubits_to_gate_mapping.keys())
         (
             gate_list_indices,
             swap_mask,
@@ -367,17 +370,6 @@ class QAOADescriptor(AnsatzDescriptor):
         
         print("Initial mapping", initial_physical_to_logical_mapping)
         print("Final mapping", final_mapping)
-        
-        # for gate in gates_to_route:
-        #     gate.qubit_1 = initial_physical_to_logical_mapping[gate.qubit_1]
-        #     if gate.gate_label.n_qubits == 2:
-        #         gate.qubit_2 = initial_physical_to_logical_mapping[gate.qubit_2]
-            
-        original_qubits_to_gate_mapping = {
-            (gate.qubit_1, gate.qubit_2): gate for gate in gates_to_route
-            if gate.gate_label.n_qubits == 2
-        }
-        # print(original_qubits_to_gate_mapping)
 
         gates_list = [gate for gate in gates_to_route if gate.gate_label.n_qubits == 1]
         swapped_history = []
