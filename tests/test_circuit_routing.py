@@ -7,11 +7,11 @@ from openqaoa import QAOA
 from openqaoa.qaoa_components import create_qaoa_variational_params, QAOADescriptor, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends import QAOAvectorizedBackendSimulator, create_device
-from openqaoa.problems import NumberPartition, QUBO
+from openqaoa.problems import NumberPartition, QUBO, Knapsack
 from openqaoa_pyquil.backends import DevicePyquil, QAOAPyQuilQPUBackend
 from openqaoa.backends.devices_core import DeviceBase
-
-
+from openqaoa.qaoa_components.ansatz_constructor.gatemap import SWAPGateMap
+from qiskit import IBMQ
 
 class TestingQAOAPyquilQVM_QR(unittest.TestCase):
     
@@ -296,19 +296,119 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
             expt_pyquil_no_qr = backend_obj_pyquil.expectation(variate_params)
 
             self.assertAlmostEqual(expt_pyquil_w_qr, expt_pyquil_no_qr)
+
+
+class ExpectedRouting:
     
+        def __init__(
+            self, 
+            device_name, 
+            device_location, 
+            problem_to_solve, 
+            initial_mapping,
+            gate_indices_list,
+            swap_mask,
+            initial_physical_to_logical_mapping,
+            final_logical_qubit_order
+        ):
+            self.device_name = device_name
+            self.device_location = device_location
+            self.problem_to_solve = problem_to_solve
+            self.initial_mapping = initial_mapping
+
+            self.gate_indices_list = gate_indices_list
+            self.swap_mask = swap_mask
+            self.initial_physical_to_logical_mapping = initial_physical_to_logical_mapping
+            self.final_logical_qubit_order = final_logical_qubit_order
+
+        def values_input(self):
+            return self.device_name, self.device_location, self.problem_to_solve, self.initial_mapping
+
+        def values_return(self):
+            return self.gate_indices_list, self.swap_mask, self.initial_physical_to_logical_mapping, self.final_logical_qubit_order
+    
+IBM_OSLO_1 = ExpectedRouting(
+    device_name='ibm_oslo',
+    device_location='ibmq',
+    problem_to_solve=[(0, 1), (2, 3), (2, 4), (3, 4), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4)],
+    initial_mapping=None,
+    gate_indices_list= [[3, 5], [1, 5], [4, 5], [2, 6], [0, 6], [4, 6], [4, 6], [4, 5], [0, 6], [1, 5], [4, 5], [4, 5], [4, 6], [0, 6], [4, 6], [1, 5], [4, 6], [4, 5]],
+    swap_mask=[True, False, False, True, False, False, True, False, False, True, False, True, False, True, False, True, True, False],
+    initial_physical_to_logical_mapping={6: 0, 0: 1, 4: 2, 2: 3, 3: 4, 1: 5, 5: 6},
+    final_logical_qubit_order=[4, 6, 1, 5, 0, 3, 2]
+)
+
 
 class TestingQubitRouting(unittest.TestCase):
 
-    def routing_function_mock(
+    def __routing_function_mock(self,
         device: DeviceBase,
         problem_to_solve: List[List[int]],
         initial_mapping: Optional[List[int]] = None
     ):
+        """
+        function that imitates the routing function for testing purposes.
+        """
+        if IBM_OSLO_1.values_input() == (device.device_name, device.device_location, problem_to_solve, initial_mapping):
+            return IBM_OSLO_1.values_return()
+
+
+    def __compare_results(self, expected: ExpectedRouting, qaoa):
+        """
+        function that compares the expected and actual results of the routing function.
+        """
+        backend, result, qubo = qaoa.backend, qaoa.result, qaoa.problem
         
+        assert backend.n_qubits == len(expected.final_logical_qubit_order), \
+        """Number of qubits in the circuit is not equal to the number of qubits given by routing"""
+
+        assert backend.problem_qubits == qubo.n, \
+        f"""Number of nodes in problem is not equal to backend.problem_qubits, 
+        is '{backend.problem_qubits }' but should be '{qubo.n}'"""
+
+        assert len(list(result.optimized['measurement_outcomes'].keys())[0]) == qubo.n, \
+        "The number of qubits in the optimized circuit is not equal to the number of qubits in the problem."
+
+        # check that swap gates are applied in the correct position
+        swap_mask_new = []
+        for gate in backend.abstract_circuit:
+            if not gate.gate_label.n_qubits == 1:
+                swap_mask_new.append(isinstance(gate, SWAPGateMap))
+        assert swap_mask_new == IBM_OSLO_1.swap_mask, "Swap gates are not in the correct position"
+
+        # check that the correct qubits are used in the gates
+        gate_indices_list_new  = []
+        for gate in backend.abstract_circuit:
+            if not gate.gate_label.n_qubits == 1:
+                gate_indices_list_new.append([gate.qubit_1, gate.qubit_2])
+        assert gate_indices_list_new == IBM_OSLO_1.gate_indices_list, "The qubits used in the gates are not correct"
+
         
 
-        return gate_indices_list, swap_mask, initial_physical_to_logical_mapping, final_logical_qubit_order
+    def test_qubit_routing(self):
+
+        IBMQ.load_account()
+
+        qubo = Knapsack.random_instance(n_items=3, seed=20).qubo
+
+        qpu_credentials ={
+            "hub": "ibm-q",
+            "group": "open", 
+            "project": "main"
+        }
+
+        qiskit_cloud = create_device(location='ibmq', name='ibm_oslo', **qpu_credentials, as_emulator=True)
+
+        q_qiskit = QAOA()
+        q_qiskit.set_device(qiskit_cloud)
+        q_qiskit.set_circuit_properties(p=1, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        q_qiskit.set_backend_properties(prepend_state=None, append_state=None)
+        q_qiskit.set_classical_optimizer(method='nelder-mead', maxiter=1, cost_progress=True, parameter_log=True, optimization_progress=True)
+        q_qiskit.compile(qubo, routing_function=self.__routing_function_mock)
+        q_qiskit.optimize()
+
+        # check that the results and circuit are as expected
+        self.__compare_results(IBM_OSLO_1, q_qiskit)
             
             
 if __name__ == '__main__':
