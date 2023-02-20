@@ -9,6 +9,7 @@ import numpy as np
 import uuid
 import matplotlib.pyplot as plt
 import networkx as nx
+import datetime
 
 from .qaoa_components import Hamiltonian, PauliOp
 
@@ -1534,9 +1535,20 @@ def convert2serialize(obj, complex_to_string: bool = False):
 
 
 ################################################################################
-# UUID
+# UUID and Timestamp
 ################################################################################
 
+def generate_timestamp() -> str:
+    """
+    Generate a timestamp string in UTC+0. Format: YYYY-MM-DDTHH:MM:SS.
+
+    Returns
+    -------
+    timestamp: `str`
+        String representation of a timestamp.
+    """
+    return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+    
 
 def generate_uuid() -> str:
     """
@@ -1626,7 +1638,7 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
 
 def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
     """
-    Generates the Dicke basis state \|ek\> with k excitations
+    Generates the Dicke basis state $|ek>$ with $k$ excitations
 
     Parameters
     ----------
@@ -1670,7 +1682,7 @@ def dicke_wavefunction(excitations, n_qubits):
     Returns
     -------
     `np.ndarray`
-        The wavefunction vector for a given cumulative Dicke states with <=k excitations
+        The wavefunction vector for a given cumulative Dicke states with $<=k$ excitations
     """
 
     k_dicke = dicke_basis(excitations, n_qubits)
@@ -1687,8 +1699,8 @@ def dicke_wavefunction(excitations, n_qubits):
 
 def k_cumulative_excitations(k: int, n_qubits: int) -> np.ndarray:
     """
-    Generates the Upper bound excitations basis vector \|Ek\>, which a superposition of all
-    Dicke basis vectors upto excitation number \"k\"
+    Generates the Upper bound excitations basis vector $|Ek>$, which a superposition of all
+    Dicke basis vectors upto excitation number $k$
 
     Parameters
     ----------
@@ -1699,8 +1711,8 @@ def k_cumulative_excitations(k: int, n_qubits: int) -> np.ndarray:
 
     Returns
     -------
-    `np.ndarray`
-        The wavefunction vector for a given cumulative Dicke states with <=k excitations
+    wavefunction: `np.ndarray`
+        The wavefunction vector for a given cumulative Dicke states with $<=k$ excitations
     """
     cumulative_dicke_bases = np.array(["0" * n_qubits])
     for exc in range(1, k + 1):

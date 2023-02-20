@@ -2,6 +2,7 @@ import json, os, gzip
 import unittest
 import networkx as nw
 import numpy as np
+import datetime
 
 from qiskit.providers.fake_provider import FakeVigo
 from qiskit.providers.aer.noise import NoiseModel
@@ -701,15 +702,30 @@ class TestingVanillaQAOA(unittest.TestCase):
         # set the header
         qaoa.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b", 
-            name="test", 
+            description="test", 
             run_by="raul", 
             provider="-", 
             target="-", 
             cloud="local", 
             client="-", 
-            qubit_routing="-", 
-            error_mitigation="-", 
-            error_correction="-"
+            )
+
+        # check that the experiment_id has not changed, since it is not set in the set_header method
+        assert qaoa.header['experiment_id'] == experiment_id, "The experiment_id has changed when it should not have."
+
+        # now set the experiment_id
+        experiment_id = experiment_id[:-2] + "00"
+
+        # set the header
+        qaoa.set_header(
+            project_id="8353185c-b175-4eda-9628-b4e58cb0e41b", 
+            description="test", 
+            run_by="raul", 
+            provider="-", 
+            target="-", 
+            cloud="local", 
+            client="-", 
+            experiment_id=experiment_id,
             )
 
         # check if the header values are set to the correct values, except for the qubit_number, atomic_id, execution_time_start, and execution_time_end (which are set to None)
@@ -717,15 +733,12 @@ class TestingVanillaQAOA(unittest.TestCase):
             'experiment_id': experiment_id,
             'project_id': '8353185c-b175-4eda-9628-b4e58cb0e41b',
             'algorithm': 'qaoa',
-            'name': 'test',
+            'description': 'test',
             'run_by': 'raul',
             'provider': '-',
             'target': '-',
             'cloud': 'local',
             'client': '-',
-            'qubit_routing': '-',
-            'error_mitigation': '-',
-            'error_correction': '-',
             'qubit_number': None,
             'atomic_id': None,
             'execution_time_start': None,
@@ -756,17 +769,42 @@ class TestingVanillaQAOA(unittest.TestCase):
         for key, value in qaoa.header.items():
             if key not in ['execution_time_start', 'execution_time_end']:
                 assert dict_values[key] == value, "The value of the key {} (of the dictionary qaoa.header) is not correct.".format(key)
-        assert qaoa.header['execution_time_start'] > 1672933928, "The execution_time_start is not a valid integer."
-        assert qaoa.header['execution_time_end'] > 1672933928, "The execution_time_end is not a valid integer."
+        assert datetime.datetime.strptime(qaoa.header['execution_time_start'], "%Y-%m-%dT%H:%M:%S"), "The execution_time_start is not valid."
+        assert datetime.datetime.strptime(qaoa.header['execution_time_end'], "%Y-%m-%dT%H:%M:%S"), "The execution_time_end is not valid."
 
 
         # test if an error is raised when the project_id is not a valid string
         error = False
         try:
-            qaoa.set_header(project_id="test")
+            qaoa.set_header(
+                project_id="test",
+                description="test", 
+                run_by="raul", 
+                provider="-", 
+                target="-", 
+                cloud="local", 
+                client="-", 
+            )
         except:
             error = True
         assert error, "The project_id is not valid string, but no error was raised."
+
+        # test if an error is raised when the experiment_id is not a valid string
+        error = False
+        try:
+            qaoa.set_header(
+                project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
+                experiment_id="test",
+                description="test", 
+                run_by="raul", 
+                provider="-", 
+                target="-", 
+                cloud="local", 
+                client="-", 
+            )
+        except:
+            error = True
+        assert error, "The experiment_id is not valid string, but no error was raised."
 
     def test_set_exp_tags(self):
         """
@@ -825,16 +863,13 @@ class TestingVanillaQAOA(unittest.TestCase):
         # set the header
         qaoa.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b", 
-            name="test", 
+            description="test", 
             run_by="raul", 
             provider="-", 
             target="-", 
             cloud="local", 
             client="-", 
-            qubit_routing="-", 
-            error_mitigation="-", 
-            error_correction="-"
-            )
+        )
         qaoa.optimize()
 
         # check QAOA asdict
@@ -915,8 +950,18 @@ class TestingVanillaQAOA(unittest.TestCase):
         """
 
         #create a dictionary with all the expected keys and set them to False
-        expected_keys = ['header', 'atomic_id', 'experiment_id', 'project_id', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 'init_type', 'p', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'result', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number']
+        expected_keys = ['header', 'atomic_id', 'experiment_id', 'project_id', 'algorithm', 'description', 'run_by', 'provider', 'target', 'cloud',
+        'client', 'qubit_number', 'execution_time_start', 'execution_time_end', 'metadata', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 
+        'init_type', 'p', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 
+        'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout',
+        'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method',
+        'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 
+        'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 
+        'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 
+        'result', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 
+        'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number']
         expected_keys = {item: False for item in expected_keys}
+
 
         #test the keys, it will set the keys to True if they are found
         _test_keys_in_dict(obj, expected_keys)
@@ -973,16 +1018,13 @@ class TestingVanillaQAOA(unittest.TestCase):
             q.set_exp_tags({'add_tag': 'test'})
             q.set_header(
                 project_id="8353185c-b175-4eda-9628-b4e58cb0e41b", 
-                name="test", 
+                description="test", 
                 run_by="raul", 
                 provider="-", 
                 target="-", 
                 cloud="local", 
                 client="-", 
-                qubit_routing="-", 
-                error_mitigation="-", 
-                error_correction="-"
-                )
+            )
 
             # test that you can convert the rqaoa object to a dictionary and then load it before optimization
             _ = QAOA.from_dict(q.asdict())
@@ -1124,16 +1166,13 @@ class TestingRQAOA(unittest.TestCase):
         r.set_classical_optimizer(method=method, maxiter=maxiter, optimization_progress=True, cost_progress=True, parameter_log=True)   
         r.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b", 
-            name="test", 
+            description="header", 
             run_by="raul", 
             provider="-", 
             target="-", 
             cloud="local", 
             client="-", 
-            qubit_routing="-", 
-            error_mitigation="-", 
-            error_correction="-"
-            )
+        )
         r.set_exp_tags(tags={'tag1': 'value1', 'tag2': 'value2'})
         r.compile(problem)
         r.optimize()
@@ -1373,7 +1412,18 @@ class TestingRQAOA(unittest.TestCase):
         """
 
         #create a dictionary with all the expected keys and set them to False
-        expected_keys = ['header', 'atomic_id', 'experiment_id', 'project_id', 'algorithm', 'name', 'run_by', 'provider', 'target', 'cloud', 'client', 'qubit_number', 'qubit_routing', 'error_mitigation', 'error_correction', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 'init_type', 'p', 'rqaoa_type', 'rqaoa_n_max', 'rqaoa_n_cutoff', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 'rqaoa_parameters', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'result', 'solution', 'classical_output', 'minimum_energy', 'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'number_steps', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number', 'exp_vals_z', 'corr_matrix', 'atomic_ids']
+        expected_keys = ['header', 'atomic_id', 'experiment_id', 'project_id', 'algorithm', 'description', 'run_by', 'provider', 'target', 'cloud', 
+        'client', 'qubit_number', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'problem_type', 'n_shots', 'optimizer_method', 
+        'param_type', 'init_type', 'p', 'rqaoa_type', 'rqaoa_n_max', 'rqaoa_n_cutoff', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 
+        'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 
+        'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 
+        'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options',
+        'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 
+        'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 
+        'seed', 'rqaoa_parameters', 'n_max', 'steps', 'n_cutoff', 'original_hamiltonian', 'counter', 'result', 'solution', 'classical_output', 'minimum_energy', 
+        'optimal_states', 'elimination_rules', 'pair', 'correlation', 'schedule', 'number_steps', 'intermediate_steps', 'problem', 'qaoa_results', 'evals', 
+        'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 'intermediate', 'angles', 'cost', 
+        'measurement_outcomes', 'job_id', 'optimized', 'eval_number', 'exp_vals_z', 'corr_matrix', 'atomic_ids']
         expected_keys = {item: False for item in expected_keys}
 
         #test the keys, it will set the keys to True if they are found
@@ -1507,15 +1557,12 @@ class TestingRQAOA(unittest.TestCase):
             r.set_exp_tags({'tag1': 'value1', 'tag2': 'value2'})            
             r.set_header(
                 project_id="8353185c-b175-4eda-9628-b4e58cb0e41b", 
-                name="test", 
+                description="test", 
                 run_by="raul", 
                 provider="-", 
                 target="-", 
                 cloud="local", 
                 client="-", 
-                qubit_routing="-", 
-                error_mitigation="-", 
-                error_correction="-"
             )
 
             # test that you can convert the rqaoa object to a dictionary and then load it before optimization
