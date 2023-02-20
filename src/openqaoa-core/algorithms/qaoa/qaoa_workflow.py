@@ -43,6 +43,13 @@ def circuit_routing(
         the second list differentiates between Ising and SWAP gates,
         and the final list returns the final qubit mapping.
     """
+
+    print("device", device)
+    print("problem_to_solve", problem_to_solve)
+    print("initial_mapping", initial_mapping)
+    print("routing_algo", routing_algo)
+
+
     device_connecivity = device.connectivity()
 
     # params for MCTS
@@ -102,6 +109,11 @@ def circuit_routing(
         gate_indices_list[idx] = sorted([logical_i, logical_j])
         
     final_logical_qubit_order = [initial_physical_to_logical_mapping[q] for q in final_mapping]
+
+    print("gate_indices_list", gate_indices_list)
+    print("swap_mask", swap_mask)
+    print("initial_physical_to_logical_mapping", initial_physical_to_logical_mapping)
+    print("final_logical_qubit_order", final_logical_qubit_order)
     
     return (gate_indices_list, swap_mask, initial_physical_to_logical_mapping, final_logical_qubit_order)
 
