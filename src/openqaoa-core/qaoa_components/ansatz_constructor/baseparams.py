@@ -7,7 +7,6 @@ from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
 from .gatemap import RotationGateMap
 
-from .gatemap import RotationGateMap
 
 def _is_iterable_empty(in_iterable):
     if isinstance(in_iterable, Iterable):  # Is Iterable
