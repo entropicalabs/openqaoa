@@ -134,7 +134,7 @@ class TestDocplex2IsingClass(unittest.TestCase):
         ModelOQ = FromDocplex2IsingModel(mdl)
         Ising_model_OQ = ModelOQ.ising_model.asdict()
         # Using the predefine function of this problem
-        IsingModelDirect = MaximumCut(G).get_qubo_problem().asdict()
+        IsingModelDirect = MaximumCut(G).qubo.asdict()
         # Comparing both results in this specific case MaxCut from OpenQAOa gives
         # the coefficients omultiplied by two of the DocplexToIsingModel
         for nn, term in enumerate(IsingModelDirect["terms"]):

@@ -15,5 +15,5 @@ Currently Supported:
 """
 from .qaoa_vectorized import QAOAvectorizedBackendSimulator
 from .qaoa_analytical_sim import QAOABackendAnalyticalSimulator
-from .devices_core import DeviceBase, DeviceLocal
+from .devices_core import DeviceLocal
 from .qaoa_device import create_device

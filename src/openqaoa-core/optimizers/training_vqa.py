@@ -11,7 +11,7 @@ from scipy.optimize import LinearConstraint, NonlinearConstraint, Bounds
 
 from ..backends.basebackend import VQABaseBackend
 from ..backends.qaoa_vectorized import QAOAvectorizedBackendSimulator
-from ..qaoa_components import QAOAVariationalBaseParams
+from ..qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
 from . import optimization_methods as om
 from .pennylane import optimization_methods_pennylane as ompl
 

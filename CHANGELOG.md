@@ -1,3 +1,23 @@
+## Version v0.0.4 (November 14th, 2022)
+
+This release brings improvements to RQAOA workflow and AWS authentication, and a bugfix to TSP problem class.
+
+## What's Changed
+* Refactor
+  * Authentication Refactor by @shahidee44 in https://github.com/entropicalabs/openqaoa/pull/126
+  * RQAOA workflow by @raulconchello in https://github.com/entropicalabs/openqaoa/pull/109
+* Fixes
+  * Bugfix to Traveling Salesman QUBO Formulation by @Adirlou in https://github.com/entropicalabs/openqaoa/pull/89
+  * Use sparse.linalg.expm for exponentiation of sparse matrices (for sci… by @shaohenc in https://github.com/entropicalabs/openqaoa/pull/121
+* Docs
+  * Fixing the docs by @Q-lds in https://github.com/entropicalabs/openqaoa/pull/113
+  * couple of cosmetic fixes to docs by @vishal-ph in https://github.com/entropicalabs/openqaoa/pull/128
+
+## New Contributors
+* @Adirlou made their first contribution in https://github.com/entropicalabs/openqaoa/pull/89
+
+**Full Changelog**: https://github.com/entropicalabs/openqaoa/compare/v0.0.3...v0.0.4
+
 ## Version v0.0.3 (October 29th, 2022)
 
 A release to fix two QPU-related bugs

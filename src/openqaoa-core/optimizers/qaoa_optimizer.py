@@ -3,7 +3,7 @@ from .training_vqa import (
     CustomScipyGradientOptimizer,
     PennyLaneOptimizer
 )
-from ..qaoa_components import QAOAVariationalBaseParams
+from ..qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
 from ..backends.basebackend import VQABaseBackend
 
 
@@ -70,11 +70,8 @@ def get_optimizer(
         f"Please choose from {available_optimizers()}"
     )
 
-    try:
-        optimizer = SUPPORTED_OPTIMIZERS[selected_class](
-            vqa_object, variational_params, optimizer_dict
-        )
-    except Exception as e:
-        raise e
+    optimizer = SUPPORTED_OPTIMIZERS[selected_class](
+        vqa_object, variational_params, optimizer_dict
+    )
 
     return optimizer

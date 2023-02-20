@@ -107,7 +107,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         g = random_k_regular_graph(
             degree=3, nodes=range(8), seed=2642, weighted=True, biases=False
         )
-        maxcut_qubo = MaximumCut(g).get_qubo_problem()
+        maxcut_qubo = MaximumCut(g).qubo
 
         # Testing for Extended params
         exception = False
@@ -144,7 +144,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         g = random_k_regular_graph(
             degree=3, nodes=range(8), seed=2642, weighted=True, biases=False
         )
-        maxcut_qubo = MaximumCut(g).get_qubo_problem()
+        maxcut_qubo = MaximumCut(g).qubo
 
         # Define the RQAOA object and set its params
         r = RQAOA()
@@ -177,7 +177,7 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         r.compile(maxcut_qubo)
         r.optimize()
 
-        opt_results = r.results
+        opt_results = r.result
         opt_solution = opt_results["solution"]
         opt_solution_string = list(opt_solution.keys())[0]
 

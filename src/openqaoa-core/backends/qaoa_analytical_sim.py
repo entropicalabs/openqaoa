@@ -3,10 +3,10 @@ Energy expectation as a function of angles computed accordingly to the analytica
 """
 from .basebackend import QAOABaseBackend
 from ..qaoa_components import (
-    QAOAVariationalBaseParams,
     QAOADescriptor,
     QAOAVariationalStandardParams,
 )
+from ..qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
 from ..utilities import energy_expectation_analytical, generate_uuid, round_value
 
 

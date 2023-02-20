@@ -26,7 +26,7 @@ list_optimizers = PennyLaneOptimizer.PENNYLANE_OPTIMIZERS
 #create a problem
 g = nx.circulant_graph(4, [1])
 problem = MinimumVertexCover(g, field =1.0, penalty=10)
-qubo_problem_1 = problem.get_qubo_problem()
+qubo_problem_1 = problem.qubo
 qubo_problem_2 = QUBO.random_instance(5)
 qubo_problem_3 = QUBO.random_instance(6)
 
@@ -66,7 +66,7 @@ class TestPennylaneOptimizers(unittest.TestCase):
         q.compile(problem) 
         q.optimize()
 
-        assert len(q.results.most_probable_states['solutions_bitstrings'][0]) > 0
+        assert len(q.result.most_probable_states['solutions_bitstrings'][0]) > 0
 
     def _run_method_manual(self, method, problem):
         " helper function tu run the test for any method using manual mode"

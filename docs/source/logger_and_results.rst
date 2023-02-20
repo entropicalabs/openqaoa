@@ -14,7 +14,7 @@ QAOA Result
 
 RQAOA Result
 ------------
-.. autoclass:: openqaoa.algorithms.rqaoa.rqaoa_results.RQAOAResults
+.. autoclass:: openqaoa.algorithms.rqaoa.rqaoa_result.RQAOAResult
     :members:
     :undoc-members:
     :show-inheritance:

@@ -44,7 +44,6 @@ class TestingRQAOA(unittest.TestCase):
 
         # For each spin compute parent and connecting factor and store them
         for spin in sorted(spin_map.keys()):
-
             comp_parent, comp_factor = find_parent(spin_map, spin)
             comp_parents.update({spin: comp_parent})
             comp_factors.append(comp_factor)
@@ -414,6 +413,22 @@ class TestingRQAOA(unittest.TestCase):
             hamiltonian.constant, comp_hamiltonian.constant
         ), f"Constant in the computed Hamiltonian is incorrect"
 
+    def test_redefine_problem_isolated_nodes(self):
+        """
+        Testing the redefine problem function for an edge case in which fixing of one spins leads to an isolated one. In the absense of biases, the only way to capture the isolated node is to keep track of eleiminatiosn and compare the old and new registers to it.
+
+        The test recreates the 5-qubits MaxCut QUBO and the spin map and asserts that the new problem is correct.
+        """
+        test_qubo = QUBO(
+            n=6,
+            terms=[[0, 1], [2, 3], [2, 5], [3, 4], [4, 5]],
+            weights=[2.0, 1.0, 1.0, 1.0, 1.0],
+        )
+        spin_map = {0: (1, 0), 1: (-1.0, 0), 2: (1, 2), 3: (1, 3), 4: (1, 4), 5: (1, 5)}
+        new_problem, new_spin_map = redefine_problem(test_qubo, spin_map)
+
+        assert new_problem.terms == [[0, 1], [0, 3], [1, 2], [2, 3]]
+
     def test_solution_for_vanishing_instances(self):
         """
         Test the function that computes the solution to the reduced problem in the rare case the problem vanishes after eliminations.
@@ -431,16 +446,7 @@ class TestingRQAOA(unittest.TestCase):
         )
 
         assert cl_energy == -2.0
-        assert cl_ground_states == [
-            "0100",
-            "0101",
-            "0110",
-            "0111",
-            "1000",
-            "1001",
-            "1010",
-            "1011",
-        ]
+        assert cl_ground_states == ["1011"]
 
         # second example in which 0 and 2 are correlated while the other spins are arbitrary
         hamiltonian = Hamiltonian.classical_hamiltonian(
@@ -453,16 +459,7 @@ class TestingRQAOA(unittest.TestCase):
         )
 
         assert cl_energy == -2.0
-        assert cl_ground_states == [
-            "0000",
-            "0001",
-            "0100",
-            "0101",
-            "1010",
-            "1011",
-            "1110",
-            "1111",
-        ]
+        assert cl_ground_states == ["1111"]
 
         # third example in which 0 and 3 are anticorrelated while the other spins are arbitrary
         hamiltonian = Hamiltonian.classical_hamiltonian(
@@ -475,140 +472,149 @@ class TestingRQAOA(unittest.TestCase):
         )
 
         assert cl_energy == -2.0
-        assert cl_ground_states == [
-            "0001",
-            "0011",
-            "0101",
-            "0111",
-            "1000",
-            "1010",
-            "1100",
-            "1110",
-        ]
+        assert cl_ground_states == ["1110"]
 
-    def workflow_mockup(self, graph_seed, betas, gammas):
-        # Generate the graph
-        g = nx.generators.gnp_random_graph(n=12, p=0.7, seed=graph_seed, directed=False)
-
-        # Define the problem and translate it into a binary QUBO.
-        maxcut_qubo = MaximumCut(g).get_qubo_problem()
-
-        # Define the RQAOA object
-        R = RQAOA()
-
-        # Set parameters for RQAOA: standard with cut off size 3 qubits
-        R.set_rqaoa_parameters(steps=1, n_cutoff=3)
-
-        # Set more parameters with a very specific starting point
-        R.set_circuit_properties(
-            p=1,
-            init_type="custom",
-            variational_params_dict={
-                "betas": betas,
-                "gammas": gammas,
-            },
-            mixer_hamiltonian="x",
+    def workflow_mockup(self, qubo, n_cutoff):
+        r = RQAOA()
+        r.set_rqaoa_parameters(n_cutoff=n_cutoff)
+        r.set_circuit_properties(
+            p=1, param_type="standard", init_type="ramp", mixer_hamiltonian="x"
         )
 
-        # Define the device to be vectorized
-        device = create_device(location="local", name="vectorized")
-        R.set_device(device)
+        # Define the device you want to run your problem on using the create_device() function
+        device = create_device(location="local", name="analytical_simulator")
+        r.set_device(device)
 
         # Set the classical method used to optimize over QAOA angles and its properties
-        R.set_classical_optimizer(method="cobyla", maxiter=200)
+        r.set_classical_optimizer(method="cobyla", maxiter=600)
 
-        # Compile and optimize the problem instance on RQAOA
-        R.compile(maxcut_qubo)
-        R.optimize()
-        return R
+        r.compile(qubo)
+        r.optimize()
+        return r.result
 
-    def test_total_elimination_whole_workflow(self):
+    def test_total_elimination_cutoff_1_whole_workflow(self):
         """
-        Testing an edge case: solving MaxCut on a specific random unweighted graph leads to vanishing instances before reaching cutoff size.
-        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the classical solution was obtained by fixing all spins arbitrarily except the correlated ones.
+        Testing the whole RQAOA workflow for Solving the MaxCut on the Ring of Disagree with normalized weights and no biases.
 
-        Note that the often those problems are highly degenerate and we provide only the solutions which obey the correlations identified by the algorithm. For example, for n=4, there are 10 classical strings with the same energy, but only 8 of them have the corresponding spins anticorrelated.
+        Recreating the specific qubo instance and running standard RQAOA with cutoff set to 1. This results in vanishing problem before reaching the cutoff, which tests both the proper isolation of nodes and the solution_for_vanishing_instances functions. RQAOA should be able to find the true ground state for this specific instance.
         """
-        R_58 = self.workflow_mockup(
-            graph_seed=58, betas=[0.2732211141792405], gammas=[1.6017587697695814]
+        qubo = QUBO(
+            n=8,
+            terms=[[0, 7], [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]],
+            weights=[1, 1 / 9, 2 / 9, 3 / 9, 5 / 9, 6 / 9, 7 / 9, 8 / 9],
         )
 
-        assert R_58.results["solution"] == {
-            "101010100010": -11.0,
-            "010100010101": -11.0,
-            #'101100010101': -11.0,
-            "101011100010": -11.0,
-            "010101010101": -11.0,
-            "101010101010": -11.0,
-            "010100011101": -11.0,
-            #'010011101010': -11.0,
-            "101011101010": -11.0,
-            "010101011101": -11.0,
-        }
+        opt_results = self.workflow_mockup(qubo, n_cutoff=1)
 
-        R_83 = self.workflow_mockup(
-            graph_seed=83, betas=[0.2732211141792405], gammas=[1.6017587697695814]
-        )
-
-        assert R_83.results["solution"] == {
-            "000001011101": -10.0,
-            "010000101111": -10.0,
-            "101101010000": -10.0,
-            #'010100101111': -10.0,
-            "111100100010": -10.0,
-            "000011011101": -10.0,
-            #'101011010000': -10.0,
-            "010010101111": -10.0,
-            "101111010000": -10.0,
-            "111110100010": -10.0,
-        }
-
-        R_88 = self.workflow_mockup(
-            graph_seed=88, betas=[0.2732211141792405], gammas=[1.6017587697695814]
-        )
-
-        assert R_88.results["solution"] == {
-            "001011011000": -12.0,
-            "101011011000": -12.0,
-            "001111011000": -12.0,
-            "101111011000": -12.0,
-            #'110100100110': -12.0,
-            #'001011011001': -12.0,
-            "010000100111": -12.0,
-            "110000100111": -12.0,
-            "010100100111": -12.0,
-            "110100100111": -12.0,
-        }
-
-    def test_isolated_nodes_minimum_example(self):
-        """
-        Testing an edge case: solving MaxCut on a specific random unweighted graph must identify correctly the isolated nodes.
-
-        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the nodes has been correctly isolated.
-        """
-        test_qubo = QUBO(
-            n=6,
-            terms=[[0, 1], [2, 3], [2, 5], [3, 4], [4, 5]],
-            weights=[2.0, 1.0, 1.0, 1.0, 1.0],
-        )
-        spin_map = {0: (1, 0), 1: (-1.0, 0), 2: (1, 2), 3: (1, 3), 4: (1, 4), 5: (1, 5)}
-        new_problem, new_spin_map = redefine_problem(test_qubo, spin_map)
-
-        assert new_problem.terms == [[0, 1], [0, 3], [1, 2], [2, 3]]
+        assert opt_results["solution"] == {"10101010": -4.555555555555555}
 
     def test_isolated_nodes_whole_workflow(self):
         """
-        Testing an edge case: solving MaxCut on a specific random unweighted graph must identify correctly the isolated nodes.
+        Testing the whole RQAOA workflow for solving the MaxCut problem on random graph instances.
 
-        The test recreates the graph instance and MaxCut QUBO, runs standard RQAOA and compare the result to the expected one if the nodes has been correctly isolated.
+        Recreating a specific qubo and testing it with cutoff size set to 3, 2, and 1. RQAOA should be able to find the true ground state for this specific instance at all cutoffs. Note that the smaller the cutoff, the less of the degenerate solutions are recovered.
         """
-        R = self.workflow_mockup(
-            graph_seed=7, betas=[0.7044346364592513], gammas=[8.926807699153894]
-        )
+        terms = [
+            [0, 2],
+            [0, 3],
+            [0, 4],
+            [0, 5],
+            [0, 6],
+            [0, 7],
+            [0, 8],
+            [0, 9],
+            [0, 1],
+            [1, 2],
+            [1, 5],
+            [1, 6],
+            [2, 3],
+            [2, 5],
+            [2, 6],
+            [2, 7],
+            [8, 2],
+            [9, 2],
+            [3, 4],
+            [3, 5],
+            [3, 6],
+            [3, 7],
+            [8, 3],
+            [9, 3],
+            [1, 3],
+            [4, 5],
+            [4, 6],
+            [4, 7],
+            [8, 4],
+            [9, 4],
+            [1, 4],
+            [5, 6],
+            [5, 7],
+            [9, 5],
+            [6, 7],
+            [8, 6],
+            [9, 6],
+            [8, 7],
+            [1, 7],
+            [8, 9],
+            [8, 1],
+            [1, 9],
+        ]
+        weights = [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            2.0,
+            1.0,
+            2.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+        ]
+        qubo = QUBO(n=10, terms=terms, weights=weights)
 
-        # Compare results to known behaviour:
-        assert R.results["schedule"] == [1, 1, 1, 1, 1, 1, 2, 1]
-        assert R.results["solution"] == {"011001101001": -6.0, "011000110011": -6.0}
+        opt_results_3 = self.workflow_mockup(qubo, n_cutoff=3)
+        assert opt_results_3["solution"] == {"1011101000": -10.0, "0010101101": -10.0}
+        assert opt_results_3["classical_output"]["optimal_states"] == ["110", "001"]
+
+        opt_results_2 = self.workflow_mockup(qubo, n_cutoff=2)
+        assert opt_results_2["solution"] == {"0010101101": -10.0, "1011101000": -10.0}
+        assert opt_results_2["classical_output"]["optimal_states"] == ["00", "11"]
+
+        opt_results_1 = self.workflow_mockup(qubo, n_cutoff=1)
+        assert opt_results_1["solution"] == {"1011101000": -10.0}
+        assert opt_results_1["classical_output"]["optimal_states"] == ["11"]
 
 
 if __name__ == "__main__":

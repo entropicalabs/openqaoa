@@ -19,7 +19,6 @@ from openqaoa.utilities import (
     flip_counts,
     generate_uuid,
     round_value,
-    permute_counts_dictionary,
 )
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.qaoa_components.ansatz_constructor import (
@@ -211,10 +210,6 @@ class QAOAQiskitBackendShotBasedSimulator(
         )
 
         final_counts = flip_counts(counts)
-        if self.final_mapping is not None:
-            final_counts = permute_counts_dictionary(
-                final_counts, self.final_mapping
-            )
         self.measurement_outcomes = final_counts
         return final_counts
 

@@ -73,7 +73,8 @@ class MaximumCut(Problem):
         )
         return MaximumCut(G)
 
-    def get_qubo_problem(self):
+    @property
+    def qubo(self):
         """
         Returns the QUBO encoding of this problem.
 

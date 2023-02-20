@@ -253,7 +253,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         shots = 100
         set_of_numbers = np.random.randint(1, 10, 6).tolist()
-        qubo = NumberPartition(set_of_numbers).get_qubo_problem()
+        qubo = NumberPartition(set_of_numbers).qubo
         mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
         qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
         variate_params = create_qaoa_variational_params(qaoa_descriptor, 'standard', 'rand')
@@ -291,10 +291,10 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         q.optimize()
 
         # check if we have job ids
-        opt_id = q.results.optimized['job_id']
+        opt_id = q.result.optimized['job_id']
         assert len(opt_id) == 36 and isinstance(opt_id, str), f'QCS QVM: job id is not a string of length 36, but {opt_id}'
 
-        inter_id = q.results.intermediate['job_id']
+        inter_id = q.result.intermediate['job_id']
         for id in inter_id:
             assert len(id) == 36 and isinstance(id, str), f'QCS QVM: on intermediate job id is not a string of length 36, but {id}'
         

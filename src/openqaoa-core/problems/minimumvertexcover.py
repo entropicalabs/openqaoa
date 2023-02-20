@@ -153,7 +153,8 @@ class MinimumVertexCover(Problem):
         # Unzip to retrieve terms and weights in separate sequences
         return terms_weights
 
-    def get_qubo_problem(self):
+    @property
+    def qubo(self):
         """
         Returns the QUBO encoding of this problem.
 

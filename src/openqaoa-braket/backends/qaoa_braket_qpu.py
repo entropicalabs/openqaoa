@@ -14,7 +14,8 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendCloud,
     QAOABaseBackendParametric,
 )
-from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
+from openqaoa.qaoa_components import QAOADescriptor
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
 
 
 class QAOAAWSQPUBackend(

@@ -5,7 +5,8 @@ from pyquil import Program, gates
 from pyquil.api import WavefunctionSimulator
 
 from openqaoa.backends.basebackend import QAOABaseBackendStatevector
-from openqaoa.qaoa_components import QAOADescriptor, QAOAVariationalBaseParams
+from openqaoa.qaoa_components import QAOADescriptor
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import (
     RXGateMap,
     RYGateMap,

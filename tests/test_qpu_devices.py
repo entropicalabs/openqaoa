@@ -5,8 +5,6 @@ import itertools
 import subprocess
 import pytest
 
-from qiskit import IBMQ
-
 from openqaoa.backends import DeviceLocal
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa_qiskit.backends import DeviceQiskit
@@ -28,41 +26,9 @@ class TestingDeviceQiskit(unittest.TestCase):
     @pytest.mark.api
     def setUp(self):
 
-        try:
-            opened_f = open('./tests/credentials.json', 'r')
-        except FileNotFoundError:
-            opened_f = open('credentials.json', 'r')
-                
-        with opened_f as f:
-            json_obj = json.load(f)['QISKIT']
-            
-            try:
-                api_token = os.environ['IBMQ_TOKEN']
-                self.HUB = os.environ['IBMQ_HUB']
-                self.GROUP = os.environ['IBMQ_GROUP']
-                self.PROJECT = os.environ['IBMQ_PROJECT']
-            except Exception:
-                api_token = json_obj['API_TOKEN']
-                self.HUB = json_obj['HUB']
-                self.GROUP = json_obj['GROUP']
-                self.PROJECT = json_obj['PROJECT']
-
-        if api_token == "YOUR_API_TOKEN_HERE":
-            raise ValueError(
-                "Please provide an appropriate API TOKEN in crendentials.json.")
-        elif self.HUB == "IBMQ_HUB":
-            raise ValueError(
-                "Please provide an appropriate IBM HUB name in crendentials.json.")
-        elif self.GROUP == "IBMQ_GROUP":
-            raise ValueError(
-                "Please provide an appropriate IBMQ GROUP name in crendentials.json.")
-        elif self.PROJECT == "IBMQ_PROJECT":
-            raise ValueError(
-                "Please provide an appropriate IBMQ Project name in crendentials.json.")
-
-        IBMQ.save_account(token = api_token, hub=self.HUB, 
-                          group=self.GROUP, project=self.PROJECT, 
-                          overwrite=True)
+        self.HUB = 'ibm-q'
+        self.GROUP = 'open'
+        self.PROJECT = 'main'
     
     @pytest.mark.api
     def test_changing_provider(self):
@@ -304,9 +270,10 @@ class TestingDeviceAzure(unittest.TestCase):
             print(error)
             raise Exception('You must have the Azure CLI installed and must be logged in to use the Azure Quantum Backends')
         else:
-            output_json = json.loads(output)[0]
-            self.RESOURCE_ID = output_json['id']
-            self.AZ_LOCATION = output_json['location']
+            output_json = json.loads(output)
+            output_json_s = [each_json for each_json in output_json if each_json['name'] == 'TestingOpenQAOA'][0]
+            self.RESOURCE_ID = output_json_s['id']
+            self.AZ_LOCATION = output_json_s['location']
             
     @pytest.mark.api
     def test_check_connection_provider_no_resource_id(self):

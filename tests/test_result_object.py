@@ -21,7 +21,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         q = QAOA()
         q.compile(vc, verbose=False)
@@ -29,7 +29,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         assert set(
             ["most_probable_states", "evals", "intermediate", "optimized"]
-        ) <= set([a for a in dir(q.results) if not a.startswith("__")])
+        ) <= set([a for a in dir(q.result) if not a.startswith("__")])
 
     def test_most_probable_bitstring(self):
 
@@ -106,19 +106,19 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         q = QAOA()
         q.compile(vc, verbose=False)
         q.optimize()
 
-        q.results.plot_cost()
+        q.result.plot_cost()
 
     def test_plot_probabilities(self):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field =1.0, penalty=10).qubo
 
         # first for state-vector based simulator:
         q_sv = QAOA()
@@ -127,7 +127,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         q_sv.optimize()
 
-        q_sv.results.plot_probabilities()
+        q_sv.result.plot_probabilities()
 
         # then for shot based simulator:
         q_shot = QAOA()
@@ -137,13 +137,13 @@ class TestingLoggerClass(unittest.TestCase):
         q_shot.compile(vc)
         q_shot.optimize()
 
-        q_shot.results.plot_probabilities()
+        q_shot.result.plot_probabilities()
 
     def test_plot_n_shots(self):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         for method in ['cans', 'icans']:
             q = QAOA()
@@ -152,7 +152,7 @@ class TestingLoggerClass(unittest.TestCase):
             q.compile(vc, verbose=False)
             q.optimize()
 
-            q.results.plot_n_shots()
+            q.result.plot_n_shots()
 
             # all combinations to check
             test_dict = {
@@ -164,7 +164,7 @@ class TestingLoggerClass(unittest.TestCase):
             # using the test_dict we plot with different options
             for value in test_dict.values():
                 for label, line, color in zip(value[1]['label'], value[1]['linestyle'], value[1]['color']):
-                    q.results.plot_n_shots(param_to_plot=value[0], label=label, linestyle=line, color=color, title=f"method: {method}, param_to_plot: {value[0]}, label: {label}, linestyle: {line}, color: {color}")
+                    q.result.plot_n_shots(param_to_plot=value[0], label=label, linestyle=line, color=color, title=f"method: {method}, param_to_plot: {value[0]}, label: {label}, linestyle: {line}, color: {color}")
                     plt.close()
 
             # function to test that errors are raised, when trying to plot with incorrect inputs 
@@ -172,7 +172,7 @@ class TestingLoggerClass(unittest.TestCase):
                 for x in inputs_to_try:
                     error = False
                     try: 
-                        q.results.plot_n_shots(**{argument:x})
+                        q.result.plot_n_shots(**{argument:x})
                     except Exception as e:
                         assert len(str(e)) > 0, "No error message was raised"
                         error = True
@@ -245,7 +245,7 @@ class TestingLoggerClass(unittest.TestCase):
         qubo = FromDocplex2IsingModel(mdl)  # translate the docplex model to qubo
         q.compile(qubo.ising_model)  # complining the ising representation of the qubo
         q.optimize()
-        result = q.results
+        result = q.result
         lowest_energy = result.lowest_cost_bitstrings()
         assert (
             lowest_energy["solutions_bitstrings"][0] == "00011"

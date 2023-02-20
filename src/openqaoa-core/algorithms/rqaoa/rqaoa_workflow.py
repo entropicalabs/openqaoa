@@ -10,7 +10,7 @@ from ...problems import QUBO
 from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise, generate_timestamp
 from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from . import rqaoa_utils
-from .rqaoa_results import RQAOAResults
+from .rqaoa_result import RQAOAResult
 
 
 class RQAOA(Workflow):
@@ -51,7 +51,7 @@ class RQAOA(Workflow):
         For a complete list of its parameters and usage please see the method set_circuit_properties
     rqaoa_parameters: `RqaoaParameters`
         Set of parameters containing all the relevant information for the recursive procedure of RQAOA.
-    results: `RQAOAResults`
+    results: `RQAOAResul`
         The results of the RQAOA optimization.
         Dictionary containing all the information about the RQAOA run: the
         solution states and energies (key: 'solution'), the output of the classical
@@ -59,9 +59,9 @@ class RQAOA(Workflow):
         (key: 'elimination_rules'), the number of eliminations at each step (key: 'schedule'),
         total number of steps (key: 'number_steps'), the intermediate QUBO problems and the
         intermediate QAOA objects that have been optimized in each RQAOA step (key: 'intermediate_problems').
-        This object (`RQAOAResults`) is a dictionary with some custom methods as
-        RQAOAResults.get_hamiltonian_step(i) which get the hamiltonian of reduced problem of the i-th step.
-        To see the full list of methods please see the RQAOAResults class.
+        This object (`RQAOAResul`) is a dictionary with some custom methods as
+        RQAOAResul.get_hamiltonian_step(i) which get the hamiltonian of reduced problem of the i-th step.
+        To see the full list of methods please see the RQAOAResul class.
 
     Examples
     --------
@@ -127,7 +127,7 @@ class RQAOA(Workflow):
     >>> r_adaptive.optimize()
     """
 
-    results_class = RQAOAResults
+    results_class = RQAOAResult
 
     def __init__(self, device: DeviceBase = DeviceLocal("vectorized")):
         """
@@ -416,7 +416,7 @@ class RQAOA(Workflow):
             new_problem.metadata = problem_metadata
 
             # Save qaoa object, correlation matrix and expectation values z
-            q_results_steps.append(q.results)
+            q_results_steps.append(q.result)
             corr_matrix_steps.append(corr_matrix)
             exp_vals_z_steps.append(exp_vals_z)
             problem_steps.append(problem)
@@ -453,18 +453,18 @@ class RQAOA(Workflow):
         self.header["execution_time_end"] = generate_timestamp()
 
         # Compute description dictionary containing all the information
-        self.results = self.results_class() 
-        self.results["solution"] = full_solutions
-        self.results["classical_output"] = {
+        self.result = self.results_class() 
+        self.result["solution"] = full_solutions
+        self.result["classical_output"] = {
             "minimum_energy": cl_energy,
             "optimal_states": cl_ground_states,
         }
-        self.results["elimination_rules"] = elimination_tracker
-        self.results["schedule"] = [
+        self.result["elimination_rules"] = elimination_tracker
+        self.result["schedule"] = [
             len(eliminations) for eliminations in elimination_tracker
         ]
-        self.results["number_steps"] = counter - self.rqaoa_parameters.counter
-        self.results["intermediate_steps"] = [
+        self.result["number_steps"] = counter - self.rqaoa_parameters.counter
+        self.result["intermediate_steps"] = [
             {
                 "counter": counter,
                 "problem": problem,
@@ -480,7 +480,7 @@ class RQAOA(Workflow):
                 corr_matrix_steps,
             )
         ]
-        self.results["atomic_ids"] = atomic_id_steps
+        self.result["atomic_ids"] = atomic_id_steps
 
         # set compiled to false
         self.compiled = False
@@ -508,9 +508,9 @@ class RQAOA(Workflow):
         cost_hamiltonian = q.cost_hamil
         mixer_type = q.circuit_properties.mixer_hamiltonian
         p = q.circuit_properties.p
-        qaoa_optimized_angles = q.results.optimized["angles"]
-        qaoa_optimized_counts = q.results.get_counts(
-            q.results.optimized["measurement_outcomes"]
+        qaoa_optimized_angles = q.result.optimized["angles"]
+        qaoa_optimized_counts = q.result.get_counts(
+            q.result.optimized["measurement_outcomes"]
         )
         analytical = isinstance(qaoa_backend, QAOABackendAnalyticalSimulator)
 

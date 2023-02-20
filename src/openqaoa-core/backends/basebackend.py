@@ -18,11 +18,10 @@ from .devices_core import DeviceBase
 from ..qaoa_components import (
     GateMap,
     QAOADescriptor,
-    QAOAVariationalBaseParams,
 )
+from ..qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
 from ..utilities import qaoa_probabilities, round_value
 from .cost_function import cost_function
-from copy import deepcopy
 
 
 class QuantumCircuitBase:

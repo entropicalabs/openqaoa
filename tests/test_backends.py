@@ -2,6 +2,7 @@ import unittest
 import json
 import os
 import pytest
+import subprocess
 
 from openqaoa.backends.qaoa_backend import get_qaoa_backend, DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.qaoa_components import (
@@ -11,8 +12,6 @@ from openqaoa.qaoa_components import (
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends.qaoa_device import create_device
 from openqaoa.backends.basebackend import QAOABaseBackendShotBased
-
-from qiskit import IBMQ
 
 
 def get_params():
@@ -63,37 +62,24 @@ class TestingBackendQPUs(unittest.TestCase):
 
     @pytest.mark.qpu
     def setUp(self):
-        try:
-            opened_f = open('./tests/credentials.json', 'r')
-        except FileNotFoundError:
-            opened_f = open('credentials.json', 'r')
-                
-        with opened_f as f:
-            json_obj = json.load(f)['QISKIT']
-            
-            try:
-                api_token = os.environ['IBMQ_TOKEN']
-                self.HUB = os.environ['IBMQ_HUB']
-                self.GROUP = os.environ['IBMQ_GROUP']
-                self.PROJECT = os.environ['IBMQ_PROJECT']
-            except Exception:
-                api_token = json_obj['API_TOKEN']
-                self.HUB = json_obj['HUB']
-                self.GROUP = json_obj['GROUP']
-                self.PROJECT = json_obj['PROJECT']
 
-        if api_token == "YOUR_API_TOKEN_HERE":
-            raise ValueError("Please provide an appropriate API TOKEN in crendentials.json.")
-        elif self.HUB == "IBMQ_HUB":
-            raise ValueError("Please provide an appropriate IBM HUB name in crendentials.json.")
-        elif self.GROUP == "IBMQ_GROUP":
-            raise ValueError("Please provide an appropriate IBMQ GROUP name in crendentials.json.")
-        elif self.PROJECT == "IBMQ_PROJECT":
-            raise ValueError("Please provide an appropriate IBMQ Project name in crendentials.json.")
+        self.HUB = 'ibm-q'
+        self.GROUP = 'open'
+        self.PROJECT = 'main'
+        
+        bashCommand = "az resource list"
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        
+        if error is not None:
+            print(error)
+            raise Exception('You must have the Azure CLI installed and must be logged in to use the Azure Quantum Backends')
+        else:
+            output_json = json.loads(output)
+            output_json_s = [each_json for each_json in output_json if each_json['name'] == 'TestingOpenQAOA'][0]
+            self.RESOURCE_ID = output_json_s['id']
+            self.AZ_LOCATION = output_json_s['location']
             
-        IBMQ.save_account(token = api_token, hub=self.HUB, 
-                          group=self.GROUP, project=self.PROJECT, 
-                          overwrite=True)
 
     @pytest.mark.qpu
     def test_get_counts_and_expectation_n_shots(self):
@@ -102,7 +88,8 @@ class TestingBackendQPUs(unittest.TestCase):
         list_device_attributes = [ 
                                     {'QPU': 'Qiskit', 'device_name': 'ibmq_qasm_simulator', 'hub': self.HUB, 'group': self.GROUP, 'project': self.PROJECT}, 
                                     {'QPU': 'Pyquil', 'device_name': "2q-qvm", 'as_qvm': True, 'execution_timeout': 3, 'compiler_timeout': 3},       
-                                    {'QPU': 'AWS', 'device_name': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'}
+                                    {'QPU': 'AWS', 'device_name': 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'},
+                                    {'QPU': 'Azure', 'device_name': 'rigetti.sim.qvm', 'resource_id': self.RESOURCE_ID, 'az_location': self.AZ_LOCATION}
                                 ]
 
         assert len(list_device_attributes) == len(DEVICE_ACCESS_OBJECT_MAPPER), "The number of QPUs in the list of tests is not the same as the number of QPUs in the DEVICE_ACCESS_OBJECT_MAPPER. The list should be updated."
