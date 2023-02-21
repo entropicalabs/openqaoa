@@ -342,7 +342,7 @@ class QAOADescriptor(AnsatzDescriptor):
         return gates_block
                       
     @staticmethod
-    def route_gates_list(gates_to_route: List['GateMap'], device:DeviceBase, routing_function: Callable) -> List[GateMap]:
+    def route_gates_list(gates_to_route: List['GateMap'], device:'DeviceBase', routing_function: Callable) -> List['GateMap']:
         """
         Apply qubit routing to the abstract circuit gate list
         based on device information
