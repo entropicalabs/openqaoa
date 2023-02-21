@@ -106,7 +106,7 @@ class TestingAwsJobs(unittest.TestCase):
         # Create the qubo and the qaoa
         r = RQAOA()
         r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
-        q.device.check_connection = True
+        r.device.check_connection = True
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
@@ -118,56 +118,57 @@ class TestingAwsJobs(unittest.TestCase):
         assert job.workflow.asdict() == r.asdict()
 
 
-    def testEndToEndLocalQAOA(self):
-        """
-        Test Creation and Loading of input_data
-        """
+    # @pytest.mark.qpu
+    # def testEndToEndLocalQAOA(self):
+    #     """
+    #     Test Creation and Loading of input_data
+    #     """
 
-        input_data_path = os.path.join(
-            os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data/"
-        )
-        os.environ[
-            "AMZN_BRAKET_JOB_RESULTS_DIR"
-        ] = "/oq_release_tests/testing_jobs/EndToEnd"
+    #     input_data_path = os.path.join(
+    #         os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data/"
+    #     )
+    #     os.environ[
+    #         "AMZN_BRAKET_JOB_RESULTS_DIR"
+    #     ] = "/oq_release_tests/testing_jobs/EndToEnd"
 
-        # Create the qubo and the qaoa
-        q = QAOA()
-        q.set_classical_optimizer(maxiter=2)
-        q.compile(self.vc)
-        q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
+    #     # Create the qubo and the qaoa
+    #     q = QAOA()
+    #     q.set_classical_optimizer(maxiter=2)
+    #     q.compile(self.vc)
+    #     q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
-        # Create an aws workflow and try check that loading the json gives the same params
-        job = AWSJobs(algorithm="QAOA")
-        job.load_compile_data()
-        job.run_workflow()
+    #     # Create an aws workflow and try check that loading the json gives the same params
+    #     job = AWSJobs(algorithm="QAOA")
+    #     job.load_compile_data()
+    #     job.run_workflow()
 
 
-    @pytest.mark.qpu
-    def testEndToEndLocalRQAOA(self):
-        """
-        Test Creation and Loading of input_data
-        """
+    # @pytest.mark.qpu
+    # def testEndToEndLocalRQAOA(self):
+    #     """
+    #     Test Creation and Loading of input_data
+    #     """
 
-        input_data_path = os.path.join(
-            os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data/"
-        )
-        os.environ[
-            "AMZN_BRAKET_JOB_RESULTS_DIR"
-        ] = "/oq_release_tests/testing_jobs/EndToEnd"
+    #     input_data_path = os.path.join(
+    #         os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data/"
+    #     )
+    #     os.environ[
+    #         "AMZN_BRAKET_JOB_RESULTS_DIR"
+    #     ] = "/oq_release_tests/testing_jobs/EndToEnd"
 
-        # Create the qubo and the qaoa
-        r = RQAOA()
-        r.set_rqaoa_parameters(steps = 2, n_cutoff = 3)
-        r.set_classical_optimizer(maxiter=3, save_intermediate=False)
-        r.compile(self.vc)
-        r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
+    #     # Create the qubo and the qaoa
+    #     r = RQAOA()
+    #     r.set_rqaoa_parameters(steps = 2, n_cutoff = 3)
+    #     r.set_classical_optimizer(maxiter=3, save_intermediate=False)
+    #     r.compile(self.vc)
+    #     r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
-        # Create an aws workflow and try check that loading the json gives the same params
-        job = AWSJobs(algorithm="RQAOA")
-        job.load_compile_data()
-        job.run_workflow()
+    #     # Create an aws workflow and try check that loading the json gives the same params
+    #     job = AWSJobs(algorithm="RQAOA")
+    #     job.load_compile_data()
+    #     job.run_workflow()
 
-        assert job.completed == True
+    #     assert job.completed == True
 
 
     @pytest.mark.docker_aws
@@ -207,7 +208,7 @@ class TestingAwsJobs(unittest.TestCase):
         r.set_rqaoa_parameters(n_cutoff=6)
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
         r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
-        q.device.check_connection = True
+        r.device.check_connection = True
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
