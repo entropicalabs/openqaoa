@@ -1,0 +1,5 @@
+version: '3'
+services:
+  web:
+    container_name: oq-aws-jobs-local
+    build: .
