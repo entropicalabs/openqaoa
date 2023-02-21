@@ -7,7 +7,7 @@ from openqaoa import QAOA
 from openqaoa.qaoa_components import create_qaoa_variational_params, QAOADescriptor, PauliOp, Hamiltonian
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.backends import QAOAvectorizedBackendSimulator, create_device
-from openqaoa.problems import NumberPartition, QUBO, Knapsack
+from openqaoa.problems import NumberPartition, QUBO, Knapsack, MaximumCut
 from openqaoa_pyquil.backends import DevicePyquil, QAOAPyQuilQPUBackend
 from openqaoa.backends.devices_core import DeviceBase
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import SWAPGateMap
@@ -302,8 +302,10 @@ class ExpectedRouting:
     
         def __init__(
             self, 
+            qubo,
             device_name, 
             device_location, 
+            qpu_credentials,
             problem_to_solve, 
             initial_mapping,
             gate_indices_list,
@@ -311,6 +313,9 @@ class ExpectedRouting:
             initial_physical_to_logical_mapping,
             final_logical_qubit_order
         ):
+            self.qubo = qubo
+            self.device = create_device(name=device_name, location=device_location, **qpu_credentials)
+
             self.device_name = device_name
             self.device_location = device_location
             self.problem_to_solve = problem_to_solve
@@ -327,19 +332,99 @@ class ExpectedRouting:
         def values_return(self):
             return self.gate_indices_list, self.swap_mask, self.initial_physical_to_logical_mapping, self.final_logical_qubit_order
     
-IBM_OSLO_1 = ExpectedRouting(
-    device_name='ibm_oslo',
-    device_location='ibmq',
-    problem_to_solve=[(0, 1), (2, 3), (2, 4), (3, 4), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4)],
-    initial_mapping=None,
-    gate_indices_list= [[3, 5], [1, 5], [4, 5], [2, 6], [0, 6], [4, 6], [4, 6], [4, 5], [0, 6], [1, 5], [4, 5], [4, 5], [4, 6], [0, 6], [4, 6], [1, 5], [4, 6], [4, 5]],
-    swap_mask=[True, False, False, True, False, False, True, False, False, True, False, True, False, True, False, True, True, False],
-    initial_physical_to_logical_mapping={6: 0, 0: 1, 4: 2, 2: 3, 3: 4, 1: 5, 5: 6},
-    final_logical_qubit_order=[4, 6, 1, 5, 0, 3, 2]
-)
-
 
 class TestingQubitRouting(unittest.TestCase):
+
+    def __init__(self, *args, **kwargs):
+
+        # init the parent class
+        super().__init__(*args, **kwargs)
+        
+        IBMQ.load_account() 
+
+        # case qubits device > qubits problem (IBM NAIROBI)
+        self.IBM_OSLO_NAIROBI = ExpectedRouting(
+            qubo = Knapsack.random_instance(n_items=3, seed=20).qubo,
+            device_location='ibmq',    
+            device_name='ibm_nairobi',
+            qpu_credentials ={
+                    "hub": "ibm-q",
+                    "group": "open", 
+                    "project": "main",
+                    "as_emulator": True,
+                },
+            problem_to_solve = [(0, 1), (2, 3), (2, 4), (3, 4), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4)],
+            initial_mapping = None,
+            gate_indices_list = [[2, 4], [1, 2], [3, 5], [0, 5], [4, 5], [4, 5], [2, 4], [0, 5], [2, 4], [1, 2], [4, 5], [0, 5], [1, 2], [2, 4], [2, 4], [0, 5], [4, 5]],
+            swap_mask = [False, False, True, False, False, True, False, False, True, False, True, False, True, False, True, True, False],
+            initial_physical_to_logical_mapping = {6: 0, 2: 1, 1: 2, 4: 3, 3: 4, 5: 5},
+            final_logical_qubit_order = [5, 4, 0, 1, 2, 3]
+        ) 
+
+        # case qubits problem == 2 (IBM OSLO)
+        self.IBM_OSLO_QUBO2 = ExpectedRouting(
+            qubo = QUBO.from_dict({ 'terms': [[0, 1], [1]],
+                                    'weights': [9.800730090617392, 26.220558065741773],
+                                    'n': 2,}),
+            device_location='ibmq',
+            device_name='ibm_oslo',
+            qpu_credentials ={
+                    "hub": "ibm-q",
+                    "group": "open", 
+                    "project": "main",
+                    "as_emulator": True,
+                },
+            problem_to_solve= [(0, 1)],
+            initial_mapping= None,
+            gate_indices_list= [[0, 2], [1, 2]],
+            swap_mask= [True, False],
+            initial_physical_to_logical_mapping= {2: 0, 3: 1, 1: 2},
+            final_logical_qubit_order= [2, 1, 0]
+        )
+
+        # case qubits device == qubits problem (IBM OSLO)
+        self.IBM_OSLO_NPARTITION = ExpectedRouting(
+            qubo = NumberPartition.random_instance(n_numbers=7, seed=2).qubo,
+            device_location='ibmq',
+            device_name='ibm_oslo',
+            qpu_credentials ={
+                    "hub": "ibm-q",
+                    "group": "open", 
+                    "project": "main",
+                    "as_emulator": True,
+                },
+            problem_to_solve= [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (2, 3), (2, 4), (2, 5), (2, 6), (3, 4), (3, 5), (3, 6), (4, 5), (4, 6), (5, 6)],
+            initial_mapping= None,
+            gate_indices_list= [[0, 5], [1, 5], [3, 4], [4, 5], [2, 3], [3, 6], [4, 5], [0, 5], [1, 5], [3, 4], [3, 4], [2, 3], [3, 6], [4, 5], [0, 5], [1, 5], [2, 3], [3, 6], [3, 4], [3, 4], [3, 6], [0, 5], [1, 5], [4, 5], [4, 5], [1, 5], [3, 6], [3, 4], [3, 4], [1, 5], [4, 5]],
+            swap_mask= [False, False, False, False, False, False, True, False, False, False, True, False, False, True, False, False, True, False, False, True, False, True, False, False, True, False, True, False, True, True, False],
+            initial_physical_to_logical_mapping= {0: 0, 2: 1, 4: 2, 5: 3, 3: 4, 1: 5, 6: 6},
+            final_logical_qubit_order= [3, 5, 1, 0, 6, 2, 4]
+        )
+
+        # # case qubits device big > qubits problem big (Rigetti AspenM3)
+        # self.RIGETTI_AspenM3_MAXCUT = ExpectedRouting(
+        #     qubo = MaximumCut.random_instance(n_nodes=10, edge_probability=0.9, seed=20).qubo,
+        #     device_location='qcs',
+        #     device_name='Aspen-M-3',
+        #     qpu_credentials ={
+        #         'as_qvm':True, 
+        #         'execution_timeout':10,
+        #         'compiler_timeout':100
+        #     },
+        #     problem_to_solve= [(0, 2), (0, 3), (0, 4), (0, 5), (0, 7), (0, 8), (0, 9), (1, 2), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (2, 3), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (3, 4), (3, 5), (3, 6), (3, 8), (3, 9), (4, 7), (4, 8), (4, 9), (5, 6), (5, 7), (5, 8), (5, 9), (6, 7), (6, 8), (6, 9), (7, 8), (7, 9), (8, 9)],
+        #     initial_mapping=None,
+        #     gate_indices_list=[[9, 19], [7, 36], [6, 36], [19, 20], [5, 20], [35, 36], [3, 33], [13, 20], [13, 14], [8, 21], [1, 21], [34, 35], [34, 39], [1, 39], [14, 15], [6, 10], [10, 11], [8, 11], [8, 21], [30, 33], [5, 12], [17, 21], [8, 21], [1, 21], [12, 13], [13, 14], [1, 38], [1, 39], [37, 38], [1, 38], [17, 38], [17, 18], [18, 26], [37, 44], [26, 27], [22, 27], [0, 24], [23, 24], [4, 23], [23, 25], [22, 25], [37, 38], [29, 30], [28, 29], [14, 28], [28, 32], [15, 32], [4, 31], [31, 32], [25, 31], [22, 25], [31, 32], [17, 21], [31, 32], [15, 32], [15, 16], [14, 15], [15, 32], [16, 41], [41, 42], [22, 42], [22, 25], [22, 42], [25, 31], [15, 16], [16, 41], [43, 44], [42, 43], [42, 43], [22, 42], [41, 42], [37, 44], [43, 44], [2, 40], [40, 41], [41, 42], [40, 41], [40, 41], [43, 44], [42, 43], [42, 43], [22, 42], [41, 42], [41, 42], [22, 42], [22, 25], [22, 25], [25, 31], [27, 43], [22, 27], [17, 18], [18, 26], [26, 27], [26, 27], [43, 44], [27, 43], [22, 27], [22, 25], [25, 31], [22, 25], [31, 32], [15, 32], [16, 41], [15, 16], [25, 31], [22, 25], [22, 27], [27, 43]],
+        #     swap_mask=[True, True, False, True, False, True, True, True, True, True, False, True, True, False, True, True, True, True, False, True, True, True, True, False, True, True, True, True, True, True, False, True, True, True, True, True, True, True, False, True, False, True, True, True, False, True, False, True, False, True, False, False, True, True, False, True, True, False, True, True, False, True, False, False, True, True, True, False, True, False, False, True, False, True, False, True, False, True, True, False, True, False, False, True, True, False, True, False, True, False, True, True, False, True, True, False, True, False, True, False, False, True, True, False, True, True, True, False],
+        #     initial_physical_to_logical_mapping={24: 0, 114: 1, 120: 2, 44: 3, 35: 4, 146: 5, 7: 6, 105: 7, 16: 8, 143: 9, 0: 10, 1: 11, 131: 12, 132: 13, 133: 14, 134: 15, 135: 16, 10: 17, 11: 18, 144: 19, 145: 20, 17: 21, 20: 22, 22: 23, 23: 24, 21: 25, 26: 26, 27: 27, 30: 28, 31: 29, 32: 30, 36: 31, 37: 32, 45: 33, 102: 34, 103: 35, 104: 36, 112: 37, 113: 38, 115: 39, 121: 40, 122: 41, 123: 42, 124: 43, 125: 44},
+        #     final_logical_qubit_order=[15, 40, 27, 31, 42, 26, 25, 16, 22, 43, 10, 11, 12, 13, 14, 6, 17, 18, 9, 19, 20, 5, 21, 8, 23, 24, 0, 28, 29, 30, 4, 32, 3, 33, 34, 35, 36, 7, 37, 38, 1, 39, 2, 41, 44]
+        # )
+
+        # create a list of all the cases
+        self.list_of_cases = []
+        for value in self.__dict__.values():
+            if isinstance(value, ExpectedRouting):
+                self.list_of_cases.append(value)
+
 
     def __routing_function_mock(self,
         device: DeviceBase,
@@ -349,16 +434,44 @@ class TestingQubitRouting(unittest.TestCase):
         """
         function that imitates the routing function for testing purposes.
         """
-        if IBM_OSLO_1.values_input() == (device.device_name, device.device_location, problem_to_solve, initial_mapping):
-            return IBM_OSLO_1.values_return()
+
+        for case in self.list_of_cases:
+            if case.values_input() == (device.device_name, device.device_location, problem_to_solve, initial_mapping):
+                return case.values_return()
+
+        raise ValueError("""The input values are not in the list of expected values, 
+                            check the expected cases and the input values. 
+                            The input values are: device_name: {}, device_location: {}, problem_to_solve: {}, 
+                            initial_mapping: {}""".format(
+                                                    device.device_name, 
+                                                    device.device_location, 
+                                                    problem_to_solve, 
+                                                    initial_mapping))
 
 
-    def __compare_results(self, expected: ExpectedRouting, qaoa):
+    def __compare_results(self, expected: ExpectedRouting):
         """
-        function that compares the expected and actual results of the routing function.
+        function that runs qaoa with the routing function and the problem to solve and
+        compares the expected and actual results of the routing function.
+
+        :param expected: ExpectedRouting object that contains the input and the expected results of the routing function
         """
-        backend, result, qubo = qaoa.backend, qaoa.result, qaoa.problem
+
+        device = expected.device
+        qubo = expected.qubo
+
+        qaoa = QAOA()
+        qaoa.set_device(device)
+        qaoa.set_circuit_properties(p=1, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        qaoa.set_backend_properties(prepend_state=None, append_state=None)
+        qaoa.set_classical_optimizer(method='nelder-mead', maxiter=1, cost_progress=True, parameter_log=True, optimization_progress=True)
+        qaoa.compile(qubo, routing_function=self.__routing_function_mock)
+        qaoa.optimize()
+
+        backend, result = qaoa.backend, qaoa.result
         
+        # do the checks
+
         assert backend.n_qubits == len(expected.final_logical_qubit_order), \
         """Number of qubits in the circuit is not equal to the number of qubits given by routing"""
 
@@ -374,41 +487,29 @@ class TestingQubitRouting(unittest.TestCase):
         for gate in backend.abstract_circuit:
             if not gate.gate_label.n_qubits == 1:
                 swap_mask_new.append(isinstance(gate, SWAPGateMap))
-        assert swap_mask_new == IBM_OSLO_1.swap_mask, "Swap gates are not in the correct position"
+        assert swap_mask_new == expected.swap_mask, "Swap gates are not in the correct position"
 
         # check that the correct qubits are used in the gates
         gate_indices_list_new  = []
         for gate in backend.abstract_circuit:
             if not gate.gate_label.n_qubits == 1:
                 gate_indices_list_new.append([gate.qubit_1, gate.qubit_2])
-        assert gate_indices_list_new == IBM_OSLO_1.gate_indices_list, "The qubits used in the gates are not correct"
+        assert gate_indices_list_new == expected.gate_indices_list, "The qubits used in the gates are not correct"
 
         
 
     def test_qubit_routing(self):
 
-        IBMQ.load_account()
+        for i, case in enumerate(self.list_of_cases):
+            print("Test case {} out of {}:".format(i+1, len(self.list_of_cases)))
+            self.__compare_results(case)
+            print("Test passed for case: {}".format(case.values_input()))
 
-        qubo = Knapsack.random_instance(n_items=3, seed=20).qubo
+        
 
-        qpu_credentials ={
-            "hub": "ibm-q",
-            "group": "open", 
-            "project": "main"
-        }
+        
 
-        qiskit_cloud = create_device(location='ibmq', name='ibm_oslo', **qpu_credentials, as_emulator=True)
-
-        q_qiskit = QAOA()
-        q_qiskit.set_device(qiskit_cloud)
-        q_qiskit.set_circuit_properties(p=1, param_type='standard', init_type='rand', mixer_hamiltonian='x')
-        q_qiskit.set_backend_properties(prepend_state=None, append_state=None)
-        q_qiskit.set_classical_optimizer(method='nelder-mead', maxiter=1, cost_progress=True, parameter_log=True, optimization_progress=True)
-        q_qiskit.compile(qubo, routing_function=self.__routing_function_mock)
-        q_qiskit.optimize()
-
-        # check that the results and circuit are as expected
-        self.__compare_results(IBM_OSLO_1, q_qiskit)
+        
             
             
 if __name__ == '__main__':
