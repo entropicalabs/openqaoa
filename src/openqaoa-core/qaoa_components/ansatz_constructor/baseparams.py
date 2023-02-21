@@ -307,9 +307,10 @@ class QAOADescriptor(AnsatzDescriptor):
                 input_object, block_type
             )
         elif isinstance(input_object, list):
-            for each_gate in input_object:
+            for gate_index, each_gate in enumerate(input_object):
                 if isinstance(each_gate, RotationGateMap):
                     each_gate.gate_label.update_gatelabel(
+                        new_application_sequence=gate_index,
                         new_gatemap_type=block_type
                     )
                 else:

@@ -66,9 +66,9 @@ class GateMapLabel:
         Change the properties of the gatemap label to update
         the gate identity
         """
-        if (new_layer_number is not None and \
-            new_gatemap_type is not None and \
-            new_application_sequence is not None \
+        if (new_layer_number is None and \
+            new_gatemap_type is None and \
+            new_application_sequence is None \
         ):
             raise ValueError("Pass atleast one updated attribute to update the gatemap label")
         else:
