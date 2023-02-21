@@ -17,6 +17,7 @@ import pytest
 import unittest
 import networkx as nw
 from braket.jobs.local import LocalQuantumJob
+from unittest.mock import MagicMock
 
 from openqaoa.problems import MinimumVertexCover
 from openqaoa.algorithms import AWSJobs
@@ -82,8 +83,8 @@ class TestingAwsJobs(unittest.TestCase):
 
         # Create the qubo and the qaoa
         q = QAOA()
+        q.device.check_connection = MagicMock(return_value = True)
         q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
-        q.device.check_connection = True
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
@@ -105,8 +106,8 @@ class TestingAwsJobs(unittest.TestCase):
 
         # Create the qubo and the qaoa
         r = RQAOA()
-        r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
         r.device.check_connection = True
+        r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
@@ -181,8 +182,8 @@ class TestingAwsJobs(unittest.TestCase):
 
         # Create the qubo and the qaoa
         q = QAOA()
+        q.device.check_connection = MagicMock(return_value = True)
         q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
-        q.device.check_connection = True
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
         
@@ -207,8 +208,8 @@ class TestingAwsJobs(unittest.TestCase):
         r = RQAOA()
         r.set_rqaoa_parameters(n_cutoff=6)
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
+        r.device.check_connection = MagicMock(return_value = True)
         r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
-        r.device.check_connection = True
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
