@@ -70,7 +70,7 @@ class TestingAwsJobs(unittest.TestCase):
         assert rqaoa_workflow.algorithm == "rqaoa"
         assert rqaoa_workflow.device.device_name == os.environ["AMZN_BRAKET_DEVICE_ARN"]
 
-    @pytest.mark.api
+
     def testCreateAwsQAOA(self):
         """
         Test Creation and Loading of input_data
@@ -83,6 +83,7 @@ class TestingAwsJobs(unittest.TestCase):
         # Create the qubo and the qaoa
         q = QAOA()
         q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        q.device.check_connection = True
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
@@ -92,7 +93,7 @@ class TestingAwsJobs(unittest.TestCase):
 
         assert job.workflow.asdict() == q.asdict()
 
-    @pytest.mark.api
+
     def testCreateAwsRecursiveQAOA(self):
         """
         Test Creation and Loading of input_data
@@ -105,6 +106,7 @@ class TestingAwsJobs(unittest.TestCase):
         # Create the qubo and the qaoa
         r = RQAOA()
         r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        q.device.check_connection = True
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
@@ -116,7 +118,6 @@ class TestingAwsJobs(unittest.TestCase):
         assert job.workflow.asdict() == r.asdict()
 
 
-    @pytest.mark.api
     def testEndToEndLocalQAOA(self):
         """
         Test Creation and Loading of input_data
@@ -141,7 +142,7 @@ class TestingAwsJobs(unittest.TestCase):
         job.run_workflow()
 
 
-    @pytest.mark.api
+    @pytest.mark.qpu
     def testEndToEndLocalRQAOA(self):
         """
         Test Creation and Loading of input_data
@@ -168,6 +169,7 @@ class TestingAwsJobs(unittest.TestCase):
 
         assert job.completed == True
 
+
     @pytest.mark.docker_aws
     def testLocalJob(self):
         """Test an end-to-end qaoa running on a local docker instance"""
@@ -179,6 +181,7 @@ class TestingAwsJobs(unittest.TestCase):
         # Create the qubo and the qaoa
         q = QAOA()
         q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        q.device.check_connection = True
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
         
@@ -190,6 +193,7 @@ class TestingAwsJobs(unittest.TestCase):
         )
 
         assert job.state() == 'COMPLETED'
+
 
     @pytest.mark.docker_aws
     def testLocalJobRQAOA(self):
@@ -203,6 +207,7 @@ class TestingAwsJobs(unittest.TestCase):
         r.set_rqaoa_parameters(n_cutoff=6)
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
         r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        q.device.check_connection = True
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
