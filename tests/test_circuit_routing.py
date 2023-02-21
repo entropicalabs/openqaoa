@@ -2,6 +2,7 @@
 import unittest
 import numpy as np
 from typing import List, Callable, Optional
+import pytest
 
 from openqaoa import QAOA
 from openqaoa.qaoa_components import create_qaoa_variational_params, QAOADescriptor, PauliOp, Hamiltonian
@@ -11,7 +12,6 @@ from openqaoa.problems import NumberPartition, QUBO, Knapsack, MaximumCut
 from openqaoa_pyquil.backends import DevicePyquil, QAOAPyQuilQPUBackend
 from openqaoa.backends.devices_core import DeviceBase
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import SWAPGateMap
-from qiskit import IBMQ
 
 class TestingQAOAPyquilQVM_QR(unittest.TestCase):
     
@@ -335,12 +335,8 @@ class ExpectedRouting:
 
 class TestingQubitRouting(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-
-        # init the parent class
-        super().__init__(*args, **kwargs)
-        
-        IBMQ.load_account() 
+    @pytest.mark.qpu
+    def setUp(self):
 
         # case qubits device > qubits problem (IBM NAIROBI)
         self.IBM_OSLO_NAIROBI = ExpectedRouting(
@@ -425,7 +421,6 @@ class TestingQubitRouting(unittest.TestCase):
             if isinstance(value, ExpectedRouting):
                 self.list_of_cases.append(value)
 
-
     def __routing_function_mock(self,
         device: DeviceBase,
         problem_to_solve: List[List[int]],
@@ -496,8 +491,7 @@ class TestingQubitRouting(unittest.TestCase):
                 gate_indices_list_new.append([gate.qubit_1, gate.qubit_2])
         assert gate_indices_list_new == expected.gate_indices_list, "The qubits used in the gates are not correct"
 
-        
-
+    @pytest.mark.qpu
     def test_qubit_routing(self):
 
         for i, case in enumerate(self.list_of_cases):
