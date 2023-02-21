@@ -73,7 +73,7 @@ def _compare_qaoa_results(dict_old, dict_new):
                 else:
                     assert dict_old[key][key2] == dict_new[key][key2], "Intermediate params are not the same."
         else:
-            assert dict_old[key] == dict_new[key], f"{key} is not the same"
+            assert dict_old[key] == dict_new[key], f"'{key}' is not the same"
 
 def _test_keys_in_dict(obj, expected_keys):
     """
@@ -958,7 +958,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log',
         'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict',
         'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed',
-        'results', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy',
+        'result', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy',
         'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number']
         expected_keys = {item: False for item in expected_keys}
 
@@ -969,9 +969,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         # Check if the dictionary has all the expected keys except the ones that were not included
         for key, value in expected_keys.items():
             if key not in exclude_keys:
-                assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
+                assert value==True, f'Key "{key}" not found in the dictionary, when using "{method}" method.'
             else:
-                assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
+                assert value==False, f'Key "{key}" was found in the dictionary, but it should not be there, when using "{method}" method.'
 
         """
         to get the list of expected keys, run the following code:
@@ -1432,9 +1432,9 @@ class TestingRQAOA(unittest.TestCase):
         # Check if the dictionary has all the expected keys except the ones that were not included
         for key, value in expected_keys.items():
             if key not in exclude_keys:
-                assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
+                assert value==True, f'Key "{key}" not found in the dictionary, when using "{method}" method.'
             else:
-                assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
+                assert value==False, f'Key "{key}" was found in the dictionary, but it should not be there, when using "{method}" method.'
 
         """
         to get the list of expected keys, run the following code:
