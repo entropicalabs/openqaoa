@@ -558,7 +558,7 @@ class QAOABaseBackendCloud:
 
     def __init__(self, device: DeviceBase):
         self.device = device
-        self.device.check_connection == Flase:
+        if self.device.check_connection == Flase:
             self.device.check_connection()
 
 
