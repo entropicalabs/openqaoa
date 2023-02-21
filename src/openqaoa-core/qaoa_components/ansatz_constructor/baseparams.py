@@ -300,7 +300,7 @@ class QAOADescriptor(AnsatzDescriptor):
         return (single_qubit_coeffs, pair_qubit_coeffs, qubit_singles, qubit_pairs)
     
     @staticmethod
-    def block_setter(input_object: Union[List[GateMap], Hamiltonian], block_type:Enum):
+    def block_setter(input_object: Union[List['GateMap'], Hamiltonian], block_type:Enum):
         
         if isinstance(input_object, Hamiltonian):
             block = HamiltonianMapper.generate_gate_maps(
@@ -342,7 +342,7 @@ class QAOADescriptor(AnsatzDescriptor):
         return gates_block
                       
     @staticmethod
-    def route_gates_list(gates_to_route: List[GateMap], device:DeviceBase, routing_function: Callable) -> List[GateMap]:
+    def route_gates_list(gates_to_route: List['GateMap'], device:DeviceBase, routing_function: Callable) -> List[GateMap]:
         """
         Apply qubit routing to the abstract circuit gate list
         based on device information
