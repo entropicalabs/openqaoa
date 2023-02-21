@@ -146,7 +146,7 @@ class QAOADescriptor(AnsatzDescriptor):
         p: int,
         mixer_coeffs: List[float] = [],
         routing_function: Optional[Callable] = None,
-        device: Optional[DeviceBase] = None
+        device: Optional['DeviceBase'] = None
     ):
         """
         Parameters
