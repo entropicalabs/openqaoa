@@ -307,10 +307,10 @@ class QAOADescriptor(AnsatzDescriptor):
                 input_object, block_type
             )
         elif isinstance(input_object, list):
-            for gate_index, each_gate in enumerate(input_object):
+            input_object = QAOADescriptor.set_block_sequence(input_object)
+            for each_gate in input_object:
                 if isinstance(each_gate, RotationGateMap):
                     each_gate.gate_label.update_gatelabel(
-                        new_application_sequence=gate_index,
                         new_gatemap_type=block_type
                     )
                 else:
@@ -324,6 +324,32 @@ class QAOADescriptor(AnsatzDescriptor):
                 "The input object defining mixer should be a List of RotationGateMaps or type Hamiltonian"
             )
         return block
+    
+    @staticmethod
+    def set_block_sequence(input_gatemap_list: List['GateMap']) -> List['GateMap']:
+        
+        one_qubit_count=0
+        two_qubit_count=0
+        
+        for each_gate in input_gatemap_list:
+            if isinstance(each_gate, RotationGateMap):
+                if each_gate.gate_label.n_qubits == 1:
+                    each_gate.gate_label.update_gatelabel(
+                        new_application_sequence=one_qubit_count,
+                    )
+                    one_qubit_count += 1
+                elif each_gate.gate_label.n_qubits == 2:
+                    each_gate.gate_label.update_gatelabel(
+                            new_application_sequence=two_qubit_count,
+                        )
+                    two_qubit_count += 1
+            else:
+                raise TypeError(
+                    f"Input gate is of unsupported type {type(each_gate)}."
+                    "Only RotationGateMaps are supported"
+                )
+        return input_gatemap_list
+
 
     def reorder_gates_block(self, gates_block, layer_number):
         """Update the qubits that the gates are acting on after application
