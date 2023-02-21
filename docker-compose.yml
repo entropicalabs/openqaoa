@@ -4,7 +4,7 @@ services:
     container_name: oq-aws-jobs-local
     build: .
   qvm:
-    container_name: rigetti/qvm
+    container_name: qvm
     image: rigetti/qvm:latest
   quilc:
     container_name: quilc
