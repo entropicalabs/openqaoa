@@ -87,6 +87,7 @@ class TestingAwsJobs(unittest.TestCase):
         q.device.check_connection = MagicMock(return_value = True)
         q.device.qpu_connected = True
         q.device.provider_connected = True
+        q.device.available_qpus = ['arn:aws:braket:::device/quantum-simulator/amazon/sv1']
         q.device.n_qubits = 10
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
@@ -114,6 +115,7 @@ class TestingAwsJobs(unittest.TestCase):
         r.device.qpu_connected = True
         r.device.provider_connected = True
         r.device.n_qubits = 10
+        r.device.available_qpus = ['arn:aws:braket:::device/quantum-simulator/amazon/sv1']
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
@@ -193,6 +195,7 @@ class TestingAwsJobs(unittest.TestCase):
         q.device.qpu_connected = True
         q.device.provider_connected = True
         q.device.n_qubits = 10
+        q.device.available_qpus = ['arn:aws:braket:::device/quantum-simulator/amazon/sv1']
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
         
@@ -222,6 +225,7 @@ class TestingAwsJobs(unittest.TestCase):
         r.device.qpu_connected = True
         r.device.provider_connected = True
         r.device.n_qubits = 10
+        r.device.available_qpus = ['arn:aws:braket:::device/quantum-simulator/amazon/sv1']
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
