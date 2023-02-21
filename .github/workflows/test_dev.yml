@@ -41,23 +41,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install .[tests]
           pip install ipykernel
-              
-      - name: Install qvm
-        run: |
-          find /usr/lib -name "libffi.so*"
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so /usr/lib/x86_64-linux-gnu/libffi.so.6
-          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
-          tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
-          cd forest-sdk-2.23.0-linux-deb/
-          sudo apt-get update
-          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
-          sudo ./forest-sdk-2.23.0-linux-deb.run
-          qvm --version
-          quilc --version
-          echo "Starting qvm and quilc"
-          screen -d -m qvm -S
-          screen -d -m quilc -S
-          cd ..
+
           
       - name: Run tests
         run: |

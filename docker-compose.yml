@@ -1,5 +1,11 @@
 version: '3'
 services:
-  web:
+  oq-braket:
     container_name: oq-aws-jobs-local
     build: .
+  qvm:
+    container_name: rigetti/qvm
+    build: run --rm -it -p 5000:5000 rigetti/qvm -S
+  quilc:
+    container_name: rigetti/quilc
+    build: run --rm -it -p 5555:5555 rigetti/quilc -P -S
