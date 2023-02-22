@@ -160,7 +160,6 @@ class TestingDeviceLocal(unittest.TestCase):
 
 
 class TestingDeviceAWS(unittest.TestCase):
-    
     """These tests check the Object used to access AWS Braket and their 
     available QPUs can be established.
 
@@ -168,7 +167,7 @@ class TestingDeviceAWS(unittest.TestCase):
     details provided are correct/valid with AWS Braket.
     """
     
-    @pytest.mark.api
+    @pytest.mark.braket_api
     def test_changing_aws_region(self):
         
         device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1')
@@ -185,7 +184,7 @@ class TestingDeviceAWS(unittest.TestCase):
         
         self.assertEqual('us-west-1', custom_region)
         
-    @pytest.mark.api
+    @pytest.mark.braket_api
     def test_changing_s3_bucket_names(self):
         
         device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1', s3_bucket_name='random_new_name')
@@ -195,7 +194,7 @@ class TestingDeviceAWS(unittest.TestCase):
         
         self.assertEqual('random_new_name', custom_bucket)
         
-    @pytest.mark.api      
+    @pytest.mark.braket_api      
     def test_check_connection_provider_no_backend_provided_credentials(self):
         
         """
@@ -211,7 +210,7 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, None)
 
 
-    @pytest.mark.api
+    @pytest.mark.braket_api
     def test_check_connection_provider_right_backend_provided_credentials(self):
         
         """
@@ -233,7 +232,7 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, True)
 
 
-    @pytest.mark.api
+    @pytest.mark.braket_api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
         
         """
