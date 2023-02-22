@@ -243,6 +243,7 @@ Contents
    notebooks/11_Mixer_example.ipynb
    notebooks/12_testing_azure.ipynb
    notebooks/X_dumping_data.ipynb
+   notebooks/X_optimizers.ipynb
 
 
 .. toctree::
