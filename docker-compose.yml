@@ -20,7 +20,7 @@ services:
   quilc:
     container_name: quilc
     image: rigetti/quilc:latest
-    command: ["-S"]
+    command: ["-P", "-S" ]
     networks:
      - local_bridge
     ports:

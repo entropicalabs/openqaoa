@@ -170,7 +170,7 @@ class TestingDeviceAWS(unittest.TestCase):
     @pytest.mark.braket_api
     def test_changing_aws_region(self):
         
-        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1')
+        device_obj = DeviceAWS(device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1', aws_region='us-east-1')
         
         device_obj.check_connection()
         default_region = device_obj.aws_region

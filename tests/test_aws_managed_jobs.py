@@ -236,7 +236,7 @@ class TestingAwsJobs(unittest.TestCase):
         r.device.provider_connected = True
         r.device.n_qubits = self.n_qubits
         r.device.backend_device = ''
-        q.device.aws_region = 'us-east-1'
+        r.device.aws_region = 'us-east-1'
         
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
