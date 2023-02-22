@@ -1,12 +1,27 @@
 version: '3'
+
+networks:
+  local_bridge:
+    external: true
+
 services:
   amazon-braket-oq-dev:
-    container_name: amazon-braket-oq-dev
-    build: .
+    image: amazon-braket-oq-dev
+    networks:
+     - local_bridge
   qvm:
     container_name: qvm
     image: rigetti/qvm:latest
+    command: ["-S"]
+    networks:
+     - local_bridge
+    ports:
+     - 5000:5000
   quilc:
     container_name: quilc
-    image: rigetti/quilc:latest 
-
+    image: rigetti/quilc:latest
+    command: ["-S"]
+    networks:
+     - local_bridge
+    ports:
+     - 5555:5555
