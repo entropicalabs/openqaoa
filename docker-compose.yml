@@ -1,6 +1,6 @@
 version: '3'
 services:
-  oq-braket:
+  amazon-braket-oq-dev:
     container_name: amazon-braket-oq-dev
     build: .
   qvm:
