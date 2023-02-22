@@ -106,6 +106,8 @@ class AnsatzDescriptor(ABC):
     @abstractproperty
     def n_qubits(self) -> int:
         pass
+    
+
 class QAOADescriptor(AnsatzDescriptor):
 
     """
