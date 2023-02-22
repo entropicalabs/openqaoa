@@ -153,7 +153,7 @@ class QAOAAWSQPUBackend(
         self.braket_parameter_list = []
         for each_gate in self.abstract_circuit:
             #if gate is of type mixer or cost gate, assign parameter to it
-            if each_gate.gate_label.type.value in ['mixer','cost']:
+            if each_gate.gate_label.type.value in ['MIXER','COST']:
                 angle_param = FreeParameter(each_gate.gate_label.__repr__()) 
                 self.braket_parameter_list.append(angle_param)
                 each_gate.angle_value = angle_param
