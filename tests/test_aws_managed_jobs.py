@@ -59,7 +59,7 @@ class TestingAwsJobs(unittest.TestCase):
         self.n_qubits = 10
 
         self.vc = MinimumVertexCover(
-            nw.circulant_graph(n_qubits, [1]), field=1.0, penalty=10
+            nw.circulant_graph(self.n_qubits, [1]), field=1.0, penalty=10
         ).qubo
 
     def testOsEnvironAssignment(self):
