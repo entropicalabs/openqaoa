@@ -188,8 +188,8 @@ class QAOAQiskitQPUBackend(
             parametric_circuit.measure(self.problem_reg,creg)
         else:
             for idx,qubit in enumerate(self.final_mapping[0:len(self.problem_reg)]):
-                    cbit = creg[idx]
-                    parametric_circuit.measure(qubit,cbit)
+                cbit = creg[idx]
+                parametric_circuit.measure(qubit,cbit)
 
         return parametric_circuit
 
@@ -240,8 +240,7 @@ class QAOAQiskitQPUBackend(
                     job_state = True
                     no_of_api_retries += 1
                     time.sleep(5)
-                except (IBMQJobFailureError, IBMQJobInvalidStateError) as e:
-                    raise(e)
+                except (IBMQJobFailureError, IBMQJobInvalidStateError):
                     print("There was an error with the state of the Job in IBMQ.")
                     no_of_job_retries += 1
                     break
@@ -256,11 +255,6 @@ class QAOAQiskitQPUBackend(
 
         # Expose counts
         final_counts = flip_counts(counts)
-        # check whether SWAP gates changed the final layout of qubits
-        # if self.final_mapping is not None:
-        #     final_counts = permute_counts_dictionary(
-        #         final_counts, self.final_mapping
-        #     )
         self.measurement_outcomes = final_counts
         return final_counts
 

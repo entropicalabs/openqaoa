@@ -313,10 +313,6 @@ class QAOAPyQuilQPUBackend(
 
         # Expose counts
         final_counts = Counter(list(meas_list))
-        # if self.final_mapping is not None:
-        #     final_counts = permute_counts_dictionary(
-        #         final_counts, self.final_mapping
-        #     )
         self.measurement_outcomes = final_counts
         return final_counts
 

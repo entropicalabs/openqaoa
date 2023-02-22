@@ -172,18 +172,6 @@ class TwoQubitRotationGateMap(RotationGateMap):
         self.qubit_2 = qubit_2
         self.gate_label = GateMapLabel(n_qubits=2)
 
-    # @property
-    # def pauli_label(self) -> List:
-
-    #     return self._pauli_label
-
-    # @pauli_label.setter
-    # def pauli_label(self, input_label: List) -> None:
-
-    #     gate_type = ['2q']
-    #     gate_type.extend(input_label)
-    #     self._pauli_label = gate_type
-
     @property
     def _decomposition_trivial(self) -> List[Tuple]:
 

@@ -132,11 +132,13 @@ class QAOADescriptor(AnsatzDescriptor):
 
     mixer_block_coeffs: `List[float]`
 
+    cost_blocks: `List[RotationGateMap]`
+
+    mixer_blocks: `List[RotationGateMap]`
+
     Properties
     ----------
-    cost_block: `List[RotationGateMap]`
-
-    mixer_block: `List[RotationGateMap]`
+    n_qubits: `int`
 
     abstract_circuit: `List[RotationGateMap]`
     """
@@ -434,9 +436,6 @@ class QAOADescriptor(AnsatzDescriptor):
             final_mapping
         ) = routing_function(device, problem_to_solve)
         
-        print("Initial mapping", initial_physical_to_logical_mapping)
-        print("Final mapping", final_mapping)
-
         gates_list = [gate for gate in gates_to_route if gate.gate_label.n_qubits == 1]
         swapped_history = []
         for idx, pair_ij in enumerate(gate_list_indices):
@@ -462,9 +461,7 @@ class QAOADescriptor(AnsatzDescriptor):
                     raise e
                 ising_gate.qubit_1, ising_gate.qubit_2 = qi, qj
                 gates_list.append(ising_gate)
-        
-        print([[gate.qubit_1] if gate.gate_label.n_qubits == 1 else [gate.qubit_1, gate.qubit_2] for gate in gates_list])
-                
+                        
         return gates_list, list(initial_physical_to_logical_mapping.keys()), final_mapping
     
     @property
