@@ -21,7 +21,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
     These tests require authentication through the AWS CLI.
     """
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_circuit_angle_assignment_qpu_backend(self):
         """
         A tests that checks if the circuit created by the AWS Backend
@@ -80,7 +80,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         self.assertEqual(main_circuit, qpu_circuit)
 
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_circuit_angle_assignment_qpu_backend_w_hadamard(self):
         """
         Checks for consistent if init_hadamard is set to True.
@@ -140,7 +140,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         self.assertEqual(main_circuit, qpu_circuit)
 
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_prepend_circuit(self):
         """
         Checks if prepended circuit has been prepended correctly.
@@ -197,7 +197,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         self.assertEqual(main_circuit, qpu_circuit)
 
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_append_circuit(self):
         """
         Checks if appended circuit is appropriately appended to the back of the
@@ -254,7 +254,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit, qpu_circuit)
         
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_prepend_exception(self):
         
         """
@@ -291,7 +291,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         except Exception as e:
             self.assertEqual(str(e), "Cannot attach a bigger circuit to the QAOA routine")
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_exceptions_in_init(self):
         
         """
@@ -348,7 +348,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         
         QAOAAWSQPUBackend(qaoa_descriptor, aws_device, shots, None, None, True, 1.)
     
-    @pytest.mark.qpu            
+    @pytest.mark.braket_api            
     def test_remote_qubit_overflow(self):
         
         """
