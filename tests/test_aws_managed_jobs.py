@@ -56,8 +56,10 @@ class TestingAwsJobs(unittest.TestCase):
         # the string that should be passed to CreateQuantumTask’s jobToken parameter for quantum tasks created in the job container
         # os.environ["AMZN_BRAKET_JOB_TOKEN"] = ''
 
+        self.n_qubits = 10
+
         self.vc = MinimumVertexCover(
-            nw.circulant_graph(10, [1]), field=1.0, penalty=10
+            nw.circulant_graph(n_qubits, [1]), field=1.0, penalty=10
         ).qubo
 
     def testOsEnvironAssignment(self):
@@ -74,7 +76,7 @@ class TestingAwsJobs(unittest.TestCase):
 
     def testCreateAwsQAOA(self):
         """
-        Test Creation and Loading of input_data
+        Checks whether the dict representation of q and the workflow match
         """
 
         input_data_path = os.path.join(
@@ -84,11 +86,13 @@ class TestingAwsJobs(unittest.TestCase):
         # Create the qubo and the qaoa
         q = QAOA()
         q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        ### The following lines are needed to fool the github actions into correctly executing q.compile() !!
         q.device.check_connection = MagicMock(return_value = True)
         q.device.qpu_connected = True
         q.device.provider_connected = True
-        q.device.available_qpus = ['arn:aws:braket:::device/quantum-simulator/amazon/sv1']
-        q.device.n_qubits = 10
+        q.device.n_qubits = self.n_qubits
+        q.device.backend_device = ''
+
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
@@ -101,7 +105,7 @@ class TestingAwsJobs(unittest.TestCase):
 
     def testCreateAwsRecursiveQAOA(self):
         """
-        Test Creation and Loading of input_data
+        Checks whether the dict representation of r and the workflow match
         """
 
         input_data_path = os.path.join(
@@ -110,13 +114,15 @@ class TestingAwsJobs(unittest.TestCase):
 
         # Create the qubo and the qaoa
         r = RQAOA()
+        r.set_classical_optimizer(maxiter=3, save_intermediate=False)
         r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        ### The following lines are needed to fool the github actions into correctly executing q.compile() !!
         r.device.check_connection = MagicMock(return_value = True)
         r.device.qpu_connected = True
         r.device.provider_connected = True
-        r.device.n_qubits = 10
-        r.device.available_qpus = ['arn:aws:braket:::device/quantum-simulator/amazon/sv1']
-        r.set_classical_optimizer(maxiter=3, save_intermediate=False)
+        r.device.n_qubits = self.n_qubits
+        r.device.backend_device = ''
+
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
@@ -191,11 +197,13 @@ class TestingAwsJobs(unittest.TestCase):
         # Create the qubo and the qaoa
         q = QAOA()
         q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        ### The following lines are needed to fool the github actions into correctly executing q.compile() !!
         q.device.check_connection = MagicMock(return_value = True)
         q.device.qpu_connected = True
         q.device.provider_connected = True
-        q.device.n_qubits = 10
-        q.device.available_qpus = ['arn:aws:braket:::device/quantum-simulator/amazon/sv1']
+        q.device.n_qubits = self.n_qubits
+        q.device.backend_device = ''
+
         q.compile(self.vc)
         q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
         
@@ -221,11 +229,13 @@ class TestingAwsJobs(unittest.TestCase):
         r.set_rqaoa_parameters(n_cutoff=6)
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
         r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        ### The following lines are needed to fool the github actions into correctly executing q.compile() !!
         r.device.check_connection = MagicMock(return_value = True)
         r.device.qpu_connected = True
         r.device.provider_connected = True
-        r.device.n_qubits = 10
-        r.device.available_qpus = ['arn:aws:braket:::device/quantum-simulator/amazon/sv1']
+        r.device.n_qubits = self.n_qubits
+        q.device.backend_device = ''
+        
         r.compile(self.vc)
         r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
 
