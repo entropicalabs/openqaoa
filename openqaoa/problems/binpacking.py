@@ -18,6 +18,7 @@ from typing import Union
 from docplex.mp.model import Model
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+import itertools
 
 
 from .problem import Problem
@@ -61,6 +62,7 @@ class BinPacking(Problem):
         self.simplifications = simplifications
         self.include_ineqs = include_ineqs
         self.eq_constraints = {}
+        self.ineq_constraints = {}
         if n_bins is None:
             self.n_bins = self.n_items
         else:
@@ -68,7 +70,7 @@ class BinPacking(Problem):
         if len(weights) > 0:
             self.solution = self.solution_dict()
             self.cplex_model = self.docplex_model()
-
+            self.n_vars = self.cplex_model.number_of_binary_variables
             
     def solution_dict(self):
         solution = {f"y_{i}":None for i in range(self.n_bins)}
@@ -77,9 +79,9 @@ class BinPacking(Problem):
                 solution[f"x_{i}_{j}"] = None
         if self.simplifications:
             # First simplification: we know the minimum number of bins
-            min_bins = int(np.ceil(np.sum(self.weights) / self.weight_capacity))
+            self.min_bins = int(np.ceil(np.sum(self.weights) / self.weight_capacity))
             for j in range(self.n_bins):
-                if j < min_bins:
+                if j < self.min_bins:
                     solution[f"y_{j}"] = 1
             solution["x_0_0"] = 1
             for j in range(1, self.n_bins):
@@ -92,6 +94,8 @@ class BinPacking(Problem):
         self.weight_capacity = weight_capacity
         self.n_items = n_items
         self.n_bins = n_items
+        if min_weight >= max_weight:
+            raise ValueError(f"min_weight: {min_weight} must be < max_weight:{max_weight}")
         self.weights = list(np.random.randint(min_weight, max_weight, n_items))
         self.simplifications = simplification
         self.solution = self.solution_dict()
@@ -123,8 +127,17 @@ class BinPacking(Problem):
             for j in range(self.n_bins):
                 # Second set of constraints: weight constraints
                 mdl.add_constraint(
-                    mdl.sum(self.weights[i] * vars_[f"x_{i}_{j}"] for i in range(self.n_items)) <= self.weight_capacity * vars_[f"y_{j}"]
+                    mdl.sum((self.weights[i]/self.weight_capacity) * vars_[f"x_{i}_{j}"] for i in range(self.n_items)) <=  vars_[f"y_{j}"]
                 )
+                if self.simplifications and j < self.min_bins:
+                    if j == 0:
+                        self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity - self.weights[0]]]
+                    else:
+                        self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity]]
+                        
+                else:
+                    self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.vars_pos[f"y_{j}"]]]
+
         return mdl
 
     def get_qubo_problem(self):
@@ -180,42 +193,100 @@ class BinPacking(Problem):
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.2 + 0.011*self.n_items), ncol=5, fancybox=True, shadow=True)
         return fig 
     
-    def find_multipliers(self, n_items=3):
+    def find_multipliers(self, penalty0=[0.1], n_items=3):
         # n_items: the number of items to optimize from
         min_weight = min(self.weights)
         max_weight = max(self.weights)
         
+        if min_weight == max_weight and max_weight > 1:
+            if max_weight > 1:
+                min_weight -= 1
+            else:
+                raise ValueError(f"max weight cannot be {max_weight}")
+        
         bin_packing = BinPacking(include_ineqs=False)
         bin_packing.random_instance(n_items, min_weight, max_weight, self.weight_capacity)
-        cplex_model = bin_packing.cplex_model
+        # cplex_model = bin_packing.cplex_model
         sol_str = bin_packing.classical_solution(string=True)
-        def get_equality(lambda0, cplex_model, sol_str, callback=False):
-            ising = FromDocplex2IsingModel(
-                        cplex_model,
-                        multipliers=lambda0[0],
-                        unbalanced_const=False,
-                        ).ising_model
+        
+        def get_penalty(penalty, problem, sol_str, penalty_eq=0, unbalanced=False, callback=False):
+            if unbalanced:
+                ising = FromDocplex2IsingModel(
+                            problem.cplex_model,
+                            multipliers=penalty_eq,
+                            unbalanced_const=True,
+                            strength_ineq=penalty
+                            ).ising_model
+            else:
+                ising = FromDocplex2IsingModel(
+                            problem.cplex_model,
+                            multipliers=penalty[0],
+                            unbalanced_const=False,
+                            ).ising_model
+            
             qaoa = QAOA()
-            qaoa.set_circuit_properties(p=1, init_type="custom" , variational_params_dict={'betas': [-np.pi/8], 'gammas': [-np.pi/4]} )
+            params = {'betas': [-np.pi/8], 'gammas': [-np.pi/4]} 
+            qaoa.set_circuit_properties(p=1, init_type="custom", variational_params_dict=params)
             qaoa.set_classical_optimizer(maxiter=100)
             qaoa.compile(ising)
             qaoa.optimize()
-            results = qaoa.results.lowest_cost_bitstrings(2**bin_packing.n_vars)
+            # betas=np.linspace(-np.pi/2, 0, 20)
+            # gammas=np.linspace(-np.pi, 0, 20)
+            # landscape = self.landscape_energy(qaoa, betas, gammas)
+            # fig, ax = plt.subplots()
+            # ax1 = ax.imshow(landscape, cmap="coolwarm")
+            # # fig.colorbar(ax1)
+            # ly, lx = landscape.shape
+            # ll = np.argmin(landscape)
+            # nX, nY = ll % lx, ll // lx
+            # beta_opt = betas[nY]
+            # gamma_opt = gammas[nX]
+            results = qaoa.results.lowest_cost_bitstrings(2**problem.n_vars)
             pos = results["solutions_bitstrings"].index(sol_str)
+
             probability = results["probabilities"][pos]
-            const_not = bin_packing.constraints_not_fulfilled(results["solutions_bitstrings"][0])
+            # probability = self.optimal_prob([beta_opt, gamma_opt], qaoa, sol_str)
+            const_not = problem.constraints_not_fulfilled(results["solutions_bitstrings"][0])
             if callback:
-                return {"result":results, "pos":pos, "CoP":probability * 2**bin_packing.n_vars,
-                        "probability":probability, "n_vars":bin_packing.n_vars, "x0":lambda0}
-            
-            print(f"lambda0: {lambda0[0]} | not fulfilled {const_not}| pos:{pos} | CoP:{probability*2**bin_packing.n_vars}")
+                return {"result":results, "pos":pos, "CoP":probability * 2**problem.n_vars,
+                        "probability":probability, "n_vars":problem.n_vars, "x0":penalty,
+                        "constraints_not_fulfilled":const_not}
+
+            print(f"lambda0: {penalty} | not fulfilled {const_not}| pos:{pos} | CoP:{probability*2**problem.n_vars}")
             return const_not - probability
         
-        sol = minimize(get_equality, x0=[0.1], args=(cplex_model, sol_str))
-        # return sol
+        print("----------------------  Finding Equalities -------------------")
+        sol = minimize(get_penalty, x0=penalty0, args=(bin_packing, sol_str), method="Powell", options={"maxfev":20})
         x0 = sol.x
-        return get_equality(x0, cplex_model, sol_str, callback=True)
-            
+        
+        bin_packing_2 = BinPacking(method="unbalanced", include_ineqs=True)
+        bin_packing_2.random_instance(n_items, min_weight, max_weight, self.weight_capacity)
+        print("----------------------  Finding Inequalities -------------------")
+        bounds = ((0,10),(0,5))
+        sol_ineq = minimize(get_penalty, x0=[0.1*x0[0], x0[0]], bounds=bounds, method="Nelder-Mead", args=(bin_packing_2, sol_str, x0[0], True))#, options={"maxfev":100})
+        x1 = sol_ineq.x
+        return [x0, x1[0], x1[1]], get_penalty(x1, bin_packing_2, sol_str, penalty_eq=x0[0], unbalanced=True, callback=True)
+    
+    def landscape_energy(self, qaoa_mdl, betas, gammas):
+        n_betas = len(betas)
+        n_gammas = len(gammas)
+        landscape =[ ]
+        for params in itertools.product(betas, gammas):
+            landscape.append(self.cost_energy(params, qaoa_mdl))
+        landscape = np.array(landscape)
+        landscape = landscape.reshape((n_betas, n_gammas))
+        return landscape
+
+    def cost_energy(self, params, qaoa):
+       varational_params = qaoa.variate_params
+       varational_params.update_from_raw(params)
+       return qaoa.backend.expectation(varational_params) 
+
+    def optimal_prob(self, params, qaoa, optimal):
+        varational_params = qaoa.variate_params
+        varational_params.update_from_raw(params)
+        probs_set = qaoa.backend.probability_dict(varational_params)[optimal]
+        return probs_set        
     
     def normalizing(self, problem, normalized=-1):
         abs_weights = np.unique(np.abs(problem.weights))
@@ -233,6 +304,21 @@ class BinPacking(Problem):
             vec = np.zeros(self.n_vars)
             vec[constraint[0]] = 1
             lh = np.sum(vec * np.array([int(i) for i in solution]))
-            if lh != constraint[1]:
-                check = False
+            if lh != constraint[1][0]:
+                check += 1
+        for ii, constraint in enumerate(self.ineq_constraints.values()):
+            vec = np.zeros(self.n_vars)
+            if self.simplifications:
+                weights = self.weights[1:]
+                if ii < self.min_bins:
+                    rhs = constraint[1][0]
+                else:
+                    rhs = self.weight_capacity * int(solution[constraint[1][0]])
+            else:
+                weights = self.weights
+                rhs = self.weight_capacity * int(solution[constraint[1]])
+            vec[constraint[0]] = weights
+            lh = np.sum(vec * np.array([int(i) for i in solution]))
+            if lh > rhs:
+                check += 1 
         return check
