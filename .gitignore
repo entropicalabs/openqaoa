@@ -133,3 +133,9 @@ dmypy.json
 
 # Mac Stuff
 *.DS_Store
+
+# Braket files
+braket-job*/
+
+# Visual Studio code
+.vscode/

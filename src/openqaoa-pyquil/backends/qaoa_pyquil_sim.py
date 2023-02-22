@@ -20,8 +20,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
     """
     A local Wavefunction simulator backend for the PyQuil service provider
     """
-
-    PYQUIL_PAULIGATE_LIBRARY = [RXGateMap, RYGateMap, RZGateMap]
+    PYQUIL_ROTATIONGATES_LIBRARY = [RXGateMap, RYGateMap, RZGateMap]
 
     def __init__(
         self,
@@ -70,9 +69,9 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
 
         # create a list of gates in order of application on quantum circuit
         low_level_gate_list = []
-        for i, each_gate in enumerate(self.abstract_circuit):
-            if type(each_gate) in self.PYQUIL_PAULIGATE_LIBRARY:
-                decomposition = each_gate.decomposition("trivial")
+        for i,each_gate in enumerate(self.abstract_circuit):
+            if type(each_gate) in QAOAPyQuilWavefunctionSimulatorBackend.PYQUIL_ROTATIONGATES_LIBRARY:
+                decomposition = each_gate.decomposition('trivial')
             else:
                 decomposition = each_gate.decomposition("standard")
             # using the list above, construct the circuit

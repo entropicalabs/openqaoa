@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from qiskit import QuantumCircuit
+from qiskit.quantum_info import Operator
 
 from openqaoa.qaoa_components import (create_qaoa_variational_params, PauliOp, 
                                       Hamiltonian, QAOADescriptor, QAOAVariationalStandardParams) 
@@ -139,10 +140,13 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.rx(-2*betas[1], 0)
         main_circuit.rx(-2*betas[1], 1)
         main_circuit.rx(-2*betas[1], 2)
-        main_circuit.measure_all()
+        
+        qpu_circuit.remove_final_measurements(inplace=True)
+        qpu_circuit_operator = Operator(qpu_circuit)
+        main_circuit_operator = Operator(main_circuit)
 
-        self.assertEqual(main_circuit.to_instruction().definition,
-                         qpu_circuit.to_instruction().definition)
+        assert qpu_circuit_operator.equiv(main_circuit_operator)
+
 
     @pytest.mark.qpu
     def test_circuit_angle_assignment_qpu_backend_w_hadamard(self):
@@ -200,10 +204,13 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.rx(-2*betas[1], 0)
         main_circuit.rx(-2*betas[1], 1)
         main_circuit.rx(-2*betas[1], 2)
-        main_circuit.measure_all()
 
-        self.assertEqual(main_circuit.to_instruction().definition,
-                         qpu_circuit.to_instruction().definition)
+        qpu_circuit.remove_final_measurements(inplace=True)
+        qpu_circuit_operator = Operator(qpu_circuit)
+        main_circuit_operator = Operator(main_circuit)
+
+        assert qpu_circuit_operator.equiv(main_circuit_operator)         
+
 
     @pytest.mark.qpu
     def test_prepend_circuit(self):
@@ -254,10 +261,13 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.rx(-2*betas[0], 0)
         main_circuit.rx(-2*betas[0], 1)
         main_circuit.rx(-2*betas[0], 2)
-        main_circuit.measure_all()
 
-        self.assertEqual(main_circuit.to_instruction().definition,
-                         qpu_circuit.to_instruction().definition)
+        qpu_circuit.remove_final_measurements(inplace=True)
+        qpu_circuit_operator = Operator(qpu_circuit)
+        main_circuit_operator = Operator(main_circuit)
+
+        assert qpu_circuit_operator.equiv(main_circuit_operator) 
+        
 
     @pytest.mark.qpu
     def test_append_circuit(self):
@@ -309,10 +319,12 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.rx(-2*betas[0], 1)
         main_circuit.rx(-2*betas[0], 2)
         main_circuit.x([0, 1, 2])
-        main_circuit.measure_all()
+        
+        qpu_circuit.remove_final_measurements(inplace=True)
+        qpu_circuit_operator = Operator(qpu_circuit)
+        main_circuit_operator = Operator(main_circuit)
 
-        self.assertEqual(main_circuit.to_instruction().definition,
-                         qpu_circuit.to_instruction().definition)
+        assert qpu_circuit_operator.equiv(main_circuit_operator) 
 
     @pytest.mark.qpu
     def test_expectations_in_init(self):

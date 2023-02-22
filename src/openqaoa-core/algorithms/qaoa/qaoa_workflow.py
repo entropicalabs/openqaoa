@@ -1,9 +1,9 @@
-import time
-
+from typing import List, Callable, Optional
+import requests
 from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
-from ...backends.devices_core import DeviceLocal
+from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...backends.qaoa_backend import get_qaoa_backend
 from ...problems import QUBO
 from ...qaoa_components import (
@@ -11,7 +11,7 @@ from ...qaoa_components import (
     QAOADescriptor,
     create_qaoa_variational_params,
 )
-from ...utilities import get_mixer_hamiltonian
+from ...utilities import get_mixer_hamiltonian, generate_timestamp
 from ...optimizers.qaoa_optimizer import get_optimizer
 
 
@@ -173,7 +173,12 @@ class QAOA(Workflow):
 
         return None
 
-    def compile(self, problem: QUBO = None, verbose: bool = False):
+    def compile(
+        self,
+        problem: QUBO = None,
+        verbose: bool = False,
+        routing_function: Optional[Callable] = None,
+    ):
         """
         Initialise the trainable parameters for QAOA according to the specified
         strategies and by passing the problem statement
@@ -192,7 +197,17 @@ class QAOA(Workflow):
         verbose: bool
             Set True to have a summary of QAOA to displayed after compilation
         """
+        # if isinstance(routing_function,Callable):
+        #     #assert that routing_function is supported only for Standard QAOA.
+        #     if (
+        #         self.backend_properties.append_state is not None or\
+        #         self.backend_properties.prepend_state is not None or\
+        #         self.circuit_properties.mixer_hamiltonian is not 'x' or\
+                
+        #     )
 
+        # connect to the QPU specified
+        self.device.check_connection()
         # we compile the method of the parent class to genereate the id and
         # check the problem is a QUBO object and save it
         super().compile(problem=problem)
@@ -209,7 +224,11 @@ class QAOA(Workflow):
         )
 
         self.qaoa_descriptor = QAOADescriptor(
-            self.cost_hamil, self.mixer_hamil, p=self.circuit_properties.p
+            self.cost_hamil,
+            self.mixer_hamil,
+            p=self.circuit_properties.p,
+            routing_function=routing_function,
+            device=self.device,
         )
         self.variate_params = create_qaoa_variational_params(
             qaoa_descriptor=self.qaoa_descriptor,
@@ -272,14 +291,14 @@ class QAOA(Workflow):
             raise ValueError("Please compile the QAOA before optimizing it!")
 
         # timestamp for the start of the optimization
-        self.header["execution_time_start"] = time.time_ns()
+        self.header["execution_time_start"] = generate_timestamp()
 
         self.optimizer.optimize()
         # TODO: result and qaoa_result will differ
         self.result = self.optimizer.qaoa_result
 
         # timestamp for the end of the optimization
-        self.header["execution_time_end"] = time.time_ns()
+        self.header["execution_time_end"] = generate_timestamp()
 
         if verbose:
             print(f"optimization completed.")

@@ -7,7 +7,7 @@ from ..qaoa import QAOA
 from ..workflow_properties import CircuitProperties
 from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...problems import QUBO
-from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise
+from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise, generate_timestamp
 from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from . import rqaoa_utils
 from .rqaoa_result import RQAOAResult
@@ -51,7 +51,7 @@ class RQAOA(Workflow):
         For a complete list of its parameters and usage please see the method set_circuit_properties
     rqaoa_parameters: `RqaoaParameters`
         Set of parameters containing all the relevant information for the recursive procedure of RQAOA.
-    results: `RQAOAResults`
+    results: `RQAOAResult`
         The results of the RQAOA optimization.
         Dictionary containing all the information about the RQAOA run: the
         solution states and energies (key: 'solution'), the output of the classical
@@ -59,9 +59,9 @@ class RQAOA(Workflow):
         (key: 'elimination_rules'), the number of eliminations at each step (key: 'schedule'),
         total number of steps (key: 'number_steps'), the intermediate QUBO problems and the
         intermediate QAOA objects that have been optimized in each RQAOA step (key: 'intermediate_problems').
-        This object (`RQAOAResults`) is a dictionary with some custom methods as
-        RQAOAResults.get_hamiltonian_step(i) which get the hamiltonian of reduced problem of the i-th step.
-        To see the full list of methods please see the RQAOAResults class.
+        This object (`RQAOAResult`) is a dictionary with some custom methods as
+        RQAOAResult.get_hamiltonian_step(i) which get the hamiltonian of reduced problem of the i-th step.
+        To see the full list of methods please see the RQAOAResult class.
 
     Examples
     --------
@@ -366,7 +366,7 @@ class RQAOA(Workflow):
             f_max_terms = rqaoa_utils.max_terms
 
         # timestamp for the start of the optimization
-        self.header["execution_time_start"] = int(time.time())
+        self.header["execution_time_start"] = generate_timestamp()
 
         # flag, set to true if the problem vanishes due to elimination before reaching cutoff
         total_elimination = False
@@ -450,7 +450,7 @@ class RQAOA(Workflow):
         )
 
         # timestamp for the end of the optimization
-        self.header["execution_time_end"] = int(time.time())
+        self.header["execution_time_end"] = generate_timestamp()
 
         # Compute description dictionary containing all the information
         self.result = self.results_class() 
