@@ -225,7 +225,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         # Without interaction terms
         device_pyquil = DevicePyquil(device_name = "2q-qvm", as_qvm=True, execution_timeout = 3, compiler_timeout=3)
-
+        device_pyquil.quantum_computer.qam.random_seed = 1
+        
         cost_hamil = Hamiltonian([PauliOp('Z',(0,)), PauliOp('Z',(1,)), PauliOp('ZZ',(0,1))], [1,1,1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
@@ -233,7 +234,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         args = [np.pi/8, np.pi/4] # beta, gamma
 
         variate_params.update_from_raw(args)
-        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=100)
+        backend_obj_pyquil = QAOAPyQuilQPUBackend(qaoa_descriptor = qaoa_descriptor, device = device_pyquil, prepend_state = None, append_state = None, init_hadamard = True, cvar_alpha = 1, n_shots=10)
         expt_pyquil = backend_obj_pyquil.expectation(variate_params)
         
         variate_params.update_from_raw(args)

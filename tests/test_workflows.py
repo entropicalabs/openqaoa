@@ -73,7 +73,7 @@ def _compare_qaoa_results(dict_old, dict_new):
                 else:
                     assert dict_old[key][key2] == dict_new[key][key2], "Intermediate params are not the same."
         else:
-            assert dict_old[key] == dict_new[key], f"{key} is not the same"
+            assert dict_old[key] == dict_new[key], f"'{key}' is not the same"
 
 def _test_keys_in_dict(obj, expected_keys):
     """
@@ -257,7 +257,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         for j in range(2):
             for i in range(6):
-                self.assertEqual(q.qaoa_descriptor.mixer_block[j][i].qubit_1, i)
+                self.assertEqual(q.qaoa_descriptor.mixer_blocks[j][i].qubit_1, i)
 
     def test_set_circuit_properties_qaoa_descriptor_mixer_xy(self):
         
@@ -951,14 +951,14 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         #create a dictionary with all the expected keys and set them to False
         expected_keys = ['header', 'atomic_id', 'experiment_id', 'project_id', 'algorithm', 'description', 'run_by', 'provider', 'target', 'cloud',
-        'client', 'qubit_number', 'execution_time_start', 'execution_time_end', 'metadata', 'problem_type', 'n_shots', 'optimizer_method', 'param_type', 
-        'init_type', 'p', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device', 
-        'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout',
+        'client', 'qubit_number', 'execution_time_start', 'execution_time_end', 'metadata', 'problem_type', 'n_shots', 'optimizer_method', 'param_type',
+        'init_type', 'p', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 'n', 'problem_instance', 'input_parameters', 'device',
+        'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 'append_state', 'cvar_alpha', 'noise_model','initial_qubit_mapping',
         'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 'classical_optimizer', 'optimize', 'method',
-        'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log', 
-        'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict', 
-        'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed', 
-        'result', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy', 
+        'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options', 'hess_options', 'parameter_log',
+        'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 'variational_params_dict',
+        'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 'seed',
+        'result', 'evals', 'number_of_evals', 'jac_evals', 'qfim_evals', 'most_probable_states', 'solutions_bitstrings', 'bitstring_energy',
         'intermediate', 'angles', 'cost', 'measurement_outcomes', 'job_id', 'optimized', 'eval_number']
         expected_keys = {item: False for item in expected_keys}
 
@@ -969,9 +969,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         # Check if the dictionary has all the expected keys except the ones that were not included
         for key, value in expected_keys.items():
             if key not in exclude_keys:
-                assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
+                assert value==True, f'Key "{key}" not found in the dictionary, when using "{method}" method.'
             else:
-                assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
+                assert value==False, f'Key "{key}" was found in the dictionary, but it should not be there, when using "{method}" method.'
 
         """
         to get the list of expected keys, run the following code:
@@ -1416,7 +1416,7 @@ class TestingRQAOA(unittest.TestCase):
         'client', 'qubit_number', 'execution_time_start', 'execution_time_end', 'metadata', 'tag1', 'tag2', 'problem_type', 'n_shots', 'optimizer_method', 
         'param_type', 'init_type', 'p', 'rqaoa_type', 'rqaoa_n_max', 'rqaoa_n_cutoff', 'data', 'exp_tags', 'input_problem', 'terms', 'weights', 'constant', 
         'n', 'problem_instance', 'input_parameters', 'device', 'device_location', 'device_name', 'backend_properties', 'init_hadamard', 'prepend_state', 
-        'append_state', 'cvar_alpha', 'noise_model', 'qubit_layout', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 
+        'append_state', 'cvar_alpha', 'noise_model', 'initial_qubit_mapping', 'seed_simulator', 'qiskit_simulation_method', 'active_reset', 'rewiring', 'disable_qubit_rewiring', 
         'classical_optimizer', 'optimize', 'method', 'maxiter', 'maxfev', 'jac', 'hess', 'constraints', 'bounds', 'tol', 'optimizer_options', 'jac_options',
         'hess_options', 'parameter_log', 'optimization_progress', 'cost_progress', 'save_intermediate', 'circuit_properties', 'qubit_register', 'q', 
         'variational_params_dict', 'total_annealing_time', 'annealing_time', 'linear_ramp_time', 'mixer_hamiltonian', 'mixer_qubit_connectivity', 'mixer_coeffs', 
@@ -1432,9 +1432,9 @@ class TestingRQAOA(unittest.TestCase):
         # Check if the dictionary has all the expected keys except the ones that were not included
         for key, value in expected_keys.items():
             if key not in exclude_keys:
-                assert value==True, f'Key {key} not found in the dictionary, when using {method} method.'
+                assert value==True, f'Key "{key}" not found in the dictionary, when using "{method}" method.'
             else:
-                assert value==False, f'Key {key} was found in the dictionary, but it should not be there, when using {method} method.'
+                assert value==False, f'Key "{key}" was found in the dictionary, but it should not be there, when using "{method}" method.'
 
         """
         to get the list of expected keys, run the following code:
