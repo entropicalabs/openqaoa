@@ -2,19 +2,20 @@ import unittest
 
 import networkx as nx
 
-from openqaoa.qaoa_components.ansatz_constructor import RXGateMap, RZXGateMap, RXXGateMap
+from openqaoa.qaoa_components.ansatz_constructor import (GateMap, SWAPGateMap, 
+                                                         RotationGateMap, RXGateMap, RZXGateMap, RXXGateMap, RYYGateMap)
 from openqaoa.qaoa_components import QAOADescriptor, create_qaoa_variational_params
 from openqaoa.backends import create_device
 from openqaoa.optimizers import get_optimizer
 from openqaoa.backends.qaoa_backend import get_qaoa_backend
-from openqaoa.utilities import quick_create_mixer_for_topology
+from openqaoa.utilities import quick_create_mixer_for_topology, X_mixer_hamiltonian, XY_mixer_hamiltonian
 from openqaoa.problems import MinimumVertexCover
+from openqaoa.qaoa_components.ansatz_constructor.gatemaplabel import GateMapType
 
 
 class TestingCustomMixer(unittest.TestCase):
     
     def setUp(self):
-        
         
         nodes = 6
         edge_probability = 0.7
@@ -101,8 +102,108 @@ class TestingCustomMixer(unittest.TestCase):
             
             # Test Equality between OQ and hand-written sequence
             self.assertEqual(descriptor_mixer_seq, correct_seq)
+            
+    def test_set_block_sequence(self):
         
+        """
+        Check that the set block sequence method is correct.
+        """
         
+        for each_gatemap_list, each_gatemap_coeffs, correct_seq in self.TESTING_GATEMAPS:
+            
+            output_gatemap_list = QAOADescriptor.set_block_sequence(each_gatemap_list)
+            output_seq = [each_gatemap.gate_label.sequence for each_gatemap in output_gatemap_list]
+            
+            self.assertEqual(output_seq, correct_seq)
+            
+    def test_set_block_sequence_error_raises(self):
+        
+        """
+        Check that the set block sequence method raises the right error when the 
+        wrong type is passed. A TypeError should be raised if the input_gatemap_list
+        if not a List of RotationGateMap Objects.
+        """
+        
+        incorrect_input_iterable = [""], [1], [SWAPGateMap(0, 1)], [RXGateMap]
+        
+        for each_iterable in incorrect_input_iterable:
+            with self.assertRaises(TypeError):
+                QAOADescriptor.set_block_sequence(each_iterable)
+                
+    def test_block_setter(self):
+        
+        """
+        Check that block_setter method correctly maps the sequence and the type
+        of the RotationGateMap Objects returned.
+        """
+        
+        input_enum_type = GateMapType.MIXER
+        
+        for each_gatemap_list, each_gatemap_coeffs, correct_seq in self.TESTING_GATEMAPS:
+            
+            output_gatemap_list = QAOADescriptor.block_setter(each_gatemap_list, input_enum_type)
+            
+            output_type = [each_gatemap.gate_label.type for each_gatemap in output_gatemap_list]
+            output_seq = [each_gatemap.gate_label.sequence for each_gatemap in output_gatemap_list]
+            
+            # sequence and type should be labelled correctly.
+            self.assertEqual(output_seq, correct_seq)
+            self.assertEqual(output_type, [input_enum_type for _ in range(len(correct_seq))])
+            
+    def test_block_setter_error_raises(self):
+        
+        """
+        The block_setter method should raise a ValueError if the input_object is 
+        not of the type Hamiltonian or List. It should also raise a TypeError if 
+        the List contains elements that are not of the type RotationGateMap.
+        """
+        
+        incorrect_input_object = [(), "", 1]
+        
+        for each_input in incorrect_input_object:
+            with self.assertRaises(ValueError):
+                QAOADescriptor.block_setter(input_object = each_input, block_type = GateMapType.MIXER)
+                
+        incorrect_input_iterable = [[SWAPGateMap(0, 1)], [RXGateMap], [RXGateMap(0), SWAPGateMap(0, 1)]]
+        
+        for each_input_iterable in incorrect_input_iterable:
+            with self.assertRaises(TypeError):
+                QAOADescriptor.block_setter(input_object = each_input_iterable, block_type = GateMapType.MIXER)
+                
+    def test_block_setter_equivalence_simple(self):
+        
+        """
+        A Hamiltonian Object and a list of RotationGateMap should have both their
+        sequence and type assigned the same if they represent the same gate sequence.
+        """
+        
+        # 1-Qubit
+        test_hamiltonian = X_mixer_hamiltonian(3)
+        test_gatemap_list = [RXGateMap(0), RXGateMap(1), RXGateMap(2)]
+        
+        return_gatemap_list_h = QAOADescriptor.block_setter(input_object = test_hamiltonian, block_type = GateMapType.MIXER)
+        return_gatemap_list_gl = QAOADescriptor.block_setter(input_object = test_gatemap_list, block_type = GateMapType.MIXER)
+        
+        # Both gatemap list should be equivalent
+        self.assertEqual([each_gatemap.gate_label.sequence for each_gatemap in return_gatemap_list_h], 
+                         [each_gatemap.gate_label.sequence for each_gatemap in return_gatemap_list_gl])
+        self.assertEqual([each_gatemap.gate_label.type for each_gatemap in return_gatemap_list_h], 
+                         [each_gatemap.gate_label.type for each_gatemap in return_gatemap_list_gl])
+        
+        # 2-Qubit
+        test_hamiltonian = XY_mixer_hamiltonian(3)
+        test_gatemap_list = [RXXGateMap(0, 1), RXXGateMap(0, 2), RXXGateMap(1, 2), 
+                             RYYGateMap(0, 1), RYYGateMap(0, 2), RYYGateMap(1, 2)]
+        
+        return_gatemap_list_h = QAOADescriptor.block_setter(input_object = test_hamiltonian, block_type = GateMapType.MIXER)
+        return_gatemap_list_gl = QAOADescriptor.block_setter(input_object = test_gatemap_list, block_type = GateMapType.MIXER)
+        
+        # Both gatemap list should be equivalent
+        self.assertEqual([each_gatemap.gate_label.sequence for each_gatemap in return_gatemap_list_h], 
+                         [each_gatemap.gate_label.sequence for each_gatemap in return_gatemap_list_gl])
+        self.assertEqual([each_gatemap.gate_label.type for each_gatemap in return_gatemap_list_h], 
+                         [each_gatemap.gate_label.type for each_gatemap in return_gatemap_list_gl])
+
     
 if __name__ == '__main__':
     unittest.main()

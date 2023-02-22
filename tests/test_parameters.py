@@ -7,7 +7,7 @@ from scipy.fft import dst, dct
 
 from openqaoa.qaoa_components import *
 from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian
-
+from openqaoa.qaoa_components.ansatz_constructor.gatemaplabel import GateMapType
 from openqaoa.qaoa_components.variational_parameters.variational_params_factory import (
     PARAMS_CLASSES_MAPPER,
 )
@@ -192,15 +192,19 @@ class TestingQAOADescriptor(unittest.TestCase):
         """
 
         mixer_gatemap = [RXGateMap(0), RXGateMap(1), RXGateMap(2), RXXGateMap(0, 2)]
-
+        
         qaoa_descriptor = QAOADescriptor(
             self.cost_hamil, mixer_gatemap, p=self.p, mixer_coeffs=[-1, -1, -1, -0.5]
         )
 
-        for each_p_block in qaoa_descriptor.cost_blocks:
+        for p_index, each_p_block in enumerate(qaoa_descriptor.cost_blocks):
             for each_item in each_p_block:
                 self.assertTrue(isinstance(each_item, RotationGateMap))
-
+                self.assertEqual(each_item.gate_label.type, GateMapType.COST)
+                self.assertEqual(each_item.gate_label.layer, p_index)
+                
+            self.assertEqual([each_item.gate_label.sequence for each_item in each_p_block], [0, 1, 2, 0])
+            
     def test_QAOADescriptor_mixer_blocks(self):
 
         """
@@ -213,9 +217,13 @@ class TestingQAOADescriptor(unittest.TestCase):
             self.cost_hamil, mixer_gatemap, p=self.p, mixer_coeffs=[-1, -1, -1, -0.5]
         )
 
-        for each_p_block in qaoa_descriptor.mixer_blocks:
+        for p_index, each_p_block in enumerate(qaoa_descriptor.mixer_blocks):
             for each_item in each_p_block:
                 self.assertTrue(isinstance(each_item, RotationGateMap))
+                self.assertEqual(each_item.gate_label.type, GateMapType.MIXER)
+                self.assertEqual(each_item.gate_label.layer, p_index)
+                
+            self.assertEqual([each_item.gate_label.sequence for each_item in each_p_block], [0, 1, 2, 0])
 
     def test_QAOADescriptor_weird_cases(self):
 

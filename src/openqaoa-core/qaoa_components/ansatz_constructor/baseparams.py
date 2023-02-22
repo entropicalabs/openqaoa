@@ -302,7 +302,30 @@ class QAOADescriptor(AnsatzDescriptor):
         return (single_qubit_coeffs, pair_qubit_coeffs, qubit_singles, qubit_pairs)
     
     @staticmethod
-    def block_setter(input_object: Union[List['GateMap'], Hamiltonian], block_type:Enum):
+    def block_setter(input_object: Union[List['RotationGateMap'], Hamiltonian], block_type: Enum) -> List['RotationGateMap']:
+        
+        """
+        Converts a Hamiltonian Object into a List of RotationGateMap Objects with 
+        the appropriate block_type and sequence assigned to the GateLabel
+        
+        OR
+        
+        Remaps a list of RotationGateMap Objects with a block_type and sequence
+        implied from its position in the list.
+        
+        Parameters
+        ----------
+        input_object: `Union[List[RotationGateMap], Hamiltonian]`
+            A Hamiltonian Object or a list of RotationGateMap Objects (Ordered
+            according to their application order in the final circuit)
+        block_type: Enum
+            The type to be assigned to all the RotationGateMap Objects generated 
+            from input_object
+            
+        Returns
+        -------
+        `List[RotationGateMap]`
+        """
         
         if isinstance(input_object, Hamiltonian):
             block = HamiltonianMapper.generate_gate_maps(
@@ -328,7 +351,21 @@ class QAOADescriptor(AnsatzDescriptor):
         return block
     
     @staticmethod
-    def set_block_sequence(input_gatemap_list: List['GateMap']) -> List['GateMap']:
+    def set_block_sequence(input_gatemap_list: List['RotationGateMap']) -> List['RotationGateMap']:
+        
+        """
+        This method assigns the sequence attribute to all RotationGateMap objects in the list.
+        The sequence of the GateMaps are implied based on their positions in the list.
+        
+        Parameters
+        ----------
+        input_gatemap_list: `List[RotationGateMap]`
+            A list of RotationGateMap Objects
+            
+        Returns
+        -------
+        `List[RotationGateMap]`
+        """
         
         one_qubit_count=0
         two_qubit_count=0
