@@ -46,7 +46,7 @@ jobs:
           source env/bin/activate
           python -c'from qiskit import IBMQ; import os; IBMQ.save_account(os.environ.get("IBMQ_TOKEN"))'
       - name: Set up az cli
-        env: # as an environment variable
+        with:
           credentials: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Setup AWS
         env:
