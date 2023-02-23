@@ -15,7 +15,9 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendStatevector,
 )
 from openqaoa.qaoa_components import QAOADescriptor
-from openqaoa.qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 from openqaoa.utilities import (
     flip_counts,
     generate_uuid,

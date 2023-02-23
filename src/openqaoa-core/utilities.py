@@ -13,8 +13,11 @@ import datetime
 
 from .qaoa_components import Hamiltonian, PauliOp
 
-from .qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams #ff
-from .qaoa_components.ansatz_constructor.gatemap import TwoQubitRotationGateMap #ff
+from .qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)  # ff
+from .qaoa_components.ansatz_constructor.gatemap import TwoQubitRotationGateMap  # ff
+
 
 def X_mixer_hamiltonian(n_qubits: int, coeffs: List[float] = None) -> Hamiltonian:
     """Construct a Hamiltonian object to implement the X mixer.
@@ -1538,6 +1541,7 @@ def convert2serialize(obj, complex_to_string: bool = False):
 # UUID and Timestamp
 ################################################################################
 
+
 def generate_timestamp() -> str:
     """
     Generate a timestamp string in UTC+0. Format: YYYY-MM-DDTHH:MM:SS.
@@ -1548,7 +1552,7 @@ def generate_timestamp() -> str:
         String representation of a timestamp.
     """
     return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
-    
+
 
 def generate_uuid() -> str:
     """
@@ -1584,10 +1588,12 @@ def is_valid_uuid(uuid_to_test: str) -> bool:
     except ValueError:
         # If it's a value error, then the string is not a valid string for a UUID.
         return False
-    
-def permute_counts_dictionary(counts_dictionary:dict,
-                              final_qubit_layout:List[int]) -> dict:
-    """Permutes the order of the qubits in the counts dictionary to the 
+
+
+def permute_counts_dictionary(
+    counts_dictionary: dict, final_qubit_layout: List[int]
+) -> dict:
+    """Permutes the order of the qubits in the counts dictionary to the
     original order if SWAP gates were used leading to modified qubit layout.
     Parameters
     ----------
@@ -1597,31 +1603,39 @@ def permute_counts_dictionary(counts_dictionary:dict,
         The qubit layout in which the qubits were initially
     final_qubit_layout: List[int]
         The final qubit layout after application of SWAPs
-        
+
     Returns
     -------
     `dict`
         The permuted counts dictionary with qubits in the original place
     """
-    
+
     # Create a mapping of original positions to final positions
     original_qubit_layout = list(range(len(final_qubit_layout)))
-    mapping = {original_qubit_layout[i]: final_qubit_layout[i] for i in range(len(original_qubit_layout))}
+    mapping = {
+        original_qubit_layout[i]: final_qubit_layout[i]
+        for i in range(len(original_qubit_layout))
+    }
     permuted_counts = {}
-    
-    for basis,counts in counts_dictionary.items():
-        def permute_string(basis_state:str=basis, mapping:dict=mapping):
+
+    for basis, counts in counts_dictionary.items():
+
+        def permute_string(basis_state: str = basis, mapping: dict = mapping):
             # Use the mapping to permute the string
-            permuted_string = "".join([basis_state[mapping[i]] for i in range(len(basis_state))])
+            permuted_string = "".join(
+                [basis_state[mapping[i]] for i in range(len(basis_state))]
+            )
             return permuted_string
-        permuted_counts.update({permuted_string:counts})
-    
+
+        permuted_counts.update({permuted_string: counts})
+
     return permuted_counts
 
 
 ################################################################################
 # CHECKING FUNCTION
 ################################################################################
+
 
 def check_kwargs(list_expected_params, list_default_values, **kwargs):
     """
@@ -1662,9 +1676,11 @@ def check_kwargs(list_expected_params, list_default_values, **kwargs):
 
     return tuple(params)
 
+
 ####################################################################################
 # QAOALIB
 ####################################################################################
+
 
 def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
     """
@@ -1676,7 +1692,7 @@ def dicke_basis(excitations: int, n_qubits: int) -> np.ndarray:
         Number of excitations in the basis vector
     n_qubits: `int`
         Total number of qubits in the system
-        
+
     Returns
     -------
     `np.ndarray`
@@ -1708,7 +1724,7 @@ def dicke_wavefunction(excitations, n_qubits):
 
     n_qubits: int
         The number of qubits in the register
-        
+
     Returns
     -------
     `np.ndarray`

@@ -22,7 +22,9 @@ from inspect import signature
 import numpy as np
 from scipy.optimize import brute, shgo
 
-from openqaoa.optimizers import pennylane as qml # changed from the original PennyLane code
+from openqaoa.optimizers import (
+    pennylane as qml,
+)  # changed from the original PennyLane code
 
 
 def _brute_optimizer(fun, num_steps, bounds=None, **kwargs):
@@ -34,7 +36,9 @@ def _brute_optimizer(fun, num_steps, bounds=None, **kwargs):
     center = (bounds[0][1] + bounds[0][0]) / 2
     for _ in range(num_steps):
         range_ = (center - width / 2, center + width / 2)
-        center, y_min, *_ = brute(fun, ranges=(range_,), full_output=True, Ns=Ns, **kwargs)
+        center, y_min, *_ = brute(
+            fun, ranges=(range_,), full_output=True, Ns=Ns, **kwargs
+        )
         # We only ever use this function for 1D optimization
         center = center[0]
         width /= Ns
@@ -100,7 +104,9 @@ def _restrict_to_univariate(fn, arg_idx, par_idx, args, kwargs):
         shift_vec = qml.math.scatter_element_add(shift_vec, par_idx, 1.0)
 
     def _univariate_fn(x):
-        return fn(*args[:arg_idx], the_arg + shift_vec * x, *args[arg_idx + 1 :], **kwargs)
+        return fn(
+            *args[:arg_idx], the_arg + shift_vec * x, *args[arg_idx + 1 :], **kwargs
+        )
 
     return _univariate_fn
 
@@ -416,10 +422,15 @@ class RotosolveOptimizer:
 
         """
         # todo: does this signature call cover all cases?
-        sign_fn = objective_fn.func if isinstance(objective_fn, qml.QNode) else objective_fn
+        sign_fn = (
+            objective_fn.func if isinstance(objective_fn, qml.QNode) else objective_fn
+        )
         arg_names = list(signature(sign_fn).parameters.keys())
         requires_grad = {
-            arg_name: True for arg_name, arg in zip(arg_names, args) # changed from the original PennyLane code
+            arg_name: True
+            for arg_name, arg in zip(
+                arg_names, args
+            )  # changed from the original PennyLane code
         }
         nums_frequency = nums_frequency or {}
         spectra = spectra or {}
@@ -453,7 +464,10 @@ class RotosolveOptimizer:
                 if spectrum is not None:
                     spectrum = np.array(spectrum)
 
-                if num_freq == 1 or (spectrum is not None and len(spectrum[spectrum > 0])) == 1:
+                if (
+                    num_freq == 1
+                    or (spectrum is not None and len(spectrum[spectrum > 0])) == 1
+                ):
                     _args = before_args + [arg] + after_args
                     univariate = _restrict_to_univariate(
                         objective_fn, arg_idx, par_idx, _args, kwargs
@@ -465,24 +479,32 @@ class RotosolveOptimizer:
                 else:
                     ids = {arg_name: (par_idx,)}
                     _nums_frequency = (
-                        {arg_name: {par_idx: num_freq}} if num_freq is not None else None
+                        {arg_name: {par_idx: num_freq}}
+                        if num_freq is not None
+                        else None
                     )
-                    _spectra = {arg_name: {par_idx: spectrum}} if spectrum is not None else None
+                    _spectra = (
+                        {arg_name: {par_idx: spectrum}}
+                        if spectrum is not None
+                        else None
+                    )
 
                     # Set up the reconstruction function
                     recon_fn = qml.fourier.reconstruct(
                         objective_fn, ids, _nums_frequency, _spectra, shifts
                     )
                     # Perform the reconstruction
-                    recon = recon_fn(*before_args, arg, *after_args, f0=_fun_at_zero, **kwargs)[
-                        arg_name
-                    ][par_idx]
+                    recon = recon_fn(
+                        *before_args, arg, *after_args, f0=_fun_at_zero, **kwargs
+                    )[arg_name][par_idx]
                     if spectrum is None:
                         spectrum = list(range(num_freq + 1))
                     x_min, y_min = self._min_numeric(recon, spectrum)
 
                     # Update the currently treated argument
-                    arg = qml.math.scatter_element_add(arg, par_idx, x_min - arg[par_idx])
+                    arg = qml.math.scatter_element_add(
+                        arg, par_idx, x_min - arg[par_idx]
+                    )
                 first_substep_in_step = False
 
                 if full_output:

@@ -6,7 +6,9 @@ from ..qaoa_components import (
     QAOADescriptor,
     QAOAVariationalStandardParams,
 )
-from ..qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from ..qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 from ..utilities import energy_expectation_analytical, generate_uuid, round_value
 
 

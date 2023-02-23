@@ -19,7 +19,9 @@ from ..qaoa_components import (
     GateMap,
     QAOADescriptor,
 )
-from ..qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from ..qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 from ..utilities import qaoa_probabilities, round_value
 from .cost_function import cost_function
 
@@ -131,16 +133,18 @@ class QAOABaseBackend(VQABaseBackend):
         self.problem_qubits = self.qaoa_descriptor.cost_hamiltonian.n_qubits
 
         self.abstract_circuit = deepcopy(self.qaoa_descriptor.abstract_circuit)
-        
-        #pass the generated mappings if the circuit is routed
+
+        # pass the generated mappings if the circuit is routed
         if self.qaoa_descriptor.routed == True:
             self.initial_qubit_mapping = self.qaoa_descriptor.initial_mapping
-            
-            if self.qaoa_descriptor.p%2!=0:
+
+            if self.qaoa_descriptor.p % 2 != 0:
                 self.final_mapping = self.qaoa_descriptor.final_mapping
             else:
                 # if even, the initial mapping [0,...,n_qubits-1] is taken as the final mapping
-                self.final_mapping = list(range(len(self.qaoa_descriptor.final_mapping)))
+                self.final_mapping = list(
+                    range(len(self.qaoa_descriptor.final_mapping))
+                )
         else:
             self.initial_qubit_mapping = None
             self.final_mapping = None

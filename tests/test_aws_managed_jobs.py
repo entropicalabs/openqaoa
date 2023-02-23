@@ -73,7 +73,6 @@ class TestingAwsJobs(unittest.TestCase):
         assert rqaoa_workflow.algorithm == "rqaoa"
         assert rqaoa_workflow.device.device_name == os.environ["AMZN_BRAKET_DEVICE_ARN"]
 
-
     @pytest.mark.docker_aws
     def testLocalJob(self):
         """Test an end-to-end qaoa running on a local docker instance"""
@@ -85,7 +84,10 @@ class TestingAwsJobs(unittest.TestCase):
         # Create the qubo and the qaoa
         q = QAOA()
         q.set_classical_optimizer(maxiter='5')
-        q.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        q.set_device(
+            create_device("aws", "arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+        )
+        
         ### The following lines are needed to fool the github actions into correctly executing q.compile() !!
         q.device.check_connection = MagicMock(return_value = True)
         q.device.qpu_connected = True
@@ -95,7 +97,12 @@ class TestingAwsJobs(unittest.TestCase):
         q.device.aws_region = 'us-east-1'
 
         q.compile(self.vc)
-        q.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
+        q.dump(
+            file_name="openqaoa_params.json",
+            file_path=input_data_path,
+            prepend_id=False,
+            overwrite=True,
+        )
 
         job = LocalQuantumJob.create(
             device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
@@ -104,7 +111,7 @@ class TestingAwsJobs(unittest.TestCase):
             input_data={"input_data": input_data_path},
         )
 
-        assert (job.state() == 'COMPLETED') and (job.result() != None) == True
+        assert (job.state() == "COMPLETED") and (job.result() != None) == True
 
 
     @pytest.mark.docker_aws
@@ -112,13 +119,17 @@ class TestingAwsJobs(unittest.TestCase):
         """Test an end-to-end rqaoa running on a local docker instance"""
 
         input_data_path = os.path.join(
-            os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data/")
+            os.environ["AMZN_BRAKET_INPUT_DIR"], "input_data/"
+        )
 
         # Create the rqaoa
         r = RQAOA()
         r.set_rqaoa_parameters(n_cutoff=6)
         r.set_classical_optimizer(maxiter=3, save_intermediate=False)
-        r.set_device(create_device('aws', 'arn:aws:braket:::device/quantum-simulator/amazon/sv1'))
+        r.set_device(
+            create_device("aws", "arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+        )
+        
         ### The following lines are needed to fool the github actions into correctly executing q.compile() !!
         r.device.check_connection = MagicMock(return_value = True)
         r.device.qpu_connected = True
@@ -126,9 +137,14 @@ class TestingAwsJobs(unittest.TestCase):
         r.device.n_qubits = self.n_qubits
         r.device.backend_device = ''
         r.device.aws_region = 'us-east-1'
-        
+
         r.compile(self.vc)
-        r.dump(file_name='openqaoa_params.json', file_path=input_data_path, prepend_id=False, overwrite=True)
+        r.dump(
+            file_name="openqaoa_params.json",
+            file_path=input_data_path,
+            prepend_id=False,
+            overwrite=True,
+        )
 
         job = LocalQuantumJob.create(
             device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
@@ -137,7 +153,7 @@ class TestingAwsJobs(unittest.TestCase):
             input_data={"input_data": input_data_path},
         )
 
-        assert (job.state() == 'COMPLETED') and (job.result() != None) == True 
+        assert (job.state() == "COMPLETED") and (job.result() != None) == True
 
 
 if __name__ == "__main__":

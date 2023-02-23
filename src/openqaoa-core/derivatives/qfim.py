@@ -4,7 +4,9 @@ import numpy as np
 
 from ..backends.basebackend import QAOABaseBackend, QAOABaseBackendShotBased
 from ..optimizers.logger_vqa import Logger
-from ..qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from ..qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 
 
 def log_qfim_evals(logger: Logger) -> Logger:

@@ -178,9 +178,13 @@ def _take_autograd(tensor, indices, axis=None):
 
 
 ar.register_function("autograd", "take", _take_autograd)
-ar.register_function("autograd", "eigvalsh", lambda x: _i("autograd").numpy.linalg.eigh(x)[0])
 ar.register_function(
-    "autograd", "entr", lambda x: -_i("autograd").numpy.sum(x * _i("autograd").numpy.log(x))
+    "autograd", "eigvalsh", lambda x: _i("autograd").numpy.linalg.eigh(x)[0]
+)
+ar.register_function(
+    "autograd",
+    "entr",
+    lambda x: -_i("autograd").numpy.sum(x * _i("autograd").numpy.log(x)),
 )
 
 ar.register_function("autograd", "diagonal", lambda x, *args: _i("qml").numpy.diag(x))
@@ -197,10 +201,14 @@ ar.autoray._SUBMODULE_ALIASES["tensorflow", "arctan"] = "tensorflow.math"
 ar.autoray._SUBMODULE_ALIASES["tensorflow", "arctan2"] = "tensorflow.math"
 ar.autoray._SUBMODULE_ALIASES["tensorflow", "diag"] = "tensorflow.linalg"
 ar.autoray._SUBMODULE_ALIASES["tensorflow", "kron"] = "tensorflow.experimental.numpy"
-ar.autoray._SUBMODULE_ALIASES["tensorflow", "moveaxis"] = "tensorflow.experimental.numpy"
+ar.autoray._SUBMODULE_ALIASES[
+    "tensorflow", "moveaxis"
+] = "tensorflow.experimental.numpy"
 ar.autoray._SUBMODULE_ALIASES["tensorflow", "sinc"] = "tensorflow.experimental.numpy"
 ar.autoray._SUBMODULE_ALIASES["tensorflow", "isclose"] = "tensorflow.experimental.numpy"
-ar.autoray._SUBMODULE_ALIASES["tensorflow", "atleast_1d"] = "tensorflow.experimental.numpy"
+ar.autoray._SUBMODULE_ALIASES[
+    "tensorflow", "atleast_1d"
+] = "tensorflow.experimental.numpy"
 
 ar.autoray._FUNC_ALIASES["tensorflow", "arcsin"] = "asin"
 ar.autoray._FUNC_ALIASES["tensorflow", "arccos"] = "acos"
@@ -353,11 +361,17 @@ def _transpose_tf(a, axes=None):
 
 
 ar.register_function("tensorflow", "transpose", _transpose_tf)
-ar.register_function("tensorflow", "diagonal", lambda x, *args: _i("tf").linalg.diag_part(x))
-ar.register_function("tensorflow", "outer", lambda a, b: _i("tf").tensordot(a, b, axes=0))
+ar.register_function(
+    "tensorflow", "diagonal", lambda x, *args: _i("tf").linalg.diag_part(x)
+)
+ar.register_function(
+    "tensorflow", "outer", lambda a, b: _i("tf").tensordot(a, b, axes=0)
+)
 
 # for some reason Autoray modifies the default behaviour, so we change it back here
-ar.register_function("tensorflow", "where", lambda *args, **kwargs: _i("tf").where(*args, **kwargs))
+ar.register_function(
+    "tensorflow", "where", lambda *args, **kwargs: _i("tf").where(*args, **kwargs)
+)
 
 
 def _eigvalsh_tf(density_matrix):
@@ -445,7 +459,9 @@ def _asarray_torch(x, dtype=None, **kwargs):
 
 ar.register_function("torch", "asarray", _asarray_torch)
 ar.register_function("torch", "diag", lambda x, k=0: _i("torch").diag(x, diagonal=k))
-ar.register_function("torch", "expand_dims", lambda x, axis: _i("torch").unsqueeze(x, dim=axis))
+ar.register_function(
+    "torch", "expand_dims", lambda x, axis: _i("torch").unsqueeze(x, dim=axis)
+)
 ar.register_function("torch", "shape", lambda x: tuple(x.shape))
 ar.register_function("torch", "gather", lambda x, indices: x[indices])
 ar.register_function("torch", "equal", lambda x, y: _i("torch").eq(x, y))
@@ -454,7 +470,9 @@ ar.register_function(
     "torch",
     "sqrt",
     lambda x: _i("torch").sqrt(
-        x.to(_i("torch").float64) if x.dtype in (_i("torch").int64, _i("torch").int32) else x
+        x.to(_i("torch").float64)
+        if x.dtype in (_i("torch").int64, _i("torch").int32)
+        else x
     ),
 )
 
@@ -608,7 +626,9 @@ def _ndim_torch(tensor):
 ar.register_function("torch", "ndim", _ndim_torch)
 
 ar.register_function("torch", "eigvalsh", lambda x: _i("torch").linalg.eigvalsh(x))
-ar.register_function("torch", "entr", lambda x: _i("torch").sum(_i("torch").special.entr(x)))
+ar.register_function(
+    "torch", "entr", lambda x: _i("torch").sum(_i("torch").special.entr(x))
+)
 
 
 def _sum_torch(tensor, axis=None, keepdims=False, dtype=None):
@@ -651,7 +671,9 @@ ar.register_function(
 )
 ar.register_function("jax", "coerce", lambda x: x)
 ar.register_function("jax", "to_numpy", _to_numpy_jax)
-ar.register_function("jax", "block_diag", lambda x: _i("jax").scipy.linalg.block_diag(*x))
+ar.register_function(
+    "jax", "block_diag", lambda x: _i("jax").scipy.linalg.block_diag(*x)
+)
 ar.register_function("jax", "gather", lambda x, indices: x[np.array(indices)])
 
 
@@ -672,10 +694,14 @@ ar.register_function(
 ar.register_function("jax", "unstack", list)
 # pylint: disable=unnecessary-lambda
 ar.register_function("jax", "eigvalsh", lambda x: _i("jax").numpy.linalg.eigvalsh(x))
-ar.register_function("jax", "entr", lambda x: _i("jax").numpy.sum(_i("jax").scipy.special.entr(x)))
+ar.register_function(
+    "jax", "entr", lambda x: _i("jax").numpy.sum(_i("jax").scipy.special.entr(x))
+)
 
 ar.register_function(
     "jax",
     "cond",
-    lambda pred, true_fn, false_fn, args: _i("jax").lax.cond(pred, true_fn, false_fn, *args),
+    lambda pred, true_fn, false_fn, args: _i("jax").lax.cond(
+        pred, true_fn, false_fn, *args
+    ),
 )

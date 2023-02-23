@@ -34,7 +34,9 @@ if np_version_spec.match(semantic_version.Version(np_version)):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-            self.__doc__ = "PennyLane wrapped NumPy Generator object\n" + super().__doc__
+            self.__doc__ = (
+                "PennyLane wrapped NumPy Generator object\n" + super().__doc__
+            )
 
             for name in dir(_random.Generator):
                 if name[0] != "_":

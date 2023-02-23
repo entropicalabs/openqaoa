@@ -17,7 +17,8 @@
 
 """Gradient descent optimizer"""
 
-get_gradient = None # changed from the original PennyLane code
+get_gradient = None  # changed from the original PennyLane code
+
 
 class GradientDescentOptimizer:
     r"""Basic gradient-descent optimizer.
