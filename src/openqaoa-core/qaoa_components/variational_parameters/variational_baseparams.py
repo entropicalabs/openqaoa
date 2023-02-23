@@ -132,6 +132,45 @@ class QAOAVariationalBaseParams(ABC):
         """
         raise NotImplementedError()
 
+    def update_from_dict(self, new_values: dict):
+        """
+        Update all the parameters from a dictionary.
+
+        The input has the same format as the output of ``self.asdict()``.
+
+        Parameters
+        ----------
+        new_values: `dict`
+            A dictionary with the new parameters. Must have the same keys as
+            the output of ``self.asdict()``.
+
+        """
+        
+        for key, value in new_values.items():
+            if key not in self.__dict__:
+                raise KeyError(f"Key '{key}' not in {self.__class__.__name__}")
+            else:
+                if getattr(self, key).shape != np.array(value).shape:
+                    raise ValueError(
+                        f"Shape of '{key}' does not match. \
+                        Expected shape {getattr(self, key).shape}, got {np.array(value).shape}"
+                    )
+                setattr(self, key, value)
+
+    def asdict(self) -> dict:
+        """
+        Return the parameters as a dictionary.
+
+        Returns
+        -------
+        dict:
+            The parameters as a dictionary. Has the same output format as the
+            expected input of ``self.update_from_dict``.
+
+        """
+        keys_to_ignore = [ 'qaoa_descriptor', 'p', 'cost_1q_coeffs', 'cost_2q_coeffs', 'mixer_1q_coeffs', 'mixer_2q_coeffs']
+        return {k: v for k, v in self.__dict__.items() if not k in keys_to_ignore}
+
     @classmethod
     def linear_ramp_from_hamiltonian(
         cls, qaoa_descriptor: QAOADescriptor, time: float = None
