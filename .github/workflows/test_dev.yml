@@ -49,7 +49,7 @@ jobs:
         with:
           credentials: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Setup AWS
-        with:
+        env:
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }} 
           SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }} 
         run:
