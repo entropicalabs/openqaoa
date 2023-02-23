@@ -67,7 +67,6 @@ class AWSJobs(Workflow):
 
         path = os.path.join(self.input_dir, "input_data/")
 
-
         if "qaoa" == self.algorithm.lower():
             workflow = QAOA()
         elif "rqaoa" == self.algorithm.lower():
@@ -77,16 +76,15 @@ class AWSJobs(Workflow):
                 f"Specified algorithm {self.algorithm} is not supported. Please choose between [QAOA, RQAOA]"
             )
 
-        self.workflow = workflow.load(file_name='openqaoa_params.json', file_path=path)
+        self.workflow = workflow.load(file_name="openqaoa_params.json", file_path=path)
 
-        #Extract the original uuid
-        self.atomic_uuid = self.workflow.asdict()['header']['atomic_id']
-        self.workflow.set_device(create_device('aws', self.device_arn))
+        # Extract the original uuid
+        self.atomic_uuid = self.workflow.asdict()["header"]["atomic_id"]
+        self.workflow.set_device(create_device("aws", self.device_arn))
 
         self.workflow.compile(self.workflow.problem)
 
-        self.workflow.header['atomic_id'] = self.atomic_uuid
-
+        self.workflow.header["atomic_id"] = self.atomic_uuid
 
     def run_workflow(self):
         """

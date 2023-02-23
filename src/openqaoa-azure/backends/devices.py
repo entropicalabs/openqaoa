@@ -98,6 +98,6 @@ class DeviceAzure(DeviceBase):
                 )
             )
             return False
-    
+
     def connectivity(self) -> List[List[int]]:
         return self.backend_device.configuration().coupling_map

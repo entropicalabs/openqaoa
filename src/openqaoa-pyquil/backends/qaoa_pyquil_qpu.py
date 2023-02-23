@@ -11,7 +11,9 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendParametric,
 )
 from openqaoa.qaoa_components import QAOADescriptor
-from openqaoa.qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap
 from openqaoa.utilities import generate_uuid
 
@@ -98,7 +100,7 @@ class QAOAPyQuilQPUBackend(
         cvar_alpha: float,
         active_reset: bool = False,
         rewiring: str = "",
-        initial_qubit_mapping: Optional[List[int]] = None
+        initial_qubit_mapping: Optional[List[int]] = None,
     ):
 
         QAOABaseBackendShotBased.__init__(
@@ -115,13 +117,17 @@ class QAOAPyQuilQPUBackend(
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.qureg = list(range(self.n_qubits))
-        self.problem_reg = self.qureg[0:self.problem_qubits]
-        
+        self.problem_reg = self.qureg[0 : self.problem_qubits]
+
         if self.initial_qubit_mapping is None:
-            self.initial_qubit_mapping = initial_qubit_mapping if initial_qubit_mapping is not None else list(range(self.n_qubits))
-        
+            self.initial_qubit_mapping = (
+                initial_qubit_mapping
+                if initial_qubit_mapping is not None
+                else list(range(self.n_qubits))
+            )
+
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
-        self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))        
+        self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.get_qubits()), (
@@ -247,7 +253,9 @@ class QAOAPyQuilQPUBackend(
                 elif len(each_tuple[1]) == 2:
                     qubits, rotation_angle = each_tuple[1]
                 else:
-                    raise ValueError(f"Specified an incorrect gate decomposition {each_tuple[1]}")
+                    raise ValueError(
+                        f"Specified an incorrect gate decomposition {each_tuple[1]}"
+                    )
                 if isinstance(qubits, list):
                     new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
                 else:
@@ -255,7 +263,7 @@ class QAOAPyQuilQPUBackend(
                 if rotation_angle is None:
                     parametric_circuit = gate.apply_pyquil_gate(
                         new_qubits, parametric_circuit
-                    ) 
+                    )
                 else:
                     parametric_circuit = gate.apply_pyquil_gate(
                         new_qubits, rotation_angle, parametric_circuit
@@ -263,15 +271,15 @@ class QAOAPyQuilQPUBackend(
 
         if self.append_state:
             parametric_circuit += self.append_state
-            
-        if self.final_mapping is None: 
-            for i,qbit in enumerate(self.problem_reg):
+
+        if self.final_mapping is None:
+            for i, qbit in enumerate(self.problem_reg):
                 parametric_circuit += gates.MEASURE(self.qubit_mapping[qbit], ro[i])
-        else: 
+        else:
             # Measurement instructions
-            for i,qubit in enumerate(self.final_mapping[0:len(self.problem_reg)]):
-                    cbit = ro[i]
-                    parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
+            for i, qubit in enumerate(self.final_mapping[0 : len(self.problem_reg)]):
+                cbit = ro[i]
+                parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
 
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 

@@ -68,10 +68,7 @@ class RQAOAResult(dict):
         )
 
     @classmethod
-    def from_dict(
-        cls, 
-        dictionary:dict
-    ):
+    def from_dict(cls, dictionary: dict):
         """
         Creates a RQAOAResult object from a dictionary (which is the output of the asdict method).
         Parameters
@@ -95,11 +92,13 @@ class RQAOAResult(dict):
             results[key] = value
 
         # convert the intermediate steps to objects
-        for step in results['intermediate_steps']:
-            step['problem'] = QUBO.from_dict(step['problem'])
-            step['qaoa_results'] = QAOAResult.from_dict(step['qaoa_results'], cost_hamiltonian=step['problem'].hamiltonian)
-            step['exp_vals_z'] = np.array(step['exp_vals_z'])
-            step['corr_matrix'] = np.array(step['corr_matrix'])
+        for step in results["intermediate_steps"]:
+            step["problem"] = QUBO.from_dict(step["problem"])
+            step["qaoa_results"] = QAOAResult.from_dict(
+                step["qaoa_results"], cost_hamiltonian=step["problem"].hamiltonian
+            )
+            step["exp_vals_z"] = np.array(step["exp_vals_z"])
+            step["corr_matrix"] = np.array(step["corr_matrix"])
 
         return results
 

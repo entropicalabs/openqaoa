@@ -23,8 +23,12 @@ class DeviceQiskit(DeviceBase):
     """
 
     def __init__(
-        self, device_name: str, hub: str = None, group: str = None, project: str = None,
-        as_emulator: bool = False
+        self,
+        device_name: str,
+        hub: str = None,
+        group: str = None,
+        project: str = None,
+        as_emulator: bool = False,
     ):
         """The user's IBMQ account has to be authenticated through qiskit in
         order to use this backend. This can be done through `IBMQ.save_account`.
@@ -101,7 +105,7 @@ class DeviceQiskit(DeviceBase):
         else:
             print(f"Please choose from {self.available_qpus} for this provider")
             return False
-        
+
     def _check_provider_connection(self) -> bool:
         """
         Private method for checking connection with provider.

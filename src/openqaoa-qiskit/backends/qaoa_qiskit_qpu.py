@@ -19,7 +19,9 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendParametric,
 )
 from openqaoa.qaoa_components import QAOADescriptor
-from openqaoa.qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 from openqaoa.utilities import flip_counts
 
 
@@ -74,10 +76,14 @@ class QAOAQiskitQPUBackend(
         QAOABaseBackendCloud.__init__(self, device)
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.problem_reg = self.qureg[0:self.problem_qubits]
+        self.problem_reg = self.qureg[0 : self.problem_qubits]
         if self.initial_qubit_mapping is None:
-            self.initial_qubit_mapping = initial_qubit_mapping if initial_qubit_mapping is not None else list(range(self.n_qubits))
-        
+            self.initial_qubit_mapping = (
+                initial_qubit_mapping
+                if initial_qubit_mapping is not None
+                else list(range(self.n_qubits))
+            )
+
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
                 "Cannot attach a bigger circuit" "to the QAOA routine"
@@ -124,9 +130,9 @@ class QAOAQiskitQPUBackend(
                 circuit_with_angles,
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
-                optimization_level = 0,
-                routing_method = 'none'
-                )
+                optimization_level=0,
+                routing_method="none",
+            )
         else:
             transpiled_circuit = transpile(
                 circuit_with_angles,
@@ -149,8 +155,8 @@ class QAOAQiskitQPUBackend(
         """
         # self.reset_circuit()
         creg = ClassicalRegister(len(self.problem_reg))
-        parametric_circuit = QuantumCircuit(self.qureg,creg)
-        
+        parametric_circuit = QuantumCircuit(self.qureg, creg)
+
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
         # Initial state is all |+>
@@ -174,14 +180,14 @@ class QAOAQiskitQPUBackend(
 
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
-        
-        #only measure the problem qubits
+
+        # only measure the problem qubits
         if self.final_mapping is None:
-            parametric_circuit.measure(self.problem_reg,creg)
+            parametric_circuit.measure(self.problem_reg, creg)
         else:
-            for idx,qubit in enumerate(self.final_mapping[0:len(self.problem_reg)]):
+            for idx, qubit in enumerate(self.final_mapping[0 : len(self.problem_reg)]):
                 cbit = creg[idx]
-                parametric_circuit.measure(qubit,cbit)
+                parametric_circuit.measure(qubit, cbit)
 
         return parametric_circuit
 
@@ -214,8 +220,8 @@ class QAOAQiskitQPUBackend(
         while job_state == False:
             # initial_layout only passed if not azure device
             # if type(self.device).__name__ == "DeviceAzure":
-                # job = self.backend_qpu.run(circuit, **input_items)                
-            job = self.backend_qpu.run(circuit, shots = n_shots)
+            # job = self.backend_qpu.run(circuit, **input_items)
+            job = self.backend_qpu.run(circuit, shots=n_shots)
 
             api_contact = False
             no_of_api_retries = 0

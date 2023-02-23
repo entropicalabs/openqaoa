@@ -23,7 +23,9 @@ import warnings
 
 import numpy as np
 from autoray import numpy as anp
-from openqaoa.optimizers import pennylane as qml # changed from the original PennyLane code
+from openqaoa.optimizers import (
+    pennylane as qml,
+)  # changed from the original PennyLane code
 
 
 def _reconstruct_equ(fun, num_frequency, x0=None, f0=None, interface=None):
@@ -58,7 +60,9 @@ def _reconstruct_equ(fun, num_frequency, x0=None, f0=None, interface=None):
         differentiable.
     """
     if not abs(int(num_frequency)) == num_frequency:
-        raise ValueError(f"num_frequency must be a non-negative integer, got {num_frequency}")
+        raise ValueError(
+            f"num_frequency must be a non-negative integer, got {num_frequency}"
+        )
 
     a = (num_frequency + 0.5) / np.pi
     b = 0.5 / np.pi
@@ -69,7 +73,9 @@ def _reconstruct_equ(fun, num_frequency, x0=None, f0=None, interface=None):
     shifts = anp.asarray(shifts, like=interface)
     f0 = fun(0.0) if f0 is None else f0
     evals = (
-        list(map(fun, shifts[:num_frequency])) + [f0] + list(map(fun, shifts[num_frequency + 1 :]))
+        list(map(fun, shifts[:num_frequency]))
+        + [f0]
+        + list(map(fun, shifts[num_frequency + 1 :]))
     )
     evals = anp.asarray(evals, like=interface)
 
@@ -138,8 +144,12 @@ def _reconstruct_gen(fun, spectrum, shifts=None, x0=None, f0=None, interface=Non
         zero_idx = R
         need_f0 = True
     elif have_f0:
-        zero_idx = qml.math.where(qml.math.isclose(shifts, qml.math.zeros_like(shifts[0])))
-        zero_idx = zero_idx[0][0] if (len(zero_idx) > 0 and len(zero_idx[0]) > 0) else None
+        zero_idx = qml.math.where(
+            qml.math.isclose(shifts, qml.math.zeros_like(shifts[0]))
+        )
+        zero_idx = (
+            zero_idx[0][0] if (len(zero_idx) > 0 and len(zero_idx[0]) > 0) else None
+        )
         need_f0 = zero_idx is not None
 
     # Take care of shifts close to zero if f0 was provided
@@ -198,7 +208,9 @@ def _parse_ids(ids, info_dict):
     """
     if ids is None:
         # Infer all id information from info_dict
-        return {outer_key: inner_dict.keys() for outer_key, inner_dict in info_dict.items()}
+        return {
+            outer_key: inner_dict.keys() for outer_key, inner_dict in info_dict.items()
+        }
     if isinstance(ids, str):
         # ids only provides a single argument name but no parameter indices
         return {ids: info_dict[ids].keys()}
@@ -226,7 +238,9 @@ def _parse_shifts(shifts, R, arg_name, par_idx, atol, need_f0):
                 f"number of frequencies (2R+1={2*R+1}) for parameter {par_idx} in "
                 f"argument {arg_name}."
             )
-        if any(qml.math.isclose(_shifts, qml.math.zeros_like(_shifts), rtol=0, atol=atol)):
+        if any(
+            qml.math.isclose(_shifts, qml.math.zeros_like(_shifts), rtol=0, atol=atol)
+        ):
             # If 0 is among the shifts, f0 is needed
             return _shifts, True
         # If 0 is not among the shifts, f0 is not needed
@@ -306,7 +320,9 @@ def _prepare_jobs(ids, nums_frequency, spectra, shifts, atol):
                 # Determine spectrum and number of frequencies, discounting for 0
                 _spectrum = spectra[arg_name][par_idx]
                 R = len(_spectrum) - 1
-                _shifts, need_f0 = _parse_shifts(shifts, R, arg_name, par_idx, atol, need_f0)
+                _shifts, need_f0 = _parse_shifts(
+                    shifts, R, arg_name, par_idx, atol, need_f0
+                )
 
                 # Store job
                 if R > 0:
@@ -330,7 +346,9 @@ def _prepare_jobs(ids, nums_frequency, spectra, shifts, atol):
 
             for par_idx in inner_dict:
                 _num_frequency = nums_frequency[arg_name][par_idx]
-                _jobs[par_idx] = {"num_frequency": _num_frequency} if _num_frequency > 0 else None
+                _jobs[par_idx] = (
+                    {"num_frequency": _num_frequency} if _num_frequency > 0 else None
+                )
 
             jobs[arg_name] = _jobs
 
@@ -621,7 +639,9 @@ def reconstruct(qnode, ids=None, nums_frequency=None, spectra=None, shifts=None)
     # pylint: disable=cell-var-from-loop, unused-argument
 
     atol = 1e-8
-    ids, recon_fn, jobs, need_f0 = _prepare_jobs(ids, nums_frequency, spectra, shifts, atol)
+    ids, recon_fn, jobs, need_f0 = _prepare_jobs(
+        ids, nums_frequency, spectra, shifts, atol
+    )
     sign_fn = qnode.func if isinstance(qnode, qml.QNode) else qnode
     arg_names = list(signature(sign_fn).parameters.keys())
     arg_idx_from_names = {arg_name: i for i, arg_name in enumerate(arg_names)}
@@ -652,7 +672,9 @@ def reconstruct(qnode, ids=None, nums_frequency=None, spectra=None, shifts=None)
                         x0 = args[arg_idx]
                     else:
                         shift_vec = qml.math.zeros_like(args[arg_idx])
-                        shift_vec = qml.math.scatter_element_add(shift_vec, par_idx, 1.0)
+                        shift_vec = qml.math.scatter_element_add(
+                            shift_vec, par_idx, 1.0
+                        )
                         x0 = args[arg_idx][par_idx]
 
                     def _univariate_fn(x):

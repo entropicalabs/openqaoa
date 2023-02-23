@@ -7,7 +7,11 @@ from ..qaoa import QAOA
 from ..workflow_properties import CircuitProperties
 from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...problems import QUBO
-from ...utilities import ground_state_hamiltonian, exp_val_hamiltonian_termwise, generate_timestamp
+from ...utilities import (
+    ground_state_hamiltonian,
+    exp_val_hamiltonian_termwise,
+    generate_timestamp,
+)
 from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from . import rqaoa_utils
 from .rqaoa_result import RQAOAResult
@@ -453,7 +457,7 @@ class RQAOA(Workflow):
         self.header["execution_time_end"] = generate_timestamp()
 
         # Compute description dictionary containing all the information
-        self.result = self.results_class() 
+        self.result = self.results_class()
         self.result["solution"] = full_solutions
         self.result["classical_output"] = {
             "minimum_energy": cl_energy,
