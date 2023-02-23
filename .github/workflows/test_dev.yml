@@ -61,6 +61,7 @@ jobs:
           aws configure set output json
       - name: Build the docker stack
         run: |
+          docker login -u AWS -p $(aws ecr get-login-password --region us-east-1) 292282985366.dkr.ecr.us-east-1.amazonaws.com
           docker network create local_bridge
           docker build -t amazon-braket-oq-dev .
           docker-compose up -d
