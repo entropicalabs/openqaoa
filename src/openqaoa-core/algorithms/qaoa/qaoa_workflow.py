@@ -1,8 +1,12 @@
 from typing import List, Callable, Optional
+import time
 import requests
+from copy import deepcopy
+
 from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
+from ...backends.basebackend import QAOABaseBackendShotBased
 from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...backends.qaoa_backend import get_qaoa_backend
 from ...problems import QUBO
@@ -303,7 +307,47 @@ class QAOA(Workflow):
         if verbose:
             print(f"optimization completed.")
         return
+    
+    def evaluate_circuit(
+        self, params: Union[List[float], Dict[str, List[float]], QAOAVariationalBaseParams]
+    ):
+        """
+        A method to evaluate the QAOA circuit at a given set of parameters
 
+        Parameters
+        ----------
+        params: list or dict or QAOAVariationalBaseParams
+            List of parameters, dictionary of parameters or QAOAVariationalBaseParams object. Which will be used to evaluate the QAOA circuit.
+
+        Returns
+        -------
+        result: dict
+            A dictionary containing the results of the evaluation
+        """
+
+        if self.compiled == False:
+            raise ValueError("Please compile the QAOA before optimizing it!")
+
+        if isinstance(params, dict):
+            params_obj = deepcopy(self.variate_params)
+            params_obj.update_from_dict(params)
+
+        elif isinstance(params, list):
+            assert len(params) == len(self.variate_params), "The number of parameters does not match the number of parameters in the QAOA circuit"
+            params_obj = deepcopy(self.variate_params)
+            params_obj.update_from_raw(params)
+
+        elif isinstance(params, QAOAVariationalBaseParams):
+            assert type(params_obj) == type(params), "The type of the parameters does not match the type of the parameters in the QAOA circuit"
+
+        else:
+            raise TypeError("params must be a list, a dictionary or a QAOAVariationalBaseParams object")
+
+        if isinstance(self.backend, QAOABaseBackendStatevector):
+            return self.backend.wavefunction(params_obj)
+        else:
+            return self.backend.get_counts(params_obj)
+    
     def _serializable_dict(
         self, complex_to_string: bool = False, intermediate_mesurements: bool = True
     ):
