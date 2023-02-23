@@ -1152,7 +1152,7 @@ class TestingRQAOA(unittest.TestCase):
     def __run_rqaoa(self, type, problem=None, n_cutoff=5, eliminations=1, p=1, param_type='standard', mixer='x', method='cobyla', maxiter=15, name_device='qiskit.statevector_simulator', return_object=False):
 
         if problem == None:
-            problem = QUBO.random_instance(n=8)
+            problem = MaximumCut.random_instance(n_nodes=8, edge_probability=0.5, seed=2).qubo
 
         r = RQAOA()
         qiskit_device = create_device(location='local', name=name_device)
