@@ -85,7 +85,9 @@ def _multi_dispatch(values):
 
     if len(set(interfaces) - {"numpy", "scipy", "autograd"}) > 1:
         # contains multiple non-autograd interfaces
-        raise ValueError("Tensors contain mixed types; cannot determine dispatch library")
+        raise ValueError(
+            "Tensors contain mixed types; cannot determine dispatch library"
+        )
 
     non_numpy_scipy_interfaces = set(interfaces) - {"numpy", "scipy"}
 
@@ -274,7 +276,9 @@ def concatenate(values, axis=0, like=None):
 
         device = (
             "cuda"
-            if any(t.device.type == "cuda" for t in values if isinstance(t, torch.Tensor))
+            if any(
+                t.device.type == "cuda" for t in values if isinstance(t, torch.Tensor)
+            )
             else "cpu"
         )
 
@@ -282,13 +286,16 @@ def concatenate(values, axis=0, like=None):
             # flatten and then concatenate zero'th dimension
             # to reproduce numpy's behaviour
             values = [
-                np.flatten(torch.as_tensor(t, device=torch.device(device)))  # pragma: no cover
+                np.flatten(
+                    torch.as_tensor(t, device=torch.device(device))
+                )  # pragma: no cover
                 for t in values
             ]
             axis = 0
         else:
             values = [
-                torch.as_tensor(t, device=torch.device(device)) for t in values  # pragma: no cover
+                torch.as_tensor(t, device=torch.device(device))
+                for t in values  # pragma: no cover
             ]
 
     if like == "tensorflow" and axis is None:

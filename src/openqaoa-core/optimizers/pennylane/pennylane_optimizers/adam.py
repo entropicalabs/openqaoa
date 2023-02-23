@@ -16,7 +16,7 @@
 # Lines modified by Entropica Labs will bear the comment # changed from the original PennyLane code
 
 """Adam optimizer"""
-from numpy import sqrt # changed from the original PennyLane code
+from numpy import sqrt  # changed from the original PennyLane code
 from .gradient_descent import GradientDescentOptimizer
 
 
@@ -92,9 +92,9 @@ class AdamOptimizer(GradientDescentOptimizer):
             if getattr(arg, "requires_grad", False):
 
                 self._update_accumulation(index, grad[trained_index])
-                args_new[index] = arg - new_stepsize * self.accumulation["fm"][index] / (
-                    sqrt(self.accumulation["sm"][index]) + self.eps
-                )
+                args_new[index] = arg - new_stepsize * self.accumulation["fm"][
+                    index
+                ] / (sqrt(self.accumulation["sm"][index]) + self.eps)
 
                 trained_index += 1
 

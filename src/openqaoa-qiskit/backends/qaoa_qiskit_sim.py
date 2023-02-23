@@ -15,8 +15,14 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendStatevector,
 )
 from openqaoa.qaoa_components import QAOADescriptor
-from openqaoa.qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
-from openqaoa.utilities import flip_counts, generate_uuid, round_value
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
+from openqaoa.utilities import (
+    flip_counts,
+    generate_uuid,
+    round_value,
+)
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.qaoa_components.ansatz_constructor import (
     RXGateMap,
@@ -101,7 +107,6 @@ class QAOAQiskitBackendShotBasedSimulator(
         )
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.qaoa_descriptor.qureg
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
@@ -153,10 +158,15 @@ class QAOAQiskitBackendShotBasedSimulator(
 
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
-            angle_param = Parameter(str(each_gate.pauli_label))
-            self.qiskit_parameter_list.append(angle_param)
-            each_gate.rotation_angle = angle_param
-            if type(each_gate) in self.QISKIT_GATEMAP_LIBRARY:
+            # if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ["MIXER", "COST"]:
+                angle_param = Parameter(each_gate.gate_label.__repr__())
+                self.qiskit_parameter_list.append(angle_param)
+                each_gate.angle_value = angle_param
+            if (
+                type(each_gate)
+                in QAOAQiskitBackendShotBasedSimulator.QISKIT_GATEMAP_LIBRARY
+            ):
                 decomposition = each_gate.decomposition("trivial")
             else:
                 decomposition = each_gate.decomposition("standard")
@@ -201,9 +211,10 @@ class QAOAQiskitBackendShotBasedSimulator(
             .result()
             .get_counts()
         )
-        flipped_counts = flip_counts(counts)
-        self.measurement_outcomes = flipped_counts
-        return flipped_counts
+
+        final_counts = flip_counts(counts)
+        self.measurement_outcomes = final_counts
+        return final_counts
 
     def circuit_to_qasm(self):
         """
@@ -280,7 +291,6 @@ class QAOAQiskitBackendStatevecSimulator(
         ), "Please use the shot-based simulator for simulations with cvar_alpha < 1"
 
         self.qureg = QuantumRegister(self.n_qubits)
-        self.qubit_layout = self.qaoa_descriptor.qureg
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
@@ -363,10 +373,15 @@ class QAOAQiskitBackendStatevecSimulator(
 
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
-            angle_param = Parameter(str(each_gate.pauli_label))
-            self.qiskit_parameter_list.append(angle_param)
-            each_gate.rotation_angle = angle_param
-            if type(each_gate) in self.QISKIT_GATEMAP_LIBRARY:
+            # if gate is of type mixer or cost gate, assign parameter to it
+            if each_gate.gate_label.type.value in ["MIXER", "COST"]:
+                angle_param = Parameter(each_gate.gate_label.__repr__())
+                self.qiskit_parameter_list.append(angle_param)
+                each_gate.angle_value = angle_param
+            if (
+                type(each_gate)
+                in QAOAQiskitBackendStatevecSimulator.QISKIT_GATEMAP_LIBRARY
+            ):
                 decomposition = each_gate.decomposition("trivial")
             else:
                 decomposition = each_gate.decomposition("standard")

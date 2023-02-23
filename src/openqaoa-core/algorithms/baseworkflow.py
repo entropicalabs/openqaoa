@@ -89,16 +89,13 @@ class Workflow(ABC):
             "experiment_id": generate_uuid(),  # the id of the experiment it is generated automatically here
             "project_id": None,
             "algorithm": None,  # qaoa or rqaoa
-            "name": None,
+            "description": None,
             "run_by": None,
             "provider": None,
             "target": None,
             "cloud": None,
             "client": None,
             "qubit_number": None,  # it is set automatically in the compilation from the problem object
-            "qubit_routing": None,
-            "error_mitigation": None,
-            "error_correction": None,
             "execution_time_start": None,
             "execution_time_end": None,
         }
@@ -123,15 +120,13 @@ class Workflow(ABC):
     def set_header(
         self,
         project_id: str,
-        name: str,
+        description: str,
         run_by: str,
         provider: str,
         target: str,
         cloud: str,
         client: str,
-        qubit_routing: str,
-        error_mitigation: str,
-        error_correction: str,
+        experiment_id: str = None,
     ):
         """
         Method to set the identification stamps of the optimizer object in self.header.
@@ -146,16 +141,21 @@ class Workflow(ABC):
                 "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
             )
 
+        if experiment_id != None:
+            if not is_valid_uuid(experiment_id):
+                raise ValueError(
+                    "The experiment_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+                )
+            else:
+                self.header["experiment_id"] = experiment_id
+
         self.header["project_id"] = project_id
-        self.header["name"] = name
+        self.header["description"] = description
         self.header["run_by"] = run_by
         self.header["provider"] = provider
         self.header["target"] = target
         self.header["cloud"] = cloud
         self.header["client"] = client
-        self.header["qubit_routing"] = qubit_routing
-        self.header["error_mitigation"] = error_mitigation
-        self.header["error_correction"] = error_correction
 
     def set_exp_tags(self, tags: dict):
         """
@@ -365,21 +365,29 @@ class Workflow(ABC):
                     data["input_parameters"]["backend_properties"][item]
                 )
 
-        data["result"] = self.result.asdict(
-            False, complex_to_string, intermediate_mesurements
-        ) if not self.result in [None, {}] else None
+        data["result"] = (
+            self.result.asdict(False, complex_to_string, intermediate_mesurements)
+            if not self.result in [None, {}]
+            else None
+        )
 
         # create the final header dictionary
         header = self.header.copy()
         header["metadata"] = {
             **self.exp_tags.copy(),
-            **({
-                "problem_type": 
-                data["input_problem"]["problem_instance"]["problem_type"] 
-            } if data["input_problem"] is not None else {}),
             **(
-                data["input_problem"]["metadata"].copy() 
-                if data["input_problem"] is not None else {}
+                {
+                    "problem_type": data["input_problem"]["problem_instance"][
+                        "problem_type"
+                    ]
+                }
+                if data["input_problem"] is not None
+                else {}
+            ),
+            **(
+                data["input_problem"]["metadata"].copy()
+                if data["input_problem"] is not None
+                else {}
             ),
             **{"n_shots": data["input_parameters"]["backend_properties"]["n_shots"]},
             **{
@@ -578,9 +586,9 @@ class Workflow(ABC):
                     file[len(file_path) :], file_path
                 )
             )
-    
+
     @classmethod
-    def from_dict(cls, dictionary:dict):
+    def from_dict(cls, dictionary: dict):
         """
         Creates an Optimizer object from a dictionary (which is the output of the asdict method)
         Parameters
@@ -593,51 +601,67 @@ class Workflow(ABC):
         """
 
         # check if the class is correct
-        algorithm = dictionary['header']['algorithm']
-        assert algorithm.lower() == cls.__name__.lower(), \
-        f"The class {cls.__name__} does not match the algorithm ({algorithm}) of the dictionary."
+        algorithm = dictionary["header"]["algorithm"]
+        assert (
+            algorithm.lower() == cls.__name__.lower()
+        ), f"The class {cls.__name__} does not match the algorithm ({algorithm}) of the dictionary."
 
         # create the object
         obj = cls()
 
         # header
-        obj.header = dictionary['header'].copy()
-        obj.header.pop('metadata', None) # remove the metadata from the header 
+        obj.header = dictionary["header"].copy()
+        obj.header.pop("metadata", None)  # remove the metadata from the header
 
         # tags
-        obj.exp_tags = dictionary['data']['exp_tags'].copy()
+        obj.exp_tags = dictionary["data"]["exp_tags"].copy()
 
         # problem
-        obj.problem = QUBO.from_dict(dictionary['data']['input_problem']) \
-                        if dictionary['data']['input_problem'] is not None else None
+        obj.problem = (
+            QUBO.from_dict(dictionary["data"]["input_problem"])
+            if dictionary["data"]["input_problem"] is not None
+            else None
+        )
 
         # input parameters
         map_inputs = {
-            'backend_properties': obj.set_backend_properties,
-            'circuit_properties': obj.set_circuit_properties,
-            'classical_optimizer': obj.set_classical_optimizer,
-            'rqaoa_parameters': obj.set_rqaoa_parameters if algorithm == 'rqaoa' else None,
+            "backend_properties": obj.set_backend_properties,
+            "circuit_properties": obj.set_circuit_properties,
+            "classical_optimizer": obj.set_classical_optimizer,
+            "rqaoa_parameters": obj.set_rqaoa_parameters
+            if algorithm == "rqaoa"
+            else None,
         }
-        for key, value in dictionary['data']['input_parameters'].items():
-            if key == 'device': continue
+        for key, value in dictionary["data"]["input_parameters"].items():
+            if key == "device":
+                continue
             map_inputs[key](**value)
 
         # results
-        if 'result' in dictionary['data'].keys() and dictionary['data']['result'] is not None:
+        if (
+            "result" in dictionary["data"].keys()
+            and dictionary["data"]["result"] is not None
+        ):
             obj.result = obj.results_class.from_dict(
-                                    dictionary['data']['result'], 
-                                    **({'cost_hamiltonian':obj.problem.hamiltonian} if algorithm == 'qaoa' else {})
-                          )
+                dictionary["data"]["result"],
+                **(
+                    {"cost_hamiltonian": obj.problem.hamiltonian}
+                    if algorithm == "qaoa"
+                    else {}
+                ),
+            )
 
         # print a message when the object is loaded
         print(f"Loaded {cls.__name__} object.")
         print("The device has to be set manually using the set_device method.")
-        print(f"Name of the device used was: {dictionary['data']['input_parameters']['device']}")
+        print(
+            f"Name of the device used was: {dictionary['data']['input_parameters']['device']}"
+        )
 
         return obj
 
     @classmethod
-    def loads(cls, string:str):
+    def loads(cls, string: str):
         """
         Creates an Optimizer object from a string (which is the output of the dumps method)
         Parameters
@@ -651,7 +675,7 @@ class Workflow(ABC):
         return cls.from_dict(json.loads(string))
 
     @classmethod
-    def load(cls, file_name:str, file_path:str=""):
+    def load(cls, file_name: str, file_path: str = ""):
         """
         Creates an Optimizer object from a file (which is the output of the dump method)
         Parameters
@@ -665,9 +689,9 @@ class Workflow(ABC):
         QAOA or RQAOA
         """
         file = file_path + file_name
-        if '.gz' == file_name[-3:]:
-            with gzip.open(file, 'r') as f:
-                return cls.loads(f.read().decode('utf-8'))
+        if ".gz" == file_name[-3:]:
+            with gzip.open(file, "r") as f:
+                return cls.loads(f.read().decode("utf-8"))
         else:
-            with open(file, 'r') as f:
+            with open(file, "r") as f:
                 return cls.loads(f.read())

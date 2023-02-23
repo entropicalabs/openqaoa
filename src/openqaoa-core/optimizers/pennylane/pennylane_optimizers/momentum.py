@@ -77,7 +77,9 @@ class MomentumOptimizer(GradientDescentOptimizer):
             index (int): index of argument to update.
             grad (ndarray): gradient at index
         """
-        self.accumulation[index] = self.momentum * self.accumulation[index] + self.stepsize * grad
+        self.accumulation[index] = (
+            self.momentum * self.accumulation[index] + self.stepsize * grad
+        )
 
     def reset(self):
         """Reset optimizer by erasing memory of past steps."""
