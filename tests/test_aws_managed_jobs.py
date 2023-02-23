@@ -137,7 +137,7 @@ class TestingAwsJobs(unittest.TestCase):
             input_data={"input_data": input_data_path},
         )
 
-        assert (job.state() == 'COMPLETED') and (job.result() != None) == True
+        assert (job.state() == 'COMPLETED') and (job.result() != None) == True 
 
 
 if __name__ == "__main__":
