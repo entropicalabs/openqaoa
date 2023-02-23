@@ -43,7 +43,7 @@ jobs:
           IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }} 
           run: |
             python -c'from qiskit import IBMQ; IBMQ.save_account(os.environ['IBMQ_TOKEN'])'
-      - 'Az CLI login'
+      - name: 'Az CLI login'
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
