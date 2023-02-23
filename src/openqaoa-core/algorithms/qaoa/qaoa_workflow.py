@@ -203,7 +203,7 @@ class QAOA(Workflow):
         #         self.backend_properties.append_state is not None or\
         #         self.backend_properties.prepend_state is not None or\
         #         self.circuit_properties.mixer_hamiltonian is not 'x' or\
-                
+
         #     )
 
         # connect to the QPU specified

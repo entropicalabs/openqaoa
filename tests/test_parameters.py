@@ -192,7 +192,7 @@ class TestingQAOADescriptor(unittest.TestCase):
         """
 
         mixer_gatemap = [RXGateMap(0), RXGateMap(1), RXGateMap(2), RXXGateMap(0, 2)]
-        
+
         qaoa_descriptor = QAOADescriptor(
             self.cost_hamil, mixer_gatemap, p=self.p, mixer_coeffs=[-1, -1, -1, -0.5]
         )
@@ -202,9 +202,12 @@ class TestingQAOADescriptor(unittest.TestCase):
                 self.assertTrue(isinstance(each_item, RotationGateMap))
                 self.assertEqual(each_item.gate_label.type, GateMapType.COST)
                 self.assertEqual(each_item.gate_label.layer, p_index)
-                
-            self.assertEqual([each_item.gate_label.sequence for each_item in each_p_block], [0, 1, 2, 0])
-            
+
+            self.assertEqual(
+                [each_item.gate_label.sequence for each_item in each_p_block],
+                [0, 1, 2, 0],
+            )
+
     def test_QAOADescriptor_mixer_blocks(self):
 
         """
@@ -222,8 +225,11 @@ class TestingQAOADescriptor(unittest.TestCase):
                 self.assertTrue(isinstance(each_item, RotationGateMap))
                 self.assertEqual(each_item.gate_label.type, GateMapType.MIXER)
                 self.assertEqual(each_item.gate_label.layer, p_index)
-                
-            self.assertEqual([each_item.gate_label.sequence for each_item in each_p_block], [0, 1, 2, 0])
+
+            self.assertEqual(
+                [each_item.gate_label.sequence for each_item in each_p_block],
+                [0, 1, 2, 0],
+            )
 
     def test_QAOADescriptor_weird_cases(self):
 

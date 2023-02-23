@@ -16,7 +16,7 @@
 # Lines modified by Entropica Labs will bear the comment # changed from the original PennyLane code
 
 """Adagrad optimizer"""
-from numpy import sqrt # changed from the original PennyLane code
+from numpy import sqrt  # changed from the original PennyLane code
 from .gradient_descent import GradientDescentOptimizer
 
 

@@ -30,7 +30,7 @@ differentiation to be preserved.
 The following frameworks are currently supported:
 
 * NumPy
-""" # changed from the original PennyLane code
+"""  # changed from the original PennyLane code
 
 import autoray as ar
 
@@ -59,7 +59,14 @@ from .multi_dispatch import (
 )
 
 from .quantum import cov_matrix, marginal_prob
-from .quantum import reduced_dm, vn_entropy, mutual_info, sqrt_matrix, fidelity, relative_entropy
+from .quantum import (
+    reduced_dm,
+    vn_entropy,
+    mutual_info,
+    sqrt_matrix,
+    fidelity,
+    relative_entropy,
+)
 
 from .utils import (
     allclose,

@@ -3,7 +3,9 @@ from copy import deepcopy
 import numpy as np
 
 from ..qaoa_components import QAOAVariationalExtendedParams
-from openqaoa.qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 from ..backends.basebackend import QAOABaseBackend
 from ..optimizers.logger_vqa import Logger
 from ..backends.cost_function import cost_function
