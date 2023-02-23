@@ -1,3 +1,4 @@
+from typing import List
 from qcs_api_client.client import QCSClientConfiguration
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
@@ -103,3 +104,9 @@ class DevicePyquil(DeviceBase):
         """
 
         return True
+
+    def connectivity(self) -> List[List[int]]:
+        # returns a networkx graph of qubit topology
+        G = self.quantum_computer.qubit_topology()
+        connectivity_as_list = list(G.edges())
+        return connectivity_as_list

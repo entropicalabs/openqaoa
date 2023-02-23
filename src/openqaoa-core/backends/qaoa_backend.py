@@ -46,8 +46,8 @@ def _backend_arg_mapper(
     noise_model=None,
     active_reset: Optional[bool] = None,
     rewiring=None,
-    qubit_layout=None,
     disable_qubit_rewiring: Optional[bool] = None,
+    initial_qubit_mapping=None,
 ):
 
     BACKEND_ARGS_MAPPER = {
@@ -60,18 +60,22 @@ def _backend_arg_mapper(
             "seed_simulator": seed_simulator,
             "qiskit_simulation_method": qiskit_simulation_method,
             "noise_model": noise_model,
+            "initial_qubit_mapping": initial_qubit_mapping,
         },
-        QAOAQiskitQPUBackend: {"n_shots": n_shots, "qubit_layout": qubit_layout},
+        QAOAQiskitQPUBackend: {
+            "n_shots": n_shots,
+            "initial_qubit_mapping": initial_qubit_mapping,
+        },
         QAOAPyQuilQPUBackend: {
             "n_shots": n_shots,
             "active_reset": active_reset,
             "rewiring": rewiring,
-            "qubit_layout": qubit_layout,
+            "initial_qubit_mapping": initial_qubit_mapping,
         },
         QAOAAWSQPUBackend: {
             "n_shots": n_shots,
-            "qubit_layout": qubit_layout,
             "disable_qubit_rewiring": disable_qubit_rewiring,
+            "initial_qubit_mapping": initial_qubit_mapping,
         },
     }
 
@@ -145,7 +149,7 @@ def get_qaoa_backend(
         The value of the CVaR parameter.
     kwargs:
     Additional keyword arguments for the backend.
-        qubit_layout: `list`
+        initial_qubit_mapping: `list`
             A list of physical qubits to be used for the QAOA circuit.
         n_shots: `int`
             The number of shots to be used for the shot-based computation.
