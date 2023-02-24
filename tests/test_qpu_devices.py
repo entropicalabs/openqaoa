@@ -322,6 +322,7 @@ class TestingDeviceAzure(unittest.TestCase):
     @pytest.mark.api      
     def test_check_connection_provider_no_backend_provided_resource_id_and_az_location(self):
         
+        """
         If no information about the device name, but the resource id and azure 
         location used are correct, check_connection should return True.
         The provider_connected attribute should be updated to True.
