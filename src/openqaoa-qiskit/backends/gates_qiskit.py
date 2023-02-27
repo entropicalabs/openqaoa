@@ -1,11 +1,14 @@
 from typing import Callable
-from openqaoa.qaoa_components.ansatz_constructor.rotationangle import RotationAngle
-import openqaoa.qaoa_parameters.gates as gates_core
+
 from qiskit.circuit.library import (
 	RXGate, RYGate, RZGate, CXGate, CZGate,
 	RXXGate, RZXGate, RZZGate, RYYGate, CRZGate
  )
 from qiskit import QuantumCircuit
+
+from openqaoa.qaoa_components.ansatz_constructor.rotationangle import RotationAngle
+import openqaoa.qaoa_components.ansatz_constructor.gates as gates_core
+
 
 class QiskitGateApplicator(gates_core.GateApplicator):
 
@@ -14,7 +17,7 @@ class QiskitGateApplicator(gates_core.GateApplicator):
 		gates_core.RX.__name__: RXGate,
 		gates_core.RY.__name__: RYGate,
 		gates_core.CX.__name__: CXGate,
-		gates_core.CZ.__name__:CZGate,
+		gates_core.CZ.__name__: CZGate,
 		gates_core.RXX.__name__: RXXGate,
 		gates_core.RZX.__name__: RZXGate,
 		gates_core.RZZ.__name__: RZZGate,
@@ -43,7 +46,6 @@ class QiskitGateApplicator(gates_core.GateApplicator):
 			[qubit_1],
 			[]
 		)
-		return circuit
 
 	@staticmethod
 	def apply_2q_rotation_gate(
@@ -60,7 +62,6 @@ class QiskitGateApplicator(gates_core.GateApplicator):
 			[qubit_1,qubit_2],
 			[]
 		)
-		return circuit
 
 	@staticmethod
 	def apply_1q_fixed_gate(
@@ -73,7 +74,6 @@ class QiskitGateApplicator(gates_core.GateApplicator):
 			[qubit_1],
 			[]
 		)
-		return circuit
 
 	@staticmethod
 	def apply_2q_fixed_gate(
@@ -87,7 +87,6 @@ class QiskitGateApplicator(gates_core.GateApplicator):
 			[qubit_1,qubit_2],
 			[]
 		)
-		return circuit
 
 	def apply_gate(self, gate: gates_core.Gate, *args):
 		selected_qiskit_gate = self.gate_selector(gate)
