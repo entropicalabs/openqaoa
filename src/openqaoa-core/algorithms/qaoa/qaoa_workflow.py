@@ -1,13 +1,12 @@
-from typing import List, Callable, Optional
-import time
-import requests
+from typing import List, Callable, Optional, Union, Dict
 from copy import deepcopy
+import numpy as np
 
 from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
-from ...backends.basebackend import QAOABaseBackendShotBased
-from ...backends.devices_core import DeviceLocal, DeviceBase
+from ...backends.basebackend import QAOABaseBackendStatevector
+from ...backends.devices_core import DeviceLocal
 from ...backends.qaoa_backend import get_qaoa_backend
 from ...problems import QUBO
 from ...qaoa_components import (
@@ -309,45 +308,69 @@ class QAOA(Workflow):
         return
     
     def evaluate_circuit(
-        self, params: Union[List[float], Dict[str, List[float]], QAOAVariationalBaseParams]
+        self, params: Union[List[float], Dict[str, List[float]], None] = None
     ):
         """
         A method to evaluate the QAOA circuit at a given set of parameters
 
         Parameters
         ----------
-        params: list or dict or QAOAVariationalBaseParams
-            List of parameters, dictionary of parameters or QAOAVariationalBaseParams object. Which will be used to evaluate the QAOA circuit.
+        params: list or dict or None
+            List of parameters or dictionary of parameters. Which will be used to evaluate the QAOA circuit.
+            If None, the variational parameters of the QAOA object will be used.
 
         Returns
         -------
         result: dict
-            A dictionary containing the results of the evaluation
+            A dictionary containing the results of the evaluation:
+            - "expectation": the expectation value of the cost Hamiltonian
+            - "uncertainty": the uncertainty of the expectation value of the cost Hamiltonian
+            - "state": the state of the QAOA circuit output (if the QAOA circuit is evaluated on a state simulator)
+            - "counts": the counts of the QAOA circuit output (if the QAOA circuit is evaluated on a QPU or shot-based simulator)
         """
 
-        if self.compiled == False:
-            raise ValueError("Please compile the QAOA before optimizing it!")
+        # before evaluating the circuit we check that the QAOA object has been compiled
+        if self.compiled == False: raise ValueError("Please compile the QAOA before optimizing it!")
 
-        if isinstance(params, dict):
+        
+        ## Check the type of the input parameters and save them as a QAOAVariationalBaseParams object at the variable `params_obj`
+
+        # if no parameters are passed, we use the optimized parameters of the QAOA object
+        if params is None:
+            assert self.result != None, "No parameters have been passed and the QAOA object has not been optimized yet"
             params_obj = deepcopy(self.variate_params)
+            params_obj.update_from_raw(self.result.optimized['angles'])
+
+        # if the parameters are passed as a dictionary we copy and update the variational parameters of the QAOA object
+        elif isinstance(params, dict):
+            params_obj = deepcopy(self.variate_params)
+            # we check that the dictionary contains all the parameters of the QAOA object that are not empty
+            for key, value in params_obj.asdict().items():
+                if value.size > 0: 
+                    assert key in params.keys(), f"The parameter `{key}` is missing from the input dictionary"
             params_obj.update_from_dict(params)
 
-        elif isinstance(params, list):
+        # if the parameters are passed as a list we copy and update the variational parameters of the QAOA object
+        elif isinstance(params, list) or isinstance(params, np.ndarray):
             assert len(params) == len(self.variate_params), "The number of parameters does not match the number of parameters in the QAOA circuit"
             params_obj = deepcopy(self.variate_params)
             params_obj.update_from_raw(params)
 
-        elif isinstance(params, QAOAVariationalBaseParams):
-            assert type(params_obj) == type(params), "The type of the parameters does not match the type of the parameters in the QAOA circuit"
-
+        # if the parameters are passed in a different format, we raise an error
         else:
-            raise TypeError("params must be a list, a dictionary or a QAOAVariationalBaseParams object")
+            raise TypeError("`params` must be a list, a dictionary or None")
 
+        ## get the results of the evaluation with the corresponding parameters
+        print("Evaluating the QAOA circuit at the following parameters:", params_obj.raw().tolist())
+        result = {}
+        result['cost'], result['uncertainty'] = self.backend.expectation_w_uncertainty(params_obj)
         if isinstance(self.backend, QAOABaseBackendStatevector):
-            return self.backend.wavefunction(params_obj)
+            result['state'] = self.backend.wavefunction(params_obj)
         else:
-            return self.backend.get_counts(params_obj)
-    
+            result['counts'] = self.backend.get_counts(params_obj)
+
+        return result    
+
     def _serializable_dict(
         self, complex_to_string: bool = False, intermediate_mesurements: bool = True
     ):
