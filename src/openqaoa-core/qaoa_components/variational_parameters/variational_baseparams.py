@@ -145,17 +145,26 @@ class QAOAVariationalBaseParams(ABC):
             the output of ``self.asdict()``.
 
         """
+
+        assert isinstance(new_values, dict), f"Expected dict, got {type(new_values)}"
         
         for key, value in new_values.items():
-            if key not in self.__dict__:
-                raise KeyError(f"Key '{key}' not in {self.__class__.__name__}")
+            if key not in self.asdict().keys():
+                raise KeyError(f"'{key}' not in {self.__class__.__name__}, expected keys: {list(self.asdict().keys())}")
             else:
                 if getattr(self, key).shape != np.array(value).shape:
                     raise ValueError(
-                        f"Shape of '{key}' does not match. \
-                        Expected shape {getattr(self, key).shape}, got {np.array(value).shape}"
+                        f"Shape of '{key}' does not match. Expected shape {getattr(self, key).shape}, got {np.array(value).shape}."
                     )
-                setattr(self, key, value)
+
+        raw_params = []
+        for key, value in self.asdict().items():
+            if key in new_values.keys():
+                raw_params += list(np.array(new_values[key]).flatten())
+            else:
+                raw_params += list(np.array(value).flatten())
+
+        self.update_from_raw(raw_params)
 
     def asdict(self) -> dict:
         """
@@ -168,8 +177,7 @@ class QAOAVariationalBaseParams(ABC):
             expected input of ``self.update_from_dict``.
 
         """
-        keys_to_ignore = [ 'qaoa_descriptor', 'p', 'cost_1q_coeffs', 'cost_2q_coeffs', 'mixer_1q_coeffs', 'mixer_2q_coeffs']
-        return {k: v for k, v in self.__dict__.items() if not k in keys_to_ignore}
+        return {k[2:]: v for k, v in self.__dict__.items() if k[0:2] == "__"}
 
     @classmethod
     def linear_ramp_from_hamiltonian(

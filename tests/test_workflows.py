@@ -3,6 +3,7 @@ import unittest
 import networkx as nw
 import numpy as np
 import datetime
+from copy import deepcopy
 
 from qiskit.providers.fake_provider import FakeVigo
 from qiskit.providers.aer.noise import NoiseModel
@@ -43,7 +44,9 @@ from openqaoa_qiskit.backends import (
     QAOAQiskitBackendShotBasedSimulator,
     QAOAQiskitBackendStatevecSimulator
 )
-
+from openqaoa.qaoa_components.variational_parameters.variational_params_factory import (
+    PARAMS_CLASSES_MAPPER
+)
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ['6q-qvm', 'Aspen-11']
@@ -1099,6 +1102,93 @@ class TestingVanillaQAOA(unittest.TestCase):
         except Exception:
             error = True
         assert error, "RQAOA.from_dict should raise an error when using a QAOA dictionary"
+
+    def test_qaoa_evaluate_circuit(self):
+
+        # problem
+        maxcut_qubo = MinimumVertexCover.random_instance(n_nodes=6, edge_probability=0.9, seed=42).qubo
+
+        # run qaoa with different param_type, and save the objcets in a list  
+        qaoas = []
+        for param_type in PARAMS_CLASSES_MAPPER.keys():
+            q = QAOA()
+            q.set_circuit_properties(p=3, param_type=param_type, init_type='rand')
+            q.compile(maxcut_qubo) 
+            qaoas.append(q)
+
+        for q in qaoas:
+
+            # evaluate the circuit with random dict of params
+            params = {k: np.random.rand(*v.shape) for k, v in q.variate_params.asdict().items()}
+            result = q.evaluate_circuit(params)
+            assert abs(result['cost']) > 0, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a cost, here cost is {result['cost']}"
+            assert abs(result['uncertainty']) > 0, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return an uncertanty, here uncertainty is {result['uncertainty']}"
+            assert len(result['state']) > 0, \
+            f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a state when using a state-based simulator"
+            assert not "counts" in result, \
+            f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should not return counts when using a state-based simulator"
+
+            # evaluate the circuit with random list of params
+            params2 = []
+            for value in params.values():
+                params2 += value.flatten().tolist()
+            result2 = q.evaluate_circuit(params2)
+            assert result == result2, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+
+            # evaluate the circuit with random np.ndarray of params
+            result2 = q.evaluate_circuit(np.array(params2))
+            assert result == result2, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+
+            # run the circuit with the optimized params manually
+            params_obj = deepcopy(q.variate_params)
+            params_obj.update_from_raw(params2)
+            result3 = {}
+            result3['cost'], result3['uncertainty'] = q.backend.expectation_w_uncertainty(params_obj)
+            result3['state'] = q.backend.wavefunction(params_obj)
+            assert result == result3, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing the optimized params manually"
+
+            # evaluate the circuit without optimizing and passing any param, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit()
+            except Exception:
+                error = True
+            assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when not optimization has happened and not passing any param"
+
+            # optimize the qaoa object and evaluate the circuit without passing any param, the cost should be the same
+            q.optimize()
+            result = q.evaluate_circuit()
+            assert result['cost'] == q.result.optimized['cost'], f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same cost as the result.cost attribute"
+
+            # it should also work if you pass the params as a list
+            optimized_params = q.result.optimized['angles']
+            result = q.evaluate_circuit(optimized_params)
+            assert result['cost'] == q.result.optimized['cost'], \
+            f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same cost as the result.cost attribute, when passing the optimized params as a list"
+
+            # it should also work if you pass the params as a dictionary
+            dictionary = q.variate_params.asdict()
+            optimized_params_ = optimized_params.copy()
+            for key in dictionary.keys(): # create the dictionary with the optimized values
+                dictionary[key] = np.array([optimized_params_.pop(0) for _ in range(dictionary[key].size)]).reshape(dictionary[key].shape)
+            result = q.evaluate_circuit(dictionary)
+            assert result['cost'] == q.result.optimized['cost'], \
+            f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same cost as the result.cost attribute, when passing the optimized params as a dictionary"
+
+        # check that it works with shots
+        q = QAOA()
+        device = create_device(location="local", name='qiskit.qasm_simulator')
+        q.set_device(device)
+        q.set_circuit_properties(p=3, param_type="standard", init_type='rand')
+        q.compile(maxcut_qubo) 
+        q.optimize()
+        result = q.evaluate_circuit()
+        assert isinstance(result['counts'], dict), "When using a shot-based simulator, `evaluate_circuit` should return a dcit of counts"
+        assert not "state" in result, "When using a shot-based simulator, `evaluate_circuit` should not return a state"
+        assert abs(result['cost']) > 0, "When using a shot-based simulator, `evaluate_circuit` should return a cost"
+        assert abs(result['uncertainty']) > 0, "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
+
+
 
 
 class TestingRQAOA(unittest.TestCase):
