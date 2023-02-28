@@ -362,7 +362,7 @@ class QAOA(Workflow):
             raise TypeError("`params` must be a list, a dictionary or None")
 
         ## get the results of the evaluation with the corresponding parameters
-        print("Evaluating the QAOA circuit at the following parameters:", params_obj.raw().tolist())
+        print("Evaluating the QAOA circuit at the following parameters:", {k: v.tolist() for k,v in params_obj.asdict().items()})
         
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             return {'cost': self.backend.expectation(params_obj)[0]}
