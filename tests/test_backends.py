@@ -122,9 +122,23 @@ class TestingBackendQPUs(unittest.TestCase):
 
     @pytest.mark.qpu
     def test_get_counts_and_expectation_n_shots(self):
-        """Check that the .get_counts, .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the backends of all QPUs."""
+        """
+        TODO: test needs to be updated as DEVICE_ACCESS_OBJECT_MAPPER is now dynamically filled based on whether a module exists.
+        
+        Check that the .get_counts, .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the backends of all QPUs.
+        """
 
         list_device_attributes = [
+            {
+                "QPU": "AWS",
+                "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            },
+            {
+                "QPU": "Azure",
+                "device_name": "rigetti.sim.qvm",
+                "resource_id": self.RESOURCE_ID,
+                "az_location": self.AZ_LOCATION,
+            },
             {
                 "QPU": "Qiskit",
                 "device_name": "ibmq_qasm_simulator",
@@ -138,16 +152,6 @@ class TestingBackendQPUs(unittest.TestCase):
                 "as_qvm": True,
                 "execution_timeout": 3,
                 "compiler_timeout": 3,
-            },
-            {
-                "QPU": "AWS",
-                "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            },
-            {
-                "QPU": "Azure",
-                "device_name": "rigetti.sim.qvm",
-                "resource_id": self.RESOURCE_ID,
-                "az_location": self.AZ_LOCATION,
             },
         ]
 
@@ -169,6 +173,7 @@ class TestingBackendQPUs(unittest.TestCase):
             #     continue
 
             try:
+                print(device, device_attributes)
                 device = device(**device_attributes)
                 backend = backend(
                     qaoa_descriptor=qaoa_descriptor,
