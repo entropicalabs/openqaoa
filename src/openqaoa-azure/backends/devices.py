@@ -30,7 +30,7 @@ class DeviceAzure(DeviceBase):
         resource_id: `str`
             The resource_id of the Workplace
         az_location: `str`
-            The location of the Azure Workplace. e.g. "us-west-1"
+            The location of the Azure Workplace. e.g. "westus"
         """
 
         self.resource_id = resource_id
