@@ -1104,6 +1104,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert error, "RQAOA.from_dict should raise an error when using a QAOA dictionary"
 
     def test_qaoa_evaluate_circuit(self):
+        """
+        test the evaluate_circuit method
+        """
 
         # problem
         maxcut_qubo = MinimumVertexCover.random_instance(n_nodes=6, edge_probability=0.9, seed=42).qubo
@@ -1116,6 +1119,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             q.compile(maxcut_qubo) 
             qaoas.append(q)
 
+        # for each qaoa object, test the evaluate_circuit method
         for q in qaoas:
 
             # evaluate the circuit with random dict of params
@@ -1128,24 +1132,32 @@ class TestingVanillaQAOA(unittest.TestCase):
             assert not "counts" in result, \
             f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should not return counts when using a state-based simulator"
 
-            # evaluate the circuit with random list of params
+            # evaluate the circuit with a list of params, taking the params from the dict, so we should get the same result
             params2 = []
             for value in params.values():
                 params2 += value.flatten().tolist()
             result2 = q.evaluate_circuit(params2)
             assert result == result2, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
 
-            # evaluate the circuit with random np.ndarray of params
+            # evaluate the circuit with np.ndarray of params, taking the params from the dict, so we should get the same result
             result2 = q.evaluate_circuit(np.array(params2))
             assert result == result2, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
 
-            # run the circuit with the optimized params manually
+            # run the circuit with the optimized params manually, we should get the same result
             params_obj = deepcopy(q.variate_params)
             params_obj.update_from_raw(params2)
             result3 = {}
             result3['cost'], result3['uncertainty'] = q.backend.expectation_w_uncertainty(params_obj)
             result3['state'] = q.backend.wavefunction(params_obj)
             assert result == result3, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing the optimized params manually"
+
+            # evaluate the circuit with a wrong input, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit(1)
+            except Exception:
+                error = True
+            assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a wrong input"
 
             # evaluate the circuit without optimizing and passing any param, it should raise an error
             error = False
