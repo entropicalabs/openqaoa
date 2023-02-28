@@ -17,7 +17,9 @@
 
 """SPSA optimizer"""
 
-from openqaoa.optimizers.pennylane import numpy as np # changed from the original PennyLane code
+from openqaoa.optimizers.pennylane import (
+    numpy as np,
+)  # changed from the original PennyLane code
 
 
 class SPSAOptimizer:

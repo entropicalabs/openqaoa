@@ -215,7 +215,7 @@ class Knapsack(Problem):
                 )
             )
         )
-    
+
     @property
     def qubo(self):
         """

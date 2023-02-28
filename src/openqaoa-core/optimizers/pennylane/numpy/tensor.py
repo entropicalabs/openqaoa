@@ -25,7 +25,9 @@ from autograd.numpy.numpy_vspaces import ComplexArrayVSpace, ArrayVSpace
 from autograd.core import VSpace
 
 
-__doc__ = "NumPy with automatic differentiation support, provided by Autograd and PennyLane."
+__doc__ = (
+    "NumPy with automatic differentiation support, provided by Autograd and PennyLane."
+)
 
 # Hotfix since _np.asarray doesn't have a gradient rule defined.
 @primitive
@@ -165,7 +167,8 @@ class tensor(_np.ndarray):
 
         # if any of the inputs were trainable, the output is also trainable
         requires_grad = any(
-            isinstance(x, onp.ndarray) and getattr(x, "requires_grad", True) for x in inputs
+            isinstance(x, onp.ndarray) and getattr(x, "requires_grad", True)
+            for x in inputs
         )
 
         # Iterate through the ufunc outputs and convert each to a PennyLane tensor.
@@ -310,4 +313,6 @@ def tensor_to_arraybox(x, *args):
 
 
 Box.type_mappings[tensor] = tensor_to_arraybox
-VSpace.mappings[tensor] = lambda x: ComplexArrayVSpace(x) if onp.iscomplexobj(x) else ArrayVSpace(x)
+VSpace.mappings[tensor] = (
+    lambda x: ComplexArrayVSpace(x) if onp.iscomplexobj(x) else ArrayVSpace(x)
+)

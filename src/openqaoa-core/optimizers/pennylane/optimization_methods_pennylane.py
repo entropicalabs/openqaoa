@@ -25,23 +25,34 @@ from scipy.optimize import OptimizeResult
 import numpy as np
 
 AVAILABLE_OPTIMIZERS = {  # optimizers implemented
-                            'pennylane_adagrad': pl.AdagradOptimizer, 
-                            'pennylane_adam': pl.AdamOptimizer, 
-                            'pennylane_vgd': pl.GradientDescentOptimizer, 
-                            'pennylane_momentum':  pl.MomentumOptimizer,
-                            'pennylane_nesterov_momentum': pl.NesterovMomentumOptimizer,
-                            'pennylane_rmsprop': pl.RMSPropOptimizer,
-                            'pennylane_rotosolve': pl.RotosolveOptimizer, 
-                            'pennylane_spsa': pl.SPSAOptimizer,
-                        }
+    "pennylane_adagrad": pl.AdagradOptimizer,
+    "pennylane_adam": pl.AdamOptimizer,
+    "pennylane_vgd": pl.GradientDescentOptimizer,
+    "pennylane_momentum": pl.MomentumOptimizer,
+    "pennylane_nesterov_momentum": pl.NesterovMomentumOptimizer,
+    "pennylane_rmsprop": pl.RMSPropOptimizer,
+    "pennylane_rotosolve": pl.RotosolveOptimizer,
+    "pennylane_spsa": pl.SPSAOptimizer,
+}
 
 
+def pennylane_optimizer(
+    fun,
+    x0,
+    args=(),
+    maxfev=None,
+    pennylane_method="vgd",
+    maxiter=100,
+    tol=10 ** (-6),
+    jac=None,
+    callback=None,
+    nums_frequency=None,
+    spectra=None,
+    shifts=None,
+    **options
+):
 
-def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd', 
-                        maxiter=100, tol=10**(-6), jac=None, callback=None,                         
-                        nums_frequency=None, spectra=None, shifts=None, **options):
-
-    '''    
+    """
     Minimize a function `fun` using some pennylane method.
     To check available methods look at the available_methods_dict variable.
     Read https://docs.pennylane.ai/en/stable/introduction/interfaces.html#optimizers
@@ -87,31 +98,34 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd',
     -------
     OptimizeResult : OptimizeResult
         Scipy OptimizeResult object.
-    '''
+    """
 
-    def cost(params, **k): # define a function to convert the params list from pennylane to numpy
+    def cost(
+        params, **k
+    ):  # define a function to convert the params list from pennylane to numpy
         return fun(np.array(params), *k)
 
+    optimizer = AVAILABLE_OPTIMIZERS[pennylane_method]  # define the optimizer
 
-    optimizer = AVAILABLE_OPTIMIZERS[pennylane_method] # define the optimizer
-
-    #get optimizer arguments
+    # get optimizer arguments
     arguments = inspect.signature(optimizer).parameters.keys()
     options_keys = list(options.keys())
 
-    #check which values of the options dict can be passed to the optimizer (pop the others)
+    # check which values of the options dict can be passed to the optimizer (pop the others)
     for key in options_keys:
-        if key not in arguments: options.pop(key) 
-        if 'maxiter' in arguments: options['maxiter'] = maxiter
+        if key not in arguments:
+            options.pop(key)
+        if "maxiter" in arguments:
+            options["maxiter"] = maxiter
 
-    optimizer = optimizer(**options) #pass the arguments
-    
+    optimizer = optimizer(**options)  # pass the arguments
+
     bestx = pl.numpy.array(x0, requires_grad=True)
     besty = cost(x0, *args)
     funcalls = 1  # tracks no. of function evals.
     niter = 0
     improved = True
-    stop = False  
+    stop = False
 
     testx = np.copy(bestx)
     testy = np.real(besty)
@@ -119,21 +133,32 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd',
         improved = False
 
         # compute step (depends on the optimizer)
-        if pennylane_method in ['pennylane_adagrad', 'pennylane_adam', 'pennylane_vgd', 'pennylane_momentum', 'pennylane_nesterov_momentum', 'pennylane_rmsprop']:
+        if pennylane_method in [
+            "pennylane_adagrad",
+            "pennylane_adam",
+            "pennylane_vgd",
+            "pennylane_momentum",
+            "pennylane_nesterov_momentum",
+            "pennylane_rmsprop",
+        ]:
             testx, testy = optimizer.step_and_cost(cost, bestx, *args, grad_fn=jac)
-        elif pennylane_method in ['pennylane_rotosolve']: 
+        elif pennylane_method in ["pennylane_rotosolve"]:
             testx, testy = optimizer.step_and_cost(
-                                                    cost, bestx, *args,
-                                                    nums_frequency={'params': {(i,):1 for i in range(bestx.size)}} if not nums_frequency else nums_frequency,
-                                                    spectra=spectra,
-                                                    shifts=shifts,
-                                                    full_output=False,
-                                                  )
-        elif pennylane_method in ['pennylane_spsa']:       
+                cost,
+                bestx,
+                *args,
+                nums_frequency={"params": {(i,): 1 for i in range(bestx.size)}}
+                if not nums_frequency
+                else nums_frequency,
+                spectra=spectra,
+                shifts=shifts,
+                full_output=False,
+            )
+        elif pennylane_method in ["pennylane_spsa"]:
             testx, testy = optimizer.step_and_cost(cost, bestx, *args)
 
         # check if stable
-        if np.abs(besty-testy) < tol and niter > 1:
+        if np.abs(besty - testy) < tol and niter > 1:
             improved = False
 
         else:
@@ -148,8 +173,7 @@ def pennylane_optimizer(fun, x0, args=(), maxfev=None, pennylane_method='vgd',
             break
 
         niter += 1
-        
-    return OptimizeResult(fun=besty, x=np.array(bestx), nit=niter,
-                          nfev=funcalls, success=(niter > 1))
 
-
+    return OptimizeResult(
+        fun=besty, x=np.array(bestx), nit=niter, nfev=funcalls, success=(niter > 1)
+    )

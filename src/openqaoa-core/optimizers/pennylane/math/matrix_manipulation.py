@@ -24,7 +24,10 @@ from typing import Generator, Tuple
 import numpy as np
 from scipy.sparse import csr_matrix, eye, issparse, kron
 
-from openqaoa.optimizers import pennylane as qml # changed from the original PennyLane code
+from openqaoa.optimizers import (
+    pennylane as qml,
+)  # changed from the original PennyLane code
+
 Wires = None
 
 
@@ -110,7 +113,9 @@ def expand_matrix(base_matrix, wires, wire_order=None, sparse_format="csr"):
 
     interface = qml.math.get_interface(base_matrix)  # pylint: disable=protected-access
     if interface == "scipy" and issparse(base_matrix):
-        return _sparse_expand_matrix(base_matrix, wires, wire_order, format=sparse_format)
+        return _sparse_expand_matrix(
+            base_matrix, wires, wire_order, format=sparse_format
+        )
 
     wire_order = qml.wires.Wires(wire_order)
     n = len(wires)
@@ -143,14 +148,19 @@ def expand_matrix(base_matrix, wires, wire_order=None, sparse_format="csr"):
         sources = [s + 1 for s in sources]
 
     mat = qml.math.moveaxis(mat_tensordot, sources, perm)
-    shape = [batch_dim] + [2 ** len(wire_order)] * 2 if batch_dim else [2 ** len(wire_order)] * 2
+    shape = (
+        [batch_dim] + [2 ** len(wire_order)] * 2
+        if batch_dim
+        else [2 ** len(wire_order)] * 2
+    )
     mat = qml.math.reshape(mat, shape)
 
     return mat
 
 
 def reduce_matrices(
-    mats_and_wires_gen: Generator[Tuple[np.ndarray, Wires], None, None], reduce_func: callable
+    mats_and_wires_gen: Generator[Tuple[np.ndarray, Wires], None, None],
+    reduce_func: callable,
 ) -> Tuple[np.ndarray, Wires]:
     """Apply the given ``reduce_func`` cumulatively to the items of the ``mats_and_wires_gen``
     generator, from left to right, so as to reduce the sequence to a tuple containing a single
@@ -165,7 +175,9 @@ def reduce_matrices(
         Tuple[tensor, Wires]: a tuple containing the reduced matrix and the wires it acts on
     """
 
-    def expand_and_reduce(op1_tuple: Tuple[np.ndarray, Wires], op2_tuple: Tuple[np.ndarray, Wires]):
+    def expand_and_reduce(
+        op1_tuple: Tuple[np.ndarray, Wires], op2_tuple: Tuple[np.ndarray, Wires]
+    ):
         mat1, wires1 = op1_tuple
         mat2, wires2 = op2_tuple
         expanded_wires = wires1 + wires2
@@ -184,7 +196,9 @@ def _local_sparse_swap_mat(i, n, format="csr"):
     assert i < n - 1
     swap_mat = csr_matrix([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
 
-    j = i + 1  # i is the index of the qubit, j is the number of qubits prior to and include qubit i
+    j = (
+        i + 1
+    )  # i is the index of the qubit, j is the number of qubits prior to and include qubit i
     return kron(
         kron(eye(2 ** (j - 1)), swap_mat), eye(2 ** (n - (j + 1))), format=format
     )  # (j - 1) + 2 + (n - (j+1)) = n
@@ -199,7 +213,8 @@ def _sparse_swap_mat(i, j, n, format="csr"):
 
     (small_i, big_j) = (i, j) if i < j else (j, i)
     store_swaps = [
-        _local_sparse_swap_mat(index, n, format=format) for index in range(small_i, big_j)
+        _local_sparse_swap_mat(index, n, format=format)
+        for index in range(small_i, big_j)
     ]
 
     res = eye(2**n, format=format)

@@ -24,7 +24,9 @@ from string import ascii_letters as ABC
 from autoray import numpy as np
 from numpy import float64
 
-from openqaoa.optimizers import pennylane as qml # changed from the original PennyLane code
+from openqaoa.optimizers import (
+    pennylane as qml,
+)  # changed from the original PennyLane code
 
 from . import single_dispatch  # pylint:disable=unused-import
 from .multi_dispatch import diag, dot, scatter_element_add, einsum, get_interface
@@ -322,7 +324,10 @@ def _partial_trace_autograd(density_matrix, indices):
         ]
         # index for summation over Kraus operators
         kraus_index = ABC[
-            rho_dim + 2 * num_partial_trace_wires : rho_dim + 2 * num_partial_trace_wires + 1
+            rho_dim
+            + 2 * num_partial_trace_wires : rho_dim
+            + 2 * num_partial_trace_wires
+            + 1
         ]
         # new state indices replace row and column indices with new ones
         new_state_indices = functools.reduce(
@@ -393,7 +398,9 @@ def _density_matrix_from_state_vector(state, indices, check_state=False):
     traced_system = [x for x in consecutive_wires if x not in indices]
 
     # Return the reduced density matrix by using numpy tensor product
-    density_matrix = np.tensordot(state, np.conj(state), axes=(traced_system, traced_system))
+    density_matrix = np.tensordot(
+        state, np.conj(state), axes=(traced_system, traced_system)
+    )
     density_matrix = np.reshape(density_matrix, (2 ** len(indices), 2 ** len(indices)))
 
     return density_matrix
@@ -540,7 +547,9 @@ def _compute_vn_entropy(density_matrix, base=None):
 
 
 # pylint: disable=too-many-arguments
-def mutual_info(state, indices0, indices1, base=None, check_state=False, c_dtype="complex128"):
+def mutual_info(
+    state, indices0, indices1, base=None, check_state=False, c_dtype="complex128"
+):
     r"""Compute the mutual information between two subsystems given a state:
 
     .. math::
@@ -592,7 +601,9 @@ def mutual_info(state, indices0, indices1, base=None, check_state=False, c_dtype
 
     # the subsystems cannot overlap
     if len([index for index in indices0 if index in indices1]) > 0:
-        raise ValueError("Subsystems for computing mutual information must not overlap.")
+        raise ValueError(
+            "Subsystems for computing mutual information must not overlap."
+        )
 
     # Cast to a complex array
     state = cast(state, dtype=c_dtype)
@@ -602,7 +613,12 @@ def mutual_info(state, indices0, indices1, base=None, check_state=False, c_dtype
         len_state = state_shape[0]
         if state_shape in [(len_state,), (len_state, len_state)]:
             return _compute_mutual_info(
-                state, indices0, indices1, base=base, check_state=check_state, c_dtype=c_dtype
+                state,
+                indices0,
+                indices1,
+                base=base,
+                check_state=check_state,
+                c_dtype=c_dtype,
             )
 
     raise ValueError("The state is not a state vector or a density matrix.")
@@ -716,7 +732,9 @@ def fidelity(state0, state1, check_state=False, c_dtype="complex128"):
     num_indices1 = int(np.log2(len_state1))
 
     if num_indices0 != num_indices1:
-        raise qml.QuantumFunctionError("The two states must have the same number of wires.")
+        raise qml.QuantumFunctionError(
+            "The two states must have the same number of wires."
+        )
 
     # Two pure states, squared overlap
     if state1.shape == (len_state1,) and state0.shape == (len_state0,):
@@ -815,7 +833,9 @@ def _compute_relative_entropy(rho, sigma, base=None):
     return (rel - ent) / div_base
 
 
-def relative_entropy(state0, state1, base=None, check_state=False, c_dtype="complex128"):
+def relative_entropy(
+    state0, state1, base=None, check_state=False, c_dtype="complex128"
+):
     r"""
     Compute the quantum relative entropy of one state with respect to another.
 
@@ -894,7 +914,9 @@ def relative_entropy(state0, state1, base=None, check_state=False, c_dtype="comp
     num_indices1 = int(np.log2(len_state1))
 
     if num_indices0 != num_indices1:
-        raise qml.QuantumFunctionError("The two states must have the same number of wires.")
+        raise qml.QuantumFunctionError(
+            "The two states must have the same number of wires."
+        )
 
     if state0.shape == (len_state0,):
         state0 = qml.math.outer(state0, np.conj(state0))
