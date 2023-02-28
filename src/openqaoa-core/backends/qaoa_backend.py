@@ -1,42 +1,57 @@
 from typing import Union, Optional, List
 import numpy as np
 
+from .plugin_finder import backend_boolean_list
 from .qaoa_vectorized import QAOAvectorizedBackendSimulator
 from .qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from .devices_core import DeviceBase, DeviceLocal
 from .basebackend import QuantumCircuitBase, QAOABaseBackend
 from ..qaoa_components import QAOADescriptor
-from openqaoa_braket.backends import DeviceAWS, QAOAAWSQPUBackend
-from openqaoa_qiskit.backends import (
-    DeviceQiskit,
-    QAOAQiskitQPUBackend,
-    QAOAQiskitBackendShotBasedSimulator,
-    QAOAQiskitBackendStatevecSimulator,
-)
-from openqaoa_azure.backends import DeviceAzure
-from openqaoa_pyquil.backends import (
-    DevicePyquil,
-    QAOAPyQuilQPUBackend,
-    QAOAPyQuilWavefunctionSimulatorBackend,
-)
+# from openqaoa_braket.backends import DeviceAWS, QAOAAWSQPUBackend
+# from openqaoa_qiskit.backends import (
+#     DeviceQiskit,
+#     QAOAQiskitQPUBackend,
+#     QAOAQiskitBackendShotBasedSimulator,
+#     QAOAQiskitBackendStatevecSimulator,
+# )
+# from openqaoa_azure.backends import DeviceAzure
+# from openqaoa_pyquil.backends import (
+#     DevicePyquil,
+#     QAOAPyQuilQPUBackend,
+#     QAOAPyQuilWavefunctionSimulatorBackend,
+# )
 
+BACKEND_BOOLEAN_LIST = backend_boolean_list()
 
-DEVICE_NAME_TO_OBJECT_MAPPER = {
-    "qiskit.qasm_simulator": QAOAQiskitBackendShotBasedSimulator,
-    "qiskit.shot_simulator": QAOAQiskitBackendShotBasedSimulator,
-    "qiskit.statevector_simulator": QAOAQiskitBackendStatevecSimulator,
-    "vectorized": QAOAvectorizedBackendSimulator,
-    "pyquil.statevector_simulator": QAOAPyQuilWavefunctionSimulatorBackend,
-    "analytical_simulator": QAOABackendAnalyticalSimulator,
-}
+def _create_mappers(input_boolean_list: list) -> dict:
+    
+    DEVICE_NAME_TO_OBJECT_MAPPER = dict()
+    DEVICE_ACCESS_OBJECT_MAPPER = dict()
+    
+    DEVICE_NAME_TO_OBJECT_MAPPER["vectorized"] = QAOAvectorizedBackendSimulator
+    DEVICE_NAME_TO_OBJECT_MAPPER["analytical_simulator"] = QAOABackendAnalyticalSimulator
+    
+    if BACKEND_BOOLEAN_LIST[0]:
+        from openqaoa_braket.utilities import device_access
+        DEVICE_ACCESS_OBJECT_MAPPER.update(device_access)
+        
+    if BACKEND_BOOLEAN_LIST[1] and input_boolean_list[2]:
+        from openqaoa_azure.utilities import device_access
+        DEVICE_ACCESS_OBJECT_MAPPER.update(device_access)
+    
+    if BACKEND_BOOLEAN_LIST[2]:
+        from openqaoa_qiskit.utilities import device_access, device_name_to_obj
+        DEVICE_NAME_TO_OBJECT_MAPPER.update(device_name_to_obj)
+        DEVICE_ACCESS_OBJECT_MAPPER.update(device_access)
+        
+    if BACKEND_BOOLEAN_LIST[3]:
+        from openqaoa_pyquil.utilities import device_access, device_name_to_obj
+        DEVICE_NAME_TO_OBJECT_MAPPER.update(device_name_to_obj)
+        DEVICE_ACCESS_OBJECT_MAPPER.update(device_access)
+        
+    return DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 
-DEVICE_ACCESS_OBJECT_MAPPER = {
-    DeviceQiskit: QAOAQiskitQPUBackend,
-    DevicePyquil: QAOAPyQuilQPUBackend,
-    DeviceAWS: QAOAAWSQPUBackend,
-    DeviceAzure: QAOAQiskitQPUBackend,
-}
-
+DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER = _create_mappers(backend_boolean_list())
 
 def _backend_arg_mapper(
     backend_obj: QAOABaseBackend,
@@ -49,35 +64,80 @@ def _backend_arg_mapper(
     disable_qubit_rewiring: Optional[bool] = None,
     initial_qubit_mapping=None,
 ):
-
+    
     BACKEND_ARGS_MAPPER = {
         QAOABackendAnalyticalSimulator: {},
         QAOAvectorizedBackendSimulator: {},
-        QAOAQiskitBackendStatevecSimulator: {},
-        QAOAPyQuilWavefunctionSimulatorBackend: {},
-        QAOAQiskitBackendShotBasedSimulator: {
+    }
+
+    if BACKEND_BOOLEAN_LIST[0]:
+        from openqaoa_braket.backends import DeviceAWS, QAOAAWSQPUBackend
+        BACKEND_ARGS_MAPPER[QAOAAWSQPUBackend] = {
+            "n_shots": n_shots,
+            "disable_qubit_rewiring": disable_qubit_rewiring,
+            "initial_qubit_mapping": initial_qubit_mapping
+        }
+    if BACKEND_BOOLEAN_LIST[2]:
+        from openqaoa_qiskit.backends import (
+            DeviceQiskit,
+            QAOAQiskitQPUBackend,
+            QAOAQiskitBackendShotBasedSimulator,
+            QAOAQiskitBackendStatevecSimulator,
+        )
+        BACKEND_ARGS_MAPPER[QAOAQiskitBackendStatevecSimulator] = {}
+        BACKEND_ARGS_MAPPER[QAOAQiskitBackendShotBasedSimulator] = {
             "n_shots": n_shots,
             "seed_simulator": seed_simulator,
             "qiskit_simulation_method": qiskit_simulation_method,
             "noise_model": noise_model,
             "initial_qubit_mapping": initial_qubit_mapping,
-        },
-        QAOAQiskitQPUBackend: {
+        }
+        BACKEND_ARGS_MAPPER[QAOAQiskitQPUBackend] = {
             "n_shots": n_shots,
             "initial_qubit_mapping": initial_qubit_mapping,
-        },
-        QAOAPyQuilQPUBackend: {
+        }
+    if BACKEND_BOOLEAN_LIST[3]:
+        from openqaoa_pyquil.backends import (
+            DevicePyquil,
+            QAOAPyQuilQPUBackend,
+            QAOAPyQuilWavefunctionSimulatorBackend
+        )
+        BACKEND_ARGS_MAPPER[QAOAPyQuilWavefunctionSimulatorBackend] = {}
+        BACKEND_ARGS_MAPPER[QAOAPyQuilQPUBackend] = {
             "n_shots": n_shots,
             "active_reset": active_reset,
             "rewiring": rewiring,
             "initial_qubit_mapping": initial_qubit_mapping,
-        },
-        QAOAAWSQPUBackend: {
-            "n_shots": n_shots,
-            "disable_qubit_rewiring": disable_qubit_rewiring,
-            "initial_qubit_mapping": initial_qubit_mapping,
-        },
-    }
+        }
+
+    #     BACKEND_ARGS_MAPPER = {
+    #     QAOABackendAnalyticalSimulator: {},
+    #     QAOAvectorizedBackendSimulator: {},
+    #     QAOAQiskitBackendStatevecSimulator: {},
+    #     QAOAPyQuilWavefunctionSimulatorBackend: {},
+    #     QAOAQiskitBackendShotBasedSimulator: {
+    #         "n_shots": n_shots,
+    #         "seed_simulator": seed_simulator,
+    #         "qiskit_simulation_method": qiskit_simulation_method,
+    #         "noise_model": noise_model,
+    #         "initial_qubit_mapping": initial_qubit_mapping,
+    #     },
+    #     QAOAQiskitQPUBackend: {
+    #         "n_shots": n_shots,
+    #         "initial_qubit_mapping": initial_qubit_mapping,
+    #     },
+    #     QAOAPyQuilQPUBackend: {
+    #         "n_shots": n_shots,
+    #         "active_reset": active_reset,
+    #         "rewiring": rewiring,
+    #         "initial_qubit_mapping": initial_qubit_mapping,
+    #     },
+    #     QAOAAWSQPUBackend: {
+    #         "n_shots": n_shots,
+    #         "disable_qubit_rewiring": disable_qubit_rewiring,
+    #         "initial_qubit_mapping": initial_qubit_mapping,
+    #     },
+    # }
 
     final_backend_kwargs = {
         key: value

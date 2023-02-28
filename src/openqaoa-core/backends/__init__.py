@@ -13,6 +13,7 @@ Currently Supported:
 	Vectorized:
 		Fast numpy native Statevector Simulator
 """
+from .plugin_finder import backend_boolean_list
 from .qaoa_vectorized import QAOAvectorizedBackendSimulator
 from .qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from .devices_core import DeviceLocal
