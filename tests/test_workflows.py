@@ -1159,6 +1159,38 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error = True
             assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a wrong input"
 
+            # evaluate the circuit with a list longer than it should, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit(params2 + [1])
+            except Exception:
+                error = True
+            assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a list longer than it should"
+
+            # evaluate the circuit with a list shorter than it should, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit(params2[:-1])
+            except Exception:
+                error = True
+            assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a list shorter than it should"
+
+            # evaluate the circuit with a dict with a wrong key, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit({**params, 'wrong_key': 1})
+            except Exception:
+                error = True
+            assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a dict with a wrong key"
+
+            # evaluate the circuit with a dict with a value longer than it should, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit({**params, list(params.keys())[0]: np.random.rand(40)})
+            except Exception:
+                error = True
+            assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a dict with a value longer than it should"
+
             # evaluate the circuit without optimizing and passing any param, it should raise an error
             error = False
             try:
