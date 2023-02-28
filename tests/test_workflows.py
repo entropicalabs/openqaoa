@@ -1109,14 +1109,14 @@ class TestingVanillaQAOA(unittest.TestCase):
         """
 
         # problem
-        maxcut_qubo = MinimumVertexCover.random_instance(n_nodes=6, edge_probability=0.9, seed=42).qubo
+        problem = QUBO.random_instance(6)
 
         # run qaoa with different param_type, and save the objcets in a list  
         qaoas = []
         for param_type in PARAMS_CLASSES_MAPPER.keys():
             q = QAOA()
             q.set_circuit_properties(p=3, param_type=param_type, init_type='rand')
-            q.compile(maxcut_qubo) 
+            q.compile(problem) 
             qaoas.append(q)
 
         # for each qaoa object, test the evaluate_circuit method
@@ -1224,7 +1224,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         device = create_device(location="local", name='qiskit.qasm_simulator')
         q.set_device(device)
         q.set_circuit_properties(p=3, param_type="standard", init_type='rand')
-        q.compile(maxcut_qubo) 
+        q.compile(problem) 
         q.optimize()
         result = q.evaluate_circuit()
         assert isinstance(result['counts'], dict), "When using a shot-based simulator, `evaluate_circuit` should return a dcit of counts"
@@ -1237,7 +1237,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         device = create_device(location="local", name='analytical_simulator')
         q.set_device(device)
         q.set_circuit_properties(p=1, param_type="standard", init_type='rand')
-        q.compile(maxcut_qubo)
+        q.compile(problem)
         q.optimize()
         result = q.evaluate_circuit()
         assert list(result.keys()) == ['cost'], "When using an analytical simulator, `evaluate_circuit` should return only the cost"
