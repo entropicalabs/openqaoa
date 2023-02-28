@@ -1232,6 +1232,17 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert abs(result['cost']) > 0, "When using a shot-based simulator, `evaluate_circuit` should return a cost"
         assert abs(result['uncertainty']) > 0, "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
 
+        # check that it works with analytical simulator
+        q = QAOA()
+        device = create_device(location="local", name='analytical_simulator')
+        q.set_device(device)
+        q.set_circuit_properties(p=1, param_type="standard", init_type='rand')
+        q.compile(maxcut_qubo)
+        q.optimize()
+        result = q.evaluate_circuit()
+        assert list(result.keys()) == ['cost'], "When using an analytical simulator, `evaluate_circuit` should return only the cost"
+        assert abs(result['cost']) > 0, "When using an analytical simulator, `evaluate_circuit` should return a cost"
+
 
 
 

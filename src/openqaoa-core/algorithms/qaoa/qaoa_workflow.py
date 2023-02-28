@@ -6,6 +6,7 @@ from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
 from ...backends.basebackend import QAOABaseBackendStatevector
+from ...backends import QAOABackendAnalyticalSimulator
 from ...backends.devices_core import DeviceLocal
 from ...backends.qaoa_backend import get_qaoa_backend
 from ...problems import QUBO
@@ -362,6 +363,10 @@ class QAOA(Workflow):
 
         ## get the results of the evaluation with the corresponding parameters
         print("Evaluating the QAOA circuit at the following parameters:", params_obj.raw().tolist())
+        
+        if isinstance(self.backend, QAOABackendAnalyticalSimulator):
+            return {'cost': self.backend.expectation(params_obj)[0]}
+
         result = {}
         result['cost'], result['uncertainty'] = self.backend.expectation_w_uncertainty(params_obj)
         if isinstance(self.backend, QAOABaseBackendStatevector):
