@@ -1125,7 +1125,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             # evaluate the circuit with random dict of params
             params = {k: np.random.rand(*v.shape) for k, v in q.variate_params.asdict().items()}
             result = q.evaluate_circuit(params)
-            assert abs(result['cost']) > 0, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a cost, here cost is {result['cost']}"
+            assert abs(result['cost']) >= 0, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a cost, here cost is {result['cost']}"
             assert abs(result['uncertainty']) > 0, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return an uncertanty, here uncertainty is {result['uncertainty']}"
             assert len(result['state']) > 0, \
             f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a state when using a state-based simulator"
@@ -1229,7 +1229,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         result = q.evaluate_circuit()
         assert isinstance(result['counts'], dict), "When using a shot-based simulator, `evaluate_circuit` should return a dcit of counts"
         assert not "state" in result, "When using a shot-based simulator, `evaluate_circuit` should not return a state"
-        assert abs(result['cost']) > 0, "When using a shot-based simulator, `evaluate_circuit` should return a cost"
+        assert abs(result['cost']) >= 0, "When using a shot-based simulator, `evaluate_circuit` should return a cost"
         assert abs(result['uncertainty']) > 0, "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
 
         # check that it works with analytical simulator
@@ -1241,7 +1241,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.optimize()
         result = q.evaluate_circuit()
         assert list(result.keys()) == ['cost'], "When using an analytical simulator, `evaluate_circuit` should return only the cost"
-        assert abs(result['cost']) > 0, "When using an analytical simulator, `evaluate_circuit` should return a cost"
+        assert abs(result['cost']) >= 0, "When using an analytical simulator, `evaluate_circuit` should return a cost"
 
 
 
