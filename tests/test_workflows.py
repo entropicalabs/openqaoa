@@ -1338,7 +1338,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         """
 
         # problem
-        problem = QUBO.random_instance(6)
+        problem = MinimumVertexCover.random_instance(n_nodes=6, edge_probability=0.8).qubo
 
         # run qaoa with different param_type, and save the objcets in a list  
         qaoas = []
