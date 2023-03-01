@@ -13,11 +13,11 @@ with open("_version.py") as f:
 
 requirements = [
     "openqaoa-core=={}".format(version),
-    "qiskit>=0.36.1",
+    "pyquil>=3.1.0",
 ]
 
 setup(
-    name="openqaoa-qiskit",
+    name="openqaoa-pyquil",
     python_requires=">=3.8, <3.11",
     version=version,
     author="Entropica Labs",
@@ -25,7 +25,7 @@ setup(
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",
-    description="Qiskit Plug-in for OpenQAOA",
+    description="Pyquil Plug-in for OpenQAOA",
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
