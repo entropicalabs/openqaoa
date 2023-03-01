@@ -19,7 +19,7 @@ import networkx as nw
 from braket.jobs.local import LocalQuantumJob
 
 from openqaoa.problems import MinimumVertexCover
-from openqaoa.algorithms import AWSJobs
+from openqaoa_braket.algorithms import AWSJobs
 from openqaoa.algorithms import QAOA, RQAOA
 from openqaoa.backends import create_device
 
