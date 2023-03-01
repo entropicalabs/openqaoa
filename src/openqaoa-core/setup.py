@@ -22,6 +22,7 @@ requirements = [
     "autograd>=1.4",
     "semantic_version>=2.10",
     "autoray>=0.3.1",
+    "requests",
 ]
 
 requirements_docs = [
@@ -43,29 +44,28 @@ requirements_test = [
     "cplex>=22.1.0.0",
 ]
 
-package_names = [
-    "openqaoa"
-]
-folder_names = [
-    "openqaoa-core"
-]
-packages_import = find_packages(where="openqaoa-core")
-updated_packages = []
-for each_package_name in packages_import:
-    for _index, each_folder_name in enumerate(folder_names):
-        if each_folder_name in each_package_name:
-            updated_packages.append(
-                each_package_name.replace(each_folder_name, package_names[_index])
-            )
-            continue
+# package_names = [
+#     "openqaoa"
+# ]
+# folder_names = [
+#     "openqaoa_core"
+# ]
+# packages_import = find_packages(where=".")
+# updated_packages = []
+# for each_package_name in packages_import:
+#     for _index, each_folder_name in enumerate(folder_names):
+#         if each_folder_name in each_package_name:
+#             updated_packages.append(
+#                 each_package_name.replace(each_folder_name, package_names[_index])
+#             )
+#             continue
 
 setup(
     name="openqaoa-core",
     python_requires=">=3.8, <3.11",
     version=version,
     author="Entropica Labs",
-    packages=updated_packages,
-    package_dir={"openqaoa": "openqaoa-core"},
+    packages=find_packages(where="."),
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",
