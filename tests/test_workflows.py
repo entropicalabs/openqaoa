@@ -46,6 +46,7 @@ from openqaoa_qiskit.backends import (
     QAOAQiskitBackendShotBasedSimulator,
     QAOAQiskitBackendStatevecSimulator,
 )
+from openqaoa_azure.backends import DeviceAzure
 
 
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
@@ -172,8 +173,15 @@ class TestingVanillaQAOA(unittest.TestCase):
             )
         )
         assert type(q.device) == DeviceQiskit
-        assert q.device.device_name == "place_holder"
-        assert q.device.device_location == "ibmq"
+        assert q.device.device_name == 'place_holder'
+        assert q.device.device_location ==  'ibmq'
+        
+        
+        q.set_device(create_device('azure', name='place_holder', resource_id='***', 
+                                   az_location='***'))
+        assert type(q.device) == DeviceAzure
+        assert q.device.device_name == 'place_holder'
+        assert q.device.device_location == 'azure'
 
     def test_compile_before_optimise(self):
         """
