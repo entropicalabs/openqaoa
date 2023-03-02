@@ -3,7 +3,6 @@ from math import log2
 from random import shuffle
 from typing import List
 from matplotlib import pyplot as plt
-from IPython.display import display, clear_output
 
 from . import QAOA
 from ...backends import create_device
@@ -12,7 +11,7 @@ class QAOABenchmark:
     """
     Benchmark is a class that implements benchmarking for QAOA.
     """
-    def __init__(self, qaoa: QAOA, range: tuple = None):
+    def __init__(self, qaoa: QAOA):
         """
         Constructor for the Benchmark class.
         """
@@ -29,48 +28,50 @@ class QAOABenchmark:
 
         # TODO: be able to use it for p>1, and all the other parameters
 
-        if range is None: self.run()
-        else: self.run(range)
-
     def run(    
             self, 
+            n_points_axis,
             ranges: list = None, 
-            n_points_axis: int = 65
             ):
 
-        n_params = len(self.qaoa.variate_params)
+        if ranges is None: 
+            n_params = len(self.qaoa.variate_params)
+            ranges = [ (0, 2*np.pi) for _ in range(n_params) ]
+        else:
+            n_params = sum([1 for r in ranges if len(r)==2])
 
-        if ranges is None: ranges = [ (0, 2*np.pi) for _ in range(n_params) ]
-        
-        points:List[list] = self.__ordered_points(ranges, n_params, n_points_axis)
+        values = np.zeros((n_points_axis, n_points_axis))
+        points = []
+
+        for point in self.__ordered_points(n_params, n_points_axis):
+
+            rescaled_point = [ point[i]*(ranges[i][1]-ranges[i][0])/(n_points_axis-1) + ranges[i][0] for i in range(n_params) ] 
+            points.append(rescaled_point)
+            values[tuple(point)] = self.qaoa.evaluate_circuit(rescaled_point)
+
+        # save the results
+        self.ranges = ranges
+        self.points = points
+        self.values = values
+
+    def plot(self):
+
+        values = np.array(self.values)
+
+        x = values[:,0]
+        y = values[0,:]
 
         fig, ax = plt.subplots()
-
-        ax.set_xlim(ranges[0][0], ranges[0][1])
-        ax.set_ylim(ranges[1][0], ranges[1][1])
-
-        for point in points:
-            clear_output(wait=True)
-            ax.scatter(point[0], point[1])                   
-            display(fig)
-
-            # self.qaoa.variate_params = point
-            # self.qaoa.run()
-            # self.reference.variate_params = point
-            # self.reference.run()
-
-            # print(f"QAOA: {self.qaoa.variate_params}, {self.qaoa.cost}")
-            # print(f"Reference: {self.reference.variate_params}, {self.reference.cost}")
+        ax.pcolorfast(x, y, values)
+        plt.show()
 
     @staticmethod
-    def __ordered_points(ranges, n_params, n_points_axis):
+    def __ordered_points(n_params, n_points_axis):
 
         assert isinstance(n_params, int) and n_params > 1, \
             "The number of parameters must be an integer, and greater than 1"
         assert isinstance(n_points_axis, int) and n_points_axis > 3, \
             "The number of points per axis must be an integer, and greater than 3"
-        assert isinstance(ranges, list) and len(ranges) == n_params, \
-            "The ranges must be a list,a nd the number of ranges must be equal to the number of parameters"
 
         ## we create a grid of points for each axis
         axis_points = list(range(n_points_axis))
@@ -116,7 +117,5 @@ class QAOABenchmark:
                     reordered_points.append(points_.pop(points_.index(point)))
 
             ordered_points = points_ # there are less points now
-            
-        final_points = [ [ x*(ranges[i][1]-ranges[i][0])/(n_points_axis-1) + ranges[i][0] for i, x in enumerate(point) ] for point in reordered_points ]
 
-        return final_points
+        return reordered_points
