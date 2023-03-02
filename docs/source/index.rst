@@ -70,11 +70,11 @@ First, create a problem instance. For example, an instance of vertex cover:
 
 .. code-block:: python
 
-   from openqaoa.problems.problem import MinimumVertexCover
+   from openqaoa.problems import MinimumVertexCover
    import networkx
    g = networkx.circulant_graph(6, [1])
    vc = MinimumVertexCover(g, field =1.0, penalty=10)
-   qubo_problem = vc.get_qubo_problem()
+   qubo_problem = vc.qubo
 
 
 Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
@@ -83,7 +83,7 @@ Once the binary problem is defined, the simplest workflow can be defined as
 
 .. code-block:: python
    
-   from openqaoa.workflows.optimizer import QAOA  
+   from openqaoa import QAOA  
    q = QAOA()
    q.compile(qubo_problem)
    q.optimize()
@@ -94,7 +94,7 @@ Workflows can be customised using some convenient setter functions. First, we ne
 
 .. code-block:: python
 
-   from openqaoa.devices import create_device
+   from openqaoa.backends import create_device
    qiskit_sv = create_device(location='local', name='qiskit.statevector_simulator')
    q.set_device(qiskit_sv)
 
@@ -136,9 +136,9 @@ Your first RQAOA workflow
 
 .. code-block:: python
 
-   from openqaoa.workflows.optimizer import RQAOA
-   r = RQAOA(qaoa = QAOA(), rqaoa_type='adaptive')
-   r.set_rqaoa_parameters(n_max=5, n_cutoff = 5)
+   from openqaoa import RQAOA
+   r = RQAOA()
+   r.set_rqaoa_parameters(rqaoa_type='adaptive', n_max=5, n_cutoff = 5)
    r.compile(qubo_problem)
    r.optimize()
 
