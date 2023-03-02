@@ -7,6 +7,7 @@ from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow
 from ...backends.basebackend import QAOABaseBackendStatevector
 from ...backends import QAOABackendAnalyticalSimulator
+from ...backends.cost_function import cost_function
 from ...backends.devices_core import DeviceLocal
 from ...backends.qaoa_backend import get_qaoa_backend
 from ...problems import QUBO
@@ -367,14 +368,35 @@ class QAOA(Workflow):
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             return {'cost': self.backend.expectation(params_obj)[0]}
 
-        result = {}
-        result['cost'], result['uncertainty'] = self.backend.expectation_w_uncertainty(params_obj)
-        if isinstance(self.backend, QAOABaseBackendStatevector):
-            result['state'] = self.backend.wavefunction(params_obj)
-        else:
-            result['counts'] = self.backend.get_counts(params_obj)
 
-        return result    
+        if isinstance(self.backend, QAOABaseBackendStatevector):
+            state = self.backend.wavefunction(params_obj)
+            cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
+            results = {
+                'cost': cost,
+                'uncertainty': uncertainty,
+                'state': state
+            }
+
+        else:
+            counts = self.backend.get_counts(params_obj)
+            cost = cost_function(
+                counts, 
+                self.backend.qaoa_descriptor.cost_hamiltonian, 
+                self.backend.cvar_alpha
+            )
+            cost_sq = cost_function(
+                counts,
+                self.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
+                self.backend.cvar_alpha,
+            )
+            results = {
+                'cost': cost,
+                'uncertainty': np.sqrt(cost_sq - cost**2),
+                'counts': counts
+            }
+
+        return results    
 
     def _serializable_dict(
         self, complex_to_string: bool = False, intermediate_mesurements: bool = True

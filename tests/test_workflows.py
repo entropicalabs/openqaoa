@@ -20,6 +20,7 @@ from openqaoa.algorithms.workflow_properties import (
 )
 from openqaoa.algorithms.rqaoa.rqaoa_workflow_properties import RqaoaParameters
 from openqaoa.backends import create_device, DeviceLocal
+from openqaoa.backends.cost_function import cost_function
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.qaoa_components import (
     Hamiltonian,
@@ -1338,7 +1339,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         """
 
         # problem
-        problem = QUBO.random_instance(6)
+        problem = MinimumVertexCover.random_instance(n_nodes=6, edge_probability=0.8).qubo
 
         # run qaoa with different param_type, and save the objcets in a list  
         qaoas = []
@@ -1460,6 +1461,20 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert not "state" in result, "When using a shot-based simulator, `evaluate_circuit` should not return a state"
         assert abs(result['cost']) >= 0, "When using a shot-based simulator, `evaluate_circuit` should return a cost"
         assert abs(result['uncertainty']) > 0, "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
+
+        cost = cost_function(
+            result['counts'], 
+            q.backend.qaoa_descriptor.cost_hamiltonian, 
+            q.backend.cvar_alpha
+        )
+        cost_sq = cost_function(
+            result['counts'],
+            q.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
+            q.backend.cvar_alpha,
+        )
+        uncertainty = np.sqrt(cost_sq - cost**2)
+        assert cost == result['cost'], "When using a shot-based simulator, `evaluate_circuit` not returning the correct cost"
+        assert uncertainty == result['uncertainty'], "When using a shot-based simulator, `evaluate_circuit` not returning the correct uncertainty"
 
         # check that it works with analytical simulator
         q = QAOA()
