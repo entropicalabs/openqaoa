@@ -242,8 +242,8 @@ Contents
    notebooks/10_workflows_on_Amazon_braket.ipynb
    notebooks/11_Mixer_example.ipynb
    notebooks/12_testing_azure.ipynb
+   notebooks/13_optimizers.ipynb
    notebooks/X_dumping_data.ipynb
-   notebooks/X_optimizers.ipynb
 
 
 .. toctree::
