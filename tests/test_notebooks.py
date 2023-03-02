@@ -66,6 +66,9 @@ def test_11_Mixer_example():
 
 def test_X_dumping_data():
     notebook_test_function("./examples/X_dumping_data.ipynb")
+
+def test_X_optimizers():
+    notebook_test_function("./examples/X_optimizers.ipynb")
        
 ### Community Tutorials
 
