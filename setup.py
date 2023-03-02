@@ -57,11 +57,11 @@ package_names = [
     "openqaoa_azure",
 ]
 folder_names = [
-    "openqaoa-core",
-    "openqaoa-braket",
-    "openqaoa-qiskit",
-    "openqaoa-pyquil",
-    "openqaoa-azure",
+    "openqaoa-core.openqaoa",
+    "openqaoa-braket.openqaoa_braket",
+    "openqaoa-qiskit.openqaoa_qiskit",
+    "openqaoa-pyquil.openqaoa_pyquil",
+    "openqaoa-azure.openqaoa_azure",
 ]
 packages_import = find_namespace_packages(where="./src")
 updated_packages = []
@@ -81,11 +81,11 @@ setup(
     packages=updated_packages,
     package_dir={
         "": "src",
-        "openqaoa": "src/openqaoa-core",
-        "openqaoa_braket": "src/openqaoa-braket",
-        "openqaoa_qiskit": "src/openqaoa-qiskit",
-        "openqaoa_pyquil": "src/openqaoa-pyquil",
-        "openqaoa_azure": "src/openqaoa-azure",
+        "openqaoa": "src/openqaoa-core/openqaoa",
+        "openqaoa_braket": "src/openqaoa-braket/openqaoa_braket",
+        "openqaoa_qiskit": "src/openqaoa-qiskit/openqaoa_qiskit",
+        "openqaoa_pyquil": "src/openqaoa-pyquil/openqaoa_pyquil",
+        "openqaoa_azure": "src/openqaoa-azure/openqaoa_azure",
     },
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
