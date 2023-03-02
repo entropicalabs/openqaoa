@@ -1,6 +1,7 @@
-from __future__ import annotations
 import abc
 import logging
+from typing import List
+import networkx as nx
 
 logging.getLogger().setLevel(logging.ERROR)
 
@@ -34,6 +35,17 @@ class DeviceBase(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
+    def connectivity(self):
+        """
+        obtain the device connectivity as a list of qubit pairs
+
+        Returns
+        -------
+            List[List[int]]
+        """
+        pass
+
 
 class DeviceLocal(DeviceBase):
     """
@@ -49,3 +61,10 @@ class DeviceLocal(DeviceBase):
             return True
         else:
             return False
+
+    def connectivity(self, n_qubits: int) -> List[List[int]]:
+        """
+        The number of qubits for simulators depend on the problem
+        """
+        G = nx.complete_graph(n_qubits)
+        return list(G.edges())

@@ -30,7 +30,9 @@ import numpy as np
 from autograd.tracer import isbox, new_box, trace_stack
 from autograd.core import VJPNode
 
-from openqaoa.optimizers.pennylane import numpy as np # changed from the original PennyLane code
+from openqaoa.optimizers.pennylane import (
+    numpy as np,
+)  # changed from the original PennyLane code
 
 
 def _autograd_is_indep_analytic(func, *args, **kwargs):
@@ -113,7 +115,9 @@ def _jax_is_indep_analytic(func, *args, **kwargs):
     """
     import jax  # pylint: disable=import-outside-toplevel
 
-    mapped_func = lambda *_args: func(*_args, **kwargs)  # pylint: disable=unnecessary-lambda
+    mapped_func = lambda *_args: func(
+        *_args, **kwargs
+    )  # pylint: disable=unnecessary-lambda
     _vjp = jax.vjp(mapped_func, *args)[1]
     if _vjp.args[0].args != ((),):
         return False
@@ -185,7 +189,9 @@ def _get_random_args(args, interface, num, seed, bounds):
         tf.random.set_seed(seed)
         rnd_args = []
         for _ in range(num):
-            _args = (tf.random.uniform(tf.shape(_arg)) * width + bounds[0] for _arg in args)
+            _args = (
+                tf.random.uniform(tf.shape(_arg)) * width + bounds[0] for _arg in args
+            )
             _args = tuple(
                 tf.Variable(_arg) if isinstance(arg, tf.Variable) else _arg
                 for _arg, arg in zip(_args, args)
@@ -196,7 +202,8 @@ def _get_random_args(args, interface, num, seed, bounds):
 
         torch.random.manual_seed(seed)
         rnd_args = [
-            tuple(torch.rand(np.shape(arg)) * width + bounds[0] for arg in args) for _ in range(num)
+            tuple(torch.rand(np.shape(arg)) * width + bounds[0] for arg in args)
+            for _ in range(num)
         ]
     else:
         np.random.seed(seed)
@@ -207,12 +214,16 @@ def _get_random_args(args, interface, num, seed, bounds):
         if interface == "autograd":
 
             # Mark the arguments as trainable with Autograd
-            rnd_args = [tuple(pnp.array(a, requires_grad=True) for a in arg) for arg in rnd_args]
+            rnd_args = [
+                tuple(pnp.array(a, requires_grad=True) for a in arg) for arg in rnd_args
+            ]
 
     return rnd_args
 
 
-def _is_indep_numerical(func, interface, args, kwargs, num_pos, seed, atol, rtol, bounds):
+def _is_indep_numerical(
+    func, interface, args, kwargs, num_pos, seed, atol, rtol, bounds
+):
     """Test whether a function returns the same output at random positions.
 
     Args:
@@ -383,4 +394,6 @@ def is_independent(
             " is a sufficient test, or change the interface."
         )
 
-    return _is_indep_numerical(func, interface, args, kwargs, num_pos, seed, atol, rtol, bounds)
+    return _is_indep_numerical(
+        func, interface, args, kwargs, num_pos, seed, atol, rtol, bounds
+    )

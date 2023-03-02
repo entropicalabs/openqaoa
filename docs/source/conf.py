@@ -1,4 +1,4 @@
- # Configuration file for the Sphinx documentation builder.
+# Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
@@ -11,27 +11,27 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 # import mock
- 
+
 # MOCK_MODULES = ['matplotlib', 'matplotlib.pyplot', 'numpy', 'scipy', 'networkx']
 # for mod_name in MOCK_MODULES:
 # 	sys.modules[mod_name] = mock.Mock()
 
 import os
 import sys
+
 # sys.path.insert(0, os.path.abspath('.'))
 # sys.path.insert(0, os.path.abspath("../../"))
-sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath("../.."))
 print(sys.path)
 
 # from openqaoa.qaoa_parameters.baseparams import shapedArray
 
 
-
 # -- Project information -----------------------------------------------------
 
-project = 'OpenQAOA'
-copyright = '2022, Entropica Labs'
-author = 'Entropica Labs'
+project = "OpenQAOA"
+copyright = "2022, Entropica Labs"
+author = "Entropica Labs"
 
 
 # -- General configuration ---------------------------------------------------
@@ -40,35 +40,39 @@ author = 'Entropica Labs'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.todo', 
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autodoc',
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx.ext.mathjax",
     "IPython.sphinxext.ipython_console_highlighting",
     "nbsphinx",
-    "sphinx.ext.intersphinx"
+    "sphinx.ext.intersphinx",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['.docs/source/notebooks/community_tutorials/*', '.docs/source/notebooks/X_dumping_data.ipynb']
+exclude_patterns = [
+    ".docs/source/notebooks/community_tutorials/*",
+    ".docs/source/notebooks/X_dumping_data.ipynb",
+]
 
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
-                       'numpy': ('https://numpy.org/doc/1.23', None),
-                       'np': ('https://numpy.org/doc/1.23', None),
-                       'scipy': ('https://docs.scipy.org/doc/scipy-1.8.1', None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/1.23", None),
+    "np": ("https://numpy.org/doc/1.23", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy-1.8.1", None),
+}
 
 
 # Exclude broken python docs
 # see https://stackoverflow.com/questions/11417221/sphinx-autodoc-gives-warning-pyclass-reference-target-not-found-type-warning
-nitpick_ignore = [('py:class', 'type')]
-
+nitpick_ignore = [("py:class", "type")]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -76,8 +80,8 @@ nitpick_ignore = [('py:class', 'type')]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
-html_logo = '../../.github/images/Entropica_logo.png'
+html_theme = "sphinx_rtd_theme"
+html_logo = "../../.github/images/Entropica_logo.png"
 # html_favicon ='favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,

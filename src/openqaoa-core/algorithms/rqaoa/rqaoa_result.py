@@ -68,38 +68,37 @@ class RQAOAResult(dict):
         )
 
     @classmethod
-    def from_dict(
-        cls, 
-        dictionary:dict
-    ):
+    def from_dict(cls, dictionary: dict):
         """
-        Creates a RQAOAResults object from a dictionary (which is the output of the asdict method).
+        Creates a RQAOAResult object from a dictionary (which is the output of the asdict method).
         Parameters
         ----------
         dictionary : dict
             The input dictionary.
         Returns
         -------
-        RQAOAResults
-            The RQAOAResults object.
+        RQAOAResult
+            The RQAOAResult object.
         """
 
         # deepcopy the dictionary, so that the original dictionary is not changed
         dictionary = copy.deepcopy(dictionary)
 
-        # create a new RQAOAResults object
+        # create a new RQAOAResult object
         results = cls()
 
-        # add the keys of the dictionary to the RQAOAResults object
+        # add the keys of the dictionary to the RQAOAResult object
         for key, value in dictionary.items():
             results[key] = value
 
         # convert the intermediate steps to objects
-        for step in results['intermediate_steps']:
-            step['problem'] = QUBO.from_dict(step['problem'])
-            step['qaoa_results'] = QAOAResult.from_dict(step['qaoa_results'], cost_hamiltonian=step['problem'].hamiltonian)
-            step['exp_vals_z'] = np.array(step['exp_vals_z'])
-            step['corr_matrix'] = np.array(step['corr_matrix'])
+        for step in results["intermediate_steps"]:
+            step["problem"] = QUBO.from_dict(step["problem"])
+            step["qaoa_results"] = QAOAResult.from_dict(
+                step["qaoa_results"], cost_hamiltonian=step["problem"].hamiltonian
+            )
+            step["exp_vals_z"] = np.array(step["exp_vals_z"])
+            step["corr_matrix"] = np.array(step["corr_matrix"])
 
         return results
 

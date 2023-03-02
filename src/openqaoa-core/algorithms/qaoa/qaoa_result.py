@@ -49,7 +49,7 @@ class QAOAResult:
 
     def __init__(
         self,
-        log: 'Logger',
+        log: "Logger",
         method: Type[str],
         cost_hamiltonian: Type[Hamiltonian],
         type_backend: Type[QAOABaseBackend],

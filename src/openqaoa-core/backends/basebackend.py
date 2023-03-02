@@ -16,11 +16,12 @@ import numpy as np
 
 from .devices_core import DeviceBase
 from ..qaoa_components import (
-    RotationGateMap,
-    TwoQubitRotationGateMap,
+    GateMap,
     QAOADescriptor,
 )
-from ..qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from ..qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 from ..utilities import qaoa_probabilities, round_value
 from .cost_function import cost_function
 
@@ -110,6 +111,7 @@ class QAOABaseBackend(VQABaseBackend):
         Appending a user-defined circuit/state to the end of the QAOA routine
     init_hadamard: `bool`
         Initialises the QAOA circuit with a hadamard when ``True``
+    cvar_alpha: `float`
     """
 
     def __init__(
@@ -118,18 +120,34 @@ class QAOABaseBackend(VQABaseBackend):
         prepend_state: Optional[Union[QuantumCircuitBase, List[complex], np.ndarray]],
         append_state: Optional[Union[QuantumCircuitBase, np.ndarray]],
         init_hadamard: bool,
-        cvar_alpha: float = 1,
+        cvar_alpha: float,
     ):
 
         super().__init__(prepend_state, append_state)
 
         self.qaoa_descriptor = qaoa_descriptor
         self.cost_hamiltonian = qaoa_descriptor.cost_hamiltonian
-        self.n_qubits = self.cost_hamiltonian.n_qubits
+        self.n_qubits = self.qaoa_descriptor.n_qubits
         self.init_hadamard = init_hadamard
         self.cvar_alpha = cvar_alpha
+        self.problem_qubits = self.qaoa_descriptor.cost_hamiltonian.n_qubits
 
         self.abstract_circuit = deepcopy(self.qaoa_descriptor.abstract_circuit)
+
+        # pass the generated mappings if the circuit is routed
+        if self.qaoa_descriptor.routed == True:
+            self.initial_qubit_mapping = self.qaoa_descriptor.initial_mapping
+
+            if self.qaoa_descriptor.p % 2 != 0:
+                self.final_mapping = self.qaoa_descriptor.final_mapping
+            else:
+                # if even, the initial mapping [0,...,n_qubits-1] is taken as the final mapping
+                self.final_mapping = list(
+                    range(len(self.qaoa_descriptor.final_mapping))
+                )
+        else:
+            self.initial_qubit_mapping = None
+            self.final_mapping = None
 
     def assign_angles(self, params: QAOAVariationalBaseParams) -> None:
 
@@ -143,80 +161,68 @@ class QAOABaseBackend(VQABaseBackend):
             The variational parameters(angles) to be assigned to the circuit gates
         """
         # if circuit is non-parameterised, then assign the angle values to the circuit
-        abstract_pauli_circuit = self.abstract_circuit
+        abstract_circuit = self.abstract_circuit
 
-        for each_pauli in abstract_pauli_circuit:
-            pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoQubitRotationGateMap):
-                if each_pauli.pauli_label[1] == "mixer":
-                    angle = params.mixer_2q_angles[
-                        pauli_label_index[0], pauli_label_index[1]
-                    ]
-                elif each_pauli.pauli_label[1] == "cost":
-                    angle = params.cost_2q_angles[
-                        pauli_label_index[0], pauli_label_index[1]
-                    ]
-            elif isinstance(each_pauli, RotationGateMap):
-                if each_pauli.pauli_label[1] == "mixer":
-                    angle = params.mixer_1q_angles[
-                        pauli_label_index[0], pauli_label_index[1]
-                    ]
-                elif each_pauli.pauli_label[1] == "cost":
-                    angle = params.cost_1q_angles[
-                        pauli_label_index[0], pauli_label_index[1]
-                    ]
-            each_pauli.rotation_angle = angle
-        self.abstract_circuit = abstract_pauli_circuit
+        for each_gate in abstract_circuit:
+            gate_label_layer = each_gate.gate_label.layer
+            gate_label_seq = each_gate.gate_label.sequence
+            if each_gate.gate_label.n_qubits == 2:
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle = params.mixer_2q_angles[gate_label_layer, gate_label_seq]
+                elif each_gate.gate_label.type.value == "COST":
+                    angle = params.cost_2q_angles[gate_label_layer, gate_label_seq]
+            elif each_gate.gate_label.n_qubits == 1:
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle = params.mixer_1q_angles[gate_label_layer, gate_label_seq]
+                elif each_gate.gate_label.type.value == "COST":
+                    angle = params.cost_1q_angles[gate_label_layer, gate_label_seq]
+            each_gate.angle_value = angle
+
+        self.abstract_circuit = abstract_circuit
 
     def obtain_angles_for_pauli_list(
-        self, input_pauli_list: List[RotationGateMap], params: QAOAVariationalBaseParams
+        self, input_gate_list: List[GateMap], params: QAOAVariationalBaseParams
     ) -> List[float]:
         """
         This method uses the pauli gate list information to obtain the pauli angles
         from the VariationalBaseParams object. The floats in the list are in the order
-        of the input RotationGateMaps list.
+        of the input GateMaps list.
 
         Parameters
         ----------
-        input_pauli_list: `List[RotationGateMap]`
-            The RotationGateMaps list
+        input_gate_list: `List[GateMap]`
+            The GateMap list including rotation gates
         params: `QAOAVariationalBaseParams`
             The variational parameters(angles) to be assigned to the circuit gates
 
         Returns
         -------
         angles_list: `List[float]`
-            The list of angles in the order of gates in the `RotationGateMap` list
+            The list of angles in the order of gates in the `GateMap` list
         """
         angle_list = []
 
-        for each_pauli in input_pauli_list:
-            pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoQubitRotationGateMap):
-                if each_pauli.pauli_label[1] == "mixer":
+        for each_gate in input_gate_list:
+            gate_label_layer = each_gate.gate_label.layer
+            gate_label_seq = each_gate.gate_label.sequence
+
+            if each_gate.gate_label.n_qubits == 2:
+                if each_gate.gate_label.type.value == "MIXER":
                     angle_list.append(
-                        params.mixer_2q_angles[
-                            pauli_label_index[0], pauli_label_index[1]
-                        ]
+                        params.mixer_2q_angles[gate_label_layer, gate_label_seq]
                     )
-                elif each_pauli.pauli_label[1] == "cost":
+                elif each_gate.gate_label.type.value == "COST":
                     angle_list.append(
-                        params.cost_2q_angles[
-                            pauli_label_index[0], pauli_label_index[1]
-                        ]
+                        params.cost_2q_angles[gate_label_layer, gate_label_seq]
                     )
-            elif isinstance(each_pauli, RotationGateMap):
-                if each_pauli.pauli_label[1] == "mixer":
+            elif each_gate.gate_label.n_qubits == 1:
+                if each_gate.gate_label.type.value == "MIXER":
                     angle_list.append(
-                        params.mixer_1q_angles[
-                            pauli_label_index[0], pauli_label_index[1]
-                        ]
+                        params.mixer_1q_angles[gate_label_layer, gate_label_seq]
                     )
-                elif each_pauli.pauli_label[1] == "cost":
+                elif each_gate.gate_label.type.value == "COST":
                     angle_list.append(
-                        params.cost_1q_angles[
-                            pauli_label_index[0], pauli_label_index[1]
-                        ]
+                        params.cost_1q_angles[gate_label_layer, gate_label_seq]
                     )
 
         return angle_list
@@ -515,13 +521,12 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
         prepend_state: Optional[QuantumCircuitBase],
         append_state: Optional[QuantumCircuitBase],
         init_hadamard: bool,
-        cvar_alpha: float = 1,
+        cvar_alpha: float,
     ):
 
         super().__init__(
             qaoa_descriptor, prepend_state, append_state, init_hadamard, cvar_alpha
         )
-
         # assert self.n_qubits >= len(prepend_state.qubits), \
         # "Cannot attach a bigger circuit to the QAOA routine"
         # assert self.n_qubits >= len(append_state.qubits), \

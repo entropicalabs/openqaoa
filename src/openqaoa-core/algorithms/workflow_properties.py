@@ -202,7 +202,7 @@ class BackendProperties(WorkflowProperties):
         The value of the CVaR parameter.
     noise_model: NoiseModel
         The `qiskit` noise model to be used for the shot-based simulator.
-    qubit_layout: Union[List[int], numpy.ndarray]
+    initial_qubit_mapping: Union[List[int], numpy.ndarray]
         Mapping from physical to logical qubit indices, used to eventually
         construct the quantum circuit.  For example, for a system composed by 3 qubits
        `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit
@@ -229,7 +229,7 @@ class BackendProperties(WorkflowProperties):
         n_shots: int = 100,
         cvar_alpha: float = 1,
         noise_model=None,
-        qubit_layout: Optional[Union[List[int], np.ndarray]] = None,
+        initial_qubit_mapping: Optional[Union[List[int], np.ndarray]] = None,
         qiskit_simulation_method: Optional[str] = None,
         seed_simulator: Optional[int] = None,
         active_reset: Optional[bool] = None,
@@ -243,7 +243,7 @@ class BackendProperties(WorkflowProperties):
         self.append_state = append_state
         self.cvar_alpha = cvar_alpha
         self.noise_model = noise_model
-        self.qubit_layout = qubit_layout
+        self.initial_qubit_mapping = initial_qubit_mapping
         self.seed_simulator = seed_simulator
         self.qiskit_simulation_method = qiskit_simulation_method
         self.active_reset = active_reset

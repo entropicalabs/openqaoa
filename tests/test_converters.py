@@ -9,7 +9,7 @@ class TestDocplex2IsingClass(unittest.TestCase):
 
     """
     Test the converter from docplex models
-    
+
     """
 
     def test_qubo(self):
@@ -80,35 +80,35 @@ class TestDocplex2IsingClass(unittest.TestCase):
         self.assertEqual(ising_problem.weights, weights)
 
     def test_unbalanced_penalizations(self):
-            """
-            Test the equality and inequality constraints are encoded in the QUBO
-            model using the unblanaced penalization method.
+        """
+        Test the equality and inequality constraints are encoded in the QUBO
+        model using the unblanaced penalization method.
 
-            """
-            weights = [3.85, 0.25, -1.15]
-            # Creating a basic docplex model
-            mdl = Model("Test inequal")  # Docplex model
-            num_z = 2  # Number of variables
-            z = mdl.binary_var_list(num_z, name="Z")  # docplex variables
-            objective = mdl.sum(z) - 2 * z[0] + z[1] * z[0] + 5  # objective function
-            # Adding constraints
-            mdl.add_constraint(mdl.sum(z[i] for i in range(num_z)) == 1)
-            mdl.add_constraint(2 * z[0] + 3 * z[1] >= 1)
-            mdl.add_constraint(2 * z[1] + z[0] <= 2)
-            mdl.minimize(objective)  # Optimization
+        """
+        weights = [3.85, 0.25, -1.15]
+        # Creating a basic docplex model
+        mdl = Model("Test inequal")  # Docplex model
+        num_z = 2  # Number of variables
+        z = mdl.binary_var_list(num_z, name="Z")  # docplex variables
+        objective = mdl.sum(z) - 2 * z[0] + z[1] * z[0] + 5  # objective function
+        # Adding constraints
+        mdl.add_constraint(mdl.sum(z[i] for i in range(num_z)) == 1)
+        mdl.add_constraint(2 * z[0] + 3 * z[1] >= 1)
+        mdl.add_constraint(2 * z[1] + z[0] <= 2)
+        mdl.minimize(objective)  # Optimization
 
-            ising_problem = FromDocplex2IsingModel(
-                mdl, unbalanced_const=True
-            ).ising_model  # Ising model of the Docplex model
+        ising_problem = FromDocplex2IsingModel(
+            mdl, unbalanced_const=True
+        ).ising_model  # Ising model of the Docplex model
 
-            self.assertIsInstance(ising_problem, QUBO)
-            
-            for weight_1, weight_2 in zip(ising_problem.weights, weights):
-                self.assertAlmostEqual(weight_1, weight_2)
+        self.assertIsInstance(ising_problem, QUBO)
+
+        for weight_1, weight_2 in zip(ising_problem.weights, weights):
+            self.assertAlmostEqual(weight_1, weight_2)
 
     def test_model_maxcut(self):
         """
-        Test the Maxcut application of OpenQAOA gives the same result as the 
+        Test the Maxcut application of OpenQAOA gives the same result as the
         Docplex translation model.
         """
 

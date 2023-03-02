@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import OptimizeResult
 
+
 def newton_descent(
     fun,
     x0,

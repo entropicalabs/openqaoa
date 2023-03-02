@@ -111,7 +111,9 @@ def tensor_wrapper(obj):
                 # Equivalently: if any tensor is trainable, the output is also trainable.
                 # NOTE: Use of Python's ``any`` results in an infinite recursion,
                 # and I'm not sure why. Using ``np.any`` works fine.
-                tensor_kwargs["requires_grad"] = _np.any([i.requires_grad for i in tensor_args])
+                tensor_kwargs["requires_grad"] = _np.any(
+                    [i.requires_grad for i in tensor_args]
+                )
 
         # evaluate the original object
         res = obj(*args, **kwargs)

@@ -16,7 +16,7 @@
 # Lines modified by Entropica Labs will bear the comment # changed from the original PennyLane code
 
 """Nesterov momentum optimizer"""
-get_gradient = None # changed from the original PennyLane code
+get_gradient = None  # changed from the original PennyLane code
 from .momentum import MomentumOptimizer
 
 
@@ -69,7 +69,9 @@ class NesterovMomentumOptimizer(MomentumOptimizer):
 
         if self.accumulation:
             for index in trainable_indices:
-                shifted_args[index] = args[index] - self.momentum * self.accumulation[index]
+                shifted_args[index] = (
+                    args[index] - self.momentum * self.accumulation[index]
+                )
 
         g = get_gradient(objective_fn) if grad_fn is None else grad_fn
         grad = g(*shifted_args, **kwargs)
