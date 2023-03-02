@@ -75,10 +75,14 @@ def test_11_Mixer_example():
     notebook_test_function("./examples/11_Mixer_example.ipynb")
 
 
+def test_13_optimizers():
+    notebook_test_function("./examples/13_optimizers.ipynb")
+
+
 def test_X_dumping_data():
     notebook_test_function("./examples/X_dumping_data.ipynb")
-
-
+       
+       
 ### Community Tutorials
 
 # @pytest.mark.notebook
