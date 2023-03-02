@@ -7,19 +7,6 @@ from .qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from .devices_core import DeviceBase, DeviceLocal
 from .basebackend import QuantumCircuitBase, QAOABaseBackend
 from ..qaoa_components import QAOADescriptor
-# from openqaoa_braket.backends import DeviceAWS, QAOAAWSQPUBackend
-# from openqaoa_qiskit.backends import (
-#     DeviceQiskit,
-#     QAOAQiskitQPUBackend,
-#     QAOAQiskitBackendShotBasedSimulator,
-#     QAOAQiskitBackendStatevecSimulator,
-# )
-# from openqaoa_azure.backends import DeviceAzure
-# from openqaoa_pyquil.backends import (
-#     DevicePyquil,
-#     QAOAPyQuilQPUBackend,
-#     QAOAPyQuilWavefunctionSimulatorBackend,
-# )
 
 BACKEND_BOOLEAN_LIST = backend_boolean_list()
 
@@ -109,35 +96,6 @@ def _backend_arg_mapper(
             "rewiring": rewiring,
             "initial_qubit_mapping": initial_qubit_mapping,
         }
-
-    #     BACKEND_ARGS_MAPPER = {
-    #     QAOABackendAnalyticalSimulator: {},
-    #     QAOAvectorizedBackendSimulator: {},
-    #     QAOAQiskitBackendStatevecSimulator: {},
-    #     QAOAPyQuilWavefunctionSimulatorBackend: {},
-    #     QAOAQiskitBackendShotBasedSimulator: {
-    #         "n_shots": n_shots,
-    #         "seed_simulator": seed_simulator,
-    #         "qiskit_simulation_method": qiskit_simulation_method,
-    #         "noise_model": noise_model,
-    #         "initial_qubit_mapping": initial_qubit_mapping,
-    #     },
-    #     QAOAQiskitQPUBackend: {
-    #         "n_shots": n_shots,
-    #         "initial_qubit_mapping": initial_qubit_mapping,
-    #     },
-    #     QAOAPyQuilQPUBackend: {
-    #         "n_shots": n_shots,
-    #         "active_reset": active_reset,
-    #         "rewiring": rewiring,
-    #         "initial_qubit_mapping": initial_qubit_mapping,
-    #     },
-    #     QAOAAWSQPUBackend: {
-    #         "n_shots": n_shots,
-    #         "disable_qubit_rewiring": disable_qubit_rewiring,
-    #         "initial_qubit_mapping": initial_qubit_mapping,
-    #     },
-    # }
 
     final_backend_kwargs = {
         key: value

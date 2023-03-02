@@ -2,10 +2,6 @@ from __future__ import annotations
 
 from .plugin_finder import backend_boolean_list
 from .devices_core import DeviceBase, DeviceLocal
-# from openqaoa_braket.backends import DeviceAWS
-# from openqaoa_qiskit.backends import DeviceQiskit
-# from openqaoa_pyquil.backends import DevicePyquil
-# from openqaoa_azure.backends import DeviceAzure
 
 BACKEND_BOOLEAN_LIST = backend_boolean_list()
 
@@ -66,31 +62,6 @@ def device_class_arg_mapper(
             "endpoint_id": endpoint_id,
             "engagement_manager": engagement_manager,
         }
-    
-    
-    # DEVICE_ARGS_MAPPER = {
-    #     DeviceQiskit: {
-    #         "hub": hub,
-    #         "group": group,
-    #         "project": project,
-    #         "as_emulator": as_emulator,
-    #     },
-    #     DevicePyquil: {
-    #         "as_qvm": as_qvm,
-    #         "noisy": noisy,
-    #         "compiler_timeout": compiler_timeout,
-    #         "execution_timeout": execution_timeout,
-    #         "client_configuration": client_configuration,
-    #         "endpoint_id": endpoint_id,
-    #         "engagement_manager": engagement_manager,
-    #     },
-    #     DeviceAWS: {
-    #         "s3_bucket_name": s3_bucket_name,
-    #         "aws_region": aws_region,
-    #         "folder_name": folder_name,
-    #     },
-    #     DeviceAzure: {"resource_id": resource_id, "location": az_location},
-    # }
 
     final_device_kwargs = {
         key: value
