@@ -3,6 +3,7 @@ from math import log2
 from random import shuffle
 from typing import List
 from matplotlib import pyplot as plt
+from copy import deepcopy
 
 from . import QAOA
 from ...backends import create_device
@@ -40,29 +41,27 @@ class QAOABenchmark:
         else:
             n_params = sum([1 for r in ranges if len(r)==2])
 
+        
+        params_obj = deepcopy(self.qaoa.variate_params)
+
         values = np.zeros((n_points_axis, n_points_axis))
-        points = []
+        for i, point in enumerate(self.__ordered_points(n_params, n_points_axis)):
+            print("Point", i+1, "out of", n_points_axis**n_params)
 
-        for point in self.__ordered_points(n_params, n_points_axis):
-
-            rescaled_point = [ point[i]*(ranges[i][1]-ranges[i][0])/(n_points_axis-1) + ranges[i][0] for i in range(n_params) ] 
-            points.append(rescaled_point)
-            values[tuple(point)] = self.qaoa.evaluate_circuit(rescaled_point)
+            params = [ point[i]*(ranges[i][1]-ranges[i][0])/(n_points_axis-1) + ranges[i][0] for i in range(n_params) ] 
+            params_obj.update_from_raw(params)
+            values[tuple(point)] = self.qaoa.backend.expectation(params_obj)
 
         # save the results
         self.ranges = ranges
-        self.points = points
         self.values = values
 
     def plot(self):
 
-        values = np.array(self.values)
-
-        x = values[:,0]
-        y = values[0,:]
+        axis = [ np.linspace(r[0], r[1], self.values.shape[i]) for i, r in enumerate(self.ranges) ]
 
         fig, ax = plt.subplots()
-        ax.pcolorfast(x, y, values)
+        ax.pcolorfast(*axis, self.values)
         plt.show()
 
     @staticmethod
