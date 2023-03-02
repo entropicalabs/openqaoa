@@ -29,7 +29,7 @@ class OneQubitGate(Gate):
         self.n_qubits = 1
 
     def apply_gate(self, ckt):
-        self.applicator.apply_gate(self, self.qubit_1, ckt)
+        return self.applicator.apply_gate(self, self.qubit_1, ckt)
 
 
 class OneQubitRotationGate(OneQubitGate):
@@ -40,7 +40,7 @@ class OneQubitRotationGate(OneQubitGate):
         self.rotation_object = rotation_object
 
     def apply_gate(self, ckt):
-        self.applicator.apply_gate(self, self.qubit_1, self.rotation_object, ckt)
+        return self.applicator.apply_gate(self, self.qubit_1, self.rotation_object, ckt)
 
     def apply_vector_gate(self, input_obj):
         input_obj.apply_rz(self.qubit_1, self.rotation_object.rotation_angle)
@@ -54,7 +54,7 @@ class TwoQubitGate(Gate):
         self.n_qubits = 2
 
     def apply_gate(self, ckt):
-        self.applicator.apply_gate(self, self.qubit_1, self.qubit_2, ckt)
+        return self.applicator.apply_gate(self, self.qubit_1, self.qubit_2, ckt)
 
     def apply_vector_gate(self, input_obj):
         raise NotImplemented()
@@ -72,7 +72,7 @@ class TwoQubitRotationGate(TwoQubitGate):
         self.rotation_object = rotation_object
 
     def apply_gate(self, ckt):
-        self.applicator.apply_gate(
+        return self.applicator.apply_gate(
             self, self.qubit_1, self.qubit_2, self.rotation_object, ckt
         )
 

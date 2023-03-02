@@ -77,16 +77,16 @@ class PyquilGateApplicator(gates_core.GateApplicator):
         if gate.n_qubits == 1:
             if hasattr(gate, 'rotation_object'):
                 # *args must be of the following format -- (qubit_1,rotation_object,circuit)
-                self.apply_1q_rotation_gate(selected_pyquil_gate, *args)
+                return self.apply_1q_rotation_gate(selected_pyquil_gate, *args)
             else:
                 # *args must be of the following format -- (qubit_1,circuit)
-                self.apply_1q_fixed_gate(selected_pyquil_gate, *args)
+                return self.apply_1q_fixed_gate(selected_pyquil_gate, *args)
         elif gate.n_qubits == 2:
             if hasattr(gate, 'rotation_object'):
                 # *args must be of the following format -- (qubit_1,qubit_2,rotation_object,circuit)
-                self.apply_2q_rotation_gate(selected_pyquil_gate, *args)
+                return self.apply_2q_rotation_gate(selected_pyquil_gate, *args)
             else:
                 # *args must be of the following format -- (qubit_1,qubit_2,circuit)
-                self.apply_2q_fixed_gate(selected_pyquil_gate, *args)
+                return self.apply_2q_fixed_gate(selected_pyquil_gate, *args)
         else:
             raise ValueError("Error applying the requested gate. Please check in the input")
