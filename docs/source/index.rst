@@ -13,6 +13,7 @@ Key features of OpenQAOA:
    * IBMQ devices
    * Rigettis' Quantum Cloud Services
    * Amazon Braket
+   * Microsoft's Azure
    * Local simulators (including Rigettis' QVM, IBM's Qiskit, and Entropica Labs' vectorized simulator)
 * Multiple parametrization strategies:
    * Standard, Fourier, and Annealing
@@ -42,12 +43,12 @@ Alternatively, you can install manually directly from the GitHub repository by
 1. Clone the git repository:
 
 ```
-git clone git@github.com:entropicalabs/openqaoa.git
+git clone https://github.com/entropicalabs/openqaoa.git
 ```
 
-2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** for the environment.
+2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** (or newer) for the environment.
 
-3. After cloning the repository `cd openqaoa` and pip install the package. Use the following command for a vanilla install with the `scipy` optimizers:
+3. After cloning the repository `cd openqaoa` and pip install the package. 
 
 ```
 pip install .
@@ -59,7 +60,6 @@ pip install .[tests]
 ```
 
 Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
-
 
 
 Your first QAOA workflow
@@ -94,7 +94,7 @@ Workflows can be customised using some convenient setter functions. First, we ne
 
 .. code-block:: python
 
-   from openqaoa.backends import create_device
+   from openqaoa import create_device
    qiskit_sv = create_device(location='local', name='qiskit.statevector_simulator')
    q.set_device(qiskit_sv)
 
@@ -128,8 +128,12 @@ Currently, the available devices are:
      - Please check the IBMQ backends available to your account
    * - `Rigetti's QCS`
      - `[nq-qvm, Aspen-11, Aspen-M-1]`
+   * - `Azure`
+     - OpenQAOA supports all gate-based QPU present on Azure Quantum. For the freshest list, please check the [Azure Quantum documentation](https://azure.microsoft.com/en-us/products/quantum/#features)
 
 With the notation `nq-qvm` it is intended that `n` is a positive integer. For example, `6q-qvm`.
+
+Check the [OpenQAOA Website](https://openqaoa.entropicalabs.com/devices/device/) for further details.
 
 Your first RQAOA workflow
 -------------------------
@@ -208,7 +212,7 @@ The result of the optimization will the be accessible as
 License
 ========
 
-OpenQAOA is released open source under the Apache License, Version 2.0.
+OpenQAOA is released open source under the MIT license
 
 Contents
 ========
