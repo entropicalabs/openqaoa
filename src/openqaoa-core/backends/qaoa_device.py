@@ -57,6 +57,13 @@ def device_class_arg_mapper(
     }
     return final_device_kwargs
 
+LOCATION_MAPPER = {
+    "ibmq": DeviceQiskit,
+    "qcs": DevicePyquil,
+    "aws": DeviceAWS,
+    "local": DeviceLocal,
+    "azure": DeviceAzure,
+}
 
 def create_device(location: str, name: str, **kwargs):
     """
@@ -78,17 +85,9 @@ def create_device(location: str, name: str, **kwargs):
         An instance of the appropriate device class.
     """
     location = location.lower()
-    if location == "ibmq":
-        device_class = DeviceQiskit
-    elif location == "qcs":
-        device_class = DevicePyquil
-    elif location == "aws":
-        device_class = DeviceAWS
-    elif location == "local":
-        device_class = DeviceLocal
-    elif location == "azure":
-        device_class = DeviceAzure
-    else:
-        raise ValueError(f"Invalid device location, Choose from: {location}")
+    if location not in LOCATION_MAPPER:
+        raise ValueError(f"Invalid device location, Choose from: {list(LOCATION_MAPPER.keys())}")
+    
+    device_class = LOCATION_MAPPER[location]
 
     return device_class(device_name=name, **kwargs)
