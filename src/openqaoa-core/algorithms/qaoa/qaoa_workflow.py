@@ -355,42 +355,35 @@ class QAOA(Workflow):
         # if the parameters are passed in a different format, we raise an error
         else:
             raise TypeError(f'The input params must be a list or a dictionary. Instead, received {type(params)}')
-
-        ## get the results of the evaluation with the corresponding parameters
-        print("Evaluating the QAOA circuit at the following parameters:", {k: v.tolist() for k,v in params_obj.asdict().items()})
         
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             return {'cost': self.backend.expectation(params_obj)[0]}
 
-
         if isinstance(self.backend, QAOABaseBackendStatevector):
             state = self.backend.wavefunction(params_obj)
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
-            results = {
+            return {
                 'cost': cost,
                 'uncertainty': uncertainty,
                 'state': state
             }
 
-        else:
-            counts = self.backend.get_counts(params_obj)
-            cost = cost_function(
-                counts, 
-                self.backend.qaoa_descriptor.cost_hamiltonian, 
-                self.backend.cvar_alpha
-            )
-            cost_sq = cost_function(
-                counts,
-                self.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
-                self.backend.cvar_alpha,
-            )
-            results = {
-                'cost': cost,
-                'uncertainty': np.sqrt(cost_sq - cost**2),
-                'counts': counts
-            }
-
-        return results    
+        counts = self.backend.get_counts(params_obj)
+        cost = cost_function(
+            counts, 
+            self.backend.qaoa_descriptor.cost_hamiltonian, 
+            self.backend.cvar_alpha
+        )
+        cost_sq = cost_function(
+            counts,
+            self.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
+            self.backend.cvar_alpha,
+        )
+        return {
+            'cost': cost,
+            'uncertainty': np.sqrt(cost_sq - cost**2),
+            'counts': counts
+        }  
 
     def _serializable_dict(
         self, complex_to_string: bool = False, intermediate_mesurements: bool = True
