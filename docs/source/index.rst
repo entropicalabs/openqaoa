@@ -191,7 +191,7 @@ Then proceed by instantiating the backend device
 
 .. code-block:: python
    
-   backend_obj = QAOAvectorizedBackendSimulator(circuit_params = qaoa_descriptor, append_state = None, prepend_state = None, init_hadamard = True)
+   backend_obj = QAOAvectorizedBackendSimulator(qaoa_descriptor = qaoa_descriptor, append_state = None, prepend_state = None, init_hadamard = True)
 
 And finally, create the classical optimizer and minimize the objective function
 
@@ -206,7 +206,7 @@ The result of the optimization will the be accessible as
 
 .. code-block:: python
 
-   optimizer_obj.results_information()
+   optimizer_obj.qaoa_result.asdict()
 
 
 License
