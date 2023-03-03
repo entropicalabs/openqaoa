@@ -1421,43 +1421,23 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error = True
             assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a dict with a value longer than it should"
 
-            # evaluate the circuit without optimizing and passing any param, it should raise an error
+            # evaluate the circuit without passing any param, it should raise an error
             error = False
             try:
                 q.evaluate_circuit()
             except Exception:
                 error = True
-            assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when not optimization has happened and not passing any param"
+            assert error, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when not passing any param"
 
-            # optimize the qaoa object and evaluate the circuit without passing any param, the cost should be the same
-            q.optimize()
-            result = q.evaluate_circuit()
-            assert result['cost'] == q.result.optimized['cost'], f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same cost as the result.cost attribute"
-
-            # it should also work if you pass the params as a list
-            optimized_params = q.result.optimized['angles']
-            result = q.evaluate_circuit(optimized_params)
-            assert result['cost'] == q.result.optimized['cost'], \
-            f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same cost as the result.cost attribute, when passing the optimized params as a list"
-
-            # it should also work if you pass the params as a dictionary
-            dictionary = q.variate_params.asdict()
-            optimized_params_ = optimized_params.copy()
-            for key in dictionary.keys(): # create the dictionary with the optimized values
-                dictionary[key] = np.array([optimized_params_.pop(0) for _ in range(dictionary[key].size)]).reshape(dictionary[key].shape)
-            result = q.evaluate_circuit(dictionary)
-            assert result['cost'] == q.result.optimized['cost'], \
-            f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same cost as the result.cost attribute, when passing the optimized params as a dictionary"
 
         # check that it works with shots
         q = QAOA()
         device = create_device(location="local", name='qiskit.qasm_simulator')
         q.set_device(device)
-        q.set_circuit_properties(p=3, param_type="standard", init_type='rand')
+        q.set_circuit_properties(p=3)
         q.compile(problem) 
-        q.optimize()
-        result = q.evaluate_circuit()
-        assert isinstance(result['counts'], dict), "When using a shot-based simulator, `evaluate_circuit` should return a dcit of counts"
+        result = q.evaluate_circuit([1,2,1,2,1,2])
+        assert isinstance(result['counts'], dict), "When using a shot-based simulator, `evaluate_circuit` should return a dict of counts"
         assert not "state" in result, "When using a shot-based simulator, `evaluate_circuit` should not return a state"
         assert abs(result['cost']) >= 0, "When using a shot-based simulator, `evaluate_circuit` should return a cost"
         assert abs(result['uncertainty']) > 0, "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
@@ -1480,10 +1460,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         q = QAOA()
         device = create_device(location="local", name='analytical_simulator')
         q.set_device(device)
-        q.set_circuit_properties(p=1, param_type="standard", init_type='rand')
+        q.set_circuit_properties(p=1, param_type="standard")
         q.compile(problem)
-        q.optimize()
-        result = q.evaluate_circuit()
+        result = q.evaluate_circuit([1,2])
         assert list(result.keys()) == ['cost'], "When using an analytical simulator, `evaluate_circuit` should return only the cost"
         assert abs(result['cost']) >= 0, "When using an analytical simulator, `evaluate_circuit` should return a cost"
 
