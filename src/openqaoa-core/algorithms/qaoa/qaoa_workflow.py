@@ -310,7 +310,7 @@ class QAOA(Workflow):
         return
     
     def evaluate_circuit(
-        self, params: Union[List[float], Dict[str, List[float]], None] = None
+        self, params: Union[List[float], Dict[str, List[float]]]
     ):
         """
         A method to evaluate the QAOA circuit at a given set of parameters
@@ -337,14 +337,8 @@ class QAOA(Workflow):
         
         ## Check the type of the input parameters and save them as a QAOAVariationalBaseParams object at the variable `params_obj`
 
-        # if no parameters are passed, we use the optimized parameters of the QAOA object
-        if params is None:
-            assert self.result != None, "No parameters have been passed and the QAOA object has not been optimized yet"
-            params_obj = deepcopy(self.variate_params)
-            params_obj.update_from_raw(self.result.optimized['angles'])
-
         # if the parameters are passed as a dictionary we copy and update the variational parameters of the QAOA object
-        elif isinstance(params, dict):
+        if isinstance(params, dict):
             params_obj = deepcopy(self.variate_params)
             # we check that the dictionary contains all the parameters of the QAOA object that are not empty
             for key, value in params_obj.asdict().items():
@@ -360,7 +354,7 @@ class QAOA(Workflow):
 
         # if the parameters are passed in a different format, we raise an error
         else:
-            raise TypeError("`params` must be a list, a dictionary or None")
+            raise TypeError(f'The input params must be a list or a dictionary. Instead, received {type(params)}')
 
         ## get the results of the evaluation with the corresponding parameters
         print("Evaluating the QAOA circuit at the following parameters:", {k: v.tolist() for k,v in params_obj.asdict().items()})
