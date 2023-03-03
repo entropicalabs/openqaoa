@@ -6,7 +6,6 @@ from openqaoa_qiskit.backends import DeviceQiskit
 from openqaoa_pyquil.backends import DevicePyquil
 from openqaoa_azure.backends import DeviceAzure
 
-
 def device_class_arg_mapper(
     device_class: DeviceBase,
     hub: str = None,
