@@ -83,9 +83,12 @@ class QAOAAWSQPUBackend(
                 else list(range(self.n_qubits))
             )
         else:
-            warnings.warn(
-                "Ignoring the initial_qubit_mapping since the routing algorithm chose one"
-            )
+            if isinstance(initial_qubit_mapping, list):
+                warnings.warn(
+                    "Ignoring the initial_qubit_mapping since the routing algorithm chose one"
+                )
+            else:
+                pass
         self.disable_qubit_rewiring = disable_qubit_rewiring
 
         if self.prepend_state:
@@ -179,8 +182,12 @@ class QAOAAWSQPUBackend(
         if self.append_state:
             parametric_circuit += self.append_state
 
-        # TODO: needs to be fixed --> measurement operations on problem qubits
-        parametric_circuit += Probability.probability()
+        if self.final_mapping is None:
+            parametric_circuit += Probability.probability(target=self.problem_reg)
+        else:
+            parametric_circuit += Probability.probability(
+                target=self.final_mapping[0 : len(self.problem_reg)]
+            )
 
         return parametric_circuit
 
@@ -250,9 +257,6 @@ class QAOAAWSQPUBackend(
                     )
 
         final_counts = counts
-        # if self.final_mapping is not None:
-        #     final_counts = permute_counts_dictionary(final_counts,
-        #                                             self.final_mapping)
         # # Expose counts
         self.measurement_outcomes = final_counts
         return final_counts
