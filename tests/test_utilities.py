@@ -508,15 +508,18 @@ class TestingUtilities(unittest.TestCase):
         and a given measurement counts dictionary.
         """
 
+        ## First test - Ring of Disagrees
+
         # Number of qubits
         n_qubits = 10
 
         # Define edges and weights determining the problem graph
         edges = [(i, i + 1) for i in range(n_qubits - 1)] + [(0, n_qubits - 1)]
         weights = [1 for _ in range(len(edges))]
+        constant = 10
 
         # Hamiltonian
-        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant=0)
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant)
 
         # Input measurement counts dictionary
         input_measurement_counts = {
@@ -531,12 +534,49 @@ class TestingUtilities(unittest.TestCase):
         energy = energy_expectation(hamiltonian, input_measurement_counts)
 
         # Correct energy
-        correct_energy = 1.2
+        correct_energy = 11.2
 
         # Test energy was computed correctly
-        assert np.allclose(
-            energy, correct_energy
-        ), f"The energy expectation value was not computed correctly"
+        assert np.allclose(energy, correct_energy), f"The energy expectation value for rings of disagrees was not computed correctly"
+
+
+        ## Second test - Minimum Vertex Cover on a Ring
+
+        # Number of qubits
+        n_qubits = 10
+
+        # Edges of the graph
+        edges = [(i, i + 1) for i in range(n_qubits - 1)] + [(0, n_qubits - 1)]
+
+        # Define graph and add edges
+        G = nx.Graph()
+        G.add_edges_from(edges)
+
+        # QUBO instance of the problem
+        field = 1.0
+        penalty = 10.0
+        mvc = MinimumVertexCover(G, field=field, penalty=penalty).qubo
+
+        # Minimum Vertex Cover Hamiltonian
+        hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
+
+        # Input measurement counts dictionary
+        input_measurement_counts = {
+            "0101010101": 10,
+            "1010101010": 10,
+            "0000000000": 10,
+            "1111111111": 10,
+        }
+
+        # Obtain energy expectation value
+        energy = energy_expectation(hamiltonian, input_measurement_counts)
+
+        # Correct energy
+        correct_energy = 30
+
+        # Test energy was computed correctly
+        assert np.allclose(energy, correct_energy), f"The energy expectation value for Minimum Vertex Cover was not computed correctly"
+
 
     def test_energy_spectrum_hamiltonian(self):
         """
