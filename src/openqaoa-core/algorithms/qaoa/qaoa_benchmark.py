@@ -5,6 +5,7 @@ from typing import List
 from matplotlib import pyplot as plt
 from copy import deepcopy
 from IPython.display import clear_output
+import time
 
 from . import QAOA
 from ...backends import create_device
@@ -12,10 +13,34 @@ from ...backends import create_device
 class QAOABenchmark:
     """
     Benchmark is a class that implements benchmarking for QAOA.
+
+    Attributes
+    ----------
+    qaoa : QAOA
+        The QAOA object to be benchmarked.
+    reference : QAOA
+        The reference QAOA object, which will be used to compare the results of the benchmarked QAOA object.
+    ranges : List[tuple]
+        The ranges of the variate parameters of the benchmarked QAOA object.
+    ranges_reference : List[tuple]
+        The ranges of the variate parameters of the reference QAOA object.
+    values : np.ndarray
+        The values of the benchmarked QAOA object.
+    values_reference : np.ndarray
+        The values of the reference QAOA object.
+    difference : np.ndarray
+        The difference between the values of the benchmarked QAOA object and the values of the reference QAOA object.
+    difference_mean : float
+        The mean of the difference between the values of the benchmarked QAOA object and the values of the reference QAOA object.
     """
     def __init__(self, qaoa: QAOA):
         """
         Constructor for the Benchmark class.
+
+        Parameters
+        ----------
+        qaoa : QAOA
+            The QAOA object to be benchmarked.
         """
         #check if the QAOA object inputted is valid and save it
         assert isinstance(qaoa, QAOA), "`qaoa` must be an instance of QAOA"
@@ -24,7 +49,7 @@ class QAOABenchmark:
 
         #create a reference QAOA object, which will be used to compare the results of the benchmarked QAOA object
         self.reference = QAOA()
-        self.reference.circuit_properties = self.qaoa.circuit_properties
+        self.reference.circuit_properties = self.qaoa.circuit_properties #copy the circuit properties of the benchmarked QAOA object
         try:
             self.reference.set_device(create_device(location='local', name='analytical_simulator'))
             self.reference.compile(self.qaoa.problem)
@@ -35,17 +60,51 @@ class QAOABenchmark:
 
     @property
     def difference(self):
+        "The difference between the values of the benchmarked QAOA object and the values of the reference QAOA object."
         if not hasattr(self, "values"):
             raise Exception("You must run the benchmark before calculating the difference")
-        if not hasattr(self, "reference_values"):
+        if not hasattr(self, "values_reference"):
             raise Exception("You must run the reference before calculating the difference")
-        if self.values.shape != self.reference_values.shape:
+        if self.values.shape != self.values_reference.shape:
             raise Exception("The ranges and number of points of the values and reference values must be the same")
-        return self.values - self.reference_values
+        return self.values - self.values_reference
     
     @property
     def difference_mean(self):
+        "The mean of the difference between the values of the benchmarked QAOA object and the values of the reference QAOA object."
         return np.mean(self.difference)
+            
+    def __assert_run_inputs(
+            self, 
+            n_points_axis: int, 
+            ranges: List[tuple], 
+            run_reference: bool, 
+            plot: bool, 
+            plot_reference: bool, 
+            plot_difference: bool, 
+            plot_options: dict,
+            ):       
+        "Private method that checks the inputs of the run (and run_reference) method."
+        assert isinstance(n_points_axis, int), "The number of points per axis must be an integer"
+        assert isinstance(ranges, list) or ranges is None, "The ranges argument must be a list of tuples: (min, max) or (value,)"
+        assert len(ranges) == len(self.qaoa.variate_params), "The number of ranges must be equal to the number of variate parameters, which is {}".format(len(self.qaoa.variate_params))
+        assert all([isinstance(r, tuple) or isinstance(r, list) for r in ranges]), "Each range must be a tuple: (min, max) or (value,)"
+        assert all([len(r)==1 or len(r)==2 for r in ranges]), "Each range must be a tuple of length 1 or 2: (min, max) or (value,)"
+        for bools in ["run_reference", "plot", "plot_reference", "plot_difference"]:
+            assert isinstance(eval(bools), bool), "The {} argument must be a boolean".format(bools)
+        assert isinstance(plot_options, dict), "The plot_options argument must be a dictionary"
+
+    def __print_expected_time(self, k, n_points):
+        "Private method that prints the expected remaining time to complete the benchmark."
+        print("\rPoint {} out of {}.".format(k+1, n_points), end="")
+        if k == 0:
+            self.__start_time = time.time()
+        elif k > 0:
+            expected_time = (time.time() - self.__start_time) * (n_points-k) / k 
+            print(" Expected remaining time to complete: {}, it will be finished at {}.".format(
+                    time.strftime("%H:%M:%S", time.localtime(expected_time)),
+                    time.strftime("%H:%M:%S", time.localtime(time.time()+expected_time))),
+                  end="")
 
     def run_reference(
             self, 
@@ -54,6 +113,28 @@ class QAOABenchmark:
             plot: bool = False,
             plot_options:dict = {}
             ):
+        """
+        Evaluates the QAOA circuit of the reference QAOA object for a given number of points per axis and ranges.
+
+        Parameters
+        ----------
+        n_points_axis : int, optional
+            The number of points per axis. 
+            If None, the number of points per axis will be the same as the number of points per axis of the benchmarked QAOA object.
+            The default is None.
+        ranges : List[tuple], optional
+            The sweep ranges of the parameters. The expected format is a list of tuples: (min, max) or (value,). One tuple per parameter.
+            If the length of the tuple is 1, the parameter will be fixed to the value of the tuple.
+            If the length of the tuple is 2, the parameter will be swept from the first value of the tuple to the second value of the tuple.
+            If None, the ranges will be the same as the ranges of the benchmarked QAOA object.
+            The default is None.
+        plot : bool, optional
+            If True, the values of the reference will be plotted.
+            The default is False.
+        plot_options : dict, optional
+            The options for the plot. The expected format is a dictionary with the keys of the plot method of this class.
+            The default is {}.
+        """
 
         # check the input -> n_points_axis
         if n_points_axis == None and hasattr(self, "values"):
@@ -66,28 +147,36 @@ class QAOABenchmark:
             ranges = self.ranges
         elif ranges == None:
             raise Exception("You must specify the ranges")
+        # save the ranges of the reference
         self.ranges_reference = ranges
 
-        # n_params = sum([1 for r in ranges if len(r)==2])
-        
-        ranges_to_use = [ r for r in ranges if len(r)==2 ]
-        axes = [ np.linspace(r[0], r[1], n_points_axis) for r in ranges_to_use ]      
-        params = lambda new_params: [ r[0] if len(r) == 1 else new_params.pop(0) for r in ranges ]        
+        # check the inputs
+        self.__assert_run_inputs(n_points_axis, ranges, True, plot, False, False, plot_options)
+
+        # prepare the axes of the grid
+        ranges_to_use = [ r for r in ranges if len(r)==2 ] # only the ranges that will be swept
+        axes = [ np.linspace(r[0], r[1], n_points_axis) for r in ranges_to_use ] # the starting and ending points are given by the ranges and the number of points is given by n_points_axis    
+
+        # function that given the values used for the parameters swept, returns the values of all the parameters in order
+        params = lambda new_params: [ r[0] if len(r) == 1 else new_params.pop(0) for r in ranges ]  
+
+        # copy the parameters object, which will be updated before each evaluation      
         params_obj = deepcopy(self.qaoa.variate_params)
-        self.reference_values = np.zeros([n_points_axis for _ in range(len(ranges_to_use))])
 
-        # evaluate all the points in the grid
+        # initialize the array that will contain the values of the reference
+        self.values_reference = np.zeros([n_points_axis for _ in range(len(ranges_to_use))])
+
+        # evaluate all the points in the grid, looping over the indices of the grid
         for k, i_point in enumerate(np.ndindex(*[len(axis) for axis in axes])):
-            print("\r", "Reference point", k+1, "out of", n_points_axis**len(ranges_to_use), end="")
+            self.__print_expected_time(k, n_points_axis**len(ranges_to_use)) # print the expected remaining time, info for the user
 
-            new_params = [ axis[i] for axis, i in zip(axes, i_point) ]
+            new_params = [ axis[i] for axis, i in zip(axes, i_point) ] # from the indices of the grid, get the values of the parameters that will be evaluated
             params_obj.update_from_raw(params(new_params))
-            self.reference_values[i_point[::-1]] = self.reference.backend.expectation(params_obj)
+            self.values_reference[i_point[::-1]] = self.reference.backend.expectation(params_obj)
 
+        # plot the values of the reference if requested
         if plot:
             self.plot(main=False, reference=True, difference=False, **plot_options)
-            
-
 
     def run(    
             self, 
@@ -99,38 +188,76 @@ class QAOABenchmark:
             plot_difference: bool = False,
             plot_options:dict = {}
             ):
+        """
+        Evaluates the QAOA circuit of the benchmarked QAOA object for a given number of points per axis and ranges.
 
-        assert isinstance(n_points_axis, int), "The number of points per axis must be an integer"
-        assert isinstance(ranges, list) or ranges is None, "The ranges argument must be a list of tuples: (min, max) or (value,)"
-        assert len(ranges) == len(self.qaoa.variate_params), "The number of ranges must be equal to the number of variate parameters"
-        assert all([isinstance(r, tuple) or isinstance(r, list) for r in ranges]), "Each range must be a tuple: (min, max) or (value,)"
-        assert all([len(r)==1 or len(r)==2 for r in ranges]), "Each range must be a tuple of length 1 or 2: (min, max) or (value,)"
-        assert isinstance(plot, bool), "The plot argument must be a boolean"
+        Parameters
+        ----------
+        n_points_axis : int
+            The number of points per axis.
+        ranges : List[tuple]
+            The sweep ranges of the parameters. The expected format is a list of tuples: (min, max) or (value,). One tuple per parameter.
+            If the length of the tuple is 1, the parameter will be fixed to the value of the tuple.
+            If the length of the tuple is 2, the parameter will be swept from the first value of the tuple to the second value of the tuple.
+        run_reference : bool, optional
+            If True, the reference QAOA object will be evaluated for the same points.
+            The default is True.
+        plot : bool, optional
+            If True, the values of the benchmarked QAOA object will be plotted.
+            The default is False.
+        plot_reference : bool, optional
+            If True, the values of the reference QAOA object will be plotted.
+            The default is False.
+        plot_difference : bool, optional
+            If True, the difference between the values of the benchmarked QAOA object and the values of the reference QAOA object will be plotted.
+            The default is False.
+        plot_options : dict, optional
+            The options for the plot. The expected format is a dictionary with the keys of the plot method of this class.
+            The default is {}.
+        """
+
+        # check the inputs
+        self.__assert_run_inputs(n_points_axis, ranges, run_reference, plot, plot_reference, plot_difference, plot_options)
 
         # save the ranges
         self.ranges = ranges
   
-        ranges_to_use = [ r for r in ranges if len(r)==2 ]
-        n_params = len(ranges_to_use)     
+        # get only the ranges that will be swept, and the number of parameters swept
+        ranges_to_use = [ r for r in ranges if len(r)==2 ] 
+        n_params = len(ranges_to_use) 
+
+        # prepare the axes of the grid
+        axes = [ np.linspace(r[0], r[1], n_points_axis) for r in ranges_to_use ] # the starting and ending points are given by the ranges and the number of points is given by n_points_axis       
+
+        # function that given the values used for the parameters swept, returns the values of all the parameters in order
         params = lambda new_params: [ r[0] if len(r) == 1 else new_params.pop(0) for r in ranges ]
+
+        # copy the parameters object, which will be updated before each evaluation
         params_obj = deepcopy(self.qaoa.variate_params)
+
+        # initialize the array that will contain the values of the benchmarked QAOA object
         self.values = np.zeros([n_points_axis for _ in range(n_params)])        
 
-        for k, point in enumerate(self.__ordered_points(n_params, n_points_axis)):
-            print("\r", "Point", k+1, "out of", n_points_axis**n_params, end="")
+        # evaluate all the points in the grid, in the order provided by the function __ordered_points. We loop over the indices of the grid.
+        for k, i_point in enumerate(self.__ordered_points(n_params, n_points_axis)):
+            self.__print_expected_time(k, n_points_axis**n_params) #print the expected remaining time, info for the user  
 
-            new_params = [ point[i]*(r[1]-r[0])/(n_points_axis-1) + r[0] for i, r in enumerate(ranges_to_use) ] 
+            new_params = [ axis[i] for axis, i in zip(axes, i_point) ] # from the indices of the grid, get the values of the parameters that will be evaluated       
             params_obj.update_from_raw(params(new_params))
-            self.values[tuple(point[::-1])] = self.qaoa.backend.expectation(params_obj)
+            self.values[tuple(i_point[::-1])] = self.qaoa.backend.expectation(params_obj)
 
             #plot every 1000 points and at the end
             if ((k%1000==0 and k>0) or k+1==n_points_axis**n_params) and plot:
-                clear_output(wait=True)
+                clear_output(wait=True) 
+
                 if (not k+1==n_points_axis**n_params) and n_params==1:
                     plot_opt={'marker':'o', 'linestyle':'', 'markersize':3}
                 else:
                     plot_opt={}
                 self.plot(plot_options=plot_opt, **plot_options)
+                
+                if k+1==n_points_axis**n_params:
+                    self.__print_expected_time(k, n_points_axis**n_params)   
 
         # run the reference if requested
         if run_reference:
@@ -144,18 +271,62 @@ class QAOABenchmark:
         if plot_difference:
             self.plot(main=False, reference=False, difference=True, **plot_options)
 
-
     def plot(
             self, 
-            ax = None, 
+            ax:plt.Axes = None, 
+            labels:List[str] = None,
             main:bool = True, 
             reference:bool = False, 
             difference:bool = False, 
-            plot_options:dict = {}
+            one_plot:bool = False,
+            # params_to_plot:List[int] = None, TODO: difficult because you need to specify the values of the other parameters
+            plot_options:dict = {},
+            verbose:bool = True,
             ):
+        """
+        Plots the values of the benchmarked QAOA object and/or the values of the reference QAOA
+          object and/or the difference between the values of the benchmarked QAOA object and the values of the reference QAOA object.
 
-        ax_input = ax
+        Parameters
+        ----------
+        ax : plt.Axes, optional
+            The matplotlib Axes object to plot on. If None, a new figure will be created.
+            The default is None.
+        labels : List[str], optional
+            The labels of the axes. The expected format is a list of two strings: one for each axis. 
+            If None, the labels will be the number of the parameters.
+            The default is None.
+        main : bool, optional
+            If True, the values of the benchmarked QAOA object will be plotted.
+            The default is True.
+        reference : bool, optional
+            If True, the values of the reference QAOA object will be plotted.
+            The default is False.
+        difference : bool, optional
+            If True, the difference between the values of the benchmarked QAOA object and the values of the reference QAOA object will be plotted.
+            The default is False.
+        one_plot : bool, optional
+            If True, the values of the benchmarked QAOA object, 
+            the values of the reference QAOA object and the difference between the values of the benchmarked QAOA object 
+            and the values of the reference QAOA object will be plotted in the same plot.
+            It is not available if the sweep is over more than one parameter.
+            The default is False.
+        plot_options : dict, optional
+            The options for the plot (plt.plot for one parameter, plt.pcolorfast for two parameters).        
+        """
 
+        # check the inputs
+        assert isinstance(ax, plt.Axes) or ax is None, "ax must be a matplotlib Axes or None"
+        assert isinstance(labels, list) or labels is None, "labels must be a list of two strings or None"
+        assert all([ isinstance(label, str) for label in labels ]) if labels is not None else True, "labels must be a list of two strings or None"
+        assert len(labels) == 2 if labels is not None else True, "labels must be a list of two strings, one for each axis"
+        for plot in ['main', 'reference', 'difference']:
+            assert isinstance(eval(plot), bool), plot + " must be a boolean"
+        assert main or reference or difference, "You must specify at least one of the main, reference or difference plots"
+        assert isinstance(plot_options, dict), "plot_options must be a dictionary"
+
+        # create a dictionary where the keys are the three possible plots and the values are a tuple 
+        # with the boolean (which says if the plot is requested) and the values to plot
         values = {
             "main": (
                 main, 
@@ -163,41 +334,108 @@ class QAOABenchmark:
             ),
             "reference": (
                 reference,
-                self.reference_values if reference and hasattr(self, "reference_values") else None
+                self.values_reference if reference and hasattr(self, "values_reference") else None
             ),
             "difference": (
                 difference,
-                self.difference if difference and hasattr(self, "values") and hasattr(self, "reference_values") else None
+                self.difference if difference and hasattr(self, "values") and hasattr(self, "values_reference") else None
             ),
         }
 
-        for key in values:
-            if values[key][0]:
+        # create the figure and axes if the axis are not provided
+        ax_input = ax #save the input axis
+        if ax_input is None:
+            nrows = 1 if one_plot else sum([ 1 if values[key][0] else 0 for key in values ])
+            fig, ax = plt.subplots(nrows=nrows, ncols=1, figsize=(6.5, 5*nrows))
 
-                if values[key][1] is None:
+        # plot the requested plots
+        count_sp = 0 #counter of subplots
+        for key in values:
+            if values[key][0]: #skip the plot if it is not requested
+
+                # raise an exception if the values for a plo requested are not available
+                if values[key][1] is None: 
                     raise Exception("You must run the benchmark before plotting the results, there are no values for the " + key + " plot")
                 
+                # get the ranges to use, use the reference ranges if the key is "reference", otherwise use the main ranges
                 ranges = self.ranges if key != "reference" else self.ranges_reference
                 ranges_to_use = [ r for r in ranges if len(r)==2 ]
                 n_params = len(ranges_to_use)
-                axes = [ np.linspace(r[0], r[1], self.values.shape[i]) for i, r in enumerate(ranges_to_use) ]
 
-                if ax_input is None:
-                    fig, ax = plt.subplots()
+                # create the axes, the range is provided by the ranges_to_use and the number of values is provided by the values[key][1].shape
+                axes = [ np.linspace(r[0], r[1], values[key][1].shape[i]) for i, r in enumerate(ranges_to_use) ]
 
-                if n_params==1:
-                    ax.plot(*axes, values[key][1], **plot_options)
-                elif n_params==2:          
-                    ax.pcolorfast(*axes, values[key][1], **plot_options)
+                # skip the plot if there are more than two parameters to plot, and print a warning
+                if n_params > 2:
+                    print("Only 1 or 2 parameters can be plotted using this method. You are trying to plot " 
+                          + str(n_params) + 
+                          " parameters. You can use the argument params_to_plot to specify which parameters to plot.")
+                    pass
+                # if verbose, print the parameters used for the plot
+                elif verbose:
+                    print("Plotting the " + key + " plot with the following parameters:")
+                    for i, r in enumerate(ranges):
+                        if len(r)==2:
+                            print("\tParameter " + str(i) + ": " + str(r[0]) + " to " + str(r[1]))
+                        else:
+                            print("\tParameter " + str(i) + ": " + str(r[0]))
+
+                ## plot the values
+
+                # if we are plotting only one plot, use the same axes, otherwise different axes for each subplot
+                axis = ax if nrows==1 else ax[count_sp]
+
+                # set the title
+                axis.set_title(key + " plot")
+
+                # set the labels and plot the values
+                if n_params == 1:
+                    axis.set_xlabel("Parameter {}".format([ i for i, r in enumerate(ranges) if len(r)==2 ][0]))
+                    axis.set_ylabel("Expectation value")
+                    axis.plot(*axes, values[key][1], **plot_options)
                 else:
-                    raise Exception("Only 1 or 2 parameters can be plotted")
+                    if one_plot:
+                        raise Exception("For two parameters, you must specify one_plot=False")
 
-                if ax_input is None:
-                    plt.show()
+                    axis.set_xlabel("Parameter {}".format([ i for i, r in enumerate(ranges) if len(r)==2 ][0]))
+                    axis.set_ylabel("Parameter {}".format([ i for i, r in enumerate(ranges) if len(r)==2 ][1]))
+                    plot = axis.pcolorfast(*axes, values[key][1], **plot_options)
+                    _ = plt.colorbar(plot)
+                                
+                # replace the labels if specified
+                if labels is not None:
+                    axis.set_xlabel(labels[0])
+                    axis.set_ylabel(labels[1])
+                
+                #increase the counter for the axes
+                count_sp += 1 
 
+        # show the figure if the axis were not provided
+        if ax_input is None:
+            if nrows>1:
+                fig.subplots_adjust(hspace=0.3) #add some space between the subplots
+            plt.show()
 
     @staticmethod
     def __ordered_points(n_params, n_points_axis):
+        """
+        This method creates a grid of points for each parameter, and then creates all the combinations of these points.
+        The points are ordered such that we evaluate the grid by rounds, the first round the resolution is very low, 
+        next rounds the resolution is higher,
+        and also, every n_points = 2**n_params one point is used at each round, and the points are shuffled.
+
+        Parameters
+        ----------
+        n_params : int
+            The number of parameters to sweep.
+        n_points_axis : int
+            The number of points per axis.
+
+        Returns
+        -------
+        points : list
+            The list of points to evaluate in order.
+        """
 
         assert isinstance(n_params, int) and n_params > 0, \
             "The number of parameters must be an integer, and greater than 0"
@@ -207,7 +445,7 @@ class QAOABenchmark:
         ## we create a grid of points for each axis
         axis_points = list(range(n_points_axis))
 
-        ## first we create all the points to evaluate and we order them such that every 2**n_params one point is used at each round, and the points are shuffled
+        ## first we create all the points to evaluate and we order them such that every n_points = 2**n_params one point is used at each round, and the points are shuffled
 
         # we separate the points in two lists, [0, 2, 4, ...] and [1, 3, 5, ...]
         axis_points_separated = ( [[i] for i in axis_points[::2]], [[i] for i in axis_points[1::2]] ) 
