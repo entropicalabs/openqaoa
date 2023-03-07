@@ -1,0 +1,3 @@
+from .devices import DevicePyquil
+from .qaoa_pyquil_qpu import QAOAPyQuilQPUBackend
+from .qaoa_pyquil_sim import QAOAPyQuilWavefunctionSimulatorBackend

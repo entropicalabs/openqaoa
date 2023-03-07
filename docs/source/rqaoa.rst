@@ -1,9 +1,9 @@
 Recursive QAOA functions
 ========================
 
-A set of helper functions for RQAOA
+A set of utility functions for RQAOA
 
-.. automodule:: openqaoa.rqaoa.rqaoa
+.. automodule:: openqaoa.algorithms.rqaoa.rqaoa_utils
     :members:
     :undoc-members:
     :inherited-members:

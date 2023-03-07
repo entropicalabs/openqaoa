@@ -2,7 +2,7 @@ QAOA Parametrisations
 =====================
 
 We currently offer 7 different parametrisations for QAOA, which can be found in
-the ``openqaoa.qaoa_parameters`` module. They fall broadly into three categories:
+the ``openqaoa.qaoa_components.variational_parameters`` module. They fall broadly into three categories:
 
 * The ``Standard`` classes are parametrisations that have the :math:`\gamma` 's and :math:`\beta` 's as free parameters, as defined in the seminal paper by Farhi `et al` in `A Quantum Approximate Optimization Algorithm <https://arxiv.org/abs/1411.4028>`_.
 * The ``Fourier`` classes have the discrete cosine and sine transforms of the :math:`\gamma` 's respective :math:`\beta`'s as free parameters, as proposed by Zhou et al. in `Quantum Approximate Optimization Algorithm: Performance, Mechanism, and Implementation on Near-Term Devices <https://arxiv.org/abs/1812.01041>`_.
@@ -32,48 +32,53 @@ Except for the ``Annealing`` parameters, each class also comes in three levels o
 
 Parameters
 ----------
-.. autoclass:: openqaoa.qaoa_parameters.baseparams.VQACircuitParams
+.. autoclass:: openqaoa.qaoa_components.ansatz_constructor.baseparams.AnsatzDescriptor
     :members:
     :undoc-members:
     :inherited-members:
 
+.. autoclass:: openqaoa.qaoa_components.ansatz_constructor.baseparams.QAOADescriptor
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :noindex:
 
 
 Standard Parameters
 -------------------
-.. autoclass:: openqaoa.qaoa_parameters.standardparams.QAOAVariationalStandardParams
+.. autoclass:: openqaoa.qaoa_components.variational_parameters.standardparams.QAOAVariationalStandardParams
     :members:
     :inherited-members:
 
-.. autoclass:: openqaoa.qaoa_parameters.standardparams.QAOAVariationalStandardWithBiasParams
+.. autoclass:: openqaoa.qaoa_components.variational_parameters.standardparams.QAOAVariationalStandardWithBiasParams
     :members:
     :inherited-members:
 
 
 Extended Parameters
 --------------------
-.. autoclass:: openqaoa.qaoa_parameters.extendedparams.QAOAVariationalExtendedParams
+.. autoclass:: openqaoa.qaoa_components.variational_parameters.extendedparams.QAOAVariationalExtendedParams
     :members:
     :inherited-members:
 
 
 Fourier Parameters
 -------------------
-.. autoclass:: openqaoa.qaoa_parameters.fourierparams.QAOAVariationalFourierParams
+.. autoclass:: openqaoa.qaoa_components.variational_parameters.fourierparams.QAOAVariationalFourierParams
     :members:
     :inherited-members:
 
-.. autoclass:: openqaoa.qaoa_parameters.fourierparams.QAOAVariationalFourierWithBiasParams
+.. autoclass:: openqaoa.qaoa_components.variational_parameters.fourierparams.QAOAVariationalFourierWithBiasParams
     :members:
     :inherited-members:
 
-.. autoclass:: openqaoa.qaoa_parameters.fourierparams.QAOAVariationalFourierExtendedParams
+.. autoclass:: openqaoa.qaoa_components.variational_parameters.fourierparams.QAOAVariationalFourierExtendedParams
     :members:
     :inherited-members:
 
 
 Annealing Parameters
 --------------------
-.. autoclass:: openqaoa.qaoa_parameters.annealingparams.QAOAVariationalAnnealingParams
+.. autoclass:: openqaoa.qaoa_components.variational_parameters.annealingparams.QAOAVariationalAnnealingParams
     :members:
     :inherited-members:

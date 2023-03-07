@@ -4,14 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from docplex.mp.model import Model
 
+from openqaoa import QAOA
 from openqaoa.problems import MinimumVertexCover
-from openqaoa.qaoa_parameters import PauliOp, Hamiltonian
-from openqaoa.optimizers.result import Result
-from openqaoa.optimizers.result import most_probable_bitstring
+from openqaoa.qaoa_components import PauliOp, Hamiltonian
+from openqaoa.algorithms.qaoa.qaoa_result import QAOAResult, most_probable_bitstring
 from openqaoa.utilities import qaoa_probabilities
-from openqaoa.workflows.optimizer import QAOA
 from openqaoa.problems.converters import FromDocplex2IsingModel
-from openqaoa.devices import create_device
+from openqaoa.backends import create_device
+
 
 class TestingLoggerClass(unittest.TestCase):
     def test_attribute_existence(self):
@@ -22,7 +22,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         q = QAOA()
         q.compile(vc, verbose=False)
@@ -30,7 +30,7 @@ class TestingLoggerClass(unittest.TestCase):
 
         assert set(
             ["most_probable_states", "evals", "intermediate", "optimized"]
-        ) <= set([a for a in dir(q.results) if not a.startswith("__")])
+        ) <= set([a for a in dir(q.result) if not a.startswith("__")])
 
     def test_most_probable_bitstring(self):
 
@@ -107,73 +107,118 @@ class TestingLoggerClass(unittest.TestCase):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         q = QAOA()
         q.compile(vc, verbose=False)
         q.optimize()
 
-        q.results.plot_cost()
+        q.result.plot_cost()
 
     def test_plot_probabilities(self):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field =1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
         # first for state-vector based simulator:
         q_sv = QAOA()
-        q_sv.set_circuit_properties(p=3, init_type='ramp')
+        q_sv.set_circuit_properties(p=3, init_type="ramp")
         q_sv.compile(vc)
 
         q_sv.optimize()
 
-        q_sv.results.plot_probabilities()
+        q_sv.result.plot_probabilities()
 
         # then for shot based simulator:
         q_shot = QAOA()
-        q_shot_dev = create_device(location='local',name='qiskit.shot_simulator')
+        q_shot_dev = create_device(location="local", name="qiskit.shot_simulator")
         q_shot.set_device(q_shot_dev)
 
         q_shot.compile(vc)
         q_shot.optimize()
 
-        q_shot.results.plot_probabilities()
+        q_shot.result.plot_probabilities()
 
     def test_plot_n_shots(self):
 
         # Create the problem
         g = nx.circulant_graph(6, [1])
-        vc = MinimumVertexCover(g, field=1.0, penalty=10).get_qubo_problem()
+        vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
-        for method in ['cans', 'icans']:
+        for method in ["cans", "icans"]:
             q = QAOA()
-            q.set_classical_optimizer(method=method, maxiter=50, jac='finite_difference', 
-                                        optimizer_options = {'stepsize': 0.01, 'n_shots_min':5, 'n_shots_max':50, 'n_shots_budget':1000})
+            q.set_classical_optimizer(
+                method=method,
+                maxiter=50,
+                jac="finite_difference",
+                optimizer_options={
+                    "stepsize": 0.01,
+                    "n_shots_min": 5,
+                    "n_shots_max": 50,
+                    "n_shots_budget": 1000,
+                },
+            )
             q.compile(vc, verbose=False)
             q.optimize()
 
-            q.results.plot_n_shots()
+            q.result.plot_n_shots()
 
             # all combinations to check
             test_dict = {
-                'none': (None, {'label': [None, ['t1', 't2']], 'linestyle':["-", ["--", "-"]], 'color': [None, ['red', 'green']]}),
-                'int':  (0, {'label': [None, 't1', ['t2']], 'linestyle':["-", ["--"]], 'color': [None, ['red'], 'green']}),
-                'list_one': (1, {'label': [None, 't1', ['t2']], 'linestyle':["-", ["--"]], 'color': [None, ['red'], 'green']}),
-                'list_two': ([0,1], {'label': [None, ['t1', 't2']], 'linestyle':["-", ["--", "-"]], 'color': [None, ['red', 'green']]}),
+                "none": (
+                    None,
+                    {
+                        "label": [None, ["t1", "t2"]],
+                        "linestyle": ["-", ["--", "-"]],
+                        "color": [None, ["red", "green"]],
+                    },
+                ),
+                "int": (
+                    0,
+                    {
+                        "label": [None, "t1", ["t2"]],
+                        "linestyle": ["-", ["--"]],
+                        "color": [None, ["red"], "green"],
+                    },
+                ),
+                "list_one": (
+                    1,
+                    {
+                        "label": [None, "t1", ["t2"]],
+                        "linestyle": ["-", ["--"]],
+                        "color": [None, ["red"], "green"],
+                    },
+                ),
+                "list_two": (
+                    [0, 1],
+                    {
+                        "label": [None, ["t1", "t2"]],
+                        "linestyle": ["-", ["--", "-"]],
+                        "color": [None, ["red", "green"]],
+                    },
+                ),
             }
             # using the test_dict we plot with different options
             for value in test_dict.values():
-                for label, line, color in zip(value[1]['label'], value[1]['linestyle'], value[1]['color']):
-                    q.results.plot_n_shots(param_to_plot=value[0], label=label, linestyle=line, color=color, title=f"method: {method}, param_to_plot: {value[0]}, label: {label}, linestyle: {line}, color: {color}")
+                for label, line, color in zip(
+                    value[1]["label"], value[1]["linestyle"], value[1]["color"]
+                ):
+                    q.result.plot_n_shots(
+                        param_to_plot=value[0],
+                        label=label,
+                        linestyle=line,
+                        color=color,
+                        title=f"method: {method}, param_to_plot: {value[0]}, label: {label}, linestyle: {line}, color: {color}",
+                    )
                     plt.close()
 
-            # function to test that errors are raised, when trying to plot with incorrect inputs 
-            def test_incorrect_arguments(argument:str, inputs_to_try:list):
+            # function to test that errors are raised, when trying to plot with incorrect inputs
+            def test_incorrect_arguments(argument: str, inputs_to_try: list):
                 for x in inputs_to_try:
                     error = False
-                    try: 
-                        q.results.plot_n_shots(**{argument:x})
+                    try:
+                        q.result.plot_n_shots(**{argument: x})
                     except Exception as e:
                         assert len(str(e)) > 0, "No error message was raised"
                         error = True
@@ -181,10 +226,19 @@ class TestingLoggerClass(unittest.TestCase):
                 plt.close()
 
             # check that errors are raised, when trying to plot with incorrect inputs
-            test_incorrect_arguments(argument='param_to_plot', inputs_to_try=["0", 2, [0,1,2]])
-            test_incorrect_arguments(argument='linestyle', inputs_to_try=[0, ["one", "two", "three"], [1, "two"]])
-            test_incorrect_arguments(argument='label', inputs_to_try=[0, ["one", "two", "three"], [1, "two"]])
-            test_incorrect_arguments(argument='color', inputs_to_try=[0, ["b", "c", "g"], [1, "g"]])
+            test_incorrect_arguments(
+                argument="param_to_plot", inputs_to_try=["0", 2, [0, 1, 2]]
+            )
+            test_incorrect_arguments(
+                argument="linestyle",
+                inputs_to_try=[0, ["one", "two", "three"], [1, "two"]],
+            )
+            test_incorrect_arguments(
+                argument="label", inputs_to_try=[0, ["one", "two", "three"], [1, "two"]]
+            )
+            test_incorrect_arguments(
+                argument="color", inputs_to_try=[0, ["b", "c", "g"], [1, "g"]]
+            )
 
     def test_get_counts(self):
 
@@ -230,10 +284,12 @@ class TestingLoggerClass(unittest.TestCase):
             "1011": 115,
         }
 
-        assert optimized_measurement_outcomes_shot == Result.get_counts(
+        assert optimized_measurement_outcomes_shot == QAOAResult.get_counts(
             optimized_measurement_outcomes_shot
         )
-        assert counts_from_sv == Result.get_counts(optimized_measurement_outcomes_sv)
+        assert counts_from_sv == QAOAResult.get_counts(
+            optimized_measurement_outcomes_sv
+        )
 
     def test_best_result(self):
         """Test lowest_cost_bitstring attribute and FromDocplex2IsingModel model generation"""
@@ -246,7 +302,7 @@ class TestingLoggerClass(unittest.TestCase):
         qubo = FromDocplex2IsingModel(mdl)  # translate the docplex model to qubo
         q.compile(qubo.ising_model)  # complining the ising representation of the qubo
         q.optimize()
-        result = q.results
+        result = q.result
         lowest_energy = result.lowest_cost_bitstrings()
         assert (
             lowest_energy["solutions_bitstrings"][0] == "00011"
