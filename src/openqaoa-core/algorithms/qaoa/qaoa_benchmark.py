@@ -90,6 +90,7 @@ class QAOABenchmark:
         assert len(ranges) == len(self.qaoa.variate_params), "The number of ranges must be equal to the number of variate parameters, which is {}".format(len(self.qaoa.variate_params))
         assert all([isinstance(r, tuple) or isinstance(r, list) for r in ranges]), "Each range must be a tuple: (min, max) or (value,)"
         assert all([len(r)==1 or len(r)==2 for r in ranges]), "Each range must be a tuple of length 1 or 2: (min, max) or (value,)"
+        assert len([r for r in ranges if len(r)==2]) > 0, "At least one range must be a tuple of length 2: (min, max)"
         for bools in ["run_main", "run_reference", "plot", "plot_difference"]:
             assert isinstance(eval(bools), bool), "The {} argument must be a boolean".format(bools)
         assert run_main or run_reference, "You must run the main or the reference or both"
