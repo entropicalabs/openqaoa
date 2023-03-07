@@ -109,4 +109,4 @@ class QiskitGateApplicator(gates_core.GateApplicator):
                 # *args must be of the following format -- (qubit_1,qubit_2,circuit)
                 return self.apply_2q_fixed_gate(selected_qiskit_gate, *args)
         else:
-            raise ValueError("Error applying the requested gate. Please check in the input")
+            raise ValueError("Only 1 and 2-qubit gates are supported.")
