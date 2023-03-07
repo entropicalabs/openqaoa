@@ -43,7 +43,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
     def test_gate_selector(self):
         
         """
-        This method should return the Braket Gate object based on the input OQ 
+        This method should return the Qiskit Gate object based on the input OQ 
         Gate object.
         """
         
@@ -55,9 +55,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
         
         for each_gate in oq_gate_list_1q:
             if each_gate not in self.qiskit_excluded_gates:
-                
                 returned_gate = gate_applicator.gate_selector(each_gate(applicator=None, qubit_1=None))
-                
                 self.assertEqual(
                     self.available_qiskit_gates[returned_gate.__name__.lower()],
                     returned_gate
@@ -67,9 +65,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
         
         for each_gate in oq_gate_list_1qr:
             if each_gate not in self.qiskit_excluded_gates:
-                
                 returned_gate = gate_applicator.gate_selector(each_gate(applicator=None, qubit_1=None, rotation_object=None))
-
                 self.assertEqual(
                     self.available_qiskit_gates[returned_gate.__name__.lower()],
                     returned_gate
@@ -79,9 +75,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
         
         for each_gate in oq_gate_list_2q:
             if each_gate not in self.qiskit_excluded_gates:
-                
                 returned_gate = gate_applicator.gate_selector(each_gate(applicator=None, qubit_1=None, qubit_2=None))
-                
                 self.assertEqual(
                     self.available_qiskit_gates[returned_gate.__name__.lower()],
                     returned_gate
@@ -91,9 +85,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
         
         for each_gate in oq_gate_list_2qr:
             if each_gate not in self.qiskit_excluded_gates:
-                
                 returned_gate = gate_applicator.gate_selector(each_gate(applicator=None, qubit_1=None, qubit_2=None, rotation_object=None))
-                
                 self.assertEqual(
                     self.available_qiskit_gates[returned_gate.__name__.lower()],
                     returned_gate

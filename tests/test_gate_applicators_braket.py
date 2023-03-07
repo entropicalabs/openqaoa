@@ -53,9 +53,7 @@ class TestBraketGateApplicator(unittest.TestCase):
         
         for each_gate in oq_gate_list_1q:
             if each_gate not in self.braket_excluded_gates:
-                
                 returned_gate = gate_applicator.gate_selector(each_gate(applicator=None, qubit_1=None))
-                
                 self.assertEqual(
                     getattr(
                         self.available_braket_gates[returned_gate.__name__], 
@@ -67,9 +65,7 @@ class TestBraketGateApplicator(unittest.TestCase):
         
         for each_gate in oq_gate_list_1qr:
             if each_gate not in self.braket_excluded_gates:
-                
                 returned_gate = gate_applicator.gate_selector(each_gate(applicator=None, qubit_1=None, rotation_object=None))
-                
                 self.assertEqual(
                     getattr(
                         self.available_braket_gates[returned_gate.__name__], 
@@ -81,9 +77,7 @@ class TestBraketGateApplicator(unittest.TestCase):
         
         for each_gate in oq_gate_list_2q:
             if each_gate not in self.braket_excluded_gates:
-                
                 returned_gate = gate_applicator.gate_selector(each_gate(applicator=None, qubit_1=None, qubit_2=None))
-                
                 self.assertEqual(
                     getattr(
                         self.available_braket_gates[returned_gate.__name__], 
@@ -95,9 +89,7 @@ class TestBraketGateApplicator(unittest.TestCase):
         
         for each_gate in oq_gate_list_2qr:
             if each_gate not in self.braket_excluded_gates:
-                
                 returned_gate = gate_applicator.gate_selector(each_gate(applicator=None, qubit_1=None, qubit_2=None, rotation_object=None))
-                
                 self.assertEqual(
                     getattr(
                         self.available_braket_gates[returned_gate.__name__], 
