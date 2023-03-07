@@ -25,8 +25,7 @@ class QiskitGateApplicator(gates_core.GateApplicator):
         gates_core.CPHASE.__name__: CRZGate
     }
 
-    def __init__(self):
-        self.library = 'qiskit'
+    library = 'qiskit'
 
     def gate_selector(self, gate: gates_core.Gate) -> Callable:
         selected_qiskit_gate = QiskitGateApplicator.QISKIT_OQ_GATE_MAPPER[gate.__name__]

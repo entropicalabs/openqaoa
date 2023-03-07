@@ -20,8 +20,7 @@ class BraketGateApplicator(gates_core.GateApplicator):
         gates_core.RiSWAP.__name__: gates.XY.xy
     }
 
-    def __init__(self):
-        self.library = 'braket'
+    library = 'braket'
 
     def gate_selector(self, gate: gates_core.Gate) -> Callable:
         selected_braket_gate = BraketGateApplicator.BRAKET_OQ_GATE_MAPPER[gate.__name__]

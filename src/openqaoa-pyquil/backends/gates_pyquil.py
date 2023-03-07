@@ -18,8 +18,7 @@ class PyquilGateApplicator(gates_core.GateApplicator):
         gates_core.RiSWAP.__name__: gates.XY
     }
 
-    def __init__(self):
-        self.library = 'pyquil'
+    library = 'pyquil'
 
     def gate_selector(self, gate: gates_core.Gate) -> Callable:
         selected_pyquil_gate = PyquilGateApplicator.PYQUIL_OQ_GATE_MAPPER[gate.__name__]

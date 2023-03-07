@@ -16,8 +16,7 @@ class VectorizedGateApplicator(gates_core.GateApplicator):
         gates_core.RiSWAP.__name__: x.apply_rxy
     }
 
-    def __init__(self):
-        self.library = 'vectorized'
+    library = 'vectorized'
 
     def gate_selector(self, gate:gates_core.Gate, vectorized_backend: 'QAOAvectorizedBackendSimulator'):
         selected_gate = VectorizedGateApplicator.VECTORIZED_OQ_GATE_MAPPER(vectorized_backend)[gate.__name__]
