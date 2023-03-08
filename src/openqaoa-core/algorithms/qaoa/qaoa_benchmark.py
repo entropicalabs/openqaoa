@@ -294,6 +294,7 @@ class QAOABenchmark:
 
         # create the figure and axes if the axis are not provided
         ax_input = ax #save the input axis
+        nrows = 1
         if ax_input is None:
             nrows = 1 if one_plot else sum([ 1 if values[key][0] else 0 for key in values ])
             fig, ax = plt.subplots(nrows=nrows, ncols=1, figsize=(6.5, 5*nrows))
@@ -320,7 +321,7 @@ class QAOABenchmark:
                     print("Only 1 or 2 parameters can be plotted using this method. You are trying to plot " 
                           + str(n_params) + 
                           " parameters. You can use the argument params_to_plot to specify which parameters to plot.")
-                    pass
+                    break
                 # if verbose, print the parameters used for the plot
                 elif verbose:
                     print("Plotting the " + key + " plot with the following parameters:")
