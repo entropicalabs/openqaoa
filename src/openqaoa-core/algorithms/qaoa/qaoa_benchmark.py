@@ -156,20 +156,6 @@ class QAOABenchmark:
             The default is {}.
         """
 
-        # check the inputs for when just the reference is run
-        if run_main==False and run_reference==True:
-            # check the input -> n_points_axis
-            if n_points_axis == None and not self.values is None:
-                n_points_axis = self.values.shape[0]
-            elif n_points_axis == None:
-                raise Exception("You must specify the number of points per axis")
-
-            # check the input -> ranges
-            if ranges == None and not self.ranges is None:
-                ranges = self.ranges
-            elif ranges == None:
-                raise Exception("You must specify the ranges")
-
         # check the inputs
         self.__assert_run_inputs(n_points_axis, ranges, run_main, run_reference, plot, plot_difference, plot_options)
 
