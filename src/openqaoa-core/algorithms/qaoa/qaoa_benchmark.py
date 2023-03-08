@@ -58,12 +58,18 @@ class QAOABenchmark:
             self.reference.compile(self.qaoa.problem)
             print("Warning: vectorized simulator will be used for the reference, since the analytical simulator is not available for the circuit properties of the benchmarked QAOA object")        
 
+        # initialize values and ranges
+        self.values = None
+        self.values_reference = None
+        self.ranges = None
+        self.ranges_reference = None
+
     @property
     def difference(self):
         "The difference between the values of the benchmarked QAOA object and the values of the reference QAOA object."
-        if not hasattr(self, "values"):
+        if self.values is None:
             raise Exception("You must run the benchmark before calculating the difference")
-        if not hasattr(self, "values_reference"):
+        if self.values_reference is None:
             raise Exception("You must run the reference before calculating the difference")
         if self.values.shape != self.values_reference.shape:
             raise Exception("The ranges and number of points of the values and reference values must be the same")
@@ -153,13 +159,13 @@ class QAOABenchmark:
         # check the inputs for when just the reference is run
         if run_main==False and run_reference==True:
             # check the input -> n_points_axis
-            if n_points_axis == None and hasattr(self, "values"):
+            if n_points_axis == None and not self.values is None:
                 n_points_axis = self.values.shape[0]
             elif n_points_axis == None:
                 raise Exception("You must specify the number of points per axis")
 
             # check the input -> ranges
-            if ranges == None and hasattr(self, "ranges"):
+            if ranges == None and not self.ranges is None:
                 ranges = self.ranges
             elif ranges == None:
                 raise Exception("You must specify the ranges")
@@ -288,15 +294,15 @@ class QAOABenchmark:
         values = {
             "main": (
                 main, 
-                self.values if main and hasattr(self, "values") else None
+                self.values if main else None
             ),
             "reference": (
                 reference,
-                self.values_reference if reference and hasattr(self, "values_reference") else None
+                self.values_reference if reference else None
             ),
             "difference": (
                 difference,
-                self.difference if difference and hasattr(self, "values") and hasattr(self, "values_reference") else None
+                self.difference if difference else None
             ),
         }
 
