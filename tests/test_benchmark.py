@@ -157,4 +157,92 @@ class TestingBenchmark(unittest.TestCase):
                 error = True
             assert error, "An error should be raised if the difference is called before running the benchmark."
             
+        def test_input_checks(self):
+            
+            qaoa = QAOA()
+            qaoa.compile(QUBO.random_instance(5))
+            benchmark = QAOABenchmark(qaoa)
 
+            def there_is_an_error(function, **kwargs):
+                error = False
+                try:
+                    function(**kwargs)
+                except:
+                    error = True
+                return error
+            
+            assert there_is_an_error(benchmark.run, ranges=[(1,2), (1,3)],), "An error should be raised when n_points_axis is not passed."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ), "An error should be raised when ranges is not passed."
+            #todo: checks for run_reference=True and run_main=False
+            assert there_is_an_error(benchmark.run, n_points_axis=4.5, ranges=[(1,2), (1,3)],), "An error should be raised when n_points_axis is not an integer."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=56,), "An error should be raised when ranges is not a list."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2),]), "An error when len(ranges) != len(qaoa.circuit_parameters)."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2),(3,), (34,)]), "An error when len(ranges) != len(qaoa.circuit_parameters)."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), 'yes'],), "An error should be raised when ranges is not a list of tuples."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3,4)],), "An error should be raised when ranges is not a list of tuples of length 2."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,), (1,)],), "An error should be raised when ranges all ranges are tuples of length 1."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3)], run_main='fhn'), "An error should be raised when run_main or run_reference are not booleans."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3)], run_reference='fhn'), "An error should be raised when run_main or run_reference are not booleans."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3)], plot='fhn', plot_reference=True), "An error should be raised when plot or plot_reference are not booleans."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3)], plot=True, plot_reference='fhn'), "An error should be raised when plot or plot_reference are not booleans."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,2)], run_main=False, run_reference=False), "An error should be raised if nor run_main nor run_reference are True."
+            assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3)], plot_options='fhn'), "An error should be raised when plot_options is not a dictionary."
+
+        def test_plot(self):
+            
+            # test standard plot
+            qaoa = QAOA()
+            qaoa.compile(QUBO.random_instance(5))
+            benchmark = QAOABenchmark(qaoa)
+
+            #2D
+            benchmark.run(n_points_axis=4, ranges=[(0,np.pi), (-5,9)])
+            benchmark.plot()
+            benchmark.plot(main=False, reference=True)
+            benchmark.plot(main=False, difference=True)
+            benchmark.plot(main=True, reference=True, difference=True)
+            benchmark.plot(main=False, reference=True, difference=True)
+            benchmark.plot(main=True, reference=False, difference=True)
+            benchmark.plot(main=True, reference=True, difference=False)
+
+            #1D
+            benchmark.run(n_points_axis=4, ranges=[(0,np.pi), (1,)])
+            benchmark.plot()
+            benchmark.plot(main=False, reference=True)
+            benchmark.plot(main=False, difference=True)
+            benchmark.plot(main=True, reference=True, difference=True)
+            benchmark.plot(main=False, reference=True, difference=True)
+            benchmark.plot(main=True, reference=False, difference=True)
+            benchmark.plot(main=True, reference=True, difference=False)
+            benchmark.plot(main=True, reference=True, difference=True, one_plot=True)
+            benchmark.plot(main=False, reference=True, difference=True, one_plot=True)
+            benchmark.plot(main=True, reference=False, difference=True, one_plot=True)
+            benchmark.plot(main=True, reference=True, difference=False, one_plot=True)
+
+        def test_plot_input_checks(self):
+
+            qaoa = QAOA()
+            qaoa.compile(QUBO.random_instance(5))
+            benchmark = QAOABenchmark(qaoa)
+
+            def there_is_an_error(function, **kwargs):
+                error = False
+                try:
+                    function(**kwargs)
+                except:
+                    error = True
+                return error
+
+            benchmark.run(n_points_axis=4, ranges=[(0,np.pi), (-5,9)])
+            assert there_is_an_error(benchmark.plot, ax=''), "An error should be raised when ax is not a matplotlib Axes"
+            assert there_is_an_error(benchmark.plot, labels=''), "An error should be raised when labels is not a list of two strings"
+            assert there_is_an_error(benchmark.plot, labels=['']), "An error should be raised when labels is not a list of two strings"
+            assert there_is_an_error(benchmark.plot, labels=['','','']), "An error should be raised when labels is not a list of two strings"
+            assert there_is_an_error(benchmark.plot, main=''), "An error should be raised when main is not a boolean"
+            assert there_is_an_error(benchmark.plot, reference=''), "An error should be raised when reference is not a boolean"
+            assert there_is_an_error(benchmark.plot, difference=''), "An error should be raised when difference is not a boolean"
+            assert there_is_an_error(benchmark.plot, plot_options=''), "An error should be raised when plot_options is not a dict"
+            assert there_is_an_error(benchmark.plot, main=True, reference=True, difference=True, one_plot=True), "An error should be raised when one_plot is True and more than one plot is requested when 2D"
+
+            # plot without values
+            # 3D
