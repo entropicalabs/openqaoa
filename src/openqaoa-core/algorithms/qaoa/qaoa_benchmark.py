@@ -388,6 +388,7 @@ class QAOABenchmark:
             if nrows>1:
                 fig.subplots_adjust(hspace=0.3) #add some space between the subplots
             plt.show()
+            plt.close(fig)
 
     @staticmethod
     def __ordered_points(n_params, n_points_axis):
