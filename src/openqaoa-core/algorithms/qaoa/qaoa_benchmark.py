@@ -94,6 +94,7 @@ class QAOABenchmark:
             plot: bool, 
             plot_difference: bool, 
             plot_options: dict,
+            verbose: bool
             ):       
         "Private method that checks the inputs of the run (and run_reference) method."
         assert isinstance(n_points_axis, int), "The number of points per axis must be an integer"
@@ -102,7 +103,7 @@ class QAOABenchmark:
         assert all([isinstance(r, tuple) or isinstance(r, list) for r in ranges]), "Each range must be a tuple: (min, max) or (value,)"
         assert all([len(r)==1 or len(r)==2 for r in ranges]), "Each range must be a tuple of length 1 or 2: (min, max) or (value,)"
         assert len([r for r in ranges if len(r)==2]) > 0, "At least one range must be a tuple of length 2: (min, max)"
-        for bools in ["run_main", "run_reference", "plot", "plot_difference"]:
+        for bools in ["run_main", "run_reference", "plot", "plot_difference", "verbose"]:
             assert isinstance(eval(bools), bool), "The {} argument must be a boolean".format(bools)
         assert run_main or run_reference, "You must run the main or the reference or both"
         assert isinstance(plot_options, dict), "The plot_options argument must be a dictionary"
@@ -128,7 +129,8 @@ class QAOABenchmark:
             plot: bool = False,
             plot_every: int = 1000,
             plot_difference: bool = False,
-            plot_options:dict = {}
+            plot_options:dict = {},
+            verbose:bool = True
             ):
         """
         Evaluates the QAOA circuit of the benchmarked (and the reference) QAOA object for a given number of points per axis and ranges.
@@ -159,10 +161,17 @@ class QAOABenchmark:
         plot_options : dict, optional
             The options for the plot. The expected format is a dictionary with the keys of the plot method of this class.
             The default is {}.
+        verbose : bool, optional
+            If True, the expected remaining time to complete the benchmark will be printed. 
+            The default is True.
         """
 
         # check the inputs
-        self.__assert_run_inputs(n_points_axis, ranges, run_main, run_reference, plot, plot_difference, plot_options)
+        self.__assert_run_inputs(n_points_axis, ranges, run_main, run_reference, plot, plot_difference, plot_options, verbose)
+
+        # plot options
+        plot_options = {**{'verbose':verbose}, **plot_options}
+        print("Plot options: {}".format(plot_options))
 
         # save the ranges
         if run_main:        self.ranges = ranges
@@ -193,11 +202,14 @@ class QAOABenchmark:
         # loop over the benchmarked QAOA object and the reference QAOA object (if requested)
         for qaoa, values, string in zip(both_qaoa, both_values, both_strings):
 
-            print(f"Running {string}.")
+            if verbose:
+                print(f"Running {string}.")
 
             # evaluate all the points in the grid, in the order provided by the function __ordered_points. We loop over the indices of the grid.
             for k, i_point in enumerate(self.__ordered_points(n_params, n_points_axis)):
-                self.__print_expected_time(k, n_points_axis**n_params) #print the expected remaining time, info for the user  
+                
+                if verbose:
+                    self.__print_expected_time(k, n_points_axis**n_params) #print the expected remaining time, info for the user  
 
                 new_params = [ axis[i] for axis, i in zip(axes, i_point) ] # from the indices of the grid, get the values of the parameters that will be evaluated       
                 params_obj.update_from_raw(params(new_params))
@@ -213,7 +225,8 @@ class QAOABenchmark:
                         plot_opt={}
                     self.plot(plot_options=plot_opt, **plot_options)
 
-            print(" ") # print a blank line, necessary because previous print: end=""
+            if verbose:
+                print(" ") # print a blank line, necessary because previous print: end=""
 
         # plot the reference if requested
         if plot and run_reference:

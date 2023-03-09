@@ -129,7 +129,7 @@ class TestingBenchmark(unittest.TestCase):
         # standard case
         qaoa = QAOA()
         qaoa.compile(QUBO.random_instance(5))
-        self.__compare_values_benchmark(qaoa, n_points_axis=4, ranges=[(-1.43, 2.78), (12.3,25.68)])
+        self.__compare_values_benchmark(qaoa, n_points_axis=4, ranges=[(-1.43, 2.78), (12.3,25.68)], verbose=False, plot_options={'verbose': False})
 
         # p=2
         qaoa = QAOA()
@@ -144,7 +144,7 @@ class TestingBenchmark(unittest.TestCase):
         qaoa = QAOA()
         qaoa.set_circuit_properties(p=2)
         qaoa.compile(QUBO.random_instance(5))
-        self.__compare_values_benchmark(qaoa, n_points_axis=4, ranges=[(-1.43, 2.78), (12.3,25.68), (0.5, 1.5), (1,)])
+        self.__compare_values_benchmark(qaoa, n_points_axis=4, ranges=[(-1.43, 2.78), (12.3,25.68), (0.5, 1.5), (1,)], verbose=True)
 
         # p=3
         qaoa = QAOA()
@@ -221,6 +221,7 @@ class TestingBenchmark(unittest.TestCase):
         assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3)], plot=True, plot_reference='fhn'), "An error should be raised when plot or plot_reference are not booleans."
         assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,2)], run_main=False, run_reference=False), "An error should be raised if nor run_main nor run_reference are True."
         assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3)], plot_options='fhn'), "An error should be raised when plot_options is not a dictionary."
+        assert there_is_an_error(benchmark.run, n_points_axis=4, ranges=[(1,2), (1,3)], verbose='d'), "An error should be raised when verbose is not a boolean."
 
     def test_plot(self):
         "Test the plot method."
