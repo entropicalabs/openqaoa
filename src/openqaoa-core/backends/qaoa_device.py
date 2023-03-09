@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from .plugin_finder import backend_boolean_list
+from .plugin_finder import plugin_finder_dict
 from .devices_core import DeviceBase, DeviceLocal
 
-BACKEND_BOOLEAN_LIST = backend_boolean_list()
+PLUGIN_DICT = plugin_finder_dict()
 
 def device_class_arg_mapper(
     device_class: DeviceBase,
@@ -27,41 +27,53 @@ def device_class_arg_mapper(
     
     DEVICE_ARGS_MAPPER = dict()
     
-    if BACKEND_BOOLEAN_LIST[0]:
-        from openqaoa_braket.utilities import backend_args
-        DEVICE_ARGS_MAPPER[DeviceAWS] = {
-            "s3_bucket_name": s3_bucket_name,
-            "aws_region": aws_region,
-            "folder_name": folder_name,
-        }
-        
-    if BACKEND_BOOLEAN_LIST[1]:
-        from openqaoa_azure.backends import DeviceAzure
-        DEVICE_ARGS_MAPPER[DeviceAzure] = {
-            "resource_id": resource_id, 
-            "location": az_location
-        }
+    local_vars = locals()
     
-    if BACKEND_BOOLEAN_LIST[2]:
-        from openqaoa_qiskit.backends import DeviceQiskit
-        DEVICE_ARGS_MAPPER[DeviceQiskit] = {
-            "hub": hub,
-            "group": group,
-            "project": project,
-            "as_emulator": as_emulator
-        }
+    for each_plugin_entrypoint in PLUGIN_DICT.values():
+        if hasattr(each_plugin_entrypoint, 'device_args'):
+            for each_key, each_value in each_plugin_entrypoint.device_args.items():
+                # Convert list of accepted parameters into a dictionary with
+                # the name of the variable as a key and the local value of the 
+                # variable
+                var_values = [local_vars[each_name] for each_name in each_value]
+                input_dict = {each_key: dict(zip(each_value, var_values))}
+                BACKEND_ARGS_MAPPER.update(input_dict)
+    
+#     if PLUGIN_DICT['braket']:
+#         from openqaoa_braket.utilities import backend_args
+#         DEVICE_ARGS_MAPPER[DeviceAWS] = {
+#             "s3_bucket_name": s3_bucket_name,
+#             "aws_region": aws_region,
+#             "folder_name": folder_name,
+#         }
         
-    if BACKEND_BOOLEAN_LIST[3]:
-        from openqaoa_pyquil.backends import DevicePyquil
-        DEVICE_ARGS_MAPPER[DevicePyquil] = {
-            "as_qvm": as_qvm,
-            "noisy": noisy,
-            "compiler_timeout": compiler_timeout,
-            "execution_timeout": execution_timeout,
-            "client_configuration": client_configuration,
-            "endpoint_id": endpoint_id,
-            "engagement_manager": engagement_manager,
-        }
+#     if PLUGIN_DICT['azure']:
+#         from openqaoa_azure.backends import DeviceAzure
+#         DEVICE_ARGS_MAPPER[DeviceAzure] = {
+#             "resource_id": resource_id, 
+#             "location": az_location
+#         }
+    
+#     if PLUGIN_DICT['qiskit']:
+#         from openqaoa_qiskit.backends import DeviceQiskit
+#         DEVICE_ARGS_MAPPER[DeviceQiskit] = {
+#             "hub": hub,
+#             "group": group,
+#             "project": project,
+#             "as_emulator": as_emulator
+#         }
+        
+#     if PLUGIN_DICT['pyquil']:
+#         from openqaoa_pyquil.backends import DevicePyquil
+#         DEVICE_ARGS_MAPPER[DevicePyquil] = {
+#             "as_qvm": as_qvm,
+#             "noisy": noisy,
+#             "compiler_timeout": compiler_timeout,
+#             "execution_timeout": execution_timeout,
+#             "client_configuration": client_configuration,
+#             "endpoint_id": endpoint_id,
+#             "engagement_manager": engagement_manager,
+#         }
 
     final_device_kwargs = {
         key: value
@@ -92,20 +104,13 @@ def create_device(location: str, name: str, **kwargs):
     """
 
     location = location.lower()
-    if location == "ibmq" and BACKEND_BOOLEAN_LIST[2]:
-        from openqaoa_qiskit.backends import DeviceQiskit
-        device_class = DeviceQiskit
-    elif location == "qcs" and BACKEND_BOOLEAN_LIST[3]:
-        from openqaoa_pyquil.backends import DevicePyquil
-        device_class = DevicePyquil
-    elif location == "aws" and BACKEND_BOOLEAN_LIST[0]:
-        from openqaoa_aws.backends import DeviceAWS
-        device_class = DeviceAWS
-    elif location == "local":
-        device_class = DeviceLocal
-    elif location == "azure" and BACKEND_BOOLEAN_LIST[1]:
-        from openqaoa_azure.backends import DeviceAzure
-        device_class = DeviceAzure
+    
+    location_device_mapper = dict()
+    location_device_mapper.update({'local': DeviceLocal})
+    location_device_mapper.update(zip([each_value.device_location for each_value in PLUGIN_DICT.values()], [each_value.device_plugin for each_value in PLUGIN_DICT.values()]))
+    
+    if location in location_device_mapper.keys():
+        device_class = location_device_mapper[location]
     else:
         raise ValueError(f"Invalid device location, Choose from: {location}")
 
