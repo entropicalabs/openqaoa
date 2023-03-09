@@ -1,7 +1,7 @@
 import numpy as np
 from math import log2
 from random import shuffle
-from typing import List
+from typing import List, Union
 from matplotlib import pyplot as plt
 from copy import deepcopy
 from IPython.display import clear_output
@@ -225,6 +225,7 @@ class QAOABenchmark:
             self, 
             ax:plt.Axes = None, 
             labels:List[str] = None,
+            title:Union[str, List[str]] = None,
             main:bool = True, 
             reference:bool = False, 
             difference:bool = False, 
@@ -245,6 +246,10 @@ class QAOABenchmark:
         labels : List[str], optional
             The labels of the axes. The expected format is a list of two strings: one for each axis. 
             If None, the labels will be the number of the parameters.
+            The default is None.
+        title : Union[str, List[str]], optional
+            The title of the plot. The expected format is a string or a list of strings: one for each plot.
+            If None, the title will be the default: `main plot`, `reference plot` or `difference plot`.
             The default is None.
         main : bool, optional
             If True, the values of the benchmarked QAOA object will be plotted.
@@ -351,7 +356,18 @@ class QAOABenchmark:
                     axis.set_xlabel("Parameter {}".format([ i for i, r in enumerate(ranges) if len(r)==2 ][0]))
                     axis.set_ylabel("Parameter {}".format([ i for i, r in enumerate(ranges) if len(r)==2 ][1]))
                     plot = axis.pcolorfast(*axes, values[key][1], **plot_options)
-                    _ = plt.colorbar(plot)
+                    _ = plt.colorbar(plot)                
+
+                # set the title
+                if not one_plot and title is None:
+                    axis.set_title(key + " plot")
+                elif not title is None:
+                    if not isinstance(title, list) and not isinstance(title, tuple):
+                        axis.set_title(title)
+                    else:
+                        if len(title) < nrows:
+                            raise Exception("If title is a list or tuple, it must have the same length as the number of plots")
+                        axis.set_title(title[count_sp])
                                 
                 # replace the labels if specified
                 if labels is not None:
