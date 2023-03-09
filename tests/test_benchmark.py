@@ -2,8 +2,7 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from openqaoa.algorithms.qaoa import QAOABenchmark
-from openqaoa import QAOA, create_device
+from openqaoa import QAOA, create_device, QAOABenchmark
 from openqaoa.problems import QUBO
 
 def there_is_an_error(function, **kwargs):
