@@ -126,7 +126,7 @@ class QAOABenchmark:
             plot_options:dict = {}
             ):
         """
-        Evaluates the QAOA circuit of the benchmarked QAOA object for a given number of points per axis and ranges.
+        Evaluates the QAOA circuit of the benchmarked (and the reference) QAOA object for a given number of points per axis and ranges.
 
         Parameters
         ----------
@@ -208,7 +208,7 @@ class QAOABenchmark:
                         plot_opt={}
                     self.plot(plot_options=plot_opt, **plot_options)
 
-            print(" ")
+            print(" ") # print a blank line, necessary because previous print: end=""
 
         # plot the reference if requested
         if plot and run_reference:
@@ -332,7 +332,7 @@ class QAOABenchmark:
                     print("Plotting the " + key + " plot with the following parameters:")
                     for i, r in enumerate(ranges):
                         if len(r)==2:
-                            print("\tParameter " + str(i) + ": " + str(r[0]) + " to " + str(r[1]))
+                            print("\tParameter " + str(i) + ": " + str(r[0]) + " to " + str(r[1]) + ", with " + str(values[key][1].shape[i]) + " values")
                         else:
                             print("\tParameter " + str(i) + ": " + str(r[0]))
 
@@ -340,9 +340,6 @@ class QAOABenchmark:
 
                 # if we are plotting only one plot, use the same axes, otherwise different axes for each subplot
                 axis = ax if nrows==1 else ax[count_sp]
-
-                # set the title
-                axis.set_title(key + " plot")
 
                 # set the labels and plot the values
                 if n_params == 1:
@@ -395,6 +392,8 @@ class QAOABenchmark:
         next rounds the resolution is higher,
         and also, every n_points = 2**n_params one point is used at each round, and the points are shuffled.
 
+        It works very well for n_points_axis = 2**k + 1 (where k is any integer), but it also works for other values.
+
         Parameters
         ----------
         n_params : int
@@ -424,7 +423,7 @@ class QAOABenchmark:
         # we create a list of lists, where each list will tell how to combine the two lists of points to create the points for each round 
         zero_one = [[0], [1]]
         order_list = zero_one
-        for i in range(n_params-1):
+        for _ in range(n_params-1):
             order_list = [order + y for order in order_list for y in zero_one]
 
         # the variable points will be a list of lists, where each list is a round of points to evaluate
@@ -432,9 +431,12 @@ class QAOABenchmark:
 
         # we create the points for each round by combining the points of the previous round with the points of the next axis
         for k in range(1, n_params):
-            for i in range(len(points)):
-                points[i] = [ point_i + point_j for point_i in points[i] for point_j in axis_points_separated[order_list[i][k]] ]
-                shuffle(points[i]) # we shuffle the points at each round
+            for x in range(len(points)):
+                points[x] = [ point_i + point_j for point_i in points[x] for point_j in axis_points_separated[order_list[x][k]] ]
+                
+        # we shuffle the points at each round
+        for i in range(len(points)):
+            shuffle(points[i]) 
 
         # the final list of points to evaluate is a concatenation of all the rounds
         ordered_points = []
