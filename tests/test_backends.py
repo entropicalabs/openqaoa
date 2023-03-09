@@ -130,21 +130,14 @@ class TestingBackendQPUs(unittest.TestCase):
 
         list_device_attributes = [
             {
-                "QPU": "AWS",
-                "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            },
-            {
                 "QPU": "Azure",
                 "device_name": "rigetti.sim.qvm",
                 "resource_id": self.RESOURCE_ID,
                 "az_location": self.AZ_LOCATION,
-            },
+            }, 
             {
-                "QPU": "Qiskit",
-                "device_name": "ibmq_qasm_simulator",
-                "hub": self.HUB,
-                "group": self.GROUP,
-                "project": self.PROJECT,
+                "QPU": "AWS",
+                "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             },
             {
                 "QPU": "Pyquil",
@@ -153,12 +146,19 @@ class TestingBackendQPUs(unittest.TestCase):
                 "execution_timeout": 3,
                 "compiler_timeout": 3,
             },
+            {
+                "QPU": "Qiskit",
+                "device_name": "ibmq_qasm_simulator",
+                "hub": self.HUB,
+                "group": self.GROUP,
+                "project": self.PROJECT,
+            },
         ]
 
         assert len(list_device_attributes) == len(
             DEVICE_ACCESS_OBJECT_MAPPER
         ), "The number of QPUs in the list of tests is not the same as the number of QPUs in the DEVICE_ACCESS_OBJECT_MAPPER. The list should be updated."
-
+        print(DEVICE_ACCESS_OBJECT_MAPPER.items(), list_device_attributes)
         for (device, backend), device_attributes in zip(
             DEVICE_ACCESS_OBJECT_MAPPER.items(), list_device_attributes
         ):
