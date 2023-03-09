@@ -3,6 +3,7 @@ from __future__ import annotations
 from .plugin_finder import plugin_finder_dict
 from .devices_core import DeviceBase, DeviceLocal
 
+
 PLUGIN_DICT = plugin_finder_dict()
 
 def device_class_arg_mapper(
@@ -81,7 +82,6 @@ def device_class_arg_mapper(
         if value is not None
     }
     return final_device_kwargs
-
 
 def create_device(location: str, name: str, **kwargs):
     """
