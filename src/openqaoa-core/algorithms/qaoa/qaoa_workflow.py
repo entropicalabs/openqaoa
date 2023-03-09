@@ -2,7 +2,7 @@ from typing import List, Callable, Optional
 import requests
 from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
-from ..baseworkflow import Workflow
+from ..baseworkflow import Workflow, check_compiled
 from ...backends.devices_core import DeviceLocal, DeviceBase
 from ...backends.qaoa_backend import get_qaoa_backend
 from ...problems import QUBO
@@ -115,6 +115,7 @@ class QAOA(Workflow):
         # change header algorithm to qaoa
         self.header["algorithm"] = "qaoa"
 
+    @check_compiled
     def set_circuit_properties(self, **kwargs):
         """
         Specify the circuit properties to construct QAOA circuit

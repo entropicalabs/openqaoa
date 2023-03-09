@@ -27,6 +27,14 @@ from ..backends.qaoa_backend import (
     DEVICE_ACCESS_OBJECT_MAPPER,
 )
 
+def check_compiled(func):
+    def wrapper(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        if self.compiled:
+            raise ValueError("Cannot change properties of the object after compilation.")
+        return result
+    return wrapper
+
 
 class Workflow(ABC):
     """
@@ -176,6 +184,7 @@ class Workflow(ABC):
 
         self.exp_tags = {**self.exp_tags, **tags}
 
+    @check_compiled
     def set_device(self, device: DeviceBase):
         """ "
         Specify the device to be used by the QAOA.
@@ -190,6 +199,7 @@ class Workflow(ABC):
         """
         self.device = device
 
+    @check_compiled
     def set_backend_properties(self, **kwargs):
         """
         Set the backend properties
@@ -236,6 +246,7 @@ class Workflow(ABC):
         self.backend_properties = BackendProperties(**kwargs)
         return None
 
+    @check_compiled
     def set_classical_optimizer(self, **kwargs):
         """
         Set the parameters for the classical optimizer to be used in the optimizers workflow
