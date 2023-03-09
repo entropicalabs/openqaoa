@@ -273,8 +273,8 @@ class TestingBenchmark(unittest.TestCase):
         #2D
         benchmark.run(n_points_axis=4, ranges=[(-np.pi/2,np.pi/2), (1,3)])
         benchmark.plot(labels=['a', 'b'], plot_options={'cmap':'gray'})
-        benchmark.plot(main=True, reference=True, difference=True, labels=['a', 'b'], plot_options={'cmap':'gray'})
-        benchmark.plot(main=True, reference=True, difference=True, verbose=False)
+        benchmark.plot(main=True, reference=True, difference=True, labels=['a', 'b'], title=['a', 'b', 'c'], plot_options={'cmap':'gray'})
+        benchmark.plot(main=True, reference=True, difference=True, verbose=False, title='s')
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         benchmark.plot(ax=ax)
         plt.show()
@@ -282,8 +282,8 @@ class TestingBenchmark(unittest.TestCase):
         #1D
         benchmark.run(n_points_axis=4, ranges=[(-np.pi/2,np.pi/2), (1, )])
         benchmark.plot(labels=['a', 'b'], plot_options={'linewidth':2})
-        benchmark.plot(main=True, reference=True, difference=True, labels=['a', 'b'], plot_options={'linewidth':2})
-        benchmark.plot(main=True, reference=True, difference=True, verbose=False, one_plot=True)
+        benchmark.plot(main=True, reference=True, difference=True, labels=['a', 'b'], title=['a', 'b', 'c'], plot_options={'linewidth':2})
+        benchmark.plot(main=True, reference=True, difference=True, verbose=False, one_plot=True, title='s')
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         benchmark.plot(ax=ax)
         plt.show()
