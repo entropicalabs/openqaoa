@@ -278,6 +278,7 @@ class TestingBenchmark(unittest.TestCase):
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         benchmark.plot(ax=ax)
         plt.show()
+        plt.close(fig)
 
         #1D
         benchmark.run(n_points_axis=4, ranges=[(-np.pi/2,np.pi/2), (1, )])
@@ -287,6 +288,7 @@ class TestingBenchmark(unittest.TestCase):
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         benchmark.plot(ax=ax)
         plt.show()
+        plt.close(fig)
 
     def test_plot_input_checks(self):
         "Test the plot method assertion inputs."
@@ -305,6 +307,7 @@ class TestingBenchmark(unittest.TestCase):
         assert there_is_an_error(benchmark.plot, difference=''), "An error should be raised when difference is not a boolean"
         assert there_is_an_error(benchmark.plot, plot_options=''), "An error should be raised when plot_options is not a dict"
         assert there_is_an_error(benchmark.plot, main=True, reference=True, difference=True, one_plot=True), "An error should be raised when one_plot is True and more than one plot is requested when 2D"
+        assert there_is_an_error(benchmark.plot, main=True, reference=True, difference=True, title=['a', 'd']), "An error should be raised when one_plot is True and more than one plot is requested when 2D"
 
         # plot without values
         qaoa = QAOA()
@@ -332,6 +335,7 @@ class TestingBenchmark(unittest.TestCase):
         qaoa.compile(QUBO.random_instance(5))
         benchmark = QAOABenchmark(qaoa)
         benchmark.run(n_points_axis=4, ranges=[(-np.pi/2,np.pi/2), (1,3)], plot=True, run_reference=True, plot_difference=True)
+
 
 
         
