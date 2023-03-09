@@ -79,6 +79,11 @@ class QAOABenchmark:
     def difference_mean(self):
         "The mean of the difference between the values of the benchmarked QAOA object and the values of the reference QAOA object."
         return np.mean(self.difference)
+
+    @property
+    def difference_std(self):
+        "The standard deviation of the difference between the values of the benchmarked QAOA object and the values of the reference QAOA object."
+        return np.std(self.difference)
             
     def __assert_run_inputs(
             self, 
