@@ -998,11 +998,12 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # check QAOA dump
         file_name = "test_dump_qaoa.json"
-        experiment_id, atomic_id = (
+        project_id, experiment_id, atomic_id = (
+            qaoa.header["project_id"],
             qaoa.header["experiment_id"],
             qaoa.header["atomic_id"],
         )
-        full_name = f"{experiment_id}--{atomic_id}--{file_name}"
+        full_name = f"{project_id}--{experiment_id}--{atomic_id}--{file_name}"
 
         qaoa.dump(file_name, indent=None)
         assert os.path.isfile(full_name), "Dump file does not exist"
@@ -1044,9 +1045,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         # check you can dump to a file with no arguments
         qaoa.dump()
         assert os.path.isfile(
-            f"{experiment_id}--{atomic_id}.json"
+            f"{project_id}--{experiment_id}--{atomic_id}.json"
         ), "Dump file does not exist, when no name is given"
-        os.remove(f"{experiment_id}--{atomic_id}.json")
+        os.remove(f"{project_id}--{experiment_id}--{atomic_id}.json")
 
         # check QAOA dump deleting some keys
         exclude_keys = ["schedule", "singlet"]
@@ -1873,11 +1874,12 @@ class TestingRQAOA(unittest.TestCase):
 
         # check RQAOA dump
         file_name = "test_dump_rqaoa.json"
-        experiment_id, atomic_id = (
+        project_id, experiment_id, atomic_id = (
+            rqaoa.header["project_id"],
             rqaoa.header["experiment_id"],
             rqaoa.header["atomic_id"],
         )
-        full_name = f"{experiment_id}--{atomic_id}--{file_name}"
+        full_name = f"{project_id}--{experiment_id}--{atomic_id}--{file_name}"
 
         rqaoa.dump(file_name, indent=None)
         assert os.path.isfile(full_name), "Dump file does not exist"
@@ -1919,9 +1921,9 @@ class TestingRQAOA(unittest.TestCase):
         # check you can dump to a file with no arguments
         rqaoa.dump()
         assert os.path.isfile(
-            f"{experiment_id}--{atomic_id}.json"
+            f"{project_id}--{experiment_id}--{atomic_id}.json"
         ), "Dump file does not exist, when no name is given"
-        os.remove(f"{experiment_id}--{atomic_id}.json")
+        os.remove(f"{project_id}--{experiment_id}--{atomic_id}.json")
 
         # check RQAOA dump deleting some keys
         exclude_keys = ["schedule", "singlet"]
@@ -2140,13 +2142,16 @@ class TestingRQAOA(unittest.TestCase):
         )
 
         # create list of expected file names
+        project_id = "None"
         experiment_id, atomic_id = r.header["experiment_id"], r.header["atomic_id"]
         file_names = {
-            id: experiment_id + "--" + id + "--" + "test_dumping_step_by_step.json.gz"
+            id: project_id + "--" + experiment_id + "--" + id + "--" + "test_dumping_step_by_step.json.gz"
             for id in r.result["atomic_ids"].values()
         }
         file_names[atomic_id] = (
-            experiment_id
+            project_id
+            + "--"
+            + experiment_id
             + "--"
             + atomic_id
             + "--"

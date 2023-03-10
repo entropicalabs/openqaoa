@@ -518,6 +518,8 @@ class Workflow(ABC):
 
         options = {**options, **{"complex_to_string": True}}
 
+        project_id = self.header["project_id"] if not self.header["project_id"] is None else "None"
+
         # get the full name
         if prepend_id == False and file_name == "":
             raise ValueError("If prepend_id is False, file_name must be specified.")
@@ -526,6 +528,8 @@ class Workflow(ABC):
         elif file_name == "":
             file = (
                 file_path
+                + project_id
+                + "--"
                 + self.header["experiment_id"]
                 + "--"
                 + self.header["atomic_id"]
@@ -533,6 +537,8 @@ class Workflow(ABC):
         else:
             file = (
                 file_path
+                + project_id
+                + "--"
                 + self.header["experiment_id"]
                 + "--"
                 + self.header["atomic_id"]
