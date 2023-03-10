@@ -138,7 +138,9 @@ class QAOABenchmark:
         Parameters
         ----------
         n_points_axis : int
-            The number of points per axis.
+            The number of points per axis. It is recommended to use a number that is a power of 2 + 1: 2**k+1 (where, k is an integer). 
+            Using this number will ensure that the points evaluated are ordered such that there are k rounds, each round covers the whole range, 
+            and each round has the double number of points (per axis) of the previous round.
         ranges : List[tuple]
             The sweep ranges of the parameters. The expected format is a list of tuples: (min, max) or (value,). One tuple per parameter.
             If the length of the tuple is 1, the parameter will be fixed to the value of the tuple.
