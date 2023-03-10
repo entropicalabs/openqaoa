@@ -3,6 +3,7 @@ name: test_dev
 # Controls when the workflow will run
 on:
   pull_request:
+    types: [review_requested, ready_for_review]
     branches:
     - dev
   # Manual trigger
@@ -12,6 +13,7 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
+    if: ${{ github.event.label.name != 'halted_testing' }}
     strategy:
       fail-fast: false
       matrix:
@@ -78,6 +80,7 @@ jobs:
           files: ./coverage.xml
 
   docs:
+    if: ${{ github.event.label.name == 'halted_testing' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out openqaoa
