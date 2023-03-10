@@ -639,6 +639,14 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
                 f"asdict() should return a dict with the correct number of values, it did not for type: '{each_key_value}'. \
                 \n Expected {number_of_params[each_key_value][key]} values for key '{key}', but got {value.size} values."
 
+            #check that the values are correct
+            list_params_raw = []
+            for key, value in variate_params_dict.items():
+                list_params_raw += value.flatten().tolist()
+            
+            assert np.allclose(list_params_raw, variate_params.raw().tolist()), \
+            f"asdict() should return a dict with the correct values, it did not for type: '{each_key_value}'." 
+
     def test_qaoa_variational_params_update_from_dict(self):
             
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
