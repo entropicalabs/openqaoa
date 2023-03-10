@@ -6,6 +6,7 @@ on:
     types: [review_requested, ready_for_review]
     branches:
     - dev
+    unlabel: [halted_testing]
   # Manual trigger
   workflow_dispatch:
 
