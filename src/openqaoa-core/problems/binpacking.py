@@ -139,7 +139,7 @@ class BinPacking(Problem):
                 if j == 0:
                     self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity - self.weights[0]]]
                 else:
-                    self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity * self.vars_pos[f"y_{j}"]]]
+                    self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity]]
                     
             else:
                 self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity * self.vars_pos[f"y_{j}"]]]
@@ -227,6 +227,8 @@ class BinPacking(Problem):
         colors = plt.cm.get_cmap("jet", len(self.weights))
         if ax is None:
             fig, ax = plt.subplots()
+        else:
+            fig = None
         for j in range(self.n_bins):
             sum_items = 0
             if solution[f"y_{j}"]:
@@ -239,4 +241,4 @@ class BinPacking(Problem):
         ax.set_xlabel("bin", fontsize=14)
         ax.set_ylabel("weight", fontsize=14)
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.2 + 0.011*self.n_items), ncol=5, fancybox=True, shadow=True)
-        return fig 
+        return fig
