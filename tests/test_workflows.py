@@ -1329,6 +1329,20 @@ class TestingVanillaQAOA(unittest.TestCase):
             error
         ), "RQAOA.from_dict should raise an error when using a QAOA dictionary"
 
+    def test_change_properties_after_compilation(self):
+        device = create_device(location='local', name='qiskit.shot_simulator')
+        q = QAOA()
+        q.compile(QUBO.random_instance(4))
+        
+        with self.assertRaises(ValueError):
+            q.set_device(device)
+        with self.assertRaises(ValueError):
+            q.set_circuit_properties(p=1, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        with self.assertRaises(ValueError):
+            q.set_backend_properties(prepend_state=None, append_state=None)
+        with self.assertRaises(ValueError):
+            q.set_classical_optimizer(maxiter=100, method='vgd', jac="finite_difference")
+
 
 class TestingRQAOA(unittest.TestCase):
     """
@@ -2365,6 +2379,22 @@ class TestingRQAOA(unittest.TestCase):
         assert (
             error
         ), "Optimizer.from_dict should raise an error when using a RQAOA dictionary"
+
+    def test_change_properties_after_compilation(self):
+        device = create_device(location='local', name='qiskit.shot_simulator')
+        r = RQAOA()
+        r.compile(QUBO.random_instance(4))
+        
+        with self.assertRaises(ValueError):
+            r.set_device(device)
+        with self.assertRaises(ValueError):
+            r.set_circuit_properties(p=1, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        with self.assertRaises(ValueError):
+            r.set_backend_properties(prepend_state=None, append_state=None)
+        with self.assertRaises(ValueError):
+            r.set_classical_optimizer(maxiter=100, method='vgd', jac="finite_difference")
+        with self.assertRaises(ValueError):
+            r.set_rqaoa_parameters(rqaoa_type='adaptive', n_cutoff=3, n_steps=3)
 
 
 if __name__ == "__main__":
