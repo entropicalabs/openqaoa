@@ -6,7 +6,6 @@ on:
     types: [review_requested, ready_for_review]
     branches:
     - dev
-    unlabel: [halted_testing]
   # Manual trigger
   workflow_dispatch:
 
@@ -14,7 +13,6 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    if: ${{ github.event.label.name != 'halted_testing' }}
     strategy:
       fail-fast: false
       matrix:
@@ -81,7 +79,6 @@ jobs:
           files: ./coverage.xml
 
   docs:
-    if: ${{ github.event.label.name != 'halted_testing' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out openqaoa
