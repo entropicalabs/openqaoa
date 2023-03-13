@@ -16,6 +16,7 @@ from ...qaoa_components import (
     QAOADescriptor,
     create_qaoa_variational_params,
 )
+from ...qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
 from ...utilities import get_mixer_hamiltonian, generate_timestamp
 from ...optimizers.qaoa_optimizer import get_optimizer
 
@@ -310,7 +311,7 @@ class QAOA(Workflow):
         return
     
     def evaluate_circuit(
-        self, params: Union[List[float], Dict[str, List[float]]]
+        self, params: Union[List[float], Dict[str, List[float]], QAOAVariationalBaseParams]
     ):
         """
         A method to evaluate the QAOA circuit at a given set of parameters
@@ -352,13 +353,22 @@ class QAOA(Workflow):
             params_obj = deepcopy(self.variate_params)
             params_obj.update_from_raw(params)
 
+        # if the parameters are passed as a QAOAVariationalBaseParams object we just take it as it is
+        elif isinstance(params, QAOAVariationalBaseParams):
+            params_obj = params
+
         # if the parameters are passed in a different format, we raise an error
         else:
             raise TypeError(f'The input params must be a list or a dictionary. Instead, received {type(params)}')
         
+        
+        ## Evaluate the QAOA circuit and return the results
+
+        # if the backend is the analytical simulator, we just return the expectation value of the cost Hamiltonian
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             return {'cost': self.backend.expectation(params_obj)[0]}
 
+        # if the backend is a statevector simulator, we return the expectation value and the uncertainty of the cost Hamiltonian and the statevector
         if isinstance(self.backend, QAOABaseBackendStatevector):
             state = self.backend.wavefunction(params_obj)
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
@@ -368,6 +378,7 @@ class QAOA(Workflow):
                 'state': state
             }
 
+        # if the backend is a QPU or a shot-based simulator, we return the expectation value and the uncertainty of the cost Hamiltonian and the counts
         counts = self.backend.get_counts(params_obj)
         cost = cost_function(
             counts, 

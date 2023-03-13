@@ -1373,13 +1373,17 @@ class TestingVanillaQAOA(unittest.TestCase):
             result2 = q.evaluate_circuit(np.array(params2))
             assert result == result2, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
 
-            # run the circuit with the optimized params manually, we should get the same result
+            # evaluate the circuit with the params as a QAOAVariationalBaseParams object, so we should get the same result
             params_obj = deepcopy(q.variate_params)
             params_obj.update_from_raw(params2)
-            result3 = {}
-            result3['cost'], result3['uncertainty'] = q.backend.expectation_w_uncertainty(params_obj)
-            result3['state'] = q.backend.wavefunction(params_obj)
-            assert result == result3, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing the optimized params manually"
+            result3 = q.evaluate_circuit(params_obj)
+            assert result == result3, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+
+            # run the circuit with the params manually, we should get the same result
+            result4 = {}
+            result4['cost'], result4['uncertainty'] = q.backend.expectation_w_uncertainty(params_obj)
+            result4['state'] = q.backend.wavefunction(params_obj)
+            assert result == result4, f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing the optimized params manually"
 
             # evaluate the circuit with a wrong input, it should raise an error
             error = False
@@ -1435,6 +1439,16 @@ class TestingVanillaQAOA(unittest.TestCase):
         device = create_device(location="local", name='qiskit.qasm_simulator')
         q.set_device(device)
         q.set_circuit_properties(p=3)
+
+        # try to evaluate the circuit before compiling
+        error = False
+        try:
+            q.evaluate_circuit()
+        except Exception:
+            error = True
+        assert error, f"param_type={param_type}. `evaluate_circuit` should raise an error if the circuit is not compiled"
+
+        # compile and evaluate the circuit, and check that the result is correct
         q.compile(problem) 
         result = q.evaluate_circuit([1,2,1,2,1,2])
         assert isinstance(result['counts'], dict), "When using a shot-based simulator, `evaluate_circuit` should return a dict of counts"
