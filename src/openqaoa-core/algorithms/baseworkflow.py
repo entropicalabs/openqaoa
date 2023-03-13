@@ -479,7 +479,7 @@ class Workflow(ABC):
         self,
         file_name: str = "",
         file_path: str = "",
-        prepend_id: bool = True,
+        prepend_id: bool = False,
         indent: int = 2,
         compresslevel: int = 0,
         exclude_keys: List[str] = [],
@@ -497,6 +497,10 @@ class Workflow(ABC):
             The name of the json file.
         file_path : str
             The path where the json file will be saved.
+        prepend_id : bool
+            If True, the name will have the following format: '{project_id}--{experiment_id}--{atomic_id}--{file_name}.json'.
+            If False, the name will have the following format: '{file_name}.json'.
+            Default is False.
         indent : int
             The number of spaces to indent the result in the json file.
             If None, the result is not indented.
@@ -522,7 +526,7 @@ class Workflow(ABC):
 
         # get the full name
         if prepend_id == False and file_name == "":
-            raise ValueError("If prepend_id is False, file_name must be specified.")
+            raise ValueError("dump method missing argument: 'file_name'. Otherwise 'prepend_id' must be specified as True.")
         elif prepend_id == False:
             file = file_path + file_name
         elif file_name == "":

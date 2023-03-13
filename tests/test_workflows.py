@@ -1005,7 +1005,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         )
         full_name = f"{project_id}--{experiment_id}--{atomic_id}--{file_name}"
 
-        qaoa.dump(file_name, indent=None)
+        qaoa.dump(file_name, indent=None, prepend_id=True)
         assert os.path.isfile(full_name), "Dump file does not exist"
         with open(full_name, "r") as file:
             assert file.read() == qaoa.dumps(
@@ -1013,13 +1013,13 @@ class TestingVanillaQAOA(unittest.TestCase):
             ), "Dump file does not contain the correct data"
         os.remove(full_name)
 
-        # check RQAOA dump whitout prepending the experiment_id and atomic_id
+        # check QAOA dump whitout prepending the experiment_id and atomic_id
         qaoa.dump(file_name, indent=None, prepend_id=False)
         assert os.path.isfile(
             file_name
         ), "Dump file does not exist, when not prepending the experiment_id and atomic_id"
 
-        # check RQAOA dump fails when the file already exists
+        # check QAOA dump fails when the file already exists
         error = False
         try:
             qaoa.dump(file_name, indent=None, prepend_id=False)
@@ -1032,7 +1032,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert os.path.isfile(file_name), "Dump file does not exist, when overwriting"
         os.remove(file_name)
 
-        # check RQAOA dump fails when prepend_id is True and file_name is not given
+        # check QAOA dump fails when prepend_id is True and file_name is not given
         error = False
         try:
             qaoa.dump(prepend_id=False)
@@ -1042,8 +1042,18 @@ class TestingVanillaQAOA(unittest.TestCase):
             error
         ), "Dump file does not fail when prepend_id is True and file_name is not given"
 
-        # check you can dump to a file with no arguments
-        qaoa.dump()
+        # check QAOA dump with no arguments
+        error = False
+        try:
+            qaoa.dump()
+        except ValueError:
+            error = True
+        assert (
+            error
+        ), "Dump file does not fail when no arguments are given, should be the same as dump(prepend_id=False)"
+
+        # check you can dump to a file with no arguments, just prepend_id=True
+        qaoa.dump(prepend_id=True)
         assert os.path.isfile(
             f"{project_id}--{experiment_id}--{atomic_id}.json"
         ), "Dump file does not exist, when no name is given"
@@ -1051,7 +1061,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # check QAOA dump deleting some keys
         exclude_keys = ["schedule", "singlet"]
-        qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
+        qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name
         ), "Dump file does not exist, when deleting some keys"
@@ -1062,7 +1072,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         os.remove(full_name)
 
         # check QAOA dump with compression
-        qaoa.dump(file_name, compresslevel=2, indent=None)
+        qaoa.dump(file_name, compresslevel=2, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name + ".gz"
         ), "Dump file does not exist, when compressing"
@@ -1881,7 +1891,7 @@ class TestingRQAOA(unittest.TestCase):
         )
         full_name = f"{project_id}--{experiment_id}--{atomic_id}--{file_name}"
 
-        rqaoa.dump(file_name, indent=None)
+        rqaoa.dump(file_name, prepend_id=True, indent=None)
         assert os.path.isfile(full_name), "Dump file does not exist"
         with open(full_name, "r") as file:
             assert file.read() == rqaoa.dumps(
@@ -1918,8 +1928,18 @@ class TestingRQAOA(unittest.TestCase):
             error
         ), "Dump file does not fail when prepend_id is True and file_name is not given"
 
-        # check you can dump to a file with no arguments
-        rqaoa.dump()
+        # check RQAOA dump with no arguments
+        error = False
+        try:
+            rqaoa.dump()
+        except ValueError:
+            error = True
+        assert (
+            error
+        ), "Dump file does not fail when no arguments are given, should be the same as dump(prepend_id=False)"
+
+        # check you can dump to a file with no arguments, just prepend_id=True
+        rqaoa.dump(prepend_id=True)
         assert os.path.isfile(
             f"{project_id}--{experiment_id}--{atomic_id}.json"
         ), "Dump file does not exist, when no name is given"
@@ -1927,7 +1947,7 @@ class TestingRQAOA(unittest.TestCase):
 
         # check RQAOA dump deleting some keys
         exclude_keys = ["schedule", "singlet"]
-        rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
+        rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name
         ), "Dump file does not exist, when deleting some keys"
@@ -1938,7 +1958,7 @@ class TestingRQAOA(unittest.TestCase):
         os.remove(full_name)
 
         # check RQAOA dump with compression
-        rqaoa.dump(file_name, compresslevel=2, indent=None)
+        rqaoa.dump(file_name, compresslevel=2, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name + ".gz"
         ), "Dump file does not exist, when compressing"
@@ -2138,6 +2158,7 @@ class TestingRQAOA(unittest.TestCase):
                 "file_name": "test_dumping_step_by_step",
                 "compresslevel": 2,
                 "indent": None,
+                "prepend_id": True,
             },
         )
 
