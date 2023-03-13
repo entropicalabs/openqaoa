@@ -87,6 +87,14 @@ setup(
         "openqaoa_pyquil": "src/openqaoa-pyquil/openqaoa_pyquil",
         "openqaoa_azure": "src/openqaoa-azure/openqaoa_azure",
     },
+    entry_points={
+        "openqaoa.plugins": [
+            "qiskit = openqaoa_qiskit.utilities",
+            "braket = openqaoa_braket.utilities",
+            "pyquil = openqaoa_pyquil.utilities",
+            "azure = openqaoa_azure.utilities"
+        ]
+    },
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",

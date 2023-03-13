@@ -1,36 +1,16 @@
-def backend_boolean_list() -> list:
+from importlib.metadata import entry_points
+
+def plugin_finder_dict() -> list:
     
-    try:
-        import openqaoa_braket
-    except ImportError:
-        print("The braket module is not installed.")
-        braket_bool = False
-    else:
-        braket_bool = True
-        
-    try:
-        import openqaoa_azure
-    except ImportError:
-        print("The azure module is not installed.")
-        azure_bool = False
-    else:
-        azure_bool = True
-        
-    try:
-        import openqaoa_qiskit
-    except ImportError:
-        print("The qiskit module is not installed.")
-        qiskit_bool = False
-    else:
-        qiskit_bool = True
-        
-    try:
-        import openqaoa_pyquil
-    except ImportError:
-        print("The pyquil module is not installed.")
-        pyquil_bool = False
-    else:
-        pyquil_bool = True
-        
+    available_plugins = entry_points()['openqaoa.plugins']
     
-    return [braket_bool, azure_bool, qiskit_bool, pyquil_bool]
+    output_dict = dict()
+    for each_plugin_entry_point in available_plugins:
+        try:
+            output_dict[each_plugin_entry_point.name] = each_plugin_entry_point.load()
+        except ModuleNotFoundError:
+            print("The {} module has not been installed.".format(each_plugin_entry_point.name))
+        except AttributeError:
+            print("An error has occured when trying to attach the {} plugin.".format(each_plugin_entry_point.name))
+    
+    return output_dict

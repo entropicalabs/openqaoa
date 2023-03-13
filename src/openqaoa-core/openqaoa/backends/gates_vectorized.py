@@ -16,14 +16,10 @@ class VectorizedGateApplicator(gates_core.GateApplicator):
         gates_core.RiSWAP.__name__: x.apply_rxy
     }
 
-    def __init__(self):
-        self.library = 'vectorized'
+    library = 'vectorized'
 
     def gate_selector(self, gate:gates_core.Gate, vectorized_backend: 'QAOAvectorizedBackendSimulator'):
-        try:
-            selected_gate = VectorizedGateApplicator.VECTORIZED_OQ_GATE_MAPPER(vectorized_backend)[gate.__name__]
-        except KeyError:
-            raise ValueError("Specified gate is not supported by the backend")
+        selected_gate = VectorizedGateApplicator.VECTORIZED_OQ_GATE_MAPPER(vectorized_backend)[gate.__name__]
         return selected_gate
 
     @staticmethod
