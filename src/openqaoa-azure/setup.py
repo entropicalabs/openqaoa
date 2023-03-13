@@ -8,7 +8,7 @@ current_path = getcwd()
 
 long_description = ""
 
-with open("_version.py") as f:
+with open("openqaoa_azure/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
