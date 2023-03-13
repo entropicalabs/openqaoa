@@ -1,14 +1,12 @@
 from typing import Union, Optional, List
 import numpy as np
 
-from .plugin_finder import plugin_finder_dict
+from .plugin_finder import PLUGIN_DICT
 from .qaoa_vectorized import QAOAvectorizedBackendSimulator
 from .qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from .devices_core import DeviceBase, DeviceLocal
 from .basebackend import QuantumCircuitBase, QAOABaseBackend
 from ..qaoa_components import QAOADescriptor
-
-PLUGIN_DICT = plugin_finder_dict()
 
 def _create_mappers(input_plugin_dict: dict) -> dict:
     

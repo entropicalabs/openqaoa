@@ -22,6 +22,11 @@ setup(
     version=version,
     author="Entropica Labs",
     packages=find_packages(where="."),
+    entry_points={
+        "openqaoa.plugins": [
+            "braket = openqaoa_braket.utilities"
+        ]
+    },
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",

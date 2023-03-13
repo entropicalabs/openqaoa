@@ -513,7 +513,7 @@ class ScipyOptimizer(OptimizeVQA):
             print(
                 "The optimization has been terminated early. Most likely due to a connection error."
                 "You can retrieve results from the optimization runs that were completed"
-                "through the .results_information method."
+                "through the .result method."
             )
         except Exception as e:
             raise e
@@ -736,7 +736,7 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
             print(
                 "The optimization has been terminated early. Most likely due to a connection error."
                 "You can retrieve results from the optimization runs that were completed"
-                "through the .results_information method."
+                "through the .result method."
             )
         except Exception as e:
             raise e
@@ -898,7 +898,7 @@ class PennyLaneOptimizer(OptimizeVQA):
             print(
                 "The optimization has been terminated early. Most likely due to a connection error."
                 "You can retrieve results from the optimization runs that were completed"
-                "through the .results_information method."
+                "through the .result method."
             )
         except Exception as e:
             raise e

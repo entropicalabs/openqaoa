@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from .plugin_finder import plugin_finder_dict
+from .plugin_finder import PLUGIN_DICT
 from .devices_core import DeviceBase, DeviceLocal
-
-
-PLUGIN_DICT = plugin_finder_dict()
 
 def device_class_arg_mapper(
     device_class: DeviceBase,

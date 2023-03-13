@@ -22,6 +22,11 @@ setup(
     version=version,
     author="Entropica Labs",
     packages=find_packages(where="."),
+    entry_points={
+        "openqaoa.plugins": [
+            "pyquil = openqaoa_pyquil.utilities"
+        ]
+    },
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",
