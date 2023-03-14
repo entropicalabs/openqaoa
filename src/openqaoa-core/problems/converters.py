@@ -218,9 +218,7 @@ class FromDocplex2IsingModel(object):
     def inequality_to_unbalanced_penalty(self, constraint):
         """
         Inequality constraint based on an unbalanced penality function described in
-        detail in the paper:
-            "Unbalanced penalizations: A novel approach of inequality constraints
-            codification in quantum optimization problems""
+        detail in the paper: https://arxiv.org/abs/2211.13914
 
         Parameters
         ----------
