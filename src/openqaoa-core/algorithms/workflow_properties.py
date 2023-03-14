@@ -7,7 +7,7 @@ from ..backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from ..backends.basebackend import QuantumCircuitBase
 from ..utilities import convert2serialize
 
-from ..backends.wrapper import TwirlingWrapper
+
 
 
 ALLOWED_PARAM_TYPES = [
@@ -253,8 +253,8 @@ class BackendProperties(WorkflowProperties):
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.disable_qubit_rewiring = disable_qubit_rewiring
-        self.wrapper = TwirlingWrapper if twirling else None
-        self.wrapper_options = twirling_options
+        self.twirling = twirling
+        self.twirling_options = twirling_options
 
     # @property
     # def cvar_alpha(self):
