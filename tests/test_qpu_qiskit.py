@@ -36,7 +36,7 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
     The Azure CLI has to be configured beforehand to run these tests.
     """
     
-    @pytest.mark.qpu
+    @pytest.mark.api
     def setUp(self):
         
         bashCommand = "az resource list"
@@ -52,7 +52,7 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
             self.RESOURCE_ID = output_json_s['id']
             self.AZ_LOCATION = output_json_s['location']
             
-    @pytest.mark.qpu
+    @pytest.mark.sim
     def check_shots_tally(self):
         
         """There is a known bug in the qiskit backend for azure where if the shots 
@@ -77,7 +77,7 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
         
         self.assertEqual(shots, comp_shots)
         
-    @pytest.mark.qpu
+    @pytest.mark.api
     def test_expectations_in_init(self):
         
         """
@@ -124,7 +124,7 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
         with self.assertRaises(Exception):
             QAOAQiskitQPUBackend(qaoa_descriptor, azure_device, shots, None, None, True)
         
-    @pytest.mark.qpu
+    @pytest.mark.api
     def test_remote_qubit_overflow(self):
         
         """
@@ -160,14 +160,14 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
     IBMQ Account has to be saved locally to run these tests.
     """
 
-    @pytest.mark.qpu
+    @pytest.mark.api
     def setUp(self):
 
         self.HUB = "ibm-q"
         self.GROUP = "open"
         self.PROJECT = "main"
 
-    @pytest.mark.qpu
+    @pytest.mark.api
     def test_circuit_angle_assignment_qpu_backend(self):
         """
         A tests that checks if the circuit created by the Qiskit Backend
@@ -233,7 +233,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         assert qpu_circuit_operator.equiv(main_circuit_operator)
 
-    @pytest.mark.qpu
+    @pytest.mark.api
     def test_circuit_angle_assignment_qpu_backend_w_hadamard(self):
         """
         Checks for consistent if init_hadamard is set to True.
@@ -298,7 +298,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         assert qpu_circuit_operator.equiv(main_circuit_operator)
 
-    @pytest.mark.qpu
+    @pytest.mark.api
     def test_prepend_circuit(self):
         """
         Checks if prepended circuit has been prepended correctly.
@@ -356,7 +356,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         assert qpu_circuit_operator.equiv(main_circuit_operator)
 
-    @pytest.mark.qpu
+    @pytest.mark.api
     def test_append_circuit(self):
         """
         Checks if appended circuit is appropriately appended to the back of the
@@ -415,7 +415,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         assert qpu_circuit_operator.equiv(main_circuit_operator)
 
-    @pytest.mark.qpu
+    @pytest.mark.api
     def test_expectations_in_init(self):
 
         """
@@ -483,7 +483,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             True,
         )
 
-    @pytest.mark.qpu
+    @pytest.mark.sim
     def test_remote_integration_sim_run(self):
         """
         Checks if Remote IBM QASM Simulator is similar/close to Local IBM
@@ -534,7 +534,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
                 qiskit_expectation, qiskit_statevec_expectation, delta=acceptable_delta
             )
 
-    @pytest.mark.qpu
+    @pytest.mark.api
     def test_remote_qubit_overflow(self):
 
         """
