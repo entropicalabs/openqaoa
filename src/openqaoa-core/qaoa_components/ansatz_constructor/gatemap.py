@@ -26,7 +26,19 @@ class GateMap(ABC):
     def _decomposition_standard(self) -> List[Tuple]:
         pass
 
+class XGateMap(GateMap):
+    def __init__(self, qubit_1: int):
 
+        super().__init__(qubit_1)
+        self.gate_label = GateMapLabel(n_qubits=1, gatemap_type=GateMapType.FIXED)
+
+    @property
+    def _decomposition_standard(self) -> List[Tuple]:
+
+        return [
+            (RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]),
+        ]
+    
 class SWAPGateMap(GateMap):
     def __init__(self, qubit_1: int, qubit_2: int):
 
