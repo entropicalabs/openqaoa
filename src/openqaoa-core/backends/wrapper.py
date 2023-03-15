@@ -38,11 +38,15 @@ class TwirlingWrapper(BaseWrapper):
         arr = np.fromiter(s, dtype=int)
         negated_qubits = np.where(arr == 1)[0] # where the syndrome has a 1
         print("qubits to negate ", negated_qubits)
+        print("abstract circuit inside change_abstract_circuit ", abstract_circuit)
+        
+        # create a new copy of the initial abstract circuit
+        new_abstract_circuit = deepcopy(abstract_circuit)
 
         for negated_qubit in negated_qubits:
-            abstract_circuit.append(XGateMap(qubit_1 = negated_qubit))
+            new_abstract_circuit.append(XGateMap(qubit_1 = negated_qubit))
 
-        return abstract_circuit
+        return new_abstract_circuit
         
     def expectation(self, params, n_shots=None) -> float:
         '''
