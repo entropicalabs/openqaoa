@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from copy import deepcopy
 
 from .basebackend import VQABaseBackend
@@ -32,9 +33,14 @@ class TwirlingWrapper(BaseWrapper):
         self.n_batches = n_batches
         
     
-    def change_abstract_circuit(self, abstract_circuit):
+    def change_abstract_circuit(self, abstract_circuit, s):
+        s = format(s, 'b').zfill(self.backend.n_qubits) # convert to binary
+        arr = np.fromiter(s, dtype=int)
+        negated_qubits = np.where(arr == 1)[0] # where the syndrome has a 1
+        print("qubits to negate ", negated_qubits)
 
-        abstract_circuit.append(XGateMap(qubit_1 = 2))
+        for negated_qubit in negated_qubits:
+            abstract_circuit.append(XGateMap(qubit_1 = negated_qubit))
 
         return abstract_circuit
         
@@ -55,28 +61,37 @@ class TwirlingWrapper(BaseWrapper):
         for _ in range(0, self.n_batches):
             s_list.append(random.getrandbits(self.backend.n_qubits)) 
         s_list = [3, 0, 1, 2] # TESTING ONLY, can be specified by the user 
-        s_list = [0, 0, 0, 0]
+        #s_list = [1, 1, 1, 1]
         
         n_shots_batch = int(self.backend.n_shots / self.n_batches)
         
         counts = {}
         
+        initial_abstract_circuit = deepcopy(self.backend.abstract_circuit)
+        
         for batch in range(0, self.n_batches):
             print("batch ", batch)
-            self.s = s_list[batch]
+            s = s_list[batch]
             
             negated_counts = {}
             
+            
+            
+            
             # TODO change the abstract circuit here
+            
             print(self.backend.abstract_circuit)
-            initial_abstract_circuit = deepcopy(self.backend.abstract_circuit)
-            self.backend.abstract_circuit = self.change_abstract_circuit(self.backend.abstract_circuit) # maybe as an attribute ?
+            self.backend.abstract_circuit = self.change_abstract_circuit(initial_abstract_circuit, s) # maybe as an attribute ?
+            
+            
+            
+            
             
             counts_batch = self.get_counts(params, n_shots_batch)
             
             # consider putting this in utilities.py, similar to permuted_counts with SWAP gates (?)
             for key in counts_batch.keys():   
-                negated_key = self.s ^ int(key, 2)  # bitwise XOR to classically negate randomly chosen qubits, specified by s
+                negated_key = s ^ int(key, 2)  # bitwise XOR to classically negate randomly chosen qubits, specified by s
                 negated_counts.update([(format(negated_key, 'b').zfill(self.backend.n_qubits), counts_batch[key])])  # make sure that the key is of the correct length 
             
             print("negated counts ", negated_counts)

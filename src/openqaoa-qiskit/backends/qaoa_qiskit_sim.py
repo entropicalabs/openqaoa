@@ -119,7 +119,11 @@ class QAOAQiskitBackendShotBasedSimulator(
             seed_simulator=seed_simulator,
         )
         # For parametric circuits
-        self.parametric_circuit = self.parametric_qaoa_circuit
+        #self.parametric_circuit = self.parametric_qaoa_circuit
+        
+    @property
+    def parametric_circuit(self, ):
+        return self.parametric_qaoa_circuit
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> QuantumCircuit:
         """
@@ -134,10 +138,11 @@ class QAOAQiskitBackendShotBasedSimulator(
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-
+        parametric_circuit = self.parametric_circuit
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
+        new_parametric_circuit = parametric_circuit.bind_parameters(memory_map)
+        print(new_parametric_circuit)
         return new_parametric_circuit
 
     @property
