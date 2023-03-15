@@ -164,7 +164,7 @@ class QAOAQiskitBackendShotBasedSimulator(
         self.qiskit_parameter_list = []
         for each_gate in self.abstract_circuit:
             # if gate is of type mixer or cost gate, assign parameter to it
-            if each_gate.gate_label.type.value in ["MIXER", "COST", "PARAMETRIC"]:
+            if each_gate.gate_label.type.value in ["MIXER", "COST"]:
                 angle_param = Parameter(each_gate.gate_label.__repr__())
                 self.qiskit_parameter_list.append(angle_param)
                 each_gate.angle_value = angle_param
