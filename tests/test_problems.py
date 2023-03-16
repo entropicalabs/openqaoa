@@ -1457,7 +1457,31 @@ class TestProblem(unittest.TestCase):
             BinPacking(weights=weights, weight_capacity=weight_capacity).classical_solution()
         self.assertEqual(
             'solution not found: integer infeasible', str(e.exception)
-        )  
+        )
+
+    def test_binpacking_input_weights(self):
+        """
+        Checks if the unfeasible classical solution returns the right error.
+        """
+        weights = [10.1, 10]
+        weight_capacity = 8
+        with self.assertRaises(TypeError) as e:
+            BinPacking(weights=weights, weight_capacity=weight_capacity).classical_solution()
+        self.assertEqual(
+            f"The weights must be integer numbers. Format {type(weights[0])} found.", str(e.exception)
+        )
+
+    def test_binpacking_input_weight_capacity(self):
+        """
+        Checks if the unfeasible classical solution returns the right error.
+        """
+        weights = [10, 10]
+        weight_capacity = 8.1
+        with self.assertRaises(TypeError) as e:
+            BinPacking(weights=weights, weight_capacity=weight_capacity).classical_solution()
+        self.assertEqual(
+            f"The weight_capacity must be integer. Format {type(weight_capacity)} found.", str(e.exception)
+        )
 
 if __name__ == "__main__":
     unittest.main()

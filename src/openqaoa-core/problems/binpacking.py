@@ -11,7 +11,7 @@ from .converters import FromDocplex2IsingModel
 
 class BinPacking(Problem):
     """
-    Creates an instance of the Bin Packing problem.
+    Creates an instance of the bin packing problem.
     https://en.wikipedia.org/wiki/Bin_packing_problem
 
     Parameters
@@ -25,7 +25,7 @@ class BinPacking(Problem):
 
     Returns
     -------
-        An instance of the Bin PAcking problem.
+        An instance of the bin packing problem.
     """
 
     __name__ = "bin_packing"
@@ -44,6 +44,11 @@ class BinPacking(Problem):
             raise ValueError(
                 f"The method '{method}' is not a valid method. Choose between 'slack' and 'unbalanced'"
             )
+        for weight in weights:
+            if int(weight) != weight:
+                raise TypeError(f"The weights must be integer numbers. Format {type(weight)} found.")
+        if int(weight_capacity) != weight_capacity:
+            raise TypeError(f"The weight_capacity must be integer. Format {type(weight_capacity)} found.")
         self.weights = weights
         self.weight_capacity = weight_capacity
         self.penalty = penalty
@@ -56,6 +61,7 @@ class BinPacking(Problem):
             self.n_bins = self.n_items
         else:
             self.n_bins = n_bins
+
         self.solution = self.solution_dict()
         self.cplex_model = self.docplex_model()
         self.n_vars = self.cplex_model.number_of_binary_variables
