@@ -173,7 +173,6 @@ class QAOABenchmark:
 
         # plot options
         plot_options = {**{'verbose':verbose}, **plot_options}
-        print("Plot options: {}".format(plot_options))
 
         # save the ranges
         if run_main:        self.ranges = ranges
