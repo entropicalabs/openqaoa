@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from typing import Union, List, Tuple, Optional
 
 # IBM Qiskit imports
@@ -119,11 +120,9 @@ class QAOAQiskitBackendShotBasedSimulator(
             seed_simulator=seed_simulator,
         )
         # For parametric circuits
-        #self.parametric_circuit = self.parametric_qaoa_circuit
+        self.parametric_circuit = self.parametric_qaoa_circuit
         
-    @property
-    def parametric_circuit(self, ):
-        return self.parametric_qaoa_circuit
+    
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> QuantumCircuit:
         """
@@ -138,7 +137,12 @@ class QAOAQiskitBackendShotBasedSimulator(
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-        parametric_circuit = self.parametric_circuit
+        parametric_circuit = deepcopy(self.parametric_circuit)
+        
+        if self.append_state:
+            parametric_circuit = parametric_circuit.compose(self.append_state)
+        parametric_circuit.measure_all()
+        
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = parametric_circuit.bind_parameters(memory_map)
@@ -182,9 +186,7 @@ class QAOAQiskitBackendShotBasedSimulator(
                     *each_tuple[1], parametric_circuit
                 )
 
-        if self.append_state:
-            parametric_circuit = parametric_circuit.compose(self.append_state)
-        parametric_circuit.measure_all()
+        
 
         return parametric_circuit
 
