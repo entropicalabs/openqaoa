@@ -13,7 +13,7 @@ class BinPacking(Problem):
     """
     Creates an instance of the Bin Packing problem.
     https://en.wikipedia.org/wiki/Bin_packing_problem
-    
+
     Parameters
     ----------
     weights: List[int]
@@ -22,19 +22,28 @@ class BinPacking(Problem):
         The maximum weight the bin can hold.
     penalty: float
         Penalty for the weight constraint.
-        
+
     Returns
     -------
         An instance of the Bin PAcking problem.
     """
 
     __name__ = "bin_packing"
-    
-    def __init__(self, weights:list=[], weight_capacity:int=0, penalty:Union[float, list]=[],
-                 n_bins:int = None, simplifications=True, method:str="slack"):
-        #include_ineqs: True if including the inequalities
+
+    def __init__(
+        self,
+        weights: list = [],
+        weight_capacity: int = 0,
+        penalty: list = [],
+        n_bins: int = None,
+        simplifications=True,
+        method: str = "slack",
+    ):
+        # include_ineqs: True if including the inequalities
         if method not in ["slack", "unbalanced"]:
-            raise ValueError(f"The method '{method}' is not a valid method. Choose between 'slack' and 'unbalanced'")
+            raise ValueError(
+                f"The method '{method}' is not a valid method. Choose between 'slack' and 'unbalanced'"
+            )
         self.weights = weights
         self.weight_capacity = weight_capacity
         self.penalty = penalty
@@ -51,9 +60,9 @@ class BinPacking(Problem):
             self.solution = self.solution_dict()
             self.cplex_model = self.docplex_model()
             self.n_vars = self.cplex_model.number_of_binary_variables
-            
+
     def solution_dict(self):
-        solution = {f"y_{i}":None for i in range(self.n_bins)}
+        solution = {f"y_{i}": None for i in range(self.n_bins)}
         for i in range(self.n_items):
             for j in range(self.n_bins):
                 solution[f"x_{i}_{j}"] = None
@@ -101,12 +110,16 @@ class BinPacking(Problem):
         min_weight = kwargs.get("min_weight", 1)
         max_weight = kwargs.get("max_weight", 7)
         if min_weight >= max_weight:
-            raise ValueError(f"min_weight: {min_weight} must be < max_weight:{max_weight}")
+            raise ValueError(
+                f"min_weight: {min_weight} must be < max_weight:{max_weight}"
+            )
         weights = list(np.random.randint(min_weight, max_weight, n_items))
         simplification = kwargs.get("simplification", True)
         penalty = kwargs.get("penalty", [])
         method = kwargs.get("method", "slack")
-        return BinPacking(weights, weight_capacity, penalty, n_bins, simplification, method)
+        return BinPacking(
+            weights, weight_capacity, penalty, n_bins, simplification, method
+        )
 
     def docplex_model(self):
         mdl = Model("bin_packing")
@@ -117,7 +130,7 @@ class BinPacking(Problem):
             else:
                 vars_[var] = self.solution[var]
         objective = mdl.sum([vars_[y] for y in vars_.keys() if y[0] == "y"])
-        self.vars_pos = {var.name:n for n, var in enumerate(mdl.iter_binary_vars())}
+        self.vars_pos = {var.name: n for n, var in enumerate(mdl.iter_binary_vars())}
 
         mdl.minimize(objective)
         if self.simplifications:
@@ -127,22 +140,40 @@ class BinPacking(Problem):
 
         for i in list_items:
             # First set of constraints: the items must be in any bin
-            self.eq_constraints[f"eq_{i}"] = [[self.vars_pos[f"x_{i}_{j}"] for j in range(self.n_bins)], [1]]
-            mdl.add_constraint(mdl.sum(vars_[f"x_{i}_{j}"] for j in range(self.n_bins)) == 1)
+            self.eq_constraints[f"eq_{i}"] = [
+                [self.vars_pos[f"x_{i}_{j}"] for j in range(self.n_bins)],
+                [1],
+            ]
+            mdl.add_constraint(
+                mdl.sum(vars_[f"x_{i}_{j}"] for j in range(self.n_bins)) == 1
+            )
 
         for j in range(self.n_bins):
             # Second set of constraints: weight constraints
             mdl.add_constraint(
-                mdl.sum((self.weights[i]/self.weight_capacity) * vars_[f"x_{i}_{j}"] for i in range(self.n_items)) <=  vars_[f"y_{j}"]
+                mdl.sum(
+                    (self.weights[i] / self.weight_capacity) * vars_[f"x_{i}_{j}"]
+                    for i in range(self.n_items)
+                )
+                <= vars_[f"y_{j}"]
             )
             if self.simplifications and j < self.min_bins:
                 if j == 0:
-                    self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity - self.weights[0]]]
+                    self.ineq_constraints[f"ineq_{j}"] = [
+                        [self.vars_pos[f"x_{i}_{j}"] for i in list_items],
+                        [self.weight_capacity - self.weights[0]],
+                    ]
                 else:
-                    self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity]]
-                    
+                    self.ineq_constraints[f"ineq_{j}"] = [
+                        [self.vars_pos[f"x_{i}_{j}"] for i in list_items],
+                        [self.weight_capacity],
+                    ]
+
             else:
-                self.ineq_constraints[f"ineq_{j}"] = [[self.vars_pos[f"x_{i}_{j}"] for i in list_items], [self.weight_capacity * self.vars_pos[f"y_{j}"]]]
+                self.ineq_constraints[f"ineq_{j}"] = [
+                    [self.vars_pos[f"x_{i}_{j}"] for i in list_items],
+                    [self.weight_capacity * self.vars_pos[f"y_{j}"]],
+                ]
 
         return mdl
 
@@ -150,25 +181,34 @@ class BinPacking(Problem):
     def qubo(self):
         """
         Returns the QUBO encoding of this problem.
-        
+
         Returns
         -------
             The QUBO encoding of this problem.
         """
         if len(self.penalty) > 0:
             if self.method == "slack":
-                qubo_docplex = FromDocplex2IsingModel(self.cplex_model, multipliers=self.penalty)
+                qubo_docplex = FromDocplex2IsingModel(
+                    self.cplex_model, multipliers=self.penalty[0]
+                )
             elif self.method == "unbalanced":
-                qubo_docplex = FromDocplex2IsingModel(self.cplex_model, multipliers=self.penalty[0], unbalanced_const=True, strength_ineq=self.penalty[1:])
+                qubo_docplex = FromDocplex2IsingModel(
+                    self.cplex_model,
+                    multipliers=self.penalty[0],
+                    unbalanced_const=True,
+                    strength_ineq=self.penalty[1:],
+                )
         else:
             if self.method == "slack":
                 qubo_docplex = FromDocplex2IsingModel(self.cplex_model)
             elif self.method == "unbalanced":
-                qubo_docplex = FromDocplex2IsingModel(self.cplex_model, unbalanced_const=True)
-            
+                qubo_docplex = FromDocplex2IsingModel(
+                    self.cplex_model, unbalanced_const=True
+                )
+
         return qubo_docplex.ising_model
 
-    def classical_solution(self, string:bool=False):
+    def classical_solution(self, string: bool = False):
         """
         Return the classical solution of the bin packing problem
 
@@ -189,6 +229,12 @@ class BinPacking(Problem):
 
         """
         docplex_sol = self.cplex_model.solve()
+
+        if docplex_sol is None:
+            raise ValueError(
+                f"solution not found: {self.cplex_model.solve_details.status}"
+            )
+
         if string:
             solution = ""
         else:
@@ -198,11 +244,9 @@ class BinPacking(Problem):
                 solution += str(int(np.round(docplex_sol.get_value(var), 1)))
             else:
                 solution[var.name] = int(np.round(docplex_sol.get_value(var), 1))
-        if not docplex_sol.is_valid_solution():
-            raise ValueError("The Cplex solver does not find a solution.")
         return solution
 
-    def plot_solution(self, solution:Union[dict, str], ax=None):
+    def plot_solution(self, solution: Union[dict, str], ax=None):
         """
         A visualization method for the bin packing problem solution.
 
@@ -234,11 +278,32 @@ class BinPacking(Problem):
             if solution[f"y_{j}"]:
                 for i in range(self.n_items):
                     if solution[f"x_{i}_{j}"]:
-                        ax.bar(j, self.weights[i], bottom=sum_items, label=f"item {i}", color=colors(i), alpha=0.7, edgecolor="black")
+                        ax.bar(
+                            j,
+                            self.weights[i],
+                            bottom=sum_items,
+                            label=f"item {i}",
+                            color=colors(i),
+                            alpha=0.7,
+                            edgecolor="black",
+                        )
                         sum_items += self.weights[i]
-        ax.hlines(self.weight_capacity, -0.5, self.n_bins - 0.5, linestyle="--", color="black", label="Max Weight")
+        ax.hlines(
+            self.weight_capacity,
+            -0.5,
+            self.n_bins - 0.5,
+            linestyle="--",
+            color="black",
+            label="Max Weight",
+        )
         ax.set_xticks(np.arange(self.n_bins), np.arange(self.n_bins), fontsize=14)
         ax.set_xlabel("bin", fontsize=14)
         ax.set_ylabel("weight", fontsize=14)
-        ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.2 + 0.011*self.n_items), ncol=5, fancybox=True, shadow=True)
+        ax.legend(
+            loc="upper center",
+            bbox_to_anchor=(0.5, 1.2 + 0.011 * self.n_items),
+            ncol=5,
+            fancybox=True,
+            shadow=True,
+        )
         return fig

@@ -1319,6 +1319,40 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
             self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
 
+    def test_binpacking_terms_penalizations_terms_unbalanced(self):
+            """Test that BinPacking creates a correct QUBO from the provided weights and terms
+            using the unbalanced penalization encoding given the penalization terms"""
+            terms = [[1, 2], [0, 2], [0], [1], [2]]
+
+            weights = [0.5, -0.25, -0.25, -0.0625, -0.125]
+            constant = 1.953125
+            
+            weights_list = [3, 4]
+            weight_capacity = 8
+            penalty = [1, 1, 1]
+            binpacking_prob_qubo = BinPacking(weights_list, weight_capacity, penalty=penalty, method="unbalanced", simplifications=True).qubo
+
+            self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
+            self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
+            self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
+
+    def test_binpacking_terms_penalizations_terms_slack(self):
+            """Test that BinPacking creates a correct QUBO from the provided weights and terms
+            using the unbalanced penalization encoding"""
+            terms = [[1, 2], [1, 3], [0, 2], [0, 4], [2, 4], [0], [1], [2], [3], [4]]
+
+            weights = [0.5, 0.15625, -0.25, -0.5, 0.25, -0.25, 0.03125, -0.125, 0.0390625, -0.25]
+            constant = 2.7890625
+            
+            weights_list = [3, 4]
+            weight_capacity = 8
+            penalty = [1]
+            binpacking_prob_qubo = BinPacking(weights_list, weight_capacity, penalty=penalty, method="slack", simplifications=True).qubo
+
+            self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
+            self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
+            self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
+
     def test_binpacking_random_problem(self):
         """Test Bin Packing random instance method"""
 
@@ -1340,6 +1374,29 @@ class TestProblem(unittest.TestCase):
         )
         self.assertEqual(binpacking_manual_prob.weights, binpacking_random_prob.weights)
         self.assertEqual(binpacking_manual_prob.constant, binpacking_random_prob.constant)
+
+    def test_binpacking_classical_sol(self):
+        """Test the Bin Packing random instance method classical solution"""
+
+        seed = 1234
+        np.random.seed(seed)
+        binpacking_sol = BinPacking.random_instance(
+            n_items=3, seed=seed).classical_solution()
+        
+        sol = {'y_0': 1,
+             'y_1': 0,
+             'y_2': 0,
+             'x_0_0': 1,
+             'x_0_1': 0,
+             'x_0_2': 0,
+             'x_1_0': 1,
+             'x_1_1': 0,
+             'x_1_2': 0,
+             'x_2_0': 1,
+             'x_2_1': 0,
+             'x_2_2': 0}
+
+        self.assertEqual(binpacking_sol, sol)
 
     def test_binpacking_plot(self):
         """Test Bin Packing random instance method"""
@@ -1367,7 +1424,7 @@ class TestProblem(unittest.TestCase):
 
     def test_binpacking_method_checking(self):
         """
-        Checks if the type-checking returns the right error.
+        Checks if the method-checking returns the right error.
         """
         weights = [3, 5, 7]
         weight_capacity = 15
@@ -1378,6 +1435,29 @@ class TestProblem(unittest.TestCase):
             f"The method '{method}' is not a valid method. Choose between 'slack' and 'unbalanced'", str(e.exception)
         )
 
+    def test_binpacking_random_problem_checking(self):
+        """
+        Checks if the random min_weight equal to max_weight returns the right error.
+        """
+        min_weight = 5
+        max_weight = 5
+        with self.assertRaises(ValueError) as e:
+            BinPacking.random_instance(min_weight=min_weight, max_weight=max_weight)
+        self.assertEqual(
+            f"min_weight: {min_weight} must be < max_weight:{max_weight}", str(e.exception)
+        )  
+
+    def test_binpacking_classical_sol_checking(self):
+        """
+        Checks if the unfeasible classical solution returns the right error.
+        """
+        weights = [10, 10]
+        weight_capacity = 8
+        with self.assertRaises(ValueError) as e:
+            BinPacking(weights=weights, weight_capacity=weight_capacity).classical_solution()
+        self.assertEqual(
+            'solution not found: integer infeasible', str(e.exception)
+        )  
 
 if __name__ == "__main__":
     unittest.main()
