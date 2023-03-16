@@ -61,11 +61,11 @@ class TestingBenchmark(unittest.TestCase):
         assert isinstance(benchmark.reference, QAOA), "The qaoa reference should be a QAOA object."
         assert isinstance(benchmark.reference.backend, type(qaoa_vectorized.backend)), "The qaoa reference should have a vectorized backend."
 
-    def __compare_values_benchmark(self, qaoa, n_points_axis, ranges, run_reference=False):
+    def __compare_values_benchmark(self, qaoa, n_points_axis, ranges, run_reference=False, verbose=True, plot_options={}):
         "private function to compare the values of the benchmark with the values obtained by evaluating the circuit manually."
 
         benchmark = QAOABenchmark(qaoa)
-        benchmark.run(n_points_axis=n_points_axis, ranges=ranges, run_reference=run_reference)
+        benchmark.run(n_points_axis=n_points_axis, ranges=ranges, run_reference=run_reference, verbose=verbose, plot_options=plot_options)
 
         ranges_to_use = [r for r in ranges if len(r) == 2]
         values = np.zeros([n_points_axis for _ in range(len(ranges_to_use))])
@@ -273,7 +273,7 @@ class TestingBenchmark(unittest.TestCase):
         #2D
         benchmark.run(n_points_axis=4, ranges=[(-np.pi/2,np.pi/2), (1,3)])
         benchmark.plot(labels=['a', 'b'], plot_options={'cmap':'gray'})
-        benchmark.plot(main=True, reference=True, difference=True, labels=['a', 'b'], title=['a', 'b', 'c'], plot_options={'cmap':'gray'})
+        benchmark.plot(main=True, reference=True, difference=True, labels=['a', 'b'], title=['a', 'b', 'c'], labels_legend='test', plot_options={'cmap':'gray'})
         benchmark.plot(main=True, reference=True, difference=True, verbose=False, title='s')
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         benchmark.plot(ax=ax)
@@ -284,7 +284,7 @@ class TestingBenchmark(unittest.TestCase):
         benchmark.run(n_points_axis=4, ranges=[(-np.pi/2,np.pi/2), (1, )])
         benchmark.plot(labels=['a', 'b'], plot_options={'linewidth':2})
         benchmark.plot(main=True, reference=True, difference=True, labels=['a', 'b'], title=['a', 'b', 'c'], plot_options={'linewidth':2})
-        benchmark.plot(main=True, reference=True, difference=True, verbose=False, one_plot=True, title='s')
+        benchmark.plot(main=True, reference=True, difference=True, verbose=False, one_plot=True, title='s', labels_legend=['a', 'b', 'c'])
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         benchmark.plot(ax=ax)
         plt.show()

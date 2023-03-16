@@ -243,8 +243,9 @@ class QAOABenchmark:
     def plot(
             self, 
             ax:plt.Axes = None, 
-            labels:List[str] = None,
             title:Union[str, List[str]] = None,
+            labels:List[str] = None,
+            labels_legend:Union[str, List[str]] = None,
             main:bool = True, 
             reference:bool = False, 
             difference:bool = False, 
@@ -262,13 +263,18 @@ class QAOABenchmark:
         ax : plt.Axes, optional
             The matplotlib Axes object to plot on. If None, a new figure will be created.
             The default is None.
+        title : Union[str, List[str]], optional
+            The title of the plot. The expected format is a string or a list of strings: one for each plot.
+            If None, the title will be the default: `main plot`, `reference plot` or `difference plot`.
+            The default is None.
         labels : List[str], optional
             The labels of the axes. The expected format is a list of two strings: one for each axis. 
             If None, the labels will be the number of the parameters.
             The default is None.
-        title : Union[str, List[str]], optional
-            The title of the plot. The expected format is a string or a list of strings: one for each plot.
-            If None, the title will be the default: `main plot`, `reference plot` or `difference plot`.
+        labels_legend : Union[str, List[str]], optional
+            The labels of the legend. The expected format is a string or a list of strings: one for each line. 
+            It is only available if the sweep is over just one parameter, and if `one_plot` is True or `ax` is not None.
+            If None, the labels will be the default: `main`, `reference` or `difference`.
             The default is None.
         main : bool, optional
             If True, the values of the benchmarked QAOA object will be plotted.
@@ -298,6 +304,10 @@ class QAOABenchmark:
             assert isinstance(eval(plot), bool), plot + " must be a boolean"
         assert main or reference or difference, "You must specify at least one of the main, reference or difference plots"
         assert isinstance(plot_options, dict), "plot_options must be a dictionary"
+
+        # if labels_legend is not a list or tuple, make it a list
+        if not isinstance(labels_legend, (list, tuple)):
+            labels_legend = [labels_legend for _ in range(3)]
 
         # create a dictionary where the keys are the three possible plots and the values are a tuple 
         # with the boolean (which says if the plot is requested) and the values to plot
@@ -364,7 +374,9 @@ class QAOABenchmark:
                 if n_params == 1:
                     axis.set_xlabel("Parameter {}".format([ i for i, r in enumerate(ranges) if len(r)==2 ][0]))
                     axis.set_ylabel("Expectation value")
-                    axis.plot(*axes, values[key][1], label=key, **plot_options)
+
+                    label_legend = labels_legend[count_sp] if labels_legend[count_sp] is not None else key
+                    axis.plot(*axes, values[key][1], label=label_legend, **plot_options)
                 else:
                     if one_plot:
                         raise Exception("For two parameters, you must specify one_plot=False")
