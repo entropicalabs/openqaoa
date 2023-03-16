@@ -56,10 +56,9 @@ class BinPacking(Problem):
             self.n_bins = self.n_items
         else:
             self.n_bins = n_bins
-        if len(weights) > 0:
-            self.solution = self.solution_dict()
-            self.cplex_model = self.docplex_model()
-            self.n_vars = self.cplex_model.number_of_binary_variables
+        self.solution = self.solution_dict()
+        self.cplex_model = self.docplex_model()
+        self.n_vars = self.cplex_model.number_of_binary_variables
 
     def solution_dict(self):
         solution = {f"y_{i}": None for i in range(self.n_bins)}
