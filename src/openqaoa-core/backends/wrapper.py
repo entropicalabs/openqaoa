@@ -32,7 +32,7 @@ class TwirlingWrapper(BaseWrapper):
         super().__init__(backend)
         self.n_batches = n_batches
     
-    def get_counts(self, params, n_shots):
+    def get_counts(self, params, n_shots = None):
         # list of integers whose binary representation signifies which qubits or be flipped at every batch 
         s_list = [] 
         for _ in range(0, self.n_batches):
@@ -40,26 +40,27 @@ class TwirlingWrapper(BaseWrapper):
         s_list = [3, 0, 1, 2] # TESTING ONLY, can be specified by the user 
         #s_list = [1, 1, 1, 1]
         
-        n_shots_batch = int(self.backend.n_shots / self.n_batches)
+        n_shots = self.backend.n_shots if n_shots == None else n_shots
+        n_shots_batch = int(n_shots / self.n_batches)
         
         counts = {}
         
         for batch in range(0, self.n_batches):
-            print("batch ", batch)
+            #print("batch ", batch)
             s = s_list[batch]
             
             negated_counts = {}
             
             
             # TODO change the append circuit here
-            print("qaoa abstract circuit ", self.abstract_circuit)
-            print(self.abstract_circuit[0].__dict__)
+            #print("qaoa abstract circuit ", self.abstract_circuit)
+            #print(self.abstract_circuit[0].__dict__)
             
             
             s_binary = format(s, 'b').zfill(self.backend.n_qubits) # convert to binary
             arr = np.fromiter(s_binary, dtype=int)
             negated_qubits = np.where(arr == 1)[0] # where the syndrome has a 1
-            print("qubits to negate ", negated_qubits)
+            #print("qubits to negate ", negated_qubits)
 
             # create a new copy of the initial abstract circuit
             append_abstract_circuit = []
@@ -67,21 +68,21 @@ class TwirlingWrapper(BaseWrapper):
             for negated_qubit in negated_qubits:
                 append_abstract_circuit.append(XGateMap(qubit_1 = negated_qubit))
                 
-            print("append abstract circuit ", append_abstract_circuit)
+            #print("append abstract circuit ", append_abstract_circuit)
             #print("append abstract circuit ", append_abstract_circuit[0].__dict__)
             
             # TODO:
             self.backend.append_state = self.backend.from_abstract_to_real(append_abstract_circuit)
         
             counts_batch = self.backend.get_counts(params, n_shots_batch) # should call the original get_counts of the specific backend
-            print(" batch counts before negating ", counts_batch)
+            #print(" batch counts before negating ", counts_batch)
             
             # consider putting this in utilities.py, similar to permuted_counts with SWAP gates (?)
             for key in counts_batch.keys():   
                 negated_key = s ^ int(key, 2)  # bitwise XOR to classically negate randomly chosen qubits, specified by s
                 negated_counts.update([(format(negated_key, 'b').zfill(self.backend.n_qubits), counts_batch[key])])  # make sure that the key is of the correct length 
             
-            print("negated counts ", negated_counts)
+            #print("negated counts ", negated_counts)
             
             # Add to the final counts dict
             for key in negated_counts:
@@ -90,7 +91,9 @@ class TwirlingWrapper(BaseWrapper):
                 else:
                     counts.update([(key, negated_counts[key])])
         
-        print("final counts ", counts)
+        #print("final counts ", counts)
+        
+        self.measurement_outcomes = counts
         
         return counts
         

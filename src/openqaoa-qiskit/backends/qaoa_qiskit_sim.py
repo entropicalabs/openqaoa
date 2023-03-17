@@ -35,9 +35,11 @@ from openqaoa.qaoa_components.ansatz_constructor import (
     RZXGateMap,
 )
 
+from .qaoa_qiskit_base import QAOAQiskitBaseBackend
+
 
 class QAOAQiskitBackendShotBasedSimulator(
-    QAOABaseBackendShotBased, QAOABaseBackendParametric
+    QAOABaseBackendShotBased, QAOABaseBackendParametric, QAOAQiskitBaseBackend
 ):
     """
     Local Shot-based simulators offered by Qiskit
