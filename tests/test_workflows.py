@@ -1002,13 +1002,14 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # check QAOA dump
         file_name = "test_dump_qaoa.json"
-        experiment_id, atomic_id = (
+        project_id, experiment_id, atomic_id = (
+            qaoa.header["project_id"],
             qaoa.header["experiment_id"],
             qaoa.header["atomic_id"],
         )
-        full_name = f"{experiment_id}--{atomic_id}--{file_name}"
+        full_name = f"{project_id}--{experiment_id}--{atomic_id}--{file_name}"
 
-        qaoa.dump(file_name, indent=None)
+        qaoa.dump(file_name, indent=None, prepend_id=True)
         assert os.path.isfile(full_name), "Dump file does not exist"
         with open(full_name, "r") as file:
             assert file.read() == qaoa.dumps(
@@ -1016,13 +1017,13 @@ class TestingVanillaQAOA(unittest.TestCase):
             ), "Dump file does not contain the correct data"
         os.remove(full_name)
 
-        # check RQAOA dump whitout prepending the experiment_id and atomic_id
+        # check QAOA dump whitout prepending the experiment_id and atomic_id
         qaoa.dump(file_name, indent=None, prepend_id=False)
         assert os.path.isfile(
             file_name
         ), "Dump file does not exist, when not prepending the experiment_id and atomic_id"
 
-        # check RQAOA dump fails when the file already exists
+        # check QAOA dump fails when the file already exists
         error = False
         try:
             qaoa.dump(file_name, indent=None, prepend_id=False)
@@ -1035,7 +1036,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert os.path.isfile(file_name), "Dump file does not exist, when overwriting"
         os.remove(file_name)
 
-        # check RQAOA dump fails when prepend_id is True and file_name is not given
+        # check QAOA dump fails when prepend_id is True and file_name is not given
         error = False
         try:
             qaoa.dump(prepend_id=False)
@@ -1045,16 +1046,26 @@ class TestingVanillaQAOA(unittest.TestCase):
             error
         ), "Dump file does not fail when prepend_id is True and file_name is not given"
 
-        # check you can dump to a file with no arguments
-        qaoa.dump()
+        # check QAOA dump with no arguments
+        error = False
+        try:
+            qaoa.dump()
+        except ValueError:
+            error = True
+        assert (
+            error
+        ), "Dump file does not fail when no arguments are given, should be the same as dump(prepend_id=False)"
+
+        # check you can dump to a file with no arguments, just prepend_id=True
+        qaoa.dump(prepend_id=True)
         assert os.path.isfile(
-            f"{experiment_id}--{atomic_id}.json"
+            f"{project_id}--{experiment_id}--{atomic_id}.json"
         ), "Dump file does not exist, when no name is given"
-        os.remove(f"{experiment_id}--{atomic_id}.json")
+        os.remove(f"{project_id}--{experiment_id}--{atomic_id}.json")
 
         # check QAOA dump deleting some keys
         exclude_keys = ["schedule", "singlet"]
-        qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
+        qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name
         ), "Dump file does not exist, when deleting some keys"
@@ -1065,7 +1076,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         os.remove(full_name)
 
         # check QAOA dump with compression
-        qaoa.dump(file_name, compresslevel=2, indent=None)
+        qaoa.dump(file_name, compresslevel=2, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name + ".gz"
         ), "Dump file does not exist, when compressing"
@@ -1333,6 +1344,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             error
         ), "RQAOA.from_dict should raise an error when using a QAOA dictionary"
 
+
     def test_qaoa_evaluate_circuit(self):
         """
         test the evaluate_circuit method
@@ -1480,6 +1492,20 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert list(result.keys()) == ['cost'], "When using an analytical simulator, `evaluate_circuit` should return only the cost"
         assert abs(result['cost']) >= 0, "When using an analytical simulator, `evaluate_circuit` should return a cost"
 
+    
+    def test_change_properties_after_compilation(self):
+        device = create_device(location='local', name='qiskit.shot_simulator')
+        q = QAOA()
+        q.compile(QUBO.random_instance(4))
+        
+        with self.assertRaises(ValueError):
+            q.set_device(device)
+        with self.assertRaises(ValueError):
+            q.set_circuit_properties(p=1, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        with self.assertRaises(ValueError):
+            q.set_backend_properties(prepend_state=None, append_state=None)
+        with self.assertRaises(ValueError):
+            q.set_classical_optimizer(maxiter=100, method='vgd', jac="finite_difference")
 
 
 
@@ -2026,13 +2052,14 @@ class TestingRQAOA(unittest.TestCase):
 
         # check RQAOA dump
         file_name = "test_dump_rqaoa.json"
-        experiment_id, atomic_id = (
+        project_id, experiment_id, atomic_id = (
+            rqaoa.header["project_id"],
             rqaoa.header["experiment_id"],
             rqaoa.header["atomic_id"],
         )
-        full_name = f"{experiment_id}--{atomic_id}--{file_name}"
+        full_name = f"{project_id}--{experiment_id}--{atomic_id}--{file_name}"
 
-        rqaoa.dump(file_name, indent=None)
+        rqaoa.dump(file_name, prepend_id=True, indent=None)
         assert os.path.isfile(full_name), "Dump file does not exist"
         with open(full_name, "r") as file:
             assert file.read() == rqaoa.dumps(
@@ -2069,16 +2096,26 @@ class TestingRQAOA(unittest.TestCase):
             error
         ), "Dump file does not fail when prepend_id is True and file_name is not given"
 
-        # check you can dump to a file with no arguments
-        rqaoa.dump()
+        # check RQAOA dump with no arguments
+        error = False
+        try:
+            rqaoa.dump()
+        except ValueError:
+            error = True
+        assert (
+            error
+        ), "Dump file does not fail when no arguments are given, should be the same as dump(prepend_id=False)"
+
+        # check you can dump to a file with no arguments, just prepend_id=True
+        rqaoa.dump(prepend_id=True)
         assert os.path.isfile(
-            f"{experiment_id}--{atomic_id}.json"
+            f"{project_id}--{experiment_id}--{atomic_id}.json"
         ), "Dump file does not exist, when no name is given"
-        os.remove(f"{experiment_id}--{atomic_id}.json")
+        os.remove(f"{project_id}--{experiment_id}--{atomic_id}.json")
 
         # check RQAOA dump deleting some keys
         exclude_keys = ["schedule", "singlet"]
-        rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
+        rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name
         ), "Dump file does not exist, when deleting some keys"
@@ -2089,7 +2126,7 @@ class TestingRQAOA(unittest.TestCase):
         os.remove(full_name)
 
         # check RQAOA dump with compression
-        rqaoa.dump(file_name, compresslevel=2, indent=None)
+        rqaoa.dump(file_name, compresslevel=2, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name + ".gz"
         ), "Dump file does not exist, when compressing"
@@ -2289,17 +2326,21 @@ class TestingRQAOA(unittest.TestCase):
                 "file_name": "test_dumping_step_by_step",
                 "compresslevel": 2,
                 "indent": None,
+                "prepend_id": True,
             },
         )
 
         # create list of expected file names
+        project_id = "None"
         experiment_id, atomic_id = r.header["experiment_id"], r.header["atomic_id"]
         file_names = {
-            id: experiment_id + "--" + id + "--" + "test_dumping_step_by_step.json.gz"
+            id: project_id + "--" + experiment_id + "--" + id + "--" + "test_dumping_step_by_step.json.gz"
             for id in r.result["atomic_ids"].values()
         }
         file_names[atomic_id] = (
-            experiment_id
+            project_id
+            + "--"
+            + experiment_id
             + "--"
             + atomic_id
             + "--"
@@ -2518,6 +2559,22 @@ class TestingRQAOA(unittest.TestCase):
         assert (
             error
         ), "Optimizer.from_dict should raise an error when using a RQAOA dictionary"
+
+    def test_change_properties_after_compilation(self):
+        device = create_device(location='local', name='qiskit.shot_simulator')
+        r = RQAOA()
+        r.compile(QUBO.random_instance(4))
+        
+        with self.assertRaises(ValueError):
+            r.set_device(device)
+        with self.assertRaises(ValueError):
+            r.set_circuit_properties(p=1, param_type='standard', init_type='rand', mixer_hamiltonian='x')
+        with self.assertRaises(ValueError):
+            r.set_backend_properties(prepend_state=None, append_state=None)
+        with self.assertRaises(ValueError):
+            r.set_classical_optimizer(maxiter=100, method='vgd', jac="finite_difference")
+        with self.assertRaises(ValueError):
+            r.set_rqaoa_parameters(rqaoa_type='adaptive', n_cutoff=3, n_steps=3)
 
 
 if __name__ == "__main__":
