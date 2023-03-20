@@ -126,6 +126,8 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         assert exception, "Extended params didn't fail"
 
         # Testing for Fourier params
+        q = QAOA()
+        q.set_device(analytical_device)
         q.set_circuit_properties(
             p=1, param_type="fourier", init_type="rand", mixer_hamiltonian="x"
         )
