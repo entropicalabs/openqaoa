@@ -13,7 +13,7 @@ from ...qaoa_components import (
 )
 from ...utilities import get_mixer_hamiltonian, generate_timestamp
 from ...optimizers.qaoa_optimizer import get_optimizer
-from ...backends.wrapper import TwirlingWrapper
+from ...backends.wrapper import SPAMTwirlingWrapper
 
 
 class QAOA(Workflow):
@@ -244,14 +244,14 @@ class QAOA(Workflow):
         )
         
         backend_dict = self.backend_properties.__dict__.copy()
-        backend_dict.pop("twirling")
-        backend_dict.pop("twirling_options")
+        backend_dict.pop("spam_twirling")
+        backend_dict.pop("spam_twirling_options")
         
         self.backend = get_qaoa_backend(
             qaoa_descriptor=self.qaoa_descriptor,
             device=self.device,
-            wrapper=TwirlingWrapper if self.backend_properties.twirling else None,
-            wrapper_options=self.backend_properties.twirling_options,
+            wrapper=SPAMTwirlingWrapper if self.backend_properties.spam_twirling else None,
+            wrapper_options=self.backend_properties.spam_twirling_options,
             **backend_dict,
         )
 

@@ -27,17 +27,25 @@ class BaseWrapper(VQABaseBackend):
         return self.backend.exact_solution(*args, **kwargs)
     
 
-class TwirlingWrapper(BaseWrapper):
+class SPAMTwirlingWrapper(BaseWrapper):
     def __init__(self, backend, n_batches):
         super().__init__(backend)
         self.n_batches = n_batches
     
     def get_counts(self, params, n_shots = None):
+        '''
+        Modified function to...
+            divide into batches
+            change the abstract circuit (deepcopy) according to the schedule, s.
+            get the counts and classically negate them
+            combine all batches into a count dict under BFA
+        '''
         # list of integers whose binary representation signifies which qubits or be flipped at every batch 
         s_list = [] 
         for _ in range(0, self.n_batches):
             s_list.append(random.getrandbits(self.backend.n_qubits)) 
-        s_list = [3, 0, 1, 2] # TESTING ONLY, can be specified by the user 
+        #print("negating schedule ", s_list)
+        #s_list = [3, 0, 1, 2] # TESTING ONLY, can be specified by the user 
         #s_list = [1, 1, 1, 1]
         
         n_shots = self.backend.n_shots if n_shots == None else n_shots
@@ -50,13 +58,7 @@ class TwirlingWrapper(BaseWrapper):
             s = s_list[batch]
             
             negated_counts = {}
-            
-            
-            # TODO change the append circuit here
-            #print("qaoa abstract circuit ", self.abstract_circuit)
-            #print(self.abstract_circuit[0].__dict__)
-            
-            
+           
             s_binary = format(s, 'b').zfill(self.backend.n_qubits) # convert to binary
             arr = np.fromiter(s_binary, dtype=int)
             negated_qubits = np.where(arr == 1)[0] # where the syndrome has a 1
@@ -67,11 +69,7 @@ class TwirlingWrapper(BaseWrapper):
 
             for negated_qubit in negated_qubits:
                 append_abstract_circuit.append(XGateMap(qubit_1 = negated_qubit))
-                
-            #print("append abstract circuit ", append_abstract_circuit)
-            #print("append abstract circuit ", append_abstract_circuit[0].__dict__)
             
-            # TODO:
             self.backend.append_state = self.backend.from_abstract_to_real(append_abstract_circuit)
         
             counts_batch = self.backend.get_counts(params, n_shots_batch) # should call the original get_counts of the specific backend
@@ -100,11 +98,7 @@ class TwirlingWrapper(BaseWrapper):
         
     def expectation(self, params, n_shots=None) -> float:
         '''
-        divide into batches
-        change the abstract circuit (deepcopy) according to the schedule, s.
-        get the counts and classically negate them
-        combine all batches into a count dict under BFA
-        use this dict to compute expectation values Zi and ZiZj
+        use the total counts under BFA to compute expectation values Zi and ZiZj
         correct these expectation values with the calibration data, lambda_i, lambda_ij
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation 
         '''

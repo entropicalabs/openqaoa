@@ -237,8 +237,8 @@ class BackendProperties(WorkflowProperties):
         active_reset: Optional[bool] = None,
         rewiring: Optional[str] = None,
         disable_qubit_rewiring: Optional[bool] = None,
-        twirling: bool = False,
-        twirling_options: dict = {},
+        spam_twirling: bool = False,
+        spam_twirling_options: dict = {},
     ):
 
         self.init_hadamard = init_hadamard
@@ -253,8 +253,8 @@ class BackendProperties(WorkflowProperties):
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.disable_qubit_rewiring = disable_qubit_rewiring
-        self.twirling = twirling
-        self.twirling_options = twirling_options
+        self.spam_twirling = spam_twirling
+        self.spam_twirling_options = spam_twirling_options
 
     # @property
     # def cvar_alpha(self):
