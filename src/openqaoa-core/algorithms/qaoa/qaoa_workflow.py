@@ -332,7 +332,7 @@ class QAOA(Workflow):
             A dictionary containing the results of the evaluation:
             - "expectation": the expectation value of the cost Hamiltonian
             - "uncertainty": the uncertainty of the expectation value of the cost Hamiltonian
-            - "measurement_outcome": either the state of the QAOA circuit output (if the QAOA circuit is
+            - "measurement_results": either the state of the QAOA circuit output (if the QAOA circuit is
             evaluated on a state simulator) or the counts of the QAOA circuit output
             (if the QAOA circuit is evaluated on a QPU or shot-based simulator)
         """
@@ -386,7 +386,7 @@ class QAOA(Workflow):
         output_dict = {
             "cost": None,
             "uncertainty": None,
-            "measurement_outcome": None,
+            "measurement_results": None,
         }
         # if the backend is the analytical simulator, we just return the expectation value of the cost Hamiltonian
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
@@ -394,12 +394,12 @@ class QAOA(Workflow):
 
         else:
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
-            measurement_outcome = self.backend.measurement_outcome
+            measurement_results = self.backend.measurement_outcomes
             output_dict.update(
                 {
                     "cost": cost,
                     "uncertainty": uncertainty,
-                    "measurement_outcome": measurement_outcome,
+                    "measurement_results": measurement_results,
                 }
             )
         return output_dict
