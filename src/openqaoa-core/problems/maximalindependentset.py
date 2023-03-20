@@ -167,4 +167,6 @@ class MIS(Problem):
         pos = nx.circular_layout(self.G)
         num_vertices = self.G.number_of_nodes()
         nx.draw(self.G, pos=pos, edgecolors="black", labels={i:str(i) for i in range(num_vertices)}, node_color=[colors[solution[f"x_{i}"]] for i in range(num_vertices)], ax=ax, edge_color="#0B2340")
+        ax.plot([],[], marker="o", markersize=10, label="MIS", linewidth=0,color=colors[1], markeredgecolor="black")
+        ax.legend(loc="upper center", bbox_to_anchor=[0.5, 1.1])
         return fig
