@@ -149,6 +149,9 @@ class QAOAQiskitBackendShotBasedSimulator(
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = parametric_circuit.bind_parameters(memory_map)
         #print(new_parametric_circuit)
+        #print(self.append_state)
+        #print(type(self.append_state))
+        self.append_state = []
         return new_parametric_circuit
 
     @property

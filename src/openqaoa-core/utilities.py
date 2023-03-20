@@ -734,7 +734,7 @@ def energy_expectation(hamiltonian: Hamiltonian, measurement_counts: dict) -> fl
 
         # Compute configuration energy
         config_energy = sum(
-            [
+            [ 
                 hamiltonian.coeffs[i]
                 if num_ones % 2 == 0
                 else -1 * hamiltonian.coeffs[i]
