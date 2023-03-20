@@ -3,10 +3,8 @@ from os import getcwd
 
 current_path = getcwd()
 
-# with open("README.md", "r") as fh:
-#     long_description = fh.read()
-
-long_description = ""
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 with open("openqaoa_braket/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
