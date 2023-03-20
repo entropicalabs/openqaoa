@@ -86,8 +86,8 @@ def test_14_benchmark():
 
 def test_X_dumping_data():
     notebook_test_function("./examples/X_dumping_data.ipynb")
-       
-       
+
+
 ### Community Tutorials
 
 # @pytest.mark.notebook

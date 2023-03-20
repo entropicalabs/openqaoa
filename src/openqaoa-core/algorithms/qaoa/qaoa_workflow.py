@@ -16,7 +16,9 @@ from ...qaoa_components import (
     QAOADescriptor,
     create_qaoa_variational_params,
 )
-from ...qaoa_components.variational_parameters.variational_baseparams import QAOAVariationalBaseParams
+from ...qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
 from ...utilities import get_mixer_hamiltonian, generate_timestamp
 from ...optimizers.qaoa_optimizer import get_optimizer
 
@@ -310,9 +312,10 @@ class QAOA(Workflow):
         if verbose:
             print(f"optimization completed.")
         return
-    
+
     def evaluate_circuit(
-        self, params: Union[List[float], Dict[str, List[float]], QAOAVariationalBaseParams]
+        self,
+        params: Union[List[float], Dict[str, List[float]], QAOAVariationalBaseParams],
     ):
         """
         A method to evaluate the QAOA circuit at a given set of parameters
@@ -334,9 +337,9 @@ class QAOA(Workflow):
         """
 
         # before evaluating the circuit we check that the QAOA object has been compiled
-        if self.compiled == False: raise ValueError("Please compile the QAOA before optimizing it!")
+        if self.compiled == False:
+            raise ValueError("Please compile the QAOA before optimizing it!")
 
-        
         ## Check the type of the input parameters and save them as a QAOAVariationalBaseParams object at the variable `params_obj`
 
         # if the parameters are passed as a dictionary we copy and update the variational parameters of the QAOA object
@@ -344,13 +347,17 @@ class QAOA(Workflow):
             params_obj = deepcopy(self.variate_params)
             # we check that the dictionary contains all the parameters of the QAOA object that are not empty
             for key, value in params_obj.asdict().items():
-                if value.size > 0: 
-                    assert key in params.keys(), f"The parameter `{key}` is missing from the input dictionary"
+                if value.size > 0:
+                    assert (
+                        key in params.keys()
+                    ), f"The parameter `{key}` is missing from the input dictionary"
             params_obj.update_from_dict(params)
 
         # if the parameters are passed as a list we copy and update the variational parameters of the QAOA object
         elif isinstance(params, list) or isinstance(params, np.ndarray):
-            assert len(params) == len(self.variate_params), "The number of parameters does not match the number of parameters in the QAOA circuit"
+            assert len(params) == len(
+                self.variate_params
+            ), "The number of parameters does not match the number of parameters in the QAOA circuit"
             params_obj = deepcopy(self.variate_params)
             params_obj.update_from_raw(params)
 
@@ -360,31 +367,28 @@ class QAOA(Workflow):
 
         # if the parameters are passed in a different format, we raise an error
         else:
-            raise TypeError(f'The input params must be a list or a dictionary. Instead, received {type(params)}')
-        
-        
+            raise TypeError(
+                f"The input params must be a list or a dictionary. Instead, received {type(params)}"
+            )
+
         ## Evaluate the QAOA circuit and return the results
 
         # if the backend is the analytical simulator, we just return the expectation value of the cost Hamiltonian
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
-            return {'cost': self.backend.expectation(params_obj)[0]}
+            return {"cost": self.backend.expectation(params_obj)[0]}
 
         # if the backend is a statevector simulator, we return the expectation value and the uncertainty of the cost Hamiltonian and the statevector
         if isinstance(self.backend, QAOABaseBackendStatevector):
             state = self.backend.wavefunction(params_obj)
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
-            return {
-                'cost': cost,
-                'uncertainty': uncertainty,
-                'state': state
-            }
+            return {"cost": cost, "uncertainty": uncertainty, "state": state}
 
         # if the backend is a QPU or a shot-based simulator, we return the expectation value and the uncertainty of the cost Hamiltonian and the counts
         counts = self.backend.get_counts(params_obj)
         cost = cost_function(
-            counts, 
-            self.backend.qaoa_descriptor.cost_hamiltonian, 
-            self.backend.cvar_alpha
+            counts,
+            self.backend.qaoa_descriptor.cost_hamiltonian,
+            self.backend.cvar_alpha,
         )
         cost_sq = cost_function(
             counts,
@@ -392,10 +396,10 @@ class QAOA(Workflow):
             self.backend.cvar_alpha,
         )
         return {
-            'cost': cost,
-            'uncertainty': np.sqrt(cost_sq - cost**2),
-            'counts': counts
-        }  
+            "cost": cost,
+            "uncertainty": np.sqrt(cost_sq - cost**2),
+            "counts": counts,
+        }
 
     def _serializable_dict(
         self, complex_to_string: bool = False, intermediate_mesurements: bool = True

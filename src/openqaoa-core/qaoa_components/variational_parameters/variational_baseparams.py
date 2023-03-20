@@ -147,10 +147,12 @@ class QAOAVariationalBaseParams(ABC):
         """
 
         assert isinstance(new_values, dict), f"Expected dict, got {type(new_values)}"
-        
+
         for key, value in new_values.items():
             if key not in self.asdict().keys():
-                raise KeyError(f"'{key}' not in {self.__class__.__name__}, expected keys: {list(self.asdict().keys())}")
+                raise KeyError(
+                    f"'{key}' not in {self.__class__.__name__}, expected keys: {list(self.asdict().keys())}"
+                )
             else:
                 if getattr(self, key).shape != np.array(value).shape:
                     raise ValueError(
