@@ -104,16 +104,17 @@ class SPAMTwirlingWrapper(BaseWrapper):
         """
         need to have access to the lambdas here for correcting
 
-        TODO use energy_expectation(hamiltonian: Hamiltonian, measurement_counts: dict) instead
+        TODO: lambdas should be dictionaries
         """
-        print("Hamiltonian coeffs ", hamiltonian.coeffs) # TODO how are these ordered?
-
         # Initialize the z expectation values and correlation matrix with 0s
         n_qubits = hamiltonian.n_qubits
         exp_vals_z = np.zeros(n_qubits)
         corr_matrix = np.zeros((n_qubits, n_qubits))
-
-
+        
+        terms = [term.qubit_indices for term in hamiltonian.terms]
+        coeffs = [coeff for coeff in hamiltonian.coeffs]
+        hamiltonian_as_dict = dict(zip(terms,coeffs))
+        
         energy = 0
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
@@ -127,7 +128,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
                 exp_vals_z[i] /= lambdas_single[i]
                 #print("Exp value ", exp_vals_z[i])
 
-                energy += exp_vals_z[i] * self.qaoa_descriptor.cost_single_qubit_coeffs[i] # TODO include the coefficientes of the hamiltonian
+                energy += exp_vals_z[i] * self.qaoa_descriptor.cost_single_qubit_coeffs[i] 
                 #print("energy ", energy)
 
             # If two-body term compute correlation
@@ -138,9 +139,11 @@ class SPAMTwirlingWrapper(BaseWrapper):
                 #print("Lambdas double ", lambdas_double[i][j])
 
                 corr_matrix[i][j] /= lambdas_double[i][j]
+                
+                # J_ij = hamiltonian_as_dict[(i,j)]
 
                 #print("Corr matrix ", corr_matrix[i][j])
-                energy += corr_matrix[i][j]  * self.qaoa_descriptor.cost_pair_qubit_coeffs[i]  # TODO that's wrong, or buggy at least, should be a double index
+                energy += corr_matrix[i][j] * hamiltonian_as_dict[(i,j)]  
                 #print("energy ", energy)
 
             # If constant term, ignore
@@ -152,8 +155,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
 
         energy += hamiltonian.constant
 
-        #print("Energy is ", energy)
-
         return energy
     
 
@@ -164,9 +165,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         correct these expectation values with the calibration data, lambda_i, lambda_ij
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation 
         '''
-        print(self.qaoa_descriptor)
-        print(self.qaoa_descriptor.cost_single_qubit_coeffs)
-        
         counts = self.get_counts(params, n_shots)
         
         hamiltonian = self.backend.qaoa_descriptor.cost_hamiltonian
@@ -174,6 +172,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         calibration = False
         
         if calibration:
+            # TODO: lambdas should be dictionaries
             lambdas_single, lambdas_double = exp_val_hamiltonian_termwise(variational_params = params,
                                                                qaoa_backend = self.backend,
                                                                hamiltonian = hamiltonian,
@@ -215,7 +214,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
                              [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
                               0.      ]]
             
-            # TODO doesn't work for weights
+            
             cost = self.expectation_value_spam_twirled(counts, hamiltonian, lambdas_single, lambdas_double)
             
             
