@@ -1378,11 +1378,8 @@ class TestingVanillaQAOA(unittest.TestCase):
                 abs(result["uncertainty"]) > 0
             ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return an uncertanty, here uncertainty is {result['uncertainty']}"
             assert (
-                len(result["state"]) > 0
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a state when using a state-based simulator"
-            assert (
-                not "counts" in result
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should not return counts when using a state-based simulator"
+                len(result["measurement_results"]) > 0
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a wavefunction when using a state-based simulator"
 
             # evaluate the circuit with a list of params, taking the params from the dict, so we should get the same result
             params2 = []
@@ -1413,7 +1410,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                 result4["cost"],
                 result4["uncertainty"],
             ) = q.backend.expectation_w_uncertainty(params_obj)
-            result4["state"] = q.backend.wavefunction(params_obj)
+            result4["measurement_results"] = q.backend.wavefunction(params_obj)
             assert (
                 result == result4
             ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing the optimized params manually"
@@ -1500,11 +1497,8 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.compile(problem)
         result = q.evaluate_circuit([1, 2, 1, 2, 1, 2])
         assert isinstance(
-            result["counts"], dict
+            result["measurement_results"], dict
         ), "When using a shot-based simulator, `evaluate_circuit` should return a dict of counts"
-        assert (
-            not "state" in result
-        ), "When using a shot-based simulator, `evaluate_circuit` should not return a state"
         assert (
             abs(result["cost"]) >= 0
         ), "When using a shot-based simulator, `evaluate_circuit` should return a cost"
@@ -1513,21 +1507,21 @@ class TestingVanillaQAOA(unittest.TestCase):
         ), "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
 
         cost = cost_function(
-            result["counts"],
+            result["measurement_results"],
             q.backend.qaoa_descriptor.cost_hamiltonian,
             q.backend.cvar_alpha,
         )
         cost_sq = cost_function(
-            result["counts"],
+            result["measurement_results"],
             q.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
             q.backend.cvar_alpha,
         )
         uncertainty = np.sqrt(cost_sq - cost**2)
         assert (
-            cost == result["cost"]
+            np.round(cost, 12) == result["cost"]
         ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct cost"
         assert (
-            uncertainty == result["uncertainty"]
+            np.round(uncertainty, 12) == result["uncertainty"]
         ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct uncertainty"
 
         # check that it works with analytical simulator
@@ -1537,12 +1531,15 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.set_circuit_properties(p=1, param_type="standard")
         q.compile(problem)
         result = q.evaluate_circuit([1, 2])
-        assert list(result.keys()) == [
-            "cost"
-        ], "When using an analytical simulator, `evaluate_circuit` should return only the cost"
         assert (
             abs(result["cost"]) >= 0
         ), "When using an analytical simulator, `evaluate_circuit` should return a cost"
+        assert (
+            result["uncertainty"] == None
+        ), "When using an analytical simulator, `evaluate_circuit` should return uncertainty None"
+        assert (
+            result["measurement_results"] == None
+        ), "When using an analytical simulator, `evaluate_circuit` should return no measurement results"
 
     def test_change_properties_after_compilation(self):
         device = create_device(location="local", name="qiskit.shot_simulator")

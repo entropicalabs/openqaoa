@@ -394,7 +394,11 @@ class QAOA(Workflow):
 
         else:
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
-            measurement_results = self.backend.measurement_outcomes
+            measurement_results = (
+                self.backend.measurement_outcomes
+                if isinstance(self.backend.measurement_outcomes, dict)
+                else self.backend.measurement_outcomes.tolist()
+            )
             output_dict.update(
                 {
                     "cost": cost,
