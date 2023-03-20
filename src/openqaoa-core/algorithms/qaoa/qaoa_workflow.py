@@ -322,7 +322,7 @@ class QAOA(Workflow):
 
         Parameters
         ----------
-        params: list or dict or None
+        params: list or dict or QAOAVariationalBaseParams or None
             List of parameters or dictionary of parameters. Which will be used to evaluate the QAOA circuit.
             If None, the variational parameters of the QAOA object will be used.
 
@@ -332,8 +332,9 @@ class QAOA(Workflow):
             A dictionary containing the results of the evaluation:
             - "expectation": the expectation value of the cost Hamiltonian
             - "uncertainty": the uncertainty of the expectation value of the cost Hamiltonian
-            - "state": the state of the QAOA circuit output (if the QAOA circuit is evaluated on a state simulator)
-            - "counts": the counts of the QAOA circuit output (if the QAOA circuit is evaluated on a QPU or shot-based simulator)
+            - "measurement_outcome": either the state of the QAOA circuit output (if the QAOA circuit is
+                                     evaluated on a state simulator) or the counts of the QAOA circuit output
+                                     (if the QAOA circuit is evaluated on a QPU or shot-based simulator)
         """
 
         # before evaluating the circuit we check that the QAOA object has been compiled
@@ -363,6 +364,16 @@ class QAOA(Workflow):
 
         # if the parameters are passed as a QAOAVariationalBaseParams object we just take it as it is
         elif isinstance(params, QAOAVariationalBaseParams):
+            # check whether the input params object is supported for circuit evaluation
+            assert (
+                len(self.variate_params.mixer_1q_angles) == len(params.mixer_1q_angles)
+                and len(self.variate_params.mixer_2q_angles)
+                == len(self.variate_params.mixer_2q_angles)
+                and len(self.variate_params.cost_1q_angles)
+                == len(self.variate_params.cost_1q_angles)
+                and len(self.variate_params.cost_2q_angles)
+                == len(self.variate_params.cost_2q_angles)
+            ), "Specify a supported params object"
             params_obj = params
 
         # if the parameters are passed in a different format, we raise an error
@@ -372,34 +383,26 @@ class QAOA(Workflow):
             )
 
         ## Evaluate the QAOA circuit and return the results
-
+        output_dict = {
+            "cost": None,
+            "uncertainty": None,
+            "measurement_outcome": None,
+        }
         # if the backend is the analytical simulator, we just return the expectation value of the cost Hamiltonian
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
-            return {"cost": self.backend.expectation(params_obj)[0]}
+            output_dict.update({"cost": self.backend.expectation(params_obj)[0]})
 
-        # if the backend is a statevector simulator, we return the expectation value and the uncertainty of the cost Hamiltonian and the statevector
-        if isinstance(self.backend, QAOABaseBackendStatevector):
-            state = self.backend.wavefunction(params_obj)
+        else:
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
-            return {"cost": cost, "uncertainty": uncertainty, "state": state}
-
-        # if the backend is a QPU or a shot-based simulator, we return the expectation value and the uncertainty of the cost Hamiltonian and the counts
-        counts = self.backend.get_counts(params_obj)
-        cost = cost_function(
-            counts,
-            self.backend.qaoa_descriptor.cost_hamiltonian,
-            self.backend.cvar_alpha,
-        )
-        cost_sq = cost_function(
-            counts,
-            self.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
-            self.backend.cvar_alpha,
-        )
-        return {
-            "cost": cost,
-            "uncertainty": np.sqrt(cost_sq - cost**2),
-            "counts": counts,
-        }
+            measurement_outcome = self.backend.measurement_outcome
+            output_dict.update(
+                {
+                    "cost": cost,
+                    "uncertainty": uncertainty,
+                    "measurement_outcome": measurement_outcome,
+                }
+            )
+        return output_dict
 
     def _serializable_dict(
         self, complex_to_string: bool = False, intermediate_mesurements: bool = True
