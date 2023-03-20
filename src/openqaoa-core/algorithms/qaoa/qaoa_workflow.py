@@ -333,8 +333,8 @@ class QAOA(Workflow):
             - "expectation": the expectation value of the cost Hamiltonian
             - "uncertainty": the uncertainty of the expectation value of the cost Hamiltonian
             - "measurement_outcome": either the state of the QAOA circuit output (if the QAOA circuit is
-                                     evaluated on a state simulator) or the counts of the QAOA circuit output
-                                     (if the QAOA circuit is evaluated on a QPU or shot-based simulator)
+            evaluated on a state simulator) or the counts of the QAOA circuit output
+            (if the QAOA circuit is evaluated on a QPU or shot-based simulator)
         """
 
         # before evaluating the circuit we check that the QAOA object has been compiled
