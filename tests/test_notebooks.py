@@ -79,6 +79,11 @@ def test_13_optimizers():
     notebook_test_function("./examples/13_optimizers.ipynb")
 
 
+@pytest.mark.qpu
+def test_14_benchmark():
+    notebook_test_function("./examples/14_qaoa_benchmark.ipynb")
+
+
 def test_X_dumping_data():
     notebook_test_function("./examples/X_dumping_data.ipynb")
        
