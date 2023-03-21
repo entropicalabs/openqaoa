@@ -6,6 +6,7 @@ from .devices_core import DeviceBase, DeviceLocal
 
 PLUGIN_DICT = plugin_finder_dict()
 
+
 def device_class_arg_mapper(
     device_class: DeviceBase,
     hub: str = None,
@@ -25,16 +26,16 @@ def device_class_arg_mapper(
     resource_id: str = None,
     az_location: str = None,
 ) -> dict:
-    
+
     DEVICE_ARGS_MAPPER = dict()
-    
+
     local_vars = locals()
-    
+
     for each_plugin_entrypoint in PLUGIN_DICT.values():
-        if hasattr(each_plugin_entrypoint, 'device_args'):
+        if hasattr(each_plugin_entrypoint, "device_args"):
             for each_key, each_value in each_plugin_entrypoint.device_args.items():
                 # Convert list of accepted parameters into a dictionary with
-                # the name of the variable as a key and the local value of the 
+                # the name of the variable as a key and the local value of the
                 # variable
                 var_values = [local_vars[each_name] for each_name in each_value]
                 input_dict = {each_key: dict(zip(each_value, var_values))}
@@ -46,6 +47,7 @@ def device_class_arg_mapper(
         if value is not None
     }
     return final_device_kwargs
+
 
 def create_device(location: str, name: str, **kwargs):
     """
@@ -68,14 +70,21 @@ def create_device(location: str, name: str, **kwargs):
     """
 
     location = location.lower()
-    
+
     location_device_mapper = dict()
-    location_device_mapper.update({'local': DeviceLocal})
-    location_device_mapper.update(zip([each_value.device_location for each_value in PLUGIN_DICT.values()], [each_value.device_plugin for each_value in PLUGIN_DICT.values()]))
-    
+    location_device_mapper.update({"local": DeviceLocal})
+    location_device_mapper.update(
+        zip(
+            [each_value.device_location for each_value in PLUGIN_DICT.values()],
+            [each_value.device_plugin for each_value in PLUGIN_DICT.values()],
+        )
+    )
+
     if location in location_device_mapper.keys():
         device_class = location_device_mapper[location]
     else:
-        raise ValueError(f"Invalid device location, Choose from: {location}")
+        raise ValueError(
+            f"Invalid device location, Choose from: {location_device_mapper.keys()}"
+        )
 
     return device_class(device_name=name, **kwargs)
