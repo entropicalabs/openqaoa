@@ -748,6 +748,9 @@ def energy_expectation(hamiltonian: Hamiltonian, measurement_counts: dict) -> fl
     # Normalize with respect to the number of shots
     energy *= 1 / shots
 
+    # Add constant term in Hamiltonian
+    energy += hamiltonian.constant
+
     return energy
 
 

@@ -13,6 +13,7 @@ Key features of OpenQAOA:
    * IBMQ devices
    * Rigettis' Quantum Cloud Services
    * Amazon Braket
+   * Microsoft's Azure
    * Local simulators (including Rigettis' QVM, IBM's Qiskit, and Entropica Labs' vectorized simulator)
 * Multiple parametrization strategies:
    * Standard, Fourier, and Annealing
@@ -42,12 +43,12 @@ Alternatively, you can install manually directly from the GitHub repository by
 1. Clone the git repository:
 
 ```
-git clone git@github.com:entropicalabs/openqaoa.git
+git clone https://github.com/entropicalabs/openqaoa.git
 ```
 
-2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** for the environment.
+2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** (or newer) for the environment.
 
-3. After cloning the repository `cd openqaoa` and pip install the package. Use the following command for a vanilla install with the `scipy` optimizers:
+3. After cloning the repository `cd openqaoa` and pip install the package. 
 
 ```
 pip install .
@@ -61,7 +62,6 @@ pip install .[tests]
 Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
 
 
-
 Your first QAOA workflow
 -------------------------
 Workflows are a simplified way to run end to end QAOA or RQAOA. In their basic format they consist of the following steps.
@@ -70,11 +70,11 @@ First, create a problem instance. For example, an instance of vertex cover:
 
 .. code-block:: python
 
-   from openqaoa.problems.problem import MinimumVertexCover
+   from openqaoa.problems import MinimumVertexCover
    import networkx
    g = networkx.circulant_graph(6, [1])
    vc = MinimumVertexCover(g, field =1.0, penalty=10)
-   qubo_problem = vc.get_qubo_problem()
+   qubo_problem = vc.qubo
 
 
 Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
@@ -83,7 +83,7 @@ Once the binary problem is defined, the simplest workflow can be defined as
 
 .. code-block:: python
    
-   from openqaoa.workflows.optimizer import QAOA  
+   from openqaoa import QAOA  
    q = QAOA()
    q.compile(qubo_problem)
    q.optimize()
@@ -94,7 +94,7 @@ Workflows can be customised using some convenient setter functions. First, we ne
 
 .. code-block:: python
 
-   from openqaoa.devices import create_device
+   from openqaoa import create_device
    qiskit_sv = create_device(location='local', name='qiskit.statevector_simulator')
    q.set_device(qiskit_sv)
 
@@ -128,17 +128,21 @@ Currently, the available devices are:
      - Please check the IBMQ backends available to your account
    * - `Rigetti's QCS`
      - `[nq-qvm, Aspen-11, Aspen-M-1]`
+   * - `Azure`
+     - OpenQAOA supports all gate-based QPU present on Azure Quantum. For the freshest list, please check the [Azure Quantum documentation](https://azure.microsoft.com/en-us/products/quantum/#features)
 
 With the notation `nq-qvm` it is intended that `n` is a positive integer. For example, `6q-qvm`.
+
+Check the [OpenQAOA Website](https://openqaoa.entropicalabs.com/devices/device/) for further details.
 
 Your first RQAOA workflow
 -------------------------
 
 .. code-block:: python
 
-   from openqaoa.workflows.optimizer import RQAOA
-   r = RQAOA(qaoa = QAOA(), rqaoa_type='adaptive')
-   r.set_rqaoa_parameters(n_max=5, n_cutoff = 5)
+   from openqaoa import RQAOA
+   r = RQAOA()
+   r.set_rqaoa_parameters(rqaoa_type='adaptive', n_max=5, n_cutoff = 5)
    r.compile(qubo_problem)
    r.optimize()
 
@@ -187,7 +191,7 @@ Then proceed by instantiating the backend device
 
 .. code-block:: python
    
-   backend_obj = QAOAvectorizedBackendSimulator(circuit_params = qaoa_descriptor, append_state = None, prepend_state = None, init_hadamard = True)
+   backend_obj = QAOAvectorizedBackendSimulator(qaoa_descriptor = qaoa_descriptor, append_state = None, prepend_state = None, init_hadamard = True)
 
 And finally, create the classical optimizer and minimize the objective function
 
@@ -202,13 +206,13 @@ The result of the optimization will the be accessible as
 
 .. code-block:: python
 
-   optimizer_obj.results_information()
+   optimizer_obj.qaoa_result.asdict()
 
 
 License
 ========
 
-OpenQAOA is released open source under the Apache License, Version 2.0.
+OpenQAOA is released open source under the MIT license
 
 Contents
 ========
@@ -242,6 +246,8 @@ Contents
    notebooks/10_workflows_on_Amazon_braket.ipynb
    notebooks/11_Mixer_example.ipynb
    notebooks/12_testing_azure.ipynb
+   notebooks/13_optimizers.ipynb
+   notebooks/14_qaoa_benchmark.ipynb
    notebooks/X_dumping_data.ipynb
 
 

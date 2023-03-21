@@ -890,7 +890,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # Reshape wavefunction
         wavefn_ = self.wavefn
 
-        self.measurement_outcomes = self.wavefn.flatten()
+        self.measurement_outcomes = wavefn_.flatten()
 
         # Compute the expectation value and its standard deviation
         ham_wf = self.ham_op * wavefn_
@@ -922,7 +922,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # Reshape wavefunction
         wavefn_ = self.wavefn
 
-        self.measurement_outcomes = self.wavefn.flatten()
+        self.measurement_outcomes = wavefn_.flatten()
 
         # Compute the expectation value and its standard deviation
         ham_wf = self.ham_op * wavefn_

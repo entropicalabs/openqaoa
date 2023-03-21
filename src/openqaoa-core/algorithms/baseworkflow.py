@@ -28,6 +28,18 @@ from ..backends.qaoa_backend import (
 )
 
 
+def check_compiled(func):
+    def wrapper(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        if self.compiled:
+            raise ValueError(
+                "Cannot change properties of the object after compilation."
+            )
+        return result
+
+    return wrapper
+
+
 class Workflow(ABC):
     """
     Abstract class to represent an optimizer
@@ -176,6 +188,7 @@ class Workflow(ABC):
 
         self.exp_tags = {**self.exp_tags, **tags}
 
+    @check_compiled
     def set_device(self, device: DeviceBase):
         """ "
         Specify the device to be used by the QAOA.
@@ -190,6 +203,7 @@ class Workflow(ABC):
         """
         self.device = device
 
+    @check_compiled
     def set_backend_properties(self, **kwargs):
         """
         Set the backend properties
@@ -236,6 +250,7 @@ class Workflow(ABC):
         self.backend_properties = BackendProperties(**kwargs)
         return None
 
+    @check_compiled
     def set_classical_optimizer(self, **kwargs):
         """
         Set the parameters for the classical optimizer to be used in the optimizers workflow
@@ -479,7 +494,7 @@ class Workflow(ABC):
         self,
         file_name: str = "",
         file_path: str = "",
-        prepend_id: bool = True,
+        prepend_id: bool = False,
         indent: int = 2,
         compresslevel: int = 0,
         exclude_keys: List[str] = [],
@@ -497,6 +512,10 @@ class Workflow(ABC):
             The name of the json file.
         file_path : str
             The path where the json file will be saved.
+        prepend_id : bool
+            If True, the name will have the following format: '{project_id}--{experiment_id}--{atomic_id}--{file_name}.json'.
+            If False, the name will have the following format: '{file_name}.json'.
+            Default is False.
         indent : int
             The number of spaces to indent the result in the json file.
             If None, the result is not indented.
@@ -518,14 +537,24 @@ class Workflow(ABC):
 
         options = {**options, **{"complex_to_string": True}}
 
+        project_id = (
+            self.header["project_id"]
+            if not self.header["project_id"] is None
+            else "None"
+        )
+
         # get the full name
         if prepend_id == False and file_name == "":
-            raise ValueError("If prepend_id is False, file_name must be specified.")
+            raise ValueError(
+                "dump method missing argument: 'file_name'. Otherwise 'prepend_id' must be specified as True."
+            )
         elif prepend_id == False:
             file = file_path + file_name
         elif file_name == "":
             file = (
                 file_path
+                + project_id
+                + "--"
                 + self.header["experiment_id"]
                 + "--"
                 + self.header["atomic_id"]
@@ -533,6 +562,8 @@ class Workflow(ABC):
         else:
             file = (
                 file_path
+                + project_id
+                + "--"
                 + self.header["experiment_id"]
                 + "--"
                 + self.header["atomic_id"]
