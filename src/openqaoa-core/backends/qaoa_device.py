@@ -7,6 +7,7 @@ from .devices_core import DeviceBase, DeviceLocal
 PLUGIN_DICT = plugin_finder_dict()
 
 
+
 def device_class_arg_mapper(
     device_class: DeviceBase,
     hub: str = None,
@@ -47,7 +48,7 @@ def device_class_arg_mapper(
         if value is not None
     }
     return final_device_kwargs
-
+    
 
 def create_device(location: str, name: str, **kwargs):
     """

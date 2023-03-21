@@ -19,16 +19,19 @@ jobs:
     # The type of runner that the job will run on
     runs-on:  ${{ matrix.os }}
     
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python }}
-        
+      - name: Log in with Azure
+        uses: azure/login@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
       - name: Install OpenQAOA
         run: |
           python -m pip install --user virtualenv
@@ -37,36 +40,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install .[tests]
           pip install ipykernel
-             
-      - name: QVM on ubuntu
-        if: ${{ matrix.os=='ubuntu-latest' }} 
+      - name: Setup IBMQ account
+        env:
+          IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }} 
         run: |
-          find /usr/lib -name "libffi.so*"
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so /usr/lib/x86_64-linux-gnu/libffi.so.6
-          wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
-          tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
-          cd forest-sdk-2.23.0-linux-deb/
-          sudo apt-get update
-          sudo apt-get install -y screen libblas-dev libblas3 libgfortran5 liblapack-dev liblapack3
-          sudo ./forest-sdk-2.23.0-linux-deb.run
-          qvm --version
-          quilc --version
-          echo "Starting qvm and quilc"
-          screen -d -m qvm -S
-          screen -d -m quilc -S
-          cd ..
-          
+          IBMQ_TOKEN=$IBMQ_TOKEN
+          source env/bin/activate
+          python -c'from qiskit import IBMQ; import os; IBMQ.save_account(os.environ.get("IBMQ_TOKEN"))'
+      - name: Setup AWS
+        env:
+          ACCESS_KEY: ${{ secrets.ACCESS_KEY }} 
+          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }} 
+        run: |
+          python -m pip install awscli
+          aws configure set aws_access_key_id $ACCESS_KEY
+          aws configure set aws_secret_access_key $SECRET_ACCESS_KEY
+          aws configure set region us-west-1
+          aws configure set output json
+      - name: Build the docker stack
+        run: |
+          docker login -u AWS -p $(aws ecr get-login-password --region us-east-1) 292282985366.dkr.ecr.us-east-1.amazonaws.com
+          docker network create local_bridge
+          docker build -t amazon-braket-oq-dev .
+          docker-compose up -d
       - name: Run tests
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          python -m pytest -v -m 'not (qpu or api or docker_aws)' 
+          pytest tests/ -v -m '(not qpu or api)' --cov --cov-report=xml:coverage.xml
           
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           files: ./coverage.xml
+
 
   docs:
     runs-on: ubuntu-latest
