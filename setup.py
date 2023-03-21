@@ -6,7 +6,7 @@ current_path = getcwd()
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("src/openqaoa-core/_version.py") as f:
+with open("src/openqaoa-core/openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [

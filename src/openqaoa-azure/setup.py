@@ -11,13 +11,13 @@ with open("openqaoa_azure/_version.py") as f:
 
 requirements = [
     "openqaoa-core=={}".format(version),
-    "openqaoa-qiskit=={}".format(version),
-    "azure-quantum",
-    "qdk",
-    "qiskit-qir",
-    "qiskit-ionq",
-    "azure-quantum[qiskit]",
+    "openqaoa-qiskit=={}".format(version)
 ]
+
+add_requirements = open('requirements.txt').readlines()
+add_requirements = [r.strip() for r in add_requirements]
+
+requirements.append(add_requirements)
 
 setup(
     name="openqaoa-azure",

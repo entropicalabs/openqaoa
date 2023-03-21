@@ -8,39 +8,15 @@ with open("README.md", "r") as fh:
 
 with open("openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
+    
+requirements = open('requirements.txt').readlines()
+requirements = [r.strip() for r in requirements]
 
-requirements = [
-    "pandas>=1.3.5",
-    "sympy>=1.10.1",
-    "numpy>=1.22.3",
-    "networkx>=2.8",
-    "matplotlib>=3.4.3",
-    "scipy>=1.8",
-    "docplex>=2.23.1",
-    "autograd>=1.4",
-    "semantic_version>=2.10",
-    "autoray>=0.3.1",
-    "requests",
-]
+requirements_docs = open('requirements_docs.txt').readlines()
+requirements_docs = [r.strip() for r in requirements_docs]
 
-requirements_docs = [
-    "sphinx>=4.5.0",
-    "sphinx-autodoc-typehints>=1.18.1",
-    "sphinx-rtd-theme>=1.0.0",
-    "nbsphinx>=0.8.9",
-    "ipython>=8.10.0",
-    "nbconvert>=6.5.1",
-]
-
-requirements_test = [
-    "pytest>=7.1.0",
-    "pytest-cov>=3.0.0",
-    "ipython>=8.2.0",
-    "nbconvert>=6.5.1",
-    "pandas>=1.4.3",
-    "plotly>=5.9.0",
-    "cplex>=22.1.0.0",
-]
+requirements_test = open('requirements_test.txt').readlines()
+requirements_test = [r.strip() for r in requirements_test]
 
 setup(
     name="openqaoa-core",

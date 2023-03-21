@@ -11,8 +11,12 @@ with open("openqaoa_braket/_version.py") as f:
 
 requirements = [
     "openqaoa-core=={}".format(version),
-    "amazon-braket-sdk>=1.23.0",
 ]
+
+add_requirements = open('requirements.txt').readlines()
+add_requirements = [r.strip() for r in add_requirements]
+
+requirements.append(add_requirements)
 
 setup(
     name="openqaoa-braket",
