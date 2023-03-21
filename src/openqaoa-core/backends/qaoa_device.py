@@ -6,6 +6,7 @@ from openqaoa_qiskit.backends import DeviceQiskit
 from openqaoa_pyquil.backends import DevicePyquil
 from openqaoa_azure.backends import DeviceAzure
 
+
 def device_class_arg_mapper(
     device_class: DeviceBase,
     hub: str = None,
@@ -56,6 +57,7 @@ def device_class_arg_mapper(
     }
     return final_device_kwargs
 
+
 LOCATION_MAPPER = {
     "ibmq": DeviceQiskit,
     "qcs": DevicePyquil,
@@ -63,6 +65,7 @@ LOCATION_MAPPER = {
     "local": DeviceLocal,
     "azure": DeviceAzure,
 }
+
 
 def create_device(location: str, name: str, **kwargs):
     """
@@ -85,8 +88,10 @@ def create_device(location: str, name: str, **kwargs):
     """
     location = location.lower()
     if location not in LOCATION_MAPPER:
-        raise ValueError(f"Invalid device location, Choose from: {list(LOCATION_MAPPER.keys())}")
-    
+        raise ValueError(
+            f"Invalid device location, Choose from: {list(LOCATION_MAPPER.keys())}"
+        )
+
     device_class = LOCATION_MAPPER[location]
 
     return device_class(device_name=name, **kwargs)
