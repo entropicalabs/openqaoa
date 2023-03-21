@@ -3,6 +3,7 @@ import unittest
 import networkx as nw
 import numpy as np
 import datetime
+from copy import deepcopy
 
 from qiskit.providers.fake_provider import FakeVigo
 from qiskit.providers.aer.noise import NoiseModel
@@ -19,6 +20,7 @@ from openqaoa.algorithms.workflow_properties import (
 )
 from openqaoa.algorithms.rqaoa.rqaoa_workflow_properties import RqaoaParameters
 from openqaoa.backends import create_device, DeviceLocal
+from openqaoa.backends.cost_function import cost_function
 from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.qaoa_components import (
     Hamiltonian,
@@ -48,7 +50,9 @@ from openqaoa_qiskit.backends import (
 )
 from openqaoa_azure.backends import DeviceAzure
 
-
+from openqaoa.qaoa_components.variational_parameters.variational_params_factory import (
+    PARAMS_CLASSES_MAPPER,
+)
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ["6q-qvm", "Aspen-11"]
 
@@ -1006,13 +1010,14 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # check QAOA dump
         file_name = "test_dump_qaoa.json"
-        experiment_id, atomic_id = (
+        project_id, experiment_id, atomic_id = (
+            qaoa.header["project_id"],
             qaoa.header["experiment_id"],
             qaoa.header["atomic_id"],
         )
-        full_name = f"{experiment_id}--{atomic_id}--{file_name}"
+        full_name = f"{project_id}--{experiment_id}--{atomic_id}--{file_name}"
 
-        qaoa.dump(file_name, indent=None)
+        qaoa.dump(file_name, indent=None, prepend_id=True)
         assert os.path.isfile(full_name), "Dump file does not exist"
         with open(full_name, "r") as file:
             assert file.read() == qaoa.dumps(
@@ -1020,13 +1025,13 @@ class TestingVanillaQAOA(unittest.TestCase):
             ), "Dump file does not contain the correct data"
         os.remove(full_name)
 
-        # check RQAOA dump whitout prepending the experiment_id and atomic_id
+        # check QAOA dump whitout prepending the experiment_id and atomic_id
         qaoa.dump(file_name, indent=None, prepend_id=False)
         assert os.path.isfile(
             file_name
         ), "Dump file does not exist, when not prepending the experiment_id and atomic_id"
 
-        # check RQAOA dump fails when the file already exists
+        # check QAOA dump fails when the file already exists
         error = False
         try:
             qaoa.dump(file_name, indent=None, prepend_id=False)
@@ -1039,7 +1044,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert os.path.isfile(file_name), "Dump file does not exist, when overwriting"
         os.remove(file_name)
 
-        # check RQAOA dump fails when prepend_id is True and file_name is not given
+        # check QAOA dump fails when prepend_id is True and file_name is not given
         error = False
         try:
             qaoa.dump(prepend_id=False)
@@ -1049,16 +1054,26 @@ class TestingVanillaQAOA(unittest.TestCase):
             error
         ), "Dump file does not fail when prepend_id is True and file_name is not given"
 
-        # check you can dump to a file with no arguments
-        qaoa.dump()
+        # check QAOA dump with no arguments
+        error = False
+        try:
+            qaoa.dump()
+        except ValueError:
+            error = True
+        assert (
+            error
+        ), "Dump file does not fail when no arguments are given, should be the same as dump(prepend_id=False)"
+
+        # check you can dump to a file with no arguments, just prepend_id=True
+        qaoa.dump(prepend_id=True)
         assert os.path.isfile(
-            f"{experiment_id}--{atomic_id}.json"
+            f"{project_id}--{experiment_id}--{atomic_id}.json"
         ), "Dump file does not exist, when no name is given"
-        os.remove(f"{experiment_id}--{atomic_id}.json")
+        os.remove(f"{project_id}--{experiment_id}--{atomic_id}.json")
 
         # check QAOA dump deleting some keys
         exclude_keys = ["schedule", "singlet"]
-        qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
+        qaoa.dump(file_name, exclude_keys=exclude_keys, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name
         ), "Dump file does not exist, when deleting some keys"
@@ -1069,7 +1084,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         os.remove(full_name)
 
         # check QAOA dump with compression
-        qaoa.dump(file_name, compresslevel=2, indent=None)
+        qaoa.dump(file_name, compresslevel=2, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name + ".gz"
         ), "Dump file does not exist, when compressing"
@@ -1336,6 +1351,221 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert (
             error
         ), "RQAOA.from_dict should raise an error when using a QAOA dictionary"
+
+    def test_qaoa_evaluate_circuit(self):
+        """
+        test the evaluate_circuit method
+        """
+
+        # problem
+        problem = MinimumVertexCover.random_instance(
+            n_nodes=6, edge_probability=0.8
+        ).qubo
+
+        # run qaoa with different param_type, and save the objcets in a list
+        qaoas = []
+        for param_type in PARAMS_CLASSES_MAPPER.keys():
+            q = QAOA()
+            q.set_circuit_properties(p=3, param_type=param_type, init_type="rand")
+            q.compile(problem)
+            qaoas.append(q)
+
+        # for each qaoa object, test the evaluate_circuit method
+        for q in qaoas:
+
+            # evaluate the circuit with random dict of params
+            params = {
+                k: np.random.rand(*v.shape)
+                for k, v in q.variate_params.asdict().items()
+            }
+            result = q.evaluate_circuit(params)
+            assert (
+                abs(result["cost"]) >= 0
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a cost, here cost is {result['cost']}"
+            assert (
+                abs(result["uncertainty"]) > 0
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return an uncertanty, here uncertainty is {result['uncertainty']}"
+            assert (
+                len(result["measurement_results"]) > 0
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a wavefunction when using a state-based simulator"
+
+            # evaluate the circuit with a list of params, taking the params from the dict, so we should get the same result
+            params2 = []
+            for value in params.values():
+                params2 += value.flatten().tolist()
+            result2 = q.evaluate_circuit(params2)
+            assert (
+                result == result2
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+
+            # evaluate the circuit with np.ndarray of params, taking the params from the dict, so we should get the same result
+            result2 = q.evaluate_circuit(np.array(params2))
+            assert (
+                result == result2
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+
+            # evaluate the circuit with the params as a QAOAVariationalBaseParams object, so we should get the same result
+            params_obj = deepcopy(q.variate_params)
+            params_obj.update_from_raw(params2)
+            result3 = q.evaluate_circuit(params_obj)
+            assert (
+                result == result3
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+
+            # run the circuit with the params manually, we should get the same result
+            result4 = {}
+            (
+                result4["cost"],
+                result4["uncertainty"],
+            ) = q.backend.expectation_w_uncertainty(params_obj)
+            result4["measurement_results"] = q.backend.wavefunction(params_obj)
+            assert (
+                result == result4
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing the optimized params manually"
+
+            # evaluate the circuit with a wrong input, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit(1)
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a wrong input"
+
+            # evaluate the circuit with a list longer than it should, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit(params2 + [1])
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a list longer than it should"
+
+            # evaluate the circuit with a list shorter than it should, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit(params2[:-1])
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a list shorter than it should"
+
+            # evaluate the circuit with a dict with a wrong key, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit({**params, "wrong_key": 1})
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a dict with a wrong key"
+
+            # evaluate the circuit with a dict with a value longer than it should, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit(
+                    {**params, list(params.keys())[0]: np.random.rand(40)}
+                )
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a dict with a value longer than it should"
+
+            # evaluate the circuit without passing any param, it should raise an error
+            error = False
+            try:
+                q.evaluate_circuit()
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when not passing any param"
+
+        # check that it works with shots
+        q = QAOA()
+        device = create_device(location="local", name="qiskit.qasm_simulator")
+        q.set_device(device)
+        q.set_circuit_properties(p=3)
+
+        # try to evaluate the circuit before compiling
+        error = False
+        try:
+            q.evaluate_circuit()
+        except Exception:
+            error = True
+        assert (
+            error
+        ), f"param_type={param_type}. `evaluate_circuit` should raise an error if the circuit is not compiled"
+
+        # compile and evaluate the circuit, and check that the result is correct
+        q.compile(problem)
+        result = q.evaluate_circuit([1, 2, 1, 2, 1, 2])
+        assert isinstance(
+            result["measurement_results"], dict
+        ), "When using a shot-based simulator, `evaluate_circuit` should return a dict of counts"
+        assert (
+            abs(result["cost"]) >= 0
+        ), "When using a shot-based simulator, `evaluate_circuit` should return a cost"
+        assert (
+            abs(result["uncertainty"]) > 0
+        ), "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
+
+        cost = cost_function(
+            result["measurement_results"],
+            q.backend.qaoa_descriptor.cost_hamiltonian,
+            q.backend.cvar_alpha,
+        )
+        cost_sq = cost_function(
+            result["measurement_results"],
+            q.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
+            q.backend.cvar_alpha,
+        )
+        uncertainty = np.sqrt(cost_sq - cost**2)
+        assert (
+            np.round(cost, 12) == result["cost"]
+        ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct cost"
+        assert (
+            np.round(uncertainty, 12) == result["uncertainty"]
+        ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct uncertainty"
+
+        # check that it works with analytical simulator
+        q = QAOA()
+        device = create_device(location="local", name="analytical_simulator")
+        q.set_device(device)
+        q.set_circuit_properties(p=1, param_type="standard")
+        q.compile(problem)
+        result = q.evaluate_circuit([1, 2])
+        assert (
+            abs(result["cost"]) >= 0
+        ), "When using an analytical simulator, `evaluate_circuit` should return a cost"
+        assert (
+            result["uncertainty"] == None
+        ), "When using an analytical simulator, `evaluate_circuit` should return uncertainty None"
+        assert (
+            result["measurement_results"] == None
+        ), "When using an analytical simulator, `evaluate_circuit` should return no measurement results"
+
+    def test_change_properties_after_compilation(self):
+        device = create_device(location="local", name="qiskit.shot_simulator")
+        q = QAOA()
+        q.compile(QUBO.random_instance(4))
+
+        with self.assertRaises(ValueError):
+            q.set_device(device)
+        with self.assertRaises(ValueError):
+            q.set_circuit_properties(
+                p=1, param_type="standard", init_type="rand", mixer_hamiltonian="x"
+            )
+        with self.assertRaises(ValueError):
+            q.set_backend_properties(prepend_state=None, append_state=None)
+        with self.assertRaises(ValueError):
+            q.set_classical_optimizer(
+                maxiter=100, method="vgd", jac="finite_difference"
+            )
 
 
 class TestingRQAOA(unittest.TestCase):
@@ -1881,13 +2111,14 @@ class TestingRQAOA(unittest.TestCase):
 
         # check RQAOA dump
         file_name = "test_dump_rqaoa.json"
-        experiment_id, atomic_id = (
+        project_id, experiment_id, atomic_id = (
+            rqaoa.header["project_id"],
             rqaoa.header["experiment_id"],
             rqaoa.header["atomic_id"],
         )
-        full_name = f"{experiment_id}--{atomic_id}--{file_name}"
+        full_name = f"{project_id}--{experiment_id}--{atomic_id}--{file_name}"
 
-        rqaoa.dump(file_name, indent=None)
+        rqaoa.dump(file_name, prepend_id=True, indent=None)
         assert os.path.isfile(full_name), "Dump file does not exist"
         with open(full_name, "r") as file:
             assert file.read() == rqaoa.dumps(
@@ -1924,16 +2155,26 @@ class TestingRQAOA(unittest.TestCase):
             error
         ), "Dump file does not fail when prepend_id is True and file_name is not given"
 
-        # check you can dump to a file with no arguments
-        rqaoa.dump()
+        # check RQAOA dump with no arguments
+        error = False
+        try:
+            rqaoa.dump()
+        except ValueError:
+            error = True
+        assert (
+            error
+        ), "Dump file does not fail when no arguments are given, should be the same as dump(prepend_id=False)"
+
+        # check you can dump to a file with no arguments, just prepend_id=True
+        rqaoa.dump(prepend_id=True)
         assert os.path.isfile(
-            f"{experiment_id}--{atomic_id}.json"
+            f"{project_id}--{experiment_id}--{atomic_id}.json"
         ), "Dump file does not exist, when no name is given"
-        os.remove(f"{experiment_id}--{atomic_id}.json")
+        os.remove(f"{project_id}--{experiment_id}--{atomic_id}.json")
 
         # check RQAOA dump deleting some keys
         exclude_keys = ["schedule", "singlet"]
-        rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None)
+        rqaoa.dump(file_name, exclude_keys=exclude_keys, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name
         ), "Dump file does not exist, when deleting some keys"
@@ -1944,7 +2185,7 @@ class TestingRQAOA(unittest.TestCase):
         os.remove(full_name)
 
         # check RQAOA dump with compression
-        rqaoa.dump(file_name, compresslevel=2, indent=None)
+        rqaoa.dump(file_name, compresslevel=2, indent=None, prepend_id=True)
         assert os.path.isfile(
             full_name + ".gz"
         ), "Dump file does not exist, when compressing"
@@ -2144,17 +2385,27 @@ class TestingRQAOA(unittest.TestCase):
                 "file_name": "test_dumping_step_by_step",
                 "compresslevel": 2,
                 "indent": None,
+                "prepend_id": True,
             },
         )
 
         # create list of expected file names
+        project_id = "None"
         experiment_id, atomic_id = r.header["experiment_id"], r.header["atomic_id"]
         file_names = {
-            id: experiment_id + "--" + id + "--" + "test_dumping_step_by_step.json.gz"
+            id: project_id
+            + "--"
+            + experiment_id
+            + "--"
+            + id
+            + "--"
+            + "test_dumping_step_by_step.json.gz"
             for id in r.result["atomic_ids"].values()
         }
         file_names[atomic_id] = (
-            experiment_id
+            project_id
+            + "--"
+            + experiment_id
             + "--"
             + atomic_id
             + "--"
@@ -2373,6 +2624,26 @@ class TestingRQAOA(unittest.TestCase):
         assert (
             error
         ), "Optimizer.from_dict should raise an error when using a RQAOA dictionary"
+
+    def test_change_properties_after_compilation(self):
+        device = create_device(location="local", name="qiskit.shot_simulator")
+        r = RQAOA()
+        r.compile(QUBO.random_instance(4))
+
+        with self.assertRaises(ValueError):
+            r.set_device(device)
+        with self.assertRaises(ValueError):
+            r.set_circuit_properties(
+                p=1, param_type="standard", init_type="rand", mixer_hamiltonian="x"
+            )
+        with self.assertRaises(ValueError):
+            r.set_backend_properties(prepend_state=None, append_state=None)
+        with self.assertRaises(ValueError):
+            r.set_classical_optimizer(
+                maxiter=100, method="vgd", jac="finite_difference"
+            )
+        with self.assertRaises(ValueError):
+            r.set_rqaoa_parameters(rqaoa_type="adaptive", n_cutoff=3, n_steps=3)
 
 
 if __name__ == "__main__":

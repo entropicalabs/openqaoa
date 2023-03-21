@@ -1,3 +1,4 @@
+# Docker compose mostly used for testing purposes: it provides dockers to interact with OQ's braket jobs and rigetti's QVM
 version: '3'
 
 networks:
