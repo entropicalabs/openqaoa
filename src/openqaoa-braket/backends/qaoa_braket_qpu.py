@@ -9,6 +9,7 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.jobs.metrics import log_metric
 
 from .devices import DeviceAWS
+from .gates_braket import BraketGateApplicator
 from openqaoa.backends.basebackend import (
     QAOABaseBackendShotBased,
     QAOABaseBackendCloud,
@@ -153,6 +154,8 @@ class QAOAAWSQPUBackend(
         the circuit.
         """
         parametric_circuit = Circuit()
+        gate_applicator = BraketGateApplicator()
+
         if self.prepend_state:
             parametric_circuit += self.prepend_state
 
@@ -171,10 +174,8 @@ class QAOAAWSQPUBackend(
             decomposition = each_gate.decomposition("standard")
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0]()
-                parametric_circuit = gate.apply_braket_gate(
-                    *each_tuple[1], parametric_circuit
-                )
+                gate = each_tuple[0](gate_applicator, *each_tuple[1])
+                gate.apply_gate(parametric_circuit)
 
         if self.append_state:
             parametric_circuit += self.append_state
