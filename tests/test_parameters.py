@@ -10,6 +10,7 @@ from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian
 from openqaoa.qaoa_components.ansatz_constructor.gatemaplabel import GateMapType
 from openqaoa.qaoa_components.variational_parameters.variational_params_factory import (
     PARAMS_CLASSES_MAPPER,
+    VARIATIONAL_PARAMS_DICT_KEYS,
 )
 
 register = [0, 1, 2]
@@ -584,94 +585,156 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
 
             self.assertEqual(variate_params.__str__(), variate_params.__repr__())
 
-    # # Plot Tests
+    def test_qaoa_variational_params_asdict(self):
 
-    # def test_StandardParams_plot(self):
+        p = 4
+        q = 2
 
-    #     register_wo_bias = [0, 1, 2]
-    #     terms_wo_bias = [[0, 1], [0, 2]]
-    #     weights_wo_bias = [1, -2.0]
+        number_of_params = {
+            "standard": {"betas": p, "gammas": p},
+            "standard_w_bias": {"betas": p, "gammas_singles": p, "gammas_pairs": p},
+            "extended": {
+                "betas_singles": len(register) * p,
+                "betas_pairs": 0,
+                "gammas_singles": sum([1 for term in terms if len(term) == 1]) * p,
+                "gammas_pairs": sum([1 for term in terms if len(term) == 2]) * p,
+            },
+            "fourier": {"v": q, "u": q},
+            "fourier_extended": {
+                "v_singles": len(register) * q,
+                "v_pairs": 0,
+                "u_singles": sum([1 for term in terms if len(term) == 1]) * q,
+                "u_pairs": sum([1 for term in terms if len(term) == 2]) * q,
+            },
+            "fourier_w_bias": {"v": q, "u_singles": q, "u_pairs": q},
+            "annealing": {"schedule": p},
+        }
 
-    #     p = 5
-    #     hyperparams = HyperParams(terms,weights,register,p)
-    #     params = StandardParams.linear_ramp_from_hamiltonian(hyperparams)
-    #     fig, ax = plt.subplots()
-    #     params.plot(ax=ax)
-    #     # plt.show()
+        qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=p)
 
-    #     p = 8
-    #     hyperparams = HyperParams(terms,weights,register,p)
-    #     params = StandardParams(hyperparams,([0.1]*p, [0.2]*p))
-    #     fig, ax = plt.subplots()
-    #     params.plot(ax=ax)
-    #     # plt.show()
+        for each_key_value in PARAMS_CLASSES_MAPPER.keys():
 
-    #     p = 2
-    #     hyperparams = HyperParams(terms_wo_bias,weights_wo_bias,register_wo_bias,p)
-    #     params = StandardParams(hyperparams,([5]*p, [10]*p))
-    #     fig, ax = plt.subplots()
-    #     params.plot(ax=ax)
-    #     # plt.show()
+            # create the variational params object
+            variate_params = create_qaoa_variational_params(
+                qaoa_descriptor,
+                params_type=each_key_value,
+                init_type="rand",
+                q=q,
+                total_annealing_time=2,
+            )
 
-    # def test_ExtendedParams_plot(self):
+            # get the dict and check that it is a dict
+            variate_params_dict = variate_params.asdict()
+            assert isinstance(
+                variate_params_dict, dict
+            ), f"asdict() should return a dict, it did not for type: '{each_key_value}'."
 
-    #     register_wo_bias = [0, 1, 2]
-    #     terms_wo_bias = [[0, 1], [0, 2]]
-    #     weights_wo_bias = [1, -2.0]
+            # check that the keys are correct
+            expected_keys = VARIATIONAL_PARAMS_DICT_KEYS[each_key_value]
+            for key in [
+                "q",
+                "total_annealing_time",
+            ]:  # from expected_keys, remove the "q" and "total_annealing_time" keys, if there are any
+                if key in expected_keys:
+                    expected_keys.remove(key)
+            assert set(variate_params_dict.keys()) == set(
+                expected_keys
+            ), f"asdict() should return a dict with the correct keys, it did not for type: '{each_key_value}'."
 
-    #     p = 5
-    #     hyperparams = HyperParams(terms_wo_bias,weights_wo_bias,register_wo_bias,p)
-    #     params = ExtendedParams.linear_ramp_from_hamiltonian(hyperparams, p)
-    #     fig, ax = plt.subplots()
-    #     params.plot(ax=ax)
-    #     # plt.show()
+            # check that the number of values is correct
+            for key, value in variate_params_dict.items():
+                assert (
+                    value.size == number_of_params[each_key_value][key]
+                ), f"asdict() should return a dict with the correct number of values, it did not for type: '{each_key_value}'. \
+                \n Expected {number_of_params[each_key_value][key]} values for key '{key}', but got {value.size} values."
 
-    #     p = 8
-    #     hyperparams = HyperParams(terms_wo_bias,weights_wo_bias,register_wo_bias,p)
-    #     params = ExtendedParams(hyperparams,
-    #                             ([0.1] * p*len(register),
-    #                             [],
-    #                             [0.2] * p*len(weights_wo_bias)))
-    #     fig, ax = plt.subplots()
-    #     params.plot(ax=ax)
-    #     # plt.show()
+            # check that the values are correct
+            list_params_raw = []
+            for key, value in variate_params_dict.items():
+                list_params_raw += value.flatten().tolist()
 
-    # def test_extended_get_constraints(self):
-    #     register = [0,1,2,3]
-    #     terms = [[0, 1], [1, 2], [2, 3], [3, 0]]
-    #     weights = [0.1, 0.3, 0.5, -0.7]
-    #     p = 2
+            assert np.allclose(
+                list_params_raw, variate_params.raw().tolist()
+            ), f"asdict() should return a dict with the correct values, it did not for type: '{each_key_value}'."
 
-    #     hyperparams = HyperParams(terms,weights,register,p)
-    #     params = ExtendedParams.linear_ramp_from_hamiltonian(hyperparams)
+    def test_qaoa_variational_params_update_from_dict(self):
 
-    #     actual_constraints = params.get_constraints()
+        qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
 
-    #     expected_constraints = [(0, 2 * np.pi), (0, 2 * np.pi),
-    #                             (0, 2 * np.pi), (0, 2 * np.pi),
-    #                             (0, 2 * np.pi), (0, 2 * np.pi),
-    #                             (0, 2 * np.pi), (0, 2 * np.pi),
-    #                             (0, 2 * np.pi / weights[0]),
-    #                             (0, 2 * np.pi / weights[1]),
-    #                             (0, 2 * np.pi / weights[2]),
-    #                             (0, 2 * np.pi / weights[3]),
-    #                             (0, 2 * np.pi / weights[0]),
-    #                             (0, 2 * np.pi / weights[1]),
-    #                             (0, 2 * np.pi / weights[2]),
-    #                             (0, 2 * np.pi / weights[3])]
+        for each_key_value in PARAMS_CLASSES_MAPPER.keys():
+            variate_params = create_qaoa_variational_params(
+                qaoa_descriptor,
+                params_type=each_key_value,
+                init_type="rand",
+                q=1,
+                total_annealing_time=1,
+            )
 
-    #     assert(np.allclose(expected_constraints, actual_constraints))
+            # get the params as a dict
+            variate_params_dict = variate_params.asdict()
 
-    #     cost_function = QAOACostVector(params)
-    #     np.random.seed(0)
-    #     random_angles = np.random.uniform(-100, 100, size=len(params.raw()))
-    #     value = cost_function(random_angles)
+            # create a new dict with random values
+            new_dict = {
+                k: np.random.rand(*v.shape) for k, v in variate_params_dict.items()
+            }
 
-    #     normalised_angles = [random_angles[i] % actual_constraints[i][1]
-    #                         for i in range(len(params.raw()))]
-    #     normalised_value = cost_function(normalised_angles)
+            # update the variational params object with the new dict
+            variate_params.update_from_dict(new_dict)
 
-    #     assert(np.allclose(value, normalised_value))
+            # check that the values are correct
+            for key, value in variate_params.asdict().items():
+                assert np.allclose(
+                    value, new_dict[key]
+                ), f"update_from_dict() should update the values correctly, it did not for type: '{each_key_value}'."
+
+            # check that if we pass in a dict with the wrong keys, an error is raised
+            wrong_dict = new_dict
+            wrong_dict["wrong_key"] = np.random.rand(1)
+            error = False
+            try:
+                variate_params.update_from_dict(wrong_dict)
+            except:
+                error = True
+            assert (
+                error
+            ), f"update_from_dict() should raise an error if the dict has the wrong keys, it did not for type: '{each_key_value}'."
+
+            # check that if we pass in a dict with more values than expected, an error is raised
+            wrong_dict = new_dict
+            wrong_dict.pop("wrong_key")
+            for key in wrong_dict.keys():
+                wrong_dict[key] = np.append(wrong_dict[key], np.random.rand(1))
+            error = False
+            try:
+                variate_params.update_from_dict(wrong_dict)
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"update_from_dict() should raise an error if the dict has more values than expected, it did not for type: '{each_key_value}'."
+
+            # check that if we pass in a dict with less values than expected, an error is raised
+            wrong_dict = new_dict
+            for key in wrong_dict.keys():
+                wrong_dict[key] = wrong_dict[key][:-2]
+            error = False
+            try:
+                variate_params.update_from_dict(wrong_dict)
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"update_from_dict() should raise an error if the dict has less values than expected, it did not for type: '{each_key_value}'."
+
+            # check that if we pass something that is not a dict, an error is raised
+            error = False
+            try:
+                variate_params.update_from_dict(1)
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"update_from_dict() should raise an error if the input is not a dict, it did not for type: '{each_key_value}'."
 
 
 if __name__ == "__main__":

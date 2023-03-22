@@ -28,17 +28,30 @@ from openqaoa.qaoa_components.ansatz_constructor.gates import (
     RiSWAP,
 )
 from openqaoa.qaoa_components.ansatz_constructor.rotationangle import RotationAngle
+from openqaoa_braket.backends.gates_braket import BraketGateApplicator
+from openqaoa_qiskit.backends.gates_qiskit import QiskitGateApplicator
+from openqaoa_pyquil.backends.gates_pyquil import PyquilGateApplicator
 
 
 class TestingGate(unittest.TestCase):
+    
+    def setUp(self):
+        
+        self.braket_gate_applicator = BraketGateApplicator()
+        self.qiskit_gate_applicator = QiskitGateApplicator()
+        self.pyquil_gate_applicator = PyquilGateApplicator()
+    
     def test_braket_gates_1q(self):
+        
+        # Braket Gate Applicator
+        gate_applicator = self.braket_gate_applicator
 
         # One Qubit Gate Tests
         rotation_angle_obj = RotationAngle(lambda x: x, [], FreeParameter("test_angle"))
-
+        
         empty_circuit = Circuit()
-        llgate = RY()
-        output_circuit = llgate.apply_braket_gate(0, rotation_angle_obj, empty_circuit)
+        llgate = RY(gate_applicator, 0, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
         output_circuit = output_circuit.make_bound_circuit({"test_angle": np.pi})
 
         test_circuit = Circuit()
@@ -47,8 +60,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
         empty_circuit = Circuit()
-        llgate = RX()
-        output_circuit = llgate.apply_braket_gate(0, rotation_angle_obj, empty_circuit)
+        llgate = RX(gate_applicator, 0, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
         output_circuit = output_circuit.make_bound_circuit({"test_angle": np.pi})
 
         test_circuit = Circuit()
@@ -57,8 +70,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
         empty_circuit = Circuit()
-        llgate = RZ()
-        output_circuit = llgate.apply_braket_gate(0, rotation_angle_obj, empty_circuit)
+        llgate = RZ(gate_applicator, 0, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
         output_circuit = output_circuit.make_bound_circuit({"test_angle": np.pi})
 
         test_circuit = Circuit()
@@ -67,11 +80,14 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
     def test_braket_gates_2q(self):
+        
+        # Braket Gate Applicator
+        gate_applicator = self.braket_gate_applicator
 
         # Two Qubit Gate Tests
         empty_circuit = Circuit()
-        llgate = CZ()
-        output_circuit = llgate.apply_braket_gate([0, 1], empty_circuit)
+        llgate = CZ(gate_applicator, 0, 1)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = Circuit()
         test_circuit += braketgates.CZ.cz(0, 1)
@@ -79,8 +95,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
         empty_circuit = Circuit()
-        llgate = CX(mode="CX")
-        output_circuit = llgate.apply_braket_gate([0, 1], empty_circuit)
+        llgate = CX(gate_applicator, 0, 1)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = Circuit()
         test_circuit += braketgates.CNot.cnot(0, 1)
@@ -88,15 +104,16 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
     def test_braket_gates_2q_w_gates(self):
+        
+        # Braket Gate Applicator
+        gate_applicator = self.braket_gate_applicator
 
         # Two Qubit Gate with Angles Tests
         rotation_angle_obj = RotationAngle(lambda x: x, [], FreeParameter("test_angle"))
 
         empty_circuit = Circuit()
-        llgate = RXX()
-        output_circuit = llgate.apply_braket_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = RXX(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
         output_circuit = output_circuit.make_bound_circuit({"test_angle": np.pi})
 
         test_circuit = Circuit()
@@ -105,10 +122,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
         empty_circuit = Circuit()
-        llgate = RYY()
-        output_circuit = llgate.apply_braket_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = RYY(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
         output_circuit = output_circuit.make_bound_circuit({"test_angle": np.pi})
 
         test_circuit = Circuit()
@@ -117,10 +132,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
         empty_circuit = Circuit()
-        llgate = RZZ()
-        output_circuit = llgate.apply_braket_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = RZZ(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
         output_circuit = output_circuit.make_bound_circuit({"test_angle": np.pi})
 
         test_circuit = Circuit()
@@ -129,10 +142,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
         empty_circuit = Circuit()
-        llgate = CPHASE()
-        output_circuit = llgate.apply_braket_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = CPHASE(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
         output_circuit = output_circuit.make_bound_circuit({"test_angle": np.pi})
 
         test_circuit = Circuit()
@@ -141,10 +152,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
         empty_circuit = Circuit()
-        llgate = RiSWAP()
-        output_circuit = llgate.apply_braket_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = RiSWAP(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
         output_circuit = output_circuit.make_bound_circuit({"test_angle": np.pi})
 
         test_circuit = Circuit()
@@ -153,13 +162,16 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
     def test_ibm_gates_1q(self):
+        
+        # Qiskit Gate Applicator
+        gate_applicator = self.qiskit_gate_applicator
 
         # One Qubit Gate Tests
         rotation_angle_obj = RotationAngle(lambda x: x, [], np.pi)
 
         empty_circuit = QuantumCircuit(1)
-        llgate = RY()
-        output_circuit = llgate.apply_ibm_gate(0, rotation_angle_obj, empty_circuit)
+        llgate = RY(gate_applicator, 0, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(1)
         test_circuit.ry(np.pi, 0)
@@ -170,8 +182,8 @@ class TestingGate(unittest.TestCase):
         )
 
         empty_circuit = QuantumCircuit(1)
-        llgate = RX()
-        output_circuit = llgate.apply_ibm_gate(0, rotation_angle_obj, empty_circuit)
+        llgate = RX(gate_applicator, 0, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(1)
         test_circuit.rx(np.pi, 0)
@@ -182,8 +194,8 @@ class TestingGate(unittest.TestCase):
         )
 
         empty_circuit = QuantumCircuit(1)
-        llgate = RZ()
-        output_circuit = llgate.apply_ibm_gate(0, rotation_angle_obj, empty_circuit)
+        llgate = RZ(gate_applicator, 0, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(1)
         test_circuit.rz(np.pi, 0)
@@ -194,11 +206,14 @@ class TestingGate(unittest.TestCase):
         )
 
     def test_ibm_gates_2q(self):
+        
+        # Qiskit Gate Applicator
+        gate_applicator = self.qiskit_gate_applicator
 
         # Two Qubit Gate Tests
         empty_circuit = QuantumCircuit(2)
-        llgate = CZ()
-        output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
+        llgate = CZ(gate_applicator, 0, 1)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.cz(0, 1)
@@ -209,8 +224,8 @@ class TestingGate(unittest.TestCase):
         )
 
         empty_circuit = QuantumCircuit(2)
-        llgate = CX(mode="CX")
-        output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
+        llgate = CX(gate_applicator, 0, 1)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.cx(0, 1)
@@ -220,32 +235,33 @@ class TestingGate(unittest.TestCase):
             output_circuit.to_instruction().definition,
         )
 
-        empty_circuit = QuantumCircuit(2)
-        llgate = CX(mode="CZ")
-        output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
+#         empty_circuit = QuantumCircuit(2)
+#         llgate = CX(gate_applicator)
+#         output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
 
-        test_circuit = QuantumCircuit(2)
-        test_circuit.ry(np.pi / 2, 1)
-        test_circuit.rx(np.pi, 1)
-        test_circuit.cz(0, 1)
-        test_circuit.ry(np.pi / 2, 1)
-        test_circuit.rx(np.pi, 1)
+#         test_circuit = QuantumCircuit(2)
+#         test_circuit.ry(np.pi / 2, 1)
+#         test_circuit.rx(np.pi, 1)
+#         test_circuit.cz(0, 1)
+#         test_circuit.ry(np.pi / 2, 1)
+#         test_circuit.rx(np.pi, 1)
 
-        self.assertEqual(
-            test_circuit.to_instruction().definition,
-            output_circuit.to_instruction().definition,
-        )
+#         self.assertEqual(
+#             test_circuit.to_instruction().definition,
+#             output_circuit.to_instruction().definition,
+#         )
 
     def test_ibm_gates_2q_w_gates(self):
+        
+        # Qiskit Gate Applicator
+        gate_applicator = self.qiskit_gate_applicator
 
         # Two Qubit Gate with Angles Tests
         rotation_angle_obj = RotationAngle(lambda x: x, [], np.pi)
 
         empty_circuit = QuantumCircuit(2)
-        llgate = RXX()
-        output_circuit = llgate.apply_ibm_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = RXX(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.rxx(np.pi, 0, 1)
@@ -256,10 +272,8 @@ class TestingGate(unittest.TestCase):
         )
 
         empty_circuit = QuantumCircuit(2)
-        llgate = RYY()
-        output_circuit = llgate.apply_ibm_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = RYY(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.ryy(np.pi, 0, 1)
@@ -270,10 +284,8 @@ class TestingGate(unittest.TestCase):
         )
 
         empty_circuit = QuantumCircuit(2)
-        llgate = RZZ()
-        output_circuit = llgate.apply_ibm_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = RZZ(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.rzz(np.pi, 0, 1)
@@ -284,10 +296,8 @@ class TestingGate(unittest.TestCase):
         )
 
         empty_circuit = QuantumCircuit(2)
-        llgate = RZX()
-        output_circuit = llgate.apply_ibm_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = RZX(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.rzx(np.pi, 0, 1)
@@ -298,10 +308,8 @@ class TestingGate(unittest.TestCase):
         )
 
         empty_circuit = QuantumCircuit(2)
-        llgate = CPHASE()
-        output_circuit = llgate.apply_ibm_gate(
-            [0, 1], rotation_angle_obj, empty_circuit
-        )
+        llgate = CPHASE(gate_applicator, 0, 1, rotation_angle_obj)
+        output_circuit = llgate.apply_gate(empty_circuit)
 
         test_circuit = QuantumCircuit(2)
         test_circuit.crz(np.pi, 0, 1)
@@ -312,13 +320,16 @@ class TestingGate(unittest.TestCase):
         )
 
     def test_pyquil_gates_1q(self):
+        
+        # Pyquil Gate Applicator
+        gate_applicator = self.pyquil_gate_applicator
 
         # One Qubit Gate Tests
         rotation_angle_obj = RotationAngle(lambda x: x, [], np.pi)
 
         empty_program = Program()
-        llgate = RY()
-        output_program = llgate.apply_pyquil_gate(0, rotation_angle_obj, empty_program)
+        llgate = RY(gate_applicator, 0, rotation_angle_obj)
+        output_program = llgate.apply_gate(empty_program)
 
         test_program = Program().inst(p_RY(np.pi, 0))
 
@@ -331,8 +342,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
         empty_program = Program()
-        llgate = RX()
-        output_program = llgate.apply_pyquil_gate(0, rotation_angle_obj, empty_program)
+        llgate = RX(gate_applicator, 0, rotation_angle_obj)
+        output_program = llgate.apply_gate(empty_program)
 
         test_program = Program().inst(p_RX(np.pi, 0))
 
@@ -345,8 +356,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
         empty_program = Program()
-        llgate = RZ()
-        output_program = llgate.apply_pyquil_gate(0, rotation_angle_obj, empty_program)
+        llgate = RZ(gate_applicator, 0, rotation_angle_obj)
+        output_program = llgate.apply_gate(empty_program)
 
         test_program = Program().inst(p_RZ(np.pi, 0))
 
@@ -359,11 +370,14 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
     def test_pyquil_gates_2q(self):
+        
+        # Pyquil Gate Applicator
+        gate_applicator = self.pyquil_gate_applicator
 
         # Two Qubit Gate Tests
         empty_program = Program()
-        llgate = CZ()
-        output_program = llgate.apply_pyquil_gate([0, 1], empty_program)
+        llgate = CZ(gate_applicator, 0, 1)
+        output_program = llgate.apply_gate(empty_program)
 
         test_program = Program().inst(p_CZ(0, 1))
 
@@ -376,8 +390,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
         empty_program = Program()
-        llgate = CX()
-        output_program = llgate.apply_pyquil_gate([0, 1], empty_program)
+        llgate = CX(gate_applicator, 0, 1)
+        output_program = llgate.apply_gate(empty_program)
 
         test_program = Program().inst(p_CX(0, 1))
 
@@ -390,15 +404,16 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
     def test_pyquil_gates_2q_w_gates(self):
+        
+        # Pyquil Gate Applicator
+        gate_applicator = self.pyquil_gate_applicator
 
         # Two Qubit Gate with Angles Tests
         rotation_angle_obj = RotationAngle(lambda x: x, [], np.pi)
 
         empty_program = Program()
-        llgate = CPHASE()
-        output_program = llgate.apply_pyquil_gate(
-            [0, 1], rotation_angle_obj, empty_program
-        )
+        llgate = CPHASE(gate_applicator, 0, 1, rotation_angle_obj)
+        output_program = llgate.apply_gate(empty_program)
 
         test_program = Program().inst(p_CPHASE(np.pi, 0, 1))
 
@@ -411,10 +426,8 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
         empty_program = Program()
-        llgate = RiSWAP()
-        output_program = llgate.apply_pyquil_gate(
-            [0, 1], rotation_angle_obj, empty_program
-        )
+        llgate = RiSWAP(gate_applicator, 0, 1, rotation_angle_obj)
+        output_program = llgate.apply_gate(empty_program)
 
         test_program = Program().inst(p_XY(np.pi, 0, 1))
 

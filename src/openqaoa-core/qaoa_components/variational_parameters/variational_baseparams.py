@@ -132,6 +132,55 @@ class QAOAVariationalBaseParams(ABC):
         """
         raise NotImplementedError()
 
+    def update_from_dict(self, new_values: dict):
+        """
+        Update all the parameters from a dictionary.
+
+        The input has the same format as the output of ``self.asdict()``.
+
+        Parameters
+        ----------
+        new_values: `dict`
+            A dictionary with the new parameters. Must have the same keys as
+            the output of ``self.asdict()``.
+
+        """
+
+        assert isinstance(new_values, dict), f"Expected dict, got {type(new_values)}"
+
+        for key, value in new_values.items():
+            if key not in self.asdict().keys():
+                raise KeyError(
+                    f"'{key}' not in {self.__class__.__name__}, expected keys: {list(self.asdict().keys())}"
+                )
+            else:
+                if getattr(self, key).shape != np.array(value).shape:
+                    raise ValueError(
+                        f"Shape of '{key}' does not match. Expected shape {getattr(self, key).shape}, got {np.array(value).shape}."
+                    )
+
+        raw_params = []
+        for key, value in self.asdict().items():
+            if key in new_values.keys():
+                raw_params += list(np.array(new_values[key]).flatten())
+            else:
+                raw_params += list(np.array(value).flatten())
+
+        self.update_from_raw(raw_params)
+
+    def asdict(self) -> dict:
+        """
+        Return the parameters as a dictionary.
+
+        Returns
+        -------
+        dict:
+            The parameters as a dictionary. Has the same output format as the
+            expected input of ``self.update_from_dict``.
+
+        """
+        return {k[2:]: v for k, v in self.__dict__.items() if k[0:2] == "__"}
+
     @classmethod
     def linear_ramp_from_hamiltonian(
         cls, qaoa_descriptor: QAOADescriptor, time: float = None

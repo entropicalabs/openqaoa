@@ -50,9 +50,9 @@ class SWAPGateMap(GateMap):
     def _decomposition_standard(self) -> List[Tuple]:
 
         return [
-            (CX, [[self.qubit_1, self.qubit_2]]),
-            (CX, [[self.qubit_2, self.qubit_1]]),
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
+            (CX, [self.qubit_2, self.qubit_1]),
+            (CX, [self.qubit_1, self.qubit_2]),
         ]
 
     @property
@@ -92,11 +92,12 @@ class SWAPGateMap(GateMap):
             (
                 RiSWAP,
                 [
-                    [self.qubit_1, self.qubit_2],
+                    self.qubit_1,
+                    self.qubit_2,
                     RotationAngle(lambda x: x, self.gate_label, np.pi),
                 ],
             ),
-            (CZ, [[self.qubit_1, self.qubit_2]]),
+            (CZ, [self.qubit_1, self.qubit_2]),
             # X gate decomposition
             (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi)]),
             (
@@ -194,7 +195,8 @@ class TwoQubitRotationGateMap(RotationGateMap):
             (
                 low_level_gate,
                 [
-                    [self.qubit_1, self.qubit_2],
+                    self.qubit_1,
+                    self.qubit_2,
                     RotationAngle(lambda x: x, self.gate_label, self.angle_value),
                 ],
             )
@@ -216,7 +218,7 @@ class RXXGateMap(TwoQubitRotationGateMap):
                 [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)],
             ),
             (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, np.pi)]),
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
             (
                 RZ,
                 [
@@ -224,7 +226,7 @@ class RXXGateMap(TwoQubitRotationGateMap):
                     RotationAngle(lambda x: x, self.gate_label, self.angle_value),
                 ],
             ),
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
             (
                 RY,
                 [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)],
@@ -258,7 +260,7 @@ class RYYGateMap(TwoQubitRotationGateMap):
                 RX,
                 [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)],
             ),
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
             (
                 RZ,
                 [
@@ -266,7 +268,7 @@ class RYYGateMap(TwoQubitRotationGateMap):
                     RotationAngle(lambda x: x, self.gate_label, self.angle_value),
                 ],
             ),
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
             (
                 RY,
                 [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, -np.pi / 2)],
@@ -288,7 +290,7 @@ class RZXGateMap(TwoQubitRotationGateMap):
                 [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)],
             ),
             (RX, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, np.pi)]),
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
             (
                 RZ,
                 [
@@ -296,7 +298,7 @@ class RZXGateMap(TwoQubitRotationGateMap):
                     RotationAngle(lambda x: x, self.gate_label, self.angle_value),
                 ],
             ),
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
             (
                 RY,
                 [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)],
@@ -310,7 +312,7 @@ class RZZGateMap(TwoQubitRotationGateMap):
     def _decomposition_standard(self) -> List[Tuple]:
 
         return [
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
             (
                 RZ,
                 [
@@ -318,7 +320,7 @@ class RZZGateMap(TwoQubitRotationGateMap):
                     RotationAngle(lambda x: x, self.gate_label, self.angle_value),
                 ],
             ),
-            (CX, [[self.qubit_1, self.qubit_2]]),
+            (CX, [self.qubit_1, self.qubit_2]),
         ]
 
     @property
@@ -342,7 +344,8 @@ class RZZGateMap(TwoQubitRotationGateMap):
             (
                 CPHASE,
                 [
-                    [self.qubit_1, self.qubit_2],
+                    self.qubit_1,
+                    self.qubit_2,
                     RotationAngle(lambda x: -2 * x, self.gate_label, self.angle_value),
                 ],
             ),
@@ -375,11 +378,9 @@ class RiSWAPGateMap(TwoQubitRotationGateMap):
             (
                 RiSWAP,
                 [
-                    [
-                        self.qubit_1,
-                        self.qubit_2,
-                        RotationAngle(lambda x: x, self.gate_label, self.angle_value),
-                    ]
+                    self.qubit_1,
+                    self.qubit_2,
+                    RotationAngle(lambda x: x, self.gate_label, self.angle_value),
                 ],
             )
         ]

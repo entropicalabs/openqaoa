@@ -537,8 +537,9 @@ class TestingUtilities(unittest.TestCase):
         correct_energy = 11.2
 
         # Test energy was computed correctly
-        assert np.allclose(energy, correct_energy), f"The energy expectation value for rings of disagrees was not computed correctly"
-
+        assert np.allclose(
+            energy, correct_energy
+        ), f"The energy expectation value for rings of disagrees was not computed correctly"
 
         ## Second test - Minimum Vertex Cover on a Ring
 
@@ -558,7 +559,9 @@ class TestingUtilities(unittest.TestCase):
         mvc = MinimumVertexCover(G, field=field, penalty=penalty).qubo
 
         # Minimum Vertex Cover Hamiltonian
-        hamiltonian = Hamiltonian.classical_hamiltonian(mvc.terms, mvc.weights, mvc.constant)
+        hamiltonian = Hamiltonian.classical_hamiltonian(
+            mvc.terms, mvc.weights, mvc.constant
+        )
 
         # Input measurement counts dictionary
         input_measurement_counts = {
@@ -575,8 +578,9 @@ class TestingUtilities(unittest.TestCase):
         correct_energy = 30
 
         # Test energy was computed correctly
-        assert np.allclose(energy, correct_energy), f"The energy expectation value for Minimum Vertex Cover was not computed correctly"
-
+        assert np.allclose(
+            energy, correct_energy
+        ), f"The energy expectation value for Minimum Vertex Cover was not computed correctly"
 
     def test_energy_spectrum_hamiltonian(self):
         """
