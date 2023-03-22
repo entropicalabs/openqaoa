@@ -36,6 +36,8 @@ class SPAMTwirlingWrapper(BaseWrapper):
     def __init__(self, backend, n_batches):
         super().__init__(backend)
         self.n_batches = n_batches
+        
+        print(self.backend.gate_applicator.create_quantum_circuit(self.backend.n_qubits))
     
     def get_counts(self, params, n_shots = None):
         '''

@@ -4,7 +4,7 @@ from qiskit.circuit.library import (
     RXGate, RYGate, RZGate, CXGate, CZGate,
     RXXGate, RZXGate, RZZGate, RYYGate, CRZGate
  )
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, QuantumRegister
 
 from openqaoa.qaoa_components.ansatz_constructor.rotationangle import RotationAngle
 import openqaoa.qaoa_components.ansatz_constructor.gates as gates_core
@@ -26,6 +26,12 @@ class QiskitGateApplicator(gates_core.GateApplicator):
     }
 
     library = 'qiskit'
+    
+    def create_quantum_circuit(self, n_qubits) -> QuantumCircuit:
+        qureg = QuantumRegister(n_qubits)
+        parametric_circuit = QuantumCircuit(qureg)
+        return parametric_circuit
+
 
     def gate_selector(self, gate: gates_core.Gate) -> Callable:
         selected_qiskit_gate = QiskitGateApplicator.QISKIT_OQ_GATE_MAPPER[gate.__name__]

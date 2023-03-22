@@ -109,7 +109,7 @@ class QAOAQiskitBackendShotBasedSimulator(
             init_hadamard,
             cvar_alpha,
         )
-
+        self.gate_applicator = QiskitGateApplicator()
         self.qureg = QuantumRegister(self.n_qubits)
 
         if self.prepend_state:
@@ -164,7 +164,7 @@ class QAOAQiskitBackendShotBasedSimulator(
         """
         # self.reset_circuit()
         parametric_circuit = QuantumCircuit(self.qureg)
-        gate_applicator = QiskitGateApplicator()
+        
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -188,9 +188,8 @@ class QAOAQiskitBackendShotBasedSimulator(
                 decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](gate_applicator,*each_tuple[1])
+                gate = each_tuple[0](self.gate_applicator,*each_tuple[1])
                 gate.apply_gate(parametric_circuit)
-
         
 
         return parametric_circuit
@@ -303,6 +302,7 @@ class QAOAQiskitBackendStatevecSimulator(
         ), "Please use the shot-based simulator for simulations with cvar_alpha < 1"
 
         self.qureg = QuantumRegister(self.n_qubits)
+        self.gate_applicator = QiskitGateApplicator()
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
@@ -376,7 +376,6 @@ class QAOAQiskitBackendStatevecSimulator(
         """
         # self.reset_circuit()
         parametric_circuit = QuantumCircuit(self.qureg)
-        gate_applicator = QiskitGateApplicator()
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -400,7 +399,7 @@ class QAOAQiskitBackendStatevecSimulator(
                 decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](gate_applicator,*each_tuple[1])
+                gate = each_tuple[0](self.gate_applicator,*each_tuple[1])
                 gate.apply_gate(parametric_circuit)
 
         if self.append_state:

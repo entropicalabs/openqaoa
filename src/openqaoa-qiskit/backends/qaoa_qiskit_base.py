@@ -12,6 +12,7 @@ from qiskit.circuit import Parameter
 
 
 from openqaoa.backends.cost_function import cost_function
+from .gates_qiskit import QiskitGateApplicator
 from openqaoa.qaoa_components.ansatz_constructor import (
     XGateMap,
     RXGateMap,
@@ -45,6 +46,7 @@ class QAOAQiskitBaseBackend():
         """
         Creates a qiskit circuit, given an abstract one. 
         """
+        gate_applicator = QiskitGateApplicator()
         qureg = QuantumRegister(self.n_qubits)
         parametric_circuit = QuantumCircuit(qureg)
 
@@ -56,10 +58,8 @@ class QAOAQiskitBaseBackend():
                 
             # Create Circuit
             for each_tuple in decomposition:
-                low_gate = each_tuple[0]()
-                parametric_circuit = low_gate.apply_ibm_gate(
-                    *each_tuple[1], parametric_circuit
-                )
+                gate = each_tuple[0](gate_applicator, *each_tuple[1])
+                gate.apply_gate(parametric_circuit)
         
         
         return parametric_circuit
