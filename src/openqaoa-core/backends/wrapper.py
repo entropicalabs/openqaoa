@@ -11,6 +11,14 @@ from ..qaoa_components.ansatz_constructor.gatemap import (
     XGateMap
 )
 
+from qiskit.circuit.library import (
+    XGate,
+    RXGate, RYGate, RZGate, CXGate, CZGate,
+    RXXGate, RZXGate, RZZGate, RYYGate, CRZGate
+ )
+
+# TODO I don't have X gate!!!
+
 from ..qaoa_components import Hamiltonian
 
 from ..utilities import exp_val_hamiltonian_termwise, energy_expectation, exp_val_pair, exp_val_single
@@ -36,8 +44,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
     def __init__(self, backend, n_batches):
         super().__init__(backend)
         self.n_batches = n_batches
-        
-        print(self.backend.gate_applicator.create_quantum_circuit(self.backend.n_qubits))
     
     def get_counts(self, params, n_shots = None):
         '''
@@ -51,7 +57,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         s_list = [] 
         for _ in range(0, self.n_batches):
             s_list.append(random.getrandbits(self.backend.n_qubits)) 
-        #print("negating schedule ", s_list)
         #s_list = [3, 0, 1, 2] # TESTING ONLY, can be specified by the user 
         #s_list = [1, 1, 1, 1]
         
@@ -69,25 +74,35 @@ class SPAMTwirlingWrapper(BaseWrapper):
             s_binary = format(s, 'b').zfill(self.backend.n_qubits) # convert to binary
             arr = np.fromiter(s_binary, dtype=int)
             negated_qubits = np.where(arr == 1)[0] # where the syndrome has a 1
-            #print("qubits to negate ", negated_qubits)
 
-            # create a new copy of the initial abstract circuit
+            
+            ##### Implementation using gate applicators #####
+            circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(self.backend.n_qubits)
+            
+            for negated_qubit in negated_qubits:
+                circuit_to_append = self.backend.gate_applicator.apply_1q_fixed_gate(qiskit_gate=XGate, qubit_1=negated_qubit, circuit=circuit_to_append)
+            
+            self.backend.append_state = circuit_to_append
+            print(self.backend.append_state)
+            
+            '''
+            ##### Implementation using baseclasses and function abstract to real #####
             append_abstract_circuit = []
 
             for negated_qubit in negated_qubits:
                 append_abstract_circuit.append(XGateMap(qubit_1 = negated_qubit))
-            
+               
             self.backend.append_state = self.backend.from_abstract_to_real(append_abstract_circuit)
+            
+            '''
         
             counts_batch = self.backend.get_counts(params, n_shots_batch) # should call the original get_counts of the specific backend
-            #print(" batch counts before negating ", counts_batch)
             
             # consider putting this in utilities.py, similar to permuted_counts with SWAP gates (?)
             for key in counts_batch.keys():   
                 negated_key = s ^ int(key, 2)  # bitwise XOR to classically negate randomly chosen qubits, specified by s
-                negated_counts.update([(format(negated_key, 'b').zfill(self.backend.n_qubits), counts_batch[key])])  # make sure that the key is of the correct length 
-            
-            #print("negated counts ", negated_counts)
+                negated_counts.update([(format(negated_key, 'b').zfill(self.backend.n_qubits), counts_batch[key])])  
+        
             
             # Add to the final counts dict
             for key in negated_counts:
@@ -96,7 +111,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
                 else:
                     counts.update([(key, negated_counts[key])])
         
-        #print("final counts ", counts)
         
         self.measurement_outcomes = counts
         
@@ -126,28 +140,18 @@ class SPAMTwirlingWrapper(BaseWrapper):
             if len(term) == 1:
                 i = term.qubit_indices[0]
                 exp_vals_z[i] = exp_val_single(i, counts)
-                #print("Exp value ", exp_vals_z[i])
                 exp_vals_z[i] /= lambdas_single[i]
-                #print("Exp value ", exp_vals_z[i])
 
                 energy += exp_vals_z[i] * self.qaoa_descriptor.cost_single_qubit_coeffs[i] 
-                #print("energy ", energy)
 
             # If two-body term compute correlation
             elif len(term) == 2:
                 i, j = term.qubit_indices
                 corr_matrix[i][j] = exp_val_pair((i, j), counts)
-                #print("Corr matrix ", corr_matrix[i][j])
-                #print("Lambdas double ", lambdas_double[i][j])
-
                 corr_matrix[i][j] /= lambdas_double[i][j]
                 
-                # J_ij = hamiltonian_as_dict[(i,j)]
-
-                #print("Corr matrix ", corr_matrix[i][j])
                 energy += corr_matrix[i][j] * hamiltonian_as_dict[(i,j)]  
-                #print("energy ", energy)
-
+                
             # If constant term, ignore
             if len(term) == 0:
                 continue
@@ -185,7 +189,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
                                                               )
             
             lambdas_double += np.outer(lambdas_single, lambdas_single)
-            #print(lambda_single, lambda_double)
             print(np.array2string(lambdas_single, separator=","))
             print(np.array2string(lambdas_double, separator=","))
             
@@ -194,27 +197,26 @@ class SPAMTwirlingWrapper(BaseWrapper):
         else:
             #cost = energy_expectation(self.qaoa_descriptor.cost_hamiltonian, counts)
             
-            lambdas_single = [0.71031 ,0.689986,0.710518,0.      ,0.      ,0.      ,0.      ,0.      ,
- 0.      ]
+            lambdas_single = [0.71031 ,0.689986,0.710518,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ]
             
             lambdas_double = [[0.      ,0.489932,0.500204,0.503316,0.49047 ,0.      ,0.      ,0.      ,
-  0.      ],
- [0.      ,0.      ,0.494388,0.      ,0.      ,0.      ,0.484026,0.      ,
-  0.      ],
- [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.505002,
-  0.      ],
- [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
-  0.507354],
- [0.      ,0.      ,0.      ,0.      ,0.      ,0.48548 ,0.      ,0.48856 ,
-  0.      ],
- [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.499968,0.      ,
-  0.      ],
- [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
-  0.      ],
- [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
-  0.      ],
- [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
-  0.      ]]
+                              0.      ],
+                             [0.      ,0.      ,0.494388,0.      ,0.      ,0.      ,0.484026,0.      ,
+                              0.      ],
+                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.505002,
+                              0.      ],
+                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
+                              0.507354],
+                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.48548 ,0.      ,0.48856 ,
+                              0.      ],
+                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.499968,0.      ,
+                              0.      ],
+                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
+                              0.      ],
+                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
+                              0.      ],
+                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
+                              0.      ]]
             
             
             cost = self.expectation_value_spam_twirled(counts, hamiltonian, lambdas_single, lambdas_double)
