@@ -1256,6 +1256,60 @@ class TestingOperators(unittest.TestCase):
             str(context.exception),
         )
 
+    def test_hamiltonian_dict(self):
+        """Test if the method produces
+        the correct dictionary corresponding to the Hamiltonian.
+
+        It creates a dictionary of the form
+        {(i, j): coeff} where i, j are the indices of the qubits if
+        argument `classical` is set true in the function otherwise,
+        produces a dictionary of the form {PauliOp}: coeff}
+        """
+
+        # TEST 1
+        # Define Hamiltonian attributes
+        terms = [[0, 1], [0, 2], [1, 2]]
+        coefficients = [1, 0.5, 0.5]
+        constant = 2
+
+        # Generate Hamiltonian
+        hamiltonian = Hamiltonian.classical_hamiltonian(terms, coefficients, constant)
+
+        # Generate dictionary
+        hamiltonian_dict = hamiltonian.hamiltonian_dict()
+
+        # Correct dictionary
+        correct_dict = {(0, 1): 1, (0, 2): 0.5, (1, 2): 0.5}
+
+        # Test if dictionary was correctly computed
+        assert (
+            hamiltonian_dict == correct_dict
+        ), f"Hamiltonian dictionary did not yield correct dictionary"
+
+        # TEST 2
+        terms = [PauliOp("XX", (0, 1)), PauliOp("YY", (0, 2))]
+        coeffs = [1, 0.5]
+        constant = 0
+
+        # Generate Hamiltonian
+        hamiltonian = Hamiltonian(terms, coeffs, constant)
+
+        # Generate dictionaries
+        hamiltonian_dict_indices = hamiltonian.hamiltonian_dict(classical=True)
+        hamiltonian_dict_pauliop = hamiltonian.hamiltonian_dict(classical=False)
+
+        # Correct dictionaries
+        correct_dict_indices = {(0, 1): 1, (0, 2): 0.5}
+        correct_dict_pauliop = {PauliOp("XX", (0, 1)): 1, PauliOp("YY", (0, 2)): 0.5}
+
+        assert (
+            hamiltonian_dict_indices == correct_dict_indices
+        ), "Hamiltonian dictionary did not yield correct dictionary"
+
+        assert (
+            hamiltonian_dict_pauliop == correct_dict_pauliop
+        ), "Hamiltonian dictionary did not yield correct dictionary"
+
 
 if __name__ == "__main__":
     unittest.main()

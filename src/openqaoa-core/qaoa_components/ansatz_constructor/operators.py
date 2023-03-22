@@ -115,6 +115,9 @@ class PauliOp:
         # Store phase accumulated from simplification
         self.phase = phase
 
+    def __hash__(self) -> int:
+        return hash((self.qubit_indices, self.pauli_str, self.phase))
+
     @staticmethod
     def _sort_pauli_op(qubit_indices: Tuple[int], pauli_str: str):
         """
@@ -263,12 +266,13 @@ class PauliOp:
         """
         Check whether two pauli_operators are equivalent, by comparing qubit indices and pauli strings.
         """
-        condition1 = (
-            True if self.qubit_indices == other_pauli_op.qubit_indices else False
+        tuple_1 = (self.qubit_indices, self.pauli_str, self.phase)
+        tuple_2 = (
+            other_pauli_op.qubit_indices,
+            other_pauli_op.pauli_str,
+            other_pauli_op.phase,
         )
-        condition2 = True if self.pauli_str == other_pauli_op.pauli_str else False
-
-        return condition1 and condition2
+        return tuple_1 == tuple_2
 
     def __copy__(self):
         """
@@ -479,6 +483,8 @@ class Hamiltonian:
 
                 # Update the coefficients with phase from Pauli Operators
                 self.coeffs.append(coeff * term.phase)
+                # after absorbing the phase in coeff, set the phase in term to 1
+                term.phase = 1
 
         if divide_into_singles_and_pairs:
             self._divide_into_singles_pairs()
@@ -544,6 +550,29 @@ class Hamiltonian:
         for term, coeff in zip(self.terms, self.coeffs):
             hamiltonian_expression += Symbol(str(coeff) + term.__str__())
         return hamiltonian_expression
+
+    # A function that outputs a dictionary of the Hamiltonian terms and coefficients
+    def hamiltonian_dict(self, classical: bool = True):
+        """
+        Generates a dictionary of the Hamiltonian terms and coefficients.
+
+        Parameters
+        ----------
+        classical: `bool`, optional
+            If true, returns a dictionary containing only qubit indices as terms
+
+        Returns
+        -------
+        `dict`
+            Dictionary of the Hamiltonian terms and coefficients.
+        """
+        hamiltonian_dict = {}
+        for term, coeff in zip(self.terms, self.coeffs):
+            if classical:
+                hamiltonian_dict[tuple(term.qubit_indices)] = coeff
+            else:
+                hamiltonian_dict[term] = coeff
+        return hamiltonian_dict
 
     def __add__(self, other_hamiltonian):
         """
