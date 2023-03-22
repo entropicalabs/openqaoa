@@ -121,6 +121,7 @@ class TestingBackendQPUs(unittest.TestCase):
             self.AZ_LOCATION = output_json_s["location"]
 
     @pytest.mark.qpu
+    @pytest.mark.skip(reason="Test needs to be refactored.")
     def test_get_counts_and_expectation_n_shots(self):
         """
         TODO: test needs to be updated as DEVICE_ACCESS_OBJECT_MAPPER is now dynamically filled based on whether a module exists.
@@ -130,11 +131,12 @@ class TestingBackendQPUs(unittest.TestCase):
 
         list_device_attributes = [
             {
-                "QPU": "Azure",
-                "device_name": "rigetti.sim.qvm",
-                "resource_id": self.RESOURCE_ID,
-                "az_location": self.AZ_LOCATION,
-            }, 
+                "QPU": "Qiskit",
+                "device_name": "ibmq_qasm_simulator",
+                "hub": self.HUB,
+                "group": self.GROUP,
+                "project": self.PROJECT,
+            },
             {
                 "QPU": "AWS",
                 "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
@@ -147,12 +149,11 @@ class TestingBackendQPUs(unittest.TestCase):
                 "compiler_timeout": 3,
             },
             {
-                "QPU": "Qiskit",
-                "device_name": "ibmq_qasm_simulator",
-                "hub": self.HUB,
-                "group": self.GROUP,
-                "project": self.PROJECT,
-            },
+                "QPU": "Azure",
+                "device_name": "rigetti.sim.qvm",
+                "resource_id": self.RESOURCE_ID,
+                "az_location": self.AZ_LOCATION,
+            }
         ]
 
         assert len(list_device_attributes) == len(

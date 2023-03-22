@@ -1,3 +1,4 @@
+# The script will stop if any intermediate file raises an error.
 set -e
 
 # TODO: Dynamically generate names (The order of installing and pushing is important here.)

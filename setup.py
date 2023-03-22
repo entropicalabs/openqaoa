@@ -1,53 +1,35 @@
 from setuptools import setup, find_namespace_packages
-from os import getcwd
+from os import getcwd, listdir
 
 current_path = getcwd()
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+# Dev package will share versions with the core in it.
 with open("src/openqaoa-core/openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
-requirements = [
-    "amazon-braket-sdk>=1.23.0",
-    "pandas>=1.3.5",
-    "sympy>=1.10.1",
-    "numpy>=1.22.3",
-    "networkx>=2.8",
-    "matplotlib>=3.4.3",
-    "scipy>=1.8",
-    "qiskit>=0.36.1",
-    "pyquil>=3.1.0",
-    "docplex>=2.23.1",
-    "autograd>=1.4",
-    "semantic_version>=2.10",
-    "autoray>=0.3.1",
-    "azure-quantum",
-    "qdk",
-    "qiskit-qir",
-    "qiskit-ionq",
-    "azure-quantum[qiskit]",
-]
+plugin_name = [each_item for each_item in listdir('src') if 'openqaoa-' in each_item]
 
-requirements_docs = [
-    "sphinx>=4.5.0",
-    "sphinx-autodoc-typehints>=1.18.1",
-    "sphinx-rtd-theme>=1.0.0",
-    "nbsphinx>=0.8.9",
-    "ipython>=8.10.0",
-    "nbconvert>=6.5.1",
-]
+# Scan plugins for their requirements and collate them.
+requirements_dict = {'requirements': [], 
+                     'requirements_docs': [], 
+                     'requirements_test': []}
 
-requirements_test = [
-    "pytest>=7.1.0",
-    "pytest-cov>=3.0.0",
-    "ipython>=8.2.0",
-    "nbconvert>=6.5.1",
-    "pandas>=1.4.3",
-    "plotly>=5.9.0",
-    "cplex>=22.1.0.0",
-]
+for each_key, each_value in requirements_dict.items():
+    for each_plugin_name in plugin_name:
+        try:
+            with open('src/'+each_plugin_name+'/'+each_key+'.txt') as rq_file:
+                plugin_requirements = rq_file.readlines()
+                plugin_requirements = [r.strip() for r in plugin_requirements]
+                requirements_dict[each_key].extend(plugin_requirements)
+        except FileNotFoundError:
+            continue
+
+requirements = requirements_dict['requirements']
+requirements_docs = requirements_dict['requirements_docs']
+requirements_test = requirements_dict['requirements_test']
 
 package_names = [
     "openqaoa",
