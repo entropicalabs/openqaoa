@@ -83,7 +83,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
                 circuit_to_append = self.backend.gate_applicator.apply_1q_fixed_gate(qiskit_gate=XGate, qubit_1=negated_qubit, circuit=circuit_to_append)
             
             self.backend.append_state = circuit_to_append
-            print(self.backend.append_state)
+            #print(self.backend.append_state)
             
             '''
             ##### Implementation using baseclasses and function abstract to real #####
@@ -118,9 +118,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
     
     def expectation_value_spam_twirled(self, counts: Dict, hamiltonian: Hamiltonian, lambdas_single: list, lambdas_double: list):
         """
-        need to have access to the lambdas here for correcting
-
-        TODO: lambdas should be dictionaries
+        need to have access to some calibration data here for correcting
         """
         # Initialize the z expectation values and correlation matrix with 0s
         n_qubits = hamiltonian.n_qubits
@@ -171,55 +169,35 @@ class SPAMTwirlingWrapper(BaseWrapper):
         correct these expectation values with the calibration data, lambda_i, lambda_ij
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation 
         '''
+        #print(self.qaoa_descriptor)
         counts = self.get_counts(params, n_shots)
         
         hamiltonian = self.backend.qaoa_descriptor.cost_hamiltonian
         
-        calibration = False
+        calibration_data = counts  # if empty circuit, otherwise should coem from the calibration data
         
-        if calibration:
-            # TODO: lambdas should be dictionaries
-            lambdas_single, lambdas_double = exp_val_hamiltonian_termwise(variational_params = params,
-                                                               qaoa_backend = self.backend,
-                                                               hamiltonian = hamiltonian,
-                                                               mixer_type = "X",  # TODO
-                                                               p = self.qaoa_descriptor.p,
-                                                               qaoa_optimized_counts = counts,
-                                                               analytical = False,
-                                                              )
+        #TODO change, a bit hacky
+        mixer_type = self.qaoa_descriptor.mixer_qubits_singles[1] or self.qaoa_descriptor.mixer_qubits_pairs[1:2]
+
+        # TODO: lambdas should be dictionaries
+        lambda_singles, lambda_pairs = exp_val_hamiltonian_termwise(variational_params = params,
+                                                           qaoa_backend = self.backend,
+                                                           hamiltonian = hamiltonian,
+                                                           mixer_type = mixer_type,  # TODO
+                                                           p = self.qaoa_descriptor.p,
+                                                           qaoa_optimized_counts = counts,
+                                                           analytical = False,
+                                                          )
+
+        lambda_pairs += np.outer(lambda_singles, lambda_singles)
+        #print(np.array2string(lambda_singles, separator=","))
+        #print(np.array2string(lambda_pairs, separator=","))
+
+        #cost = cost_function(counts, hamiltonian, self.cvar_alpha)
+        #cost = energy_expectation(self.qaoa_descriptor.cost_hamiltonian, counts)
+        
             
-            lambdas_double += np.outer(lambdas_single, lambdas_single)
-            print(np.array2string(lambdas_single, separator=","))
-            print(np.array2string(lambdas_double, separator=","))
-            
-            cost = cost_function(counts, hamiltonian, self.cvar_alpha)
-            
-        else:
-            #cost = energy_expectation(self.qaoa_descriptor.cost_hamiltonian, counts)
-            
-            lambdas_single = [0.71031 ,0.689986,0.710518,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ]
-            
-            lambdas_double = [[0.      ,0.489932,0.500204,0.503316,0.49047 ,0.      ,0.      ,0.      ,
-                              0.      ],
-                             [0.      ,0.      ,0.494388,0.      ,0.      ,0.      ,0.484026,0.      ,
-                              0.      ],
-                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.505002,
-                              0.      ],
-                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
-                              0.507354],
-                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.48548 ,0.      ,0.48856 ,
-                              0.      ],
-                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.499968,0.      ,
-                              0.      ],
-                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
-                              0.      ],
-                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
-                              0.      ],
-                             [0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,0.      ,
-                              0.      ]]
-            
-            
-            cost = self.expectation_value_spam_twirled(counts, hamiltonian, lambdas_single, lambdas_double)
+        cost = self.expectation_value_spam_twirled(counts, hamiltonian, lambda_singles, lambda_pairs)
             
             
         return cost
