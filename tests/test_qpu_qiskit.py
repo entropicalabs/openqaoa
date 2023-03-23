@@ -464,11 +464,10 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
         variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
         qiskit_device = DeviceQiskit(
-            self.API_TOKEN,
+            "ibm_perth",
             self.HUB,
             self.GROUP,
             self.PROJECT,
-            "ibmq_bogota",
             as_emulator=True,
         )
 
@@ -501,9 +500,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
         variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
-        qiskit_device = DeviceQiskit(
-            self.API_TOKEN, self.HUB, self.GROUP, self.PROJECT, "ibm_perth"
-        )
+        qiskit_device = DeviceQiskit("ibm_perth", self.HUB, self.GROUP, self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(
             qaoa_descriptor, qiskit_device, shots, None, None, False
