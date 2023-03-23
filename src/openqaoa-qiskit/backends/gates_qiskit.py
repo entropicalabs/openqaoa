@@ -1,6 +1,7 @@
 from typing import Callable
 
 from qiskit.circuit.library import (
+    XGate,
     RXGate, RYGate, RZGate, CXGate, CZGate,
     RXXGate, RZXGate, RZZGate, RYYGate, CRZGate
  )
@@ -13,6 +14,7 @@ import openqaoa.qaoa_components.ansatz_constructor.gates as gates_core
 class QiskitGateApplicator(gates_core.GateApplicator):
 
     QISKIT_OQ_GATE_MAPPER = {
+        gates_core.X.__name__: XGate,
         gates_core.RZ.__name__: RZGate,
         gates_core.RX.__name__: RXGate,
         gates_core.RY.__name__: RYGate,
@@ -28,6 +30,11 @@ class QiskitGateApplicator(gates_core.GateApplicator):
     library = 'qiskit'
     
     def create_quantum_circuit(self, n_qubits) -> QuantumCircuit:
+        '''
+        Function which creates and empty circuit for the specific backend. 
+        Needed for twirling but can be used inside parametric circuit too
+        instead of creating parametric_circuit = QuantumCircuit(self.qureg)
+        '''
         qureg = QuantumRegister(n_qubits)
         parametric_circuit = QuantumCircuit(qureg)
         return parametric_circuit

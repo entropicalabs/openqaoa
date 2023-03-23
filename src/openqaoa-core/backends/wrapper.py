@@ -7,17 +7,13 @@ from .basebackend import VQABaseBackend
 
 from .cost_function import cost_function
 
-from ..qaoa_components.ansatz_constructor.gatemap import (
-    XGateMap
+from ..qaoa_components.ansatz_constructor.gates import (
+    X
 )
 
-from qiskit.circuit.library import (
-    XGate,
-    RXGate, RYGate, RZGate, CXGate, CZGate,
-    RXXGate, RZXGate, RZZGate, RYYGate, CRZGate
- )
+from qiskit.circuit.library import (XGate,)
 
-# TODO I don't have X gate!!!
+
 
 from ..qaoa_components import Hamiltonian
 
@@ -44,6 +40,9 @@ class SPAMTwirlingWrapper(BaseWrapper):
     def __init__(self, backend, n_batches):
         super().__init__(backend)
         self.n_batches = n_batches
+        
+        #self.lambda_singles = ... 
+        # self.calibration_factors = # TODO
     
     def get_counts(self, params, n_shots = None):
         '''
@@ -81,6 +80,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
             
             for negated_qubit in negated_qubits:
                 circuit_to_append = self.backend.gate_applicator.apply_1q_fixed_gate(qiskit_gate=XGate, qubit_1=negated_qubit, circuit=circuit_to_append)
+                #circuit_to_append = self.backend.gate_applicator.apply_gate(X, negated_qubit, circuit_to_append)
             
             self.backend.append_state = circuit_to_append
             #print(self.backend.append_state)
@@ -154,9 +154,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
             if len(term) == 0:
                 continue
 
-        # Remove expectation value contribution from the correlations
-        corr_matrix -= np.outer(exp_vals_z, exp_vals_z)
-
         energy += hamiltonian.constant
 
         return energy
@@ -183,7 +180,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         lambda_singles, lambda_pairs = exp_val_hamiltonian_termwise(variational_params = params,
                                                            qaoa_backend = self.backend,
                                                            hamiltonian = hamiltonian,
-                                                           mixer_type = mixer_type,  # TODO
+                                                           mixer_type = mixer_type,
                                                            p = self.qaoa_descriptor.p,
                                                            qaoa_optimized_counts = counts,
                                                            analytical = False,

@@ -36,7 +36,7 @@ class XGateMap(GateMap):
     def _decomposition_standard(self) -> List[Tuple]:
 
         return [
-            (RX, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi)]),
+            (X, [self.qubit_1]),
         ]
     
 class SWAPGateMap(GateMap):

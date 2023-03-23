@@ -76,7 +76,7 @@ class QAOAQiskitBackendShotBasedSimulator(
     noise_model: `NoiseModel`
         The Qiskit noise model to be used for the simulation.
     """
-
+    # TODO do we need this here ???
     QISKIT_GATEMAP_LIBRARY = [
         RXGateMap,
         RYGateMap,
@@ -163,7 +163,7 @@ class QAOAQiskitBackendShotBasedSimulator(
         the circuit.
         """
         # self.reset_circuit()
-        parametric_circuit = QuantumCircuit(self.qureg)
+        parametric_circuit = QuantumCircuit(self.qureg)  # consider changing this too with my new function
         
 
         if self.prepend_state:
