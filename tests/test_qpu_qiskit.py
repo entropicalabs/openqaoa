@@ -442,6 +442,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
                 "There are lesser qubits on the device than the number of qubits required for the circuit.",
             )
 
+    @pytest.mark.qpu
     def test_integration_on_emulator(self):
         """
         Test Emulated QPU Workflow. Checks if the expectation value is returned
