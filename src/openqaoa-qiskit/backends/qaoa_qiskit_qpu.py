@@ -147,7 +147,7 @@ class QAOAQiskitQPUBackend(
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
             )
-        return circuit_with_angles
+        return transpiled_circuit
 
     @property
     def parametric_qaoa_circuit(self) -> QuantumCircuit:
