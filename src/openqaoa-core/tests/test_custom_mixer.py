@@ -111,7 +111,7 @@ class TestingCustomMixer(unittest.TestCase):
                 p=1,
                 mixer_coeffs=custom_mixer_block_coeffs,
             )
-            device_local = create_device(location="local", name="qiskit.shot_simulator")
+            device_local = create_device(location="local", name="vectorized")
             variate_params = create_qaoa_variational_params(
                 qaoa_descriptor, "standard", "rand"
             )

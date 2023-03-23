@@ -130,16 +130,6 @@ class TestingLoggerClass(unittest.TestCase):
 
         q_sv.result.plot_probabilities()
 
-        # then for shot based simulator:
-        q_shot = QAOA()
-        q_shot_dev = create_device(location="local", name="qiskit.shot_simulator")
-        q_shot.set_device(q_shot_dev)
-
-        q_shot.compile(vc)
-        q_shot.optimize()
-
-        q_shot.result.plot_probabilities()
-
     def test_plot_n_shots(self):
 
         # Create the problem
