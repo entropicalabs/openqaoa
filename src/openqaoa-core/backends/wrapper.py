@@ -17,7 +17,7 @@ from qiskit.circuit.library import (XGate,)
 
 from ..qaoa_components import Hamiltonian
 
-from ..utilities import exp_val_hamiltonian_termwise, energy_expectation, exp_val_pair, exp_val_single
+from ..utilities import exp_val_hamiltonian_termwise, energy_expectation, exp_val_pair, exp_val_single, negate_counts_dictionary
 
 class BaseWrapper(VQABaseBackend):
     def __init__(self, backend):
@@ -67,15 +67,10 @@ class SPAMTwirlingWrapper(BaseWrapper):
         for batch in range(0, self.n_batches):
             #print("batch ", batch)
             s = s_list[batch]
-            
-            negated_counts = {}
-           
             s_binary = format(s, 'b').zfill(self.backend.n_qubits) # convert to binary
             arr = np.fromiter(s_binary, dtype=int)
             negated_qubits = np.where(arr == 1)[0] # where the syndrome has a 1
 
-            
-            ##### Implementation using gate applicators #####
             circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(self.backend.n_qubits)
             
             for negated_qubit in negated_qubits:
@@ -84,25 +79,10 @@ class SPAMTwirlingWrapper(BaseWrapper):
             
             self.backend.append_state = circuit_to_append
             #print(self.backend.append_state)
-            
-            '''
-            ##### Implementation using baseclasses and function abstract to real #####
-            append_abstract_circuit = []
-
-            for negated_qubit in negated_qubits:
-                append_abstract_circuit.append(XGateMap(qubit_1 = negated_qubit))
-               
-            self.backend.append_state = self.backend.from_abstract_to_real(append_abstract_circuit)
-            
-            '''
         
             counts_batch = self.backend.get_counts(params, n_shots_batch) # should call the original get_counts of the specific backend
             
-            # consider putting this in utilities.py, similar to permuted_counts with SWAP gates (?)
-            for key in counts_batch.keys():   
-                negated_key = s ^ int(key, 2)  # bitwise XOR to classically negate randomly chosen qubits, specified by s
-                negated_counts.update([(format(negated_key, 'b').zfill(self.backend.n_qubits), counts_batch[key])])  
-        
+            negated_counts = negate_counts_dictionary(counts_dictionary = counts_batch, s = s)
             
             # Add to the final counts dict
             for key in negated_counts:

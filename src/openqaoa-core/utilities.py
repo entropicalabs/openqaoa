@@ -1634,6 +1634,32 @@ def permute_counts_dictionary(
 
     return permuted_counts
 
+def negate_counts_dictionary(
+    counts_dictionary: dict, s: int
+) -> dict:
+    """Negates every bitstring of the counts dictionary according to
+    the position of the X gates before the measurement. 
+    Used in SPAM Twirling.
+    Parameters
+    ----------
+    counts_dictionary : `dict`
+        The measurement outcomes obtained from the Simulator/QPU
+    s: int
+        Syndrome whose binary representation denotes the negated qubits. For example, 4 = 100, signifies that the first qubit had an X gate just before the measurement, which requires the first digit of the every key to be classically negated inside this function. 
+
+    Returns
+    -------
+    `dict`
+        The negated counts dictionary
+    """
+    negated_counts = {}
+    for key in counts_dictionary.keys():  
+        n_qubits = len(key)
+        negated_key = s ^ int(key, 2)  # bitwise XOR to classically negate randomly chosen qubits, specified by s
+        negated_counts.update([(format(negated_key, 'b').zfill(n_qubits), counts_dictionary[key])])  
+    return negated_counts
+        
+
 
 ################################################################################
 # CHECKING FUNCTION
