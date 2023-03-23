@@ -96,11 +96,17 @@ class QAOAQiskitQPUBackend(
             False,
             None,
         ]:
-            raise Exception("Connection to {} was made. Error connecting to the specified backend.".format(self.device.device_location.upper()))
-            
+            raise Exception(
+                "Connection to {} was made. Error connecting to the specified backend.".format(
+                    self.device.device_location.upper()
+                )
+            )
+
         else:
-            
-            raise Exception("Error connecting to {}.".format(self.device.device_location.upper()))
+
+            raise Exception(
+                "Error connecting to {}.".format(self.device.device_location.upper())
+            )
 
         if self.device.n_qubits < self.n_qubits:
             raise Exception(
@@ -140,7 +146,7 @@ class QAOAQiskitQPUBackend(
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
             )
-        return circuit_with_angles
+        return transpiled_circuit
 
     @property
     def parametric_qaoa_circuit(self) -> QuantumCircuit:
