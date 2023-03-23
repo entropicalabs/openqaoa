@@ -1,4 +1,4 @@
-from time import time
+import time
 import unittest
 from unittest.mock import Mock
 import json
@@ -506,15 +506,16 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             qaoa_descriptor, qiskit_device, shots, None, None, False
         )
         circuit = qiskit_backend.qaoa_circuit(variate_params)
-        job = self.backend_qpu.run(circuit, shots=qiskit_backend.shots)
+        job = qiskit_backend.backend_qpu.run(circuit, shots=qiskit_backend.n_shots)
 
         # check if the cirucit is validated by IBMQ servers when submitted for execution
         # check the status of the job and keep retrying until its completed or queued
         while job.status().name not in ["DONE", "CANCELLED", "ERROR"]:
-            time.sleep(1)
             # if the job is queued, cancel the job
             if job.status().name == "QUEUED":
                 job.cancel()
+            else:
+                time.sleep(1)
 
         assert job.status().name in ["DONE", "CANCELLED"]
 
