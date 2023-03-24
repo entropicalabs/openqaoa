@@ -247,6 +247,7 @@ Contents
    notebooks/11_Mixer_example.ipynb
    notebooks/12_testing_azure.ipynb
    notebooks/13_optimizers.ipynb
+   notebooks/14_qaoa_benchmark.ipynb
    notebooks/X_dumping_data.ipynb
 
 

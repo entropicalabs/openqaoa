@@ -54,46 +54,6 @@ def _backend_arg_mapper(
                 var_values = [local_vars[each_name] for each_name in each_value]
                 input_dict = {each_key: dict(zip(each_value, var_values))}
                 BACKEND_ARGS_MAPPER.update(input_dict)
-        
-#     if BACKEND_BOOLEAN_LIST[0]:
-#         from openqaoa_braket.backends import DeviceAWS, QAOAAWSQPUBackend
-#         BACKEND_ARGS_MAPPER[QAOAAWSQPUBackend] = {
-#             "n_shots": n_shots,
-#             "disable_qubit_rewiring": disable_qubit_rewiring,
-#             "initial_qubit_mapping": initial_qubit_mapping
-#         }
-#     if BACKEND_BOOLEAN_LIST[2]:
-#         from openqaoa_qiskit.backends import (
-#             DeviceQiskit,
-#             QAOAQiskitQPUBackend,
-#             QAOAQiskitBackendShotBasedSimulator,
-#             QAOAQiskitBackendStatevecSimulator,
-#         )
-#         BACKEND_ARGS_MAPPER[QAOAQiskitBackendStatevecSimulator] = {}
-#         BACKEND_ARGS_MAPPER[QAOAQiskitBackendShotBasedSimulator] = {
-#             "n_shots": n_shots,
-#             "seed_simulator": seed_simulator,
-#             "qiskit_simulation_method": qiskit_simulation_method,
-#             "noise_model": noise_model,
-#             "initial_qubit_mapping": initial_qubit_mapping,
-#         }
-#         BACKEND_ARGS_MAPPER[QAOAQiskitQPUBackend] = {
-#             "n_shots": n_shots,
-#             "initial_qubit_mapping": initial_qubit_mapping,
-#         }
-#     if BACKEND_BOOLEAN_LIST[3]:
-#         from openqaoa_pyquil.backends import (
-#             DevicePyquil,
-#             QAOAPyQuilQPUBackend,
-#             QAOAPyQuilWavefunctionSimulatorBackend
-#         )
-#         BACKEND_ARGS_MAPPER[QAOAPyQuilWavefunctionSimulatorBackend] = {}
-#         BACKEND_ARGS_MAPPER[QAOAPyQuilQPUBackend] = {
-#             "n_shots": n_shots,
-#             "active_reset": active_reset,
-#             "rewiring": rewiring,
-#             "initial_qubit_mapping": initial_qubit_mapping,
-#         }
 
     final_backend_kwargs = {
         key: value
