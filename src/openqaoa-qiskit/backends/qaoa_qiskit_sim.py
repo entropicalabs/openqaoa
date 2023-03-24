@@ -27,6 +27,7 @@ from openqaoa.utilities import (
 )
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.qaoa_components.ansatz_constructor import (
+    XGateMap,
     RXGateMap,
     RYGateMap,
     RZGateMap,

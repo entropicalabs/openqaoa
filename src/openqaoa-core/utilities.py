@@ -1048,8 +1048,6 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
 
 
 def exp_val_hamiltonian_termwise(
-    variational_params: QAOAVariationalBaseParams,
-    qaoa_backend,
     hamiltonian: Hamiltonian,
     mixer_type: str,
     p: int,
@@ -1063,10 +1061,6 @@ def exp_val_hamiltonian_termwise(
 
     Parameters
     ----------
-    variational_params: `QAOAVariationalBaseParams`
-        Set of variational parameters in the QAOA ansatz.
-    qaoa_backend: `QAOABaseBackend`
-        Chosen backend on which QAOA is performed.
     hamiltonian: `Hamiltonian`
         Hamiltonian object containing the problem statement.
     p: `int`
@@ -1158,6 +1152,63 @@ def exp_val_hamiltonian_termwise(
 
     return exp_vals_z, corr_matrix
 
+def calculate_calibration_factors(
+    hamiltonian: Hamiltonian,
+    qaoa_optimized_counts: Optional[dict] = None,
+) -> Dict:
+    """
+    Computes the calibration factors <Z_{i}> and <Z_{i}Z_{j}>,
+    using the optimization results obtained from an empty (initial state = |000..0> QAOA circuit.
+
+    Parameters
+    ----------
+    hamiltonian: `Hamiltonian`
+        Hamiltonian object containing the problem statement.
+    qaoa_optimized_counts: `dict`
+        Dictionary containing the measurement counts of optimized QAOA circuit.
+    Returns
+    -------
+    calibration_factors: `dict`
+        Calibration factors as a dict.
+    """
+
+    # Define number of qubits, problem hamiltonian and QAOA parameters
+    n_qubits = hamiltonian.n_qubits
+
+    # Extract Hamiltonian terms
+    terms = list(hamiltonian.terms)
+
+    # Initialize an empty dict
+    calibration_factors = {}
+    
+    
+    if isinstance(qaoa_optimized_counts, dict):
+        counts_dict = qaoa_optimized_counts
+    else:
+        raise ValueError(
+            "Please specify calibration data to compute calibration factors."
+        )
+
+    # Compute single spin and pairs of spins expectation values of terms present in the Hamiltonian
+    for term in terms:
+
+        # If bias term compute single spins expectation value
+        if len(term) == 1:
+            i = term.qubit_indices[0]
+            exp_val_z = exp_val_single(i, counts_dict)
+            calibration_factors.update({(i,): exp_val_z})
+
+        # If two-body term compute pairs of spins expectation values
+        elif len(term) == 2:
+            i, j = term.qubit_indices
+            exp_val_zz = exp_val_pair((i, j), counts_dict)
+            calibration_factors.update({(i, j): exp_val_zz})
+
+        # If constant term, ignore
+        if len(term) == 0:
+            continue
+
+    return calibration_factors
 
 ################################################################################
 # ANALYTIC & KNOWN FORMULAE
@@ -1427,6 +1478,75 @@ def flip_counts(counts_dictionary: dict) -> dict:
     return output_counts_dictionary
 
 
+def permute_counts_dictionary(
+    counts_dictionary: dict, final_qubit_layout: List[int]
+) -> dict:
+    """Permutes the order of the qubits in the counts dictionary to the
+    original order if SWAP gates were used leading to modified qubit layout.
+    Parameters
+    ----------
+    counts_dictionary : `dict`
+        The measurement outcomes obtained from the Simulator/QPU
+    original_qubit_layout: List[int]
+        The qubit layout in which the qubits were initially
+    final_qubit_layout: List[int]
+        The final qubit layout after application of SWAPs
+
+    Returns
+    -------
+    `dict`
+        The permuted counts dictionary with qubits in the original place
+    """
+
+    # Create a mapping of original positions to final positions
+    original_qubit_layout = list(range(len(final_qubit_layout)))
+    mapping = {
+        original_qubit_layout[i]: final_qubit_layout[i]
+        for i in range(len(original_qubit_layout))
+    }
+    permuted_counts = {}
+
+    for basis, counts in counts_dictionary.items():
+
+        def permute_string(basis_state: str = basis, mapping: dict = mapping):
+            # Use the mapping to permute the string
+            permuted_string = "".join(
+                [basis_state[mapping[i]] for i in range(len(basis_state))]
+            )
+            return permuted_string
+
+        permuted_counts.update({permuted_string: counts})
+
+    return permuted_counts
+
+def negate_counts_dictionary(
+    counts_dictionary: dict, s: int
+) -> dict:
+    """Negates every bitstring of the counts dictionary according to
+    the position of the X gates before the measurement. 
+    Used in SPAM Twirling.
+    Parameters
+    ----------
+    counts_dictionary : `dict`
+        The measurement outcomes obtained from the Simulator/QPU
+    s: int
+        Syndrome whose binary representation denotes the negated qubits. For example, 4 = 100, signifies that the first qubit had an X gate just before the measurement, which requires the first digit of the every key to be classically negated inside this function. 
+
+    Returns
+    -------
+    `dict`
+        The negated counts dictionary
+    """
+    negated_counts = {}
+    for key in counts_dictionary.keys():  
+        n_qubits = len(key)
+        negated_key = s ^ int(key, 2)  # bitwise XOR to classically negate randomly chosen qubits, specified by s
+        negated_counts.update([(format(negated_key, 'b').zfill(n_qubits), counts_dictionary[key])])  
+    return negated_counts
+        
+
+
+
 @round_value
 def qaoa_probabilities(statevector) -> dict:
     """
@@ -1496,6 +1616,7 @@ def delete_keys_from_dict(obj: Union[list, dict], keys_to_delete: List[str]):
             delete_keys_from_dict(item, keys_to_delete)
 
     return obj
+
 
 
 def convert2serialize(obj, complex_to_string: bool = False):
@@ -1592,73 +1713,6 @@ def is_valid_uuid(uuid_to_test: str) -> bool:
         # If it's a value error, then the string is not a valid string for a UUID.
         return False
 
-
-def permute_counts_dictionary(
-    counts_dictionary: dict, final_qubit_layout: List[int]
-) -> dict:
-    """Permutes the order of the qubits in the counts dictionary to the
-    original order if SWAP gates were used leading to modified qubit layout.
-    Parameters
-    ----------
-    counts_dictionary : `dict`
-        The measurement outcomes obtained from the Simulator/QPU
-    original_qubit_layout: List[int]
-        The qubit layout in which the qubits were initially
-    final_qubit_layout: List[int]
-        The final qubit layout after application of SWAPs
-
-    Returns
-    -------
-    `dict`
-        The permuted counts dictionary with qubits in the original place
-    """
-
-    # Create a mapping of original positions to final positions
-    original_qubit_layout = list(range(len(final_qubit_layout)))
-    mapping = {
-        original_qubit_layout[i]: final_qubit_layout[i]
-        for i in range(len(original_qubit_layout))
-    }
-    permuted_counts = {}
-
-    for basis, counts in counts_dictionary.items():
-
-        def permute_string(basis_state: str = basis, mapping: dict = mapping):
-            # Use the mapping to permute the string
-            permuted_string = "".join(
-                [basis_state[mapping[i]] for i in range(len(basis_state))]
-            )
-            return permuted_string
-
-        permuted_counts.update({permuted_string: counts})
-
-    return permuted_counts
-
-def negate_counts_dictionary(
-    counts_dictionary: dict, s: int
-) -> dict:
-    """Negates every bitstring of the counts dictionary according to
-    the position of the X gates before the measurement. 
-    Used in SPAM Twirling.
-    Parameters
-    ----------
-    counts_dictionary : `dict`
-        The measurement outcomes obtained from the Simulator/QPU
-    s: int
-        Syndrome whose binary representation denotes the negated qubits. For example, 4 = 100, signifies that the first qubit had an X gate just before the measurement, which requires the first digit of the every key to be classically negated inside this function. 
-
-    Returns
-    -------
-    `dict`
-        The negated counts dictionary
-    """
-    negated_counts = {}
-    for key in counts_dictionary.keys():  
-        n_qubits = len(key)
-        negated_key = s ^ int(key, 2)  # bitwise XOR to classically negate randomly chosen qubits, specified by s
-        negated_counts.update([(format(negated_key, 'b').zfill(n_qubits), counts_dictionary[key])])  
-    return negated_counts
-        
 
 
 ################################################################################
