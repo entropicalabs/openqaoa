@@ -803,7 +803,6 @@ class TestProblem(unittest.TestCase):
         ]
         expected_constant = 62.51983851122417
         tsp_qubo = TSP(city_coordinates).qubo
-        print(tsp_qubo.weights)
         self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
         self.assertEqual(expected_weights, tsp_qubo.weights)
         self.assertEqual(expected_constant, tsp_qubo.constant)
@@ -991,7 +990,7 @@ class TestProblem(unittest.TestCase):
         bin_terms, bin_weights = sp.terms_and_weights()
         terms, weights = QUBO.convert_qubo_to_ising(n_variables, bin_terms, bin_weights)
         qubo = sp.qubo
-        print(terms)
+
         self.assertTrue(terms_list_equality(bin_terms, sp_terms))
         self.assertEqual(list(bin_weights), sp_weights)
         self.assertTrue(terms_list_equality(terms, conv_sp_terms))
@@ -1014,7 +1013,7 @@ class TestProblem(unittest.TestCase):
         sp_prob = ShortestPath.random_instance(
             n_nodes=3, edge_probability=1, seed=1234, source=0, dest=2
         ).qubo
-        print(sp_prob.terms)
+
         self.assertTrue(terms_list_equality(sp_rand_terms, sp_prob.terms))
         self.assertEqual(sp_rand_weights, sp_prob.weights)
         self.assertEqual(sp_rand_constant, sp_prob.constant)
@@ -1065,6 +1064,8 @@ class TestProblem(unittest.TestCase):
             "shortest_path": ShortestPath.random_instance(
                 n_nodes=randint(3, 15), edge_probability=random()
             ),
+            "bin_packing": BinPacking.random_instance(
+            ),
         }
         qubo_random_instances = {
             k: v.qubo for k, v in problems_random_instances.items()
@@ -1103,6 +1104,9 @@ class TestProblem(unittest.TestCase):
             ],
             "minimum_vertex_cover": ["problem_type", "G", "field", "penalty"],
             "shortest_path": ["problem_type", "G", "source", "dest"],
+            "bin_packing":["problem_type", "weights", "weight_capacity","penalty",
+                           "n_items", "method", "simplifications", "n_bins",
+                           'min_bins', 'solution'],
             "generic_qubo": ["problem_type"],
         }
 
@@ -1139,7 +1143,10 @@ class TestProblem(unittest.TestCase):
             problem_instance = qubos[type].problem_instance.copy()
 
             problem = create_problem_from_dict(problem_instance)
-
+            if problem_instance["problem_type"] == "bin_packing":
+                print(problem.problem_instance)
+                print()
+                print(problems[type].problem_instance)
             assert (
                 problem.problem_instance == problems[type].problem_instance
             ), "Problem from instance method is not correct for problem type {}".format(

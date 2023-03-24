@@ -33,10 +33,10 @@ class FromDocplex2IsingModel(object):
             Lagrange multipliers of the penalization term using the unbalanced
             penalization method.
             
-            For the unbalnaced penalization => - \lambda_1 h(x) + \lambda_2 * h(x)**2
+            For the unbalanced penalization => - \lambda_1 h(x) + \lambda_2 * h(x)**2
             where h(x) >= 0 is the inequality constraint.
             strength_ineq = [\lambda_1, \lambda_2]
-            Usually \lambda_2 < \lambda_1. Please refere to the paper:
+            Usually \lambda_2 < \lambda_1. Please refer to the paper:
                 Unbalanced penalization: A new approach to encode inequality constraints
                 of combinatorial problems for quantum optimization algorithms
                 https://arxiv.org/abs/2211.13914
