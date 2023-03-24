@@ -15,9 +15,6 @@ from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.problems import MinimumVertexCover, QUBO, MaximumCut
 from openqaoa.qaoa_components import Hamiltonian
 
-ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
-
-
 def _compare_qaoa_results(dict_old, dict_new, bool_cmplx_str):
 
     for key in dict_old.keys():
@@ -116,7 +113,7 @@ class TestingResultOutputs(unittest.TestCase):
         )
         recorded_evals = [0, 5]
 
-        for device_name in ALLOWED_LOCAL_SIMUALTORS:
+        for device_name in SUPPORTED_LOCAL_SIMULATORS:
 
             for each_choice in choice_combination:
 
@@ -129,6 +126,7 @@ class TestingResultOutputs(unittest.TestCase):
                     maxiter=5,
                 )
                 device = create_device("local", device_name)
+                print(device.device_name)
                 q.set_device(device)
                 q.compile(vc)
                 q.optimize()

@@ -14,7 +14,7 @@ from typing import Union, List, Dict, Optional, Any, Tuple
 from copy import deepcopy
 import numpy as np
 
-from .devices_core import DeviceBase
+from .basedevice import DeviceBase
 from ..qaoa_components import (
     GateMap,
     QAOADescriptor,

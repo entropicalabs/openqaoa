@@ -1,7 +1,7 @@
 from qiskit import IBMQ
 from qiskit_aer import AerSimulator
 from typing import List
-from openqaoa.backends.devices_core import DeviceBase
+from openqaoa.backends.basedevice import DeviceBase
 
 
 class DeviceQiskit(DeviceBase):

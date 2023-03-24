@@ -3,14 +3,6 @@ from __future__ import annotations
 from .plugin_finder import PLUGIN_DICT
 from .devices_core import DeviceBase, DeviceLocal
 
-<<<<<<< HEAD:src/openqaoa-core/openqaoa/backends/qaoa_device.py
-=======
-
-PLUGIN_DICT = plugin_finder_dict()
-
-
-
->>>>>>> dev:src/openqaoa-core/backends/qaoa_device.py
 def device_class_arg_mapper(
     device_class: DeviceBase,
     hub: str = None,

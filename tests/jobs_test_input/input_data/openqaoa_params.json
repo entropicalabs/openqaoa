@@ -1,7 +1,7 @@
 {
   "header": {
-    "atomic_id": "210a6aaa-932d-45a6-b260-f3fdd085c547",
-    "experiment_id": "74779bb1-867c-4131-89d2-ac9238422cd9",
+    "atomic_id": "8ad7b87f-1376-4590-8d1f-5155cf89ce91",
+    "experiment_id": "8312a289-1126-42cd-8493-d12e8f6c6793",
     "project_id": null,
     "algorithm": "rqaoa",
     "description": null,
@@ -22,7 +22,7 @@
       "p": 1,
       "rqaoa_type": "custom",
       "rqaoa_n_max": 1,
-      "rqaoa_n_cutoff": 3
+      "rqaoa_n_cutoff": 6
     }
   },
   "data": {
@@ -212,8 +212,8 @@
     },
     "input_parameters": {
       "device": {
-        "device_location": "local",
-        "device_name": "vectorized"
+        "device_location": "aws",
+        "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
       },
       "backend_properties": {
         "init_hadamard": true,
@@ -268,15 +268,12 @@
         "rqaoa_type": "custom",
         "n_max": 1,
         "steps": [
-          2,
-          2,
-          2,
-          2,
-          2,
-          2,
-          2
+          1,
+          1,
+          1,
+          1
         ],
-        "n_cutoff": 3,
+        "n_cutoff": 6,
         "original_hamiltonian": null,
         "counter": 0
       }
