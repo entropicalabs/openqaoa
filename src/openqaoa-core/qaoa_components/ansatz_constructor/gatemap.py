@@ -25,19 +25,6 @@ class GateMap(ABC):
     @abstractmethod
     def _decomposition_standard(self) -> List[Tuple]:
         pass
-
-class XGateMap(GateMap):
-    def __init__(self, qubit_1: int):
-
-        super().__init__(qubit_1)
-        self.gate_label = GateMapLabel(n_qubits=1, gatemap_type=GateMapType.FIXED)
-
-    @property
-    def _decomposition_standard(self) -> List[Tuple]:
-
-        return [
-            (X, [self.qubit_1]),
-        ]
     
 class SWAPGateMap(GateMap):
     def __init__(self, qubit_1: int, qubit_2: int):

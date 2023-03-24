@@ -27,7 +27,6 @@ from openqaoa.utilities import (
 )
 from openqaoa.backends.cost_function import cost_function
 from openqaoa.qaoa_components.ansatz_constructor import (
-    XGateMap,
     RXGateMap,
     RYGateMap,
     RZGateMap,
@@ -37,11 +36,9 @@ from openqaoa.qaoa_components.ansatz_constructor import (
     RZXGateMap,
 )
 
-from .qaoa_qiskit_base import QAOAQiskitBaseBackend
-
 
 class QAOAQiskitBackendShotBasedSimulator(
-    QAOABaseBackendShotBased, QAOABaseBackendParametric, QAOAQiskitBaseBackend
+    QAOABaseBackendShotBased, QAOABaseBackendParametric
 ):
     """
     Local Shot-based simulators offered by Qiskit
@@ -150,9 +147,6 @@ class QAOAQiskitBackendShotBasedSimulator(
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = parametric_circuit.bind_parameters(memory_map)
-        #print(new_parametric_circuit)
-        #print(self.append_state)
-        #print(type(self.append_state))
         self.append_state = []
         return new_parametric_circuit
 
