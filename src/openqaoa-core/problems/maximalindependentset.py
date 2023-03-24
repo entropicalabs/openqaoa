@@ -80,6 +80,7 @@ class MIS(Problem):
         )
         return MIS(G)
 
+    @property
     def docplex_model(self):
         mdl = Model('MIS')
         num_vertices = self.G.number_of_nodes()
@@ -100,7 +101,7 @@ class MIS(Problem):
         -------
             The QUBO encoding of this problem.
         """
-        cplex_model = self.docplex_model()
+        cplex_model = self.docplex_model
         qubo_docplex = FromDocplex2IsingModel(cplex_model).ising_model
         
         return QUBO(self.G.number_of_nodes(), qubo_docplex.terms + [[]], qubo_docplex.weights + [qubo_docplex.constant], self.problem_instance)
