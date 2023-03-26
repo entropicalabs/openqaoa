@@ -560,6 +560,7 @@ class Hamiltonian:
         ----------
         classical: `bool`, optional
             If true, returns a dictionary containing only qubit indices as terms
+            else returns a dictionary containing PauliOp objects as terms.
 
         Returns
         -------
@@ -572,6 +573,8 @@ class Hamiltonian:
                 hamiltonian_dict[tuple(term.qubit_indices)] = coeff
             else:
                 hamiltonian_dict[term] = coeff
+            # add the constant term
+            hamiltonian_dict[()] = self.constant
         return hamiltonian_dict
 
     def __add__(self, other_hamiltonian):
