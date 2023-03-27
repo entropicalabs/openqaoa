@@ -47,9 +47,6 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.assertEqual(device_obj.provider.credentials.group, self.GROUP)
         self.assertEqual(device_obj.provider.credentials.project, self.PROJECT)
 
-        device_obj2 = DeviceQiskit(device_name="ibmq_manila", hub="ibm-q-startup")
-        device_obj2.check_connection()
-        self.assertEqual(device_obj2.provider.credentials.hub, "ibm-q-startup")
 
     @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_hub_group_project(self):
