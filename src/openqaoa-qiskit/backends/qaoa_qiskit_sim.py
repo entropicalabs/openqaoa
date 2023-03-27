@@ -9,6 +9,7 @@ from qiskit.opflow.primitive_ops import PauliSumOp
 from qiskit.quantum_info import Statevector
 from qiskit.circuit import Parameter
 
+from .gates_qiskit import QiskitGateApplicator
 from openqaoa.backends.basebackend import (
     QAOABaseBackendParametric,
     QAOABaseBackendShotBased,
@@ -149,6 +150,7 @@ class QAOAQiskitBackendShotBasedSimulator(
         """
         # self.reset_circuit()
         parametric_circuit = QuantumCircuit(self.qureg)
+        gate_applicator = QiskitGateApplicator()
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -172,10 +174,8 @@ class QAOAQiskitBackendShotBasedSimulator(
                 decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
-                low_gate = each_tuple[0]()
-                parametric_circuit = low_gate.apply_ibm_gate(
-                    *each_tuple[1], parametric_circuit
-                )
+                gate = each_tuple[0](gate_applicator,*each_tuple[1])
+                gate.apply_gate(parametric_circuit)
 
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
@@ -364,6 +364,7 @@ class QAOAQiskitBackendStatevecSimulator(
         """
         # self.reset_circuit()
         parametric_circuit = QuantumCircuit(self.qureg)
+        gate_applicator = QiskitGateApplicator()
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -387,10 +388,8 @@ class QAOAQiskitBackendStatevecSimulator(
                 decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
-                low_gate = each_tuple[0]()
-                parametric_circuit = low_gate.apply_ibm_gate(
-                    *each_tuple[1], parametric_circuit
-                )
+                gate = each_tuple[0](gate_applicator,*each_tuple[1])
+                gate.apply_gate(parametric_circuit)
 
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
