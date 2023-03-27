@@ -12,7 +12,6 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    if : github.event.pull_request.draft == false
     strategy:
       fail-fast: false
       matrix:
@@ -20,6 +19,7 @@ jobs:
         python: [3.8]  
     # The type of runner that the job will run on
     runs-on:  ${{ matrix.os }}
+    if : github.event.pull_request.draft == false
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -79,8 +79,8 @@ jobs:
           files: ./coverage.xml
 
   docs:
-    if : github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    if : github.event.pull_request.draft == false
     steps:
       - name: Check out openqaoa
         uses: actions/checkout@v3
