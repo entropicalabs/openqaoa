@@ -252,14 +252,14 @@ class QAOA(Workflow):
         )
         
         backend_dict = self.backend_properties.__dict__.copy()
-        backend_dict.pop("spam_twirling")
-        backend_dict.pop("spam_twirling_options")
+        #backend_dict.pop("spam_twirling")
+        #backend_dict.pop("spam_twirling_options")
         
         self.backend = get_qaoa_backend(
             qaoa_descriptor=self.qaoa_descriptor,
             device=self.device,
-            wrapper=SPAMTwirlingWrapper if self.backend_properties.spam_twirling else None,
-            wrapper_options=self.backend_properties.spam_twirling_options,
+            wrapper=SPAMTwirlingWrapper if self.error_mitigation_properties.error_mitigation_technique == 'spam_twirling' else None,
+            wrapper_options={'n_batches' : self.error_mitigation_properties.n_batches, 'calibration_data_location':self.error_mitigation_properties.calibration_data_location},
             **backend_dict,
         )
 

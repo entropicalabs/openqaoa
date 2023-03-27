@@ -237,8 +237,8 @@ class BackendProperties(WorkflowProperties):
         active_reset: Optional[bool] = None,
         rewiring: Optional[str] = None,
         disable_qubit_rewiring: Optional[bool] = None,
-        spam_twirling: bool = False,
-        spam_twirling_options: dict = {},
+        #spam_twirling: bool = False,
+        #spam_twirling_options: dict = {},
     ):
 
         self.init_hadamard = init_hadamard
@@ -253,8 +253,8 @@ class BackendProperties(WorkflowProperties):
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.disable_qubit_rewiring = disable_qubit_rewiring
-        self.spam_twirling = spam_twirling
-        self.spam_twirling_options = spam_twirling_options
+        #self.spam_twirling = spam_twirling
+        #self.spam_twirling_options = spam_twirling_options
 
     # @property
     # def cvar_alpha(self):
@@ -267,6 +267,20 @@ class BackendProperties(WorkflowProperties):
     #             f"cvar_alpha must be between 0 and 1. Received {value}.")
     #     self._cvar_alpha = value
 
+
+class ErrorMitigationProperties(WorkflowProperties):
+    """
+    """
+    def __init__(
+    self,
+    error_mitigation_technique: Optional[str] = None,
+    n_batches: int = 10,
+    calibration_data_location: Optional[str] = None,
+    ):
+        
+        self.error_mitigation_technique = error_mitigation_technique
+        self.n_batches = n_batches
+        self.calibration_data_location = calibration_data_location
 
 class ClassicalOptimizer(WorkflowProperties):
     """

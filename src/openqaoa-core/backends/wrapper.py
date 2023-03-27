@@ -24,6 +24,7 @@ class BaseWrapper(VQABaseBackend):
 
     def __getattr__(self, name):
         return getattr(self.backend, name)
+        # problem is that the calibration data is not an attribute of the backend ???
 
     def expectation(self, *args, **kwargs):
         return self.backend.expectation(*args, **kwargs)
@@ -36,21 +37,23 @@ class BaseWrapper(VQABaseBackend):
 
 
 class SPAMTwirlingWrapper(BaseWrapper):
-    def __init__(self, backend, n_batches):
+    def __init__(self, backend, n_batches, calibration_data_location):
         super().__init__(backend)
         self.n_batches = n_batches
+        self.calibration_data_location = calibration_data_location
+        
+        print("self.n_batches ", self.n_batches)
+        print("self.calibration_data_location ", self.calibration_data_location)
 
-        self.calibration = False
-
-        if not self.calibration:
-            filename = "flip_noise"  # the name of where the calibration data is stored should come externally in the same way as n_batches
-            with open("calibration_data/{}.json".format(filename), "r") as f:
-                calibration_data = json.load(f)
+        with open(self.calibration_data_location, "r") as f:
+            calibration_data = json.load(f) # TODO this should be only one of the keys in the dict, also need registers, metadata, etc.
 
             # compute here so that we do it only once
             self.calibration_factors = calculate_calibration_factors(
                 self.backend.qaoa_descriptor.cost_hamiltonian, calibration_data
             )
+            
+        print("self.calibration_factors ", self.calibration_factors)
 
     def get_counts(self, params, n_shots=None):
         """
@@ -115,7 +118,9 @@ class SPAMTwirlingWrapper(BaseWrapper):
     def expectation_value_spam_twirled(
         self, counts: Dict, hamiltonian: Hamiltonian, calibration_factors: dict
     ):
-        """ """
+        """ 
+        TODO
+        """
 
         terms = [term.qubit_indices for term in hamiltonian.terms]
         coeffs = [coeff for coeff in hamiltonian.coeffs]
@@ -157,15 +162,18 @@ class SPAMTwirlingWrapper(BaseWrapper):
         """
         counts = self.get_counts(params, n_shots)
 
-        if self.calibration:
-            # filename = time.strftime("%Y%m%d-%H%M%S") # with the time in UTC
-            # filename = time.strftime("%Y%m%d")
-            # filename = 'realistic_noise'
-            # filename = 'biased_noise'
-            # filename = 'no_noise'
-            # filename = 'flip_noise'
-            with open("calibration_data/{}.json".format(filename), "w") as fp:
-                json.dump(counts, fp)
+        
+        # timestamp = time.strftime("%Y%m%d-%H%M%S") # with the time in UTC
+        # timestamp = time.strftime("%Y%m%d")
+        # TODO device info should come externally
+        # device = aspen
+        # device = rigetti
+        # device = 'realistic_noise'
+        # device = 'biased_noise'
+        # device = 'no_noise'
+        # device = 'flip_noise'
+        with open(self.calibration_data_location, "w") as fp:
+            json.dump(counts, fp)
 
         cost = self.expectation_value_spam_twirled(
             counts,

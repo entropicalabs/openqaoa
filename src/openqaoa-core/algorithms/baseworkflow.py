@@ -18,7 +18,7 @@ import json
 import gzip
 from os.path import exists
 
-from .workflow_properties import BackendProperties, ClassicalOptimizer
+from .workflow_properties import BackendProperties, ErrorMitigationProperties, ClassicalOptimizer
 from ..backends.devices_core import DeviceBase, DeviceLocal
 from ..problems import QUBO
 from ..utilities import delete_keys_from_dict, is_valid_uuid, generate_uuid
@@ -90,6 +90,7 @@ class Workflow(ABC):
 
         self.device = device
         self.backend_properties = BackendProperties()
+        self.error_mitigation_properties = ErrorMitigationProperties()
         self.classical_optimizer = ClassicalOptimizer()
         self.local_simulators = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
         self.cloud_provider = list(DEVICE_ACCESS_OBJECT_MAPPER.keys())
@@ -249,6 +250,26 @@ class Workflow(ABC):
 
         self.backend_properties = BackendProperties(**kwargs)
         return None
+    
+    @check_compiled
+    def set_error_mitigation_properties(self, **kwargs):
+        """
+        Set the error mitigation properties
+
+        Parameters
+        -------------------
+        """
+        for key, value in kwargs.items():
+            if hasattr(self.error_mitigation_properties, key):
+                pass  # setattr(self.error_mitigation, key, value)
+            else:
+                raise ValueError(
+                    f"Specified argument `{value}` for `{key}` in set_error_mitigation_properties is not supported"
+                )
+        
+        self.error_mitigation_properties = ErrorMitigationProperties(**kwargs)
+        return None
+    
 
     @check_compiled
     def set_classical_optimizer(self, **kwargs):
