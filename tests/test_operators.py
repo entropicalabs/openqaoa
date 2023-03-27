@@ -1279,7 +1279,7 @@ class TestingOperators(unittest.TestCase):
         hamiltonian_dict = hamiltonian.hamiltonian_dict()
 
         # Correct dictionary
-        correct_dict = {(0, 1): 1, (0, 2): 0.5, (1, 2): 0.5}
+        correct_dict = {(0, 1): 1, (0, 2): 0.5, (1, 2): 0.5, (): 2}
 
         # Test if dictionary was correctly computed
         assert (
@@ -1299,8 +1299,12 @@ class TestingOperators(unittest.TestCase):
         hamiltonian_dict_pauliop = hamiltonian.hamiltonian_dict(classical=False)
 
         # Correct dictionaries
-        correct_dict_indices = {(0, 1): 1, (0, 2): 0.5}
-        correct_dict_pauliop = {PauliOp("XX", (0, 1)): 1, PauliOp("YY", (0, 2)): 0.5}
+        correct_dict_indices = {(0, 1): 1, (0, 2): 0.5, (): 0}
+        correct_dict_pauliop = {
+            PauliOp("XX", (0, 1)): 1,
+            PauliOp("YY", (0, 2)): 0.5,
+            (): 0,
+        }
 
         assert (
             hamiltonian_dict_indices == correct_dict_indices
