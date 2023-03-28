@@ -270,16 +270,19 @@ class BackendProperties(WorkflowProperties):
 
 class ErrorMitigationProperties(WorkflowProperties):
     """
+    TODO
     """
     def __init__(
     self,
-    error_mitigation_technique: Optional[str] = None,
+    error_mitigation_technique: str = 'spam_twirling',
     n_batches: int = 10,
+    #schedule: Optional[???] # how to pass the negated qubits schedule ?
     calibration_data_location: Optional[str] = None,
     ):
         
         self.error_mitigation_technique = error_mitigation_technique
         self.n_batches = n_batches
+        # self.schedule
         self.calibration_data_location = calibration_data_location
 
 class ClassicalOptimizer(WorkflowProperties):

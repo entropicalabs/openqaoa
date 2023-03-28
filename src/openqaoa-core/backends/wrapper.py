@@ -24,7 +24,6 @@ class BaseWrapper(VQABaseBackend):
 
     def __getattr__(self, name):
         return getattr(self.backend, name)
-        # problem is that the calibration data is not an attribute of the backend ???
 
     def expectation(self, *args, **kwargs):
         return self.backend.expectation(*args, **kwargs)
@@ -41,9 +40,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         super().__init__(backend)
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
-        
-        print("self.n_batches ", self.n_batches)
-        print("self.calibration_data_location ", self.calibration_data_location)
 
         with open(self.calibration_data_location, "r") as f:
             calibration_data = json.load(f) # TODO this should be only one of the keys in the dict, also need registers, metadata, etc.
@@ -91,9 +87,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
                 circuit_to_append = self.backend.gate_applicator.apply_gate(
                     negation_gate, negated_qubit, circuit_to_append
                 )
-                # another way to do the same:
-                # circuit_to_append = self.backend.gate_applicator.apply_1q_fixed_gate(qiskit_gate=XGate, qubit_1=negated_qubit, circuit=circuit_to_append)
-
             self.backend.append_state = circuit_to_append
 
             counts_batch = self.backend.get_counts(
@@ -162,7 +155,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         """
         counts = self.get_counts(params, n_shots)
 
-        
+        ### To create and save my calibration data, think about another way to do this more consistently.
         # timestamp = time.strftime("%Y%m%d-%H%M%S") # with the time in UTC
         # timestamp = time.strftime("%Y%m%d")
         # TODO device info should come externally
@@ -172,8 +165,9 @@ class SPAMTwirlingWrapper(BaseWrapper):
         # device = 'biased_noise'
         # device = 'no_noise'
         # device = 'flip_noise'
-        with open(self.calibration_data_location, "w") as fp:
-            json.dump(counts, fp)
+        #calibration_data_location = 'calibration_data/' + str(device) + str(timestamp)
+        #with open(calibration_data_location, "w") as fp:
+            #json.dump(counts, fp)
 
         cost = self.expectation_value_spam_twirled(
             counts,

@@ -252,8 +252,6 @@ class QAOA(Workflow):
         )
         
         backend_dict = self.backend_properties.__dict__.copy()
-        #backend_dict.pop("spam_twirling")
-        #backend_dict.pop("spam_twirling_options")
         
         self.backend = get_qaoa_backend(
             qaoa_descriptor=self.qaoa_descriptor,
