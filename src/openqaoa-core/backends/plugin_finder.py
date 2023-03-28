@@ -7,7 +7,7 @@ def plugin_finder_dict() -> dict:
     the backend_config module of the respective plugin.
     """
     
-    available_plugins = entry_points().select(group='openqaoa.plugins')
+    available_plugins = entry_points.select(group='openqaoa.plugins')
     
     output_dict = dict()
     for each_plugin_entry_point in available_plugins:
