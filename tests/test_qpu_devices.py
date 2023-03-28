@@ -43,19 +43,20 @@ class TestingDeviceQiskit(unittest.TestCase):
 
         device_obj = DeviceQiskit(device_name="ibmq_manila")
         device_obj.check_connection()
-        
-        provider_instances = device_obj.provider.instances()
-        
-        if len(provider_instances) >= 2:
-            
-            for each_item in provider_instances[:2]:
-                
-                [hub, group, project] = each_item.split('/')
-                device_obj2 = DeviceQiskit(device_name="ibmq_manila", hub=hub, group=group, project=project)
-                device_obj2.check_connection()
-        
-                self.assertEqual(device_obj2.provider._account.instance, each_item)
 
+        provider_instances = device_obj.provider.instances()
+
+        if len(provider_instances) >= 2:
+
+            for each_item in provider_instances[:2]:
+
+                [hub, group, project] = each_item.split("/")
+                device_obj2 = DeviceQiskit(
+                    device_name="ibmq_manila", hub=hub, group=group, project=project
+                )
+                device_obj2.check_connection()
+
+                self.assertEqual(device_obj2.provider._account.instance, each_item)
 
     @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_hub_group_project(self):
@@ -182,15 +183,15 @@ class TestingDeviceAWS(unittest.TestCase):
     For any tests using provided credentials, the tests will only pass if those
     details provided are correct/valid with AWS Braket.
     """
-    
+
     @pytest.mark.braket_api
     def test_changing_aws_region(self):
-        
+
         device_obj = DeviceAWS(
-          device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1',
-          aws_region='us-east-1'
+            device_name="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            aws_region="us-east-1",
         )
-        
+
         device_obj.check_connection()
         default_region = device_obj.aws_region
 
@@ -203,9 +204,9 @@ class TestingDeviceAWS(unittest.TestCase):
 
         device_obj.check_connection()
         custom_region = device_obj.aws_region
-        
-        self.assertEqual('us-west-1', custom_region)
-        
+
+        self.assertEqual("us-west-1", custom_region)
+
     @pytest.mark.braket_api
     def test_changing_s3_bucket_names(self):
 
@@ -216,10 +217,10 @@ class TestingDeviceAWS(unittest.TestCase):
 
         device_obj.check_connection()
         custom_bucket = device_obj.s3_bucket_name
-        
-        self.assertEqual('random_new_name', custom_bucket)
-        
-    @pytest.mark.braket_api      
+
+        self.assertEqual("random_new_name", custom_bucket)
+
+    @pytest.mark.braket_api
     def test_check_connection_provider_no_backend_provided_credentials(self):
 
         """
@@ -233,7 +234,6 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.check_connection(), True)
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, None)
-
 
     @pytest.mark.braket_api
     def test_check_connection_provider_right_backend_provided_credentials(self):
@@ -255,7 +255,6 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.check_connection(), True)
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, True)
-
 
     @pytest.mark.braket_api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
@@ -328,12 +327,14 @@ class TestingDeviceAzure(unittest.TestCase):
                 self.assertEqual(device_obj.check_connection(), False)
                 self.assertEqual(device_obj.provider_connected, False)
                 self.assertEqual(device_obj.qpu_connected, None)
-        
-    @pytest.mark.api      
-    def test_check_connection_provider_no_backend_provided_resource_id_and_az_location(self):
-        
+
+    @pytest.mark.api
+    def test_check_connection_provider_no_backend_provided_resource_id_and_az_location(
+        self,
+    ):
+
         """
-        If no information about the device name, but the resource id and azure 
+        If no information about the device name, but the resource id and azure
         location used are correct, check_connection should return True.
         The provider_connected attribute should be updated to True.
         """
@@ -347,10 +348,12 @@ class TestingDeviceAzure(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, None)
 
     @pytest.mark.api
-    def test_check_connection_provider_right_backend_provided_resource_id_and_az_location(self):
+    def test_check_connection_provider_right_backend_provided_resource_id_and_az_location(
+        self,
+    ):
 
         """
-        If the correct device name is provided and the resource id and azure 
+        If the correct device name is provided and the resource id and azure
         location used are correct, check_connection should return True.
         The provider_connected attribute should be updated to True.
         The qpu_connected attribute should be updated to True.
@@ -374,10 +377,12 @@ class TestingDeviceAzure(unittest.TestCase):
         self.assertEqual(device_obj.qpu_connected, True)
 
     @pytest.mark.api
-    def test_check_connection_provider_wrong_backend_provided_resource_id_and_az_location(self):
-        
+    def test_check_connection_provider_wrong_backend_provided_resource_id_and_az_location(
+        self,
+    ):
+
         """
-        If device name provided is incorrect, and not empty, and the resource id 
+        If device name provided is incorrect, and not empty, and the resource id
         and azure location used are correct, check_connection should return False.
         The provider_connected attribute should be updated to True.
         The qpu_connected attribute should be updated to False.
