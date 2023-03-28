@@ -4,6 +4,7 @@ import numpy as np
 from pyquil import Program, gates
 from pyquil.api import WavefunctionSimulator
 
+from .gates_pyquil import PyquilGateApplicator
 from openqaoa.backends.basebackend import QAOABaseBackendStatevector
 from openqaoa.qaoa_components import QAOADescriptor
 from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
@@ -58,7 +59,8 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         `pyquil.Program`
                 A pyquil.Program object.
         """
-
+        gates_applicator = PyquilGateApplicator()
+        
         self.assign_angles(params)
 
         circuit = Program()
@@ -82,8 +84,8 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
                 decomposition = each_gate.decomposition("standard")
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                low_gate = each_tuple[0]()
-                circuit = low_gate.apply_pyquil_gate(*each_tuple[1], circuit)
+                gate = each_tuple[0](gates_applicator, *each_tuple[1])
+                gate.apply_gate(circuit)
 
         if self.append_state:
             circuit += self.append_state

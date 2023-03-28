@@ -2,7 +2,7 @@ import time
 import numpy as np
 
 from .rqaoa_workflow_properties import RqaoaParameters
-from ..baseworkflow import Workflow
+from ..baseworkflow import Workflow, check_compiled
 from ..qaoa import QAOA
 from ..workflow_properties import CircuitProperties
 from ...backends.devices_core import DeviceLocal, DeviceBase
@@ -149,6 +149,7 @@ class RQAOA(Workflow):
         # change algorithm name to rqaoa
         self.header["algorithm"] = "rqaoa"
 
+    @check_compiled
     def set_circuit_properties(self, **kwargs):
         """
         Specify the circuit properties to construct the QAOA circuits
@@ -211,6 +212,7 @@ class RQAOA(Workflow):
 
         return None
 
+    @check_compiled
     def set_rqaoa_parameters(self, **kwargs):
         """
         Specify the parameters to run a desired RQAOA program.

@@ -5,6 +5,7 @@ from typing import List, Optional
 import warnings
 
 from .devices import DevicePyquil
+from .gates_pyquil import PyquilGateApplicator
 from openqaoa.backends.basebackend import (
     QAOABaseBackendShotBased,
     QAOABaseBackendCloud,
@@ -15,6 +16,7 @@ from openqaoa.qaoa_components.variational_parameters.variational_baseparams impo
     QAOAVariationalBaseParams,
 )
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap
+from openqaoa.qaoa_components.ansatz_constructor.rotationangle import RotationAngle
 from openqaoa.utilities import generate_uuid
 
 
@@ -200,6 +202,8 @@ class QAOAPyQuilQPUBackend(
         `pyquil.Program`
             A pyquil.Program object.
         """
+        gates_applicator = PyquilGateApplicator()
+        
         if self.active_reset:
             parametric_circuit = Program(gates.RESET())
         else:
@@ -254,27 +258,21 @@ class QAOAPyQuilQPUBackend(
 
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0]()
-                if len(each_tuple[1]) == 1:
-                    qubits, rotation_angle = each_tuple[1][0], None
-                elif len(each_tuple[1]) == 2:
-                    qubits, rotation_angle = each_tuple[1]
+                if type(each_tuple[1][-1]) == RotationAngle:
+                    rotation_angle = each_tuple[1][-1]
+                    qubits = each_tuple[1][:-1]
                 else:
-                    raise ValueError(
-                        f"Specified an incorrect gate decomposition {each_tuple[1]}"
-                    )
-                if isinstance(qubits, list):
-                    new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
-                else:
-                    new_qubits = self.qubit_mapping[qubits]
+                    rotation_angle = None
+                    qubits = each_tuple[1]
+                if not isinstance(qubits, list):
+                    qubits = [qubits]
+                new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
+                    
                 if rotation_angle is None:
-                    parametric_circuit = gate.apply_pyquil_gate(
-                        new_qubits, parametric_circuit
-                    )
+                    gate = each_tuple[0](gates_applicator, *new_qubits)
                 else:
-                    parametric_circuit = gate.apply_pyquil_gate(
-                        new_qubits, rotation_angle, parametric_circuit
-                    )
+                    gate = each_tuple[0](gates_applicator, *new_qubits, rotation_angle)
+                gate.apply_gate(parametric_circuit)
 
         if self.append_state:
             parametric_circuit += self.append_state

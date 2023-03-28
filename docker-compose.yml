@@ -1,0 +1,28 @@
+# Docker compose mostly used for testing purposes: it provides dockers to interact with OQ's braket jobs and rigetti's QVM
+version: '3'
+
+networks:
+  local_bridge:
+    external: true
+
+services:
+  amazon-braket-oq-dev:
+    image: amazon-braket-oq-dev
+    networks:
+     - local_bridge
+  qvm:
+    container_name: qvm
+    image: rigetti/qvm:latest
+    command: ["-S"]
+    networks:
+     - local_bridge
+    ports:
+     - 5000:5000
+  quilc:
+    container_name: quilc
+    image: rigetti/quilc:latest
+    command: ["-P", "-S" ]
+    networks:
+     - local_bridge
+    ports:
+     - 5555:5555

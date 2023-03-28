@@ -28,9 +28,9 @@ class DeviceAzure(DeviceBase):
         device_name: `str`
             The name of the Azure remote QPU/Simulator to be used
         resource_id: `str`
-            resource_id
+            The resource_id of the Workplace
         az_location: `str`
-            az_location
+            The location of the Azure Workplace. e.g. "westus"
         """
 
         self.resource_id = resource_id

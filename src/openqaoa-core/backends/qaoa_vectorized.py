@@ -9,6 +9,7 @@ from scipy.sparse import csc_matrix, kron, diags
 from scipy.sparse.linalg import expm
 
 from .basebackend import QAOABaseBackendStatevector
+from .gates_vectorized import VectorizedGateApplicator
 from ..qaoa_components import QAOADescriptor, Hamiltonian
 from ..qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
@@ -820,6 +821,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         -------
             None
         """
+        gates_applicator = VectorizedGateApplicator()
+        
         # generate a job id for the wavefunction evaluation
         self.job_id = generate_uuid()
 
@@ -834,8 +837,8 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
             low_level_gate_list.extend(each_gate.decomposition("trivial"))
 
         for each_tuple in low_level_gate_list:
-            gate = each_tuple[0]()
-            gate.apply_vector_gate(*each_tuple[1], self)
+            gate = each_tuple[0](gates_applicator, *each_tuple[1])
+            gate.apply_gate(self)
 
         # Handle append state
         if self.append_state is not None:
@@ -890,7 +893,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # Reshape wavefunction
         wavefn_ = self.wavefn
 
-        self.measurement_outcomes = self.wavefn.flatten()
+        self.measurement_outcomes = wavefn_.flatten()
 
         # Compute the expectation value and its standard deviation
         ham_wf = self.ham_op * wavefn_
@@ -922,7 +925,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         # Reshape wavefunction
         wavefn_ = self.wavefn
 
-        self.measurement_outcomes = self.wavefn.flatten()
+        self.measurement_outcomes = wavefn_.flatten()
 
         # Compute the expectation value and its standard deviation
         ham_wf = self.ham_op * wavefn_
