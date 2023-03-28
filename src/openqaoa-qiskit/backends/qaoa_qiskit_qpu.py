@@ -4,11 +4,11 @@ import warnings
 
 # IBM Qiskit imports
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, transpile
-from qiskit.providers.ibmq.job import (
-    IBMQJobApiError,
-    IBMQJobInvalidStateError,
-    IBMQJobFailureError,
-    IBMQJobTimeoutError,
+from qiskit_ibm_provider.job.exceptions import (
+    IBMJobApiError,
+    IBMJobInvalidStateError,
+    IBMJobFailureError,
+    IBMJobTimeoutError,
 )
 from qiskit.circuit import Parameter
 
@@ -239,12 +239,12 @@ class QAOAQiskitQPUBackend(
                     counts = job.result().get_counts()
                     api_contact = True
                     job_state = True
-                except (IBMQJobApiError, IBMQJobTimeoutError):
+                except (IBMJobApiError, IBMJobTimeoutError):
                     print("There was an error when trying to contact the IBMQ API.")
                     job_state = True
                     no_of_api_retries += 1
                     time.sleep(5)
-                except (IBMQJobFailureError, IBMQJobInvalidStateError):
+                except (IBMJobFailureError, IBMJobInvalidStateError):
                     print("There was an error with the state of the Job in IBMQ.")
                     no_of_job_retries += 1
                     break
