@@ -49,8 +49,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
                 self.backend.qaoa_descriptor.cost_hamiltonian, calibration_data
             )
             
-        print("self.calibration_factors ", self.calibration_factors)
-
     def get_counts(self, params, n_shots=None):
         """
         Modified function to...
