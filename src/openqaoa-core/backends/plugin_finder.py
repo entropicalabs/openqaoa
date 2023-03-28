@@ -1,6 +1,11 @@
 from importlib.metadata import entry_points
 
-def plugin_finder_dict() -> list:
+def plugin_finder_dict() -> dict:
+    
+    """
+    Returns a dictionary whose key:value pairs are the names of the plugin and
+    the backend_config module of the respective plugin.
+    """
     
     available_plugins = entry_points().select(group='openqaoa.plugins')
     
