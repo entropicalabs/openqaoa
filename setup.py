@@ -29,7 +29,6 @@ requirements = [
     "qiskit-qir",
     "qiskit-ionq",
     "azure-quantum[qiskit]",
-    "importlib-metadata",
 ]
 
 requirements_docs = [
