@@ -18,6 +18,7 @@ requirements = [
     "matplotlib>=3.4.3",
     "scipy>=1.8",
     "qiskit>=0.36.1",
+    "qiskit-ibm-provider",
     "pyquil>=3.1.0",
     "docplex>=2.23.1",
     "autograd>=1.4",
