@@ -2,7 +2,7 @@ from importlib.metadata import entry_points
 
 def plugin_finder_dict() -> list:
     
-    available_plugins = entry_points()['openqaoa.plugins']
+    available_plugins = entry_points().select(group='openqaoa.plugins')
     
     output_dict = dict()
     for each_plugin_entry_point in available_plugins:
