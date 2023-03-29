@@ -26,7 +26,7 @@ setup(
     packages=find_packages(where="."),
     entry_points={
         "openqaoa.plugins": [
-            "qiskit = openqaoa_qiskit.utilities"
+            "qiskit = openqaoa_qiskit.backend_config"
         ]
     },
     url="https://github.com/entropicalabs/openqaoa",

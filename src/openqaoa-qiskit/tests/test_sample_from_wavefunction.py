@@ -133,39 +133,5 @@ class TestGetSamplesMethod(unittest.TestCase):
             prob_wf_qiskit, samples_prob_qiskit, decimal=3
         )
 
-    # def testing_w_init_prog(self):
-    # 	"""
-    # 	This function creates an init_prog and then implements a Hamiltonian
-    # 	with zero betas and gammas.
-    # 	"""
-    # 	reg = [0,1,2,3,4,5]
-    # 	init_terms = [(i,) for i in reg]
-    # 	init_weights = [1]*len(init_terms)
-    # 	init_p=2
-
-    # 	init_params = ([[np.pi/4]*len(reg),
-    # 					[np.pi/2,0,0,0,0,np.pi/2]],
-    # 					[[-np.pi/4]*len(init_terms),
-    # 					[0]*len(reg)],
-    # 					[[],[]])
-    # 	hyperparams_init = HyperParams(init_terms,init_weights,reg,init_p)
-    # 	init_prog = ExtendedParams(hyperparams_init,init_params)
-
-    # 	terms,weights = zip(*random_hamiltonian(reg).items())
-    # 	terms, weights = list(terms),list(weights)
-    # 	p=1
-    # 	trainable_params = ([0],[0])
-    # 	hyperparams = HyperParams(terms,weights,reg,p)
-
-    # 	qaoa_params = StandardParams(hyperparams,trainable_params)
-    # 	cost_fn = QAOACostVector(qaoa_params,init_prog=init_prog)
-
-    # 	solution = '100001'
-    # 	shot_results = cost_fn.get_samples(qaoa_params.raw(), nshots=15)
-    # 	bool_list = [x == solution for x in shot_results]
-
-    # 	assert all(bool_list)
-
-
 if __name__ == "__main__":
     unittest.main()

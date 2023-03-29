@@ -26,7 +26,7 @@ setup(
     packages=find_packages(where="."),
     entry_points={
         "openqaoa.plugins": [
-            "pyquil = openqaoa_pyquil.utilities"
+            "pyquil = openqaoa_pyquil.backend_config"
         ]
     },
     url="https://github.com/entropicalabs/openqaoa",

@@ -1328,52 +1328,69 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error
             ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when not passing any param"
 
-        # check that it works with shots
-        q = QAOA()
-        device = create_device(location="local", name="qiskit.qasm_simulator")
-        q.set_device(device)
-        q.set_circuit_properties(p=3)
+    def test_qaoa_evaluate_circuit_shot(self):
 
-        # try to evaluate the circuit before compiling
-        error = False
-        try:
-            q.evaluate_circuit()
-        except Exception:
-            error = True
-        assert (
-            error
-        ), f"param_type={param_type}. `evaluate_circuit` should raise an error if the circuit is not compiled"
+        # problem
+        problem = MinimumVertexCover.random_instance(
+            n_nodes=6, edge_probability=0.8
+        ).qubo
 
-        # compile and evaluate the circuit, and check that the result is correct
-        q.compile(problem)
-        result = q.evaluate_circuit([1, 2, 1, 2, 1, 2])
-        assert isinstance(
-            result["measurement_results"], dict
-        ), "When using a shot-based simulator, `evaluate_circuit` should return a dict of counts"
-        assert (
-            abs(result["cost"]) >= 0
-        ), "When using a shot-based simulator, `evaluate_circuit` should return a cost"
-        assert (
-            abs(result["uncertainty"]) > 0
-        ), "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
+        if "qiskit.qasm_simulator" not in SUPPORTED_LOCAL_SIMULATORS:
+            self.skipTest(reason="Qiskit QASM Simulator is not available. Please install the qiskit plugin: openqaoa-qiskit.")
+        else:
+            # check that it works with shots
+            q = QAOA()
+            device = create_device(location="local", name="qiskit.qasm_simulator")
+            q.set_device(device)
+            q.set_circuit_properties(p=3)
 
-        cost = cost_function(
-            result["measurement_results"],
-            q.backend.qaoa_descriptor.cost_hamiltonian,
-            q.backend.cvar_alpha,
-        )
-        cost_sq = cost_function(
-            result["measurement_results"],
-            q.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
-            q.backend.cvar_alpha,
-        )
-        uncertainty = np.sqrt(cost_sq - cost**2)
-        assert (
-            np.round(cost, 12) == result["cost"]
-        ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct cost"
-        assert (
-            np.round(uncertainty, 12) == result["uncertainty"]
-        ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct uncertainty"
+            # try to evaluate the circuit before compiling
+            error = False
+            try:
+                q.evaluate_circuit()
+            except Exception:
+                error = True
+            assert (
+                error
+            ), f"param_type={param_type}. `evaluate_circuit` should raise an error if the circuit is not compiled"
+
+            # compile and evaluate the circuit, and check that the result is correct
+            q.compile(problem)
+            result = q.evaluate_circuit([1, 2, 1, 2, 1, 2])
+            assert isinstance(
+                result["measurement_results"], dict
+            ), "When using a shot-based simulator, `evaluate_circuit` should return a dict of counts"
+            assert (
+                abs(result["cost"]) >= 0
+            ), "When using a shot-based simulator, `evaluate_circuit` should return a cost"
+            assert (
+                abs(result["uncertainty"]) > 0
+            ), "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
+
+            cost = cost_function(
+                result["measurement_results"],
+                q.backend.qaoa_descriptor.cost_hamiltonian,
+                q.backend.cvar_alpha,
+            )
+            cost_sq = cost_function(
+                result["measurement_results"],
+                q.backend.qaoa_descriptor.cost_hamiltonian.hamiltonian_squared,
+                q.backend.cvar_alpha,
+            )
+            uncertainty = np.sqrt(cost_sq - cost**2)
+            assert (
+                np.round(cost, 12) == result["cost"]
+            ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct cost"
+            assert (
+                np.round(uncertainty, 12) == result["uncertainty"]
+            ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct uncertainty"
+
+    def test_qaoa_evaluate_circuit_analytical_sim(self):
+
+        # problem
+        problem = MinimumVertexCover.random_instance(
+            n_nodes=6, edge_probability=0.8
+        ).qubo
 
         # check that it works with analytical simulator
         q = QAOA()
@@ -1393,7 +1410,8 @@ class TestingVanillaQAOA(unittest.TestCase):
         ), "When using an analytical simulator, `evaluate_circuit` should return no measurement results"
 
     def test_change_properties_after_compilation(self):
-        device = create_device(location="local", name="qiskit.shot_simulator")
+
+        device = create_device(location="local", name="vectorized")
         q = QAOA()
         q.compile(QUBO.random_instance(4))
 

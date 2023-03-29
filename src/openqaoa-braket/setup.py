@@ -26,7 +26,7 @@ setup(
     packages=find_packages(where="."),
     entry_points={
         "openqaoa.plugins": [
-            "braket = openqaoa_braket.utilities"
+            "braket = openqaoa_braket.backend_config"
         ]
     },
     url="https://github.com/entropicalabs/openqaoa",

@@ -1,8 +1,4 @@
 import unittest
-import json
-import os
-import pytest
-import subprocess
 
 from openqaoa.backends.qaoa_backend import (
     get_qaoa_backend,
@@ -40,7 +36,7 @@ class TestingBackendLocal(unittest.TestCase):
         Check that the .get_counts admit n_shots as an argument, and works properly for the backend of all local devices.
         Also check that .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the QAOABaseBackendShotBased backends.
         """
-
+        print(DEVICE_NAME_TO_OBJECT_MAPPER)
         for device_name in DEVICE_NAME_TO_OBJECT_MAPPER.keys():
 
             # Analytical device doesn't have any of those so we are skipping it in the tests.

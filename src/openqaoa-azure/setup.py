@@ -27,7 +27,7 @@ setup(
     packages=find_packages(where="."),
     entry_points={
         "openqaoa.plugins": [
-            "azure = openqaoa_azure.utilities"
+            "azure = openqaoa_azure.backend_config"
         ]
     },
     url="https://github.com/entropicalabs/openqaoa",

@@ -326,12 +326,11 @@ class TestingResultOutputs(unittest.TestCase):
             nw.generators.fast_gnp_random_graph(n=6, p=0.6, seed=42)
         ).qubo
 
-        # run qaoa with different devices, and save the objcets in a list
+        # run qaoa with different devices, and save the objects in a list
         qaoas = []
         for device in [
-            create_device(location="local", name="qiskit.shot_simulator"),
-            create_device(location="local", name="vectorized"),
-        ]:
+                create_device(location="local", name=each_device_name) for each_device_name in SUPPORTED_LOCAL_SIMULATORS if each_device_name != "analytical_simulator"
+            ]:
 
             q = QAOA()
             q.set_device(device)
@@ -378,7 +377,7 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         mixer="x",
         method="cobyla",
         maxiter=15,
-        name_device="qiskit.statevector_simulator",
+        name_device="vectorized",
     ):
         """
         private function to run the RQAOA
@@ -685,10 +684,10 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # run rqaoa with different devices, and save the objcets in a list
         rqaoas = []
+        
         for device in [
-            create_device(location="local", name="qiskit.shot_simulator"),
-            create_device(location="local", name="vectorized"),
-        ]:
+                create_device(location="local", name=each_device_name) for each_device_name in SUPPORTED_LOCAL_SIMULATORS if each_device_name != "analytical_simulator"
+            ]:
 
             r = RQAOA()
             r.set_device(device)

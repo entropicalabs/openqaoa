@@ -1,7 +1,7 @@
 # unit testing for circuit routing functionality in OQ
 import unittest
 import numpy as np
-from typing import List, Callable, Optional
+from typing import List, Optional
 import pytest
 
 from openqaoa import QAOA
@@ -12,8 +12,8 @@ from openqaoa.qaoa_components import (
     Hamiltonian,
 )
 from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa.backends import QAOAvectorizedBackendSimulator, create_device
-from openqaoa.problems import NumberPartition, QUBO, Knapsack, MaximumCut, ShortestPath
+from openqaoa.backends import create_device
+from openqaoa.problems import MaximumCut, ShortestPath
 from openqaoa_pyquil.backends import DevicePyquil, QAOAPyQuilQPUBackend
 from openqaoa.backends.devices_core import DeviceBase
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import SWAPGateMap
@@ -605,210 +605,6 @@ class ExpectedRouting:
 class TestingQubitRouting(unittest.TestCase):
     @pytest.mark.qpu
     def setUp(self):
-
-        # case qubits device > qubits problem (IBM NAIROBI)
-        self.IBM_NAIROBI_KNAPSACK = ExpectedRouting(
-            qubo=Knapsack.random_instance(n_items=3, seed=20).qubo,
-            device_location="ibmq",
-            device_name="ibm_nairobi",
-            qpu_credentials={
-                "hub": "ibm-q",
-                "group": "open",
-                "project": "main",
-                "as_emulator": True,
-            },
-            problem_to_solve=[
-                (0, 1),
-                (2, 3),
-                (2, 4),
-                (3, 4),
-                (0, 2),
-                (0, 3),
-                (0, 4),
-                (1, 2),
-                (1, 3),
-                (1, 4),
-            ],
-            initial_mapping=None,
-            gate_indices_list=[
-                [2, 4],
-                [1, 2],
-                [3, 5],
-                [0, 5],
-                [4, 5],
-                [4, 5],
-                [2, 4],
-                [0, 5],
-                [2, 4],
-                [1, 2],
-                [4, 5],
-                [0, 5],
-                [1, 2],
-                [2, 4],
-                [2, 4],
-                [0, 5],
-                [4, 5],
-            ],
-            swap_mask=[
-                False,
-                False,
-                True,
-                False,
-                False,
-                True,
-                False,
-                False,
-                True,
-                False,
-                True,
-                False,
-                True,
-                False,
-                True,
-                True,
-                False,
-            ],
-            initial_physical_to_logical_mapping={6: 0, 2: 1, 1: 2, 4: 3, 3: 4, 5: 5},
-            final_logical_qubit_order=[5, 4, 0, 1, 2, 3],
-        )
-
-        # case qubits problem == 2 (IBM OSLO)
-        self.IBM_OSLO_QUBO2 = ExpectedRouting(
-            qubo=QUBO.from_dict(
-                {
-                    "terms": [[0, 1], [1]],
-                    "weights": [9.800730090617392, 26.220558065741773],
-                    "n": 2,
-                }
-            ),
-            device_location="ibmq",
-            device_name="ibm_oslo",
-            qpu_credentials={
-                "hub": "ibm-q",
-                "group": "open",
-                "project": "main",
-                "as_emulator": True,
-            },
-            problem_to_solve=[(0, 1)],
-            initial_mapping=None,
-            gate_indices_list=[[0, 2], [1, 2]],
-            swap_mask=[True, False],
-            initial_physical_to_logical_mapping={2: 0, 3: 1, 1: 2},
-            final_logical_qubit_order=[2, 1, 0],
-        )
-
-        # case qubits device == qubits problem (IBM OSLO)
-        self.IBM_OSLO_NPARTITION = ExpectedRouting(
-            qubo=NumberPartition.random_instance(n_numbers=7, seed=2).qubo,
-            device_location="ibmq",
-            device_name="ibm_oslo",
-            qpu_credentials={
-                "hub": "ibm-q",
-                "group": "open",
-                "project": "main",
-                "as_emulator": True,
-            },
-            problem_to_solve=[
-                (0, 1),
-                (0, 2),
-                (0, 3),
-                (0, 4),
-                (0, 5),
-                (0, 6),
-                (1, 2),
-                (1, 3),
-                (1, 4),
-                (1, 5),
-                (1, 6),
-                (2, 3),
-                (2, 4),
-                (2, 5),
-                (2, 6),
-                (3, 4),
-                (3, 5),
-                (3, 6),
-                (4, 5),
-                (4, 6),
-                (5, 6),
-            ],
-            initial_mapping=None,
-            gate_indices_list=[
-                [0, 5],
-                [1, 5],
-                [3, 4],
-                [4, 5],
-                [2, 3],
-                [3, 6],
-                [4, 5],
-                [0, 5],
-                [1, 5],
-                [3, 4],
-                [3, 4],
-                [2, 3],
-                [3, 6],
-                [4, 5],
-                [0, 5],
-                [1, 5],
-                [2, 3],
-                [3, 6],
-                [3, 4],
-                [3, 4],
-                [3, 6],
-                [0, 5],
-                [1, 5],
-                [4, 5],
-                [4, 5],
-                [1, 5],
-                [3, 6],
-                [3, 4],
-                [3, 4],
-                [1, 5],
-                [4, 5],
-            ],
-            swap_mask=[
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                True,
-                False,
-                False,
-                False,
-                True,
-                False,
-                False,
-                True,
-                False,
-                False,
-                True,
-                False,
-                False,
-                True,
-                False,
-                True,
-                False,
-                False,
-                True,
-                False,
-                True,
-                False,
-                True,
-                True,
-                False,
-            ],
-            initial_physical_to_logical_mapping={
-                0: 0,
-                2: 1,
-                4: 2,
-                5: 3,
-                3: 4,
-                1: 5,
-                6: 6,
-            },
-            final_logical_qubit_order=[3, 5, 1, 0, 6, 2, 4],
-        )
 
         # case qubits device > qubits problem (RIGETTI)
         self.RIGETTI_SHORTESTPATH = ExpectedRouting(
