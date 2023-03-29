@@ -1726,6 +1726,42 @@ def is_valid_uuid(uuid_to_test: str) -> bool:
 
 
 
+def permute_counts_dictionary(
+    counts_dictionary: dict, permutation_order: List[int]
+) -> dict:
+    """Permutes the order of the qubits in the counts dictionary to the
+    original order if SWAP gates were used leading to modified qubit layout.
+    Parameters
+    ----------
+    counts_dictionary : `dict`
+        The measurement outcomes obtained from the Simulator/QPU
+    permutation_order: List[int]
+        The qubit order to permute the dictionary with
+
+    Returns
+    -------
+    `dict`
+        The permuted counts dictionary with qubits in the original place
+    """
+
+    # Create a mapping of original positions to final positions
+    # original order always goes from 0 -> n-1
+    original_order = list(range(len(permutation_order)))
+    mapping = {
+        original_order[i]: permutation_order[i] for i in range(len(original_order))
+    }
+    permuted_counts = {}
+
+    for basis_state, counts in counts_dictionary.items():
+        # Use the mapping to permute the string
+        permuted_string = "".join(
+            [basis_state[mapping[i]] for i in range(len(basis_state))]
+        )
+        permuted_counts.update({permuted_string: counts})
+
+    return permuted_counts
+
+
 ################################################################################
 # CHECKING FUNCTION
 ################################################################################
@@ -1813,7 +1849,7 @@ def dicke_wavefunction(excitations, n_qubits):
 
     Parameters
     ----------
-    excitations: str
+    excitations: int
         The number of excitations in the basis
 
     n_qubits: int
