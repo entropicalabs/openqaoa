@@ -149,8 +149,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         """
 
         terms = [term.qubit_indices for term in hamiltonian.terms]
-        coeffs = [coeff for coeff in hamiltonian.coeffs]
-        hamiltonian_as_dict = dict(zip(terms, coeffs))
+        hamiltonian_as_dict = hamiltonian.hamiltonian_dict()
 
         energy = 0
 
