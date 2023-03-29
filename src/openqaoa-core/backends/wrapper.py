@@ -40,15 +40,50 @@ class SPAMTwirlingWrapper(BaseWrapper):
         super().__init__(backend)
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
-
+        
+        print(self.backend.qaoa_descriptor.__dict__)
+        if self.backend.qaoa_descriptor.__dict__['routed'] == False:
+            #final_mapping = None
+            final_mapping = {0:133, 1:131, 2:132, 3:134}  
+        else:
+            self.backend.qaoa_descriptor.final_mapping
+        
+        ### FAKE code for testing ###
+        #final_mapping = self.backend.qaoa_descriptor.final_mapping
+        #initial_mapping = {0:131, 1:132, 2:133, 3:134}
+        #final_mapping = {0:133, 1:131, 2:132, 3:134}  
+        #calibration_counts = {'000000':90, '010000':10 }
+        #calibration_registers = [123, 124, 131, 132, 133, 134, 150]
+        
+        
+        ### REAListic scenario, input from the user ###
         with open(self.calibration_data_location, "r") as f:
-            calibration_data = json.load(f) # TODO this should be only one of the keys in the dict, also need registers, metadata, etc.
-
-            # compute here so that we do it only once
-            self.calibration_factors = calculate_calibration_factors(
-                self.backend.qaoa_descriptor.cost_hamiltonian, calibration_data
-            )
+            calibration_data = json.load(f) 
             
+        #calibration_measurements = calibration_data['results']['measurement_outcomes']
+        out = calibration_data['results']['measurement outcomes']
+        calibration_registers = calibration_data['register']
+        
+        # convert list to strings
+        ### relevant only for the specific calibration data Eze gave me, should not be required with the current OQ
+        calibration_measurements = {}
+        for outcomes in out:
+            for state, counts in outcomes.items():
+                state = ''.join([str(e) for e in eval(state)])
+                if calibration_measurements.get(state) is None:
+                    calibration_measurements.update({state:counts})
+                else:
+                    calibration_measurements[state] += counts
+        
+        self.calibration_factors = calculate_calibration_factors(self.backend.qaoa_descriptor.cost_hamiltonian, calibration_measurements, calibration_registers, final_mapping)
+        
+        '''
+        This doesn't work because keys are tuples  =(
+        # save calibration factors just in case
+        with open('test.json', "w") as fp:
+            json.dump(self.calibration_factors, fp)
+        '''
+        
     def get_counts(self, params, n_shots=None):
         """
         Modified function to...
@@ -154,18 +189,25 @@ class SPAMTwirlingWrapper(BaseWrapper):
         counts = self.get_counts(params, n_shots)
 
         ### To create and save my calibration data, think about another way to do this more consistently.
-        # timestamp = time.strftime("%Y%m%d-%H%M%S") # with the time in UTC
+        '''
+        timestamp = time.strftime("%Y%m%d-%H%M%S") # with the time in UTC
         # timestamp = time.strftime("%Y%m%d")
         # TODO device info should come externally
         # device = aspen
         # device = rigetti
-        # device = 'realistic_noise'
+        device = 'realistic_noise'
         # device = 'biased_noise'
         # device = 'no_noise'
         # device = 'flip_noise'
-        #calibration_data_location = 'calibration_data/' + str(device) + str(timestamp)
-        #with open(calibration_data_location, "w") as fp:
-            #json.dump(counts, fp)
+        calibration_data_location = 'calibration_data/{}/{}.json'.format(device, timestamp)
+        with open(calibration_data_location, "w") as fp:
+            json.dump({'calibration_counts':counts,
+                       #'calibration_registers':
+                       'metadata':device,
+                      }, fp)
+            json.dump({'metadata': device}, fp)
+            #json.dump(registers, fp)
+        '''
 
         cost = self.expectation_value_spam_twirled(
             counts,

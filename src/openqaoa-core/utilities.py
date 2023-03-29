@@ -1153,8 +1153,10 @@ def exp_val_hamiltonian_termwise(
     return exp_vals_z, corr_matrix
 
 def calculate_calibration_factors(
-    hamiltonian: Hamiltonian,
-    qaoa_optimized_counts: Optional[dict] = None,
+    hamiltonian,
+    calibration_measurements,
+    calibration_registers,
+    final_mapping,
 ) -> Dict:
     """
     Computes the calibration factors <Z_{i}> and <Z_{i}Z_{j}>,
@@ -1164,13 +1166,17 @@ def calculate_calibration_factors(
     ----------
     hamiltonian: `Hamiltonian`
         Hamiltonian object containing the problem statement.
-    qaoa_optimized_counts: `dict`
+    calibration_measurements: `dict`
         Dictionary containing the measurement counts of optimized QAOA circuit.
+        
+    TODO
+    
     Returns
     -------
     calibration_factors: `dict`
         Calibration factors as a dict.
     """
+    calibration_registers_dict  = {v:k for k, v in enumerate(calibration_registers)}
 
     # Define number of qubits, problem hamiltonian and QAOA parameters
     n_qubits = hamiltonian.n_qubits
@@ -1181,28 +1187,33 @@ def calculate_calibration_factors(
     # Initialize an empty dict
     calibration_factors = {}
     
-    
-    if isinstance(qaoa_optimized_counts, dict):
-        counts_dict = qaoa_optimized_counts
-    else:
-        raise ValueError(
-            "Please specify calibration data to compute calibration factors."
-        )
-
     # Compute single spin and pairs of spins expectation values of terms present in the Hamiltonian
     for term in terms:
 
         # If bias term compute single spins expectation value
         if len(term) == 1:
             i = term.qubit_indices[0]
-            exp_val_z = exp_val_single(i, counts_dict)
+            exp_val_z = exp_val_single(i, calibration_measurements)
             calibration_factors.update({(i,): exp_val_z})
 
         # If two-body term compute pairs of spins expectation values
         elif len(term) == 2:
-            i, j = term.qubit_indices
-            exp_val_zz = exp_val_pair((i, j), counts_dict)
-            calibration_factors.update({(i, j): exp_val_zz})
+            
+            i, j = term.qubit_indices  # problem indices, ex: (0,1)
+            if final_mapping != None:  # What to do if no final mapping?
+                
+                print(i, j) 
+                i_phys,j_phys = final_mapping[i], final_mapping[j] # physical indices, ex: (133, 131) after routing
+                print(i_phys, j_phys)
+                i_cal,j_cal = calibration_registers_dict[i_phys], calibration_registers_dict[j_phys] # calibration indices, i.e. to which location on the measurement string each physical qubit corresponds to, ex: (63, 61)
+                print(i_cal, j_cal)
+            
+                exp_val_zz = exp_val_pair((i_cal, j_cal), calibration_measurements)
+                
+            else:
+                exp_val_zz = exp_val_pair((i, j), calibration_measurements)
+            
+            calibration_factors.update({(i, j): exp_val_zz})  # calibration factors are calculated for the terms in the hamiltonian/problem
 
         # If constant term, ignore
         if len(term) == 0:
