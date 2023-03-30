@@ -53,8 +53,8 @@ class TestingBackendQPUs(unittest.TestCase):
                 "project": self.PROJECT,
             }
         ]
-        print(DEVICE_ACCESS_OBJECT_MAPPER)
-        assert DeviceQiskit in DEVICE_ACCESS_OBJECT_MAPPER.items()
+
+        assert DeviceQiskit in DEVICE_ACCESS_OBJECT_MAPPER.keys()
         
         device = DeviceQiskit
         backend = DEVICE_ACCESS_OBJECT_MAPPER[DeviceQiskit]

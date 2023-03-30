@@ -290,7 +290,7 @@ class TestingBenchmark(unittest.TestCase):
         "Test the property difference and difference_mean."
 
         if "qiskit.shot_simulator" not in SUPPORTED_LOCAL_SIMULATORS:
-            self.skipTest()
+            self.skipTest(reason="The Qiskit Shot Simulator is currently not available. Please install the openqaoa-qiskit plugin.")
 
         # device shot-based
         qaoa = QAOA()
