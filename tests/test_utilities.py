@@ -34,7 +34,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Test for different sizes
         for n_qubits in sizes:
-
             # Define input coefficients
             input_coefficients = [-1 for _ in range(n_qubits)]
 
@@ -84,13 +83,10 @@ class TestingUtilities(unittest.TestCase):
 
         # Test for different sizes
         for n_qubits in sizes:
-
             # Test for different connectivities
             for connectivity in connectivities:
-
                 # Test for different input types
                 for input in input_type:
-
                     # Define connectivity explicit indexing
                     if connectivity == "full":
                         terms_indices = list(itertools.combinations(range(n_qubits), 2))
@@ -174,7 +170,6 @@ class TestingUtilities(unittest.TestCase):
         connectivities = [None, "star", "full", "chain"]
 
         for connectivity in connectivities:
-
             # Define connectivity explicit indexing
             if connectivity == "full":
                 terms_indices = list(itertools.combinations(range(n_qubits), 2))
@@ -309,7 +304,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Populate the graph with weighted nodes and weighted edges
         for edge in edges:
-
             # Weighted node
             if len(edge) == 1:
                 graph.add_node(edge[0], weight=-1)
@@ -362,12 +356,9 @@ class TestingUtilities(unittest.TestCase):
 
         # Check for every degree
         for degree in degrees:
-
             # Check for weighted and unweighted
             for weighted in [False, True]:
-
                 for biases in [False, True]:
-
                     # Generate graph
                     graph = random_k_regular_graph(
                         degree, list(range(n_nodes)), weighted=weighted, biases=biases
@@ -397,7 +388,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Test for different qubit numbers
         for n_qubits in sizes:
-
             hamiltonian = random_classical_hamiltonian(reg=list(range(n_qubits)))
 
             # Test the hamiltonian is a Hamiltonian object
@@ -492,7 +482,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Test for each string
         for state in states:
-
             # Compute energies for the given trial states
             energy = bitstring_energy(hamiltonian, state)
 
@@ -703,7 +692,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Uniform case
         for n_qubits in sizes:
-
             # Generate ring of disagrees and extract attributes
             rod_hamiltonian = ring_of_disagrees(reg=list(range(n_qubits)))
 
@@ -777,7 +765,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Compute singlet expectation values and correlations for each set of angles
         for qaoa_angles in qaoa_angles_cases.keys():
-
             # Extract correct solution
             exp_val = np.round(qaoa_angles_cases[qaoa_angles][0], 16)
             corr = np.round(qaoa_angles_cases[qaoa_angles][1], 16)
@@ -922,53 +909,73 @@ class TestingUtilities(unittest.TestCase):
             assert np.allclose(
                 corr_matrix[j], num_corr_matrix[j]
             ), f"Computed correlation matrix is incorrect"
-            
-            
+
     def test_calculate_calibration_factors_for_trivial_cases(self):
         """
         Tests the function that computes the calibration factors ...
 
         The test consists in ...
-        
+
         """
         # Create a Hamiltonian
         n_qubits = 4
-        edges = [(i, i + 1) for i in range(n_qubits - 1)] + [(0, n_qubits - 1)] + [(i,) for i in range(n_qubits)]
+        edges = (
+            [(i, i + 1) for i in range(n_qubits - 1)]
+            + [(0, n_qubits - 1)]
+            + [(i,) for i in range(n_qubits)]
+        )
         weights = [1 for _ in range(len(edges))]
         hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant=10)
-        
+
         # Create mock registers and mapping, on a 7 qubits device
         calibration_registers = [123, 124, 131, 132, 133, 134, 150]
-        final_mapping = {0:131, 1:132, 2:133, 3:134} 
-        
+        final_mapping = {0: 131, 1: 132, 2: 133, 3: 134}
+
         ### no errors, all factors should be equal to 1, i.e. no correction needed
-        calibration_measurements = {'0000000' : 100}
-        
-        output_calibration_factors = calculate_calibration_factors(hamiltonian, calibration_measurements, calibration_registers, final_mapping)
-        
-        expected_calibration_factors = {(0, 1): 1.0, (1, 2): 1.0, (2, 3): 1.0, (0, 3): 1.0, (0,): 1.0, (1,): 1.0, (2,): 1.0, (3,): 1.0}
-        
+        calibration_measurements = {"0000000": 100}
+
+        output_calibration_factors = calculate_calibration_factors(
+            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+        )
+
+        expected_calibration_factors = {
+            (0, 1): 1.0,
+            (1, 2): 1.0,
+            (2, 3): 1.0,
+            (0, 3): 1.0,
+            (0,): 1.0,
+            (1,): 1.0,
+            (2,): 1.0,
+            (3,): 1.0,
+        }
+
         assert (
             output_calibration_factors == expected_calibration_factors
         ), f"Calibration factors have not been calculated correctly in the absense of errors."
-        
-        
-        
+
         ### some of the physical qubits always get flipped
-        ##### in this case the physical qubits 131 and 132 where 0 and 1 problem qubits are mapped to 
+        ##### in this case the physical qubits 131 and 132 where 0 and 1 problem qubits are mapped to
         ##### note that the flipping of both 0 and 1 cancels, resulting in a calibration factor = 1 for the term [0,1].
-        calibration_measurements = {'0011000' : 100}
-        
-        output_calibration_factors = calculate_calibration_factors(hamiltonian, calibration_measurements, calibration_registers, final_mapping)
+        calibration_measurements = {"0011000": 100}
+
+        output_calibration_factors = calculate_calibration_factors(
+            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+        )
         print(output_calibration_factors)
-        expected_calibration_factors = {(0, 1): 1.0, (0, 3): -1.0, (1, 2): -1.0, (2, 3): 1.0, (0,): -1.0, (1,): -1.0, (2,): 1.0, (3,): 1.0}
+        expected_calibration_factors = {
+            (0, 1): 1.0,
+            (0, 3): -1.0,
+            (1, 2): -1.0,
+            (2, 3): 1.0,
+            (0,): -1.0,
+            (1,): -1.0,
+            (2,): 1.0,
+            (3,): 1.0,
+        }
 
         assert (
             output_calibration_factors == expected_calibration_factors
         ), f"Calibration factors have not been calculated correctly for bit flip errors."
-        
-        
-        
 
     def test_energy_expectation_analytical(self):
         """
@@ -1110,7 +1117,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Test that each probability dictionary has been generated correctly
         for idx, prob_dict in enumerate(prob_dicts):
-
             # Check each string has the same probability associated
             for string in prob_dict.keys():
                 assert np.allclose(
@@ -1295,21 +1301,22 @@ class TestingUtilities(unittest.TestCase):
     def test_negate_counts_dictionary(self):
         """
         Tests the function that negates the counts dictionary used for SPAM Twirling.
-        
+
         13 => 001101 in binary => negate the 3rd, 4th, and 6th qubit
         """
         # Input dictionary
         input_dict = {"011011": 1, "000111": 2, "000000": 3}
-        
+
         # Expected dictionary
         expected_dict = {"010110": 1, "001010": 2, "001101": 3}
-        
-        output_dict = negate_counts_dictionary(input_dict, s = 13)  
-        
+
+        output_dict = negate_counts_dictionary(input_dict, s=13)
+
         # Test that the dictionary has been permuted correctly
         assert (
             output_dict == expected_dict
         ), f"Dictionary has not been negated correctly"
+
 
 if __name__ == "__main__":
     unittest.main()
