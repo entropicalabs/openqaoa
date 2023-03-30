@@ -46,7 +46,9 @@ class SPAMTwirlingWrapper(BaseWrapper):
             #final_mapping = None
             final_mapping = {0:133, 1:131, 2:132, 3:134}  
         else:
-            self.backend.qaoa_descriptor.final_mapping
+            self.backend.qaoa_descriptor.final_mapping  # make the final_mapping to be as the initial one if routed == False
+            
+            #self.backend.initial_qubit_mapping # Not working if by qiskit ???
         
         ### FAKE code for testing ###
         #final_mapping = self.backend.qaoa_descriptor.final_mapping
