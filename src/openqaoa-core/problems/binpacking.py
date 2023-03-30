@@ -2,8 +2,6 @@ import numpy as np
 
 from typing import Union
 from docplex.mp.model import Model
-import matplotlib.pyplot as plt
-
 
 from .problem import Problem
 from .converters import FromDocplex2IsingModel
@@ -141,7 +139,7 @@ class BinPacking(Problem):
         mdl = Model("bin_packing")
         vars_ = {}
         for var in self.solution.keys():
-            if self.solution[var] is -1:
+            if self.solution[var] == -1:
                 vars_[var] = mdl.binary_var(var)
             else:
                 vars_[var] = self.solution[var]
@@ -287,13 +285,15 @@ class BinPacking(Problem):
             The plot visualization of the solution.
 
         """
+        import matplotlib.pyplot as plt
+        from matplotlib import colormaps
         cplex_model = self.docplex_model
         if isinstance(solution, str):
             sol = self.solution.copy()
             for n, var in enumerate(cplex_model.iter_binary_vars()):
                 sol[var.name] = int(solution[n])
             solution = sol
-        colors = plt.cm.get_cmap("jet", len(self.weights))
+        colors = colormaps["jet"]
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -308,7 +308,7 @@ class BinPacking(Problem):
                             self.weights[i],
                             bottom=sum_items,
                             label=f"item {i}",
-                            color=colors(i),
+                            color=colors(i/self.n_items),
                             alpha=0.7,
                             edgecolor="black",
                         )
