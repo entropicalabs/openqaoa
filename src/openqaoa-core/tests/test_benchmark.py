@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from openqaoa import QAOA, create_device, QAOABenchmark
 from openqaoa.problems import QUBO
+from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 
 
 def there_is_an_error(function, **kwargs):
@@ -16,6 +17,7 @@ def there_is_an_error(function, **kwargs):
 
 
 class TestingBenchmark(unittest.TestCase):
+
     def test_simple_benchmark(self):
         "Test the simplest benchmark."
 
@@ -66,7 +68,7 @@ class TestingBenchmark(unittest.TestCase):
 
         # standard qaoa should have a analytical reference
         qaoa = QAOA()
-        qaoa.set_device(create_device(name="qiskit.shot_simulator", location="local"))
+        qaoa.set_device(create_device(name="vectorized", location="local"))
         qaoa.compile(QUBO.random_instance(5))
         benchmark = QAOABenchmark(qaoa)
         assert isinstance(
@@ -78,7 +80,7 @@ class TestingBenchmark(unittest.TestCase):
 
         # p>1 qaoa should have a vectorized reference
         qaoa = QAOA()
-        qaoa.set_device(create_device(name="qiskit.shot_simulator", location="local"))
+        qaoa.set_device(create_device(name="vectorized", location="local"))
         qaoa.set_circuit_properties(p=2)
         qaoa.compile(QUBO.random_instance(5))
         benchmark = QAOABenchmark(qaoa)
@@ -284,8 +286,11 @@ class TestingBenchmark(unittest.TestCase):
             run_reference=True,
         )
 
-    def test_difference(self):
+    def test_difference_shot(self):
         "Test the property difference and difference_mean."
+
+        if "qiskit.shot_simulator" not in SUPPORTED_LOCAL_SIMULATORS:
+            self.skipTest()
 
         # device shot-based
         qaoa = QAOA()
@@ -304,6 +309,9 @@ class TestingBenchmark(unittest.TestCase):
         assert benchmark.difference_mean == np.mean(
             benchmark.difference
         ), "The difference mean should be the mean of the difference matrix."
+
+    def test_difference(self):
+        "Test the property difference and difference_mean."
 
         # test raise errors if not run main or run reference
         qaoa = QAOA()
