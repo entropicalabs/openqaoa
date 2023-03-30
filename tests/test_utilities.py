@@ -922,6 +922,53 @@ class TestingUtilities(unittest.TestCase):
             assert np.allclose(
                 corr_matrix[j], num_corr_matrix[j]
             ), f"Computed correlation matrix is incorrect"
+            
+            
+    def test_calculate_calibration_factors_for_trivial_cases(self):
+        """
+        Tests the function that computes the calibration factors ...
+
+        The test consists in ...
+        
+        """
+        # Create a Hamiltonian
+        n_qubits = 4
+        edges = [(i, i + 1) for i in range(n_qubits - 1)] + [(0, n_qubits - 1)] + [(i,) for i in range(n_qubits)]
+        weights = [1 for _ in range(len(edges))]
+        hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant=10)
+        
+        # Create mock registers and mapping, on a 7 qubits device
+        calibration_registers = [123, 124, 131, 132, 133, 134, 150]
+        final_mapping = {0:131, 1:132, 2:133, 3:134} 
+        
+        ### no errors, all factors should be equal to 1, i.e. no correction needed
+        calibration_measurements = {'0000000' : 100}
+        
+        output_calibration_factors = calculate_calibration_factors(hamiltonian, calibration_measurements, calibration_registers, final_mapping)
+        
+        expected_calibration_factors = {(0, 1): 1.0, (1, 2): 1.0, (2, 3): 1.0, (0, 3): 1.0, (0,): 1.0, (1,): 1.0, (2,): 1.0, (3,): 1.0}
+        
+        assert (
+            output_calibration_factors == expected_calibration_factors
+        ), f"Calibration factors have not been calculated correctly in the absense of errors."
+        
+        
+        
+        ### some of the physical qubits always get flipped
+        ##### in this case the physical qubits 131 and 132 where 0 and 1 problem qubits are mapped to 
+        ##### note that the flipping of both 0 and 1 cancels, resulting in a calibration factor = 1 for the term [0,1].
+        calibration_measurements = {'0011000' : 100}
+        
+        output_calibration_factors = calculate_calibration_factors(hamiltonian, calibration_measurements, calibration_registers, final_mapping)
+        print(output_calibration_factors)
+        expected_calibration_factors = {(0, 1): 1.0, (0, 3): -1.0, (1, 2): -1.0, (2, 3): 1.0, (0,): -1.0, (1,): -1.0, (2,): 1.0, (3,): 1.0}
+
+        assert (
+            output_calibration_factors == expected_calibration_factors
+        ), f"Calibration factors have not been calculated correctly for bit flip errors."
+        
+        
+        
 
     def test_energy_expectation_analytical(self):
         """
@@ -1206,7 +1253,7 @@ class TestingUtilities(unittest.TestCase):
     def test_generate_timestamp(self):
         """
         Tests the function that generates a timestamp: generate_timestamp.
-        It checks if the reutned string is a valid timestamp of format YYYY-MM-DDTHH:MM:SS.
+        It checks if the returned string is a valid timestamp of format YYYY-MM-DDTHH:MM:SS.
         """
 
         def is_valid_timestamp(s):
@@ -1245,6 +1292,24 @@ class TestingUtilities(unittest.TestCase):
             output_dict == expected_dict
         ), f"Dictionary has not been permuted correctly"
 
+    def test_negate_counts_dictionary(self):
+        """
+        Tests the function that negates the counts dictionary used for SPAM Twirling.
+        
+        13 => 001101 in binary => negate the 3rd, 4th, and 6th qubit
+        """
+        # Input dictionary
+        input_dict = {"011011": 1, "000111": 2, "000000": 3}
+        
+        # Expected dictionary
+        expected_dict = {"010110": 1, "001010": 2, "001101": 3}
+        
+        output_dict = negate_counts_dictionary(input_dict, s = 13)  
+        
+        # Test that the dictionary has been permuted correctly
+        assert (
+            output_dict == expected_dict
+        ), f"Dictionary has not been negated correctly"
 
 if __name__ == "__main__":
     unittest.main()

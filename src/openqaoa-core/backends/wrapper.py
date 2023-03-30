@@ -44,7 +44,8 @@ class SPAMTwirlingWrapper(BaseWrapper):
         print(self.backend.qaoa_descriptor.__dict__)
         if self.backend.qaoa_descriptor.__dict__['routed'] == False:
             #final_mapping = None
-            final_mapping = {0:133, 1:131, 2:132, 3:134}  
+            #final_mapping = {0:133, 1:131, 2:132, 3:134}  
+            final_mapping = {0:131, 1:132, 2:133, 3:134} 
         else:
             self.backend.qaoa_descriptor.final_mapping  # make the final_mapping to be as the initial one if routed == False
             
@@ -76,8 +77,13 @@ class SPAMTwirlingWrapper(BaseWrapper):
                     calibration_measurements.update({state:counts})
                 else:
                     calibration_measurements[state] += counts
+                    
+        calibration_registers = [123, 124, 131, 132, 133, 134, 150]
+        calibration_measurements = {'0011000':100}
         
         self.calibration_factors = calculate_calibration_factors(self.backend.qaoa_descriptor.cost_hamiltonian, calibration_measurements, calibration_registers, final_mapping)
+        
+        print(self.calibration_factors)
         
         '''
         This doesn't work because keys are tuples  =(
