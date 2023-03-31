@@ -12,7 +12,7 @@ on:
 jobs:
   test-dev:
     runs-on: ubuntu-latest
-    if : ${{ github.event.pull_request.head.repo.fork == 'true' }}
+    if : ${{ github.event.pull_request.head.repo.fork == false }} # runs only when fork==false
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -63,7 +63,7 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          pytest tests/ -v -m '(not qpu or sim or api)' --cov --cov-report=xml:coverage.xml
+          pytest tests/ -v -m '(not qpu)' --cov --cov-report=xml:coverage.xml
 
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
@@ -73,7 +73,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
-    if : github.event.pull_request.draft == false
+    if : github.event.pull_request.draft == false &&  github.event.pull_request.head.repo.fork == false
     steps:
       - name: Check out openqaoa
         uses: actions/checkout@v3
