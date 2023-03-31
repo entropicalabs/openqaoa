@@ -5,12 +5,12 @@ set -e
 modulesList=("src/openqaoa-core" "src/openqaoa-qiskit" "src/openqaoa-braket" "src/openqaoa-pyquil" "src/openqaoa-azure")
 
 pip install .
-pytest tests
+pytest tests $1 $2 $3 $4 $5
 
 for entry in "${modulesList[@]}"; do
     echo "testing $entry"
     cd $entry
-    pytest -n auto tests
+    pytest -n auto tests $1 $2 $3 $4 $5
     cd "../.."
 done
 
