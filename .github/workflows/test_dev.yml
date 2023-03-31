@@ -12,7 +12,7 @@ on:
 jobs:
   test-dev:
     runs-on: ubuntu-latest
-    if : ${{ github.event.pull_request.head.repo.fork }} == false # if fork is true, then equality is not satisfied
+    if : !github.event.pull_request.head.repo.fork # Negate fork boolean
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
