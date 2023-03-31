@@ -910,7 +910,7 @@ class TestingUtilities(unittest.TestCase):
                 corr_matrix[j], num_corr_matrix[j]
             ), f"Computed correlation matrix is incorrect"
 
-    def test_calculate_calibration_factors_for_trivial_cases(self):
+    def test_calculate_calibration_factors(self):
         """
         Tests the function that computes the calibration factors ...
 
@@ -928,7 +928,7 @@ class TestingUtilities(unittest.TestCase):
         hamiltonian = Hamiltonian.classical_hamiltonian(edges, weights, constant=10)
 
         # Create mock registers and mapping, on a 7 qubits device
-        calibration_registers = [123, 124, 131, 132, 133, 134, 150]
+        calibration_registers = [120, 121, 131, 132, 133, 134, 140]
         final_mapping = {0: 131, 1: 132, 2: 133, 3: 134}
 
         ### no errors, all factors should be equal to 1, i.e. no correction needed
@@ -961,7 +961,6 @@ class TestingUtilities(unittest.TestCase):
         output_calibration_factors = calculate_calibration_factors(
             hamiltonian, calibration_measurements, calibration_registers, final_mapping
         )
-        print(output_calibration_factors)
         expected_calibration_factors = {
             (0, 1): 1.0,
             (0, 3): -1.0,
@@ -976,6 +975,84 @@ class TestingUtilities(unittest.TestCase):
         assert (
             output_calibration_factors == expected_calibration_factors
         ), f"Calibration factors have not been calculated correctly for bit flip errors."
+
+        ### Bit flip errors happen on all qubits vut the ones we embed the problem onto
+        ##### in this example device qubits 120, 121 and 140 are faulty but this should nt affect the rest
+        calibration_measurements = {"1100001": 100}
+
+        output_calibration_factors = calculate_calibration_factors(
+            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+        )
+        expected_calibration_factors = {
+            (0, 1): 1.0,
+            (0, 3): 1.0,
+            (1, 2): 1.0,
+            (2, 3): 1.0,
+            (0,): 1.0,
+            (1,): 1.0,
+            (2,): 1.0,
+            (3,): 1.0,
+        }
+
+        assert (
+            output_calibration_factors == expected_calibration_factors
+        ), f"Calibration factors have not been calculated correctly for errors happening on irrelevant qubits."
+
+        ### A bitflip error on the 131 physical register
+        ##### but now the 1st problem qubit has been mapped to register after the routing
+        final_mapping = {0: 133, 1: 131, 2: 132, 3: 134}
+        calibration_measurements = {"0010000": 100}
+
+        output_calibration_factors = calculate_calibration_factors(
+            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+        )
+
+        expected_calibration_factors = {
+            (0, 1): -1.0,
+            (1, 2): -1.0,
+            (2, 3): 1.0,
+            (0, 3): 1.0,
+            (0,): 1.0,
+            (1,): -1.0,
+            (2,): 1.0,
+            (3,): 1.0,
+        }
+
+        assert (
+            output_calibration_factors == expected_calibration_factors
+        ), f"Calibration factors have not been calculated correctly when routed."
+
+        ### A bitflip error happen with probability 0.25 on the 131 and 132 physical registers
+        ##### which results in more entries in the measurements dict
+        ##### and affects the 0th and 1st problem qubits
+        final_mapping = {0: 133, 1: 131, 2: 132, 3: 134}
+        calibration_measurements = {
+            "0000000": 10000 * 0.75 * 0.75,
+            "0001000": 10000 * 0.25 * 0.75,
+            "0010000": 10000 * 0.75 * 25,
+            "0011000": 10000 * 0.25 * 0.25,
+        }
+
+        output_calibration_factors = calculate_calibration_factors(
+            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+        )
+
+        print(output_calibration_factors)
+
+        expected_calibration_factors = {
+            (0, 1): -0.923322683706,
+            (1, 2): -0.936102236422,
+            (2, 3): 0.974440894569,
+            (0, 3): 1.0,
+            (0,): 1.0,
+            (1,): -0.923322683706,
+            (2,): 0.974440894569,
+            (3,): 1.0,
+        }
+
+        assert (
+            output_calibration_factors == expected_calibration_factors
+        ), f"Calibration factors have not been calculated correctly in the presense of probabalistic errors."
 
     def test_energy_expectation_analytical(self):
         """

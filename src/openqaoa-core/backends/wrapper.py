@@ -41,7 +41,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
 
-        print(self.backend.qaoa_descriptor.__dict__)
+        #print(self.backend.qaoa_descriptor.__dict__)
         if self.backend.qaoa_descriptor.__dict__["routed"] == False:
             # final_mapping = None
             # final_mapping = {0:133, 1:131, 2:132, 3:134}
@@ -87,7 +87,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
             final_mapping,
         )
 
-        print(self.calibration_factors)
 
         """
         This doesn't work because keys are tuples  =(
@@ -198,6 +197,8 @@ class SPAMTwirlingWrapper(BaseWrapper):
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation
         """
         counts = self.get_counts(params, n_shots)
+        
+        print(counts)
 
         ### To create and save my calibration data, think about another way to do this more consistently.
         """
