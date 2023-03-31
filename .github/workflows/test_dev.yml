@@ -11,7 +11,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test-dev:
-    if : ${{ github.event.pull_request.draft == false }} && ${{ github.triggering_actor == 'Q-lds' }}
+    if : ${{ github.event.pull_request.draft == false }} && ${{ github.triggering_actor == 'vishal-ph' }}
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
