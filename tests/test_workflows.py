@@ -53,12 +53,12 @@ from openqaoa_azure.backends import DeviceAzure
 from openqaoa.qaoa_components.variational_parameters.variational_params_factory import (
     PARAMS_CLASSES_MAPPER,
 )
+
 ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ["6q-qvm", "Aspen-11"]
 
 
 def _compare_qaoa_results(dict_old, dict_new):
-
     for key in dict_old.keys():
         if key == "cost_hamiltonian":  ## CHECK WHAT DO WITH THIS
             pass
@@ -121,7 +121,6 @@ class TestingVanillaQAOA(unittest.TestCase):
     """
 
     def test_vanilla_qaoa_default_values(self):
-
         q = QAOA()
         assert q.circuit_properties.p == 1
         assert q.circuit_properties.param_type == "standard"
@@ -130,7 +129,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         assert q.device.device_name == "vectorized"
 
     def test_end_to_end_vectorized(self):
-
         g = nw.circulant_graph(6, [1])
         vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
 
@@ -177,15 +175,17 @@ class TestingVanillaQAOA(unittest.TestCase):
             )
         )
         assert type(q.device) == DeviceQiskit
-        assert q.device.device_name == 'place_holder'
-        assert q.device.device_location ==  'ibmq'
-        
-        
-        q.set_device(create_device('azure', name='place_holder', resource_id='***', 
-                                   az_location='***'))
+        assert q.device.device_name == "place_holder"
+        assert q.device.device_location == "ibmq"
+
+        q.set_device(
+            create_device(
+                "azure", name="place_holder", resource_id="***", az_location="***"
+            )
+        )
         assert type(q.device) == DeviceAzure
-        assert q.device.device_name == 'place_holder'
-        assert q.device.device_location == 'azure'
+        assert q.device.device_name == "place_holder"
+        assert q.device.device_location == "azure"
 
     def test_compile_before_optimise(self):
         """
@@ -200,7 +200,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertRaises(ValueError, lambda: q.optimize())
 
     def test_cost_hamil(self):
-
         g = nw.circulant_graph(6, [1])
         problem = MinimumVertexCover(g, field=1.0, penalty=10)
         qubo_problem = problem.qubo
@@ -221,7 +220,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         )
 
     def test_set_circuit_properties_fourier_q(self):
-
         """
         The value of q should be None if the param_type used is not fourier.
         Else if param_type is fourier, fourier_extended or fourier_w_bias, it
@@ -241,7 +239,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.circuit_properties.q, None)
 
     def test_set_circuit_properties_annealing_time_linear_ramp_time(self):
-
         """
         Check that linear_ramp_time and annealing_time are updated appropriately
         as the value of p is changed.
@@ -260,7 +257,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.circuit_properties.linear_ramp_time, 0.7 * 2)
 
     def test_set_circuit_properties_qaoa_descriptor_mixer_x(self):
-
         """
         Checks if the X mixer created by the X_mixer_hamiltonian method and the automated methods in workflows do the same thing.
 
@@ -294,7 +290,6 @@ class TestingVanillaQAOA(unittest.TestCase):
                 self.assertEqual(q.qaoa_descriptor.mixer_blocks[j][i].qubit_1, i)
 
     def test_set_circuit_properties_qaoa_descriptor_mixer_xy(self):
-
         """
         Checks if the XY mixer created by the XY_mixer_hamiltonian method and the automated methods in workflows do the same thing.
 
@@ -340,7 +335,6 @@ class TestingVanillaQAOA(unittest.TestCase):
                 )
 
     def test_set_circuit_properties_variate_params(self):
-
         """
         Ensure that the Varitional Parameter Object created based on the input string , param_type, is correct.
 
@@ -370,7 +364,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         problem = MinimumVertexCover(g, field=1.0, penalty=10)
 
         for i in range(len(object_types)):
-
             q = QAOA()
             q.set_circuit_properties(param_type=param_type_names[i], q=1)
 
@@ -379,7 +372,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             self.assertEqual(type(q.variate_params), object_types[i])
 
     def test_set_circuit_properties_change(self):
-
         """
         Ensure that once a property has beefn changed via set_circuit_properties.
         The attribute has been appropriately updated.
@@ -427,7 +419,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             self.assertEqual(getattr(q.circuit_properties, each_key), each_value)
 
     def test_set_circuit_properties_rejected_values(self):
-
         """
         Some properties of CircuitProperties Object return a ValueError if the specified property has not been whitelisted in the code.
         This checks that the ValueError is raised if the argument is not whitelisted.
@@ -447,7 +438,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertRaises(ValueError, lambda: q.set_circuit_properties(p=-1))
 
     def test_set_backend_properties_change(self):
-
         """
         Ensure that once a property has been changed via set_backend_properties.
         The attribute has been appropriately updated.
@@ -481,7 +471,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             self.assertEqual(getattr(q.backend_properties, each_key), each_value)
 
     def test_set_backend_properties_check_backend_vectorized(self):
-
         """
         Check if the backend returned by set_backend_properties is correct
         Based on the input device.
@@ -508,7 +497,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: q.backend.n_shots)
 
     def test_set_backend_properties_check_backend_vectorized_w_custom(self):
-
         """
         Check if the backend returned by set_backend_properties is correct
         Based on the input device.
@@ -550,7 +538,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: q.backend.n_shots)
 
     def test_set_backend_properties_check_backend_vectorized_error_values(self):
-
         """
         If the values provided from the workflows are incorrect, we should
         receive the appropriate error messages from the vectorized backend.
@@ -588,7 +575,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertRaises(ValueError, lambda: q.compile(problem=qubo_problem))
 
     def test_set_backend_properties_check_backend_qiskit_qasm(self):
-
         """
         Check if the backend returned by set_backend_properties is correct
         Based on the input device. For qiskit qasm simulator.
@@ -614,7 +600,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.backend.n_shots, 100)
 
     def test_set_backend_properties_check_backend_qiskit_statevector(self):
-
         """
         Check if the backend returned by set_backend_properties is correct
         Based on the input device. For qiskit statevector simulator.
@@ -643,7 +628,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: q.backend.n_shots)
 
     def test_set_backend_properties_check_backend_pyquil_statevector(self):
-
         """
         Check if the backend returned by set_backend_properties is correct
         Based on the input device. For pyquil statevector simulator.
@@ -671,8 +655,36 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         self.assertRaises(AttributeError, lambda: q.backend.n_shots)
 
-    def test_set_classical_optimizer_defaults(self):
+    def test_set_error_mitigation_properties_change(self):
+        """
+        Ensure that once a property has been changed via set_error_mitigation_properties the attribute has been appropriately updated.
+        Updating all attributes at the same time.
+        """
 
+        default_pairings = {
+            "error_mitigation_technique": None,
+            "n_batches": 10,
+            "calibration_data_location": None
+        }
+
+        q = QAOA()
+
+        for each_key, each_value in default_pairings.items():
+            self.assertEqual(getattr(q.error_mitigation_properties, each_key), each_value)
+
+        update_pairings = {
+            "error_mitigation_technique": 'spam_twirling',
+            "n_batches": 20,
+            "calibration_data_location": 'calibration_data/aspen'
+        }
+
+        q.set_error_mitigation_properties(**update_pairings)
+
+        for each_key, each_value in update_pairings.items():
+            self.assertEqual(getattr(q.error_mitigation_properties, each_key), each_value)
+            
+
+    def test_set_classical_optimizer_defaults(self):
         """
         Check if the fields in the default classical_optimizer dict are correct
         """
@@ -703,7 +715,6 @@ class TestingVanillaQAOA(unittest.TestCase):
                 self.assertEqual(q.classical_optimizer.asdict()[each_key], each_value)
 
     def test_set_classical_optimizer_jac_hess_casing(self):
-
         """
         jac and hess should be in lower case if it is a string.
         """
@@ -715,7 +726,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.classical_optimizer.hess, "hess")
 
     def test_set_classical_optimizer_method_selectors(self):
-
         """
         Different methods would return different Optimizer classes.
         Check that the correct class is returned.
@@ -1245,7 +1255,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             create_device(location="local", name="qiskit.shot_simulator"),
             create_device(location="local", name="vectorized"),
         ]:
-
             q = QAOA()
             q.set_device(device)
             q.set_circuit_properties(
@@ -1280,7 +1289,6 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # for each rqaoa object, create a new rqaoa object from dict, json string, json file, and compressed json file and compare them with the original object
         for q in qaoas:
-
             new_q_list = []
 
             # get new qaoa from dict
@@ -1297,7 +1305,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             os.remove("test.json.gz")  # delete file test.json
 
             for new_q in new_q_list:
-
                 # check that the new object is an QAOA object
                 assert isinstance(new_q, QAOA), "new_r is not an RQAOA object"
 
@@ -1372,7 +1379,6 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # for each qaoa object, test the evaluate_circuit method
         for q in qaoas:
-
             # evaluate the circuit with random dict of params
             params = {
                 k: np.random.rand(*v.shape)
@@ -1629,7 +1635,6 @@ class TestingRQAOA(unittest.TestCase):
         name_device="qiskit.statevector_simulator",
         return_object=False,
     ):
-
         if problem == None:
             problem = MaximumCut.random_instance(
                 n_nodes=8, edge_probability=0.5, seed=2
@@ -1701,7 +1706,6 @@ class TestingRQAOA(unittest.TestCase):
         ), "RQAOA should not be able to optimize twice without compilation"
 
     def test_example_1_adaptive_custom(self):
-
         # Number of qubits
         n_qubits = 12
 
@@ -1739,7 +1743,6 @@ class TestingRQAOA(unittest.TestCase):
                 assert solution[key] == exact_soutions[key]
 
     def test_example_2_adaptive_custom(self):
-
         # Elimination scheme
         n_cutoff = 3
 
@@ -1761,7 +1764,6 @@ class TestingRQAOA(unittest.TestCase):
                 assert solution[key] == exact_soutions[key]
 
     def test_example_3_adaptive_custom(self):
-
         # Elimination scheme
         step = 2
         nmax = 4
@@ -1796,7 +1798,6 @@ class TestingRQAOA(unittest.TestCase):
                 assert solution[key] == exact_soutions[key]
 
     def test_example_4_adaptive_custom(self):
-
         # Number of qubits
         n_qubits = 10
 
@@ -2426,11 +2427,9 @@ class TestingRQAOA(unittest.TestCase):
 
         # check if the files have the expected keys
         for atomic_id, dictionary in files.items():
-
             file_name = file_names[atomic_id]
 
             if r.header["atomic_id"] == atomic_id:  # rqaoa files
-
                 rqaoa_files += 1
 
                 assert (
@@ -2451,7 +2450,6 @@ class TestingRQAOA(unittest.TestCase):
                     ), f"File {file_name} has intermediate mesuraments, but it should not have them."
 
             else:  # qaoa files
-
                 qaoa_files += 1
 
                 assert (
@@ -2497,7 +2495,6 @@ class TestingRQAOA(unittest.TestCase):
             create_device(location="local", name="qiskit.shot_simulator"),
             create_device(location="local", name="vectorized"),
         ]:
-
             r = RQAOA()
             r.set_device(device)
             r.set_circuit_properties(
@@ -2533,7 +2530,6 @@ class TestingRQAOA(unittest.TestCase):
 
         # for each rqaoa object, create a new rqaoa object from dict, json string, json file, and compressed json file and compare them with the original object
         for r in rqaoas:
-
             new_r_list = []
 
             # get new qaoa from dict
@@ -2550,7 +2546,6 @@ class TestingRQAOA(unittest.TestCase):
             os.remove("test.json.gz")  # delete file test.json
 
             for new_r in new_r_list:
-
                 # check that the new object is an RQAOA object
                 assert isinstance(new_r, RQAOA), "new_r is not an RQAOA object"
 

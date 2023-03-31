@@ -275,7 +275,7 @@ class ErrorMitigationProperties(WorkflowProperties):
     def __init__(
     self,
     error_mitigation_technique: Optional[str] = None,  # NOTE this has to be optional so that no mitigation technique if not passing #q.set_error_mitigation_properties
-    n_batches: int = 10,
+    n_batches: Optional[int] = 10,
     #schedule: Optional[???] # how to pass the negated qubits schedule ?
     calibration_data_location: Optional[str] = None,
     ):
