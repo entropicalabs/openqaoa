@@ -18,6 +18,7 @@ requirements = [
     "matplotlib>=3.4.3",
     "scipy>=1.8",
     "qiskit>=0.36.1",
+    "qiskit-ibm-provider",
     "pyquil>=3.1.0",
     "docplex>=2.23.1",
     "autograd>=1.4",
@@ -86,6 +87,14 @@ setup(
         "openqaoa_qiskit": "src/openqaoa-qiskit",
         "openqaoa_pyquil": "src/openqaoa-pyquil",
         "openqaoa_azure": "src/openqaoa-azure",
+    },
+    entry_points={
+        "openqaoa.plugins": [
+            "qiskit = openqaoa_qiskit.backend_config",
+            "braket = openqaoa_braket.backend_config",
+            "pyquil = openqaoa_pyquil.backend_config",
+            "azure = openqaoa_azure.backend_config"
+        ]
     },
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,

@@ -57,8 +57,8 @@ class QAOAVariationalFourierParams(QAOAVariationalBaseParams):
         super().__init__(qaoa_descriptor)
         assert q is not None, f"Depth q for {type(self).__name__} must be specified"
         self.q = q
-        self.u = u
         self.v = v
+        self.u = u
         self.betas = dct(self.v, n=self.p)
         self.gammas = dst(self.u, n=self.p)
 
