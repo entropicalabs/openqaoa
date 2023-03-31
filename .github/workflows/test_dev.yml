@@ -20,6 +20,7 @@ jobs:
         python: [3.8]  
     # The type of runner that the job will run on
     runs-on:  ${{ matrix.os }}
+    if : github.event.pull_request.draft == false
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -49,7 +50,7 @@ jobs:
         run: |
           IBMQ_TOKEN=$IBMQ_TOKEN
           source env/bin/activate
-          python -c'from qiskit import IBMQ; import os; IBMQ.save_account(os.environ.get("IBMQ_TOKEN"))'
+          python -c'from qiskit_ibm_provider import IBMProvider; import os; IBMProvider.save_account(os.environ.get("IBMQ_TOKEN"))'
       - name: Setup AWS
         env:
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }} 
@@ -79,8 +80,8 @@ jobs:
           files: ./coverage.xml
 
   docs:
-    if : github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    if : github.event.pull_request.draft == false
     steps:
       - name: Check out openqaoa
         uses: actions/checkout@v3
