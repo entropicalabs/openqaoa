@@ -1,4 +1,4 @@
-name: test_dev
+name: test_dev_ext
 
 # Controls when the workflow will run
 on:
@@ -52,13 +52,7 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          pytest tests/ -v -m '(not qpu or docker_aws or api)' --cov --cov-report=xml:coverage.xml
-
-      - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          files: ./coverage.xml
+          pytest tests/ -v -m 'not (qpu or docker_aws or api or sim)'
 
   docs-ext:
     runs-on: ubuntu-latest
