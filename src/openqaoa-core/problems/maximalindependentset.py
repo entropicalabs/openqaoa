@@ -122,7 +122,7 @@ class MIS(Problem):
         solution : Union[str, dict]
             The classical solution of the specific problem as a string or a dict.
         """
-        cplex_model = self.docplex_model()
+        cplex_model = self.docplex_model
         docplex_sol = cplex_model.solve()
 
         if docplex_sol is None:
