@@ -1,4 +1,4 @@
-from qiskit import IBMQ
+from qiskit_ibm_provider import IBMProvider
 from qiskit_aer import AerSimulator
 from typing import List
 from openqaoa.backends.devices_core import DeviceBase
@@ -81,7 +81,7 @@ class DeviceQiskit(DeviceBase):
         if self.provider_connected == False:
             return self.provider_connected
 
-        self.available_qpus = [backend.name() for backend in self.provider.backends()]
+        self.available_qpus = [backend.name for backend in self.provider.backends()]
 
         if self.device_name == "":
             return self.provider_connected
@@ -112,18 +112,26 @@ class DeviceQiskit(DeviceBase):
         """
 
         try:
-            self.provider = IBMQ.load_account()
-            if any([self.hub, self.group, self.project]):
-                self.provider = IBMQ.get_provider(
-                    hub=self.hub, group=self.group, project=self.project
-                )
+            #Use default
+            self.provider = IBMProvider()
+            #Unless exact instance is specified
+            if all([self.hub, self.group, self.project]):
+                instance_name = self.hub + '/' + self.group + '/' + self.project
+                assert instance_name in self.provider.instances()
+                self.provider = IBMProvider(instance=instance_name)
+            elif any([self.hub, self.group, self.project]):
+                #if only partially specified, print warning.
+                raise Exception("You've only partially specified the instance name. Either"
+                                "the hub, group or project is missing. hub: {}, group: {}, project: {}.\n"
+                                "The default instance will be used instead. (This default can "
+                                "be specified when doing `IBMProvider.save_account`)")
             return True
         except Exception as e:
             print(
                 "An Exception has occured when trying to connect with the provider."
                 "Please note that you are required to set up your IBMQ account locally first."
                 "See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq"
-                "for how to save your IBMQ account locally: {}".format(e)
+                "for how to save your IBMQ account locally. \n {}".format(e)
             )
             return False
 

@@ -27,12 +27,16 @@ from ..backends.qaoa_backend import (
     DEVICE_ACCESS_OBJECT_MAPPER,
 )
 
+
 def check_compiled(func):
     def wrapper(self, *args, **kwargs):
         result = func(self, *args, **kwargs)
         if self.compiled:
-            raise ValueError("Cannot change properties of the object after compilation.")
+            raise ValueError(
+                "Cannot change properties of the object after compilation."
+            )
         return result
+
     return wrapper
 
 
@@ -533,11 +537,17 @@ class Workflow(ABC):
 
         options = {**options, **{"complex_to_string": True}}
 
-        project_id = self.header["project_id"] if not self.header["project_id"] is None else "None"
+        project_id = (
+            self.header["project_id"]
+            if not self.header["project_id"] is None
+            else "None"
+        )
 
         # get the full name
         if prepend_id == False and file_name == "":
-            raise ValueError("dump method missing argument: 'file_name'. Otherwise 'prepend_id' must be specified as True.")
+            raise ValueError(
+                "dump method missing argument: 'file_name'. Otherwise 'prepend_id' must be specified as True."
+            )
         elif prepend_id == False:
             file = file_path + file_name
         elif file_name == "":

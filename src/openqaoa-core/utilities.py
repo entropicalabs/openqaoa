@@ -1594,7 +1594,7 @@ def is_valid_uuid(uuid_to_test: str) -> bool:
 
 
 def permute_counts_dictionary(
-    counts_dictionary: dict, final_qubit_layout: List[int]
+    counts_dictionary: dict, permutation_order: List[int]
 ) -> dict:
     """Permutes the order of the qubits in the counts dictionary to the
     original order if SWAP gates were used leading to modified qubit layout.
@@ -1602,10 +1602,8 @@ def permute_counts_dictionary(
     ----------
     counts_dictionary : `dict`
         The measurement outcomes obtained from the Simulator/QPU
-    original_qubit_layout: List[int]
-        The qubit layout in which the qubits were initially
-    final_qubit_layout: List[int]
-        The final qubit layout after application of SWAPs
+    permutation_order: List[int]
+        The qubit order to permute the dictionary with
 
     Returns
     -------
@@ -1614,22 +1612,18 @@ def permute_counts_dictionary(
     """
 
     # Create a mapping of original positions to final positions
-    original_qubit_layout = list(range(len(final_qubit_layout)))
+    # original order always goes from 0 -> n-1
+    original_order = list(range(len(permutation_order)))
     mapping = {
-        original_qubit_layout[i]: final_qubit_layout[i]
-        for i in range(len(original_qubit_layout))
+        original_order[i]: permutation_order[i] for i in range(len(original_order))
     }
     permuted_counts = {}
 
-    for basis, counts in counts_dictionary.items():
-
-        def permute_string(basis_state: str = basis, mapping: dict = mapping):
-            # Use the mapping to permute the string
-            permuted_string = "".join(
-                [basis_state[mapping[i]] for i in range(len(basis_state))]
-            )
-            return permuted_string
-
+    for basis_state, counts in counts_dictionary.items():
+        # Use the mapping to permute the string
+        permuted_string = "".join(
+            [basis_state[mapping[i]] for i in range(len(basis_state))]
+        )
         permuted_counts.update({permuted_string: counts})
 
     return permuted_counts
@@ -1722,7 +1716,7 @@ def dicke_wavefunction(excitations, n_qubits):
 
     Parameters
     ----------
-    excitations: str
+    excitations: int
         The number of excitations in the basis
 
     n_qubits: int
