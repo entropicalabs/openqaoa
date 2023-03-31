@@ -11,7 +11,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test-dev:
-    if : ${{ github.event.pull_request.draft}} == false  && ${{ github.event.pull_request.head.repo.fork }} == false
+    if : ${{ github.event.pull_request.head.repo.fork }} == false # if fork is true, then equality is not satisfied
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
