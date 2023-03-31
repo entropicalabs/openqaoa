@@ -1,17 +1,25 @@
 from abc import abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Callable
 from pyqir.generator import BasicQisBuilder, SimpleModule, ir_to_bitcode, types
 from pyqir.generator import SimpleModule
+from pyqir.qis import cx, cz, rx, ry, rz
 from openqaoa.qaoa_components.ansatz_constructor import QAOADescriptor
-from openqaoa.qaoa_components.variational_parameters import QAOAVariationalBaseParams
-from openqaoa.qaoa_components.ansatz_constructor import gates
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
+from openqaoa.qaoa_components.ansatz_constructor import gates, RotationAngle
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import (
     RotationGateMap,
     TwoQubitRotationGateMap,
 )
+from openqaoa.backends.basebackend import (
+    QAOABaseBackendShotBased,
+)
+
+from openqaoa_azure.backends import DeviceAzure
 
 
-class QAOAIntermediateBaseRepresentation:
+class QAOAIntermediateBaseRepresentation(QAOABaseBackendShotBased):
     """
         This class provides a skeleton for classes implementing
         Intermediate Representations (IRs) for a given QAOA circuit
@@ -22,8 +30,8 @@ class QAOAIntermediateBaseRepresentation:
         Representations, for instance, `OpenQASM3`, `QIR` ...
     Parameters
     ----------
-    circuit_params: `QAOACircuitParams`
-        An object of the class ``QAOACircuitParams`` which contains information on
+    qaoa_descriptor: `QAOADescriptor`
+        An object of the class ``QAOADescriptor`` which contains information on
         circuit construction and depth of the circuit.
     prepend_state: `QIR`
         Instructions prepended to the circuit.
@@ -36,16 +44,25 @@ class QAOAIntermediateBaseRepresentation:
 
     def __init__(
         self,
-        circuit_params: QAOACircuitParams,
+        qaoa_descriptor: QAOADescriptor,
+        n_shots: int,
         prepend_state: Optional[str],
         append_state: Optional[str],
         init_hadamard: bool,
+        cvar_alpha: float,
         qubit_layout: List[int] = [],
     ):
-
-        self.n_qubits = circuit_params.cost_hamiltonian.n_qubits
-        self.qureg = circuit_params.qureg
-        self.abstract_circuit = circuit_params.abstract_circuit
+        super().__init__(
+            qaoa_descriptor,
+            n_shots,
+            prepend_state,
+            append_state,
+            init_hadamard,
+            cvar_alpha,
+        )
+        self.n_qubits = qaoa_descriptor.cost_hamiltonian.n_qubits
+        self.qureg = qaoa_descriptor.qureg
+        self.abstract_circuit = qaoa_descriptor.abstract_circuit
         self.prepend_state = prepend_state
         self.append_state = append_state
         self.init_hadamard = init_hadamard
@@ -64,71 +81,143 @@ class QAOAIntermediateBaseRepresentation:
         """
         raise NotImplementedError()
 
-    @abstractmethod
-    def qaoa_circuit(self, params: QAOAVariationalBaseParams):
-        """
-        Generate circuit instructions in Intermediate Representation using
-        the qaoa_circuit_params object, assigned with variational_params
-        Parameters
-        ----------
-        params: `QAOAVariationalBaseParams`
-                The QAOA variational parameters
+    # @abstractmethod
+    # def qaoa_circuit(self, params: QAOAVariationalBaseParams):
+    #     """
+    #     Generate circuit instructions in Intermediate Representation using
+    #     the qaoa_descriptor object, assigned with variational_params
+    #     Parameters
+    #     ----------
+    #     params: `QAOAVariationalBaseParams`
+    #             The QAOA variational parameters
 
-        Returns
-        -------
-        qaoa_circuit: Intermediate Representation
-                The QAOA instructions with designated angles based on `params`
-        """
-        raise NotImplementedError()
+    #     Returns
+    #     -------
+    #     qaoa_circuit: Intermediate Representation
+    #             The QAOA instructions with designated angles based on `params`
+    #     """
+    #     raise NotImplementedError()
 
-    def assign_angles(self, params: QAOAVariationalBaseParams):
-        """
-        Assigns the angle values of the variational parameters to the circuit gates
-        specified as a list of gates in the ``abstract_circuit``.
-        Parameters
-        ----------
-        params: `QAOAVariationalBaseParams`
-            The variational parameters(angles) to be assigned to the circuit gates
-        """
-        # if circuit is non-parameterised, then assign the angle values to the circuit
-        abstract_pauli_circuit = self.abstract_circuit
+    # def assign_angles(self, params: QAOAVariationalBaseParams):
+    #     """
+    #     Assigns the angle values of the variational parameters to the circuit gates
+    #     specified as a list of gates in the ``abstract_circuit``.
+    #     Parameters
+    #     ----------
+    #     params: `QAOAVariationalBaseParams`
+    #         The variational parameters(angles) to be assigned to the circuit gates
+    #     """
+    #     # if circuit is non-parameterised, then assign the angle values to the circuit
+    #     abstract_pauli_circuit = self.abstract_circuit
 
-        for each_pauli in abstract_pauli_circuit:
-            pauli_label_index = each_pauli.pauli_label[2:]
-            if isinstance(each_pauli, TwoQubitRotationGateMap):
-                if each_pauli.pauli_label[1] == "mixer":
-                    angle = params.mixer_2q_angles[
-                        pauli_label_index[0], pauli_label_index[1]
-                    ]
-                elif each_pauli.pauli_label[1] == "cost":
-                    angle = params.cost_2q_angles[
-                        pauli_label_index[0], pauli_label_index[1]
-                    ]
-            elif isinstance(each_pauli, RotationGateMap):
-                if each_pauli.pauli_label[1] == "mixer":
-                    angle = params.mixer_1q_angles[
-                        pauli_label_index[0], pauli_label_index[1]
-                    ]
-                elif each_pauli.pauli_label[1] == "cost":
-                    angle = params.cost_1q_angles[
-                        pauli_label_index[0], pauli_label_index[1]
-                    ]
-            each_pauli.rotation_angle = angle
-        self.abstract_circuit = abstract_pauli_circuit
+    #     for each_pauli in abstract_pauli_circuit:
+    #         pauli_label_index = each_pauli.pauli_label[2:]
+    #         if isinstance(each_pauli, TwoQubitRotationGateMap):
+    #             if each_pauli.pauli_label[1] == "mixer":
+    #                 angle = params.mixer_2q_angles[
+    #                     pauli_label_index[0], pauli_label_index[1]
+    #                 ]
+    #             elif each_pauli.pauli_label[1] == "cost":
+    #                 angle = params.cost_2q_angles[
+    #                     pauli_label_index[0], pauli_label_index[1]
+    #                 ]
+    #         elif isinstance(each_pauli, RotationGateMap):
+    #             if each_pauli.pauli_label[1] == "mixer":
+    #                 angle = params.mixer_1q_angles[
+    #                     pauli_label_index[0], pauli_label_index[1]
+    #                 ]
+    #             elif each_pauli.pauli_label[1] == "cost":
+    #                 angle = params.cost_1q_angles[
+    #                     pauli_label_index[0], pauli_label_index[1]
+    #                 ]
+    #         each_pauli.rotation_angle = angle
+    #     self.abstract_circuit = abstract_pauli_circuit
+
+
+class QISGateApplicator(gates.GateApplicator):
+    library = "PYQIR"
+
+    def __init__(self, qaoa_module: SimpleModule, qis_builder: BasicQisBuilder):
+        self.qaoa_module = qaoa_module
+        self.qis_builder = qis_builder
+
+        self.QIS_OQ_MAPPER = {
+            gates.CX.__name__: self.qis_builder.cx,
+            gates.CZ.__name__: self.qis_builder.cz,
+            gates.RX.__name__: self.qis_builder.rx,
+            gates.RY.__name__: self.qis_builder.ry,
+            gates.RZ.__name__: self.qis_builder.rz,
+        }
+
+    def gate_selector(self, gate: gates.Gate, qis_builder: BasicQisBuilder) -> Callable:
+        selected_qiskit_gate = self.QIS_OQ_MAPPER[gate.__name__]
+        return selected_qiskit_gate
+
+    def apply_1q_rotation_gate(
+        self, qis_gate, qubit_1, rotation_object: RotationAngle, ckt=None
+    ) -> None:
+        qubit_1 = self.qaoa_module.qubits[qubit_1]
+        qis_gate(rotation_object.rotation_angle, qubit_1)
+
+    def apply_2q_rotation_gate(
+        self, qis_gate, qubit_1, qubit_2, rotation_object: RotationAngle, ckt=None
+    ) -> None:
+        qubit_1 = self.qaoa_module.qubits[qubit_1]
+        qubit_2 = self.qaoa_module.qubits[qubit_2]
+        qis_gate(rotation_object.rotation_angle, qubit_1, qubit_2)
+
+    def apply_1q_fixed_gate(self, qis_gate, qubit_1: int, ckt=None) -> None:
+        qubit_1 = self.qaoa_module.qubits[qubit_1]
+        qis_gate(qubit_1)
+
+    def apply_2q_fixed_gate(
+        self, qis_gate, qubit_1: int, qubit_2: int, ckt=None
+    ) -> None:
+        qubit_1 = self.qaoa_module.qubits[qubit_1]
+        qubit_2 = self.qaoa_module.qubits[qubit_2]
+        qis_gate(qubit_1, qubit_2)
+
+    def apply_gate(self, gate: gates.Gate, *args):
+        selected_qiskit_gate = self.gate_selector(gate, self.qis_builder)
+        if gate.n_qubits == 1:
+            if hasattr(gate, "rotation_object"):
+                # *args must be of the following format -- (qubit_1,rotation_object,circuit)
+                return self.apply_1q_rotation_gate(selected_qiskit_gate, *args)
+            else:
+                # *args must be of the following format -- (qubit_1,circuit)
+                return self.apply_1q_fixed_gate(selected_qiskit_gate, *args)
+        elif gate.n_qubits == 2:
+            if hasattr(gate, "rotation_object"):
+                # *args must be of the following format -- (qubit_1,qubit_2,rotation_object,circuit)
+                return self.apply_2q_rotation_gate(selected_qiskit_gate, *args)
+            else:
+                # *args must be of the following format -- (qubit_1,qubit_2,circuit)
+                return self.apply_2q_fixed_gate(selected_qiskit_gate, *args)
+        else:
+            raise ValueError("Only 1 and 2-qubit gates are supported.")
 
 
 class QAOAQIR(QAOAIntermediateBaseRepresentation):
     def __init__(
         self,
-        circuit_params: QAOACircuitParams,
+        qaoa_descriptor: QAOADescriptor,
+        device: DeviceAzure,
+        n_shots: int,
         prepend_state: Optional[str] = None,
         append_state: Optional[str] = None,
         init_hadamard: bool = True,
+        cvar_alpha: float = 1,
         qubit_layout: List[int] = [],
     ):
 
         super().__init__(
-            circuit_params, prepend_state, append_state, init_hadamard, qubit_layout
+            qaoa_descriptor,
+            n_shots,
+            prepend_state,
+            append_state,
+            init_hadamard,
+            cvar_alpha,
+            qubit_layout,
         )
 
         self.qaoa_module = SimpleModule(
@@ -136,6 +225,7 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
         )
         self.qureg = self.qaoa_module.qubits
         self.qis_builder = BasicQisBuilder(self.qaoa_module.builder)
+        self.gate_applicator = QISGateApplicator(self.qaoa_module, self.qis_builder)
 
     @property
     def gate_mapper(self):
@@ -151,14 +241,14 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
         mapping: `dict`
                 The mapping between two gate sets
         """
-        mapper = {
-            gates.CX: self.qis_builder.cx,
-            gates.CZ: self.qis_builder.cz,
-            gates.RX: self.qis_builder.rx,
-            gates.RY: self.qis_builder.ry,
-            gates.RZ: self.qis_builder.rz,
-        }
-
+        # mapper = {
+        #     gates.CX: self.qis_builder.cx,
+        #     gates.CZ: self.qis_builder.cz,
+        #     gates.RX: self.qis_builder.rx,
+        #     gates.RY: self.qis_builder.ry,
+        #     gates.RZ: self.qis_builder.rz,
+        # }
+        mapper = None
         return mapper
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> SimpleModule:
@@ -176,24 +266,14 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
         for i, each_gate in enumerate(self.abstract_circuit):
             decomposition = each_gate.decomposition("standard")
             for each_tuple in decomposition:
-                gate = each_tuple[0]
-                callable_gate = self.gate_mapper[gate]
-                if issubclass(gate, OneQubitGate):
-                    qubit_idx, rotation_angle_obj = each_tuple[1]
-                    qubit = self.qureg[qubit_idx]
-                    callable_gate(rotation_angle_obj.rotation_angle, qubit)
-                elif issubclass(gate, TwoQubitGate):
-                    qubit_idx1, qubit_idx2 = each_tuple[1][0]
-                    qubit1, qubit2 = self.qureg[qubit_idx1], self.qureg[qubit_idx2]
-                    callable_gate(qubit1, qubit2)
-                elif issubclass(gate, TwoQubitGateWithAngle):
-                    [qubit_idx1, qubit_idx2], rotation_angle_obj = each_tuple[1][0]
-                    qubit1, qubit2 = self.qureg[qubit_idx1], self.qureg[qubit_idx2]
-                    callable_gate(rotation_angle_obj.rotation_angle, qubit1, qubit2)
+                oq_gate = each_tuple[0](self.gate_applicator, *each_tuple[1])
+                oq_gate.apply_gate(None)
 
         # TODO: Apply append state if provided by user
         # if isinstance(self.append_state, SimpleModule):
         # append the circuit
+        for i in range(len(self.qureg)):
+            self.qis_builder.mz(self.qureg[i], self.qaoa_module.results[i])
 
         return None
 
@@ -220,3 +300,38 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
         ir = self.qaoa_module.ir()
 
         return ir
+
+    @staticmethod
+    def append_record_output_to_ir(ir: str):
+        instructions = "declare void @__quantum__rt__array_start_record_output()\n\n"
+        instructions += "declare void @__quantum__rt__array_end_record_output()\n\n"
+        instructions += (
+            "declare void @__quantum__rt__result_record_output(%Result*)\n\n"
+        )
+        return instructions
+
+    def convert_to_bitcode(self, params: QAOAVariationalBaseParams):
+        """
+        Convert the IR into bitcode using the QAOA SimpleModule
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+            The QAOA variational parameters
+        Returns
+        -------
+        bitcode:
+                The bitcode corresponding to the QAOA circuit
+        """
+        ir = self.convert_to_ir(params)
+        
+        bitcode = ir_to_bitcode(ir)
+        return bitcode
+
+    def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
+        pass
+
+    def circuit_to_qasm(self):
+        pass
+
+    def reset_circuit(self):
+        pass
