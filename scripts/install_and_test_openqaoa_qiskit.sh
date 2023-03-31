@@ -14,7 +14,7 @@ done
 for entry in "${modulesList[@]}"; do
     echo "testing $entry"
     cd src/$entry
-    pytest tests
+    pytest -n auto tests
     cd "../.."
 done
 

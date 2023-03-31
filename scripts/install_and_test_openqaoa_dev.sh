@@ -10,7 +10,7 @@ pytest tests
 for entry in "${modulesList[@]}"; do
     echo "testing $entry"
     cd $entry
-    pytest tests
+    pytest -n auto tests
     cd "../.."
 done
 
