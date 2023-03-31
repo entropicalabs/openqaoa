@@ -20,8 +20,8 @@ class TestImports(unittest.TestCase):
         
         packages_import = []
         for each_file_name in folder_names:
-            packages_import.extend(find_namespace_packages(where="./src/"+each_file_name, exclude=['dist', 'build']))
-        
+            packages_import.extend(find_namespace_packages(where="./src/"+each_file_name, exclude=['dist', 'build', 'build.*', 'tests', 'tests.*']))
+        print(packages_import)
         packages_import = sorted(packages_import)
         for each_package in packages_import:
             try:

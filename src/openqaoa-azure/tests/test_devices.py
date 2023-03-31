@@ -4,6 +4,7 @@ import itertools
 import subprocess
 import pytest
 
+import openqaoa
 from openqaoa_azure.backends import DeviceAzure
 
 

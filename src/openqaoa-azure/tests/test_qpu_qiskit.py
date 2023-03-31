@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 import subprocess
 
+import openqaoa
 from openqaoa_azure.backends import DeviceAzure
 from openqaoa.qaoa_components import (
     create_qaoa_variational_params,
