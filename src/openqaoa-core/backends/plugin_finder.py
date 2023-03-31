@@ -1,8 +1,17 @@
+import sys
 from importlib.metadata import entry_points
 
-def plugin_finder_dict() -> list:
+def plugin_finder_dict() -> dict:
     
-    available_plugins = entry_points()['openqaoa.plugins']
+    """
+    Returns a dictionary whose key:value pairs are the names of the plugin and
+    the backend_config module of the respective plugin.
+    """
+    
+    if sys.version_info >= (3, 9):
+        available_plugins = entry_points().select(group='openqaoa.plugins')
+    else:
+        available_plugins = entry_points()['openqaoa.plugins']
     
     output_dict = dict()
     for each_plugin_entry_point in available_plugins:
