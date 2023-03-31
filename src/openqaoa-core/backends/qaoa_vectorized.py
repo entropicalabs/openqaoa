@@ -333,6 +333,31 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         self.wavefn_init = copy(self.wavefn)
 
     # Apply gate methods
+    def apply_x(self, qubit_1: int):
+        r"""
+        Applies the X gate on ``qubit_1`` in a vectorized way.
+        
+        TODO check if correct 
+        
+        Parameters
+        ----------
+        qubit_1:
+            Qubit index to apply gate.
+            
+        Returns
+        -------
+            None
+        """
+        
+        rotation_angle = np.pi
+        C = np.cos(rotation_angle / 2)
+        S = -1j * np.sin(rotation_angle / 2)
+        wfn = (C * self.wavefn) + (
+            S * np.flip(self.wavefn, self.n_qubits - qubit_1 - 1)
+        )
+
+        self.wavefn = wfn
+        
     def apply_rx(self, qubit_1: int, rotation_angle: float):
         r"""
         Applies the RX($\theta$ = ``rotation_angle``) gate on ``qubit_1`` in a vectorized way.

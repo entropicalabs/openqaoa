@@ -9,6 +9,7 @@ import openqaoa.qaoa_components.ansatz_constructor.gates as gates_core
 class PyquilGateApplicator(gates_core.GateApplicator):
 
     PYQUIL_OQ_GATE_MAPPER = {
+        gates_core.X.__name__: gates.X,
         gates_core.RZ.__name__: gates.RZ,
         gates_core.RX.__name__: gates.RX,
         gates_core.RY.__name__: gates.RY,

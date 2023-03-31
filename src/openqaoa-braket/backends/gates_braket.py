@@ -8,6 +8,7 @@ import openqaoa.qaoa_components.ansatz_constructor.gates as gates_core
 class BraketGateApplicator(gates_core.GateApplicator):
 
     BRAKET_OQ_GATE_MAPPER = {
+        gates_core.X.__name__: gates.X.x,
         gates_core.RZ.__name__: gates.Rz.rz,
         gates_core.RX.__name__: gates.Rx.rx,
         gates_core.RY.__name__: gates.Ry.ry,

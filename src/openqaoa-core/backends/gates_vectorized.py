@@ -5,6 +5,7 @@ from ..qaoa_components.ansatz_constructor.rotationangle import RotationAngle
 class VectorizedGateApplicator(gates_core.GateApplicator):
 
     VECTORIZED_OQ_GATE_MAPPER = lambda x: {
+        gates_core.X.__name__: x.apply_x,
         gates_core.RZ.__name__: x.apply_rz,
         gates_core.RX.__name__: x.apply_rx,
         gates_core.RY.__name__: x.apply_ry,

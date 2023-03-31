@@ -24,6 +24,7 @@ class TestVectorizedGateApplicator(unittest.TestCase):
         self.vectorized_excluded_gates = [oq_gate_mod.OneQubitGate, 
                                           oq_gate_mod.OneQubitRotationGate, 
                                           oq_gate_mod.TwoQubitGate, oq_gate_mod.TwoQubitRotationGate, 
+                                          oq_gate_mod.X,
                                           oq_gate_mod.CZ, oq_gate_mod.CX, 
                                           oq_gate_mod.RXY, oq_gate_mod.CPHASE]
     
