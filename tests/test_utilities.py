@@ -1224,6 +1224,27 @@ class TestingUtilities(unittest.TestCase):
             generated_timestamp
         ), f"Timestamp has not been generated correctly"
 
+    def test_permute_counts_dictionary(self):
+        """
+        Tests the function that permutes the counts dictionary: permute_counts_dictionary.
+        """
+
+        # Input dictionary
+        input_dict = {"011011": 1, "000111": 2, "000000": 3}
+
+        # Permute the dictionary
+        output_dict = permute_counts_dictionary(
+            input_dict, permutation_order=[4, 5, 3, 0, 1, 2]
+        )
+
+        # Expected dictionary
+        expected_dict = {"110011": 1, "111000": 2, "000000": 3}
+
+        # Test that the dictionary has been permuted correctly
+        assert (
+            output_dict == expected_dict
+        ), f"Dictionary has not been permuted correctly"
+
 
 if __name__ == "__main__":
     unittest.main()
