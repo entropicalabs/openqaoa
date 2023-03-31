@@ -12,7 +12,7 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    if : github.event.pull_request.draft == false
+    if : github.event.pull_request.draft == false & github.repository_owner	== entropicalabs
     strategy:
       fail-fast: false
       matrix:
