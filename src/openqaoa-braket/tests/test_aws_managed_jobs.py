@@ -66,7 +66,7 @@ class TestingAwsJobs(unittest.TestCase):
 
         qaoa_workflow = AWSJobs(algorithm="QaoA")
         assert qaoa_workflow.algorithm == "qaoa"
-        assert qaoa_workflow.input_dir == "./tests/jobs_test_input/"
+        assert qaoa_workflow.input_dir == "./src/openqaoa-braket/tests/jobs_test_input/"
         assert qaoa_workflow.device.device_name == os.environ["AMZN_BRAKET_DEVICE_ARN"]
 
         rqaoa_workflow = AWSJobs(algorithm="rqAoa")
