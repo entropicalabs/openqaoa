@@ -23,6 +23,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         self.HUB = "ibm-q"
         self.GROUP = "open"
         self.PROJECT = "main"
+        self.INSTANCE = "ibm-q/open/main"
 
     @pytest.mark.api
     def test_changing_provider(self):
@@ -36,20 +37,28 @@ class TestingDeviceQiskit(unittest.TestCase):
         device_obj = DeviceQiskit(device_name="ibmq_manila")
         device_obj.check_connection()
 
-        self.assertEqual(device_obj.provider.credentials.hub, self.HUB)
-        self.assertEqual(device_obj.provider.credentials.group, self.GROUP)
-        self.assertEqual(device_obj.provider.credentials.project, self.PROJECT)
+        provider_instances = device_obj.provider.instances()
 
-        device_obj2 = DeviceQiskit(device_name="ibmq_manila", hub="ibm-q-startup")
-        device_obj2.check_connection()
-        self.assertEqual(device_obj2.provider.credentials.hub, "ibm-q-startup")
+        if len(provider_instances) >= 2:
+
+            for each_item in provider_instances[:2]:
+
+                [hub, group, project] = each_item.split("/")
+                device_obj2 = DeviceQiskit(
+                    device_name="ibmq_manila", hub=hub, group=group, project=project
+                )
+                device_obj2.check_connection()
+
+                self.assertEqual(device_obj2.provider._account.instance, each_item)
 
     @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_hub_group_project(self):
 
         """
-        If the wrong hub, group or project is specified, check_connection should
+        Hub, group and project must always be specified together.
+        If either the hub, group or project is wrongly specified, check_connection should
         return False.
+        If not all 3 are specified, check_connection should return False.
         The provider_connected attribute should be updated to False.
         Since the API Token is loaded from save_account, the api token will be
         checked by Qiskit.
