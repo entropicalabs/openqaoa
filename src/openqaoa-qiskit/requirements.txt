@@ -1,1 +1,2 @@
 qiskit>=0.36.1
+qiskit-ibm-provider
