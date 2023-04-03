@@ -8,7 +8,7 @@ def plugin_finder_dict() -> dict:
     the backend_config module of the respective plugin.
     """
     
-    if sys.version_info >= (3, 9):
+    if sys.version_info >= (3, 10):
         available_plugins = entry_points().select(group='openqaoa.plugins')
     else:
         available_plugins = entry_points()['openqaoa.plugins']
