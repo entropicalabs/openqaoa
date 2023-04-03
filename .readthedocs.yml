@@ -31,7 +31,3 @@ python:
       path: .
       extra_requirements:
         - docs
-
-# python:
-#  install:
-#    - requirements: docs/requirements.txt
