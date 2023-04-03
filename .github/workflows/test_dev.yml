@@ -71,7 +71,7 @@ jobs:
           source env/bin/activate
           ipython kernel install --name "env" --user
           pip install pytest-xdist
-          scripts/install_and_test_openqaoa_dev.sh -v -m '(not qpu or sim)' --cov --cov-report=xml:coverage.xml
+          pytest tests/ src/*/tests -v -m '(not qpu or sim)' --cov --cov-report=xml:coverage.xml -n auto
           
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
