@@ -1,3 +1,4 @@
+import sys
 from importlib.metadata import entry_points
 
 def plugin_finder_dict() -> list:
