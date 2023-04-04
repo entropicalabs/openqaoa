@@ -1,6 +1,6 @@
 from braket.jobs import save_job_result
 
-from openqaoa.algorithms import AWSJobs
+from openqaoa_braket.algorithms import AWSJobs
 
 
 def main():
