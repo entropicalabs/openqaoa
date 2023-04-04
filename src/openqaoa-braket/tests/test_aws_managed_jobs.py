@@ -106,7 +106,7 @@ class TestingAwsJobs(unittest.TestCase):
 
         job = LocalQuantumJob.create(
             device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            source_module="./tests/jobs_test_input/aws_braket_source_module/openqaoa_qaoa_script.py",
+            source_module="./src/openqaoa-braket/tests/jobs_test_input/aws_braket_source_module/openqaoa_qaoa_script.py",
             image_uri="amazon-braket-oq-dev",
             input_data={"input_data": input_data_path},
         )
@@ -148,7 +148,7 @@ class TestingAwsJobs(unittest.TestCase):
 
         job = LocalQuantumJob.create(
             device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            source_module="./tests/jobs_test_input/aws_braket_source_module/openqaoa_rqaoa_script.py",
+            source_module="./src/openqaoa-braket/tests/jobs_test_input/aws_braket_source_module/openqaoa_rqaoa_script.py",
             image_uri="amazon-braket-oq-dev",
             input_data={"input_data": input_data_path},
         )
