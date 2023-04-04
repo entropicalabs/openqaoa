@@ -166,10 +166,9 @@ def get_qaoa_backend(
                 cvar_alpha=cvar_alpha,
                 **backend_kwargs,
             )
+    
     except Exception as e:
         raise ValueError(f"The backend returned an error: {e}")
     if wrapper != None:
-        print(wrapper)
-        print(backend_obj)
         backend_obj = wrapper(backend_obj, **wrapper_options)
     return backend_obj

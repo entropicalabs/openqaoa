@@ -3,6 +3,7 @@ import numpy as np
 from typing import Dict
 import json
 import time
+import sys
 
 from .basebackend import VQABaseBackend
 
@@ -40,6 +41,8 @@ class SPAMTwirlingWrapper(BaseWrapper):
         super().__init__(backend)
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
+        
+        print(self.calibration_data_location)
 
         #print(self.backend.qaoa_descriptor.__dict__)
         if self.backend.qaoa_descriptor.__dict__["routed"] == False:
@@ -55,13 +58,19 @@ class SPAMTwirlingWrapper(BaseWrapper):
         # final_mapping = self.backend.qaoa_descriptor.final_mapping
         # initial_mapping = {0:131, 1:132, 2:133, 3:134}
         # final_mapping = {0:133, 1:131, 2:132, 3:134}
-        # calibration_counts = {'000000':90, '010000':10 }
+        # calibration_measurements = {'000000':90, '010000':10 }
         # calibration_registers = [123, 124, 131, 132, 133, 134, 150]
 
         ### REAListic scenario, input from the user ###
-        with open(self.calibration_data_location, "r") as f:
-            calibration_data = json.load(f)
-
+        try:
+            with open(self.calibration_data_location, "r") as f:
+                calibration_data = json.load(f)
+        except IOError:
+            print("Please specify the name of the file containing calibration data.")
+            sys.exit(1)  # TODO what do we do if no calibration data present? 
+            
+        '''
+        Rigetti's data:
         # calibration_measurements = calibration_data['results']['measurement_outcomes']
         out = calibration_data["results"]["measurement outcomes"]
         calibration_registers = calibration_data["register"]
@@ -76,9 +85,10 @@ class SPAMTwirlingWrapper(BaseWrapper):
                     calibration_measurements.update({state: counts})
                 else:
                     calibration_measurements[state] += counts
+        '''
 
-        calibration_registers = [123, 124, 131, 132, 133, 134, 150]
-        calibration_measurements = {"0011000": 100}
+        calibration_measurements = calibration_data["results"]["measurement_outcomes"]
+        calibration_registers = calibration_data["register"]
 
         self.calibration_factors = calculate_calibration_factors(
             self.backend.qaoa_descriptor.cost_hamiltonian,
