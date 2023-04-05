@@ -42,24 +42,14 @@ class SPAMTwirlingWrapper(BaseWrapper):
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
 
-        #print(self.backend.qaoa_descriptor.__dict__)
-        if self.backend.qaoa_descriptor.__dict__["routed"] == False:
-            # final_mapping = None
-            # final_mapping = {0:133, 1:131, 2:132, 3:134}
-            final_mapping = {0: 131, 1: 132, 2: 133, 3: 134}
-        else:
-            self.backend.qaoa_descriptor.final_mapping  # make the final_mapping to be as the initial one if routed == False
-
-
         try:
             with open(self.calibration_data_location, "r") as f:
                 calibration_data = json.load(f)
         except IOError:
             print("Please specify the name of the file containing calibration data.")
-            sys.exit(1)  # TODO what do we do if no calibration data present? 
-            
-        '''
-        Rigetti's data:
+            sys.exit(1)  # TODO what do we do if no calibration data present?
+
+        # Rigetti's data:
         # calibration_measurements = calibration_data['results']['measurement_outcomes']
         out = calibration_data["results"]["measurement outcomes"]
         calibration_registers = calibration_data["register"]
@@ -73,22 +63,15 @@ class SPAMTwirlingWrapper(BaseWrapper):
                     calibration_measurements.update({state: counts})
                 else:
                     calibration_measurements[state] += counts
-        '''
-        
-        ### Mock data for testing ###
-        # final_mapping = self.backend.qaoa_descriptor.final_mapping
-        # initial_mapping = {0:131, 1:132, 2:133, 3:134}
-        # final_mapping = {0:133, 1:131, 2:132, 3:134}
-        calibration_measurements = {'000000':90, '010000':10 }
-        calibration_registers = [123, 124, 131, 132, 133, 134, 150]
+
+        qubit_mapping = self.backend.initial_qubit_mapping
 
         self.calibration_factors = calculate_calibration_factors(
             self.backend.qaoa_descriptor.cost_hamiltonian,
             calibration_measurements,
             calibration_registers,
-            final_mapping,
+            qubit_mapping,
         )
-
 
         """
         This doesn't work because keys are tuples  =(
@@ -127,30 +110,26 @@ class SPAMTwirlingWrapper(BaseWrapper):
             circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(
                 self.backend.n_qubits
             )
-            
 
             for negated_qubit in negated_qubits:
-                negated_qubit = negated_qubit.item()  # convert to native data structure int; important for Pyquil
+                negated_qubit = (
+                    negated_qubit.item()
+                )  # convert to native data structure int; important for Pyquil
                 negation_gate = X(self.backend.gate_applicator, negated_qubit)
                 circuit_to_append = self.backend.gate_applicator.apply_gate(
                     negation_gate, negated_qubit, circuit_to_append
                 )
-                
-            print(circuit_to_append)
+
             self.backend.append_state = circuit_to_append
 
             counts_batch = self.backend.get_counts(
                 params, n_shots_batch
-            )  # should call the original get_counts of the specific backend
-            
-            print("counts_batch", counts_batch)
-            
+            )  # calls the get_counts method of the specific backend
+
             negated_counts = negate_counts_dictionary(
                 counts_dictionary=counts_batch, s=s
             )
-            
-            
-            
+
             # Add to the final counts dict
             for key in negated_counts:
                 if key in counts:
@@ -207,7 +186,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation
         """
         counts = self.get_counts(params, n_shots)
-        
+
         print(counts)
 
         ### To create and save my calibration data, think about another way to do this more consistently.

@@ -1145,7 +1145,7 @@ def calculate_calibration_factors(
     hamiltonian,
     calibration_measurements,
     calibration_registers,
-    final_mapping,
+    qubit_mapping,
 ) -> Dict:
     """
     Computes the calibration factors <Z_{i}> and <Z_{i}Z_{j}>,
@@ -1181,29 +1181,24 @@ def calculate_calibration_factors(
         # If bias term compute single spins expectation value
         if len(term) == 1:
             i = term.qubit_indices[0]
-            if final_mapping != None:  # What to do if no final mapping?
-                i_phys = final_mapping[i]
-                i_cal = calibration_registers_dict[i_phys]
-                exp_val_z = exp_val_single(i_cal, calibration_measurements)
-            else:
-                exp_val_z = exp_val_single(i, calibration_measurements)
+            i_phys = qubit_mapping[i]
+            i_cal = calibration_registers_dict[i_phys]
+            exp_val_z = exp_val_single(i_cal, calibration_measurements)
             calibration_factors.update({(i,): exp_val_z})
 
         # If two-body term compute pairs of spins expectation values
         elif len(term) == 2:
             i, j = term.qubit_indices  # problem indices, ex: (0,1)
-            if final_mapping != None:  # What to do if no final mapping?
-                i_phys, j_phys = (
-                    final_mapping[i],
-                    final_mapping[j],
-                )  # physical indices, ex: (133, 131) after routing
-                i_cal, j_cal = (
-                    calibration_registers_dict[i_phys],
-                    calibration_registers_dict[j_phys],
-                )  # calibration indices, i.e. to which location on the measurement string each physical qubit corresponds to, ex: (63, 61)
-                exp_val_zz = exp_val_pair((i_cal, j_cal), calibration_measurements)
-            else:
-                exp_val_zz = exp_val_pair((i, j), calibration_measurements)
+            i_phys, j_phys = (
+                qubit_mapping[i],
+                qubit_mapping[j],
+            )  # physical indices, ex: (133, 131) after routing
+            i_cal, j_cal = (
+                calibration_registers_dict[i_phys],
+                calibration_registers_dict[j_phys],
+            )  # calibration indices, i.e. to which location on the measurement string each physical qubit corresponds to, ex: (63, 61)
+            exp_val_zz = exp_val_pair((i_cal, j_cal), calibration_measurements)
+
 
             calibration_factors.update(
                 {(i, j): exp_val_zz}

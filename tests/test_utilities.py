@@ -929,13 +929,13 @@ class TestingUtilities(unittest.TestCase):
 
         # Create mock registers and mapping, on a 7 qubits device
         calibration_registers = [120, 121, 131, 132, 133, 134, 140]
-        final_mapping = {0: 131, 1: 132, 2: 133, 3: 134}
+        qubit_mapping = [131, 132, 133, 134]
 
         ### no errors, all factors should be equal to 1, i.e. no correction needed
         calibration_measurements = {"0000000": 100}
 
         output_calibration_factors = calculate_calibration_factors(
-            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+            hamiltonian, calibration_measurements, calibration_registers, qubit_mapping
         )
 
         expected_calibration_factors = {
@@ -959,7 +959,7 @@ class TestingUtilities(unittest.TestCase):
         calibration_measurements = {"0011000": 100}
 
         output_calibration_factors = calculate_calibration_factors(
-            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+            hamiltonian, calibration_measurements, calibration_registers, qubit_mapping
         )
         expected_calibration_factors = {
             (0, 1): 1.0,
@@ -981,7 +981,7 @@ class TestingUtilities(unittest.TestCase):
         calibration_measurements = {"1100001": 100}
 
         output_calibration_factors = calculate_calibration_factors(
-            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+            hamiltonian, calibration_measurements, calibration_registers, qubit_mapping
         )
         expected_calibration_factors = {
             (0, 1): 1.0,
@@ -1000,11 +1000,11 @@ class TestingUtilities(unittest.TestCase):
 
         ### A bitflip error on the 131 physical register
         ##### but now the 1st problem qubit has been mapped to register after the routing
-        final_mapping = {0: 133, 1: 131, 2: 132, 3: 134}
+        qubit_mapping = [133, 131, 132, 134]
         calibration_measurements = {"0010000": 100}
 
         output_calibration_factors = calculate_calibration_factors(
-            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+            hamiltonian, calibration_measurements, calibration_registers, qubit_mapping
         )
 
         expected_calibration_factors = {
@@ -1025,7 +1025,7 @@ class TestingUtilities(unittest.TestCase):
         ### A bitflip error happen with probability 0.25 on the 131 and 132 physical registers
         ##### which results in more entries in the measurements dict
         ##### and affects the 0th and 1st problem qubits
-        final_mapping = {0: 133, 1: 131, 2: 132, 3: 134}
+        qubit_mapping = [133, 131, 132, 134]
         calibration_measurements = {
             "0000000": 10000 * 0.75 * 0.75,
             "0001000": 10000 * 0.25 * 0.75,
@@ -1034,7 +1034,7 @@ class TestingUtilities(unittest.TestCase):
         }
 
         output_calibration_factors = calculate_calibration_factors(
-            hamiltonian, calibration_measurements, calibration_registers, final_mapping
+            hamiltonian, calibration_measurements, calibration_registers, qubit_mapping
         )
 
         print(output_calibration_factors)
