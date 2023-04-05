@@ -75,10 +75,11 @@ class TwoQubitRotationGate(TwoQubitGate):
             self.qubit_1, self.qubit_2, self.rotation_object.rotation_angle
         )
 
+
 class X(OneQubitGate):
     __name__ = "X"
-    
-        
+
+
 class RZ(OneQubitRotationGate):
     __name__ = "RZ"
 

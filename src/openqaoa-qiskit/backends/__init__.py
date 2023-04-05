@@ -4,4 +4,3 @@ from .qaoa_qiskit_sim import (
     QAOAQiskitBackendShotBasedSimulator,
     QAOAQiskitBackendStatevecSimulator,
 )
-

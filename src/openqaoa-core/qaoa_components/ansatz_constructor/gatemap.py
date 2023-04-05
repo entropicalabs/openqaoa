@@ -25,17 +25,16 @@ class GateMap(ABC):
     @abstractmethod
     def _decomposition_standard(self) -> List[Tuple]:
         pass
-    
+
+
 class SWAPGateMap(GateMap):
     def __init__(self, qubit_1: int, qubit_2: int):
-
         super().__init__(qubit_1)
         self.qubit_2 = qubit_2
         self.gate_label = GateMapLabel(n_qubits=2, gatemap_type=GateMapType.FIXED)
 
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         return [
             (CX, [self.qubit_1, self.qubit_2]),
             (CX, [self.qubit_2, self.qubit_1]),
@@ -44,7 +43,6 @@ class SWAPGateMap(GateMap):
 
     @property
     def _decomposition_standard2(self) -> List[Tuple]:
-
         return [
             (
                 RZ,
@@ -112,7 +110,6 @@ class SWAPGateMap(GateMap):
 
 class RotationGateMap(GateMap):
     def __init__(self, qubit_1: int):
-
         super().__init__(qubit_1)
         self.angle_value = None
         self.gate_label = GateMapLabel(n_qubits=1)
@@ -125,7 +122,6 @@ class RotationGateMap(GateMap):
 class RYGateMap(RotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         return [
             (
                 RY,
@@ -140,7 +136,6 @@ class RYGateMap(RotationGateMap):
 class RXGateMap(RotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         return [
             (
                 RX,
@@ -155,7 +150,6 @@ class RXGateMap(RotationGateMap):
 class RZGateMap(RotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         return [
             (
                 RZ,
@@ -169,14 +163,12 @@ class RZGateMap(RotationGateMap):
 
 class TwoQubitRotationGateMap(RotationGateMap):
     def __init__(self, qubit_1: int, qubit_2: int):
-
         super().__init__(qubit_1)
         self.qubit_2 = qubit_2
         self.gate_label = GateMapLabel(n_qubits=2)
 
     @property
     def _decomposition_trivial(self) -> List[Tuple]:
-
         low_level_gate = eval(type(self).__name__.strip("GateMap"))
         return [
             (
@@ -193,7 +185,6 @@ class TwoQubitRotationGateMap(RotationGateMap):
 class RXXGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         return [
             (
                 RY,
@@ -230,14 +221,12 @@ class RXXGateMap(TwoQubitRotationGateMap):
 class RXYGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         raise NotImplementedError()
 
 
 class RYYGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         return [
             (
                 RX,
@@ -270,7 +259,6 @@ class RYYGateMap(TwoQubitRotationGateMap):
 class RZXGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         return [
             (
                 RY,
@@ -297,7 +285,6 @@ class RZXGateMap(TwoQubitRotationGateMap):
 class RZZGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         return [
             (CX, [self.qubit_1, self.qubit_2]),
             (
@@ -312,7 +299,6 @@ class RZZGateMap(TwoQubitRotationGateMap):
 
     @property
     def _decomposition_standard2(self) -> List[Tuple]:
-
         return [
             (
                 RZ,
@@ -342,7 +328,6 @@ class RZZGateMap(TwoQubitRotationGateMap):
 class RYZGateMap(TwoQubitRotationGateMap):
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         raise NotImplementedError()
 
 
@@ -353,14 +338,12 @@ class RiSWAPGateMap(TwoQubitRotationGateMap):
 
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-
         total_decomp = RXXGateMap.decomposition
         total_decomp.extend(RYYGateMap.decomposition)
         return total_decomp
 
     @property
     def _decomposition_standard2(self) -> List[Tuple]:
-
         return [
             (
                 RiSWAP,
@@ -374,7 +357,6 @@ class RiSWAPGateMap(TwoQubitRotationGateMap):
 
 
 class RotationGateMapFactory(object):
-
     PAULI_OPERATORS = ["X", "Y", "Z", "XX", "ZX", "ZZ", "XY", "YY", "YZ"]
     GATE_GENERATOR_GATEMAP_MAPPER = {
         term: eval(f"R{term}GateMap") for term in PAULI_OPERATORS

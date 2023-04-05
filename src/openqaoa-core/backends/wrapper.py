@@ -47,31 +47,36 @@ class SPAMTwirlingWrapper(BaseWrapper):
                 calibration_data = json.load(f)
         except IOError:
             print("Please specify the name of the file containing calibration data.")
-            sys.exit(1)  # TODO what do we do if no calibration data present?
+            sys.exit(1)  # TODO what do we do if no calibration data present? 
+            
+        if self.calibration_data_location == 'calibration_data/8bc00556-2824-4d38-b563-706a803c6401--calibration.json':
+            # Rigetti's data:
+            # calibration_measurements = calibration_data['results']['measurement_outcomes']
+            out = calibration_data["results"]["measurement outcomes"]
+            calibration_registers = calibration_data["register"]
 
-        # Rigetti's data:
-        # calibration_measurements = calibration_data['results']['measurement_outcomes']
-        out = calibration_data["results"]["measurement outcomes"]
-        calibration_registers = calibration_data["register"]
-
-        # convert list to strings
-        calibration_measurements = {}
-        for outcomes in out:
-            for state, counts in outcomes.items():
-                state = "".join([str(e) for e in eval(state)])
-                if calibration_measurements.get(state) is None:
-                    calibration_measurements.update({state: counts})
-                else:
-                    calibration_measurements[state] += counts
-
+            # convert list to strings
+            calibration_measurements = {}
+            for outcomes in out:
+                for state, counts in outcomes.items():
+                    state = "".join([str(e) for e in eval(state)])
+                    if calibration_measurements.get(state) is None:
+                        calibration_measurements.update({state: counts})
+                    else:
+                        calibration_measurements[state] += counts
+        else:
+            calibration_measurements = calibration_data["results"]["measurement_outcomes"]
+            calibration_registers = calibration_data["register"]
+        
         qubit_mapping = self.backend.initial_qubit_mapping
-
+        
         self.calibration_factors = calculate_calibration_factors(
             self.backend.qaoa_descriptor.cost_hamiltonian,
             calibration_measurements,
             calibration_registers,
             qubit_mapping,
         )
+
 
         """
         This doesn't work because keys are tuples  =(
@@ -110,26 +115,25 @@ class SPAMTwirlingWrapper(BaseWrapper):
             circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(
                 self.backend.n_qubits
             )
+            
 
             for negated_qubit in negated_qubits:
-                negated_qubit = (
-                    negated_qubit.item()
-                )  # convert to native data structure int; important for Pyquil
+                negated_qubit = negated_qubit.item()  # convert to native data structure int; important for Pyquil
                 negation_gate = X(self.backend.gate_applicator, negated_qubit)
                 circuit_to_append = self.backend.gate_applicator.apply_gate(
                     negation_gate, negated_qubit, circuit_to_append
                 )
-
+                
             self.backend.append_state = circuit_to_append
 
             counts_batch = self.backend.get_counts(
                 params, n_shots_batch
             )  # calls the get_counts method of the specific backend
-
+            
             negated_counts = negate_counts_dictionary(
                 counts_dictionary=counts_batch, s=s
             )
-
+            
             # Add to the final counts dict
             for key in negated_counts:
                 if key in counts:
@@ -186,7 +190,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation
         """
         counts = self.get_counts(params, n_shots)
-
+        
         print(counts)
 
         ### To create and save my calibration data, think about another way to do this more consistently.
