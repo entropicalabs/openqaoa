@@ -20,6 +20,16 @@ class PyquilGateApplicator(gates_core.GateApplicator):
     }
 
     library = 'pyquil'
+    
+    def create_quantum_circuit(self, n_qubits) -> Program:
+        '''
+        Function which creates and empty circuit for the specific backend. 
+        Needed for twirling but can be used inside parametric circuit too
+        instead of creating parametric_circuit = QuantumCircuit(self.qureg)
+        TODO this function doesn't require n_qubits but the one for qiskit does.
+        '''
+        parametric_circuit = Program()
+        return parametric_circuit
 
     def gate_selector(self, gate: gates_core.Gate) -> Callable:
         selected_pyquil_gate = PyquilGateApplicator.PYQUIL_OQ_GATE_MAPPER[gate.__name__]

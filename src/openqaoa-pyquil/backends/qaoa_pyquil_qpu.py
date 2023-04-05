@@ -115,6 +115,8 @@ class QAOAPyQuilQPUBackend(
             cvar_alpha,
         )
         QAOABaseBackendCloud.__init__(self, device)
+        
+        self.gate_applicator = PyquilGateApplicator()
 
         self.active_reset = active_reset
         self.rewiring = rewiring
@@ -195,7 +197,6 @@ class QAOAPyQuilQPUBackend(
         `pyquil.Program`
             A pyquil.Program object.
         """
-        gates_applicator = PyquilGateApplicator()
         
         if self.active_reset:
             parametric_circuit = Program(gates.RESET())
@@ -262,9 +263,9 @@ class QAOAPyQuilQPUBackend(
                 new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
                     
                 if rotation_angle is None:
-                    gate = each_tuple[0](gates_applicator, *new_qubits)
+                    gate = each_tuple[0](self.gate_applicator, *new_qubits)
                 else:
-                    gate = each_tuple[0](gates_applicator, *new_qubits, rotation_angle)
+                    gate = each_tuple[0](self.gate_applicator, *new_qubits, rotation_angle)
                 gate.apply_gate(parametric_circuit)
 
         if self.append_state:

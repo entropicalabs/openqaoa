@@ -41,8 +41,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         super().__init__(backend)
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
-        
-        print(self.calibration_data_location)
 
         #print(self.backend.qaoa_descriptor.__dict__)
         if self.backend.qaoa_descriptor.__dict__["routed"] == False:
@@ -52,16 +50,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         else:
             self.backend.qaoa_descriptor.final_mapping  # make the final_mapping to be as the initial one if routed == False
 
-            # self.backend.initial_qubit_mapping # Not working if by qiskit ???
 
-        ### FAKE code for testing ###
-        # final_mapping = self.backend.qaoa_descriptor.final_mapping
-        # initial_mapping = {0:131, 1:132, 2:133, 3:134}
-        # final_mapping = {0:133, 1:131, 2:132, 3:134}
-        # calibration_measurements = {'000000':90, '010000':10 }
-        # calibration_registers = [123, 124, 131, 132, 133, 134, 150]
-
-        ### REAListic scenario, input from the user ###
         try:
             with open(self.calibration_data_location, "r") as f:
                 calibration_data = json.load(f)
@@ -76,7 +65,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         calibration_registers = calibration_data["register"]
 
         # convert list to strings
-        ### relevant only for the specific calibration data Eze gave me, should not be required with the current OQ
         calibration_measurements = {}
         for outcomes in out:
             for state, counts in outcomes.items():
@@ -86,9 +74,13 @@ class SPAMTwirlingWrapper(BaseWrapper):
                 else:
                     calibration_measurements[state] += counts
         '''
-
-        calibration_measurements = calibration_data["results"]["measurement_outcomes"]
-        calibration_registers = calibration_data["register"]
+        
+        ### Mock data for testing ###
+        # final_mapping = self.backend.qaoa_descriptor.final_mapping
+        # initial_mapping = {0:131, 1:132, 2:133, 3:134}
+        # final_mapping = {0:133, 1:131, 2:132, 3:134}
+        calibration_measurements = {'000000':90, '010000':10 }
+        calibration_registers = [123, 124, 131, 132, 133, 134, 150]
 
         self.calibration_factors = calculate_calibration_factors(
             self.backend.qaoa_descriptor.cost_hamiltonian,
@@ -135,22 +127,30 @@ class SPAMTwirlingWrapper(BaseWrapper):
             circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(
                 self.backend.n_qubits
             )
+            
 
             for negated_qubit in negated_qubits:
+                negated_qubit = negated_qubit.item()  # convert to native data structure int; important for Pyquil
                 negation_gate = X(self.backend.gate_applicator, negated_qubit)
                 circuit_to_append = self.backend.gate_applicator.apply_gate(
                     negation_gate, negated_qubit, circuit_to_append
                 )
+                
+            print(circuit_to_append)
             self.backend.append_state = circuit_to_append
 
             counts_batch = self.backend.get_counts(
                 params, n_shots_batch
             )  # should call the original get_counts of the specific backend
-
+            
+            print("counts_batch", counts_batch)
+            
             negated_counts = negate_counts_dictionary(
                 counts_dictionary=counts_batch, s=s
             )
-
+            
+            
+            
             # Add to the final counts dict
             for key in negated_counts:
                 if key in counts:

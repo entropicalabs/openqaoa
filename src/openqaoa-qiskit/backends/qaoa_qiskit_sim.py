@@ -186,7 +186,6 @@ class QAOAQiskitBackendShotBasedSimulator(
                 gate = each_tuple[0](self.gate_applicator,*each_tuple[1])
                 gate.apply_gate(parametric_circuit)
         
-
         return parametric_circuit
 
     def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
