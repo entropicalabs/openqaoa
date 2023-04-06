@@ -11,6 +11,7 @@ from openqaoa.problems import (
     SlackFreeKnapsack,
     MaximumCut,
     MinimumVertexCover,
+    VRP,
 )
 from openqaoa.utilities import convert2serialize
 from openqaoa.problems.helper_functions import create_problem_from_dict
@@ -1031,6 +1032,218 @@ class TestProblem(unittest.TestCase):
             shortest_path_qubo = shortest_path_problem.qubo
 
         self.assertRaises(Exception, test_assertion_fn)
+
+    # TESTING VRP PROBLEM CLASS
+    
+    def test_vrp_terms_weights_constant(self):
+        """Testing VRP problem creation"""
+        nodes_coordinates = [[4, 1], [4, 4], [3, 3], [1, 3.5]]
+        nodes = len(nodes_coordinates)
+        G = nx.Graph()
+        G.add_nodes_from(range(nodes))
+        for i in range(nodes-1):
+            for j in range(i)
+        vrp_qubo = VRP(pos=nodes_coordinates)
+        expected_terms = [
+            [0, 3],
+            [1, 4],
+            [2, 5],
+            [0, 6],
+            [1, 7],
+            [8, 2],
+            [3, 6],
+            [4, 7],
+            [8, 5],
+            [0, 1],
+            [0, 2],
+            [1, 2],
+            [3, 4],
+            [3, 5],
+            [4, 5],
+            [6, 7],
+            [8, 6],
+            [8, 7],
+            [0, 4],
+            [1, 3],
+            [3, 7],
+            [4, 6],
+            [0, 5],
+            [2, 3],
+            [8, 3],
+            [5, 6],
+            [1, 5],
+            [2, 4],
+            [8, 4],
+            [5, 7],
+            [0],
+            [1],
+            [2],
+            [3],
+            [4],
+            [5],
+            [6],
+            [7],
+            [8],
+        ]
+        expected_weights = [
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            3.905124837953327,
+            0.3535533905932738,
+            0.3535533905932738,
+            0.7603453162872774,
+            0.7603453162872774,
+            0.3535533905932738,
+            0.3535533905932738,
+            0.5153882032022076,
+            0.5153882032022076,
+            0.7603453162872774,
+            0.7603453162872774,
+            0.5153882032022076,
+            0.5153882032022076,
+            -10.424148382787205,
+            -9.797225258452029,
+            -11.038545614372802,
+            -10.038047089667756,
+            -9.548132863497614,
+            -10.361716714885624,
+            -10.424148382787205,
+            -9.797225258452029,
+            -11.038545614372802,
+        ]
+        expected_constant = 62.51983851122417
+        tsp_qubo = TSP(city_coordinates).qubo
+        print(tsp_qubo.weights)
+        self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
+        self.assertEqual(expected_weights, tsp_qubo.weights)
+        self.assertEqual(expected_constant, tsp_qubo.constant)
+    
+    def test_tsp_random_instance(self):
+        """Testing the random_instance method of the TSP problem class"""
+        rng = np.random.default_rng(1234)
+        n_cities = 4
+    
+        box_size = np.sqrt(n_cities)
+        city_coordinates = list(map(tuple, box_size * rng.random(size=(n_cities, 2))))
+    
+        tsp_prob = TSP(city_coordinates).qubo
+    
+        tsp_prob_random = TSP.random_instance(n_cities=n_cities, seed=1234).qubo
+    
+        self.assertTrue(terms_list_equality(tsp_prob_random.terms, tsp_prob.terms))
+        self.assertEqual(tsp_prob_random.weights, tsp_prob.weights)
+        self.assertEqual(tsp_prob_random.constant, tsp_prob.constant)
+    
+    def test_tsp_type_checking(self):
+        """
+        Checks if the type-checking returns the right error.
+        """
+        # If nothing is given, must return a ValueError
+        with self.assertRaises(ValueError) as e:
+            TSP()
+        self.assertEqual(
+            "Input missing: city coordinates, distance matrix or (weighted graph) required",
+            str(e.exception),
+        )
+    
+        # coordinates type-check
+        coordinates_list = [(1, 2), {"test": "oh", "test1": "oh"}, np.array([1, 2])]
+    
+        for each_coordinates in coordinates_list:
+            with self.assertRaises(TypeError) as e:
+                TSP(each_coordinates)
+            self.assertEqual("The coordinates should be a list", str(e.exception))
+    
+        coordinates_list = [[[1, 2], [2, 1]], [np.array([1, 2]), np.array([2, 1])]]
+        for each_coordinates in coordinates_list:
+            with self.assertRaises(TypeError) as e:
+                TSP(each_coordinates)
+            self.assertEqual(
+                "The coordinates should be contained in a tuple", str(e.exception)
+            )
+    
+        coordinates_list = [
+            [("oh", "num"), ("num", "oh")],
+            [(np.array(1), np.array(2)), (np.array(2), np.array(1))],
+        ]
+        for each_coordinates in coordinates_list:
+            with self.assertRaises(TypeError) as e:
+                TSP(each_coordinates)
+            self.assertEqual(
+                "The coordinates must be of type float or int", str(e.exception)
+            )
+    
+        # coordinates type-check
+        distance_matrices = [
+            (1, 2),
+            np.array([[1, 2], [3, 4]]),
+            {"test": "oh", "test1": "oh"},
+        ]
+    
+        for distance_matrix in distance_matrices:
+            with self.assertRaises(TypeError) as e:
+                TSP(distance_matrix=distance_matrix)
+            self.assertEqual("The distance matrix should be a list", str(e.exception))
+    
+        # Distance matrix type-check
+        distance_matrices = [[(1, 2), (2, 1)], [np.array([1, 2]), np.array([2, 1])]]
+        for distance_matrix in distance_matrices:
+            with self.assertRaises(TypeError) as e:
+                TSP(distance_matrix=distance_matrix)
+            self.assertEqual(
+                "Each row in the distance matrix should be a list", str(e.exception)
+            )
+    
+        distance_matrices = [
+            [["oh", "num"], ["num", "oh"]],
+            [[np.array(1), np.array(2)], [np.array(2), np.array(1)]],
+        ]
+        for distance_matrix in distance_matrices:
+            with self.assertRaises(TypeError) as e:
+                TSP(distance_matrix=distance_matrix)
+            self.assertEqual(
+                "The distance matrix entries must be of type float or int",
+                str(e.exception),
+            )
+    
+        distance_matrix = [[1, 2.3], [-2, 3]]
+        with self.assertRaises(ValueError) as e:
+            TSP(distance_matrix=distance_matrix)
+        self.assertEqual("Distances should be positive", str(e.exception))
+    
+        # Graph type-check
+        G = nx.complete_graph(5)
+        for (u, v) in G.edges():
+            G[u][v]["weight"] = "a"
+    
+        with self.assertRaises(TypeError) as e:
+            TSP(G=G)
+        self.assertEqual(
+            "The edge weights must be of type float or int", str(e.exception)
+        )
+    
+        for (u, v) in G.edges():
+            G[u][v]["weight"] = -2.0
+    
+        with self.assertRaises(ValueError) as e:
+            TSP(G=G)
+        self.assertEqual("Edge weights should be positive", str(e.exception))
+
 
     def __generate_random_problems(self):
         problems_random_instances = {
