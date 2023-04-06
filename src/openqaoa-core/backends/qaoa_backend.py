@@ -1,5 +1,6 @@
 from typing import Union, Optional, List
 import numpy as np
+from __future__ import annotations
 
 from .plugin_finder import plugin_finder_dict
 from .qaoa_vectorized import QAOAvectorizedBackendSimulator
@@ -170,5 +171,11 @@ def get_qaoa_backend(
     except Exception as e:
         raise ValueError(f"The backend returned an error: {e}")
     if wrapper != None:
-        backend_obj = wrapper(backend_obj, **wrapper_options)
+        try:
+            with open(wrapper_options['calibration_data_location'], "r") as f:
+                backend_obj = wrapper(backend_obj, **wrapper_options)
+        except IOError:
+            print("Please specify the name of the file containing calibration data. Optimizing without SPAM Twirling. ")
+            pass
+        
     return backend_obj
