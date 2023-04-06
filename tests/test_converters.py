@@ -85,7 +85,7 @@ class TestDocplex2IsingClass(unittest.TestCase):
         model using the unblanaced penalization method.
 
         """
-        weights = [3.85, 0.25, -1.15]
+        weights = [4.25, -0.95, -2.45]
         # Creating a basic docplex model
         mdl = Model("Test inequal")  # Docplex model
         num_z = 2  # Number of variables

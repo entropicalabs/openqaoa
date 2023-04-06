@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import Union
+
 import numpy as np
 
 from .qubo import QUBO
@@ -13,7 +14,6 @@ class FromDocplex2IsingModel(object):
         unbalanced_const: bool = False,
         strength_ineq: list = [0.1, 0.5],
     ):
-
         """
         Creates an instance to translate Docplex models to its Ising Model representation
 
@@ -30,15 +30,19 @@ class FromDocplex2IsingModel(object):
             implement a novel approach that do not required slack variables.
         strength_ineq: List[float, float]
             Lagrange multipliers of the penalization term using the unbalanced
-            constrained method.
-            For the penalty => \lambda_2 * \zeta**2 - \lambda_1 * \zeta  || strength_ineq = [a, b]
-            Usually lambda_2 < lambda_1. Please refere to the paper:
-                Unbalanced penalizations: A novel approach of inequality constraints
-                codification in quantum optimization problems.
+            penalization method.
+            For the unbalanced penalization => - \lambda_1 h(x) + \lambda_2 * h(x)**2
+            where h(x) >= 0 is the inequality constraint.
+            strength_ineq = [\lambda_1, \lambda_2]
+            Usually \lambda_2 < \lambda_1. Please refer to the paper:
+                Unbalanced penalization: A new approach to encode inequality constraints
+                of combinatorial problems for quantum optimization algorithms
+                https://arxiv.org/abs/2211.13914
+
         """
-
+        # assign the docplex Model
         self.model = model.copy()
-
+        self.model_name = model.name
         # save the index in a dict
         self.idx_terms = {}
         for x in self.model.iter_variables():
@@ -59,8 +63,8 @@ class FromDocplex2IsingModel(object):
         ----------
         expr : model.objective_expr
             A docplex model attribute.
-        """
 
+        """
         for x, weight in expr.get_linear_part().iter_terms():
             self.qubo_dict[(self.idx_terms[x],)] += weight
 
@@ -101,8 +105,8 @@ class FromDocplex2IsingModel(object):
         -------
         penalty : docplex.mp.quad.QuadExpr
             Penalty that will be added to the cost function.
-        """
 
+        """
         penalty = multiplier * (expression) ** 2
         return penalty
 
@@ -172,6 +176,7 @@ class FromDocplex2IsingModel(object):
         -------
         new_exp : docplex.mp.linear.LinearExpr
             The equality constraint representation of the inequality constraint.
+
         """
 
         if constraint.sense_string == "LE":  # Less or equal inequality constraint
@@ -179,7 +184,7 @@ class FromDocplex2IsingModel(object):
         elif constraint.sense_string == "GE":  # Great or equal inequality constriant
             new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
         else:
-            AttributeError(
+            raise AttributeError(
                 f"It is not possible to implement constraint {constraint.sense_string}."
             )
 
@@ -211,8 +216,7 @@ class FromDocplex2IsingModel(object):
     def inequality_to_unbalanced_penalty(self, constraint):
         """
         Inequality constraint based on an unbalanced penality function described in
-        detail in the paper: "Unbalanced penalizations: A novel approach of
-        inequality constraints codification in quantum optimization problems""
+        detail in the paper: https://arxiv.org/abs/2211.13914
 
         Parameters
         ----------
@@ -223,18 +227,18 @@ class FromDocplex2IsingModel(object):
         -------
         penalty : DOcplex term
             Quadratic programing penalization term.
-        """
 
+        """
         if constraint.sense_string == "LE":  # Less or equal inequality constraint
             new_exp = constraint.get_right_expr() + -1 * constraint.get_left_expr()
         elif constraint.sense_string == "GE":  # Great or equal inequality constriant
             new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
         else:
-            AttributeError(
+            raise AttributeError(
                 f"It is not possible to implement constraint {constraint.sense_string}."
             )
         strength = self.strength_ineq
-        penalty = strength[0] * new_exp**2 - strength[1] * new_exp
+        penalty = -strength[0] * new_exp + strength[1] * new_exp**2
         return penalty
 
     def multipliers_generators(self):
@@ -247,8 +251,8 @@ class FromDocplex2IsingModel(object):
         -------
         float
             the multiplier resized by the cost function limits.
-        """
 
+        """
         cost_func = self.model.objective_expr
         l_bound_linear, u_bound_linear = self.bounds(cost_func.get_linear_part())
         l_bound_quad, u_bound_quad = self.quadratic_bounds(
@@ -268,6 +272,7 @@ class FromDocplex2IsingModel(object):
         Returns
         -------
         None.
+
         """
 
         constraints_list = list(self.model.iter_linear_constraints())
@@ -282,7 +287,7 @@ class FromDocplex2IsingModel(object):
             multipliers = n_constraints * [multipliers]
 
         elif type(multipliers) not in [list, np.ndarray]:
-            TypeError(f"{type(multipliers)} is not a accepted format")
+            raise TypeError(f"{type(multipliers)} is not a accepted format")
 
         for cn, constraint in enumerate(constraints_list):
             if (
@@ -298,14 +303,12 @@ class FromDocplex2IsingModel(object):
             ]:  # Inequality constraint added as a penalty with additional slack variables.
                 constraint.name = f"C{cn}"
                 if self.unbalanced:
-                    penalty = multipliers[cn] * self.inequality_to_unbalanced_penalty(
-                        constraint
-                    )
+                    penalty = self.inequality_to_unbalanced_penalty(constraint)
                 else:
                     ineq2eq = self.inequality_to_equality(constraint)
                     penalty = self.equality_to_penalty(ineq2eq, multipliers[cn])
             else:
-                TypeError("This is not a valid constraint.")
+                raise TypeError("This is not a valid constraint.")
 
             self.linear_expr(penalty)
             self.quadratic_expr(penalty)
@@ -331,15 +334,14 @@ class FromDocplex2IsingModel(object):
         Returns
         -------
         Ising Model stored on QUBO class
-        """
 
+        """
         ising_terms, ising_weights = [], []
         linear_terms = np.zeros(n_variables)
 
         constant_term = 0
         # Process the given terms and weights
         for weight, term in zip(qubo_weights, qubo_terms):
-
             if len(term) == 2:
                 u, v = term
 
@@ -358,7 +360,7 @@ class FromDocplex2IsingModel(object):
             elif len(term) == 0:
                 constant_term += weight
             else:
-                TypeError(f"Term {term} is not recognized!")
+                raise TypeError(f"Term {term} is not recognized!")
 
         for variable, linear_term in enumerate(linear_terms):
             ising_terms.append([variable])
@@ -420,6 +422,7 @@ class FromDocplex2IsingModel(object):
         n_variables = self.model.number_of_variables
         # QUBO docplex
         qubo_docplex = self.model.copy()
+        qubo_docplex.name = self.model_name
         qubo_docplex.clear_constraints()
         qubo_docplex.remove_objective()
         qubo_docplex.minimize(self.objective_qubo)
