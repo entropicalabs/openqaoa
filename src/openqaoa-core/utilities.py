@@ -1207,6 +1207,8 @@ def calculate_calibration_factors(
         # If constant term, ignore
         if len(term) == 0:
             continue
+            
+    # assert calibration_factors != 0  # check if the calibration factors are not zero
 
     return calibration_factors
 

@@ -1,13 +1,12 @@
 from typing import List, Optional, Union
 import numpy as np
+import json
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
 from ..optimizers.training_vqa import CustomScipyGradientOptimizer, PennyLaneOptimizer
 from ..backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from ..backends.basebackend import QuantumCircuitBase
 from ..utilities import convert2serialize
-
-
 
 
 ALLOWED_PARAM_TYPES = [
@@ -79,7 +78,6 @@ class CircuitProperties(WorkflowProperties):
         mixer_coeffs: Optional[float] = None,
         seed: Optional[int] = None,
     ):
-
         self.param_type = param_type
         self.init_type = init_type
         self.qubit_register = qubit_register
@@ -238,7 +236,6 @@ class BackendProperties(WorkflowProperties):
         rewiring: Optional[str] = None,
         disable_qubit_rewiring: Optional[bool] = None,
     ):
-
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state
@@ -268,18 +265,46 @@ class ErrorMitigationProperties(WorkflowProperties):
     """
     TODO
     """
+
     def __init__(
-    self,
-    error_mitigation_technique: Optional[str] = None,  # NOTE this has to be optional so that no mitigation technique if not passing #q.set_error_mitigation_properties
-    n_batches: Optional[int] = 10,
-    #schedule: Optional[???] # how to pass the negated qubits schedule ?
-    calibration_data_location: Optional[str] = None,
+        self,
+        error_mitigation_technique: Optional[str] = None,
+        n_batches: Optional[int] = 10,
+        calibration_data_location: Optional[str] = None,
     ):
-        
         self.error_mitigation_technique = error_mitigation_technique
-        self.n_batches = n_batches
-        # self.schedule
+
+        if isinstance(n_batches, int) and n_batches > 0:
+            self.n_batches = n_batches
+        else:
+            raise ValueError("n_batches must be a positive integer.")
+
         self.calibration_data_location = calibration_data_location
+        if calibration_data_location != None:
+            try:
+                with open(calibration_data_location, "r") as file:
+                    # Parse the JSON file
+                    calibration_data = json.load(file)
+
+                    # Check if the file has the expected structure
+                    calibration_measurements = calibration_data["results"][
+                        "measurement_outcomes"
+                    ]
+                    calibration_registers = calibration_data["register"]
+
+            except FileNotFoundError:
+                raise FileNotFoundError(
+                    "Calibration data file not found at specified location: {}".format(
+                        calibration_data_location
+                    )
+                )
+            except json.JSONDecodeError:
+                raise json.JSONDecodeError(
+                    "Calibration data file is not a valid JSON file"
+                )
+            except KeyError:
+                raise KeyError("File structure not as expected")
+
 
 class ClassicalOptimizer(WorkflowProperties):
     """

@@ -664,25 +664,28 @@ class TestingVanillaQAOA(unittest.TestCase):
         default_pairings = {
             "error_mitigation_technique": None,
             "n_batches": 10,
-            "calibration_data_location": None
+            "calibration_data_location": None,
         }
 
         q = QAOA()
 
         for each_key, each_value in default_pairings.items():
-            self.assertEqual(getattr(q.error_mitigation_properties, each_key), each_value)
+            self.assertEqual(
+                getattr(q.error_mitigation_properties, each_key), each_value
+            )
 
         update_pairings = {
-            "error_mitigation_technique": 'spam_twirling',
+            "error_mitigation_technique": "spam_twirling",
             "n_batches": 20,
-            "calibration_data_location": 'calibration_data/aspen'
+            "calibration_data_location": "calibration_data/aspen",
         }
 
         q.set_error_mitigation_properties(**update_pairings)
 
         for each_key, each_value in update_pairings.items():
-            self.assertEqual(getattr(q.error_mitigation_properties, each_key), each_value)
-            
+            self.assertEqual(
+                getattr(q.error_mitigation_properties, each_key), each_value
+            )
 
     def test_set_classical_optimizer_defaults(self):
         """

@@ -42,16 +42,16 @@ class SPAMTwirlingWrapper(BaseWrapper):
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
 
-        try:
-            with open(self.calibration_data_location, "r") as f:
-                calibration_data = json.load(f)
-        except IOError:
-            print("Please specify the name of the file containing calibration data.")
-            sys.exit(1)  # TODO what do we do if no calibration data present? 
-            
-        if self.calibration_data_location == 'calibration_data/8bc00556-2824-4d38-b563-706a803c6401--calibration.json':
+        with open(self.calibration_data_location, "r") as f:
+            calibration_data = json.load(f)
+
+        if (
+            self.calibration_data_location
+            == "calibration_data/8bc00556-2824-4d38-b563-706a803c6401--calibration.json"
+            or self.calibration_data_location
+            == "calibration_data/ac469846-25e7-40be-b0d0-2d60ae29d973--calibration.json"
+        ):
             # Rigetti's data:
-            # calibration_measurements = calibration_data['results']['measurement_outcomes']
             out = calibration_data["results"]["measurement outcomes"]
             calibration_registers = calibration_data["register"]
 
@@ -65,18 +65,19 @@ class SPAMTwirlingWrapper(BaseWrapper):
                     else:
                         calibration_measurements[state] += counts
         else:
-            calibration_measurements = calibration_data["results"]["measurement_outcomes"]
+            calibration_measurements = calibration_data["results"][
+                "measurement_outcomes"
+            ]
             calibration_registers = calibration_data["register"]
-        
+
         qubit_mapping = self.backend.initial_qubit_mapping
-        
+
         self.calibration_factors = calculate_calibration_factors(
             self.backend.qaoa_descriptor.cost_hamiltonian,
             calibration_measurements,
             calibration_registers,
             qubit_mapping,
         )
-
 
         """
         This doesn't work because keys are tuples  =(
@@ -106,7 +107,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         counts = {}
 
         for batch in range(0, self.n_batches):
-            # print("batch ", batch)
             s = s_list[batch]
             s_binary = format(s, "b").zfill(self.backend.n_qubits)  # convert to binary
             arr = np.fromiter(s_binary, dtype=int)
@@ -115,25 +115,26 @@ class SPAMTwirlingWrapper(BaseWrapper):
             circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(
                 self.backend.n_qubits
             )
-            
 
             for negated_qubit in negated_qubits:
-                negated_qubit = negated_qubit.item()  # convert to native data structure int; important for Pyquil
+                negated_qubit = (
+                    negated_qubit.item()
+                )  # convert to native data structure int; important for Pyquil
                 negation_gate = X(self.backend.gate_applicator, negated_qubit)
                 circuit_to_append = self.backend.gate_applicator.apply_gate(
                     negation_gate, negated_qubit, circuit_to_append
                 )
-                
+
             self.backend.append_state = circuit_to_append
 
             counts_batch = self.backend.get_counts(
                 params, n_shots_batch
             )  # calls the get_counts method of the specific backend
-            
+
             negated_counts = negate_counts_dictionary(
                 counts_dictionary=counts_batch, s=s
             )
-            
+
             # Add to the final counts dict
             for key in negated_counts:
                 if key in counts:
@@ -190,29 +191,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation
         """
         counts = self.get_counts(params, n_shots)
-        
-        print(counts)
-
-        ### To create and save my calibration data, think about another way to do this more consistently.
-        """
-        timestamp = time.strftime("%Y%m%d-%H%M%S") # with the time in UTC
-        # timestamp = time.strftime("%Y%m%d")
-        # TODO device info should come externally
-        # device = aspen
-        # device = rigetti
-        device = 'realistic_noise'
-        # device = 'biased_noise'
-        # device = 'no_noise'
-        # device = 'flip_noise'
-        calibration_data_location = 'calibration_data/{}/{}.json'.format(device, timestamp)
-        with open(calibration_data_location, "w") as fp:
-            json.dump({'calibration_counts':counts,
-                       #'calibration_registers':
-                       'metadata':device,
-                      }, fp)
-            json.dump({'metadata': device}, fp)
-            #json.dump(registers, fp)
-        """
 
         cost = self.expectation_value_spam_twirled(
             counts,
