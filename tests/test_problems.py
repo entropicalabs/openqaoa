@@ -1050,212 +1050,131 @@ class TestProblem(unittest.TestCase):
     
     def test_vrp_terms_weights_constant(self):
         """Testing VRP problem creation"""
-        nodes_coordinates = [[4, 1], [4, 4], [3, 3], [1, 3.5]]
-        nodes = len(nodes_coordinates)
+        pos = [[4, 1], [4, 4], [3, 3]] # nodes position x, y
+        n_vehicles = 1
+        n_nodes = len(pos)
         G = nx.Graph()
-        G.add_nodes_from(range(nodes))
-        for i in range(nodes-1):
-            for j in range(i)
-        vrp_qubo = VRP(pos=nodes_coordinates)
-        expected_terms = [
-            [0, 3],
-            [1, 4],
-            [2, 5],
-            [0, 6],
-            [1, 7],
-            [8, 2],
-            [3, 6],
-            [4, 7],
-            [8, 5],
-            [0, 1],
-            [0, 2],
-            [1, 2],
-            [3, 4],
-            [3, 5],
-            [4, 5],
-            [6, 7],
-            [8, 6],
-            [8, 7],
-            [0, 4],
-            [1, 3],
-            [3, 7],
-            [4, 6],
-            [0, 5],
-            [2, 3],
-            [8, 3],
-            [5, 6],
-            [1, 5],
-            [2, 4],
-            [8, 4],
-            [5, 7],
-            [0],
-            [1],
-            [2],
-            [3],
-            [4],
-            [5],
-            [6],
-            [7],
-            [8],
-        ]
-        expected_weights = [
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            3.905124837953327,
-            0.3535533905932738,
-            0.3535533905932738,
-            0.7603453162872774,
-            0.7603453162872774,
-            0.3535533905932738,
-            0.3535533905932738,
-            0.5153882032022076,
-            0.5153882032022076,
-            0.7603453162872774,
-            0.7603453162872774,
-            0.5153882032022076,
-            0.5153882032022076,
-            -10.424148382787205,
-            -9.797225258452029,
-            -11.038545614372802,
-            -10.038047089667756,
-            -9.548132863497614,
-            -10.361716714885624,
-            -10.424148382787205,
-            -9.797225258452029,
-            -11.038545614372802,
-        ]
-        expected_constant = 62.51983851122417
-        tsp_qubo = TSP(city_coordinates).qubo
-        print(tsp_qubo.weights)
-        self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
-        self.assertEqual(expected_weights, tsp_qubo.weights)
-        self.assertEqual(expected_constant, tsp_qubo.constant)
+        G.add_nodes_from(range(n_nodes))
+        for i in range(n_nodes-1):
+            for j in range(i+1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0])**2 + (pos[i][1] - pos[j][1])**2)
+                G.add_weighted_edges_from([(i,j,r)])
+        vrp_qubo = VRP(G, pos, n_vehicles).qubo
+        expected_terms = [[0, 1], [0, 2], [1, 2], [0], [1], [2]]
+        expected_weights = [2.0, 2.0, 2.0, 6.5, 6.881966011250105, 7.292893218813452]
+        expected_constant = 21.32514076993644
+        
+        self.assertTrue(terms_list_equality(expected_terms, vrp_qubo.terms))
+        self.assertEqual(expected_weights, vrp_qubo.weights)
+        self.assertEqual(expected_constant, vrp_qubo.constant)
     
-    def test_tsp_random_instance(self):
-        """Testing the random_instance method of the TSP problem class"""
-        rng = np.random.default_rng(1234)
-        n_cities = 4
+    def test_vrp_random_instance(self):
+        """Testing the random_instance method of the VRP problem class"""
+        seed =  1234
+        np.random.seed(seed)
+        n_nodes = 3 
+        n_vehicles = 1    
+        G = nx.Graph()
+        G.add_nodes_from(range(n_nodes))
+        pos = [[0,0]]
+        pos += [list(2*np.random.rand(2)-1) for _ in range(n_nodes - 1)]
+        for i in range(n_nodes - 1):
+            for j in range(i+1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0])**2 + (pos[i][1] - pos[j][1])**2)
+                G.add_weighted_edges_from([(i, j, r)])
+        
+        vrp_prob = VRP(G, pos, n_vehicles).qubo
+        vrp_prob_random = VRP.random_instance(n_nodes=n_nodes, n_vehicles=n_vehicles,
+                                              seed=seed).qubo
+
+        self.assertTrue(terms_list_equality(vrp_prob_random.terms, vrp_prob.terms))
+        self.assertEqual(vrp_prob_random.weights, vrp_prob.weights)
+        self.assertEqual(vrp_prob_random.constant, vrp_prob.constant)
+
+    def test_vrp_random_instance_unbalanced(self):
+        """
+        Testing the random_instance method of the VRP problem class using the 
+        unbalanced penalization method
+        """
+        seed =  1234
+        np.random.seed(seed)
+        n_nodes = 8 
+        n_vehicles = 2   
+        n_vars = n_nodes * (n_nodes - 1) // 2
+
+        vrp_prob_random = VRP.random_instance(n_nodes=n_nodes, n_vehicles=n_vehicles, seed=seed, method="unbalanced", penalty=3*[0.1]).qubo
+
+        self.assertTrue(vrp_prob_random.n == n_vars)
+        self.assertTrue(vrp_prob_random.weights[0] == 0.05)
+        self.assertTrue(vrp_prob_random.weights[-1] == -0.688413325464513)
+        self.assertTrue(vrp_prob_random.terms[0] == [0, 1])
+        self.assertTrue(vrp_prob_random.terms[-1] == [27])
     
-        box_size = np.sqrt(n_cities)
-        city_coordinates = list(map(tuple, box_size * rng.random(size=(n_cities, 2))))
-    
-        tsp_prob = TSP(city_coordinates).qubo
-    
-        tsp_prob_random = TSP.random_instance(n_cities=n_cities, seed=1234).qubo
-    
-        self.assertTrue(terms_list_equality(tsp_prob_random.terms, tsp_prob.terms))
-        self.assertEqual(tsp_prob_random.weights, tsp_prob.weights)
-        self.assertEqual(tsp_prob_random.constant, tsp_prob.constant)
-    
-    def test_tsp_type_checking(self):
+    def test_vrp_type_checking(self):
         """
         Checks if the type-checking returns the right error.
         """
-        # If nothing is given, must return a ValueError
+        # Wrong method is called
         with self.assertRaises(ValueError) as e:
-            TSP()
+            VRP.random_instance(n_nodes=6, n_vehicles=2, method="method")
         self.assertEqual(
-            "Input missing: city coordinates, distance matrix or (weighted graph) required",
+            "The method 'method' is not valid.",
+            str(e.exception),
+        )
+        # Penalization terms in unblanced method is not equal to three
+        with self.assertRaises(ValueError) as e:
+            VRP.random_instance(n_nodes=6, n_vehicles=2, method="unbalanced", penalty=[0.1])
+        self.assertEqual(
+            "The penalty must have 3 parameters [lambda_0, lambda_1, lambda_2]",
             str(e.exception),
         )
     
-        # coordinates type-check
-        coordinates_list = [(1, 2), {"test": "oh", "test1": "oh"}, np.array([1, 2])]
-    
-        for each_coordinates in coordinates_list:
-            with self.assertRaises(TypeError) as e:
-                TSP(each_coordinates)
-            self.assertEqual("The coordinates should be a list", str(e.exception))
-    
-        coordinates_list = [[[1, 2], [2, 1]], [np.array([1, 2]), np.array([2, 1])]]
-        for each_coordinates in coordinates_list:
-            with self.assertRaises(TypeError) as e:
-                TSP(each_coordinates)
-            self.assertEqual(
-                "The coordinates should be contained in a tuple", str(e.exception)
-            )
-    
-        coordinates_list = [
-            [("oh", "num"), ("num", "oh")],
-            [(np.array(1), np.array(2)), (np.array(2), np.array(1))],
-        ]
-        for each_coordinates in coordinates_list:
-            with self.assertRaises(TypeError) as e:
-                TSP(each_coordinates)
-            self.assertEqual(
-                "The coordinates must be of type float or int", str(e.exception)
-            )
-    
-        # coordinates type-check
-        distance_matrices = [
-            (1, 2),
-            np.array([[1, 2], [3, 4]]),
-            {"test": "oh", "test1": "oh"},
-        ]
-    
-        for distance_matrix in distance_matrices:
-            with self.assertRaises(TypeError) as e:
-                TSP(distance_matrix=distance_matrix)
-            self.assertEqual("The distance matrix should be a list", str(e.exception))
-    
-        # Distance matrix type-check
-        distance_matrices = [[(1, 2), (2, 1)], [np.array([1, 2]), np.array([2, 1])]]
-        for distance_matrix in distance_matrices:
-            with self.assertRaises(TypeError) as e:
-                TSP(distance_matrix=distance_matrix)
-            self.assertEqual(
-                "Each row in the distance matrix should be a list", str(e.exception)
-            )
-    
-        distance_matrices = [
-            [["oh", "num"], ["num", "oh"]],
-            [[np.array(1), np.array(2)], [np.array(2), np.array(1)]],
-        ]
-        for distance_matrix in distance_matrices:
-            with self.assertRaises(TypeError) as e:
-                TSP(distance_matrix=distance_matrix)
-            self.assertEqual(
-                "The distance matrix entries must be of type float or int",
-                str(e.exception),
-            )
-    
-        distance_matrix = [[1, 2.3], [-2, 3]]
+        # paths with an unfeasible solution
         with self.assertRaises(ValueError) as e:
-            TSP(distance_matrix=distance_matrix)
-        self.assertEqual("Distances should be positive", str(e.exception))
-    
-        # Graph type-check
-        G = nx.complete_graph(5)
-        for (u, v) in G.edges():
-            G[u][v]["weight"] = "a"
-    
-        with self.assertRaises(TypeError) as e:
-            TSP(G=G)
+            vrp = VRP.random_instance(n_nodes=6, n_vehicles=2, seed=1234)
+            sol = vrp.classical_solution()
+            sol["x_0_1"] = (sol["x_0_1"] + 1) % 2 # Changing one value in the solution to make it an unfeasible solution
+            vrp.paths_subtours(sol)
         self.assertEqual(
-            "The edge weights must be of type float or int", str(e.exception)
+            "Solution provided does not fulfill all the path conditions.",
+            str(e.exception),
         )
-    
-        for (u, v) in G.edges():
-            G[u][v]["weight"] = -2.0
-    
+        # subtours with an unfeasible direction (broke subtour)
         with self.assertRaises(ValueError) as e:
-            TSP(G=G)
-        self.assertEqual("Edge weights should be positive", str(e.exception))
+            vrp = VRP.random_instance(n_nodes=10, n_vehicles=2, subtours=[[]], seed=1234)
+            sol = vrp.classical_solution()
+            sol["x_1_2"] = (sol["x_1_2"] + 1) % 2 # Changing one value in the solution to make it an unfeasible solution
+            vrp.paths_subtours(sol)
+        self.assertEqual(
+            "The subtours in the solution are broken.",
+            str(e.exception),
+        )
+        # Test unfeasible problem does not return classical solution
+        with self.assertRaises(ValueError) as e:
+            vrp = VRP.random_instance(n_nodes=3, n_vehicles=3, seed=1234)
+            sol = vrp.classical_solution()
+            vrp.paths_subtours(sol)
+        self.assertEqual(
+            "Solution not found: integer infeasible.",
+            str(e.exception),
+        )
+        # Test wrong graph input
+        with self.assertRaises(TypeError) as e:
+            G = [[0,1,2], [1,2,3]]
+            vrp = VRP(G, pos=[[0,1],[1,2]], n_vehicles=2)
+        self.assertEqual(
+            "Input problem graph must be a networkx Graph.",
+            str(e.exception),
+        )
+        # Test different size between graph nodes and x, y positions in pos
+        with self.assertRaises(ValueError) as e:
+            G = nx.Graph()
+            G.add_nodes_from(range(3))
+            vrp = VRP(G, pos=[[0,1],[1,2]], n_vehicles=2)
+        self.assertEqual(
+            "The number of nodes in G is 3 while the x, y coordinates in pos is 2",
+            str(e.exception),
+        )
 
 
     def __generate_random_problems(self):
@@ -1278,6 +1197,8 @@ class TestProblem(unittest.TestCase):
                 n_nodes=randint(3, 15), edge_probability=random()
             ),
             "bin_packing": BinPacking.random_instance(
+            ),
+            "vehicle_routing": VRP.random_instance(
             ),
         }
         qubo_random_instances = {
@@ -1320,6 +1241,8 @@ class TestProblem(unittest.TestCase):
             "bin_packing":["problem_type", "weights", "weight_capacity","penalty",
                            "n_items", "method", "simplifications", "n_bins",
                            'min_bins', 'solution'],
+            "vehicle_routing":["problem_type", "G", "pos", "n_vehicles", "depot",
+                               "subtours", "method", "penalty"],
             "generic_qubo": ["problem_type"],
         }
 
@@ -1345,6 +1268,7 @@ class TestProblem(unittest.TestCase):
             "minimum_vertex_cover": MinimumVertexCover,
             "shortest_path": ShortestPath,
             "bin_packing": BinPacking,
+            "vehicle_routing":VRP,
         }
 
         problems, qubos = self.__generate_random_problems()

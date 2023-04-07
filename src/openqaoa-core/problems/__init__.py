@@ -5,5 +5,6 @@ from .numberpartition import NumberPartition
 from .shortestpath import ShortestPath
 from .tsp import TSP
 from .binpacking import BinPacking
+from .vehiclerouting import VRP
 from .converters import FromDocplex2IsingModel
 from .qubo import QUBO

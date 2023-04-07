@@ -48,7 +48,9 @@ class VRP(Problem):
     __name__ = "vehicle_routing"
 
     def __init__(self, G, pos, n_vehicles, depot:int=0, subtours:list=[], method:str="slack", penalty:Union[int, float, list]=4):
-        self._G = G
+        self.G = G
+        if len(G.nodes) != len(pos):
+            raise ValueError(f"The number of nodes in G is {len(G.nodes)} while the x, y coordinates in pos is {len(pos)}")
         self.pos = pos
         self.n_vehicles = n_vehicles
         self.depot = depot
@@ -87,6 +89,14 @@ class VRP(Problem):
             Required keyword arguments are:
             n_nodes: int
                 The number of nodes (vertices) in the graph.
+            n_vehicles: int
+                Number of vehicles used in the problem
+            method: str 
+                method for the inequality constraints ['slack', 'unbalanced'].
+                For the unbalaced method refer to https://arxiv.org/abs/2211.13914
+                For the slack method: https://en.wikipedia.org/wiki/Slack_variable
+            subtours: list[list]
+                Manually add the subtours to be avoided
             seed: int
                 Seed for the random problems.
 
@@ -163,8 +173,7 @@ class VRP(Problem):
             qubo_docplex = FromDocplex2IsingModel(cplex_model,multipliers=self.penalty).ising_model
         elif self.method == "unbalanced":
             qubo_docplex = FromDocplex2IsingModel(cplex_model,multipliers=self.penalty[0], unbalanced_const=True, strength_ineq=self.penalty[1:]).ising_model
-        
-        return QUBO(self.G.number_of_nodes(), qubo_docplex.terms + [[]], qubo_docplex.weights + [qubo_docplex.constant], self.problem_instance)
+        return QUBO(qubo_docplex.n, qubo_docplex.terms + [[]], qubo_docplex.weights + [qubo_docplex.constant], self.problem_instance)
 
     def classical_solution(self, string: bool = False):
         """
@@ -187,7 +196,7 @@ class VRP(Problem):
 
         if docplex_sol is None:
             raise ValueError(
-                f"solution not found: {self.cplex_model.solve_details.status}"
+                f"Solution not found: {cplex_model.solve_details.status}."
             )
 
         if string:
@@ -241,7 +250,7 @@ class VRP(Problem):
                         break
                 max_edges -= 1
                 if max_edges < 0:
-                    raise ValueError("Solution provided does not fulfill all the conditions!")
+                    raise ValueError("Solution provided does not fulfill all the path conditions.")
         # ----------------            subtours                -----------------
         subtours = {}
         i = 0
@@ -261,7 +270,7 @@ class VRP(Problem):
                         break
                 max_edges -= 1
                 if max_edges < 0:
-                    raise ValueError("Solution provided does not fulfill all the conditions!")
+                    raise ValueError("The subtours in the solution are broken.")
             i += 1
         return {"paths":paths, "subtours": subtours}
 
