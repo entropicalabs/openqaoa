@@ -28,7 +28,7 @@ class RQAOA(Workflow):
 
     .. note::
         The attributes of the RQAOA class should be initialized using the set methods of QAOA.
-        For example, to set the qaoa circuit's depth to 10 you should run `set_circuit_properties(p=10)`
+        For example, to set the qaoa circuit's depth to 10 you should run `fecircuit_properties(p=10)`
 
     Attributes
     ----------

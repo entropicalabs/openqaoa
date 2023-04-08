@@ -86,11 +86,13 @@ def _compare_qaoa_results(dict_old, dict_new):
                     for step in range(len(dict_old[key][key2])):
                         assert np.all(
                             dict_old[key][key2][step] == dict_new[key][key2][step]
-                        ), "Intermediate params are not the same."
+                        ), f"Intermediate params are not the same. Expected {dict_old[key][key2][step]} but \
+                            received {dict_new[key][key2][step]}"
                 else:
                     assert (
                         dict_old[key][key2] == dict_new[key][key2]
-                    ), "Intermediate params are not the same."
+                    ), f"Intermediate params are not the same. Expected {dict_old[key][key2]}, but \
+                        received {dict_new[key][key2]}"
         else:
             assert dict_old[key] == dict_new[key], f"'{key}' is not the same"
 
@@ -778,7 +780,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             description="test",
             run_by="raul",
             provider="-",
-            target="-",
+            target="vectorized",
             cloud="local",
             client="-",
         )
@@ -797,7 +799,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             description="test",
             run_by="raul",
             provider="-",
-            target="-",
+            target="vectorized",
             cloud="local",
             client="-",
             experiment_id=experiment_id,
@@ -812,7 +814,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             "description": "test",
             "run_by": "raul",
             "provider": "-",
-            "target": "-",
+            "target": "vectorized",
             "cloud": "local",
             "client": "-",
             "qubit_number": None,
@@ -877,7 +879,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                 description="test",
                 run_by="raul",
                 provider="-",
-                target="-",
+                target="vectorized",
                 cloud="local",
                 client="-",
             )
@@ -894,7 +896,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                 description="test",
                 run_by="raul",
                 provider="-",
-                target="-",
+                target="vectorized",
                 cloud="local",
                 client="-",
             )
@@ -913,10 +915,17 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa.compile(problem=QUBO.random_instance(n=8))
         qaoa.optimize()
 
-        assert qaoa.exp_tags == {
+        tags = {
             "tag1": "value9",
             "tag2": "value2",
-        }, "Experiment tags are not set correctly."
+            "init_type": "ramp",
+            "optimizer_method": "cobyla",
+            "p": 1,
+            "param_type": "standard",
+            "qubit_number": 8,
+        }
+
+        assert qaoa.exp_tags == tags, "Experiment tags are not set correctly."
 
         error = False
         try:
@@ -970,7 +979,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             description="test",
             run_by="raul",
             provider="-",
-            target="-",
+            target="vectorized",
             cloud="local",
             client="-",
         )
@@ -1239,15 +1248,12 @@ class TestingVanillaQAOA(unittest.TestCase):
                 p=1, param_type="extended", init_type="rand", mixer_hamiltonian="x"
             )
             q.set_backend_properties(n_shots=50)
-            q.set_classical_optimizer(maxiter=10, optimization_progress=True)
+            q.set_classical_optimizer(maxiter=2, optimization_progress=True)
             q.set_exp_tags({"add_tag": "test"})
             q.set_header(
                 project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
                 description="test",
-                run_by="raul",
-                provider="-",
-                target="-",
-                cloud="local",
+                run_by="oq",
                 client="-",
             )
 
@@ -1672,9 +1678,6 @@ class TestingRQAOA(unittest.TestCase):
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="header",
             run_by="raul",
-            provider="-",
-            target="-",
-            cloud="local",
             client="-",
         )
         r.set_exp_tags(tags={"tag1": "value1", "tag2": "value2"})
@@ -2399,7 +2402,7 @@ class TestingRQAOA(unittest.TestCase):
         )
 
         # create list of expected file names
-        project_id = "None"
+        project_id = "d3a6f03b-1484-423a-8432-38e57c4e9ec7"
         experiment_id, atomic_id = r.header["experiment_id"], r.header["atomic_id"]
         file_names = {
             id: project_id
@@ -2517,7 +2520,7 @@ class TestingRQAOA(unittest.TestCase):
                 description="test",
                 run_by="raul",
                 provider="-",
-                target="-",
+                target="vectorized",
                 cloud="local",
                 client="-",
             )

@@ -156,7 +156,7 @@ class QAOAResult:
         return_dict["evals"] = self.evals
         return_dict["most_probable_states"] = self.most_probable_states
 
-        complx_to_str = (
+        complex_to_str = (
             lambda x: str(x)
             if isinstance(x, np.complex128) or isinstance(x, complex)
             else x
@@ -168,24 +168,35 @@ class QAOAResult:
         if complex_to_string:
             return_dict["intermediate"] = {}
             for key, value in self.intermediate.items():
-                if intermediate_measurements is False and "measurement" in key:
-                    # if intermediate_measurements is false, the intermediate measurements are not included in the dump
-                    return_dict["intermediate"][key] = []
-                elif "measurement" in key and (
-                    isinstance(value, list) or isinstance(value, np.ndarray)
-                ):
-                    return_dict["intermediate"][key] = [
-                        [complx_to_str(item) for item in list_]
-                        for list_ in value
-                        if (isinstance(list_, list) or isinstance(list_, np.ndarray))
-                    ]
-                else:
-                    return_dict["intermediate"][key] = value
-
-                if "cost" == key and (
+                # Measurements and Cost may require casting
+                if "measurement" in key:
+                    if len(value) > 0:
+                        if intermediate_measurements is False:
+                            # if intermediate_measurements is false, the intermediate measurements are not included
+                            return_dict["intermediate"][key] = []
+                        elif isinstance(
+                            value[0], np.ndarray
+                        ):  # Statevector -> convert complex to str
+                            return_dict["intermediate"][key] = [
+                                [complex_to_str(item) for item in list_]
+                                for list_ in value
+                                if (
+                                    isinstance(list_, list)
+                                    or isinstance(list_, np.ndarray)
+                                )
+                            ]
+                        else:  # All other case -> cast numpy into
+                            return_dict["intermediate"][key] = [
+                                {k_: int(v_) for k_, v_ in v.items()} for v in value
+                            ]
+                    else:
+                        pass
+                elif "cost" == key and (
                     isinstance(value[0], np.float64) or isinstance(value[0], np.float32)
                 ):
                     return_dict["intermediate"][key] = [float(item) for item in value]
+                else:
+                    return_dict["intermediate"][key] = value
 
             return_dict["optimized"] = {}
             for key, value in self.optimized.items():
@@ -194,7 +205,7 @@ class QAOAResult:
                     isinstance(value, list) or isinstance(value, np.ndarray)
                 ):
                     return_dict["optimized"][key] = [
-                        complx_to_str(item) for item in value
+                        complex_to_str(item) for item in value
                     ]
                 # if dictionary, convert measurement values to integers
                 elif "measurement" in key and (isinstance(value, dict)):
