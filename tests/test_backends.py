@@ -1,6 +1,5 @@
 import unittest
 import json
-import os
 import pytest
 import subprocess
 
@@ -38,12 +37,13 @@ class TestingBackendLocal(unittest.TestCase):
 
     def test_get_counts_and_expectation_n_shots(self):
         """
-        Check that the .get_counts admit n_shots as an argument, and works properly for the backend of all local devices.
-        Also check that .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the QAOABaseBackendShotBased backends.
+        Check that the .get_counts admit n_shots as an argument, and works properly for
+          the backend of all local devices.
+        Also check that .expectation and .expecation_w_uncertainty methods admit n_shots
+         as an argument for the QAOABaseBackendShotBased backends.
         """
 
         for device_name in DEVICE_NAME_TO_OBJECT_MAPPER.keys():
-
             # Analytical device doesn't have any of those so we are skipping it in the tests.
             if device_name in ["analytical_simulator"]:
                 continue
@@ -96,7 +96,6 @@ class TestingBackendQPUs(unittest.TestCase):
 
     @pytest.mark.qpu
     def setUp(self):
-
         self.HUB = "ibm-q"
         self.GROUP = "open"
         self.PROJECT = "main"
@@ -123,9 +122,11 @@ class TestingBackendQPUs(unittest.TestCase):
     @pytest.mark.qpu
     def test_get_counts_and_expectation_n_shots(self):
         """
-        TODO: test needs to be updated as DEVICE_ACCESS_OBJECT_MAPPER is now dynamically filled based on whether a module exists.
-        
-        Check that the .get_counts, .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the backends of all QPUs.
+        TODO: test needs to be updated as DEVICE_ACCESS_OBJECT_MAPPER is now dynamically filled
+        based on whether a module exists.
+
+        Check that the .get_counts, .expectation and .expecation_w_uncertainty methods
+        admit n_shots as an argument for the backends of all QPUs.
         """
 
         list_device_attributes = [
@@ -134,7 +135,7 @@ class TestingBackendQPUs(unittest.TestCase):
                 "device_name": "rigetti.sim.qvm",
                 "resource_id": self.RESOURCE_ID,
                 "az_location": self.AZ_LOCATION,
-            }, 
+            },
             {
                 "QPU": "AWS",
                 "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
@@ -157,12 +158,12 @@ class TestingBackendQPUs(unittest.TestCase):
 
         assert len(list_device_attributes) == len(
             DEVICE_ACCESS_OBJECT_MAPPER
-        ), "The number of QPUs in the list of tests is not the same as the number of QPUs in the DEVICE_ACCESS_OBJECT_MAPPER. The list should be updated."
+        ), "The number of QPUs in the list of tests is not the same as the number of QPUs in \
+             the DEVICE_ACCESS_OBJECT_MAPPER. The list should be updated."
         print(DEVICE_ACCESS_OBJECT_MAPPER.items(), list_device_attributes)
         for (device, backend), device_attributes in zip(
             DEVICE_ACCESS_OBJECT_MAPPER.items(), list_device_attributes
         ):
-
             qaoa_descriptor, variational_params_std = get_params()
 
             QPU_name = device_attributes.pop("QPU")
@@ -193,7 +194,8 @@ class TestingBackendQPUs(unittest.TestCase):
                         ).values()
                     )
                     == 58
-                ), "`n_shots` is not being respected when calling .get_counts(n_shots=58).".format(
+                ), "`n_shots` \
+                        is not being respected when calling .get_counts(n_shots=58).".format(
                     QPU_name
                 )
                 backend.expectation(params=variational_params_std, n_shots=58)
@@ -202,7 +204,6 @@ class TestingBackendQPUs(unittest.TestCase):
                 )
 
             except Exception as e:
-
                 raise e from type(e)(f"Error raised for `{QPU_name}`: " + str(e))
 
             print("Test passed for {} backend.".format(QPU_name))

@@ -1,9 +1,9 @@
 {
   "header": {
-    "atomic_id": "210a6aaa-932d-45a6-b260-f3fdd085c547",
-    "experiment_id": "74779bb1-867c-4131-89d2-ac9238422cd9",
+    "atomic_id": "4d2598da-167e-4c2b-8134-852f9bfcf167",
+    "experiment_id": "8f62d958-2d10-4253-a829-77c634826e12",
     "project_id": null,
-    "algorithm": "rqaoa",
+    "algorithm": "qaoa",
     "description": null,
     "run_by": null,
     "provider": null,
@@ -19,10 +19,7 @@
       "optimizer_method": "cobyla",
       "param_type": "standard",
       "init_type": "ramp",
-      "p": 1,
-      "rqaoa_type": "custom",
-      "rqaoa_n_max": 1,
-      "rqaoa_n_cutoff": 3
+      "p": 1
     }
   },
   "data": {
@@ -212,8 +209,8 @@
     },
     "input_parameters": {
       "device": {
-        "device_location": "local",
-        "device_name": "vectorized"
+        "device_location": "aws",
+        "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
       },
       "backend_properties": {
         "init_hadamard": true,
@@ -232,7 +229,7 @@
       "classical_optimizer": {
         "optimize": true,
         "method": "cobyla",
-        "maxiter": 3,
+        "maxiter": "5",
         "maxfev": null,
         "jac": null,
         "hess": null,
@@ -263,22 +260,6 @@
         "mixer_qubit_connectivity": null,
         "mixer_coeffs": null,
         "seed": null
-      },
-      "rqaoa_parameters": {
-        "rqaoa_type": "custom",
-        "n_max": 1,
-        "steps": [
-          2,
-          2,
-          2,
-          2,
-          2,
-          2,
-          2
-        ],
-        "n_cutoff": 3,
-        "original_hamiltonian": null,
-        "counter": 0
       }
     },
     "result": null
