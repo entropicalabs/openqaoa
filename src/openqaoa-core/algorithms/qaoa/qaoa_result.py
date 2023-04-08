@@ -165,14 +165,11 @@ class QAOAResult:
         # if the backend is a statevector backend, the measurement outcomes will be the statevector,
         # meaning that it is a list of complex numbers, which is not serializable.
         # If that is the case, and complex_to_string is true the complex numbers are converted to strings.
-        if complex_to_string and issubclass(
-            self.__type_backend, QAOABaseBackendStatevector
-        ):
+        if complex_to_string:
             return_dict["intermediate"] = {}
             for key, value in self.intermediate.items():
-                if (
-                    intermediate_measurements is False and "measurement" in key
-                ):  # if intermediate_measurements is false, the intermediate measurements are not included in the dump
+                if intermediate_measurements is False and "measurement" in key:
+                    # if intermediate_measurements is false, the intermediate measurements are not included in the dump
                     return_dict["intermediate"][key] = []
                 elif "measurement" in key and (
                     isinstance(value, list) or isinstance(value, np.ndarray)
@@ -184,6 +181,11 @@ class QAOAResult:
                     ]
                 else:
                     return_dict["intermediate"][key] = value
+
+                if "cost" == key and (
+                    isinstance(value[0], np.float64) or isinstance(value[0], np.float32)
+                ):
+                    return_dict["intermediate"][key] = [float(item) for item in value]
 
             return_dict["optimized"] = {}
             for key, value in self.optimized.items():
@@ -201,6 +203,11 @@ class QAOAResult:
                     }
                 else:
                     return_dict["optimized"][key] = value
+
+                if "cost" in key and (
+                    isinstance(value, np.float64) or isinstance(value, np.float32)
+                ):
+                    return_dict["optimized"][key] = float(value)
         else:
             return_dict["intermediate"] = self.intermediate
             return_dict["optimized"] = self.optimized
