@@ -2372,22 +2372,18 @@ class TestingRQAOA(unittest.TestCase):
         test dumping the RQAOA object step by step
         """
 
+        project_id = "d3a6f03b-1484-423a-8432-38e57c4e9ec7"
+
         # define the problem
         problem = QUBO.random_instance(n=8)
         problem.set_metadata(
             {"metadata_key1": "metadata_value1", "metadata_key2": "metadata_value2"}
         )
 
-        # define the RQAOA object
         r = RQAOA()
-
-        # set experimental tags
+        r.set_header(project_id=project_id)
         r.set_exp_tags({"tag1": "value1", "tag2": "value2"})
-
-        # set the classical optimizer
         r.set_classical_optimizer(optimization_progress=True)
-
-        # compile the problem
         r.compile(problem)
 
         # optimize the problem while dumping the data at each step
@@ -2402,7 +2398,6 @@ class TestingRQAOA(unittest.TestCase):
         )
 
         # create list of expected file names
-        project_id = "d3a6f03b-1484-423a-8432-38e57c4e9ec7"
         experiment_id, atomic_id = r.header["experiment_id"], r.header["atomic_id"]
         file_names = {
             id: project_id
