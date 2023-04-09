@@ -62,7 +62,8 @@ class TestingBackendLocal(unittest.TestCase):
                     ).values()
                 )
                 == 58
-            ), "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=58).".format(
+            ), "`n_shots` is not being respected for the local simulator `{}` when \
+                calling backend.get_counts(n_shots=58).".format(
                 device_name
             )
             if isinstance(backend, QAOABaseBackendShotBased):
@@ -70,7 +71,8 @@ class TestingBackendLocal(unittest.TestCase):
                     backend.expectation(params=variational_params_std, n_shots=58)
                 except Exception:
                     raise Exception(
-                        "backend.expectation does not admit `n_shots` as an argument for the local simulator `{}`.".format(
+                        "backend.expectation does not admit `n_shots` as an argument \
+                            for the local simulator `{}`.".format(
                             device_name
                         )
                     )
@@ -80,7 +82,8 @@ class TestingBackendLocal(unittest.TestCase):
                     )
                 except Exception:
                     raise Exception(
-                        "backend.expectation_w_uncertainty does not admit `n_shots` as an argument for the local simulator `{}`.".format(
+                        "backend.expectation_w_uncertainty does not admit `n_shots` \
+                            as an argument for the local simulator `{}`.".format(
                             device_name
                         )
                     )
@@ -94,7 +97,7 @@ class TestingBackendQPUs(unittest.TestCase):
     credentials.
     """
 
-    @pytest.mark.qpu
+    @pytest.mark.api
     def setUp(self):
         self.HUB = "ibm-q"
         self.GROUP = "open"
@@ -186,7 +189,8 @@ class TestingBackendQPUs(unittest.TestCase):
                     init_hadamard=True,
                 )
 
-                # Check that the .get_counts, .expectation and .expectation_w_variance methods admit n_shots as an argument
+                # Check that the .get_counts, .expectation and .expectation_w_variance methods
+                # admit n_shots as an argument
                 assert (
                     sum(
                         backend.get_counts(
@@ -194,8 +198,8 @@ class TestingBackendQPUs(unittest.TestCase):
                         ).values()
                     )
                     == 58
-                ), "`n_shots` \
-                        is not being respected when calling .get_counts(n_shots=58).".format(
+                ), "`n_shots` is not being respected \
+                    when calling .get_counts(n_shots=58) for QPU `{}`.".format(
                     QPU_name
                 )
                 backend.expectation(params=variational_params_std, n_shots=58)

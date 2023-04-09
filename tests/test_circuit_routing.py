@@ -594,7 +594,6 @@ class ExpectedRouting:
 
 
 class TestingQubitRouting(unittest.TestCase):
-    @pytest.mark.qpu
     def setUp(self):
         """
         Test edge cases
