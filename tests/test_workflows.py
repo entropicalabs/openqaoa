@@ -778,7 +778,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="test",
-            run_by="raul",
+            run_by="OpenQAOA",
             provider="-",
             target="vectorized",
             cloud="local",
@@ -797,7 +797,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="test",
-            run_by="raul",
+            run_by="OpenQAOA",
             provider="-",
             target="vectorized",
             cloud="local",
@@ -812,7 +812,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             "project_id": "8353185c-b175-4eda-9628-b4e58cb0e41b",
             "algorithm": "qaoa",
             "description": "test",
-            "run_by": "raul",
+            "run_by": "OpenQAOA",
             "provider": "-",
             "target": "vectorized",
             "cloud": "local",
@@ -877,7 +877,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             qaoa.set_header(
                 project_id="test",
                 description="test",
-                run_by="raul",
+                run_by="OpenQAOA",
                 provider="-",
                 target="vectorized",
                 cloud="local",
@@ -894,7 +894,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                 project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
                 experiment_id="test",
                 description="test",
-                run_by="raul",
+                run_by="OpenQAOA",
                 provider="-",
                 target="vectorized",
                 cloud="local",
@@ -977,7 +977,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="test",
-            run_by="raul",
+            run_by="OpenQAOA",
             provider="-",
             target="vectorized",
             cloud="local",
@@ -1677,7 +1677,7 @@ class TestingRQAOA(unittest.TestCase):
         r.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="header",
-            run_by="raul",
+            run_by="OpenQAOA",
             client="-",
         )
         r.set_exp_tags(tags={"tag1": "value1", "tag2": "value2"})
@@ -2513,7 +2513,7 @@ class TestingRQAOA(unittest.TestCase):
             r.set_header(
                 project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
                 description="test",
-                run_by="raul",
+                run_by="OpenQAOA",
                 provider="-",
                 target="vectorized",
                 cloud="local",
