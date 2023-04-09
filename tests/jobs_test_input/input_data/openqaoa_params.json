@@ -1,29 +1,34 @@
 {
   "header": {
-    "atomic_id": "4d2598da-167e-4c2b-8134-852f9bfcf167",
-    "experiment_id": "8f62d958-2d10-4253-a829-77c634826e12",
+    "atomic_id": "386997de-0e90-4e1c-8236-cd722801615f",
+    "experiment_id": "ce2f83d7-4000-4507-9e98-96e3f9afd55e",
     "project_id": null,
-    "algorithm": "qaoa",
+    "algorithm": "rqaoa",
     "description": null,
     "run_by": null,
     "provider": null,
     "target": null,
     "cloud": null,
     "client": null,
-    "qubit_number": 10,
     "execution_time_start": null,
     "execution_time_end": null,
     "metadata": {
+      "qubit_number": 10,
       "problem_type": "minimum_vertex_cover",
       "n_shots": 100,
       "optimizer_method": "cobyla",
       "param_type": "standard",
       "init_type": "ramp",
-      "p": 1
+      "p": 1,
+      "rqaoa_type": "custom",
+      "rqaoa_n_max": 1,
+      "rqaoa_n_cutoff": 6
     }
   },
   "data": {
-    "exp_tags": {},
+    "exp_tags": {
+      "qubit_number": 10
+    },
     "input_problem": {
       "terms": [
         [
@@ -229,7 +234,7 @@
       "classical_optimizer": {
         "optimize": true,
         "method": "cobyla",
-        "maxiter": "5",
+        "maxiter": 3,
         "maxfev": null,
         "jac": null,
         "hess": null,
@@ -260,6 +265,19 @@
         "mixer_qubit_connectivity": null,
         "mixer_coeffs": null,
         "seed": null
+      },
+      "rqaoa_parameters": {
+        "rqaoa_type": "custom",
+        "n_max": 1,
+        "steps": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "n_cutoff": 6,
+        "original_hamiltonian": null,
+        "counter": 0
       }
     },
     "result": null
