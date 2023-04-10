@@ -1,21 +1,16 @@
 from abc import abstractmethod
 from typing import Optional, List, Callable
-from pyqir.generator import BasicQisBuilder, SimpleModule, ir_to_bitcode, types
-from pyqir.generator import SimpleModule
-from pyqir.qis import cx, cz, rx, ry, rz
+from pyqir.generator import BasicQisBuilder, SimpleModule, ir_to_bitcode
+
+# from pyqir.qis import cx, cz, rx, ry, rz
 from openqaoa.qaoa_components.ansatz_constructor import QAOADescriptor
-from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
+from openqaoa.qaoa_components.variational_parameters import (
     QAOAVariationalBaseParams,
 )
 from openqaoa.qaoa_components.ansatz_constructor import gates, RotationAngle
-from openqaoa.qaoa_components.ansatz_constructor.gatemap import (
-    RotationGateMap,
-    TwoQubitRotationGateMap,
-)
 from openqaoa.backends.basebackend import (
     QAOABaseBackendShotBased,
 )
-
 from openqaoa_azure.backends import DeviceAzure
 
 
@@ -89,12 +84,12 @@ class QAOAIntermediateBaseRepresentation(QAOABaseBackendShotBased):
     #     Parameters
     #     ----------
     #     params: `QAOAVariationalBaseParams`
-    #             The QAOA variational parameters
+    #         The QAOA variational parameters
 
     #     Returns
     #     -------
     #     qaoa_circuit: Intermediate Representation
-    #             The QAOA instructions with designated angles based on `params`
+    #         The QAOA instructions with designated angles based on `params`
     #     """
     #     raise NotImplementedError()
 
@@ -209,7 +204,6 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
         cvar_alpha: float = 1,
         qubit_layout: List[int] = [],
     ):
-
         super().__init__(
             qaoa_descriptor,
             n_shots,
@@ -252,7 +246,6 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
         return mapper
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> SimpleModule:
-
         self.assign_angles(params)
 
         # TODO: Replace all logic with `apply_gate` method
@@ -323,7 +316,7 @@ class QAOAQIR(QAOAIntermediateBaseRepresentation):
                 The bitcode corresponding to the QAOA circuit
         """
         ir = self.convert_to_ir(params)
-        
+
         bitcode = ir_to_bitcode(ir)
         return bitcode
 
