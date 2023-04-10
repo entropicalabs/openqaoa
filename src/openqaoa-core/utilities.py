@@ -1148,18 +1148,21 @@ def calculate_calibration_factors(
     qubit_mapping,
 ) -> Dict:
     """
-    Computes the calibration factors <Z_{i}> and <Z_{i}Z_{j}>,
-    using the optimization results obtained from an empty (initial state = |000..0> QAOA circuit.
+    Computes the single spin and pairs of spins calibration factors, which are the expectation value of the observables found in the particular Hamiltonian, <Z_{i}> and <Z_{i}Z_{j}>, from the calibration data provided. The calibration data is obtained under BFA on an empty (initial state = |000..0>) QAOA circuit.
+    See arXiv:2012.09738 and arXiv:2106.05800.
 
     Parameters
     ----------
     hamiltonian: `Hamiltonian`
         Hamiltonian object containing the problem statement.
     calibration_measurements: `dict`
-        Dictionary containing the measurement counts of optimized QAOA circuit.
-
-    TODO
-
+        Dictionary containing the measurement counts of an empty QAOA circuit.
+    calibration_registers: `list`
+        List specifying the physical (device) qubits on which the calibration data has been obtained.
+        This is required because the calibration is usually performed over the whole device and hence the measurement outcomes (the calibration data) are strings with the size of the whole device while usually only a particular section is used.
+    qubit_mapping: `list`
+        List specifying the physical (device) qubits on which the QAOA circuit is executed. Related to qubit selection and qubit routing.
+    
     Returns
     -------
     calibration_factors: `dict`
@@ -1208,8 +1211,11 @@ def calculate_calibration_factors(
         if len(term) == 0:
             continue
             
-    # assert calibration_factors != 0  # check if the calibration factors are not zero
-
+    #if not all(value != 0 for value in calibration_factors.values()):
+        #raise ValueError("One (or more) of the calibration factors is 0 which means that the measurement is faulty. Please double check the data.")
+    
+    assert all(value != 0 for value in calibration_factors.values()), "One (or more) of the calibration factors is 0 which means that the measurement is faulty. Please check the data."
+    
     return calibration_factors
 
 

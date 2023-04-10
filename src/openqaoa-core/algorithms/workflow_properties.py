@@ -279,7 +279,7 @@ class ErrorMitigationProperties(WorkflowProperties):
         else:
             raise ValueError("n_batches must be a positive integer.")
 
-        self.calibration_data_location = calibration_data_location
+        
         if calibration_data_location != None:
             try:
                 with open(calibration_data_location, "r") as file:
@@ -300,10 +300,13 @@ class ErrorMitigationProperties(WorkflowProperties):
                 )
             except json.JSONDecodeError:
                 raise json.JSONDecodeError(
-                    "Calibration data file is not a valid JSON file"
+                    "Calibration data file {} is not a valid JSON file".format(calibration_data_location)
                 )
             except KeyError:
-                raise KeyError("File structure not as expected")
+                raise KeyError("Calibration data file {} structure not as expected".format(calibration_data_location)
+                )
+                
+        self.calibration_data_location = calibration_data_location
 
 
 class ClassicalOptimizer(WorkflowProperties):

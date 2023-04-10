@@ -912,7 +912,7 @@ class TestingUtilities(unittest.TestCase):
 
     def test_calculate_calibration_factors(self):
         """
-        Tests the function that computes the calibration factors ...
+        Tests the function that computes the calibration factors.
 
         The test consists in ...
 
@@ -1037,8 +1037,6 @@ class TestingUtilities(unittest.TestCase):
             hamiltonian, calibration_measurements, calibration_registers, qubit_mapping
         )
 
-        print(output_calibration_factors)
-
         expected_calibration_factors = {
             (0, 1): -0.923322683706,
             (1, 2): -0.936102236422,
@@ -1053,6 +1051,27 @@ class TestingUtilities(unittest.TestCase):
         assert (
             output_calibration_factors == expected_calibration_factors
         ), f"Calibration factors have not been calculated correctly in the presense of probabalistic errors."
+        
+        
+        ### Calibration factors are 0 as a result of a faulty measurement (probability of an error is 0.5)
+        ##### Raise a ValueError
+        calibration_measurements = {
+            "0000000": 10000 * 0.5,
+            "0001000": 10000 * 0.5,
+        }
+        
+        
+        exception = False
+        try:
+            output_calibration_factors = calculate_calibration_factors(
+            hamiltonian, calibration_measurements, calibration_registers, qubit_mapping
+        )
+        except:
+            exception = True
+
+        assert exception, "Calibration factors 0 didn't fail"
+
+
 
     def test_energy_expectation_analytical(self):
         """

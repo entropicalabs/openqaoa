@@ -677,7 +677,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         update_pairings = {
             "error_mitigation_technique": "spam_twirling",
             "n_batches": 20,
-            "calibration_data_location": "calibration_data/aspen",
+            "calibration_data_location": "./tests/qpu_calibration_data/spam_twirling_mock.json",
         }
 
         q.set_error_mitigation_properties(**update_pairings)

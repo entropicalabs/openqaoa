@@ -52,8 +52,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
             == "calibration_data/ac469846-25e7-40be-b0d0-2d60ae29d973--calibration.json"
         ):
             # Rigetti's data:
-            out = calibration_data["results"]["measurement outcomes"]
-            calibration_registers = calibration_data["register"]
+            out = calibration_data["results"]["measurement_outcomes"]
 
             # convert list to strings
             calibration_measurements = {}
@@ -68,7 +67,8 @@ class SPAMTwirlingWrapper(BaseWrapper):
             calibration_measurements = calibration_data["results"][
                 "measurement_outcomes"
             ]
-            calibration_registers = calibration_data["register"]
+        
+        calibration_registers = calibration_data["register"]
 
         qubit_mapping = self.backend.initial_qubit_mapping
 
@@ -98,8 +98,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         s_list = []
         for _ in range(0, self.n_batches):
             s_list.append(random.getrandbits(self.backend.n_qubits))
-        # s_list = [3, 0, 1, 2] # TESTING ONLY, can be specified by the user
-        # s_list = [1, 1, 1, 1]
 
         n_shots = self.backend.n_shots if n_shots == None else n_shots
         n_shots_batch = int(n_shots / self.n_batches)
@@ -187,7 +185,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
     def expectation(self, params, n_shots=None) -> float:
         """
         use the total counts under BFA to compute expectation values Zi and ZiZj
-        correct these expectation values with the calibration data, lambda_i, lambda_ij
+        correct these expectation values with the calibration factors, lambda_i, lambda_ij
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation
         """
         counts = self.get_counts(params, n_shots)
