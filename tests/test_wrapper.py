@@ -50,8 +50,20 @@ class TestingBaseWrapper(unittest.TestCase):
         Check that we can wrap around any backend, i.e. that the wrapper is backend-agnostic. 
         """
         qaoa_descriptor, variational_params_std = get_params()
-        device_name = 'qiskit.shot_simulator'  # TODO for loop for all devices
+        
+        
+        
+        rigetti_args ={
+    'as_qvm':True, 
+    'execution_timeout':10,
+    'compiler_timeout':100
+}
+        device = create_device(location='qcs', name='7q-noisy-qvm', **rigetti_args)
+        
+        device_name = 'qiskit.qasm_simulator'  # TODO for loop for all devices
         device = create_device(location="local", name=device_name)
+        
+        
         backend = get_qaoa_backend(
             qaoa_descriptor=qaoa_descriptor, device=device, wrapper=SPAMTwirlingWrapper, wrapper_options={'n_batches' : 6, 'calibration_data_location':'./tests/qpu_calibration_data/spam_twirling_mock.json'}, n_shots = 42
         )
@@ -63,7 +75,7 @@ class TestingBaseWrapper(unittest.TestCase):
                 ).values()
             )
             == 42
-        ), "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=58).".format(
+        ), "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=42).".format(
             device_name
         )
             

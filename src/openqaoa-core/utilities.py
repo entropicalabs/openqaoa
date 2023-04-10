@@ -1140,12 +1140,13 @@ def exp_val_hamiltonian_termwise(
 
     return exp_vals_z, corr_matrix
 
+
 @round_value
 def calculate_calibration_factors(
-    hamiltonian,
-    calibration_measurements,
-    calibration_registers,
-    qubit_mapping,
+    hamiltonian: Hamiltonian,
+    calibration_measurements: dict,
+    calibration_registers: list,
+    qubit_mapping: list,
 ) -> Dict:
     """
     Computes the single spin and pairs of spins calibration factors, which are the expectation value of the observables found in the particular Hamiltonian, <Z_{i}> and <Z_{i}Z_{j}>, from the calibration data provided. The calibration data is obtained under BFA on an empty (initial state = |000..0>) QAOA circuit.
@@ -1162,7 +1163,7 @@ def calculate_calibration_factors(
         This is required because the calibration is usually performed over the whole device and hence the measurement outcomes (the calibration data) are strings with the size of the whole device while usually only a particular section is used.
     qubit_mapping: `list`
         List specifying the physical (device) qubits on which the QAOA circuit is executed. Related to qubit selection and qubit routing.
-    
+
     Returns
     -------
     calibration_factors: `dict`
@@ -1175,6 +1176,9 @@ def calculate_calibration_factors(
 
     # Extract Hamiltonian terms
     terms = list(hamiltonian.terms)
+    
+    if qubit_mapping == None:
+        qubit_mapping = np.arange(0, n_qubits)
 
     # Initialize an empty dict
     calibration_factors = {}
@@ -1202,7 +1206,6 @@ def calculate_calibration_factors(
             )  # calibration indices, i.e. to which location on the measurement string each physical qubit corresponds to, ex: (63, 61)
             exp_val_zz = exp_val_pair((i_cal, j_cal), calibration_measurements)
 
-
             calibration_factors.update(
                 {(i, j): exp_val_zz}
             )  # calibration factors are calculated for the terms in the hamiltonian/problem
@@ -1210,12 +1213,11 @@ def calculate_calibration_factors(
         # If constant term, ignore
         if len(term) == 0:
             continue
-            
-    #if not all(value != 0 for value in calibration_factors.values()):
-        #raise ValueError("One (or more) of the calibration factors is 0 which means that the measurement is faulty. Please double check the data.")
-    
-    assert all(value != 0 for value in calibration_factors.values()), "One (or more) of the calibration factors is 0 which means that the measurement is faulty. Please check the data."
-    
+
+    assert all(
+        value != 0 for value in calibration_factors.values()
+    ), "One (or more) of the calibration factors is 0 which means that the measurement is faulty. Please check the data."
+
     return calibration_factors
 
 
