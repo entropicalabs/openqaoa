@@ -687,16 +687,15 @@ class TestingVanillaQAOA(unittest.TestCase):
                 getattr(q.error_mitigation_properties, each_key), each_value
             )
 
-            
     def test_set_error_mitigation_properties_check_user_input(self):
         """
-        If the calibration data file doesn't exist, is of the wrong format, or has a different structure than the one expected, 
+        If the calibration data file doesn't exist, is of the wrong format, or has a different structure than the one expected,
         we should receive the appropriate error messages.
-        
+
         Checks also if the number of batches is non-positive.
         """
         filename = "./tests/qpu_calibration_data/spam_twirling_mock.json"
-        
+
         nodes = 3
         edge_probability = 0.6
         g = nw.generators.fast_gnp_random_graph(n=nodes, p=edge_probability)
@@ -704,45 +703,69 @@ class TestingVanillaQAOA(unittest.TestCase):
         qubo_problem = problem.qubo
 
         q = QAOA()
-        q.set_device(create_device(location='local', name='qiskit.qasm_simulator'))
-        
-        self.assertRaises(ValueError, lambda: q.set_error_mitigation_properties(error_mitigation_technique = 'spam_twirling', n_batches = -1, calibration_data_location = filename)
-)
+        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
+
+        self.assertRaises(
+            ValueError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=-1,
+                calibration_data_location=filename,
+            ),
+        )
 
         q = QAOA()
-        q.set_device(create_device(location='local', name='qiskit.qasm_simulator'))
+        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
 
-        
-        self.assertRaises(ValueError, lambda: q.set_error_mitigation_properties(error_mitigation_technique = 'spam_twirling', n_batches = 0, calibration_data_location = filename)
-)
+        self.assertRaises(
+            ValueError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=0,
+                calibration_data_location=filename,
+            ),
+        )
         q = QAOA()
-        q.set_device(create_device(location='local', name='qiskit.qasm_simulator'))
-        
+        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
+
         filename = "./tests/qpu_calibration_data/non-existing-location.json"
-        
-        self.assertRaises(FileNotFoundError, lambda: q.set_error_mitigation_properties(error_mitigation_technique = 'spam_twirling', n_batches = 10, calibration_data_location = filename)
-)
+
+        self.assertRaises(
+            FileNotFoundError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=10,
+                calibration_data_location=filename,
+            ),
+        )
         q = QAOA()
-        q.set_device(create_device(location='local', name='qiskit.qasm_simulator'))
-        
+        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
+
         filename = "./tests/qpu_calibration_data/wrong_format.txt"
-        
-        self.assertRaises(json.JSONDecodeError, lambda: q.set_error_mitigation_properties(error_mitigation_technique = 'spam_twirling', n_batches = 10, calibration_data_location = filename)
-)
+
+        self.assertRaises(
+            json.JSONDecodeError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=10,
+                calibration_data_location=filename,
+            ),
+        )
 
         q = QAOA()
-        q.set_device(create_device(location='local', name='qiskit.qasm_simulator'))
-        
+        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
+
         filename = "./tests/qpu_calibration_data/wrong_structure.json"
-        
-        self.assertRaises(KeyError, lambda: q.set_error_mitigation_properties(error_mitigation_technique = 'spam_twirling', n_batches = 10, calibration_data_location = filename)
-)
-        
-        
-        
-        
-        
-        
+
+        self.assertRaises(
+            KeyError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=10,
+                calibration_data_location=filename,
+            ),
+        )
+
     def test_set_classical_optimizer_defaults(self):
         """
         Check if the fields in the default classical_optimizer dict are correct

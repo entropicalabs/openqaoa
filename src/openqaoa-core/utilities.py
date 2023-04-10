@@ -1176,7 +1176,7 @@ def calculate_calibration_factors(
 
     # Extract Hamiltonian terms
     terms = list(hamiltonian.terms)
-    
+
     if qubit_mapping == None:
         qubit_mapping = np.arange(0, n_qubits)
 
