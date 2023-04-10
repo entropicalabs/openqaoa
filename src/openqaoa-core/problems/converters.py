@@ -31,7 +31,6 @@ class FromDocplex2IsingModel(object):
         strength_ineq: List[float, float]
             Lagrange multipliers of the penalization term using the unbalanced
             penalization method.
-
             For the unbalanced penalization => - \lambda_1 h(x) + \lambda_2 * h(x)**2
             where h(x) >= 0 is the inequality constraint.
             strength_ineq = [\lambda_1, \lambda_2]
