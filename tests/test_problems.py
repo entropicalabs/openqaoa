@@ -1157,7 +1157,8 @@ class TestProblem(unittest.TestCase):
                 n_nodes=randint(3, 15), edge_probability=random()
             ),
             "maximal_independent_set": MIS.random_instance(
-                n_nodes=randint(3, 15), edge_probability=random())
+                n_nodes=randint(3, 15), edge_probability=random()
+            ),
             "bin_packing": BinPacking.random_instance(
             ),
         }
