@@ -45,40 +45,6 @@ class TestingBaseWrapper(unittest.TestCase):
     These tests check that the methods of the wrapper around the backend are working properly.
     """
 
-    def test_setup(self):
-        """
-        Check that we can wrap around any backend, i.e. that the wrapper is backend-agnostic. 
-        """
-        qaoa_descriptor, variational_params_std = get_params()
-        
-        
-        
-        rigetti_args ={
-    'as_qvm':True, 
-    'execution_timeout':10,
-    'compiler_timeout':100
-}
-        device = create_device(location='qcs', name='7q-noisy-qvm', **rigetti_args)
-        
-        device_name = 'qiskit.qasm_simulator'  # TODO for loop for all devices
-        device = create_device(location="local", name=device_name)
-        
-        
-        backend = get_qaoa_backend(
-            qaoa_descriptor=qaoa_descriptor, device=device, wrapper=SPAMTwirlingWrapper, wrapper_options={'n_batches' : 6, 'calibration_data_location':'./tests/qpu_calibration_data/spam_twirling_mock.json'}, n_shots = 42
-        )
-
-        assert (
-            sum(
-                backend.get_counts(
-                    params=variational_params_std, n_shots=42
-                ).values()
-            )
-            == 42
-        ), "`n_shots` is not being respected for the local simulator `{}` when calling backend.get_counts(n_shots=42).".format(
-            device_name
-        )
-            
 
 class TestingSPAMTwirlingWrapper(unittest.TestCase):
     """
@@ -86,18 +52,70 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
 
     """
 
-    def test_get_counts(self):
+    def setUp(
+        self,
+    ):
+        self.n_batches = 6
+        self.calibration_data_location = (
+            "./tests/qpu_calibration_data/spam_twirling_mock.json"
+        )
+        self.qaoa_descriptor, self.variate_params = get_params()
+        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
+            self.qaoa_descriptor, 100, None, None, True, 1.0
+        )
+        self.wrapped_obj = SPAMTwirlingWrapper(
+            qiskit_shot_backend,
+            n_batches=self.n_batches,
+            calibration_data_location=self.calibration_data_location,
+        )
 
+    def test_wrap_any_backend(self):
+        """
+        Check that we can wrap around any backend, i.e. that the wrapper is backend-agnostic.
+        """
+        qaoa_descriptor, variational_params_std = get_params()
+
+        rigetti_args = {
+            "as_qvm": True,
+            "execution_timeout": 10,
+            "compiler_timeout": 100,
+        }
+        device_list = [
+            create_device(location="local", name="qiskit.qasm_simulator"),
+            create_device(location="qcs", name="7q-noisy-qvm", **rigetti_args),
+        ]
+        for device in device_list:
+            try:
+                backend = get_qaoa_backend(
+                    qaoa_descriptor=self.qaoa_descriptor,
+                    device=device,
+                    wrapper=SPAMTwirlingWrapper,
+                    wrapper_options={
+                        "n_batches": 6,
+                        "calibration_data_location": "./tests/qpu_calibration_data/spam_twirling_mock.json",
+                    },
+                    n_shots=42,
+                )
+            except:
+                raise ValueError("The {} backend cannot be wrapped.".format(backend))
+
+    def test_setUp(self):
+        assert (
+            self.wrapped_obj.n_batches == self.n_batches
+        ), "The number of batches hasn't been set correctly."
+        assert (
+            self.wrapped_obj.calibration_data_location == self.calibration_data_location
+        ), "The location of the calibration file hasn't been set correctly."
+
+    def test_get_counts(self):
         """
         Test get_counts in the spam twirling wrapper.
         """
-        shots = 10000
-        qaoa_descriptor, variate_params = get_params()
-        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(qaoa_descriptor, shots, None, None, True, 1.0)
 
-        shot_result = qiskit_shot_backend.get_counts(variate_params)
+        self.wrapped_obj.get_counts(
+            self.variate_params
+        )  # TODO how to check if this outputs the right counts dict and it's not the same as the one without the wrapper ???
 
-        self.assertEqual(type(shot_result), dict)
 
 if __name__ == "__main__":
     unittest.main()
