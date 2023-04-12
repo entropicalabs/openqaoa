@@ -1194,6 +1194,7 @@ class TestProblem(unittest.TestCase):
         self.assertEqual(
             "The number of nodes in G is 3 while the x, y coordinates in pos is 2",
             str(e.exception),
+        )
 
     # TESTING MAXIMAL INDEPENDENT SET PROBLEM
 
@@ -1201,7 +1202,19 @@ class TestProblem(unittest.TestCase):
         """Test that MaximumCut creates a correct QUBO from the provided graph"""
 
         gr = nx.generators.random_graphs.fast_gnp_random_graph(n=5, p=0.8, seed=1234)
-        gr_edges = [[0, 3], [0, 4], [1, 2], [1, 3], [2, 4], [3, 4], [0], [1], [2], [3], [4]]
+        gr_edges = [
+            [0, 3],
+            [0, 4],
+            [1, 2],
+            [1, 3],
+            [2, 4],
+            [3, 4],
+            [0],
+            [1],
+            [2],
+            [3],
+            [4],
+        ]
         gr_weights = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -1.0, -1.0]
 
         mis_prob_qubo = MIS(gr).qubo
@@ -1249,42 +1262,46 @@ class TestProblem(unittest.TestCase):
         seed = 1234
         np.random.seed(seed)
         mis_sol = MIS.random_instance(
-            n_nodes=10, edge_probability = 0.7, seed=seed).classical_solution()
-        
-        sol = {'x_0': 1,
-         'x_1': 1,
-         'x_2': 0,
-         'x_3': 0,
-         'x_4': 0,
-         'x_5': 0,
-         'x_6': 0,
-         'x_7': 0,
-         'x_8': 1,
-         'x_9': 0}
+            n_nodes=10, edge_probability=0.7, seed=seed
+        ).classical_solution()
+
+        sol = {
+            "x_0": 1,
+            "x_1": 1,
+            "x_2": 0,
+            "x_3": 0,
+            "x_4": 0,
+            "x_5": 0,
+            "x_6": 0,
+            "x_7": 0,
+            "x_8": 1,
+            "x_9": 0,
+        }
 
         self.assertEqual(mis_sol, sol)
 
     def test_mis_plot(self):
         """Test maximal independent set random instance method"""
         from matplotlib.pyplot import Figure
+
         seed = 1234
         mis_random_prob = MIS.random_instance(
-            n_nodes=10, edge_probability = 0.7, seed=seed
+            n_nodes=10, edge_probability=0.7, seed=seed
         )
-        sol = {'x_0': 1,
-         'x_1': 1,
-         'x_2': 0,
-         'x_3': 0,
-         'x_4': 0,
-         'x_5': 0,
-         'x_6': 0,
-         'x_7': 0,
-         'x_8': 1,
-         'x_9': 0}
+        sol = {
+            "x_0": 1,
+            "x_1": 1,
+            "x_2": 0,
+            "x_3": 0,
+            "x_4": 0,
+            "x_5": 0,
+            "x_6": 0,
+            "x_7": 0,
+            "x_8": 1,
+            "x_9": 0,
+        }
         fig = mis_random_prob.plot_solution(sol)
-        self.assertTrue(
-            isinstance(fig, Figure)
-        )
+        self.assertTrue(isinstance(fig, Figure))
 
     def __generate_random_problems(self):
         problems_random_instances = {
@@ -1309,8 +1326,7 @@ class TestProblem(unittest.TestCase):
             "maximal_independent_set": MIS.random_instance(
                 n_nodes=randint(3, 15), edge_probability=random()
             ),
-            "bin_packing": BinPacking.random_instance(
-            ),
+            "bin_packing": BinPacking.random_instance(),
         }
         qubo_random_instances = {
             k: v.qubo for k, v in problems_random_instances.items()
@@ -1359,9 +1375,18 @@ class TestProblem(unittest.TestCase):
                 "penalty",
             ],
             "maximal_independent_set": ["problem_type", "G", "penalty"],
-            "bin_packing":["problem_type", "weights", "weight_capacity","penalty",
-                           "n_items", "method", "simplifications", "n_bins",
-                           'min_bins', 'solution'],
+            "bin_packing": [
+                "problem_type",
+                "weights",
+                "weight_capacity",
+                "penalty",
+                "n_items",
+                "method",
+                "simplifications",
+                "n_bins",
+                "min_bins",
+                "solution",
+            ],
             "generic_qubo": ["problem_type"],
         }
 
