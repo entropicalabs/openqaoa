@@ -57,7 +57,7 @@ class PortfolioOptimization(Problem):
         mu_bounds: tuple
             bounds of the expected return
         sigma_bounds: tuple
-            bound of the covariance matrix 
+            bound of the covariance matrix
         risk_factor: float
             desired risk factor exposures
         seed: int
@@ -77,12 +77,17 @@ class PortfolioOptimization(Problem):
 
         np.random.seed(seed)
 
-        mu = [(mu_bounds[1] - mu_bounds[0]) * np.random.rand() + mu_bounds[0] for _ in range(num_assets)]
+        mu = [
+            (mu_bounds[1] - mu_bounds[0]) * np.random.rand() + mu_bounds[0]
+            for _ in range(num_assets)
+        ]
         sigma = [[0 for i in range(num_assets)] for j in range(num_assets)]
         for i in range(num_assets):
             for j in range(num_assets):
-                sigma[i][j] = (sigma_bounds[1] - sigma_bounds[0]) * np.random.rand() + sigma_bounds[0]
-                
+                sigma[i][j] = (
+                    sigma_bounds[1] - sigma_bounds[0]
+                ) * np.random.rand() + sigma_bounds[0]
+
         return PortfolioOptimization(mu, sigma, risk_factor, budget, penalty)
 
     @property
@@ -91,25 +96,25 @@ class PortfolioOptimization(Problem):
 
         num_assets = self.num_assets
 
-        #Start the docplex model with Model("name of the model")
-        mdl = Model('Portfolio Optimization')
+        # Start the docplex model with Model("name of the model")
+        mdl = Model("Portfolio Optimization")
 
         # Consider the number of variables as num_assets,
         # and binary set of variables that represent the stocks
         # x vector in numpy array for matrix multiplication
         x = np.array(mdl.binary_var_list(num_assets, name="asset"))
 
-        #Specific the objective of the
+        # Specific the objective of the
         # portfolio optimization function
-        objective_function = - np.array(self.mu) @ x + x.T @ np.array(self.sigma) @ x
+        objective_function = -np.array(self.mu) @ x + x.T @ np.array(self.sigma) @ x
 
-        # For this problem it aims to maximize the profit 
+        # For this problem it aims to maximize the profit
         # of those assets minimizing the risk of the investment
         mdl.minimize(objective_function)
 
         # Budget constraint
-        mdl.add_constraint(mdl.sum(x) == self.budget, ctname='budget')
-    
+        mdl.add_constraint(mdl.sum(x) == self.budget, ctname="budget")
+
         return mdl
 
     @property
@@ -122,13 +127,14 @@ class PortfolioOptimization(Problem):
         """
         cplex_model = self.docplex_model
         n_vars = cplex_model.number_of_binary_variables
-        qubo_docplex = FromDocplex2IsingModel(
-                    cplex_model, multipliers=self.penalty
-                )
+        qubo_docplex = FromDocplex2IsingModel(cplex_model, multipliers=self.penalty)
         ising_model = qubo_docplex.ising_model
-        return QUBO(n_vars, ising_model.terms+[[]],
-                    ising_model.weights + [ising_model.constant],
-                    self.problem_instance)
+        return QUBO(
+            n_vars,
+            ising_model.terms + [[]],
+            ising_model.weights + [ising_model.constant],
+            self.problem_instance,
+        )
 
     def classical_solution(self, string: bool = False):
         """
@@ -150,9 +156,7 @@ class PortfolioOptimization(Problem):
         docplex_sol = cplex_model.solve()
 
         if docplex_sol is None:
-            raise ValueError(
-                f"solution not found: {cplex_model.solve_details.status}"
-            )
+            raise ValueError(f"solution not found: {cplex_model.solve_details.status}")
 
         if string:
             solution = ""
@@ -164,29 +168,56 @@ class PortfolioOptimization(Problem):
             else:
                 solution[var.name] = int(np.round(docplex_sol.get_value(var), 1))
         return solution
-    
+
     def plot_solution(self, solution, ax=None):
         G = nx.Graph()
         G.add_nodes_from(range(self.num_assets))
         edge_list = []
         width = []
-        for i in range(self.num_assets-1):
-            for j in range(i+1, self.num_assets):
-                G.add_edge(i,j, weight=self.sigma[i][j])
-                edge_list.append((i,j))
+        for i in range(self.num_assets - 1):
+            for j in range(i + 1, self.num_assets):
+                G.add_edge(i, j, weight=self.sigma[i][j])
+                edge_list.append((i, j))
                 width.append(self.sigma[i][j])
         pos = nx.circular_layout(G)
         if ax is None:
             fig, ax = plt.subplots()
         else:
             fig = None
-        graph_colors_sol = ["#F29D55" if int(i) else "#28C9C9" for i in solution.values()]
+        graph_colors_sol = [
+            "#F29D55" if int(i) else "#28C9C9" for i in solution.values()
+        ]
 
-        nx.draw(G, pos=pos, labels = {i:k for i, k in enumerate(solution.keys())},
-                node_size=900, node_color = graph_colors_sol, ax=ax, edgecolors="grey")
+        nx.draw(
+            G,
+            pos=pos,
+            labels={i: k for i, k in enumerate(solution.keys())},
+            node_size=900,
+            node_color=graph_colors_sol,
+            ax=ax,
+            edgecolors="grey",
+        )
         nx.draw_networkx_edges(G, pos, edgelist=edge_list, width=width, ax=ax)
-        ax.plot([],[], marker="o", linewidth=0, markeredgecolor="grey",color="#F29D55", label="selected", markersize=10)
-        ax.plot([],[], marker="o", linewidth=0, markeredgecolor="grey",color="#28C9C9", label="non-selected", markersize=10)
-    
-        ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.08), ncol=2)
+        ax.plot(
+            [],
+            [],
+            marker="o",
+            linewidth=0,
+            markeredgecolor="grey",
+            color="#F29D55",
+            label="selected",
+            markersize=10,
+        )
+        ax.plot(
+            [],
+            [],
+            marker="o",
+            linewidth=0,
+            markeredgecolor="grey",
+            color="#28C9C9",
+            label="non-selected",
+            markersize=10,
+        )
+
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.08), ncol=2)
         return fig
