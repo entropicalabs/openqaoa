@@ -8,6 +8,7 @@ from .minimumvertexcover import MinimumVertexCover
 from .numberpartition import NumberPartition
 from .shortestpath import ShortestPath
 from .tsp import TSP
+from .maximalindependentset import MIS
 from .binpacking import BinPacking
 from .qubo import QUBO
 
@@ -40,8 +41,8 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
         "slack_free_knapsack": SlackFreeKnapsack,
         "minimum_vertex_cover": MinimumVertexCover,
         "shortest_path": ShortestPath,
+        "maximal_independent_set": MIS,
         "bin_packing": BinPacking,
-        
     }
 
     # check if the problem type is in the mapper
