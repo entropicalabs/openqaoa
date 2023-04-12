@@ -43,7 +43,7 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
         "shortest_path": ShortestPath,
         "vehicle_routing": VRP,
         "bin_packing": BinPacking,
-        }
+    }
 
     # check if the problem type is in the mapper
     assert (

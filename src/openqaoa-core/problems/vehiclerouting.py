@@ -7,7 +7,6 @@ import copy
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 
-from ..utilities import check_kwargs
 from .problem import Problem
 from .converters import FromDocplex2IsingModel
 from .qubo import QUBO
@@ -21,7 +20,7 @@ class VRP(Problem):
     Parameters
     ----------
     G: networkx.Graph
-        Networkx graph of the problem 
+        Networkx graph of the problem
     pos: list[list]
         position x, y of each node
     n_vehicles: int
@@ -35,11 +34,11 @@ class VRP(Problem):
         about subtours refer to https://de.wikipedia.org/wiki/Datei:TSP_short_cycles.png
     all_subtours:
     penalty: float
-        Penalty for the constraints. If the method is 'unbalanced' three values are needed, 
-        one for the equality constraints and two for the inequality constraints. 
+        Penalty for the constraints. If the method is 'unbalanced' three values are needed,
+        one for the equality constraints and two for the inequality constraints.
     method: str
         Two available methods for the inequality constraints ["slack", "unbalanced"]
-        For 'unblanced' see https://arxiv.org/abs/2211.13914 
+        For 'unblanced' see https://arxiv.org/abs/2211.13914
     Returns
     -------
         An instance of the VRP problem.
@@ -47,27 +46,39 @@ class VRP(Problem):
 
     __name__ = "vehicle_routing"
 
-    def __init__(self, G, pos, n_vehicles, depot:int=0, subtours:list=[], method:str="slack", penalty:Union[int, float, list]=4):
+    def __init__(
+        self,
+        G,
+        pos,
+        n_vehicles,
+        depot: int = 0,
+        subtours: list = [],
+        method: str = "slack",
+        penalty: Union[int, float, list] = 4,
+    ):
         self.G = G
         if len(G.nodes) != len(pos):
-            raise ValueError(f"The number of nodes in G is {len(G.nodes)} while the x, y coordinates in pos is {len(pos)}")
+            raise ValueError(
+                f"The number of nodes in G is {len(G.nodes)} while the x, y coordinates in pos is {len(pos)}"
+            )
         self.pos = pos
         self.n_vehicles = n_vehicles
         self.depot = depot
         self.subtours = subtours
         self.method = method
         if method == "unbalanced" and len(penalty) != 3:
-            raise ValueError("The penalty must have 3 parameters [lambda_0, lambda_1, lambda_2]")
+            raise ValueError(
+                "The penalty must have 3 parameters [lambda_0, lambda_1, lambda_2]"
+            )
         else:
             self.penalty = penalty
-        
+
     @property
     def G(self):
         return self._G
 
     @G.setter
     def G(self, input_networkx_graph):
-
         if not isinstance(input_networkx_graph, nx.Graph):
             raise TypeError("Input problem graph must be a networkx Graph.")
 
@@ -91,7 +102,7 @@ class VRP(Problem):
                 The number of nodes (vertices) in the graph.
             n_vehicles: int
                 Number of vehicles used in the problem
-            method: str 
+            method: str
                 method for the inequality constraints ['slack', 'unbalanced'].
                 For the unbalaced method refer to https://arxiv.org/abs/2211.13914
                 For the slack method: https://en.wikipedia.org/wiki/Slack_variable
@@ -114,39 +125,54 @@ class VRP(Problem):
             penalty = kwargs.get("penalty", [4, 1, 1])
         else:
             raise ValueError(f"The method '{method}' is not valid.")
-        subtours = kwargs.get("subtours",[])
+        subtours = kwargs.get("subtours", [])
         np.random.seed(seed)
         G = nx.Graph()
         G.add_nodes_from(range(n_nodes))
-        pos = [[0,0]]
-        pos += [list(2*np.random.rand(2)-1) for _ in range(n_nodes - 1)]
+        pos = [[0, 0]]
+        pos += [list(2 * np.random.rand(2) - 1) for _ in range(n_nodes - 1)]
         for i in range(n_nodes - 1):
-            for j in range(i+1, n_nodes):
-                r = np.sqrt((pos[i][0] - pos[j][0])**2 + (pos[i][1] - pos[j][1])**2)
+            for j in range(i + 1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
                 G.add_weighted_edges_from([(i, j, r)])
-        return VRP(G, pos, n_vehicles, subtours=subtours, method=method, penalty=penalty)
+        return VRP(
+            G, pos, n_vehicles, subtours=subtours, method=method, penalty=penalty
+        )
 
     @property
     def docplex_model(self):
-        mdl = Model('VRP')
+        mdl = Model("VRP")
         num_nodes = self.G.number_of_nodes()
 
-        x = {(i, j): mdl.binary_var(name=f"x_{i}_{j}")
-            for i in range(num_nodes-1)
-            for j in range(i+1, num_nodes)
+        x = {
+            (i, j): mdl.binary_var(name=f"x_{i}_{j}")
+            for i in range(num_nodes - 1)
+            for j in range(i + 1, num_nodes)
         }
 
         mdl.minimize(
             mdl.sum(
                 self.G.edges[i, j]["weight"] * x[(i, j)]
-                for i in range(num_nodes-1)
-                for j in range(i+1, num_nodes)))
+                for i in range(num_nodes - 1)
+                for j in range(i + 1, num_nodes)
+            )
+        )
         # Only 2 edges for node
         for i in range(num_nodes):
             if i != self.depot:
-                mdl.add_constraint(mdl.sum([x[tuple(sorted([i, j]))] for j in range(num_nodes) if i != j]) == 2)
+                mdl.add_constraint(
+                    mdl.sum(
+                        [x[tuple(sorted([i, j]))] for j in range(num_nodes) if i != j]
+                    )
+                    == 2
+                )
             else:
-                mdl.add_constraint(mdl.sum([x[tuple(sorted([i, j]))] for j in range(num_nodes) if i != j]) == 2*self.n_vehicles)
+                mdl.add_constraint(
+                    mdl.sum(
+                        [x[tuple(sorted([i, j]))] for j in range(num_nodes) if i != j]
+                    )
+                    == 2 * self.n_vehicles
+                )
         if self.subtours:
             list_subtours = self.subtours
         else:
@@ -156,7 +182,16 @@ class VRP(Problem):
                 for subtour in itertools.combinations(nodes, i):
                     tour = sorted(subtour)
                     n_subtour = len(subtour)
-                    mdl.add_constraint(mdl.sum([x[(tour[i], tour[j])] for i in range(n_subtour-1) for j in range(i+1, n_subtour)]) <= n_subtour - 1)
+                    mdl.add_constraint(
+                        mdl.sum(
+                            [
+                                x[(tour[i], tour[j])]
+                                for i in range(n_subtour - 1)
+                                for j in range(i + 1, n_subtour)
+                            ]
+                        )
+                        <= n_subtour - 1
+                    )
         return mdl
 
     @property
@@ -170,10 +205,22 @@ class VRP(Problem):
         """
         cplex_model = self.docplex_model
         if self.method == "slack":
-            qubo_docplex = FromDocplex2IsingModel(cplex_model,multipliers=self.penalty).ising_model
+            qubo_docplex = FromDocplex2IsingModel(
+                cplex_model, multipliers=self.penalty
+            ).ising_model
         elif self.method == "unbalanced":
-            qubo_docplex = FromDocplex2IsingModel(cplex_model,multipliers=self.penalty[0], unbalanced_const=True, strength_ineq=self.penalty[1:]).ising_model
-        return QUBO(qubo_docplex.n, qubo_docplex.terms + [[]], qubo_docplex.weights + [qubo_docplex.constant], self.problem_instance)
+            qubo_docplex = FromDocplex2IsingModel(
+                cplex_model,
+                multipliers=self.penalty[0],
+                unbalanced_const=True,
+                strength_ineq=self.penalty[1:],
+            ).ising_model
+        return QUBO(
+            qubo_docplex.n,
+            qubo_docplex.terms + [[]],
+            qubo_docplex.weights + [qubo_docplex.constant],
+            self.problem_instance,
+        )
 
     def classical_solution(self, string: bool = False):
         """
@@ -195,9 +242,7 @@ class VRP(Problem):
         docplex_sol = cplex_model.solve()
 
         if docplex_sol is None:
-            raise ValueError(
-                f"Solution not found: {cplex_model.solve_details.status}."
-            )
+            raise ValueError(f"Solution not found: {cplex_model.solve_details.status}.")
 
         if string:
             solution = ""
@@ -213,7 +258,7 @@ class VRP(Problem):
     def paths_subtours(self, sol):
         """
         Return the routes the different vehicles take and the subtours the solution
-        has if any 
+        has if any
         Parameters
         ----------
         sol : dict
@@ -228,10 +273,10 @@ class VRP(Problem):
         """
         n_nodes = self.G.number_of_nodes()
         vars_list = []
-        for i in range(n_nodes-1):
-            for j in range(i+1, n_nodes):
+        for i in range(n_nodes - 1):
+            for j in range(i + 1, n_nodes):
                 if int(sol[f"x_{i}_{j}"]):
-                    vars_list.append([i,j])
+                    vars_list.append([i, j])
         # ----------------  vehicle routing problem solutions -----------------
         paths = {}
         for i in range(self.n_vehicles):
@@ -250,7 +295,9 @@ class VRP(Problem):
                         break
                 max_edges -= 1
                 if max_edges < 0:
-                    raise ValueError("Solution provided does not fulfill all the path conditions.")
+                    raise ValueError(
+                        "Solution provided does not fulfill all the path conditions."
+                    )
         # ----------------            subtours                -----------------
         subtours = {}
         i = 0
@@ -272,7 +319,7 @@ class VRP(Problem):
                 if max_edges < 0:
                     raise ValueError("The subtours in the solution are broken.")
             i += 1
-        return {"paths":paths, "subtours": subtours}
+        return {"paths": paths, "subtours": subtours}
 
     def plot_solution(self, solution: Union[dict, str], ax=None):
         """
@@ -301,7 +348,7 @@ class VRP(Problem):
         tours_color = {}
         for vehicle in range(self.n_vehicles):
             for i, j in paths[vehicle]:
-                tours_color[f"x_{i}_{j}"] = colors((vehicle+1)/self.n_vehicles)
+                tours_color[f"x_{i}_{j}"] = colors((vehicle + 1) / self.n_vehicles)
         for subtour in subtours.keys():
             for i, j in subtours[subtour]:
                 tours_color[f"x_{i}_{j}"] = "black"
@@ -315,11 +362,19 @@ class VRP(Problem):
         G = nx.Graph()
         G.add_nodes_from(range(num_vertices))
         edge_color = []
-        for i in range(num_vertices-1):
-            for j in range(i+1, num_vertices):
+        for i in range(num_vertices - 1):
+            for j in range(i + 1, num_vertices):
                 if int(solution[f"x_{i}_{j}"]):
                     edge_color.append(tours_color[f"x_{i}_{j}"])
                     G.add_edge(i, j)
-        nx.draw(G, pos=pos, edge_color=edge_color, node_color=color_node, alpha=0.8,
-                labels={i:str(i) for i in range(num_vertices)}, ax=ax, edgecolors="black")
+        nx.draw(
+            G,
+            pos=pos,
+            edge_color=edge_color,
+            node_color=color_node,
+            alpha=0.8,
+            labels={i: str(i) for i in range(num_vertices)},
+            ax=ax,
+            edgecolors="black",
+        )
         return fig

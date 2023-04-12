@@ -31,6 +31,7 @@ def terms_list_equality(terms_list1, terms_list2):
 
     return bool
 
+
 def terms_list_isclose(terms_list1, terms_list2):
     """
     Check if the distance between two terms list
@@ -40,13 +41,16 @@ def terms_list_isclose(terms_list1, terms_list2):
         bool = False
     else:
         for term1, term2 in zip(terms_list1, terms_list2):
-            bool = True if np.isclose(term1, term2) or np.isclose(term1, term2[::-1]) else False
+            bool = (
+                True
+                if np.isclose(term1, term2) or np.isclose(term1, term2[::-1])
+                else False
+            )
 
     return bool
 
 
 class TestProblem(unittest.TestCase):
-
     # TESTING QUBO CLASS METHODS
     def test_qubo_terms_and_weight_same_size(self):
         """
@@ -903,7 +907,7 @@ class TestProblem(unittest.TestCase):
 
         # Graph type-check
         G = nx.complete_graph(5)
-        for (u, v) in G.edges():
+        for u, v in G.edges():
             G[u][v]["weight"] = "a"
 
         with self.assertRaises(TypeError) as e:
@@ -912,7 +916,7 @@ class TestProblem(unittest.TestCase):
             "The edge weights must be of type float or int", str(e.exception)
         )
 
-        for (u, v) in G.edges():
+        for u, v in G.edges():
             G[u][v]["weight"] = -2.0
 
         with self.assertRaises(ValueError) as e:
@@ -981,7 +985,7 @@ class TestProblem(unittest.TestCase):
         sp_qubo_constant = 2.5
 
         gr = nx.generators.fast_gnp_random_graph(3, 1, seed=1234)
-        for (u, v) in gr.edges():
+        for u, v in gr.edges():
             gr.edges[u, v]["weight"] = 1
         for w in gr.nodes():
             gr.nodes[w]["weight"] = 1
@@ -1007,7 +1011,7 @@ class TestProblem(unittest.TestCase):
         sp_rand_constant = 2.5
 
         gr = nx.generators.fast_gnp_random_graph(3, 1, seed=1234)
-        for (u, v) in gr.edges():
+        for u, v in gr.edges():
             gr.edges[u, v]["weight"] = 1.0
         for w in gr.nodes():
             gr.nodes[w]["weight"] = 1.0
@@ -1047,45 +1051,46 @@ class TestProblem(unittest.TestCase):
         self.assertRaises(Exception, test_assertion_fn)
 
     # TESTING VRP PROBLEM CLASS
-    
+
     def test_vrp_terms_weights_constant(self):
         """Testing VRP problem creation"""
-        pos = [[4, 1], [4, 4], [3, 3]] # nodes position x, y
+        pos = [[4, 1], [4, 4], [3, 3]]  # nodes position x, y
         n_vehicles = 1
         n_nodes = len(pos)
         G = nx.Graph()
         G.add_nodes_from(range(n_nodes))
-        for i in range(n_nodes-1):
-            for j in range(i+1, n_nodes):
-                r = np.sqrt((pos[i][0] - pos[j][0])**2 + (pos[i][1] - pos[j][1])**2)
-                G.add_weighted_edges_from([(i,j,r)])
+        for i in range(n_nodes - 1):
+            for j in range(i + 1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
+                G.add_weighted_edges_from([(i, j, r)])
         vrp_qubo = VRP(G, pos, n_vehicles).qubo
         expected_terms = [[0, 1], [0, 2], [1, 2], [0], [1], [2]]
         expected_weights = [2.0, 2.0, 2.0, 6.5, 6.881966011250105, 7.292893218813452]
         expected_constant = 21.32514076993644
-        
+
         self.assertTrue(terms_list_equality(expected_terms, vrp_qubo.terms))
         self.assertEqual(expected_weights, vrp_qubo.weights)
         self.assertEqual(expected_constant, vrp_qubo.constant)
-    
+
     def test_vrp_random_instance(self):
         """Testing the random_instance method of the VRP problem class"""
-        seed =  1234
+        seed = 1234
         np.random.seed(seed)
-        n_nodes = 3 
-        n_vehicles = 1    
+        n_nodes = 3
+        n_vehicles = 1
         G = nx.Graph()
         G.add_nodes_from(range(n_nodes))
-        pos = [[0,0]]
-        pos += [list(2*np.random.rand(2)-1) for _ in range(n_nodes - 1)]
+        pos = [[0, 0]]
+        pos += [list(2 * np.random.rand(2) - 1) for _ in range(n_nodes - 1)]
         for i in range(n_nodes - 1):
-            for j in range(i+1, n_nodes):
-                r = np.sqrt((pos[i][0] - pos[j][0])**2 + (pos[i][1] - pos[j][1])**2)
+            for j in range(i + 1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
                 G.add_weighted_edges_from([(i, j, r)])
-        
+
         vrp_prob = VRP(G, pos, n_vehicles).qubo
-        vrp_prob_random = VRP.random_instance(n_nodes=n_nodes, n_vehicles=n_vehicles,
-                                              seed=seed).qubo
+        vrp_prob_random = VRP.random_instance(
+            n_nodes=n_nodes, n_vehicles=n_vehicles, seed=seed
+        ).qubo
 
         self.assertTrue(terms_list_equality(vrp_prob_random.terms, vrp_prob.terms))
         self.assertEqual(vrp_prob_random.weights, vrp_prob.weights)
@@ -1093,23 +1098,29 @@ class TestProblem(unittest.TestCase):
 
     def test_vrp_random_instance_unbalanced(self):
         """
-        Testing the random_instance method of the VRP problem class using the 
+        Testing the random_instance method of the VRP problem class using the
         unbalanced penalization method
         """
-        seed =  1234
+        seed = 1234
         np.random.seed(seed)
-        n_nodes = 8 
-        n_vehicles = 2   
+        n_nodes = 8
+        n_vehicles = 2
         n_vars = n_nodes * (n_nodes - 1) // 2
 
-        vrp_prob_random = VRP.random_instance(n_nodes=n_nodes, n_vehicles=n_vehicles, seed=seed, method="unbalanced", penalty=3*[0.1]).qubo
+        vrp_prob_random = VRP.random_instance(
+            n_nodes=n_nodes,
+            n_vehicles=n_vehicles,
+            seed=seed,
+            method="unbalanced",
+            penalty=3 * [0.1],
+        ).qubo
 
         self.assertTrue(vrp_prob_random.n == n_vars)
         self.assertTrue(vrp_prob_random.weights[0] == 0.05)
         self.assertTrue(vrp_prob_random.weights[-1] == -0.688413325464513)
         self.assertTrue(vrp_prob_random.terms[0] == [0, 1])
         self.assertTrue(vrp_prob_random.terms[-1] == [27])
-    
+
     def test_vrp_type_checking(self):
         """
         Checks if the type-checking returns the right error.
@@ -1123,17 +1134,21 @@ class TestProblem(unittest.TestCase):
         )
         # Penalization terms in unblanced method is not equal to three
         with self.assertRaises(ValueError) as e:
-            VRP.random_instance(n_nodes=6, n_vehicles=2, method="unbalanced", penalty=[0.1])
+            VRP.random_instance(
+                n_nodes=6, n_vehicles=2, method="unbalanced", penalty=[0.1]
+            )
         self.assertEqual(
             "The penalty must have 3 parameters [lambda_0, lambda_1, lambda_2]",
             str(e.exception),
         )
-    
+
         # paths with an unfeasible solution
         with self.assertRaises(ValueError) as e:
             vrp = VRP.random_instance(n_nodes=6, n_vehicles=2, seed=1234)
             sol = vrp.classical_solution()
-            sol["x_0_1"] = (sol["x_0_1"] + 1) % 2 # Changing one value in the solution to make it an unfeasible solution
+            sol["x_0_1"] = (
+                sol["x_0_1"] + 1
+            ) % 2  # Changing one value in the solution to make it an unfeasible solution
             vrp.paths_subtours(sol)
         self.assertEqual(
             "Solution provided does not fulfill all the path conditions.",
@@ -1141,9 +1156,13 @@ class TestProblem(unittest.TestCase):
         )
         # subtours with an unfeasible direction (broke subtour)
         with self.assertRaises(ValueError) as e:
-            vrp = VRP.random_instance(n_nodes=10, n_vehicles=2, subtours=[[]], seed=1234)
+            vrp = VRP.random_instance(
+                n_nodes=10, n_vehicles=2, subtours=[[]], seed=1234
+            )
             sol = vrp.classical_solution()
-            sol["x_1_2"] = (sol["x_1_2"] + 1) % 2 # Changing one value in the solution to make it an unfeasible solution
+            sol["x_1_2"] = (
+                sol["x_1_2"] + 1
+            ) % 2  # Changing one value in the solution to make it an unfeasible solution
             vrp.paths_subtours(sol)
         self.assertEqual(
             "The subtours in the solution are broken.",
@@ -1160,8 +1179,8 @@ class TestProblem(unittest.TestCase):
         )
         # Test wrong graph input
         with self.assertRaises(TypeError) as e:
-            G = [[0,1,2], [1,2,3]]
-            vrp = VRP(G, pos=[[0,1],[1,2]], n_vehicles=2)
+            G = [[0, 1, 2], [1, 2, 3]]
+            vrp = VRP(G, pos=[[0, 1], [1, 2]], n_vehicles=2)
         self.assertEqual(
             "Input problem graph must be a networkx Graph.",
             str(e.exception),
@@ -1170,12 +1189,11 @@ class TestProblem(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             G = nx.Graph()
             G.add_nodes_from(range(3))
-            vrp = VRP(G, pos=[[0,1],[1,2]], n_vehicles=2)
+            vrp = VRP(G, pos=[[0, 1], [1, 2]], n_vehicles=2)
         self.assertEqual(
             "The number of nodes in G is 3 while the x, y coordinates in pos is 2",
             str(e.exception),
         )
-
 
     def __generate_random_problems(self):
         problems_random_instances = {
@@ -1196,10 +1214,8 @@ class TestProblem(unittest.TestCase):
             "shortest_path": ShortestPath.random_instance(
                 n_nodes=randint(3, 15), edge_probability=random()
             ),
-            "bin_packing": BinPacking.random_instance(
-            ),
-            "vehicle_routing": VRP.random_instance(
-            ),
+            "bin_packing": BinPacking.random_instance(),
+            "vehicle_routing": VRP.random_instance(),
         }
         qubo_random_instances = {
             k: v.qubo for k, v in problems_random_instances.items()
@@ -1238,11 +1254,28 @@ class TestProblem(unittest.TestCase):
             ],
             "minimum_vertex_cover": ["problem_type", "G", "field", "penalty"],
             "shortest_path": ["problem_type", "G", "source", "dest"],
-            "bin_packing":["problem_type", "weights", "weight_capacity","penalty",
-                           "n_items", "method", "simplifications", "n_bins",
-                           'min_bins', 'solution'],
-            "vehicle_routing":["problem_type", "G", "pos", "n_vehicles", "depot",
-                               "subtours", "method", "penalty"],
+            "bin_packing": [
+                "problem_type",
+                "weights",
+                "weight_capacity",
+                "penalty",
+                "n_items",
+                "method",
+                "simplifications",
+                "n_bins",
+                "min_bins",
+                "solution",
+            ],
+            "vehicle_routing": [
+                "problem_type",
+                "G",
+                "pos",
+                "n_vehicles",
+                "depot",
+                "subtours",
+                "method",
+                "penalty",
+            ],
             "generic_qubo": ["problem_type"],
         }
 
@@ -1268,7 +1301,7 @@ class TestProblem(unittest.TestCase):
             "minimum_vertex_cover": MinimumVertexCover,
             "shortest_path": ShortestPath,
             "bin_packing": BinPacking,
-            "vehicle_routing":VRP,
+            "vehicle_routing": VRP,
         }
 
         problems, qubos = self.__generate_random_problems()
@@ -1302,7 +1335,6 @@ class TestProblem(unittest.TestCase):
 
         _, qubos = self.__generate_random_problems()
         for _, qubo in qubos.items():
-
             qubo_dict = qubo.asdict()
 
             new_qubo = QUBO.from_dict(qubo_dict)
@@ -1331,95 +1363,130 @@ class TestProblem(unittest.TestCase):
     # TESTING BINPACKING CLASS
     def test_binpacking_terms_weights_constant(self):
         """Test that BinPacking creates a correct QUBO from the provided weights and terms"""
-        
-        terms = [[2, 3],
-                 [4, 5],
-                 [0, 2],
-                 [0, 4],
-                 [0, 6],
-                 [2, 4],
-                 [2, 6],
-                 [4, 6],
-                 [1, 3],
-                 [1, 5],
-                 [1, 7],
-                 [3, 5],
-                 [3, 7],
-                 [5, 7],
-                 [0],
-                 [1],
-                 [2],
-                 [3],
-                 [4],
-                 [5],
-                 [6],
-                 [7]]
 
-        weights = [1.5,
-         1.5,
-         -0.75,
-         -1.0,
-         -1.5,
-         0.5,
-         0.75,
-         1.0,
-         -0.75,
-         -1.0,
-         -1.5,
-         0.5,
-         0.75,
-         1.0,
-         1.25,
-         1.25,
-         -0.875,
-         -0.875,
-         -1.1666666666666665,
-         -1.1666666666666665,
-         -1.75,
-         -1.75]
+        terms = [
+            [2, 3],
+            [4, 5],
+            [0, 2],
+            [0, 4],
+            [0, 6],
+            [2, 4],
+            [2, 6],
+            [4, 6],
+            [1, 3],
+            [1, 5],
+            [1, 7],
+            [3, 5],
+            [3, 7],
+            [5, 7],
+            [0],
+            [1],
+            [2],
+            [3],
+            [4],
+            [5],
+            [6],
+            [7],
+        ]
+
+        weights = [
+            1.5,
+            1.5,
+            -0.75,
+            -1.0,
+            -1.5,
+            0.5,
+            0.75,
+            1.0,
+            -0.75,
+            -1.0,
+            -1.5,
+            0.5,
+            0.75,
+            1.0,
+            1.25,
+            1.25,
+            -0.875,
+            -0.875,
+            -1.1666666666666665,
+            -1.1666666666666665,
+            -1.75,
+            -1.75,
+        ]
         constant = 10.083333333333332
         weights_list = [3, 4]
         weight_capacity = 6
-        binpacking_prob_qubo = BinPacking(weights_list, weight_capacity, simplifications=False).qubo
+        binpacking_prob_qubo = BinPacking(
+            weights_list, weight_capacity, simplifications=False
+        ).qubo
         self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
         self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
         self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
 
     def test_binpacking_terms_weights_constant_simplified(self):
         """Test that BinPacking creates a correct QUBO from the provided weights and terms"""
-        
-        terms = [[1, 2],
-                 [1, 3],
-                 [2, 3],
-                 [4, 5],
-                 [4, 6],
-                 [5, 6],
-                 [1, 4],
-                 [1, 7],
-                 [4, 7],
-                 [2, 5],
-                 [8, 2],
-                 [8, 5],
-                 [0, 3],
-                 [0, 6],
-                 [0, 9],
-                 [3, 6],
-                 [9, 3],
-                 [9, 6],
-                 [0],
-                 [1],
-                 [2],
-                 [3],
-                 [4],
-                 [5],
-                 [6],
-                 [7],
-                 [8],
-                 [9]]
 
-        weights = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.28, 0.35, 0.2, 0.4, 0.5, -0.4,
-                    -0.5, -1.0, 0.2, 0.4, 0.5, 0.4, -1.08, -0.96, -1.36, -1.1, -0.95,
-                    -1.45, -0.14, 0.1, -0.9]
+        terms = [
+            [1, 2],
+            [1, 3],
+            [2, 3],
+            [4, 5],
+            [4, 6],
+            [5, 6],
+            [1, 4],
+            [1, 7],
+            [4, 7],
+            [2, 5],
+            [8, 2],
+            [8, 5],
+            [0, 3],
+            [0, 6],
+            [0, 9],
+            [3, 6],
+            [9, 3],
+            [9, 6],
+            [0],
+            [1],
+            [2],
+            [3],
+            [4],
+            [5],
+            [6],
+            [7],
+            [8],
+            [9],
+        ]
+
+        weights = [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.2,
+            0.28,
+            0.35,
+            0.2,
+            0.4,
+            0.5,
+            -0.4,
+            -0.5,
+            -1.0,
+            0.2,
+            0.4,
+            0.5,
+            0.4,
+            -1.08,
+            -0.96,
+            -1.36,
+            -1.1,
+            -0.95,
+            -1.45,
+            -0.14,
+            0.1,
+            -0.9,
+        ]
         constant = 9.29
         weights_list = [3, 4, 5]
         weight_capacity = 10
@@ -1428,74 +1495,119 @@ class TestProblem(unittest.TestCase):
         self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
         self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
         self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
-        
+
     def test_binpacking_terms_weights_constant_unbalanced(self):
-            """Test that BinPacking creates a correct QUBO from the provided weights and terms
-            using the unbalanced penalization encoding"""
-            terms = [[1, 2],
-                     [1, 3],
-                     [2, 3],
-                     [4, 5],
-                     [4, 6],
-                     [5, 6],
-                     [1, 4],
-                     [2, 5],
-                     [0, 3],
-                     [0, 6],
-                     [3, 6],
-                     [0],
-                     [1],
-                     [2],
-                     [3],
-                     [4],
-                     [5],
-                     [6]]
+        """Test that BinPacking creates a correct QUBO from the provided weights and terms
+        using the unbalanced penalization encoding"""
+        terms = [
+            [1, 2],
+            [1, 3],
+            [2, 3],
+            [4, 5],
+            [4, 6],
+            [5, 6],
+            [1, 4],
+            [2, 5],
+            [0, 3],
+            [0, 6],
+            [3, 6],
+            [0],
+            [1],
+            [2],
+            [3],
+            [4],
+            [5],
+            [6],
+        ]
 
-            weights = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.05, 0.05, -0.1, -0.125,
-                       0.05, -0.475, -0.97, -0.91, -1.01, -0.9625, -0.8875, -1.0125]
-            constant = 6.8775
-            
-            weights_list = [3, 4, 5]
-            weight_capacity = 10
-            binpacking_prob_qubo = BinPacking(weights_list, weight_capacity, method="unbalanced").qubo
+        weights = [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.05,
+            0.05,
+            -0.1,
+            -0.125,
+            0.05,
+            -0.475,
+            -0.97,
+            -0.91,
+            -1.01,
+            -0.9625,
+            -0.8875,
+            -1.0125,
+        ]
+        constant = 6.8775
 
-            self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
-            self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
-            self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
+        weights_list = [3, 4, 5]
+        weight_capacity = 10
+        binpacking_prob_qubo = BinPacking(
+            weights_list, weight_capacity, method="unbalanced"
+        ).qubo
+
+        self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
+        self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
+        self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
 
     def test_binpacking_terms_penalizations_terms_unbalanced(self):
-            """Test that BinPacking creates a correct QUBO from the provided weights and terms
-            using the unbalanced penalization encoding given the penalization terms"""
-            terms = [[1, 2], [0, 2], [0], [1], [2]]
+        """Test that BinPacking creates a correct QUBO from the provided weights and terms
+        using the unbalanced penalization encoding given the penalization terms"""
+        terms = [[1, 2], [0, 2], [0], [1], [2]]
 
-            weights = [0.5, -0.25, -0.25, -0.0625, -0.125]
-            constant = 1.953125
-            
-            weights_list = [3, 4]
-            weight_capacity = 8
-            penalty = [1, 1, 1]
-            binpacking_prob_qubo = BinPacking(weights_list, weight_capacity, penalty=penalty, method="unbalanced", simplifications=True).qubo
+        weights = [0.5, -0.25, -0.25, -0.0625, -0.125]
+        constant = 1.953125
 
-            self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
-            self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
-            self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
+        weights_list = [3, 4]
+        weight_capacity = 8
+        penalty = [1, 1, 1]
+        binpacking_prob_qubo = BinPacking(
+            weights_list,
+            weight_capacity,
+            penalty=penalty,
+            method="unbalanced",
+            simplifications=True,
+        ).qubo
+
+        self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
+        self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
+        self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
 
     def test_binpacking_terms_penalizations_terms_slack(self):
-            """Test that BinPacking creates a correct QUBO from the provided weights and terms
-            using the unbalanced penalization encoding"""
-            terms = [[1, 2], [1, 3], [0, 2], [0, 4], [2, 4], [0], [1], [2], [3], [4]]
+        """Test that BinPacking creates a correct QUBO from the provided weights and terms
+        using the unbalanced penalization encoding"""
+        terms = [[1, 2], [1, 3], [0, 2], [0, 4], [2, 4], [0], [1], [2], [3], [4]]
 
-            weights = [0.5, 0.15625, -0.25, -0.5, 0.25, -0.25, 0.03125, -0.125, 0.0390625, -0.25]
-            constant = 2.7890625
-            
-            weights_list = [3, 4]
-            weight_capacity = 8
-            penalty = [1]
-            binpacking_prob_qubo = BinPacking(weights_list, weight_capacity, penalty=penalty, method="slack", simplifications=True).qubo
+        weights = [
+            0.5,
+            0.15625,
+            -0.25,
+            -0.5,
+            0.25,
+            -0.25,
+            0.03125,
+            -0.125,
+            0.0390625,
+            -0.25,
+        ]
+        constant = 2.7890625
 
-            self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
-            self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
-            self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
+        weights_list = [3, 4]
+        weight_capacity = 8
+        penalty = [1]
+        binpacking_prob_qubo = BinPacking(
+            weights_list,
+            weight_capacity,
+            penalty=penalty,
+            method="slack",
+            simplifications=True,
+        ).qubo
+
+        self.assertTrue(terms_list_equality(terms, binpacking_prob_qubo.terms))
+        self.assertTrue(terms_list_isclose(weights, binpacking_prob_qubo.weights))
+        self.assertTrue(np.isclose(constant, binpacking_prob_qubo.constant))
 
     def test_binpacking_random_problem(self):
         """Test Bin Packing random instance method"""
@@ -1514,10 +1626,14 @@ class TestProblem(unittest.TestCase):
         ).qubo
 
         self.assertTrue(
-            terms_list_equality(binpacking_manual_prob.terms, binpacking_random_prob.terms)
+            terms_list_equality(
+                binpacking_manual_prob.terms, binpacking_random_prob.terms
+            )
         )
         self.assertEqual(binpacking_manual_prob.weights, binpacking_random_prob.weights)
-        self.assertEqual(binpacking_manual_prob.constant, binpacking_random_prob.constant)
+        self.assertEqual(
+            binpacking_manual_prob.constant, binpacking_random_prob.constant
+        )
 
     def test_binpacking_classical_sol(self):
         """Test the Bin Packing random instance method classical solution"""
@@ -1525,46 +1641,48 @@ class TestProblem(unittest.TestCase):
         seed = 1234
         np.random.seed(seed)
         binpacking_sol = BinPacking.random_instance(
-            n_items=3, seed=seed).classical_solution()
-        
-        sol = {'y_0': 1,
-             'y_1': 0,
-             'y_2': 0,
-             'x_0_0': 1,
-             'x_0_1': 0,
-             'x_0_2': 0,
-             'x_1_0': 1,
-             'x_1_1': 0,
-             'x_1_2': 0,
-             'x_2_0': 1,
-             'x_2_1': 0,
-             'x_2_2': 0}
+            n_items=3, seed=seed
+        ).classical_solution()
+
+        sol = {
+            "y_0": 1,
+            "y_1": 0,
+            "y_2": 0,
+            "x_0_0": 1,
+            "x_0_1": 0,
+            "x_0_2": 0,
+            "x_1_0": 1,
+            "x_1_1": 0,
+            "x_1_2": 0,
+            "x_2_0": 1,
+            "x_2_1": 0,
+            "x_2_2": 0,
+        }
 
         self.assertEqual(binpacking_sol, sol)
 
     def test_binpacking_plot(self):
         """Test Bin Packing random instance method"""
         from matplotlib.pyplot import Figure
+
         seed = 1234
-        binpacking_random_prob = BinPacking.random_instance(
-            n_items=3, seed=seed
-        )
-        sol = {'y_0': 1,
-         'y_1': 0,
-         'y_2': 0,
-         'x_0_0': 1,
-         'x_0_1': 0,
-         'x_0_2': 0,
-         'x_1_0': 1,
-         'x_1_1': 0,
-         'x_1_2': 0,
-         'x_2_0': 1,
-         'x_2_1': 0,
-         'x_2_2': 0}
+        binpacking_random_prob = BinPacking.random_instance(n_items=3, seed=seed)
+        sol = {
+            "y_0": 1,
+            "y_1": 0,
+            "y_2": 0,
+            "x_0_0": 1,
+            "x_0_1": 0,
+            "x_0_2": 0,
+            "x_1_0": 1,
+            "x_1_1": 0,
+            "x_1_2": 0,
+            "x_2_0": 1,
+            "x_2_1": 0,
+            "x_2_2": 0,
+        }
         fig = binpacking_random_prob.plot_solution(sol)
-        self.assertTrue(
-            isinstance(fig, Figure)
-        )
+        self.assertTrue(isinstance(fig, Figure))
 
     def test_binpacking_method_checking(self):
         """
@@ -1576,7 +1694,8 @@ class TestProblem(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             BinPacking(weights, weight_capacity, method=method)
         self.assertEqual(
-            f"The method '{method}' is not a valid method. Choose between 'slack' and 'unbalanced'", str(e.exception)
+            f"The method '{method}' is not a valid method. Choose between 'slack' and 'unbalanced'",
+            str(e.exception),
         )
 
     def test_binpacking_random_problem_checking(self):
@@ -1588,8 +1707,9 @@ class TestProblem(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             BinPacking.random_instance(min_weight=min_weight, max_weight=max_weight)
         self.assertEqual(
-            f"min_weight: {min_weight} must be < max_weight:{max_weight}", str(e.exception)
-        )  
+            f"min_weight: {min_weight} must be < max_weight:{max_weight}",
+            str(e.exception),
+        )
 
     def test_binpacking_classical_sol_checking(self):
         """
@@ -1598,10 +1718,10 @@ class TestProblem(unittest.TestCase):
         weights = [10, 10]
         weight_capacity = 8
         with self.assertRaises(ValueError) as e:
-            BinPacking(weights=weights, weight_capacity=weight_capacity).classical_solution()
-        self.assertEqual(
-            'solution not found: integer infeasible', str(e.exception)
-        )
+            BinPacking(
+                weights=weights, weight_capacity=weight_capacity
+            ).classical_solution()
+        self.assertEqual("solution not found: integer infeasible", str(e.exception))
 
     def test_binpacking_input_weights(self):
         """
@@ -1610,9 +1730,12 @@ class TestProblem(unittest.TestCase):
         weights = [10.1, 10]
         weight_capacity = 8
         with self.assertRaises(TypeError) as e:
-            BinPacking(weights=weights, weight_capacity=weight_capacity).classical_solution()
+            BinPacking(
+                weights=weights, weight_capacity=weight_capacity
+            ).classical_solution()
         self.assertEqual(
-            f"The weights must be integer numbers. Format {type(weights[0])} found.", str(e.exception)
+            f"The weights must be integer numbers. Format {type(weights[0])} found.",
+            str(e.exception),
         )
 
     def test_binpacking_input_weight_capacity(self):
@@ -1622,10 +1745,14 @@ class TestProblem(unittest.TestCase):
         weights = [10, 10]
         weight_capacity = 8.1
         with self.assertRaises(TypeError) as e:
-            BinPacking(weights=weights, weight_capacity=weight_capacity).classical_solution()
+            BinPacking(
+                weights=weights, weight_capacity=weight_capacity
+            ).classical_solution()
         self.assertEqual(
-            f"The weight_capacity must be integer. Format {type(weight_capacity)} found.", str(e.exception)
+            f"The weight_capacity must be integer. Format {type(weight_capacity)} found.",
+            str(e.exception),
         )
+
 
 if __name__ == "__main__":
     unittest.main()
