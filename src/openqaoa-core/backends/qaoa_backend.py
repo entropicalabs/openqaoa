@@ -108,8 +108,6 @@ def get_qaoa_backend(
     append_state: Optional[Union[QuantumCircuitBase, np.ndarray]] = None,
     init_hadamard: bool = True,
     cvar_alpha: float = 1,
-    wrapper: "BaseWrapper" = None,
-    wrapper_options: dict = {},
     **kwargs,
 ):
     """
@@ -171,6 +169,4 @@ def get_qaoa_backend(
 
     except Exception as e:
         raise ValueError(f"The backend returned an error: {e}")
-    if wrapper != None:
-        backend_obj = wrapper(backend_obj, **wrapper_options)
     return backend_obj

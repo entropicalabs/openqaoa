@@ -250,16 +250,24 @@ class QAOA(Workflow):
             seed=self.circuit_properties.seed,
             total_annealing_time=self.circuit_properties.annealing_time,
         )
-        
+
         backend_dict = self.backend_properties.__dict__.copy()
-        
+
         self.backend = get_qaoa_backend(
             qaoa_descriptor=self.qaoa_descriptor,
             device=self.device,
-            wrapper=SPAMTwirlingWrapper if self.error_mitigation_properties.error_mitigation_technique == 'spam_twirling' else None,
-            wrapper_options={'n_batches' : self.error_mitigation_properties.n_batches, 'calibration_data_location':self.error_mitigation_properties.calibration_data_location},
             **backend_dict,
         )
+
+        if (
+            self.error_mitigation_properties.error_mitigation_technique
+            == "spam_twirling"
+        ):
+            self.backend = SPAMTwirlingWrapper(
+                backend=self.backend,
+                n_batches=self.error_mitigation_properties.n_batches,
+                calibration_data_location=self.error_mitigation_properties.calibration_data_location,
+            )
 
         self.optimizer = get_optimizer(
             vqa_object=self.backend,

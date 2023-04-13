@@ -278,7 +278,6 @@ class ErrorMitigationProperties(WorkflowProperties):
             self.n_batches = n_batches
         else:
             raise ValueError("n_batches must be a positive integer.")
-
         
         if calibration_data_location != None:
             try:
@@ -298,8 +297,8 @@ class ErrorMitigationProperties(WorkflowProperties):
                         calibration_data_location
                     )
                 )
-            except json.JSONDecodeError:
-                raise json.JSONDecodeError(
+            except ValueError:
+                raise ValueError(
                     "Calibration data file {} is not a valid JSON file".format(calibration_data_location)
                 )
             except KeyError:

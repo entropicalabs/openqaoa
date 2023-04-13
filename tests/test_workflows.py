@@ -703,8 +703,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         qubo_problem = problem.qubo
 
         q = QAOA()
-        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
-
         self.assertRaises(
             ValueError,
             lambda: q.set_error_mitigation_properties(
@@ -715,8 +713,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         )
 
         q = QAOA()
-        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
-
         self.assertRaises(
             ValueError,
             lambda: q.set_error_mitigation_properties(
@@ -726,10 +722,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             ),
         )
         q = QAOA()
-        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
-
         filename = "./tests/qpu_calibration_data/non-existing-location.json"
-
         self.assertRaises(
             FileNotFoundError,
             lambda: q.set_error_mitigation_properties(
@@ -739,12 +732,11 @@ class TestingVanillaQAOA(unittest.TestCase):
             ),
         )
         q = QAOA()
-        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
 
         filename = "./tests/qpu_calibration_data/wrong_format.txt"
 
         self.assertRaises(
-            json.JSONDecodeError,
+            ValueError,
             lambda: q.set_error_mitigation_properties(
                 error_mitigation_technique="spam_twirling",
                 n_batches=10,
@@ -753,7 +745,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         )
 
         q = QAOA()
-        q.set_device(create_device(location="local", name="qiskit.qasm_simulator"))
 
         filename = "./tests/qpu_calibration_data/wrong_structure.json"
 
