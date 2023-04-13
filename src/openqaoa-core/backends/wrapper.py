@@ -41,8 +41,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         super().__init__(backend)
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
-        
-        print(self.calibration_data_location)
 
         with open(self.calibration_data_location, "r") as f:
             calibration_data = json.load(f)
@@ -69,7 +67,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
             calibration_measurements = calibration_data["results"][
                 "measurement_outcomes"
             ]
-        
+
         calibration_registers = calibration_data["register"]
 
         qubit_mapping = self.backend.initial_qubit_mapping

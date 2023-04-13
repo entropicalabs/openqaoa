@@ -85,17 +85,17 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             create_device(location="qcs", name="7q-noisy-qvm", **rigetti_args),
         ]
         for device in device_list:
-            try:
-                backend = get_qaoa_backend(
+            backend = get_qaoa_backend(
                     qaoa_descriptor=self.qaoa_descriptor,
                     device=device,
-                    wrapper=SPAMTwirlingWrapper,
-                    wrapper_options={
-                        "n_batches": 6,
-                        "calibration_data_location": "./tests/qpu_calibration_data/spam_twirling_mock.json",
-                    },
                     n_shots=42,
                 )
+            try:
+                SPAMTwirlingWrapper(
+            backend,
+            n_batches=self.n_batches,
+            calibration_data_location=self.calibration_data_location,
+        )
             except:
                 raise ValueError("The {} backend cannot be wrapped.".format(backend))
 

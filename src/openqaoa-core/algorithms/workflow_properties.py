@@ -263,14 +263,23 @@ class BackendProperties(WorkflowProperties):
 
 class ErrorMitigationProperties(WorkflowProperties):
     """
-    TODO
+    Optional, choose an error mitigation technique for the QAOA circuit. Currently supports only SPAM Twirling.
+
+    Parameters
+    ----------
+    error_mitigation_technique: str
+        The name of the error mitigation technique. Only 'spam_twirling' supported for now.
+    n_batches: Optional[int] = int
+        Number of batches into the total number of shots is divided into.
+    calibration_data_location: str
+        The path to the file containing calibration data for the specific device.
     """
 
     def __init__(
         self,
-        error_mitigation_technique: Optional[str] = None,
-        n_batches: Optional[int] = 10,
-        calibration_data_location: Optional[str] = None,
+        error_mitigation_technique = None,
+        n_batches = 10,
+        calibration_data_location = None,
     ):
         self.error_mitigation_technique = error_mitigation_technique
 
