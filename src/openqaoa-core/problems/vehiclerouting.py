@@ -52,7 +52,7 @@ class VRP(Problem):
         pos,
         n_vehicles,
         depot: int = 0,
-        subtours: list = [],
+        subtours: list = None,
         method: str = "slack",
         penalty: Union[int, float, list] = 4,
     ):
@@ -64,7 +64,7 @@ class VRP(Problem):
         self.pos = pos
         self.n_vehicles = n_vehicles
         self.depot = depot
-        self.subtours = subtours
+        self.subtours = [] if subtours is None else subtours
         self.method = method
         if method == "unbalanced" and len(penalty) != 3:
             raise ValueError(
@@ -113,7 +113,7 @@ class VRP(Problem):
 
         Returns
         -------
-            A random instance of the maximal independent set problem.
+            A random instance of the vehicle routing problem.
         """
         n_nodes = kwargs.get("n_nodes", 6)
         n_vehicles = kwargs.get("n_vehicles", 2)
@@ -141,15 +141,32 @@ class VRP(Problem):
 
     @property
     def docplex_model(self):
+        """
+        Return a docplex model of the vehicle routing problem using the linear 
+        programming approach. In this approach, the edges between different nodes 
+        of the graph are the variables of the problem. Therefore, x_i_j will represent 
+        if the path between nodes i and j is selected. The idea is to minimize the distance
+        traveled
+        
+        sum_{i, j > i} r_{ij} x_{ij}.
+        
+        where r_{ij} is the distance between nodes i and j (self.G.edges[i, j]["weight"]).
+
+        Returns
+        -------
+        mdl : Model
+            Docplex model of the Vehicle routing problem.
+
+        """
         mdl = Model("VRP")
         num_nodes = self.G.number_of_nodes()
-
+        # Variables: the edges between nodes for a symmetric problem. This means x_i_j == x_j_i and only x_i_j is used.
         x = {
             (i, j): mdl.binary_var(name=f"x_{i}_{j}")
             for i in range(num_nodes - 1)
             for j in range(i + 1, num_nodes)
         }
-
+        # Distance traveled
         mdl.minimize(
             mdl.sum(
                 self.G.edges[i, j]["weight"] * x[(i, j)]
@@ -157,7 +174,7 @@ class VRP(Problem):
                 for j in range(i + 1, num_nodes)
             )
         )
-        # Only 2 edges for node
+        # Only 2 edges for node constraint
         for i in range(num_nodes):
             if i != self.depot:
                 mdl.add_constraint(
@@ -173,6 +190,7 @@ class VRP(Problem):
                     )
                     == 2 * self.n_vehicles
                 )
+        # Subtour constraint if any
         if self.subtours:
             list_subtours = self.subtours
         else:
