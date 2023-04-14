@@ -48,7 +48,7 @@ class PortfolioOptimization(Problem):
     @staticmethod
     def random_instance(**kwargs):
         """
-        Creates a random instance of the Knapsack problem.
+        Creates a random instance of the portfolio optimization problem.
 
         Parameters
         ----------
@@ -92,12 +92,10 @@ class PortfolioOptimization(Problem):
 
     @property
     def docplex_model(self):
-        mdl = Model("portfolio_optimization")
-
         num_assets = self.num_assets
 
         # Start the docplex model with Model("name of the model")
-        mdl = Model("Portfolio Optimization")
+        mdl = Model("Portfolio_Optimization")
 
         # Consider the number of variables as num_assets,
         # and binary set of variables that represent the stocks
@@ -138,7 +136,7 @@ class PortfolioOptimization(Problem):
 
     def classical_solution(self, string: bool = False):
         """
-        Return the classical solution of the bin packing problem
+        Return the classical solution of the portfolio optimization problem
         Parameters
         ----------
         string : bool, optional
@@ -164,9 +162,12 @@ class PortfolioOptimization(Problem):
             solution = {}
         for var in cplex_model.iter_binary_vars():
             if string:
-                solution += str(int(np.round(docplex_sol.get_value(var), 1)))
+                # round is used because sometimes docplex gives the solution close to 1 but not 1,
+                # if we want to store this as an integer and use int(value) and value is 0.999999
+                # it will store a zero.
+                solution += str(round(docplex_sol.get_value(var), 1))
             else:
-                solution[var.name] = int(np.round(docplex_sol.get_value(var), 1))
+                solution[var.name] = round(docplex_sol.get_value(var), 1)
         return solution
 
     def plot_solution(self, solution, ax=None):
