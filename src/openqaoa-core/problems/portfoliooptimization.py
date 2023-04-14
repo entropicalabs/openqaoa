@@ -163,8 +163,8 @@ class PortfolioOptimization(Problem):
         for var in cplex_model.iter_binary_vars():
             if string:
                 # round is used because sometimes docplex gives the solution close to 1 but not 1,
-                # if we want to store this as an integer and use int(value) and value is 0.999999
-                # it will store a zero.
+                #if we want to store this as an integer and use int(value) and the value is 0.999999
+                #it will store a zero.
                 solution += str(round(docplex_sol.get_value(var), 1))
             else:
                 solution[var.name] = round(docplex_sol.get_value(var), 1)
