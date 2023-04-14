@@ -1218,6 +1218,10 @@ def calculate_calibration_factors(
         value != 0 for value in calibration_factors.values()
     ), "One (or more) of the calibration factors is 0 which means that the measurement is faulty. Please check the data."
 
+    assert all(
+        value <= 1 for value in calibration_factors.values()
+    ), "One (or more) of the calibration factors is larger than 1 which is not physical. Please check the data."
+
     return calibration_factors
 
 

@@ -16,6 +16,7 @@ from ..utilities import (
     exp_val_single,
     negate_counts_dictionary,
     calculate_calibration_factors,
+    round_value
 )
 
 
@@ -86,15 +87,17 @@ class SPAMTwirlingWrapper(BaseWrapper):
             json.dump(self.calibration_factors, fp)
         """
 
-    def get_counts(self, params, n_shots=None):
+    def get_counts(self, params, n_shots=None, seed=1):
         """
+        Overrides the get_counts function of the backend object.
         Modified function to...
             divide into batches
             change the self.append_state according to the schedule, s.
             get the counts and classically negate them
             combine all batches into a count dict under BFA
         """
-        # list of integers whose binary representation signifies which qubits or be flipped at every batch
+        random.seed(seed)
+        # list of integers whose binary representation signifies which qubits to be flipped at every batch
         s_list = []
         for _ in range(0, self.n_batches):
             s_list.append(random.getrandbits(self.backend.n_qubits))
@@ -144,6 +147,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
 
         return counts
 
+    @round_value
     def expectation_value_spam_twirled(
         self, counts: Dict, hamiltonian: Hamiltonian, calibration_factors: dict
     ):

@@ -74,7 +74,6 @@ class QAOAQiskitBackendShotBasedSimulator(
     noise_model: `NoiseModel`
         The Qiskit noise model to be used for the simulation.
     """
-    # TODO do we need this here ???
     QISKIT_GATEMAP_LIBRARY = [
         RXGateMap,
         RYGateMap,
