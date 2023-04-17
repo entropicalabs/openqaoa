@@ -16,7 +16,7 @@ requirements = [
 add_requirements = open('requirements.txt').readlines()
 add_requirements = [r.strip() for r in add_requirements]
 
-requirements.append(add_requirements)
+requirements.extend(add_requirements)
 
 setup(
     name="openqaoa-braket",

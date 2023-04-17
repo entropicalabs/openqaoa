@@ -1,4 +1,3 @@
-azure-quantum
 qdk
 qiskit-qir
 qiskit-ionq
