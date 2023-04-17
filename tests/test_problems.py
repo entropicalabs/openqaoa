@@ -1559,10 +1559,7 @@ class TestProblem(unittest.TestCase):
             problem_instance = qubos[type].problem_instance.copy()
 
             problem = create_problem_from_dict(problem_instance)
-            if problem_instance["problem_type"] == "bin_packing":
-                print(problem.problem_instance)
-                print()
-                print(problems[type].problem_instance)
+
             assert (
                 problem.problem_instance == problems[type].problem_instance
             ), "Problem from instance method is not correct for problem type {}".format(
@@ -1597,7 +1594,7 @@ class TestProblem(unittest.TestCase):
                 ), "QUBO from dict method is not correct for problem type {}".format(
                     qubo.problem_instance["problem_type"]
                 )
-
+                
                 for key in qubo.__dict__:
                     if key != "terms" and key != "weights":
                         assert (

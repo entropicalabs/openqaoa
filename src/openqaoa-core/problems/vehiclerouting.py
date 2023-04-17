@@ -28,6 +28,7 @@ class VRP(Problem):
     depot: int
         the node where all the vehicles leave for and return after
     subtours: list[list]
+        if -1 (Default value): All the possible subtours are added to the constraints. Avoid it for large instances.
         if there are subtours that want be avoided in the solution, e.g, a 8 nodes
         VRP with an optimal solution showing subtour between nodes 4, 5, and 8 can be
         avoided introducing the constraint subtours=[[4,5,8]]. To additional information
@@ -52,7 +53,7 @@ class VRP(Problem):
         pos,
         n_vehicles,
         depot: int = 0,
-        subtours: list = None,
+        subtours: list = -1,
         method: str = "slack",
         penalty: Union[int, float, list] = 4,
     ):
@@ -64,7 +65,7 @@ class VRP(Problem):
         self.pos = pos
         self.n_vehicles = n_vehicles
         self.depot = depot
-        self.subtours = [] if subtours is None else subtours
+        self.subtours = subtours
         self.method = method
         if method == "unbalanced" and len(penalty) != 3:
             raise ValueError(
@@ -125,7 +126,7 @@ class VRP(Problem):
             penalty = kwargs.get("penalty", [4, 1, 1])
         else:
             raise ValueError(f"The method '{method}' is not valid.")
-        subtours = kwargs.get("subtours", None)
+        subtours = kwargs.get("subtours", -1)
         np.random.seed(seed)
         G = nx.Graph()
         G.add_nodes_from(range(n_nodes))
@@ -190,24 +191,8 @@ class VRP(Problem):
                     )
                     == 2 * self.n_vehicles
                 )
-        # Subtour constraint if any
-        if self.subtours:
-            list_subtours = self.subtours
-            for subtour in list_subtours:
-                tour = sorted(subtour)
-                n_subtour = len(subtour)
-                if n_subtour != 0:
-                    mdl.add_constraint(
-                        mdl.sum(
-                            [
-                                x[(tour[i], tour[j])]
-                                for i in range(n_subtour)
-                                for j in range(i + 1, n_subtour)
-                            ]
-                        )
-                        <= n_subtour - 1
-                    )
-        else:
+
+        if self.subtours == -1:
             # When subtours are not added, by default all the possible subtours are added.
             # However, it is really costly for large instances (above 10 nodes)
             list_subtours = [[i for i in range(num_nodes) if i != self.depot]]
@@ -226,6 +211,25 @@ class VRP(Problem):
                             )
                             <= n_subtour - 1
                         )
+        # Subtour constraints if any
+        elif isinstance(self.subtours, list):
+            list_subtours = self.subtours
+            for subtour in list_subtours:
+                tour = sorted(subtour)
+                n_subtour = len(subtour)
+                if n_subtour != 0:
+                    mdl.add_constraint(
+                        mdl.sum(
+                            [
+                                x[(tour[i], tour[j])]
+                                for i in range(n_subtour)
+                                for j in range(i + 1, n_subtour)
+                            ]
+                        )
+                        <= n_subtour - 1
+                    )
+        else:
+            raise ValueError(f"{type(self.subtour)} is not a valid format for the subtours.")
         return mdl
 
     @property
