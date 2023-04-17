@@ -1195,6 +1195,7 @@ class TestProblem(unittest.TestCase):
         self.assertEqual(
             "The number of nodes in G is 3 while the x, y coordinates in pos is 2",
             str(e.exception),
+        )
 
     # TESTING PORTFOLIO OPTIMIZATION PROBLEM CLASS
 

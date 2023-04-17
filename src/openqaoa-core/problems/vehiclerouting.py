@@ -125,7 +125,7 @@ class VRP(Problem):
             penalty = kwargs.get("penalty", [4, 1, 1])
         else:
             raise ValueError(f"The method '{method}' is not valid.")
-        subtours = kwargs.get("subtours", [])
+        subtours = kwargs.get("subtours", None)
         np.random.seed(seed)
         G = nx.Graph()
         G.add_nodes_from(range(n_nodes))
@@ -193,23 +193,39 @@ class VRP(Problem):
         # Subtour constraint if any
         if self.subtours:
             list_subtours = self.subtours
-        else:
-            list_subtours = [[i for i in range(num_nodes) if i != self.depot]]
-        for nodes in list_subtours:
-            for i in range(3, num_nodes - 2 * self.n_vehicles):
-                for subtour in itertools.combinations(nodes, i):
-                    tour = sorted(subtour)
-                    n_subtour = len(subtour)
+            for subtour in list_subtours:
+                tour = sorted(subtour)
+                n_subtour = len(subtour)
+                if n_subtour != 0:
                     mdl.add_constraint(
                         mdl.sum(
                             [
                                 x[(tour[i], tour[j])]
-                                for i in range(n_subtour - 1)
+                                for i in range(n_subtour)
                                 for j in range(i + 1, n_subtour)
                             ]
                         )
                         <= n_subtour - 1
                     )
+        else:
+            # When subtours are not added, by default all the possible subtours are added.
+            # However, it is really costly for large instances (above 10 nodes)
+            list_subtours = [[i for i in range(num_nodes) if i != self.depot]]
+            for nodes in list_subtours: # costly for large instances
+                for i in range(3, num_nodes - 2 * self.n_vehicles):
+                    for subtour in itertools.combinations(nodes, i):
+                        tour = sorted(subtour)
+                        n_subtour = len(subtour)
+                        mdl.add_constraint(
+                            mdl.sum(
+                                [
+                                    x[(tour[i], tour[j])]
+                                    for i in range(n_subtour - 1)
+                                    for j in range(i + 1, n_subtour)
+                                ]
+                            )
+                            <= n_subtour - 1
+                        )
         return mdl
 
     @property
@@ -268,9 +284,9 @@ class VRP(Problem):
             solution = {}
         for var in cplex_model.iter_binary_vars():
             if string:
-                solution += str(int(round(docplex_sol.get_value(var), 1)))
+                solution += str(round(docplex_sol.get_value(var)))
             else:
-                solution[var.name] = int(round(docplex_sol.get_value(var), 1))
+                solution[var.name] = round(docplex_sol.get_value(var))
         return solution
 
     def paths_subtours(self, sol):
@@ -293,7 +309,7 @@ class VRP(Problem):
         vars_list = []
         for i in range(n_nodes - 1):
             for j in range(i + 1, n_nodes):
-                if int(sol[f"x_{i}_{j}"]):
+                if round(sol[f"x_{i}_{j}"]):
                     vars_list.append([i, j])
         # ----------------  vehicle routing problem solutions -----------------
         paths = {}
@@ -358,7 +374,7 @@ class VRP(Problem):
         if isinstance(solution, str):
             sol = self.solution.copy()
             for n, var in enumerate(self.docplex_model().iter_binary_vars()):
-                sol[var.name] = int(solution[n])
+                sol[var.name] = round(solution[n])
             solution = sol
         paths_and_subtours = self.paths_subtours(solution)
         paths = paths_and_subtours["paths"]
