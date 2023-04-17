@@ -76,9 +76,10 @@ class QAOAQiskitQPUBackend(
         )
         QAOABaseBackendCloud.__init__(self, device)
 
+        self.qureg = QuantumRegister(self.n_qubits)
         self.problem_reg = self.qureg[0 : self.problem_qubits]
         self.creg = ClassicalRegister(len(self.problem_reg))
-        self.qureg = QuantumRegister(self.n_qubits)
+
         self.gate_applicator = QiskitGateApplicator()
 
         if self.initial_qubit_mapping is None:
@@ -145,7 +146,7 @@ class QAOAQiskitQPUBackend(
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+        new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
         if self.qaoa_descriptor.routed == True:
             transpiled_circuit = transpile(
                 circuit_with_angles,

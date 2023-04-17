@@ -63,7 +63,6 @@ class QAOAAWSQPUBackend(
         disable_qubit_rewiring: bool = False,
         initial_qubit_mapping: Optional[List[int]] = None,
     ):
-
         QAOABaseBackendShotBased.__init__(
             self,
             qaoa_descriptor,
@@ -74,6 +73,7 @@ class QAOAAWSQPUBackend(
             cvar_alpha,
         )
         QAOABaseBackendCloud.__init__(self, device)
+        self.gate_applicator = BraketGateApplicator()
 
         self.qureg = list(range(self.n_qubits))
         self.problem_reg = self.qureg[0 : self.problem_qubits]
@@ -132,6 +132,13 @@ class QAOAAWSQPUBackend(
         qaoa_circuit: `Circuit`
             The final QAOA circuit constructed using the angles from variational params.
         """
+        parametric_circuit = deepcopy(self.parametric_circuit)
+
+        if self.append_state:
+            parametric_circuit += self.append_state
+
+        # TODO: needs to be fixed --> measurement operations on problem qubits
+        parametric_circuit += Probability.probability()
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(
@@ -154,7 +161,6 @@ class QAOAAWSQPUBackend(
         the circuit.
         """
         parametric_circuit = Circuit()
-        gate_applicator = BraketGateApplicator()
 
         if self.prepend_state:
             parametric_circuit += self.prepend_state
@@ -174,14 +180,8 @@ class QAOAAWSQPUBackend(
             decomposition = each_gate.decomposition("standard")
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](gate_applicator, *each_tuple[1])
+                gate = each_tuple[0](self.gate_applicator, *each_tuple[1])
                 gate.apply_gate(parametric_circuit)
-
-        if self.append_state:
-            parametric_circuit += self.append_state
-
-        # TODO: needs to be fixed --> measurement operations on problem qubits
-        parametric_circuit += Probability.probability()
 
         return parametric_circuit
 
@@ -259,7 +259,6 @@ class QAOAAWSQPUBackend(
         return final_counts
 
     def log_with_backend(self, metric_name: str, value, iteration_number) -> None:
-
         """
         If using AWS Jobs, these values will be logged.
         """
