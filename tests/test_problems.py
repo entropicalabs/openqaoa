@@ -1123,6 +1123,29 @@ class TestProblem(unittest.TestCase):
         self.assertTrue(vrp_prob_random.terms[0] == [0, 1])
         self.assertTrue(vrp_prob_random.terms[-1] == [27])
 
+    def test_vrp_plot(self):
+        """
+        Testing the random_instance method of the VRP problem class using the
+        unbalanced penalization method
+        """
+        import matplotlib.pyplot as plt
+
+        seed = 1234
+        np.random.seed(seed)
+        n_nodes = 8
+        n_vehicles = 2
+
+        vrp_prob_random = VRP.random_instance(
+            n_nodes=n_nodes,
+            n_vehicles=n_vehicles,
+            seed=seed
+        )
+        vrp_sol = vrp_prob_random.classical_solution()
+        vrp_sol_str = vrp_prob_random.classical_solution(string=True)
+
+        self.assertTrue(isinstance(vrp_prob_random.plot_solution(vrp_sol), plt.Figure))
+        self.assertTrue(isinstance(vrp_prob_random.plot_solution(vrp_sol_str), plt.Figure))
+
     def test_vrp_type_checking(self):
         """
         Checks if the type-checking returns the right error.
@@ -1194,6 +1217,15 @@ class TestProblem(unittest.TestCase):
             vrp = VRP(G, pos=[[0, 1], [1, 2]], n_vehicles=2)
         self.assertEqual(
             "The number of nodes in G is 3 while the x, y coordinates in pos is 2",
+            str(e.exception),
+        )
+        # Test different size between colors and number of vehicles
+        with self.assertRaises(ValueError) as e:
+            seed = 1234
+            vrp = VRP.random_instance(n_nodes=6, n_vehicles=2, seed=seed)
+            vrp.plot_solution(vrp.classical_solution(), colors=["tab:blue"])
+        self.assertEqual(
+            "The length of colors 1 and the number of vehicles 2 do not match",
             str(e.exception),
         )
 

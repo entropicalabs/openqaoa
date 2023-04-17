@@ -355,7 +355,7 @@ class VRP(Problem):
             i += 1
         return {"paths": paths, "subtours": subtours}
 
-    def plot_solution(self, solution: Union[dict, str], ax=None):
+    def plot_solution(self, solution: Union[dict, str], ax=None, edge_width=4, colors=None):
         """
         A visualization method for the vehicle routing problem solution.
         Parameters
@@ -370,11 +370,14 @@ class VRP(Problem):
             The graph visualization of the solution.
         """
 
-        colors = colormaps["jet"]
+        colors = colormaps["jet"] if colors is None else colors
+        if type(colors) is list and len(colors) != self.n_vehicles:
+            raise ValueError(f"The length of colors {len(colors)} and the number of vehicles {self.n_vehicles} do not match")
+            
         if isinstance(solution, str):
-            sol = self.solution.copy()
-            for n, var in enumerate(self.docplex_model().iter_binary_vars()):
-                sol[var.name] = round(solution[n])
+            sol = {}
+            for n, var in enumerate(self.docplex_model.iter_binary_vars()):
+                sol[var.name] = int(solution[n])
             solution = sol
         paths_and_subtours = self.paths_subtours(solution)
         paths = paths_and_subtours["paths"]
@@ -382,7 +385,10 @@ class VRP(Problem):
         tours_color = {}
         for vehicle in range(self.n_vehicles):
             for i, j in paths[vehicle]:
-                tours_color[f"x_{i}_{j}"] = colors((vehicle + 1) / self.n_vehicles)
+                if type(colors) is list:
+                    tours_color[f"x_{i}_{j}"] = colors[vehicle]
+                else:
+                    tours_color[f"x_{i}_{j}"] = colors((vehicle + 1) / self.n_vehicles)
         for subtour in subtours.keys():
             for i, j in subtours[subtour]:
                 tours_color[f"x_{i}_{j}"] = "black"
@@ -404,6 +410,7 @@ class VRP(Problem):
         nx.draw(
             G,
             pos=pos,
+            width=edge_width,
             edge_color=edge_color,
             node_color=color_node,
             alpha=0.8,
