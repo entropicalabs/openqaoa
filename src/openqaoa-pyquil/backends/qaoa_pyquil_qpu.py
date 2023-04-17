@@ -170,7 +170,7 @@ class QAOAPyQuilQPUBackend(
         
         if self.append_state:
             parametric_circuit += self.append_state
-
+        
         if self.final_mapping is None:
             for i, qbit in enumerate(self.problem_reg):
                 parametric_circuit += gates.MEASURE(self.qubit_mapping[qbit], ro[i])
@@ -181,11 +181,8 @@ class QAOAPyQuilQPUBackend(
                 parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
         
-        native_prog = self.device.quantum_computer.compiler.quil_to_native_quil(
-            parametric_circuit
-        )
         prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
-            native_prog
+            parametric_circuit
         )
         
         angles_list = np.array(
@@ -288,6 +285,8 @@ class QAOAPyQuilQPUBackend(
                 else:
                     gate = each_tuple[0](self.gate_applicator, *new_qubits, rotation_angle)
                 gate.apply_gate(parametric_circuit)
+                
+        
         
         return parametric_circuit
 
