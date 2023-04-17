@@ -193,7 +193,6 @@ class SPAMTwirlingWrapper(BaseWrapper):
         combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation
         """
         counts = self.get_counts(params, n_shots)
-
         cost = self.expectation_value_spam_twirled(
             counts,
             self.backend.qaoa_descriptor.cost_hamiltonian,
