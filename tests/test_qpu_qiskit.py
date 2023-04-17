@@ -1,3 +1,4 @@
+import time
 import unittest
 from unittest.mock import Mock
 import json
@@ -7,6 +8,7 @@ import subprocess
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
+from qiskit.tools.monitor import job_monitor
 
 
 from openqaoa_azure.backends import DeviceAzure
@@ -566,35 +568,83 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
                 "There are lesser qubits on the device than the number of qubits required for the circuit.",
             )
 
+    @pytest.mark.qpu
+    def test_integration_on_emulator(self):
+        """
+        Test Emulated QPU Workflow. Checks if the expectation value is returned
+        after the circuit run.
+        """
 
-#     def test_remote_integration_qpu_run(self):
-#         """
-#         Test Actual QPU Workflow. Checks if the expectation value is returned
-#         after the circuit run.
-#         """
+        nqubits = 3
+        p = 1
+        weights = [1, 1, 1]
+        gammas = [[1 / 8 * np.pi]]
+        betas = [[1 / 8 * np.pi]]
+        shots = 10000
 
-#         nqubits = 3
-#         p = 1
-#         weights = [1, 1, 1]
-#         gammas = [[1/8*np.pi]]
-#         betas = [[1/8*np.pi]]
-#         shots = 10000
+        cost_hamil = Hamiltonian(
+            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
+            weights,
+            1,
+        )
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
+        qiskit_device = DeviceQiskit(
+            "ibm_perth",
+            self.HUB,
+            self.GROUP,
+            self.PROJECT,
+            as_emulator=True,
+        )
 
-#         cost_hamil = Hamiltonian([PauliOp('ZZ', (0, 1)), PauliOp('ZZ', (1, 2)),
-#                                   PauliOp('ZZ', (0, 2))], weights, 1)
-#         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-#         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
-#         variate_params = QAOAVariationalStandardParams(qaoa_descriptor,
-#                                                        betas,
-#                                                        gammas)
-#         qiskit_device = DeviceQiskit(self.API_TOKEN, self.HUB, self.GROUP,
-#                                                   self.PROJECT, 'ibmq_bogota')
+        qiskit_backend = QAOAQiskitQPUBackend(
+            qaoa_descriptor, qiskit_device, shots, None, None, False
+        )
+        qiskit_expectation = qiskit_backend.expectation(variate_params)
 
-#         qiskit_backend = QAOAQiskitQPUBackend(qaoa_descriptor, qiskit_device,
-#                                               shots, None, None, False)
-#         qiskit_expectation = qiskit_backend.expectation(variate_params)
+        self.assertEqual(type(qiskit_expectation.item()), float)
 
-#         self.assertEqual(type(qiskit_expectation.item()), float)
+    @pytest.mark.qpu
+    def test_remote_integration_qpu_run(self):
+        """
+        Test Actual QPU Workflow. Checks if the expectation value is returned
+        after the circuit run.
+        """
+
+        nqubits = 3
+        p = 1
+        weights = [1, 1, 1]
+        gammas = [[1 / 8 * np.pi]]
+        betas = [[1 / 8 * np.pi]]
+        shots = 10000
+
+        cost_hamil = Hamiltonian(
+            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
+            weights,
+            1,
+        )
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
+        qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
+        qiskit_device = DeviceQiskit("ibm_perth", self.HUB, self.GROUP, self.PROJECT)
+
+        qiskit_backend = QAOAQiskitQPUBackend(
+            qaoa_descriptor, qiskit_device, shots, None, None, False
+        )
+        circuit = qiskit_backend.qaoa_circuit(variate_params)
+        job = qiskit_backend.backend_qpu.run(circuit, shots=qiskit_backend.n_shots)
+
+        # check if the cirucit is validated by IBMQ servers when submitted for execution
+        # check the status of the job and keep retrying until its completed or queued
+        while job.status().name not in ["DONE", "CANCELLED", "ERROR"]:
+            # if the job is queued, cancel the job
+            if job.status().name == "QUEUED":
+                job.cancel()
+            else:
+                time.sleep(1)
+
+        assert job.status().name in ["DONE", "CANCELLED"]
 
 
 if __name__ == "__main__":

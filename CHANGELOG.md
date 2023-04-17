@@ -1,3 +1,9 @@
+## Version v0.1.2 (March 23rd, 2023)
+
+There was a small bug in the code that resulted in qiskit circuit not compiling, resulting in erros on QPUs
+* This bug was fixed
+* Two additional unittests were added to test for compilation to avoid these errors in future.
+
 ## Version v0.1.1 (February 23rd, 2023)
 
 This release brings the following new features:

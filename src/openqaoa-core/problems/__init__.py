@@ -4,6 +4,7 @@ from .minimumvertexcover import MinimumVertexCover
 from .numberpartition import NumberPartition
 from .shortestpath import ShortestPath
 from .tsp import TSP
+from .portfoliooptimization import PortfolioOptimization
 from .maximalindependentset import MIS
 from .binpacking import BinPacking
 from .vehiclerouting import VRP
