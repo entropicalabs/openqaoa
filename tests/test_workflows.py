@@ -1582,8 +1582,28 @@ class TestingVanillaQAOA(unittest.TestCase):
         q.optimize()
 
         # add numpy results
-        numpy_res = {"000": np.int64(85), "100": np.int64(85), "010": np.int64(85)}
-        q.result.optimized["measurement_outcomes"] = numpy_res
+        numpy_dict = {
+            "000": np.int64(85),
+            "100": np.int64(85),
+            "010": np.int64(85),
+            "111": 12,
+        }
+        numpy_cost = np.float64(85.123)
+
+        q.result.optimized["intermediate"] = [
+            numpy_cost,
+            numpy_cost,
+            numpy_cost,
+            0.123,
+            -123.123,
+        ]
+        q.result.intermediate["measurement_outcomes"] = [
+            numpy_dict,
+            numpy_dict,
+            numpy_dict,
+        ]
+        q.result.optimized["measurement_outcomes"] = numpy_dict
+        q.result.optimized["cost"] = numpy_cost
 
         q.dumps()
 
