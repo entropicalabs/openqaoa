@@ -143,13 +143,15 @@ class QAOAQiskitQPUBackend(
             for idx, qubit in enumerate(self.final_mapping[0 : len(self.problem_reg)]):
                 cbit = self.creg[idx]
                 parametric_circuit.measure(qubit, cbit)
+                
+        print(parametric_circuit)
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
         if self.qaoa_descriptor.routed == True:
             transpiled_circuit = transpile(
-                circuit_with_angles,
+                new_parametric_circuit,
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
                 optimization_level=0,
@@ -157,7 +159,7 @@ class QAOAQiskitQPUBackend(
             )
         else:
             transpiled_circuit = transpile(
-                circuit_with_angles,
+                new_parametric_circuit,
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
             )

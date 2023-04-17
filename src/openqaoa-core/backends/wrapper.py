@@ -87,7 +87,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
             json.dump(self.calibration_factors, fp)
         """
 
-    def get_counts(self, params, n_shots=None, seed=1):
+    def get_counts(self, params, n_shots=None, seed=42):
         """
         Overrides the get_counts function of the backend object.
         Modified function to...
