@@ -11,6 +11,7 @@ from openqaoa.problems import (
     SlackFreeKnapsack,
     MaximumCut,
     MinimumVertexCover,
+    VRP,
     PortfolioOptimization,
     MIS,
     BinPacking,
@@ -1051,6 +1052,183 @@ class TestProblem(unittest.TestCase):
 
         self.assertRaises(Exception, test_assertion_fn)
 
+    # TESTING VRP PROBLEM CLASS
+
+    def test_vrp_terms_weights_constant(self):
+        """Testing VRP problem creation"""
+        pos = [[4, 1], [4, 4], [3, 3]]  # nodes position x, y
+        n_vehicles = 1
+        n_nodes = len(pos)
+        G = nx.Graph()
+        G.add_nodes_from(range(n_nodes))
+        for i in range(n_nodes - 1):
+            for j in range(i + 1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
+                G.add_weighted_edges_from([(i, j, r)])
+        vrp_qubo = VRP(G, pos, n_vehicles).qubo
+        expected_terms = [[0, 1], [0, 2], [1, 2], [0], [1], [2]]
+        expected_weights = [2.0, 2.0, 2.0, 6.5, 6.881966011250105, 7.292893218813452]
+        expected_constant = 21.32514076993644
+
+        self.assertTrue(terms_list_equality(expected_terms, vrp_qubo.terms))
+        self.assertEqual(expected_weights, vrp_qubo.weights)
+        self.assertEqual(expected_constant, vrp_qubo.constant)
+
+    def test_vrp_random_instance(self):
+        """Testing the random_instance method of the VRP problem class"""
+        seed = 1234
+        np.random.seed(seed)
+        n_nodes = 3
+        n_vehicles = 1
+        G = nx.Graph()
+        G.add_nodes_from(range(n_nodes))
+        pos = [[0, 0]]
+        pos += [list(2 * np.random.rand(2) - 1) for _ in range(n_nodes - 1)]
+        for i in range(n_nodes - 1):
+            for j in range(i + 1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
+                G.add_weighted_edges_from([(i, j, r)])
+
+        vrp_prob = VRP(G, pos, n_vehicles).qubo
+        vrp_prob_random = VRP.random_instance(
+            n_nodes=n_nodes, n_vehicles=n_vehicles, seed=seed
+        ).qubo
+
+        self.assertTrue(terms_list_equality(vrp_prob_random.terms, vrp_prob.terms))
+        self.assertEqual(vrp_prob_random.weights, vrp_prob.weights)
+        self.assertEqual(vrp_prob_random.constant, vrp_prob.constant)
+
+    def test_vrp_random_instance_unbalanced(self):
+        """
+        Testing the random_instance method of the VRP problem class using the
+        unbalanced penalization method
+        """
+        seed = 1234
+        np.random.seed(seed)
+        n_nodes = 8
+        n_vehicles = 2
+        n_vars = n_nodes * (n_nodes - 1) // 2
+
+        vrp_prob_random = VRP.random_instance(
+            n_nodes=n_nodes,
+            n_vehicles=n_vehicles,
+            seed=seed,
+            method="unbalanced",
+            penalty=3 * [0.1],
+        ).qubo
+
+        self.assertTrue(vrp_prob_random.n == n_vars)
+        self.assertTrue(vrp_prob_random.weights[0] == 0.05)
+        self.assertTrue(vrp_prob_random.weights[-1] == -0.688413325464513)
+        self.assertTrue(vrp_prob_random.terms[0] == [0, 1])
+        self.assertTrue(vrp_prob_random.terms[-1] == [27])
+
+    def test_vrp_plot(self):
+        """
+        Testing the random_instance method of the VRP problem class using the
+        unbalanced penalization method
+        """
+        import matplotlib.pyplot as plt
+
+        seed = 1234
+        np.random.seed(seed)
+        n_nodes = 8
+        n_vehicles = 2
+
+        vrp_prob_random = VRP.random_instance(
+            n_nodes=n_nodes,
+            n_vehicles=n_vehicles,
+            seed=seed
+        )
+        vrp_sol = vrp_prob_random.classical_solution()
+        vrp_sol_str = vrp_prob_random.classical_solution(string=True)
+
+        self.assertTrue(isinstance(vrp_prob_random.plot_solution(vrp_sol), plt.Figure))
+        self.assertTrue(isinstance(vrp_prob_random.plot_solution(vrp_sol_str), plt.Figure))
+
+    def test_vrp_type_checking(self):
+        """
+        Checks if the type-checking returns the right error.
+        """
+        # Wrong method is called
+        with self.assertRaises(ValueError) as e:
+            VRP.random_instance(n_nodes=6, n_vehicles=2, method="method")
+        self.assertEqual(
+            "The method 'method' is not valid.",
+            str(e.exception),
+        )
+        # Penalization terms in unblanced method is not equal to three
+        with self.assertRaises(ValueError) as e:
+            VRP.random_instance(
+                n_nodes=6, n_vehicles=2, method="unbalanced", penalty=[0.1]
+            )
+        self.assertEqual(
+            "The penalty must have 3 parameters [lambda_0, lambda_1, lambda_2]",
+            str(e.exception),
+        )
+
+        # paths with an unfeasible solution
+        with self.assertRaises(ValueError) as e:
+            vrp = VRP.random_instance(n_nodes=6, n_vehicles=2, seed=1234)
+            sol = vrp.classical_solution()
+            sol["x_0_1"] = (
+                sol["x_0_1"] + 1
+            ) % 2  # Changing one value in the solution to make it an unfeasible solution
+            vrp.paths_subtours(sol)
+        self.assertEqual(
+            "Solution provided does not fulfill all the path conditions.",
+            str(e.exception),
+        )
+        # subtours with an unfeasible direction (broke subtour)
+        with self.assertRaises(ValueError) as e:
+            vrp = VRP.random_instance(
+                n_nodes=10, n_vehicles=2, subtours=[[]], seed=1234
+            )
+            sol = vrp.classical_solution()
+            sol["x_1_2"] = (
+                sol["x_1_2"] + 1
+            ) % 2  # Changing one value in the solution to make it an unfeasible solution
+            vrp.paths_subtours(sol)
+        self.assertEqual(
+            "The subtours in the solution are broken.",
+            str(e.exception),
+        )
+        # Test unfeasible problem does not return classical solution
+        with self.assertRaises(ValueError) as e:
+            vrp = VRP.random_instance(n_nodes=3, n_vehicles=3, seed=1234)
+            sol = vrp.classical_solution()
+            vrp.paths_subtours(sol)
+        self.assertEqual(
+            "Solution not found: integer infeasible.",
+            str(e.exception),
+        )
+        # Test wrong graph input
+        with self.assertRaises(TypeError) as e:
+            G = [[0, 1, 2], [1, 2, 3]]
+            vrp = VRP(G, pos=[[0, 1], [1, 2]], n_vehicles=2)
+        self.assertEqual(
+            "Input problem graph must be a networkx Graph.",
+            str(e.exception),
+        )
+        # Test different size between graph nodes and x, y positions in pos
+        with self.assertRaises(ValueError) as e:
+            G = nx.Graph()
+            G.add_nodes_from(range(3))
+            vrp = VRP(G, pos=[[0, 1], [1, 2]], n_vehicles=2)
+        self.assertEqual(
+            "The number of nodes in G is 3 while the x, y coordinates in pos is 2",
+            str(e.exception),
+        )
+        # Test different size between colors and number of vehicles
+        with self.assertRaises(ValueError) as e:
+            seed = 1234
+            vrp = VRP.random_instance(n_nodes=6, n_vehicles=2, seed=seed)
+            vrp.plot_solution(vrp.classical_solution(), colors=["tab:blue"])
+        self.assertEqual(
+            "The length of colors 1 and the number of vehicles 2 do not match",
+            str(e.exception),
+        )
+
     # TESTING PORTFOLIO OPTIMIZATION PROBLEM CLASS
 
     def test_portfoliooptimization_terms_weights_constant(self):
@@ -1147,8 +1325,7 @@ class TestProblem(unittest.TestCase):
         self.assertTrue(isinstance(figure, plt.Figure))
         fig, ax = plt.subplots(figsize=(5, 5))
         self.assertTrue(
-            porfolitooptimization_random_prob.plot_solution(sol, ax=ax) == None
-        )
+            porfolitooptimization_random_prob.plot_solution(sol, ax=ax) == None)
 
     # TESTING MAXIMAL INDEPENDENT SET PROBLEM
 
@@ -1276,6 +1453,7 @@ class TestProblem(unittest.TestCase):
             "shortest_path": ShortestPath.random_instance(
                 n_nodes=randint(3, 15), edge_probability=random()
             ),
+            "vehicle_routing": VRP.random_instance(),
             "maximal_independent_set": MIS.random_instance(
                 n_nodes=randint(3, 15), edge_probability=random()
             ),
@@ -1320,6 +1498,16 @@ class TestProblem(unittest.TestCase):
             ],
             "minimum_vertex_cover": ["problem_type", "G", "field", "penalty"],
             "shortest_path": ["problem_type", "G", "source", "dest"],
+            "vehicle_routing": [
+                "problem_type",
+                "G",
+                "pos",
+                "n_vehicles",
+                "depot",
+                "subtours",
+                "method",
+                "penalty",
+            ],
             "maximal_independent_set": ["problem_type", "G", "penalty"],
             "bin_packing": [
                 "problem_type",
@@ -1359,6 +1547,7 @@ class TestProblem(unittest.TestCase):
             "shortest_path": ShortestPath,
             "maximal_independent_set": MIS,
             "bin_packing": BinPacking,
+            "vehicle_routing": VRP,
         }
 
         problems, qubos = self.__generate_random_problems()
@@ -1370,10 +1559,7 @@ class TestProblem(unittest.TestCase):
             problem_instance = qubos[type].problem_instance.copy()
 
             problem = create_problem_from_dict(problem_instance)
-            if problem_instance["problem_type"] == "bin_packing":
-                print(problem.problem_instance)
-                print()
-                print(problems[type].problem_instance)
+
             assert (
                 problem.problem_instance == problems[type].problem_instance
             ), "Problem from instance method is not correct for problem type {}".format(
@@ -1408,7 +1594,7 @@ class TestProblem(unittest.TestCase):
                 ), "QUBO from dict method is not correct for problem type {}".format(
                     qubo.problem_instance["problem_type"]
                 )
-
+                
                 for key in qubo.__dict__:
                     if key != "terms" and key != "weights":
                         assert (
