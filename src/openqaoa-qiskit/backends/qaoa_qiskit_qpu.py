@@ -144,7 +144,6 @@ class QAOAQiskitQPUBackend(
                 cbit = self.creg[idx]
                 parametric_circuit.measure(qubit, cbit)
                 
-        print(parametric_circuit)
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))

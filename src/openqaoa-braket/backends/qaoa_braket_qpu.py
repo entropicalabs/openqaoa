@@ -152,6 +152,8 @@ class QAOAAWSQPUBackend(
             )
         )
         new_parametric_circuit = self.parametric_circuit.make_bound_circuit(memory_map)
+        
+        self.append_state = []
         return new_parametric_circuit
 
     @property

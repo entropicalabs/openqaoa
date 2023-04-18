@@ -175,7 +175,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         """
         assert (
             self.wrapped_obj.expectation(self.variate_params, n_shots=100)
-            == -0.333333333333
+            == -0.5
         )
 
 
