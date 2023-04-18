@@ -92,7 +92,15 @@ To run the test, first, make sure to have installed all the optional testing dep
 > :warning: **Some tests require authentication**: all tests flagged `api` or `qpu` require valid qpu crendentials to be specified in `tests/credentials.json`
 
 > :warning: **Some tests require authentication**: Please, note that the PyQuil-Rigetti tests contained in `test_pyquil_qvm.py` requires an active `qvm` (see Rigetti's documentation [here](https://pyquil-docs.rigetti.com/en/v3.1.0/qvm.html))
+    
+## For Developers
 
+This repository was packaged with `poetry`. The default `pyproject.toml` file installs the internal plugin depedencies as editable through `poetry`. If you need to create an editable install of this repository do the following in the root directory of this repository:
+
+```bash
+poetry install
+```
+ 
 ## Contributing and feedback
 
 If you find any bugs or errors, have feature requests, or code you would like to contribute, feel free to open an issue or send us a pull request on GitHub.

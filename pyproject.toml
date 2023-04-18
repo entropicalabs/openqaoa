@@ -1,3 +1,31 @@
+[tool.poetry]
+name = "openqaoa"
+version = "0.1.19"
+description = "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators"
+authors = ["Entropica Labs"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/entropicalabs/openqaoa"
+homepage = "https://openqaoa.entropicalabs.com/"
+documentation = "https://el-openqaoa.readthedocs.io/en/main/"
+classifiers = [ 
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent"
+]
+packages = [
+    {include = "src"}
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.11"
+openqaoa-core = {path = "./src/openqaoa-core", develop = true}
+openqaoa-qiskit = {path = "./src/openqaoa-qiskit", develop = true}
+openqaoa-azure = {path = "./src/openqaoa-azure", develop = true}
+openqaoa-pyquil = {path = "./src/openqaoa-pyquil", develop = true}
+openqaoa-braket = {path = "./src/openqaoa-braket", develop = true}
+
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
