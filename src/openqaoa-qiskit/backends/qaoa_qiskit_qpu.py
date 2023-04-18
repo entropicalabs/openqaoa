@@ -147,7 +147,7 @@ class QAOAQiskitQPUBackend(
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
+        new_parametric_circuit = parametric_circuit.bind_parameters(memory_map)
         if self.qaoa_descriptor.routed == True:
             transpiled_circuit = transpile(
                 new_parametric_circuit,

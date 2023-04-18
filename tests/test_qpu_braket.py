@@ -117,7 +117,6 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         )
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
         
-        print("Kristina flag: QPU circuit is ", qpu_circuit)
 
         # Standard Decomposition
         main_circuit = Circuit()
@@ -249,7 +248,6 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         )
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
         
-        print("Kristina flag: QPU circuit is ", qpu_circuit)
 
         # Standard Decomposition
         main_circuit = Circuit()
