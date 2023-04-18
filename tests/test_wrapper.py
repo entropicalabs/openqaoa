@@ -59,7 +59,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             "./tests/qpu_calibration_data/spam_twirling_mock.json"
         )
         self.qaoa_descriptor, self.variate_params = get_params()
-        qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
+        self.qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
             qaoa_descriptor=self.qaoa_descriptor,
             n_shots=100,
             prepend_state=None,
@@ -75,8 +75,14 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         # print(self.backend.backend_simulator.__dict__['_options'].seed_simulator)
 
         self.wrapped_obj = SPAMTwirlingWrapper(
-            qiskit_shot_backend,
+            self.qiskit_shot_backend,
             n_batches=self.n_batches,
+            calibration_data_location=self.calibration_data_location,
+        )
+        
+        self.wrapped_obj_trivial = SPAMTwirlingWrapper(
+            self.qiskit_shot_backend,
+            n_batches=1,
             calibration_data_location=self.calibration_data_location,
         )
 
@@ -93,6 +99,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         device_list = [
             create_device(location="local", name="qiskit.qasm_simulator"),
             create_device(location="qcs", name="7q-noisy-qvm", **rigetti_args),
+            create_device(location='ibmq', name='ibm_perth', as_emulator=True) 
         ]
         for device in device_list:
             backend = get_qaoa_backend(
@@ -129,6 +136,21 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             "01": 34,
             "10": 42,
         }, "The get_counts function in the wrapper didn't return the expected counts."
+        
+        print(self.qiskit_shot_backend.get_counts(self.variate_params, n_shots=100))
+        print(self.wrapped_obj_trivial.get_counts(
+            self.variate_params, n_shots=100, seed=2
+        ))
+        
+        self.wrapped_obj_trivial.get_counts(
+            self.variate_params, n_shots=100, seed=1
+        ) == self.qiskit_shot_backend.get_counts(self.variate_params, n_shots=100), "The get_counts function in the trivial wrapper didn't return the original backend counts."
+        
+        self.wrapped_obj_trivial.get_counts(
+            self.variate_params, n_shots=100, seed=2
+        ) != self.qiskit_shot_backend.get_counts(self.variate_params, n_shots=100), "The get_counts function in the trivial wrapper with (negating qubits) didn't change the counts."
+        
+
 
     def test_expectation_value_spam_twirled(self):
         """

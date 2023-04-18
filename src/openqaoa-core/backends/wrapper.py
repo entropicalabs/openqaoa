@@ -112,6 +112,8 @@ class SPAMTwirlingWrapper(BaseWrapper):
             s_binary = format(s, "b").zfill(self.backend.n_qubits)  # convert to binary
             arr = np.fromiter(s_binary, dtype=int)
             negated_qubits = np.where(arr == 1)[0]  # where the syndrome has a 1
+            
+            print(negated_qubits)
 
             circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(
                 self.backend.n_qubits
@@ -120,7 +122,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
             for negated_qubit in negated_qubits:
                 negated_qubit = (
                     negated_qubit.item()
-                )  # convert to native data structure int; important for Pyquil
+                )
                 negation_gate = X(self.backend.gate_applicator, negated_qubit)
                 circuit_to_append = self.backend.gate_applicator.apply_gate(
                     negation_gate, negated_qubit, circuit_to_append
