@@ -97,7 +97,7 @@ class TestingBackendQPUs(unittest.TestCase):
     credentials.
     """
 
-    @pytest.mark.api
+    @pytest.mark.qpu
     def setUp(self):
         self.HUB = "ibm-q"
         self.GROUP = "open"

@@ -321,7 +321,7 @@ class QAOA(Workflow):
         self.header["execution_time_end"] = generate_timestamp()
 
         if verbose:
-            print("optimization completed.")
+            print("Optimization completed.")
         return
 
     def evaluate_circuit(
