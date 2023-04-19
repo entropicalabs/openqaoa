@@ -16,7 +16,7 @@ from ..utilities import (
     exp_val_single,
     negate_counts_dictionary,
     calculate_calibration_factors,
-    round_value
+    round_value,
 )
 
 
@@ -112,17 +112,13 @@ class SPAMTwirlingWrapper(BaseWrapper):
             s_binary = format(s, "b").zfill(self.backend.n_qubits)  # convert to binary
             arr = np.fromiter(s_binary, dtype=int)
             negated_qubits = np.where(arr == 1)[0]  # where the syndrome has a 1
-            
-            print(negated_qubits)
 
             circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(
                 self.backend.n_qubits
             )
 
             for negated_qubit in negated_qubits:
-                negated_qubit = (
-                    negated_qubit.item()
-                )
+                negated_qubit = negated_qubit.item()
                 negation_gate = X(self.backend.gate_applicator, negated_qubit)
                 circuit_to_append = self.backend.gate_applicator.apply_gate(
                     negation_gate, negated_qubit, circuit_to_append

@@ -29,13 +29,17 @@ from openqaoa.backends.basebackend import QAOABaseBackendShotBased
 
 
 def get_params():
-    cost_hamil = Hamiltonian.classical_hamiltonian([[0, 1]], [1], constant=0)
+    cost_hamil = Hamiltonian.classical_hamiltonian(
+        terms=[[0, 1], [0], [1]], coeffs=[1, 1, 1], constant=0
+    )
     mixer_hamil = X_mixer_hamiltonian(2)
 
     qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
     variational_params_std = create_qaoa_variational_params(
         qaoa_descriptor, "standard", "ramp"
     )
+
+    # variational_params_std = create_qaoa_variational_params(qaoa_descriptor, params_type = "standard", init_type = "custom", variational_params_dict = {'gammas':[0], 'betas':[0]})
 
     return qaoa_descriptor, variational_params_std
 
@@ -54,7 +58,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
     def setUp(
         self,
     ):
-        self.n_batches = 6
+        self.n_batches = 5
         self.calibration_data_location = (
             "./tests/qpu_calibration_data/spam_twirling_mock.json"
         )
@@ -79,7 +83,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             n_batches=self.n_batches,
             calibration_data_location=self.calibration_data_location,
         )
-        
+
         self.wrapped_obj_trivial = SPAMTwirlingWrapper(
             self.qiskit_shot_backend,
             n_batches=1,
@@ -99,7 +103,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         device_list = [
             create_device(location="local", name="qiskit.qasm_simulator"),
             create_device(location="qcs", name="7q-noisy-qvm", **rigetti_args),
-            create_device(location='ibmq', name='ibm_perth', as_emulator=True) 
+            create_device(location="ibmq", name="ibm_perth", as_emulator=True),
         ]
         for device in device_list:
             backend = get_qaoa_backend(
@@ -128,36 +132,43 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         """
         Testing the get_counts method of the SPAM Twirling wrapper.
         """
+
         assert self.wrapped_obj.get_counts(
             self.variate_params, n_shots=100, seed=13
         ) == {
-            "11": 10,
-            "00": 10,
-            "01": 34,
-            "10": 42,
+            "11": 27,
+            "10": 36,
+            "01": 35,
+            "00": 2,
         }, "The get_counts function in the wrapper didn't return the expected counts."
-        
-        print(self.qiskit_shot_backend.get_counts(self.variate_params, n_shots=100))
-        print(self.wrapped_obj_trivial.get_counts(
-            self.variate_params, n_shots=100, seed=2
-        ))
-        
-        self.wrapped_obj_trivial.get_counts(
-            self.variate_params, n_shots=100, seed=1
-        ) == self.qiskit_shot_backend.get_counts(self.variate_params, n_shots=100), "The get_counts function in the trivial wrapper didn't return the original backend counts."
-        
-        self.wrapped_obj_trivial.get_counts(
-            self.variate_params, n_shots=100, seed=2
-        ) != self.qiskit_shot_backend.get_counts(self.variate_params, n_shots=100), "The get_counts function in the trivial wrapper with (negating qubits) didn't change the counts."
-        
 
+        assert self.wrapped_obj_trivial.get_counts(
+            self.variate_params, n_shots=100, seed=1
+        ) == self.qiskit_shot_backend.get_counts(
+            self.variate_params, n_shots=100
+        ), "The get_counts function in the trivial wrapper didn't return the original backend counts."
+
+        n_shots = 10**6
+        wrapper_counts = self.wrapped_obj_trivial.get_counts(
+            self.variate_params, n_shots=n_shots, seed=2
+        )
+        wrapper_probs = {key: value / n_shots for key, value in wrapper_counts.items()}
+        backend_counts = self.qiskit_shot_backend.get_counts(
+            self.variate_params, n_shots=n_shots
+        )
+        backend_probs = {key: value / n_shots for key, value in backend_counts.items()}
+
+        for key in wrapper_probs:
+            assert np.isclose(
+                wrapper_probs[key], backend_probs[key], rtol=1e-1
+            ), "The get_counts function in the trivial wrapper with (negating qubits) didn't change the counts."
 
     def test_expectation_value_spam_twirled(self):
         """
         Testing the expectation_value_spam_twirled method of the SPAM Twirling wrapper in the following scenarious:
             Given very trivial counts where only the 00 state is present and calibration factors 1.0, meaning no errors, the expectation value of the energy must be the energy of the 00 bitstring.
             Given the same counts but calibration factors 0.5, the expectation value of the energy must be twice the energy of the 00 bitstring due to corrections coming from the calibration factors.
-            
+
         """
         counts = {"00": 100, "01": 0, "10": 0, "11": 0}
         hamiltonian = Hamiltonian.classical_hamiltonian(
@@ -179,26 +190,27 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
 
         counts = {"00": 25, "01": 25, "10": 25, "11": 25}
         calibration_factors = {(1,): 1.0, (0,): 1.0, (0, 1): 1.0}
-        assert self.wrapped_obj.expectation_value_spam_twirled(
-            counts, hamiltonian, calibration_factors
-        ) == 0, "The function which computes the expectation value when using spam twirling when equal superposition of states doesn't give the correct energy."
+        assert (
+            self.wrapped_obj.expectation_value_spam_twirled(
+                counts, hamiltonian, calibration_factors
+            )
+            == 0
+        ), "The function which computes the expectation value when using spam twirling when equal superposition of states doesn't give the correct energy."
 
         counts = {"00": 13, "01": 26, "10": 42, "11": 66}
         calibration_factors = {(1,): 0.9, (0,): 0.8, (0, 1): 0.7}
-        assert self.wrapped_obj.expectation_value_spam_twirled(
-            counts, hamiltonian, calibration_factors
-        ) == -0.759502213584, "The function which computes the expectation value when using spam twirling with random counts and factors doesn't give the correct energy."
+        assert (
+            self.wrapped_obj.expectation_value_spam_twirled(
+                counts, hamiltonian, calibration_factors
+            )
+            == -0.759502213584
+        ), "The function which computes the expectation value when using spam twirling with random counts and factors doesn't give the correct energy."
 
-        
-        
     def test_expectation(self):
         """
         Testing the expectation method of the SPAM Twirling wrapper which overrides the backend function as defined in basebackends.
         """
-        assert (
-            self.wrapped_obj.expectation(self.variate_params, n_shots=100)
-            == -0.5
-        )
+        assert self.wrapped_obj.expectation(self.variate_params, n_shots=100) == -0.5
 
 
 if __name__ == "__main__":
