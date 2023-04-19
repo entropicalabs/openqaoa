@@ -1,0 +1,224 @@
+{
+  "header": {
+    "atomic_id": "0dfbc6c6-7f52-45c7-ad01-6cd8d4b69d89",
+    "experiment_id": "b4a71d60-2c04-4ed7-bfef-86b5319e70a2",
+    "project_id": null,
+    "algorithm": "qaoa",
+    "description": null,
+    "run_by": null,
+    "provider": null,
+    "target": null,
+    "cloud": null,
+    "client": null,
+    "qubit_number": 6,
+    "execution_time_start": null,
+    "execution_time_end": null,
+    "metadata": {
+      "problem_type": "maximum_cut",
+      "n_shots": 2000,
+      "optimizer_method": "cobyla",
+      "param_type": "standard",
+      "init_type": "custom",
+      "p": 1
+    }
+  },
+  "data": {
+    "exp_tags": {},
+    "input_problem": {
+      "terms": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "weights": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "constant": 0,
+      "n": 6,
+      "problem_instance": {
+        "problem_type": "maximum_cut",
+        "G": {
+          "directed": false,
+          "multigraph": false,
+          "graph": {},
+          "nodes": [
+            {
+              "id": 0
+            },
+            {
+              "id": 1
+            },
+            {
+              "id": 2
+            },
+            {
+              "id": 3
+            },
+            {
+              "id": 4
+            },
+            {
+              "id": 5
+            }
+          ],
+          "links": [
+            {
+              "source": 0,
+              "target": 1
+            },
+            {
+              "source": 0,
+              "target": 3
+            },
+            {
+              "source": 0,
+              "target": 4
+            },
+            {
+              "source": 0,
+              "target": 5
+            },
+            {
+              "source": 1,
+              "target": 2
+            },
+            {
+              "source": 1,
+              "target": 4
+            },
+            {
+              "source": 1,
+              "target": 5
+            },
+            {
+              "source": 2,
+              "target": 3
+            },
+            {
+              "source": 2,
+              "target": 4
+            },
+            {
+              "source": 3,
+              "target": 4
+            },
+            {
+              "source": 4,
+              "target": 5
+            }
+          ]
+        }
+      },
+      "metadata": {}
+    },
+    "input_parameters": {
+      "device": {
+        "device_location": "ibmq",
+        "device_name": "ibm_nairobi"
+      },
+      "backend_properties": {
+        "init_hadamard": true,
+        "n_shots": 2000,
+        "prepend_state": null,
+        "append_state": null,
+        "cvar_alpha": 1,
+        "noise_model": null,
+        "initial_qubit_mapping": null,
+        "seed_simulator": null,
+        "qiskit_simulation_method": null,
+        "active_reset": null,
+        "rewiring": null,
+        "disable_qubit_rewiring": null
+      },
+      "classical_optimizer": {
+        "optimize": true,
+        "method": "cobyla",
+        "maxiter": 100,
+        "maxfev": null,
+        "jac": null,
+        "hess": null,
+        "constraints": null,
+        "bounds": null,
+        "tol": null,
+        "optimizer_options": null,
+        "jac_options": null,
+        "hess_options": null,
+        "parameter_log": true,
+        "optimization_progress": false,
+        "cost_progress": true,
+        "save_intermediate": false
+      },
+      "circuit_properties": {
+        "param_type": "standard",
+        "init_type": "custom",
+        "qubit_register": [],
+        "p": 1,
+        "q": null,
+        "variational_params_dict": {
+          "betas": 0.30221970557,
+          "gammas": 0.255824715233,
+          "q": null,
+          "total_annealing_time": 0.7
+        },
+        "annealing_time": 0.7,
+        "linear_ramp_time": 0.7,
+        "mixer_hamiltonian": "x",
+        "mixer_qubit_connectivity": null,
+        "mixer_coeffs": null,
+        "seed": null
+      }
+    },
+    "result": null
+  }
+}

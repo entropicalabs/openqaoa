@@ -71,9 +71,9 @@ class DeviceQiskit(DeviceBase):
         Returns
         -------
         bool
-                        True if successfully connected to IBMQ or IBMQ and the QPU backend
-                        if it was specified. False if unable to connect to IBMQ or failure
-                        in the attempt to connect to the specified backend.
+            True if successfully connected to IBMQ or IBMQ and the QPU backend
+            if it was specified. False if unable to connect to IBMQ or failure
+            in the attempt to connect to the specified backend.
         """
 
         self.provider_connected = self._check_provider_connection()
@@ -112,19 +112,21 @@ class DeviceQiskit(DeviceBase):
         """
 
         try:
-            #Use default
+            # Use default
             self.provider = IBMProvider()
-            #Unless exact instance is specified
+            # Unless exact instance is specified
             if all([self.hub, self.group, self.project]):
-                instance_name = self.hub + '/' + self.group + '/' + self.project
+                instance_name = self.hub + "/" + self.group + "/" + self.project
                 assert instance_name in self.provider.instances()
                 self.provider = IBMProvider(instance=instance_name)
             elif any([self.hub, self.group, self.project]):
-                #if only partially specified, print warning.
-                raise Exception("You've only partially specified the instance name. Either"
-                                "the hub, group or project is missing. hub: {}, group: {}, project: {}.\n"
-                                "The default instance will be used instead. (This default can "
-                                "be specified when doing `IBMProvider.save_account`)")
+                # if only partially specified, print warning.
+                raise Exception(
+                    "You've only partially specified the instance name. Either"
+                    "the hub, group or project is missing. hub: {}, group: {}, project: {}.\n"
+                    "The default instance will be used instead. (This default can "
+                    "be specified when doing `IBMProvider.save_account`)"
+                )
             return True
         except Exception as e:
             print(

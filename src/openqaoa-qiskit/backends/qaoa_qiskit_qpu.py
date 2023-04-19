@@ -64,7 +64,6 @@ class QAOAQiskitQPUBackend(
         initial_qubit_mapping: Optional[List[int]] = None,
         cvar_alpha: float = 1,
     ):
-
         QAOABaseBackendShotBased.__init__(
             self,
             qaoa_descriptor,
@@ -103,7 +102,6 @@ class QAOAQiskitQPUBackend(
             )
 
         else:
-
             raise Exception(
                 "Error connecting to {}.".format(self.device.device_location.upper())
             )
@@ -267,9 +265,8 @@ class QAOAQiskitQPUBackend(
         A method to convert the entire QAOA `QuantumCircuit` object into
         a OpenQASM string
         """
-        raise NotImplementedError()
-        # qasm_string = self.qaoa_circuit(params).qasm(formatted=True)
-        # return qasm_string
+        qasm_string = self.qaoa_circuit(params).qasm()
+        return qasm_string
 
     def reset_circuit(self):
         """

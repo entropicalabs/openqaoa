@@ -26,6 +26,7 @@ requirements = [
     "autoray>=0.3.1",
     "azure-quantum",
     "qdk",
+    "fire-opal",
     "qiskit-qir",
     "qiskit-ionq",
     "azure-quantum[qiskit]",
@@ -56,6 +57,7 @@ package_names = [
     "openqaoa_qiskit",
     "openqaoa_pyquil",
     "openqaoa_azure",
+    "openqaoa_fireopal",
 ]
 folder_names = [
     "openqaoa-core",
@@ -63,6 +65,7 @@ folder_names = [
     "openqaoa-qiskit",
     "openqaoa-pyquil",
     "openqaoa-azure",
+    "openqaoa-fireopal",
 ]
 packages_import = find_namespace_packages(where="./src")
 updated_packages = []
@@ -87,13 +90,15 @@ setup(
         "openqaoa_qiskit": "src/openqaoa-qiskit",
         "openqaoa_pyquil": "src/openqaoa-pyquil",
         "openqaoa_azure": "src/openqaoa-azure",
+        "openqaoa_fireopal": "src/openqaoa-fireopal",
     },
     entry_points={
         "openqaoa.plugins": [
             "qiskit = openqaoa_qiskit.backend_config",
             "braket = openqaoa_braket.backend_config",
             "pyquil = openqaoa_pyquil.backend_config",
-            "azure = openqaoa_azure.backend_config"
+            "azure = openqaoa_azure.backend_config",
+            "fireopal = openqaoa_fireopal.backend_config",
         ]
     },
     url="https://github.com/entropicalabs/openqaoa",
