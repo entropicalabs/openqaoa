@@ -1,10 +1,10 @@
 # unit testing for circuit routing functionality in OQ
 import unittest
 import numpy as np
-from typing import List, Callable, Optional
+from typing import List, Optional
 import pytest
 
-from openqaoa import QAOA
+from openqaoa import QAOA, create_device, QUBO
 from openqaoa.qaoa_components import (
     create_qaoa_variational_params,
     QAOADescriptor,
@@ -12,8 +12,7 @@ from openqaoa.qaoa_components import (
     Hamiltonian,
 )
 from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa.backends import QAOAvectorizedBackendSimulator, create_device
-from openqaoa.problems import NumberPartition, QUBO, Knapsack, MaximumCut, ShortestPath
+from openqaoa.problems import NumberPartition, Knapsack, MaximumCut, ShortestPath
 from openqaoa_pyquil.backends import DevicePyquil, QAOAPyQuilQPUBackend
 from openqaoa.backends.devices_core import DeviceBase
 from openqaoa.qaoa_components.ansatz_constructor.gatemap import SWAPGateMap
@@ -35,7 +34,6 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
         """
 
         def routing_function_test1(device, problem_to_solve):
-
             # tuples ordered from 0,n, both SWAP and ising gates
             gate_list_indices = [[0, 1]]
 
@@ -117,7 +115,6 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
         device_pyquil.quantum_computer.qam.random_seed = seed
 
         for i in range(len(p_lst)):
-
             p = p_lst[i]
             args = args_lst[i]
             cost_hamil = cost_hamil_lst[i]
@@ -166,14 +163,13 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
 
     def test_cancelled_swap(self):
         """
-        Tests that QAOADescriptor with a trivial `routing_function` input (with two swaps that cancel each other) returns identical
-        results as QAOADescriptor with no `routing_function` input, by comparing output of seeded QVM run.
-        Different values of p, arguments, and cost hamiltonian coefficients are tested.
-
+        Tests that QAOADescriptor with a trivial `routing_function` input (with two swaps that cancel each other)
+        returns identical results as QAOADescriptor with no `routing_function` input,
+        by comparing output of seeded QVM run. Different values of p, arguments,
+        and cost hamiltonian coefficients are tested.
         """
 
         def routing_function_test1(device, problem_to_solve):
-
             # tuples ordered from 0,n, both SWAP and ising gates
             gate_list_indices = [[0, 1], [0, 1], [0, 1]]
 
@@ -255,7 +251,6 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
         device_pyquil.quantum_computer.qam.random_seed = seed
 
         for i in range(len(p_lst)):
-
             p = p_lst[i]
             args = args_lst[i]
             cost_hamil = cost_hamil_lst[i]
@@ -314,7 +309,6 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
         """
 
         def routing_function_test1(device, problem_to_solve):
-
             # tuples ordered from 0,n, both SWAP and ising gates
             gate_list_indices = [[0, 1], [0, 1]]
 
@@ -396,7 +390,6 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
         device_pyquil.quantum_computer.qam.random_seed = seed
 
         for i in range(len(p_lst)):
-
             p = p_lst[i]
             args = args_lst[i]
             cost_hamil = cost_hamil_lst[i]
@@ -454,7 +447,6 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
         """
 
         def routing_function_test1(device, problem_to_solve):
-
             # tuples ordered from 0,n, both SWAP and ising gates
             gate_list_indices = [[0, 1], [1, 0], [0, 1]]
 
@@ -500,7 +492,6 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
         seed = 1
 
         for i in range(len(p_lst)):
-
             p = p_lst[i]
             args = args_lst[i]
             cost_hamil = cost_hamil_lst[i]
@@ -603,9 +594,10 @@ class ExpectedRouting:
 
 
 class TestingQubitRouting(unittest.TestCase):
-    @pytest.mark.qpu
     def setUp(self):
-
+        """
+        Test edge cases
+        """
         # case qubits device > qubits problem (IBM NAIROBI)
         self.IBM_NAIROBI_KNAPSACK = ExpectedRouting(
             qubo=Knapsack.random_instance(n_items=3, seed=20).qubo,
@@ -882,7 +874,7 @@ class TestingQubitRouting(unittest.TestCase):
         )
 
         # case qubits device == qubits problem (RIGETTI)
-        self.RIGETTI_MACUT = ExpectedRouting(
+        self.RIGETTI_MAXCUT = ExpectedRouting(
             qubo=MaximumCut.random_instance(
                 n_nodes=9, edge_probability=0.9, seed=20
             ).qubo,
@@ -1132,7 +1124,6 @@ class TestingQubitRouting(unittest.TestCase):
 
     @pytest.mark.qpu
     def test_qubit_routing(self):
-
         for i, case in enumerate(self.list_of_cases):
             print("Test case {} out of {}:".format(i + 1, len(self.list_of_cases)))
             self.__compare_results(case, p=i % 4 + 1)

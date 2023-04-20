@@ -1,7 +1,7 @@
 {
   "header": {
-    "atomic_id": "210a6aaa-932d-45a6-b260-f3fdd085c547",
-    "experiment_id": "74779bb1-867c-4131-89d2-ac9238422cd9",
+    "atomic_id": "386997de-0e90-4e1c-8236-cd722801615f",
+    "experiment_id": "ce2f83d7-4000-4507-9e98-96e3f9afd55e",
     "project_id": null,
     "algorithm": "rqaoa",
     "description": null,
@@ -10,10 +10,10 @@
     "target": null,
     "cloud": null,
     "client": null,
-    "qubit_number": 10,
     "execution_time_start": null,
     "execution_time_end": null,
     "metadata": {
+      "qubit_number": 10,
       "problem_type": "minimum_vertex_cover",
       "n_shots": 100,
       "optimizer_method": "cobyla",
@@ -22,11 +22,13 @@
       "p": 1,
       "rqaoa_type": "custom",
       "rqaoa_n_max": 1,
-      "rqaoa_n_cutoff": 3
+      "rqaoa_n_cutoff": 6
     }
   },
   "data": {
-    "exp_tags": {},
+    "exp_tags": {
+      "qubit_number": 10
+    },
     "input_problem": {
       "terms": [
         [
@@ -212,8 +214,8 @@
     },
     "input_parameters": {
       "device": {
-        "device_location": "local",
-        "device_name": "vectorized"
+        "device_location": "aws",
+        "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
       },
       "backend_properties": {
         "init_hadamard": true,
@@ -268,15 +270,12 @@
         "rqaoa_type": "custom",
         "n_max": 1,
         "steps": [
-          2,
-          2,
-          2,
-          2,
-          2,
-          2,
-          2
+          1,
+          1,
+          1,
+          1
         ],
-        "n_cutoff": 3,
+        "n_cutoff": 6,
         "original_hamiltonian": null,
         "counter": 0
       }

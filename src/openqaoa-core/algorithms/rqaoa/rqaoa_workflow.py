@@ -494,7 +494,7 @@ class RQAOA(Workflow):
         # dump the object if dump is true
         if dump:
             self.dump(
-                **{**dump_options, **{"options": {"intermediate_mesurements": False}}}
+                **{**dump_options, **{"options": {"intermediate_measurements": False}}}
             )
 
         if verbose:
@@ -548,7 +548,7 @@ class RQAOA(Workflow):
         return (n_qubits - n_cutoff) if (n_qubits - n_cutoff) < n else n
 
     def _serializable_dict(
-        self, complex_to_string: bool = False, intermediate_mesurements: bool = True
+        self, complex_to_string: bool = False, intermediate_measurements: bool = True
     ):
         """
         Returns all values and attributes of the object that we want to
@@ -565,7 +565,7 @@ class RQAOA(Workflow):
         serializable_dict: dict
             Dictionary containing all the values and attributes of the object
             that we want to return in `asdict` and `dump(s)` methods.
-        intermediate_mesurements: bool
+        intermediate_measurements: bool
             If True, intermediate measurements are included in the dump. If False,
             intermediate measurements are not included in the dump.
             Default is True.
@@ -573,7 +573,7 @@ class RQAOA(Workflow):
         # we call the _serializable_dict method of the parent class,
         # specifying the keys to delete from the results dictionary
         serializable_dict = super()._serializable_dict(
-            complex_to_string, intermediate_mesurements
+            complex_to_string, intermediate_measurements
         )
 
         # we add the keys of the RQAOA object that we want to return
