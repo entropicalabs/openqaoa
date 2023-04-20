@@ -1105,8 +1105,6 @@ def exp_val_hamiltonian_termwise(
                 corr_matrix[i][j] = exp_val_pair_analytical(
                     (i, j), hamiltonian, qaoa_optimized_angles
                 )
-
-            # If constant term, ignore
             else:
                 continue
 
@@ -1131,8 +1129,7 @@ def exp_val_hamiltonian_termwise(
                 i, j = term.qubit_indices
                 corr_matrix[i][j] = exp_val_pair((i, j), counts_dict)
 
-            # If constant term, ignore
-            if len(term) == 0:
+            else:
                 continue
 
     # Remove expectation value contribution from the correlations

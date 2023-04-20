@@ -177,10 +177,12 @@ class QAOAPyQuilQPUBackend(
                 cbit = ro[i]
                 parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
+        
+        native = self.device.quantum_computer.compiler.quil_to_native_quil(parametric_circuit)
 
         prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
-            parametric_circuit
-        )
+            native
+        )  # TODO
 
         angles_list = np.array(
             self.obtain_angles_for_pauli_list(self.abstract_circuit, params),

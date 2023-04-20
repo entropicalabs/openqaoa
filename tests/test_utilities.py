@@ -914,7 +914,7 @@ class TestingUtilities(unittest.TestCase):
         """
         Tests the function that computes the calibration factors.
 
-        The test consists in ...
+        The test consists in creating a simple hamiltonian, and a variety of calibration registers, qubit mappings and calibration measurements for different edge cases. See the comments before every case for more information.
 
         """
         # Create a Hamiltonian

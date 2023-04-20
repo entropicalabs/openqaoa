@@ -1,9 +1,6 @@
 import random
 import numpy as np
-from typing import Dict
 import json
-import time
-import sys
 
 from .basebackend import VQABaseBackend
 
@@ -46,29 +43,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
         with open(self.calibration_data_location, "r") as f:
             calibration_data = json.load(f)
 
-        if (
-            self.calibration_data_location
-            == "calibration_data/8bc00556-2824-4d38-b563-706a803c6401--calibration.json"
-            or self.calibration_data_location
-            == "calibration_data/ac469846-25e7-40be-b0d0-2d60ae29d973--calibration.json"
-        ):
-            # Rigetti's data:
-            out = calibration_data["results"]["measurement_outcomes"]
-
-            # convert list to strings
-            calibration_measurements = {}
-            for outcomes in out:
-                for state, counts in outcomes.items():
-                    state = "".join([str(e) for e in eval(state)])
-                    if calibration_measurements.get(state) is None:
-                        calibration_measurements.update({state: counts})
-                    else:
-                        calibration_measurements[state] += counts
-        else:
-            calibration_measurements = calibration_data["results"][
-                "measurement_outcomes"
-            ]
-
+        calibration_measurements = calibration_data["results"]["measurement_outcomes"]
         calibration_registers = calibration_data["register"]
 
         qubit_mapping = self.backend.initial_qubit_mapping
@@ -80,14 +55,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
             qubit_mapping,
         )
 
-        """
-        This doesn't work because keys are tuples  =(
-        # save calibration factors just in case
-        with open('test.json', "w") as fp:
-            json.dump(self.calibration_factors, fp)
-        """
-
-    def get_counts(self, params, n_shots=None, seed=42):
+    def get_counts(self, params, n_shots=None, seed=None):
         """
         Overrides the get_counts function of the backend object.
         Modified function to...
@@ -96,7 +64,8 @@ class SPAMTwirlingWrapper(BaseWrapper):
             get the counts and classically negate them
             combine all batches into a count dict under BFA
         """
-        random.seed(seed)
+        if seed is not None:
+            random.seed(seed)
         # list of integers whose binary representation signifies which qubits to be flipped at every batch
         s_list = []
         for _ in range(0, self.n_batches):
@@ -147,7 +116,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
 
     @round_value
     def expectation_value_spam_twirled(
-        self, counts: Dict, hamiltonian: Hamiltonian, calibration_factors: dict
+        self, counts: dict, hamiltonian: Hamiltonian, calibration_factors: dict
     ):
         """
         TODO
