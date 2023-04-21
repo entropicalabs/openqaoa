@@ -53,10 +53,11 @@ class RqaoaParameters(WorkflowProperties):
         n_max: `int`
             Maximum number of eliminations allowed at each step when using the adaptive method. Defaults to 1.
         steps: `Union[list,int]`
-            Elimination schedule for the RQAOA algorithm. If an integer is passed, it sets the number of spins eliminated
-            at each step. If a list is passed, the algorithm will follow the list to select how many spins to eliminate
-            at each step. Note that the list needs enough elements to specify eliminations from the initial number of qubits
-            up to the cutoff value. If the list contains more, the algorithm will follow instructions until the cutoff value
+            Elimination schedule for the RQAOA algorithm. If an integer is passed, it sets the number of spins
+            eliminated at each step. If a list is passed, the algorithm will follow the list to select
+            how many spins to eliminate at each step. Note that the list needs enough elements to specify
+            eliminations from the initial number of qubits up to the cutoff value. If the list contains more,
+            the algorithm will follow instructions until the cutoff value
             is reached. Defaults to 1.
         n_cutoff: `int`
             Cutoff value at which the RQAOA algorithm obtains the solution classically. Defaults to 5.
@@ -74,7 +75,7 @@ class RqaoaParameters(WorkflowProperties):
         self.counter = counter
 
         # check if the rqaoa type is correct
-        if not self.rqaoa_type in ALLOWED_RQAOA_TYPES:
+        if self.rqaoa_type not in ALLOWED_RQAOA_TYPES:
             self.compiled = False
             raise Exception(
                 f'rqaoa_type {self.rqaoa_type} is not supported. Please select "adaptive" or "custom".'
@@ -84,16 +85,17 @@ class RqaoaParameters(WorkflowProperties):
         if self.rqaoa_type == "adaptive":
             if self.steps != 1:
                 raise ValueError(
-                    f"When using the adaptive method, the `steps` parameter is not required.  \
+                    "When using the adaptive method, the `steps` parameter is not required.  \
                     The parameter that specifies the maximum number of eliminations per step is `n_max`."
                 )
             if self.counter != 0:
                 raise ValueError(
-                    f"When using the adaptive method, the `counter` parameter is not required."
+                    "When using the adaptive method, the `counter` parameter is not required."
                 )
         else:
             if self.n_max != 1:
                 raise ValueError(
-                    f"When using the custom method, the `n_max` parameter is not required.  \
-                    The parameter that specifies the number of eliminations is `steps`, which can be a string or a list."
+                    "When using the custom method, the `n_max` parameter is not required.  \
+                    The parameter that specifies the number of eliminations is `steps`,\
+                          which can be a string or a list."
                 )

@@ -107,7 +107,6 @@ class Workflow(ABC):
             "target": None,
             "cloud": None,
             "client": None,
-            "qubit_number": None,  # it is set automatically in the compilation from the problem object
             "execution_time_start": None,
             "execution_time_end": None,
         }
@@ -131,13 +130,13 @@ class Workflow(ABC):
 
     def set_header(
         self,
-        project_id: str,
-        description: str,
-        run_by: str,
-        provider: str,
-        target: str,
-        cloud: str,
-        client: str,
+        project_id: str = None,
+        description: str = None,
+        run_by: str = None,
+        provider: str = None,
+        target: str = None,
+        cloud: str = None,
+        client: str = None,
         experiment_id: str = None,
     ):
         """
@@ -147,16 +146,17 @@ class Workflow(ABC):
         ----------
         TODO : document the parameters
         """
+        if project_id is not None:
+            if not is_valid_uuid(project_id):
+                raise ValueError(
+                    "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+                )
 
-        if not is_valid_uuid(project_id):
-            raise ValueError(
-                "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
-            )
-
-        if experiment_id != None:
+        if experiment_id is not None:
             if not is_valid_uuid(experiment_id):
                 raise ValueError(
-                    "The experiment_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+                    "The experiment_id is not a valid uuid, \
+                        example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
                 )
             else:
                 self.header["experiment_id"] = experiment_id
@@ -335,13 +335,13 @@ class Workflow(ABC):
         self.header["atomic_id"] = generate_uuid()
 
         # header is updated with the qubit number of the problem
-        self.header["qubit_number"] = self.problem.n
+        self.set_exp_tags({"qubit_number": self.problem.n})
 
     def optimize():
         raise NotImplementedError
 
     def _serializable_dict(
-        self, complex_to_string: bool = False, intermediate_mesurements: bool = True
+        self, complex_to_string: bool = False, intermediate_measurements: bool = True
     ):
         """
         Returns a dictionary with all values and attributes of the object that we want to
@@ -355,7 +355,7 @@ class Workflow(ABC):
         complex_to_string: bool
             If True, converts all complex numbers to strings. This is useful for
             JSON serialization, for the `dump(s)` methods.
-        intermediate_mesurements: bool
+        intermediate_measurements: bool
             If True, intermediate measurements are included in the dump.
             If False, intermediate measurements are not included in the dump.
             Default is True.
@@ -381,8 +381,8 @@ class Workflow(ABC):
                 )
 
         data["result"] = (
-            self.result.asdict(False, complex_to_string, intermediate_mesurements)
-            if not self.result in [None, {}]
+            self.result.asdict(False, complex_to_string, intermediate_measurements)
+            if self.result not in [None, {}]
             else None
         )
 
@@ -437,7 +437,7 @@ class Workflow(ABC):
                 complex_to_string : bool
                     If True, converts complex numbers to strings. If False,
                     complex numbers are not converted to strings.
-                intermediate_mesurements : bool
+                intermediate_measurements : bool
                     If True, includes the intermediate measurements in the results.
                     If False, only the final measurements are included.
 
@@ -469,7 +469,7 @@ class Workflow(ABC):
         options : dict
             A dictionary of options to pass to the method that creates
             the dictionary to dump.
-        intermediate_mesurements : bool
+        intermediate_measurements : bool
             If True, includes the intermediate measurements in the results.
             If False, only the final measurements are included.
 
@@ -530,7 +530,7 @@ class Workflow(ABC):
             raises an error if the file already exists.
         options : dict
             A dictionary of options to pass to the method that creates the dictionary to dump.
-        intermediate_mesurements : bool
+        intermediate_measurements : bool
             If True, includes the intermediate measurements in the results.
             If False, only the final measurements are included.
         """
@@ -544,11 +544,11 @@ class Workflow(ABC):
         )
 
         # get the full name
-        if prepend_id == False and file_name == "":
+        if prepend_id is False and file_name == "":
             raise ValueError(
                 "dump method missing argument: 'file_name'. Otherwise 'prepend_id' must be specified as True."
             )
-        elif prepend_id == False:
+        elif prepend_id is False:
             file = file_path + file_name
         elif file_name == "":
             file = (
@@ -577,12 +577,12 @@ class Workflow(ABC):
             file = file + ".gz" if ".gz" != file[-3:] else file
 
         # checking if the file already exists, and raising an error if it does and overwrite is False
-        if overwrite == False and exists(file):
+        if overwrite is False and exists(file):
             raise FileExistsError(
                 f"The file {file} already exists. Please change the name of the file or set overwrite=True."
             )
 
-        ## saving the file
+        # saving the file
         if compresslevel == 0:  # if compresslevel is 0, save as json file
             with open(file, "w") as f:
                 if exclude_keys == []:

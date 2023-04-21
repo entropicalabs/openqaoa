@@ -65,7 +65,7 @@ def max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_elim: int):
 
     # Flag if we have have not been able to extract any relation for the terms
     if max_terms_and_stats == {}:
-        print(f"All expectation values are 0: Breaking degeneracy by fixing a qubit\n")
+        print("All expectation values are 0: Breaking degeneracy by fixing a qubit\n")
         max_terms_and_stats = {(0,): -1.0}
 
     return max_terms_and_stats
@@ -132,7 +132,7 @@ def ada_max_terms(exp_vals_z: np.ndarray, corr_matrix: np.ndarray, n_max: int):
 
     # Flag if we have have not been able to extract any relation for the terms
     if max_terms_and_stats == {}:
-        print(f"All expectation values are 0: Breaking degeneracy by fixing a qubit\n")
+        print("All expectation values are 0: Breaking degeneracy by fixing a qubit\n")
         max_terms_and_stats = {(0,): -1.0}
 
     # Correlation average magnitude
@@ -395,7 +395,7 @@ def redefine_problem(problem: QUBO, spin_map: dict):
     # get a set of all the spins to be eliminated
     eliminated_spins = set()
     for spin in spin_map.keys():
-        if spin != spin_map[spin][1] or spin_map[spin][1] == None:
+        if spin != spin_map[spin][1] or spin_map[spin][1] is None:
             eliminated_spins.add(spin)
 
     # Scan all terms and weights
@@ -605,7 +605,8 @@ def final_solution(
 
 def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     """
-    Constructs the final solution of the smallest non vanishing problem by fixing the vanishing spins arbitrarily to 1 while obeying the correlations identified by the last run of QAOA before the problem vanished.
+    Constructs the final solution of the smallest non vanishing problem by fixing the vanishing spins arbitrarily to 1
+    while obeying the correlations identified by the last run of QAOA before the problem vanished.
     Computing the classical energy of the generated string.
 
     Parameters
@@ -621,12 +622,14 @@ def solution_for_vanishing_instances(hamiltonian: Hamiltonian, spin_map: dict):
     cl_energy: `float`
         The energy of the solution wrt the cost Hamiltonian.
     cl_ground_state: `list`
-        The (single) classical solution to the problem reconstructed accordingly to the last spin map. Represented as a binary string and then cast to a list to match the output of the `ground_state_hamiltonian` function which is used usually.
+        The (single) classical solution to the problem reconstructed accordingly to the last spin map.
+        Represented as a binary string and then cast to a list to match the output of the
+        `ground_state_hamiltonian` function which is used usually.
     """
     cl_ground_state = ""
 
     for spin in spin_map.keys():
-        if spin_map[spin][1] == None:
+        if spin_map[spin][1] is None:
             cl_ground_state += "1"
         else:
             # fix according to correlation factor

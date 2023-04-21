@@ -18,7 +18,7 @@ class RQAOAResult(dict):
         self,
         keep_cost_hamiltonian: bool = True,
         complex_to_string: bool = False,
-        intermediate_mesurements: bool = True,
+        intermediate_measurements: bool = True,
         exclude_keys: List[str] = [],
     ):
         """
@@ -32,7 +32,7 @@ class RQAOAResult(dict):
         complex_to_string : bool, optional
             If True, the complex numbers are converted to strings, by default False.
             This is useful for JSON serialization.
-        intermediate_mesurements: bool, optional
+        intermediate_measurements: bool, optional
             If True, intermediate measurements are included in the dump. If False,
             intermediate measurements are not included in the dump.
             Default is True.
@@ -55,7 +55,7 @@ class RQAOAResult(dict):
                     "qaoa_results": step["qaoa_results"].asdict(
                         keep_cost_hamiltonian,
                         complex_to_string,
-                        intermediate_mesurements,
+                        intermediate_measurements,
                     ),
                     "exp_vals_z": step["exp_vals_z"].tolist(),
                     "corr_matrix": step["corr_matrix"].tolist(),

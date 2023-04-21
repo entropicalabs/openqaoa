@@ -1,7 +1,7 @@
 {
   "header": {
-    "atomic_id": "a015ce55-6d93-438b-9b4b-d9c4b7e02b1d",
-    "experiment_id": "bcb97ba5-b6fe-48b9-9b37-10847d66e42c",
+    "atomic_id": "386997de-0e90-4e1c-8236-cd722801615f",
+    "experiment_id": "ce2f83d7-4000-4507-9e98-96e3f9afd55e",
     "project_id": null,
     "algorithm": "rqaoa",
     "description": null,
@@ -10,10 +10,10 @@
     "target": null,
     "cloud": null,
     "client": null,
-    "qubit_number": 10,
     "execution_time_start": null,
     "execution_time_end": null,
     "metadata": {
+      "qubit_number": 10,
       "problem_type": "minimum_vertex_cover",
       "n_shots": 100,
       "optimizer_method": "cobyla",
@@ -26,7 +26,9 @@
     }
   },
   "data": {
-    "exp_tags": {},
+    "exp_tags": {
+      "qubit_number": 10
+    },
     "input_problem": {
       "terms": [
         [

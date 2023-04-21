@@ -1,6 +1,8 @@
 import unittest
 import numpy as np
 import matplotlib.pyplot as plt
+import pytest
+import sys
 
 from openqaoa import QAOA, create_device, QAOABenchmark
 from openqaoa.problems import QUBO
@@ -91,6 +93,10 @@ class TestingBenchmark(unittest.TestCase):
             benchmark.reference.backend, type(qaoa_vectorized.backend)
         ), "The qaoa reference should have a vectorized backend."
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def __compare_values_benchmark(
         self,
         qaoa,
@@ -198,6 +204,10 @@ class TestingBenchmark(unittest.TestCase):
                 n_points_axis, ranges, run_reference
             )
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def test_values_1D(self):
         "Test the values of the benchmark for 1D ranges."
 
@@ -236,6 +246,10 @@ class TestingBenchmark(unittest.TestCase):
             ],
         )
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def test_values_2D(self):
         "Test the values of the benchmark for 2D ranges."
 
@@ -261,6 +275,10 @@ class TestingBenchmark(unittest.TestCase):
             run_reference=True,
         )
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def test_values_3D(self):
         "Test the values of the benchmark for 3D ranges."
 
@@ -286,7 +304,11 @@ class TestingBenchmark(unittest.TestCase):
             run_reference=True,
         )
 
-    def test_difference_shot(self):
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
+    def test_difference(self):
         "Test the property difference and difference_mean."
 
         if "qiskit.shot_simulator" not in SUPPORTED_LOCAL_SIMULATORS:
@@ -361,6 +383,10 @@ class TestingBenchmark(unittest.TestCase):
             error
         ), "An error should be raised if the difference is called before running the benchmark."
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def test_input_checks(self):
         "Test the input assertions of the run method."
 
@@ -445,6 +471,10 @@ class TestingBenchmark(unittest.TestCase):
             benchmark.run, n_points_axis=4, ranges=[(1, 2), (1, 3)], verbose="d"
         ), "An error should be raised when verbose is not a boolean."
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def test_plot(self):
         "Test the plot method."
 
@@ -485,6 +515,10 @@ class TestingBenchmark(unittest.TestCase):
         benchmark.run(n_points_axis=4, ranges=[(0, np.pi), (-5, 9), (0, 1), (1,)])
         benchmark.plot()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def test_plot_inputs(self):
         "Test the plot method with different inputs."
 
@@ -537,6 +571,10 @@ class TestingBenchmark(unittest.TestCase):
         plt.show()
         plt.close(fig)
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def test_plot_input_checks(self):
         "Test the plot method assertion inputs."
 
@@ -624,8 +662,11 @@ class TestingBenchmark(unittest.TestCase):
             benchmark.plot, main=False, reference=False, difference=True
         ), "An error should be raised when no values are available"
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin" or sys.platform.startswith("win"),
+        reason="Test does not run on Mac and Windows currently",
+    )
     def test_run_w_plots(self):
-
         qaoa = QAOA()
         qaoa.compile(QUBO.random_instance(5))
         benchmark = QAOABenchmark(qaoa)

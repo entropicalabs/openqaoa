@@ -24,7 +24,7 @@ from openqaoa_qiskit.backends import (
 )
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.problems import NumberPartition
-from openqaoa import QAOA
+from openqaoa import QAOA, create_device
 
 
 class TestingQAOAQiskitQPUBackend(unittest.TestCase):
@@ -32,13 +32,15 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
     """This Object tests the QAOA Qiskit QPU Backend objects, which is tasked with the
     creation and execution of a QAOA circuit for the selected QPU provider and
     backend.
-    
+
     IBMQ Account has to be saved locally to run these tests.
     """
 
     @pytest.mark.api
     def setUp(self):
-
+        """
+        Define the credentials
+        """
         self.HUB = "ibm-q"
         self.GROUP = "open"
         self.PROJECT = "main"
@@ -293,7 +295,6 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
     @pytest.mark.api
     def test_expectations_in_init(self):
-
         """
         Testing the Exceptions in the init function of the QiskitQPUShotBasedBackend
         """
@@ -312,7 +313,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         )
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
+
+        # Check the creation of the varitional parms
+        _ = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         # We mock the potential Exception that could occur in the Device class
         qiskit_device = DeviceQiskit("", "", "", "")
@@ -377,7 +380,6 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         shots = 10000
 
         for i in range(4):
-
             cost_hamil = Hamiltonian(
                 [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
                 weights,
@@ -412,7 +414,6 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
     @pytest.mark.api
     def test_remote_qubit_overflow(self):
-
         """
         If the user creates a circuit that is larger than the maximum circuit size
         that is supported by the QPU. An Exception should be raised with the
@@ -426,9 +427,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
         qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
-        variate_params = create_qaoa_variational_params(
-            qaoa_descriptor, "standard", "rand"
-        )
+
+        # Check the creation of the varitional parms
+        _ = create_qaoa_variational_params(qaoa_descriptor, "standard", "rand")
 
         qiskit_device = DeviceQiskit("ibmq_manila", self.HUB, self.GROUP, self.PROJECT)
 
