@@ -20,7 +20,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-openqaoa-core = {path = "./src/openqaoa-core", develop = true, extras=["all"]}
+openqaoa-core = {path = "./src/openqaoa-core", develop = true, markers="all"}
 openqaoa-qiskit = {path = "./src/openqaoa-qiskit", develop = true}
 openqaoa-azure = {path = "./src/openqaoa-azure", develop = true}
 openqaoa-pyquil = {path = "./src/openqaoa-pyquil", develop = true}
