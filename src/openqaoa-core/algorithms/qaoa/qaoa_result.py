@@ -17,7 +17,9 @@ from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
-
+    """
+    Computing the most probable bitstring
+    """
     mea_out = list(measurement_outcomes.values())
     index_likliest_states = np.argwhere(mea_out == np.max(mea_out))
     # degeneracy = len(index_likliest_states)
@@ -54,7 +56,9 @@ class QAOAResult:
         cost_hamiltonian: Type[Hamiltonian],
         type_backend: Type[QAOABaseBackend],
     ):
-
+        """
+        init method
+        """
         self.__type_backend = type_backend
         self.method = method
         self.cost_hamiltonian = cost_hamiltonian
@@ -116,7 +120,7 @@ class QAOAResult:
         self,
         keep_cost_hamiltonian: bool = True,
         complex_to_string: bool = False,
-        intermediate_mesurements: bool = True,
+        intermediate_measurements: bool = True,
         exclude_keys: List[str] = [],
     ):
         """
@@ -132,7 +136,7 @@ class QAOAResult:
         complex_to_string: `bool`
             If True, the complex numbers are converted to strings. If False, they are kept as complex numbers.
             This is useful for the JSON serialization.
-        intermediate_mesurements: bool, optional
+        intermediate_measurements: bool, optional
             If True, intermediate measurements are included in the dump.
             If False, intermediate measurements are not included in the dump.
             Default is True.
@@ -152,7 +156,7 @@ class QAOAResult:
         return_dict["evals"] = self.evals
         return_dict["most_probable_states"] = self.most_probable_states
 
-        complx_to_str = (
+        complex_to_str = (
             lambda x: str(x)
             if isinstance(x, np.complex128) or isinstance(x, complex)
             else x
@@ -161,43 +165,67 @@ class QAOAResult:
         # if the backend is a statevector backend, the measurement outcomes will be the statevector,
         # meaning that it is a list of complex numbers, which is not serializable.
         # If that is the case, and complex_to_string is true the complex numbers are converted to strings.
-        if complex_to_string and issubclass(
-            self.__type_backend, QAOABaseBackendStatevector
-        ):
+        if complex_to_string:
             return_dict["intermediate"] = {}
             for key, value in self.intermediate.items():
-                if (
-                    intermediate_mesurements == False and "measurement" in key
-                ):  # if intermediate_mesurements is false, the intermediate measurements are not included in the dump
-                    return_dict["intermediate"][key] = []
-                elif "measurement" in key and (
-                    isinstance(value, list) or isinstance(value, np.ndarray)
+                # Measurements and Cost may require casting
+                if "measurement" in key:
+                    if len(value) > 0:
+                        if intermediate_measurements is False:
+                            # if intermediate_measurements is false, the intermediate measurements are not included
+                            return_dict["intermediate"][key] = []
+                        elif isinstance(
+                            value[0], np.ndarray
+                        ):  # Statevector -> convert complex to str
+                            return_dict["intermediate"][key] = [
+                                [complex_to_str(item) for item in list_]
+                                for list_ in value
+                                if (
+                                    isinstance(list_, list)
+                                    or isinstance(list_, np.ndarray)
+                                )
+                            ]
+                        else:  # All other case -> cast numpy into
+                            return_dict["intermediate"][key] = [
+                                {k_: int(v_) for k_, v_ in v.items()} for v in value
+                            ]
+                    else:
+                        pass
+                elif "cost" == key and (
+                    isinstance(value[0], np.float64) or isinstance(value[0], np.float32)
                 ):
-                    return_dict["intermediate"][key] = [
-                        [complx_to_str(item) for item in list_]
-                        for list_ in value
-                        if (isinstance(list_, list) or isinstance(list_, np.ndarray))
-                    ]
+                    return_dict["intermediate"][key] = [float(item) for item in value]
                 else:
                     return_dict["intermediate"][key] = value
 
             return_dict["optimized"] = {}
             for key, value in self.optimized.items():
+                # If wavefunction do complex to str
                 if "measurement" in key and (
                     isinstance(value, list) or isinstance(value, np.ndarray)
                 ):
                     return_dict["optimized"][key] = [
-                        complx_to_str(item) for item in value
+                        complex_to_str(item) for item in value
                     ]
+                # if dictionary, convert measurement values to integers
+                elif "measurement" in key and (isinstance(value, dict)):
+                    return_dict["optimized"][key] = {
+                        k: int(v) for k, v in value.items()
+                    }
                 else:
                     return_dict["optimized"][key] = value
+
+                if "cost" in key and (
+                    isinstance(value, np.float64) or isinstance(value, np.float32)
+                ):
+                    return_dict["optimized"][key] = float(value)
         else:
             return_dict["intermediate"] = self.intermediate
             return_dict["optimized"] = self.optimized
 
         # if we are using a shot adaptive optimizer, we need to add the number of shots to the result,
         # so if attribute n_shots is not empty, it is added to the dictionary
-        if getattr(self, "n_shots", None) != None:
+        if getattr(self, "n_shots", None) is not None:
             return_dict["n_shots"] = self.n_shots
 
         return (
@@ -233,7 +261,7 @@ class QAOAResult:
             setattr(result, key, value)
 
         # if there is an input cost hamiltonian, it is added to the result
-        if cost_hamiltonian != None:
+        if cost_hamiltonian is not None:
             result.cost_hamiltonian = cost_hamiltonian
 
         # if the measurement_outcomes are strings, they are converted to complex numbers
@@ -281,7 +309,7 @@ class QAOAResult:
             the actual measurement counts.
         """
 
-        if type(measurement_outcomes) == type(np.array([])):
+        if isinstance(measurement_outcomes, type(np.array([]))):
             measurement_outcomes = qaoa_probabilities(measurement_outcomes)
 
         return measurement_outcomes
@@ -335,7 +363,6 @@ class QAOAResult:
         color="tab:blue",
         ax=None,
     ):
-
         """
         Helper function to plot the probabilities corresponding to each basis states
         (with prob != 0) obtained from the optimized result
@@ -359,7 +386,7 @@ class QAOAResult:
         outcome = self.optimized["measurement_outcomes"]
 
         # converting to counts dictionary if outcome is statevector
-        if type(outcome) == type(np.array([])):
+        if isinstance(outcome, type(np.array([]))):
             outcome = self.get_counts(outcome)
             # setting norm to 1 since it might differ slightly for statevectors due to numerical preicision
             norm = np.float64(1)
@@ -407,7 +434,7 @@ class QAOAResult:
         ]
         labels.append("rest")
 
-        # represent the bar with the addition of all the remaining probabilites
+        # represent the bar with the addition of all the remaining probabilities
         rest = sum(probs[n_states_to_keep:])
 
         if ax is None:
@@ -470,7 +497,7 @@ class QAOAResult:
         if ax is None:
             ax = plt.subplots(figsize=figsize)[1]
 
-        ## creating a list of parameters to plot
+        # creating a list of parameters to plot
         # if param_to_plot is not given, plot all the parameters
         if param_to_plot is None:
             param_to_plot = list(range(len(self.n_shots[0])))
@@ -504,22 +531,23 @@ class QAOAResult:
                 color = [color]
 
         # if param_top_plot is a list and label or color are not lists, raise error
-        if (type(label) != list) or (type(color) != list and color != None):
+        if (type(label) != list) or (type(color) != list and color is not None):
             raise TypeError("`label` and `color` must be list of str")
         # if label is a list, check that all the elements are strings
-        for l in label:
-            assert type(l) == str, "`label` must be a list of strings"
+        for lab in label:
+            assert type(lab) == str, "`label` must be a list of strings"
         # if color is a list, check that all the elements are strings
-        if color != None:
+        if color is not None:
             for c in color:
                 assert type(c) == str, "`color` must be a list of strings"
 
         # if label and color are lists, check if they have the same length as param_to_plot
         if len(label) != len(param_to_plot) or (
-            color != None and len(color) != len(param_to_plot)
+            color is not None and len(color) != len(param_to_plot)
         ):
             raise ValueError(
-                f"`param_to_plot`, `label` and `color` must have the same length, `param_to_plot` is a list of {len(param_to_plot)} elements"
+                f"`param_to_plot`, `label` and `color` must have the same length, \
+                    `param_to_plot` is a list of {len(param_to_plot)} elements"
             )
 
         # linestyle must be a string or a list of strings, if it is a string, convert it to a list of strings
@@ -529,7 +557,8 @@ class QAOAResult:
             linestyle = [linestyle for _ in range(len(param_to_plot))]
         elif len(linestyle) != len(param_to_plot):
             raise ValueError(
-                f"`linestyle` must have the same length as param_to_plot (length of `param_to_plot` is {len(param_to_plot)}), or be a string"
+                f"`linestyle` must have the same length as param_to_plot \
+                    (length of `param_to_plot` is {len(param_to_plot)}), or be a string"
             )
         else:
             for ls in linestyle:

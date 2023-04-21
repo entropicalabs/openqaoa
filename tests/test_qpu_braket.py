@@ -26,7 +26,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
     These tests require authentication through the AWS CLI.
     """
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_circuit_angle_assignment_qpu_backend(self):
         """
         A tests that checks if the circuit created by the AWS Backend
@@ -87,7 +87,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit, qpu_circuit)
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_circuit_angle_assignment_qpu_backend_w_hadamard(self):
         """
         Checks for consistent if init_hadamard is set to True.
@@ -149,7 +149,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit, qpu_circuit)
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_prepend_circuit(self):
         """
         Checks if prepended circuit has been prepended correctly.
@@ -208,7 +208,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit, qpu_circuit)
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_append_circuit(self):
         """
         Checks if appended circuit is appropriately appended to the back of the
@@ -268,9 +268,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         self.assertEqual(main_circuit, qpu_circuit)
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_prepend_exception(self):
-
         """
         Test that the error catching for a prepend ciruit larger than the problem
         circuit is invalid
@@ -297,12 +296,15 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         )
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
+
+        # Try to create the variate params
+        _ = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         aws_device = DeviceAWS("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
 
         try:
-            aws_backend = QAOAAWSQPUBackend(
+            # Try to create the AWS backend
+            _ = QAOAAWSQPUBackend(
                 qaoa_descriptor, aws_device, shots, prepend_circuit, None, True, 1.0
             )
         except Exception as e:
@@ -310,9 +312,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                 str(e), "Cannot attach a bigger circuit to the QAOA routine"
             )
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_exceptions_in_init(self):
-
         """
         Testing the Exceptions in the init function of the QAOAAWSQPUBackend
         """
@@ -331,7 +332,9 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         )
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
+
+        # Try instantiating the variate params
+        _ = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         # If the user's aws credentials is not correct.
         mock_device = Mock()
@@ -379,9 +382,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
 
         QAOAAWSQPUBackend(qaoa_descriptor, aws_device, shots, None, None, True, 1.0)
 
-    @pytest.mark.qpu
+    @pytest.mark.braket_api
     def test_remote_qubit_overflow(self):
-
         """
         If the user creates a circuit that is larger than the maximum circuit size
         that is supported by the QPU. An Exception should be raised with the
@@ -412,9 +414,8 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
                 "There are lesser qubits on the device than the number of qubits required for the circuit.",
             )
 
-    @pytest.mark.qpu
+    @pytest.mark.sim
     def test_remote_integration_qpu_run(self):
-
         """
         Run a toy example in manual mode to make sure everything works as
         expected for a remote backend

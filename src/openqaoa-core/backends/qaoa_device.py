@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from .plugin_finder import plugin_finder_dict
 from .devices_core import DeviceBase, DeviceLocal
-from openqaoa_braket.backends import DeviceAWS
-from openqaoa_qiskit.backends import DeviceQiskit
-from openqaoa_pyquil.backends import DevicePyquil
-from openqaoa_azure.backends import DeviceAzure
+
+
+PLUGIN_DICT = plugin_finder_dict()
+
 
 
 def device_class_arg_mapper(
@@ -26,29 +27,20 @@ def device_class_arg_mapper(
     resource_id: str = None,
     az_location: str = None,
 ) -> dict:
-    DEVICE_ARGS_MAPPER = {
-        DeviceQiskit: {
-            "hub": hub,
-            "group": group,
-            "project": project,
-            "as_emulator": as_emulator,
-        },
-        DevicePyquil: {
-            "as_qvm": as_qvm,
-            "noisy": noisy,
-            "compiler_timeout": compiler_timeout,
-            "execution_timeout": execution_timeout,
-            "client_configuration": client_configuration,
-            "endpoint_id": endpoint_id,
-            "engagement_manager": engagement_manager,
-        },
-        DeviceAWS: {
-            "s3_bucket_name": s3_bucket_name,
-            "aws_region": aws_region,
-            "folder_name": folder_name,
-        },
-        DeviceAzure: {"resource_id": resource_id, "location": az_location},
-    }
+
+    DEVICE_ARGS_MAPPER = dict()
+
+    local_vars = locals()
+
+    for each_plugin_entrypoint in PLUGIN_DICT.values():
+        if hasattr(each_plugin_entrypoint, "device_args"):
+            for each_key, each_value in each_plugin_entrypoint.device_args.items():
+                # Convert list of accepted parameters into a dictionary with
+                # the name of the variable as a key and the local value of the
+                # variable
+                var_values = [local_vars[each_name] for each_name in each_value]
+                input_dict = {each_key: dict(zip(each_value, var_values))}
+                DEVICE_ARGS_MAPPER.update(input_dict)
 
     final_device_kwargs = {
         key: value
@@ -56,7 +48,7 @@ def device_class_arg_mapper(
         if value is not None
     }
     return final_device_kwargs
-
+    
 
 def create_device(location: str, name: str, **kwargs):
     """
@@ -77,18 +69,23 @@ def create_device(location: str, name: str, **kwargs):
     device: DeviceBase
         An instance of the appropriate device class.
     """
+
     location = location.lower()
-    if location == "ibmq":
-        device_class = DeviceQiskit
-    elif location == "qcs":
-        device_class = DevicePyquil
-    elif location == "aws":
-        device_class = DeviceAWS
-    elif location == "local":
-        device_class = DeviceLocal
-    elif location == "azure":
-        device_class = DeviceAzure
+
+    location_device_mapper = dict()
+    location_device_mapper.update({"local": DeviceLocal})
+    location_device_mapper.update(
+        zip(
+            [each_value.device_location for each_value in PLUGIN_DICT.values()],
+            [each_value.device_plugin for each_value in PLUGIN_DICT.values()],
+        )
+    )
+
+    if location in location_device_mapper.keys():
+        device_class = location_device_mapper[location]
     else:
-        raise ValueError(f"Invalid device location, Choose from: {location}")
+        raise ValueError(
+            f"Invalid device location, Choose from: {location_device_mapper.keys()}"
+        )
 
     return device_class(device_name=name, **kwargs)

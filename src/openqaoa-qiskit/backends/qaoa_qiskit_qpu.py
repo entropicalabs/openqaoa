@@ -4,15 +4,16 @@ import warnings
 
 # IBM Qiskit imports
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, transpile
-from qiskit.providers.ibmq.job import (
-    IBMQJobApiError,
-    IBMQJobInvalidStateError,
-    IBMQJobFailureError,
-    IBMQJobTimeoutError,
+from qiskit_ibm_provider.job.exceptions import (
+    IBMJobApiError,
+    IBMJobInvalidStateError,
+    IBMJobFailureError,
+    IBMJobTimeoutError,
 )
 from qiskit.circuit import Parameter
 
 from .devices import DeviceQiskit
+from .gates_qiskit import QiskitGateApplicator
 from openqaoa.backends.basebackend import (
     QAOABaseBackendShotBased,
     QAOABaseBackendCloud,
@@ -95,19 +96,17 @@ class QAOAQiskitQPUBackend(
             False,
             None,
         ]:
-            if type(self.device).__name__ == "DeviceAzure":
-                raise Exception(
-                    "Connection to Azure was made. Error connecting to the specified backend."
+            raise Exception(
+                "Connection to {} was made. Error connecting to the specified backend.".format(
+                    self.device.device_location.upper()
                 )
-            else:
-                raise Exception(
-                    "Connection to IBMQ was made. Error connecting to the specified backend."
-                )
+            )
+
         else:
-            if type(self.device).__name__ == "DeviceAzure":
-                raise Exception("Error connecting to Azure.")
-            else:
-                raise Exception("Error connecting to IBMQ.")
+
+            raise Exception(
+                "Error connecting to {}.".format(self.device.device_location.upper())
+            )
 
         if self.device.n_qubits < self.n_qubits:
             raise Exception(
@@ -164,6 +163,7 @@ class QAOAQiskitQPUBackend(
         # self.reset_circuit()
         creg = ClassicalRegister(len(self.problem_reg))
         parametric_circuit = QuantumCircuit(self.qureg, creg)
+        gate_applicator = QiskitGateApplicator()
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -181,10 +181,8 @@ class QAOAQiskitQPUBackend(
             decomposition = each_gate.decomposition("standard")
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0]()
-                parametric_circuit = gate.apply_ibm_gate(
-                    *each_tuple[1], parametric_circuit
-                )
+                gate = each_tuple[0](gate_applicator, *each_tuple[1])
+                gate.apply_gate(parametric_circuit)
 
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
@@ -241,12 +239,12 @@ class QAOAQiskitQPUBackend(
                     counts = job.result().get_counts()
                     api_contact = True
                     job_state = True
-                except (IBMQJobApiError, IBMQJobTimeoutError):
+                except (IBMJobApiError, IBMJobTimeoutError):
                     print("There was an error when trying to contact the IBMQ API.")
                     job_state = True
                     no_of_api_retries += 1
                     time.sleep(5)
-                except (IBMQJobFailureError, IBMQJobInvalidStateError):
+                except (IBMJobFailureError, IBMJobInvalidStateError):
                     print("There was an error with the state of the Job in IBMQ.")
                     no_of_job_retries += 1
                     break
