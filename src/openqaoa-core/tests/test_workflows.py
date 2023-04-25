@@ -21,7 +21,7 @@ from openqaoa.algorithms.rqaoa.rqaoa_workflow_properties import RqaoaParameters
 from openqaoa.backends import create_device, DeviceLocal
 from openqaoa.backends.cost_function import cost_function
 
-# from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
+from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.qaoa_components import (
     Hamiltonian,
     QAOADescriptor,
