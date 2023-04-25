@@ -18,7 +18,11 @@ import json
 import gzip
 from os.path import exists
 
-from .workflow_properties import BackendProperties, ErrorMitigationProperties, ClassicalOptimizer
+from .workflow_properties import (
+    BackendProperties,
+    ErrorMitigationProperties,
+    ClassicalOptimizer,
+)
 from ..backends.devices_core import DeviceBase, DeviceLocal
 from ..problems import QUBO
 from ..utilities import delete_keys_from_dict, is_valid_uuid, generate_uuid
@@ -94,6 +98,7 @@ class Workflow(ABC):
         self.classical_optimizer = ClassicalOptimizer()
         self.local_simulators = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
         self.cloud_provider = list(DEVICE_ACCESS_OBJECT_MAPPER.keys())
+        self.available_error_mitigation_techniques = ["spam_twirling"]
         self.compiled = False
 
         # Initialize the identifier stamps, we initialize all the stamps needed to None
@@ -250,26 +255,35 @@ class Workflow(ABC):
 
         self.backend_properties = BackendProperties(**kwargs)
         return None
-    
+
     @check_compiled
     def set_error_mitigation_properties(self, **kwargs):
         """
-        Set the error mitigation properties
+        Set the error mitigation properties, if any.
 
         Parameters
-        -------------------
+        ----------
+            error_mitigation_technique: str
+                The specific technique used to mitigate the errors. Only a simple state preparation and measurement twirling with bitflip averages, under the name "spam_twirling" is currently supported.
+            n_batches: int
+                The number of batches specifies the different negating schedules at random. Total number of shots is distributed accordingly.
+            calibration_data_location: str
+                The location of the json file containing calibration data. For spam twirling this is the measurement outcomes of an empty circuit under the bit-flip averaging.
+
         """
         for key, value in kwargs.items():
-            if hasattr(self.error_mitigation_properties, key):
+            if hasattr(self.error_mitigation_properties, key) and (
+                kwargs["error_mitigation_technique"].lower()
+                in self.available_error_mitigation_techniques
+            ):
                 pass  # setattr(self.error_mitigation, key, value)
             else:
                 raise ValueError(
                     f"Specified argument `{value}` for `{key}` in set_error_mitigation_properties is not supported"
                 )
-        
+
         self.error_mitigation_properties = ErrorMitigationProperties(**kwargs)
         return None
-    
 
     @check_compiled
     def set_classical_optimizer(self, **kwargs):

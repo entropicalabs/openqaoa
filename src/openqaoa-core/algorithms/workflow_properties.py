@@ -277,17 +277,21 @@ class ErrorMitigationProperties(WorkflowProperties):
 
     def __init__(
         self,
-        error_mitigation_technique = None,
-        n_batches = 10,
-        calibration_data_location = None,
+        error_mitigation_technique=None,
+        n_batches=10,
+        calibration_data_location=None,
     ):
-        self.error_mitigation_technique = error_mitigation_technique
+        self.error_mitigation_technique = (
+            error_mitigation_technique.lower()
+            if type(error_mitigation_technique) == str
+            else error_mitigation_technique
+        )
 
         if isinstance(n_batches, int) and n_batches > 0:
             self.n_batches = n_batches
         else:
             raise ValueError("n_batches must be a positive integer.")
-        
+
         if calibration_data_location != None:
             try:
                 with open(calibration_data_location, "r") as file:
@@ -308,12 +312,17 @@ class ErrorMitigationProperties(WorkflowProperties):
                 )
             except ValueError:
                 raise ValueError(
-                    "Calibration data file {} is not a valid JSON file".format(calibration_data_location)
+                    "Calibration data file {} is not a valid JSON file".format(
+                        calibration_data_location
+                    )
                 )
             except KeyError:
-                raise KeyError("Calibration data file {} structure not as expected".format(calibration_data_location)
+                raise KeyError(
+                    "Calibration data file {} structure not as expected".format(
+                        calibration_data_location
+                    )
                 )
-                
+
         self.calibration_data_location = calibration_data_location
 
 

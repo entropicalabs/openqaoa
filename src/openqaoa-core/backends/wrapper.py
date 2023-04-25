@@ -46,6 +46,10 @@ class SPAMTwirlingWrapper(BaseWrapper):
         calibration_measurements = calibration_data["results"]["measurement_outcomes"]
         calibration_registers = calibration_data["register"]
 
+        assert (
+            len(calibration_registers) >= self.backend.n_qubits
+        ), "Problem requires more qubits than present in the calibration data. Make sure that the calibration data file is for the correct device. "
+
         qubit_mapping = self.backend.initial_qubit_mapping
 
         self.calibration_factors = calculate_calibration_factors(
