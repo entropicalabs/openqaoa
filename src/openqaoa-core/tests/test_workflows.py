@@ -46,9 +46,6 @@ from openqaoa.qaoa_components.variational_parameters.variational_params_factory 
     PARAMS_CLASSES_MAPPER,
 )
 
-ALLOWED_LOCAL_SIMULATORS = SUPPORTED_LOCAL_SIMULATORS
-LOCAL_DEVICES = ALLOWED_LOCAL_SIMULATORS + ["6q-qvm", "Aspen-11"]
-
 
 def _compare_qaoa_results(dict_old, dict_new):
     for key in dict_old.keys():
