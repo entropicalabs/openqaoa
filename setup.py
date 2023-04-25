@@ -18,6 +18,7 @@ setup(
     version=version,
     author="Entropica Labs",
     packages=[],
+    entry_points={"openqaoa.plugins": []}
     url="https://github.com/entropicalabs/openqaoa",
     # install_requires=requirements,
     license="MIT",
