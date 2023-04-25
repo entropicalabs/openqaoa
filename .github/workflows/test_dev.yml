@@ -37,6 +37,7 @@ jobs:
           pip install poetry
           poetry lock
           poetry install
+          pip install -e ./src/openqaoa-core[tests]
           pip install ipykernel
       - name: Setup IBMQ account
         env:
