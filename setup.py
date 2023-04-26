@@ -20,7 +20,7 @@ setup(
     packages=[],
     entry_points={"openqaoa.plugins": []}
     url="https://github.com/entropicalabs/openqaoa",
-    # install_requires=requirements,
+    install_requires=requirements,
     license="MIT",
     description="OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators",
     long_description=long_description,
