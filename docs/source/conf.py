@@ -58,6 +58,8 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
+autodoc_mock_imports = ["qiskit_ibm_provider", "azure", "boto3", "qcs_api_client"]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -74,7 +76,6 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/1.23", None),
     "np": ("https://numpy.org/doc/1.23", None),
     "scipy": ("https://docs.scipy.org/doc/scipy-1.8.1", None),
-    "qiskit-ibm-provider": ("https://qiskit.org/ecosystem/ibm-provider/", None),
 }
 
 
