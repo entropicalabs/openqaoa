@@ -64,7 +64,7 @@ autodoc_mock_imports = ["botocore",
                         "azure", 
                         "boto3", 
                         "qcs_api_client", 
-                        "qiskit_ibm_provider"]
+                        "qiskit_ibm_provider", "qiskit", "braket"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
