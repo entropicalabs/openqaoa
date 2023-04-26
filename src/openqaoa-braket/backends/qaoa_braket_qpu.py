@@ -151,10 +151,10 @@ class QAOAAWSQPUBackend(
                 angles_list,
             )
         )
-        new_parametric_circuit = parametric_circuit.make_bound_circuit(memory_map)
-        
+        circuit_with_angles = parametric_circuit.make_bound_circuit(memory_map)
+
         self.append_state = []
-        return new_parametric_circuit
+        return circuit_with_angles
 
     @property
     def parametric_qaoa_circuit(self) -> Circuit:

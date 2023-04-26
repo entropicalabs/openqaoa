@@ -74,6 +74,7 @@ class QAOAQiskitBackendShotBasedSimulator(
     noise_model: `NoiseModel`
         The Qiskit noise model to be used for the simulation.
     """
+
     QISKIT_GATEMAP_LIBRARY = [
         RXGateMap,
         RYGateMap,
@@ -96,7 +97,6 @@ class QAOAQiskitBackendShotBasedSimulator(
         seed_simulator: Optional[int] = None,
         noise_model: Optional[NoiseModel] = None,
     ):
-
         QAOABaseBackendShotBased.__init__(
             self,
             qaoa_descriptor,
@@ -121,8 +121,6 @@ class QAOAQiskitBackendShotBasedSimulator(
         )
         # For parametric circuits
         self.parametric_circuit = self.parametric_qaoa_circuit
-        
-    
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> QuantumCircuit:
         """
@@ -138,16 +136,16 @@ class QAOAQiskitBackendShotBasedSimulator(
             The final QAOA circuit after binding angles from variational parameters.
         """
         parametric_circuit = deepcopy(self.parametric_circuit)
-        
+
         if self.append_state:
             parametric_circuit = parametric_circuit.compose(self.append_state)
         parametric_circuit.measure_all()
-        
+
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        new_parametric_circuit = parametric_circuit.bind_parameters(memory_map)
+        circuit_with_angles = parametric_circuit.bind_parameters(memory_map)
         self.append_state = []
-        return new_parametric_circuit
+        return circuit_with_angles
 
     @property
     def parametric_qaoa_circuit(self) -> QuantumCircuit:
@@ -157,8 +155,9 @@ class QAOAQiskitBackendShotBasedSimulator(
         the circuit.
         """
         # self.reset_circuit()
-        parametric_circuit = QuantumCircuit(self.qureg)  # consider changing this too with my new function
-        
+        parametric_circuit = QuantumCircuit(
+            self.qureg
+        )  # consider changing this too with my new function
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -182,9 +181,9 @@ class QAOAQiskitBackendShotBasedSimulator(
                 decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](self.gate_applicator,*each_tuple[1])
+                gate = each_tuple[0](self.gate_applicator, *each_tuple[1])
                 gate.apply_gate(parametric_circuit)
-        
+
         return parametric_circuit
 
     def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:
@@ -280,7 +279,6 @@ class QAOAQiskitBackendStatevecSimulator(
         init_hadamard: bool,
         cvar_alpha: float = 1,
     ):
-
         QAOABaseBackendStatevector.__init__(
             self,
             qaoa_descriptor,
@@ -352,8 +350,8 @@ class QAOAQiskitBackendStatevecSimulator(
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
-        return new_parametric_circuit
+        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+        return circuit_with_angles
 
     @property
     def parametric_qaoa_circuit(self) -> QuantumCircuit:
@@ -392,7 +390,7 @@ class QAOAQiskitBackendStatevecSimulator(
                 decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](self.gate_applicator,*each_tuple[1])
+                gate = each_tuple[0](self.gate_applicator, *each_tuple[1])
                 gate.apply_gate(parametric_circuit)
 
         if self.append_state:

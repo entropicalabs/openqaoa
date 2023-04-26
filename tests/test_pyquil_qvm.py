@@ -232,7 +232,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         measurement_gate_no = len(
             [
                 instr
-                for instr in backend_obj_pyquil.parametric_circuit
+                for instr in backend_obj_pyquil.qaoa_circuit
                 if type(instr) == quilbase.Measurement
             ]
         )
@@ -397,7 +397,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
         assert ["RZ", "RZ", "RZ", "RZ", "CPHASE", "RX", "RX", "RX", "RY", "RZ"] == [
             instr.name
-            for instr in pyquil_backend.parametric_circuit
+            for instr in pyquil_backend.qaoa_circuit
             if type(instr) == quilbase.Gate
         ]
 

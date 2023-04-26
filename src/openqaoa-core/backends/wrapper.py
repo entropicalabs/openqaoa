@@ -89,17 +89,22 @@ class SPAMTwirlingWrapper(BaseWrapper):
         self, params: QAOAVariationalBaseParams, n_shots=None, seed=None
     ) -> dict:
         """
-            This function overrides the get_counts method of the backend object to obtain the measurement outcomes under the bit flip averaging technique, which is applying an X gate just before the measurement and negating the classical outcomes for a set of qubits selected at random. Every such set we call a batch, and the total number of shots is distributed amongst the number of batches. The procedure is as follows: per batch, generate a random integer, obtain its binary representation and use the positions of 1s in the bitstring to mark the qubits to which an X gate will be applied. Then, create an append state which is a set of all these X gates on the chosen qubits. Run the modified circuit and obtain the measurement outcomes using the original backend get_counts method. Negate the counts classically for the selected qubits. Lastly, combine the counts from all batches.
+            This method overrides the get_counts method of the backend object to obtain the measurement outcomes under the bit flip averaging technique, which is applying an X gate just before the measurement and negating the classical outcomes for a set of qubits selected at random. Every such set we call a batch, and the total number of shots is distributed amongst the number of batches. The procedure is as follows: per batch, generate a random integer, obtain its binary representation and use the positions of 1s in the bitstring to mark the qubits to which an X gate will be applied. Then, create an append state which is a set of all these X gates on the chosen qubits. Run the modified circuit and obtain the measurement outcomes using the original backend get_counts method. Negate the counts classically for the selected qubits. Lastly, combine the counts from all batches.
 
-            Parameters
+        Parameters
         ----------
-            params: `QAOAVariationalBaseParams`
-                The QAOA parameters - an object of one of the parameter classes, containing
-                variable parameters.
-            n_shots: `int`
-                The number of shots to be used for the measurement. If None, the backend default.
-            seed: `int`
-                The seed controlling the random number generator, which selects the set of qubits to be negated at every batch. Default is None.
+        params: `QAOAVariationalBaseParams`
+            The QAOA parameters - an object of one of the parameter classes, containing
+            variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
+        seed: `int`
+            The seed controlling the random number generator, which selects the set of qubits to be negated at every batch. Default is None.
+
+        Returns
+        -------
+        dict:
+            The dictionary containing measurement outcomes (counts) of a given QAOA circit under the bit-flip-averaging (BFA) technique.
         """
         if seed is not None:
             random.seed(seed)
@@ -156,7 +161,21 @@ class SPAMTwirlingWrapper(BaseWrapper):
         self, counts: dict, hamiltonian: Hamiltonian, calibration_factors: dict
     ) -> float:
         """
-        TODO
+        This method computes the expectation value of a Hamiltonian termwise while correcting for measurement errors by dividing by the hardware-specific calibration factors.
+
+        Parameters
+        ----------
+        counts: `dict`
+            A dictionary of the measurement outcomes of a given QAOA circuit.
+        hamiltonian: `Hamiltonian`
+            Hamiltonian object containing the problem statement.
+        calibration_factors: `dict`
+            Dictionary containing the relevant calibration factors computed given calibration data for the specific hardware.
+
+        Returns
+        -------
+        float:
+            The error mitigated expectation value of cost operator wrt a measurement outcomes dictionary (counts).
         """
 
         terms = [term.qubit_indices for term in hamiltonian.terms]
@@ -192,9 +211,20 @@ class SPAMTwirlingWrapper(BaseWrapper):
 
     def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
         """
-        use the total counts under BFA to compute expectation values Zi and ZiZj
-        correct these expectation values with the calibration factors, lambda_i, lambda_ij
-        combine all corrected expectation values into the energy = cost fn to be given to the optimizer every time it calls expectation
+        This method overrrides the one from the basebackend to allow for correcting the expectation values of each term in the Hamiltonian before providing the energy to the optimizer. It does this by first obtaining the measurement outcomes through the modified get_counts method and then calculating the cost with the wrapper's own expectation_value_spam_twirled method.
+
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+            The QAOA parameters - an object of one of the parameter classes, containing
+            variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None, the backend default.
+
+        Returns
+        -------
+        float:
+            The error mitigated expectation value of cost operator wrt to quantum state produced by QAOA circuit
         """
         counts = self.get_counts(params, n_shots)
         cost = self.expectation_value_spam_twirled(
