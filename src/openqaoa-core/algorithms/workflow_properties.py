@@ -270,7 +270,7 @@ class ErrorMitigationProperties(WorkflowProperties):
     error_mitigation_technique: str
         The name of the error mitigation technique. Only 'spam_twirling' supported for now.
     n_batches: Optional[int] = int
-        Number of batches into the total number of shots is divided into.
+        Number of batches in which the total number of shots is divided to. For every batch, we choose a set of qubits at random to which we apply X gates and classical negating. The dafault value is set to 10 to be comparable with most problem sizes in NISQ without creating too much of an overhead.
     calibration_data_location: str
         The path to the file containing calibration data for the specific device.
     """

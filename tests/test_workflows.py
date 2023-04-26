@@ -660,7 +660,6 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         self.assertRaises(AttributeError, lambda: q.backend.n_shots)
 
-<<<<<<< HEAD
     def test_set_error_mitigation_properties_change(self):
         """
         Ensure that once a property has been changed via set_error_mitigation_properties the attribute has been appropriately updated.
@@ -783,8 +782,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             ),
         )
 
-=======
->>>>>>> dev
     def test_set_classical_optimizer_defaults(self):
         """
         Check if the fields in the default classical_optimizer dict are correct
@@ -1794,11 +1791,7 @@ class TestingRQAOA(unittest.TestCase):
         name_device="qiskit.statevector_simulator",
         return_object=False,
     ):
-<<<<<<< HEAD
-        if problem == None:
-=======
         if problem is None:
->>>>>>> dev
             problem = MaximumCut.random_instance(
                 n_nodes=8, edge_probability=0.5, seed=2
             ).qubo

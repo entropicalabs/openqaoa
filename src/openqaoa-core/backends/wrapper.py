@@ -6,6 +6,10 @@ from .basebackend import VQABaseBackend
 
 from ..qaoa_components.ansatz_constructor.gates import X
 
+from ..qaoa_components.variational_parameters.variational_baseparams import (
+    QAOAVariationalBaseParams,
+)
+
 from ..qaoa_components import Hamiltonian
 
 from ..utilities import (
@@ -18,6 +22,15 @@ from ..utilities import (
 
 
 class BaseWrapper(VQABaseBackend):
+    """
+    This is the Abstract Base Class over which other classes will be built. It is designed to take the backend object and wrap around it in order to override the necessary methods.
+
+    Parameters
+    ----------
+    backend: `VQABaseBackend`
+        The backend object to be wrapped.
+    """
+
     def __init__(self, backend):
         self.backend = backend
 
@@ -35,6 +48,19 @@ class BaseWrapper(VQABaseBackend):
 
 
 class SPAMTwirlingWrapper(BaseWrapper):
+    """
+    This class inherits from the BaseWrapper and needs to be backend
+    agnostic to QAOA implementations on different devices and their
+    respective SDKs. It implements State Preparation and Measurement (SPAM) Twirling which is a simple error mitigation technique used to remove any preferred direction due to readout noise.
+
+    Parameters
+    ----------
+    n_batches: `int`
+        Number of batches.
+    calibration_data_location: `str`
+        The location of the calibration data file.
+    """
+
     def __init__(self, backend, n_batches, calibration_data_location):
         super().__init__(backend)
         self.n_batches = n_batches
@@ -59,14 +85,21 @@ class SPAMTwirlingWrapper(BaseWrapper):
             qubit_mapping,
         )
 
-    def get_counts(self, params, n_shots=None, seed=None):
+    def get_counts(
+        self, params: QAOAVariationalBaseParams, n_shots=None, seed=None
+    ) -> dict:
         """
-        Overrides the get_counts function of the backend object.
-        Modified function to...
-            divide into batches
-            change the self.append_state according to the schedule, s.
-            get the counts and classically negate them
-            combine all batches into a count dict under BFA
+            This function overrides the get_counts method of the backend object to obtain the measurement outcomes under the bit flip averaging technique, which is applying an X gate just before the measurement and negating the classical outcomes for a set of qubits selected at random. Every such set we call a batch, and the total number of shots is distributed amongst the number of batches. The procedure is as follows: per batch, generate a random integer, obtain its binary representation and use the positions of 1s in the bitstring to mark the qubits to which an X gate will be applied. Then, create an append state which is a set of all these X gates on the chosen qubits. Run the modified circuit and obtain the measurement outcomes using the original backend get_counts method. Negate the counts classically for the selected qubits. Lastly, combine the counts from all batches.
+
+            Parameters
+        ----------
+            params: `QAOAVariationalBaseParams`
+                The QAOA parameters - an object of one of the parameter classes, containing
+                variable parameters.
+            n_shots: `int`
+                The number of shots to be used for the measurement. If None, the backend default.
+            seed: `int`
+                The seed controlling the random number generator, which selects the set of qubits to be negated at every batch. Default is None.
         """
         if seed is not None:
             random.seed(seed)
@@ -121,7 +154,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
     @round_value
     def expectation_value_spam_twirled(
         self, counts: dict, hamiltonian: Hamiltonian, calibration_factors: dict
-    ):
+    ) -> float:
         """
         TODO
         """
@@ -157,7 +190,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
 
         return energy
 
-    def expectation(self, params, n_shots=None) -> float:
+    def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
         """
         use the total counts under BFA to compute expectation values Zi and ZiZj
         correct these expectation values with the calibration factors, lambda_i, lambda_ij
