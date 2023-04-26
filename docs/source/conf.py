@@ -22,6 +22,7 @@ import sys
 # sys.path.insert(0, os.path.abspath('.'))
 # sys.path.insert(0, os.path.abspath("../../"))
 sys.path.insert(0, os.path.abspath("../.."))
+sys.path.insert(0, os.path.abspath("../../src/openqaoa-core"))
 print(sys.path)
 
 # from openqaoa.qaoa_parameters.baseparams import shapedArray
