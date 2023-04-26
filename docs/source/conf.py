@@ -58,7 +58,14 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
-autodoc_mock_imports = ["qiskit_ibm_provider", "azure", "boto3", "qcs_api_client"]
+autodoc_mock_imports = ["amazon-braket-sdk", 
+                        "qdk", 
+                        "qiskit-qir",
+                        "qiskit-ionq",
+                        "azure-quantum", 
+                        "pyquil", 
+                        "qiskit", 
+                        "qiskit-ibm-provider"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
