@@ -124,6 +124,8 @@ class SPAMTwirlingWrapper(BaseWrapper):
             arr = np.fromiter(s_binary, dtype=int)
             negated_qubits = np.where(arr == 1)[0]  # where the syndrome has a 1
 
+            print("Negated qubits ", negated_qubits)
+
             circuit_to_append = self.backend.gate_applicator.create_quantum_circuit(
                 self.backend.n_qubits
             )

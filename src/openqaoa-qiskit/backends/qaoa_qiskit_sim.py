@@ -139,9 +139,13 @@ class QAOAQiskitBackendShotBasedSimulator(
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
 
+        print(circuit_with_angles)
+
         if self.append_state:
             circuit_with_angles = circuit_with_angles.compose(self.append_state)
         circuit_with_angles.measure_all()
+
+        print(circuit_with_angles)
 
         self.append_state = []
         return circuit_with_angles
