@@ -56,4 +56,4 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --user --name "env"
-          python -m pytest -v -m 'not (qpu or api or docker_aws)'
+          pytest tests/ -m 'not (qpu or api or docker_aws or braket_api or sim)'

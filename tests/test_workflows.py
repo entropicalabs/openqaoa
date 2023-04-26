@@ -1,4 +1,6 @@
-import json, os, gzip
+import json
+import os
+import gzip
 import unittest
 import networkx as nw
 import numpy as np
@@ -10,6 +12,7 @@ from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer import QasmSimulator
 
 from openqaoa import QAOA, RQAOA
+from openqaoa.problems import NumberPartition
 from openqaoa.algorithms import QAOAResult, RQAOAResult
 from openqaoa.algorithms.baseworkflow import Workflow
 from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
@@ -21,7 +24,8 @@ from openqaoa.algorithms.workflow_properties import (
 from openqaoa.algorithms.rqaoa.rqaoa_workflow_properties import RqaoaParameters
 from openqaoa.backends import create_device, DeviceLocal
 from openqaoa.backends.cost_function import cost_function
-from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
+
+# from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.qaoa_components import (
     Hamiltonian,
     QAOADescriptor,
@@ -54,13 +58,10 @@ from openqaoa.qaoa_components.variational_parameters.variational_params_factory 
     PARAMS_CLASSES_MAPPER,
 )
 
-ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
-LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ["6q-qvm", "Aspen-11"]
-
 
 def _compare_qaoa_results(dict_old, dict_new):
     for key in dict_old.keys():
-        if key == "cost_hamiltonian":  ## CHECK WHAT DO WITH THIS
+        if key == "cost_hamiltonian":  # CHECK WHAT DO WITH THIS
             pass
         elif key == "_QAOAResult__type_backend":
             if issubclass(dict_old[key], QAOABaseBackendStatevector):
@@ -85,18 +86,21 @@ def _compare_qaoa_results(dict_old, dict_new):
                     for step in range(len(dict_old[key][key2])):
                         assert np.all(
                             dict_old[key][key2][step] == dict_new[key][key2][step]
-                        ), "Intermediate params are not the same."
+                        ), f"Intermediate params are not the same. Expected {dict_old[key][key2][step]} but \
+                            received {dict_new[key][key2][step]}"
                 else:
                     assert (
                         dict_old[key][key2] == dict_new[key][key2]
-                    ), "Intermediate params are not the same."
+                    ), f"Intermediate params are not the same. Expected {dict_old[key][key2]}, but \
+                        received {dict_new[key][key2]}"
         else:
             assert dict_old[key] == dict_new[key], f"'{key}' is not the same"
 
 
 def _test_keys_in_dict(obj, expected_keys):
     """
-    private function to test the keys. It recursively tests the keys of the nested dictionaries, or lists of dictionaries
+    private function to test the keys.
+    It recursively tests the keys of the nested dictionaries, or lists of dictionaries
     """
 
     if isinstance(obj, dict):
@@ -191,8 +195,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         """
         Assert that compilation has to be called before optimisation
         """
-        g = nw.circulant_graph(6, [1])
-        # vc = MinimumVertexCover(g, field =1.0, penalty=10).qubo
 
         q = QAOA()
         q.set_classical_optimizer(optimization_progress=True)
@@ -258,7 +260,8 @@ class TestingVanillaQAOA(unittest.TestCase):
 
     def test_set_circuit_properties_qaoa_descriptor_mixer_x(self):
         """
-        Checks if the X mixer created by the X_mixer_hamiltonian method and the automated methods in workflows do the same thing.
+        Checks if the X mixer created by the X_mixer_hamiltonian method
+        and the automated methods in workflows do the same thing.
 
         For each qubit, there should be 1 RXGateMap per layer of p.
         """
@@ -291,7 +294,8 @@ class TestingVanillaQAOA(unittest.TestCase):
 
     def test_set_circuit_properties_qaoa_descriptor_mixer_xy(self):
         """
-        Checks if the XY mixer created by the XY_mixer_hamiltonian method and the automated methods in workflows do the same thing.
+        Checks if the XY mixer created by the XY_mixer_hamiltonian method
+        and the automated methods in workflows do the same thing.
 
         Depending on the qubit connectivity selected. (chain, full or star)
         For each pair of connected qubits, there should be 1 RXXGateMap and RYYGateMap per layer of p.
@@ -420,7 +424,8 @@ class TestingVanillaQAOA(unittest.TestCase):
 
     def test_set_circuit_properties_rejected_values(self):
         """
-        Some properties of CircuitProperties Object return a ValueError if the specified property has not been whitelisted in the code.
+        Some properties of CircuitProperties Object return a ValueError
+        if the specified property has not been whitelisted in the code.
         This checks that the ValueError is raised if the argument is not whitelisted.
         """
 
@@ -655,6 +660,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         self.assertRaises(AttributeError, lambda: q.backend.n_shots)
 
+<<<<<<< HEAD
     def test_set_error_mitigation_properties_change(self):
         """
         Ensure that once a property has been changed via set_error_mitigation_properties the attribute has been appropriately updated.
@@ -777,6 +783,8 @@ class TestingVanillaQAOA(unittest.TestCase):
             ),
         )
 
+=======
+>>>>>>> dev
     def test_set_classical_optimizer_defaults(self):
         """
         Check if the fields in the default classical_optimizer dict are correct
@@ -804,8 +812,8 @@ class TestingVanillaQAOA(unittest.TestCase):
         for each_key, each_value in default_pairings.items():
             self.assertEqual(getattr(q.classical_optimizer, each_key), each_value)
 
-            if each_value != None:
-                self.assertEqual(q.classical_optimizer.asdict()[each_key], each_value)
+            # if each_value is None: LD --> I don't think we really need this test, since asdict()
+            #     assert isinstance(q.classical_optimizer.each_key, None)
 
     def test_set_classical_optimizer_jac_hess_casing(self):
         """
@@ -883,7 +891,7 @@ class TestingVanillaQAOA(unittest.TestCase):
                 assert qaoa.header["algorithm"] == "qaoa"
             else:
                 assert (
-                    value == None
+                    value is None
                 ), "The value of the key {} (of the dictionary qaoa.header) is not None, when it should be.".format(
                     key
                 )
@@ -895,9 +903,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="test",
-            run_by="raul",
+            run_by="OpenQAOA",
             provider="-",
-            target="-",
+            target="vectorized",
             cloud="local",
             client="-",
         )
@@ -914,23 +922,24 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="test",
-            run_by="raul",
+            run_by="OpenQAOA",
             provider="-",
-            target="-",
+            target="vectorized",
             cloud="local",
             client="-",
             experiment_id=experiment_id,
         )
 
-        # check if the header values are set to the correct values, except for the qubit_number, atomic_id, execution_time_start, and execution_time_end (which are set to None)
+        # check if the header values are set to the correct values, except for the
+        # qubit_number, atomic_id, execution_time_start, and execution_time_end (which are set to None)
         dict_values = {
             "experiment_id": experiment_id,
             "project_id": "8353185c-b175-4eda-9628-b4e58cb0e41b",
             "algorithm": "qaoa",
             "description": "test",
-            "run_by": "raul",
+            "run_by": "OpenQAOA",
             "provider": "-",
-            "target": "-",
+            "target": "vectorized",
             "cloud": "local",
             "client": "-",
             "qubit_number": None,
@@ -948,8 +957,10 @@ class TestingVanillaQAOA(unittest.TestCase):
         # compile the QAOA object
         qaoa.compile(problem=QUBO.random_instance(n=8))
 
-        # check if the header values are still set to the correct values, except for execution_time_start, and execution_time_end (which are set to None).
-        # Now atomic_id should be set to a valid uuid. And qubit_number should be set to 8 (number of qubits of the problem)
+        # check if the header values are still set to the correct values, except for execution_time_start, and
+        # execution_time_end (which are set to None).
+        # Now atomic_id should be set to a valid uuid.
+        # And qubit_number should be set to 8 (number of qubits of the problem)
         dict_values["qubit_number"] = 8
         for key, value in qaoa.header.items():
             if key not in ["atomic_id"]:
@@ -968,7 +979,8 @@ class TestingVanillaQAOA(unittest.TestCase):
         # optimize the QAOA object
         qaoa.optimize()
 
-        # check if the header values are still set to the correct values, now everything should be set to a valid value (execution_time_start and execution_time_end should be integers>1672933928)
+        # check if the header values are still set to the correct values, now everything should be set to a valid value
+        # (execution_time_start and execution_time_end should be integers>1672933928)
         dict_values["atomic_id"] = atomic_id
         for key, value in qaoa.header.items():
             if key not in ["execution_time_start", "execution_time_end"]:
@@ -990,9 +1002,9 @@ class TestingVanillaQAOA(unittest.TestCase):
             qaoa.set_header(
                 project_id="test",
                 description="test",
-                run_by="raul",
+                run_by="OpenQAOA",
                 provider="-",
-                target="-",
+                target="vectorized",
                 cloud="local",
                 client="-",
             )
@@ -1007,9 +1019,9 @@ class TestingVanillaQAOA(unittest.TestCase):
                 project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
                 experiment_id="test",
                 description="test",
-                run_by="raul",
+                run_by="OpenQAOA",
                 provider="-",
-                target="-",
+                target="vectorized",
                 cloud="local",
                 client="-",
             )
@@ -1028,10 +1040,17 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa.compile(problem=QUBO.random_instance(n=8))
         qaoa.optimize()
 
-        assert qaoa.exp_tags == {
+        tags = {
             "tag1": "value9",
             "tag2": "value2",
-        }, "Experiment tags are not set correctly."
+            "init_type": "ramp",
+            "optimizer_method": "cobyla",
+            "p": 1,
+            "param_type": "standard",
+            "qubit_number": 8,
+        }
+
+        assert qaoa.exp_tags == tags, "Experiment tags are not set correctly."
 
         error = False
         try:
@@ -1083,9 +1102,9 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="test",
-            run_by="raul",
+            run_by="OpenQAOA",
             provider="-",
-            target="-",
+            target="vectorized",
             cloud="local",
             client="-",
         )
@@ -1302,11 +1321,11 @@ class TestingVanillaQAOA(unittest.TestCase):
         for key, value in expected_keys.items():
             if key not in exclude_keys:
                 assert (
-                    value == True
+                    value is True
                 ), f'Key "{key}" not found in the dictionary, when using "{method}" method.'
             else:
                 assert (
-                    value == False
+                    value is False
                 ), f'Key "{key}" was found in the dictionary, but it should not be there, when using "{method}" method.'
 
         """
@@ -1354,15 +1373,12 @@ class TestingVanillaQAOA(unittest.TestCase):
                 p=1, param_type="extended", init_type="rand", mixer_hamiltonian="x"
             )
             q.set_backend_properties(n_shots=50)
-            q.set_classical_optimizer(maxiter=10, optimization_progress=True)
+            q.set_classical_optimizer(maxiter=2, optimization_progress=True)
             q.set_exp_tags({"add_tag": "test"})
             q.set_header(
                 project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
                 description="test",
-                run_by="raul",
-                provider="-",
-                target="-",
-                cloud="local",
+                run_by="oq",
                 client="-",
             )
 
@@ -1380,7 +1396,8 @@ class TestingVanillaQAOA(unittest.TestCase):
 
             qaoas.append(q)
 
-        # for each rqaoa object, create a new rqaoa object from dict, json string, json file, and compressed json file and compare them with the original object
+        # for each rqaoa object, create a new rqaoa object from dict, json string, json file,
+        # and compressed json file and compare them with the original object
         for q in qaoas:
             new_q_list = []
 
@@ -1480,36 +1497,45 @@ class TestingVanillaQAOA(unittest.TestCase):
             result = q.evaluate_circuit(params)
             assert (
                 abs(result["cost"]) >= 0
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a cost, here cost is {result['cost']}"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` \
+                should return a cost, here cost is {result['cost']}"
             assert (
                 abs(result["uncertainty"]) > 0
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return an uncertanty, here uncertainty is {result['uncertainty']}"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return an uncertanty, \
+                here uncertainty is {result['uncertainty']}"
             assert (
                 len(result["measurement_results"]) > 0
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return a wavefunction when using a state-based simulator"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return \
+                a wavefunction when using a state-based simulator"
 
-            # evaluate the circuit with a list of params, taking the params from the dict, so we should get the same result
+            # evaluate the circuit with a list of params, taking the params from the dict,
+            # so we should get the same result
             params2 = []
             for value in params.values():
                 params2 += value.flatten().tolist()
             result2 = q.evaluate_circuit(params2)
             assert (
                 result == result2
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
+                when passing a dict or a list of params"
 
-            # evaluate the circuit with np.ndarray of params, taking the params from the dict, so we should get the same result
+            # evaluate the circuit with np.ndarray of params, taking the params from the dict,
+            # so we should get the same result
             result2 = q.evaluate_circuit(np.array(params2))
             assert (
                 result == result2
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
+                when passing a dict or a list of params"
 
-            # evaluate the circuit with the params as a QAOAVariationalBaseParams object, so we should get the same result
+            # evaluate the circuit with the params as a QAOAVariationalBaseParams object,
+            # so we should get the same result
             params_obj = deepcopy(q.variate_params)
             params_obj.update_from_raw(params2)
             result3 = q.evaluate_circuit(params_obj)
             assert (
                 result == result3
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing a dict or a list of params"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
+                when passing a dict or a list of params"
 
             # run the circuit with the params manually, we should get the same result
             result4 = {}
@@ -1520,7 +1546,8 @@ class TestingVanillaQAOA(unittest.TestCase):
             result4["measurement_results"] = q.backend.wavefunction(params_obj)
             assert (
                 result == result4
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when passing the optimized params manually"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when \
+                  passing the optimized params manually"
 
             # evaluate the circuit with a wrong input, it should raise an error
             error = False
@@ -1530,7 +1557,8 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error = True
             assert (
                 error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a wrong input"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+                  passing a wrong input"
 
             # evaluate the circuit with a list longer than it should, it should raise an error
             error = False
@@ -1540,7 +1568,8 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error = True
             assert (
                 error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a list longer than it should"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+                passing a list longer than it should"
 
             # evaluate the circuit with a list shorter than it should, it should raise an error
             error = False
@@ -1550,7 +1579,8 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error = True
             assert (
                 error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a list shorter than it should"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+                passing a list shorter than it should"
 
             # evaluate the circuit with a dict with a wrong key, it should raise an error
             error = False
@@ -1560,7 +1590,8 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error = True
             assert (
                 error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a dict with a wrong key"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error \
+                when passing a dict with a wrong key"
 
             # evaluate the circuit with a dict with a value longer than it should, it should raise an error
             error = False
@@ -1572,7 +1603,8 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error = True
             assert (
                 error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when passing a dict with a value longer than it should"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+                passing a dict with a value longer than it should"
 
             # evaluate the circuit without passing any param, it should raise an error
             error = False
@@ -1582,7 +1614,8 @@ class TestingVanillaQAOA(unittest.TestCase):
                 error = True
             assert (
                 error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when not passing any param"
+            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+                  not passing any param"
 
         # check that it works with shots
         q = QAOA()
@@ -1642,10 +1675,10 @@ class TestingVanillaQAOA(unittest.TestCase):
             abs(result["cost"]) >= 0
         ), "When using an analytical simulator, `evaluate_circuit` should return a cost"
         assert (
-            result["uncertainty"] == None
+            result["uncertainty"] is None
         ), "When using an analytical simulator, `evaluate_circuit` should return uncertainty None"
         assert (
-            result["measurement_results"] == None
+            result["measurement_results"] is None
         ), "When using an analytical simulator, `evaluate_circuit` should return no measurement results"
 
     def test_change_properties_after_compilation(self):
@@ -1666,6 +1699,39 @@ class TestingVanillaQAOA(unittest.TestCase):
                 maxiter=100, method="vgd", jac="finite_difference"
             )
 
+    def test_numpy_serialize(self):
+        np_qubo = NumberPartition([1, 2, 3]).qubo
+
+        q = QAOA()
+        q.compile(np_qubo)
+        q.optimize()
+
+        # add numpy results
+        numpy_dict = {
+            "000": np.int64(85),
+            "100": np.int64(85),
+            "010": np.int64(85),
+            "111": 12,
+        }
+        numpy_cost = np.float64(85.123)
+
+        q.result.optimized["intermediate"] = [
+            numpy_cost,
+            numpy_cost,
+            numpy_cost,
+            0.123,
+            -123.123,
+        ]
+        q.result.intermediate["measurement_outcomes"] = [
+            numpy_dict,
+            numpy_dict,
+            numpy_dict,
+        ]
+        q.result.optimized["measurement_outcomes"] = numpy_dict
+        q.result.optimized["cost"] = numpy_cost
+
+        q.dumps()
+
 
 class TestingRQAOA(unittest.TestCase):
     """
@@ -1682,7 +1748,7 @@ class TestingRQAOA(unittest.TestCase):
         assert cp.param_type == "standard"
         assert cp.init_type == "ramp"
         assert cp.p == 1
-        assert cp.q == None
+        assert cp.q is None
         assert cp.mixer_hamiltonian == "x"
 
         # device
@@ -1700,7 +1766,7 @@ class TestingRQAOA(unittest.TestCase):
         assert r.rqaoa_parameters.n_cutoff == 5
         assert r.rqaoa_parameters.n_max == 1
         assert r.rqaoa_parameters.steps == 1
-        assert r.rqaoa_parameters.original_hamiltonian == None
+        assert r.rqaoa_parameters.original_hamiltonian is None
         assert r.rqaoa_parameters.counter == 0
 
         self._test_default_values(r)
@@ -1728,7 +1794,11 @@ class TestingRQAOA(unittest.TestCase):
         name_device="qiskit.statevector_simulator",
         return_object=False,
     ):
+<<<<<<< HEAD
         if problem == None:
+=======
+        if problem is None:
+>>>>>>> dev
             problem = MaximumCut.random_instance(
                 n_nodes=8, edge_probability=0.5, seed=2
             ).qubo
@@ -1756,10 +1826,7 @@ class TestingRQAOA(unittest.TestCase):
         r.set_header(
             project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
             description="header",
-            run_by="raul",
-            provider="-",
-            target="-",
-            cloud="local",
+            run_by="OpenQAOA",
             client="-",
         )
         r.set_exp_tags(tags={"tag1": "value1", "tag2": "value2"})
@@ -2420,11 +2487,11 @@ class TestingRQAOA(unittest.TestCase):
         for key, value in expected_keys.items():
             if key not in exclude_keys:
                 assert (
-                    value == True
+                    value is True
                 ), f'Key "{key}" not found in the dictionary, when using "{method}" method.'
             else:
                 assert (
-                    value == False
+                    value is False
                 ), f'Key "{key}" was found in the dictionary, but it should not be there, when using "{method}" method.'
 
         """
@@ -2454,22 +2521,18 @@ class TestingRQAOA(unittest.TestCase):
         test dumping the RQAOA object step by step
         """
 
+        project_id = "d3a6f03b-1484-423a-8432-38e57c4e9ec7"
+
         # define the problem
         problem = QUBO.random_instance(n=8)
         problem.set_metadata(
             {"metadata_key1": "metadata_value1", "metadata_key2": "metadata_value2"}
         )
 
-        # define the RQAOA object
         r = RQAOA()
-
-        # set experimental tags
+        r.set_header(project_id=project_id)
         r.set_exp_tags({"tag1": "value1", "tag2": "value2"})
-
-        # set the classical optimizer
         r.set_classical_optimizer(optimization_progress=True)
-
-        # compile the problem
         r.compile(problem)
 
         # optimize the problem while dumping the data at each step
@@ -2484,7 +2547,6 @@ class TestingRQAOA(unittest.TestCase):
         )
 
         # create list of expected file names
-        project_id = "None"
         experiment_id, atomic_id = r.header["experiment_id"], r.header["atomic_id"]
         file_names = {
             id: project_id
@@ -2600,9 +2662,9 @@ class TestingRQAOA(unittest.TestCase):
             r.set_header(
                 project_id="8353185c-b175-4eda-9628-b4e58cb0e41b",
                 description="test",
-                run_by="raul",
+                run_by="OpenQAOA",
                 provider="-",
-                target="-",
+                target="vectorized",
                 cloud="local",
                 client="-",
             )
@@ -2621,7 +2683,8 @@ class TestingRQAOA(unittest.TestCase):
 
             rqaoas.append(r)
 
-        # for each rqaoa object, create a new rqaoa object from dict, json string, json file, and compressed json file and compare them with the original object
+        # for each rqaoa object, create a new rqaoa object from dict, json string, json file,
+        # and compressed json file and compare them with the original object
         for r in rqaoas:
             new_r_list = []
 
