@@ -22,11 +22,13 @@ import sys
 # sys.path.insert(0, os.path.abspath('.'))
 # sys.path.insert(0, os.path.abspath("../../"))
 sys.path.insert(0, os.path.abspath("../.."))
-sys.path.insert(0, os.path.abspath("../../src/openqaoa-core"))
-sys.path.insert(0, os.path.abspath("../../src/openqaoa-qiskit"))
-sys.path.insert(0, os.path.abspath("../../src/openqaoa-pyquil"))
-sys.path.insert(0, os.path.abspath("../../src/openqaoa-braket"))
-sys.path.insert(0, os.path.abspath("../../src/openqaoa-azure"))
+for each_folder_name in os.listdir(os.path.abspath("../../src")):
+    sys.path.insert(0, os.path.abspath("../../src/"+each_folder_name))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-core"))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-qiskit"))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-pyquil"))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-braket"))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-azure"))
 print(sys.path)
 
 # from openqaoa.qaoa_parameters.baseparams import shapedArray
@@ -72,6 +74,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/1.23", None),
     "np": ("https://numpy.org/doc/1.23", None),
     "scipy": ("https://docs.scipy.org/doc/scipy-1.8.1", None),
+    "qiskit_ibm_provider": ("https://qiskit.org/ecosystem/ibm-provider/", None),
 }
 
 
