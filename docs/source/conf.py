@@ -74,7 +74,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/1.23", None),
     "np": ("https://numpy.org/doc/1.23", None),
     "scipy": ("https://docs.scipy.org/doc/scipy-1.8.1", None),
-    "qiskit_ibm_provider": ("https://qiskit.org/ecosystem/ibm-provider/", None),
+    "qiskit-ibm-provider": ("https://qiskit.org/ecosystem/ibm-provider/", None),
 }
 
 
