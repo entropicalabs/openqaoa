@@ -257,8 +257,8 @@ class QAOA(Workflow):
             **backend_dict,
         )
 
-        # Implementing SPAM Twirling error mitigation requires wrapping the backend. 
-        # However, the BaseWrapper can have many more use cases. 
+        # Implementing SPAM Twirling error mitigation requires wrapping the backend.
+        # However, the BaseWrapper can have many more use cases.
         if (
             self.error_mitigation_properties.error_mitigation_technique
             == "spam_twirling"

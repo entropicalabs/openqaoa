@@ -43,7 +43,6 @@ class QUBO(object):
         problem_instance: dict = {"problem_type": "generic_qubo"},
         clean_terms_and_weights=False,
     ):
-
         # check-type for terms and weights
         if not isinstance(terms, list) and not isinstance(terms, tuple):
             raise TypeError(
@@ -115,7 +114,6 @@ class QUBO(object):
 
     @n.setter
     def n(self, input_n):
-
         if not isinstance(input_n, int):
             raise TypeError("The input parameter, n, has to be of type int")
 
@@ -215,7 +213,6 @@ class QUBO(object):
 
         # We do one pass over terms and weights
         for term, weight in zip(terms, weights):
-
             # Convert the term to a set
             term_set = set(term)
 
@@ -263,7 +260,6 @@ class QUBO(object):
 
         # Process the given terms and weights
         for term, weight in zip(qubo_terms, qubo_weights):
-
             if len(term) == 2:
                 u, v = term
 

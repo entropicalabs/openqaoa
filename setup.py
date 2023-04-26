@@ -93,7 +93,7 @@ setup(
             "qiskit = openqaoa_qiskit.backend_config",
             "braket = openqaoa_braket.backend_config",
             "pyquil = openqaoa_pyquil.backend_config",
-            "azure = openqaoa_azure.backend_config"
+            "azure = openqaoa_azure.backend_config",
         ]
     },
     url="https://github.com/entropicalabs/openqaoa",

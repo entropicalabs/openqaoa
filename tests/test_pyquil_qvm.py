@@ -29,7 +29,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_connection(self):
-
         """
         Checks if connection to qvm and quilc is successful.
         TODO : improve test
@@ -48,7 +47,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_active_reset(self):
-
         """
         Test if active_reset works fine.
         Check for RESET instruction in parametric circuit when active_reset = True / False
@@ -91,7 +89,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_rewiring(self):
-
         """
         Test if rewiring works fine.
 
@@ -151,7 +148,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_qaoa_pyquil_expectation(self):
-
         """
         Checks if expectation value agrees with known values. Since angles are selected such that the final state is one of the computational basis states, shots do not matter (there is no statistical variance).
         """
@@ -186,7 +182,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_qaoa_pyquil_gate_names(self):
-
         """
         Checks if names of gates are correct, and no. of measurement gates match the no. of qubits.
         """
@@ -290,7 +285,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_circuit_init_hadamard(self):
-
         """
         Checks correctness of circuit for the argument `init_hadamard`.
         """
@@ -365,7 +359,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_circuit_append_state(self):
-
         """
         Checks correctness of circuit for the argument `append_state`.
         """
@@ -403,7 +396,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_circuit_prepend_state(self):
-
         """
         Checks correctness of circuit for the argument `prepend_state`.
         """
@@ -456,7 +448,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_pyquil_vectorized_agreement(self):
-
         """
         Checks correctness of expectation values with vectorized backend, up to a tolerance of delta = std.dev.
         """

@@ -25,9 +25,8 @@ class BraketGateApplicator(gates_core.GateApplicator):
 
     def create_quantum_circuit(self, n_qubits) -> Circuit:
         """
-        Function which creates and empty circuit for the specific backend.
-        Needed for twirling but can be used inside parametric circuit too
-        instead of creating parametric_circuit = QuantumCircuit(self.qureg)
+        Function which creates and empty circuit for the braket backend.
+        Needed for SPAM twirling but more general than that.
         """
         return Circuit()
 

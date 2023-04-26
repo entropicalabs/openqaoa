@@ -23,10 +23,8 @@ class PyquilGateApplicator(gates_core.GateApplicator):
 
     def create_quantum_circuit(self, n_qubits) -> Program:
         """
-        Function which creates and empty circuit for the specific backend.
-        Needed for twirling but can be used inside parametric circuit too
-        instead of creating parametric_circuit = QuantumCircuit(self.qureg)
-        TODO this function doesn't require n_qubits but the one for qiskit does.
+        Function which creates and empty circuit specific to the pyquil backend.
+        Needed for SPAM twirling but can be used more generally.
         """
         return Program()
 

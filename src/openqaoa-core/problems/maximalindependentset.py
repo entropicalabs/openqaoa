@@ -18,7 +18,7 @@ class MIS(Problem):
     Parameters
     ----------
     G: networkx.Graph
-        Networkx graph of the problem 
+        Networkx graph of the problem
     penalty: float
         Penalty for the edge constraints.
 
@@ -29,7 +29,7 @@ class MIS(Problem):
 
     __name__ = "maximal_independent_set"
 
-    def __init__(self, G, penalty:Union[int, float]=2):
+    def __init__(self, G, penalty: Union[int, float] = 2):
         self.G = G
         self.penalty = penalty
         # self.cplex_model = self.docplex_model()
@@ -40,7 +40,6 @@ class MIS(Problem):
 
     @G.setter
     def G(self, input_networkx_graph):
-
         if not isinstance(input_networkx_graph, nx.Graph):
             raise TypeError("Input problem graph must be a networkx Graph.")
 
@@ -82,14 +81,14 @@ class MIS(Problem):
 
     @property
     def docplex_model(self):
-        mdl = Model('MIS')
+        mdl = Model("MIS")
         num_vertices = self.G.number_of_nodes()
 
         x = {i: mdl.binary_var(name=f"x_{i}") for i in range(num_vertices)}
 
-        mdl.minimize(-mdl.sum(x) + self.penalty * mdl.sum(
-            x[i] * x[j] for (i, j) in self.G.edges
-        ))
+        mdl.minimize(
+            -mdl.sum(x) + self.penalty * mdl.sum(x[i] * x[j] for (i, j) in self.G.edges)
+        )
         return mdl
 
     @property
@@ -103,8 +102,13 @@ class MIS(Problem):
         """
         cplex_model = self.docplex_model
         qubo_docplex = FromDocplex2IsingModel(cplex_model).ising_model
-        
-        return QUBO(self.G.number_of_nodes(), qubo_docplex.terms + [[]], qubo_docplex.weights + [qubo_docplex.constant], self.problem_instance)
+
+        return QUBO(
+            self.G.number_of_nodes(),
+            qubo_docplex.terms + [[]],
+            qubo_docplex.weights + [qubo_docplex.constant],
+            self.problem_instance,
+        )
 
     def classical_solution(self, string: bool = False):
         """
@@ -167,7 +171,24 @@ class MIS(Problem):
             fig = None
         pos = nx.circular_layout(self.G)
         num_vertices = self.G.number_of_nodes()
-        nx.draw(self.G, pos=pos, edgecolors="black", labels={i:str(i) for i in range(num_vertices)}, node_color=[colors[solution[f"x_{i}"]] for i in range(num_vertices)], ax=ax, edge_color="#0B2340")
-        ax.plot([],[], marker="o", markersize=10, label="MIS", linewidth=0,color=colors[1], markeredgecolor="black")
+        nx.draw(
+            self.G,
+            pos=pos,
+            edgecolors="black",
+            labels={i: str(i) for i in range(num_vertices)},
+            node_color=[colors[solution[f"x_{i}"]] for i in range(num_vertices)],
+            ax=ax,
+            edge_color="#0B2340",
+        )
+        ax.plot(
+            [],
+            [],
+            marker="o",
+            markersize=10,
+            label="MIS",
+            linewidth=0,
+            color=colors[1],
+            markeredgecolor="black",
+        )
         ax.legend(loc="upper center", bbox_to_anchor=[0.5, 1.1])
         return fig

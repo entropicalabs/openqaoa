@@ -131,8 +131,8 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
     def test_get_counts(self):
         """
         Testing the get_counts method of the SPAM Twirling wrapper.
-        
-        The test compares the probability dictionary returned from the get_counts method as overriden by the wrapper to the hardcoded one and the unwrapped backend. The later is only true for the very trivial case of a using a single batch and seed 1 which translates to not adding any X gates to the circuit. 
+
+        The test compares the probability dictionary returned from the get_counts method as overriden by the wrapper to the hardcoded one and the unwrapped backend. The later is only true for the very trivial case of a using a single batch and seed 1 which translates to not adding any X gates to the circuit.
         The test also compares the outcome probabilitites obtained within the wrapper to the ones obtained form the original backend. These should be almost equal given that there's no measurement noise and enough shots.
         """
 
@@ -159,7 +159,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         backend_counts = self.qiskit_shot_backend.get_counts(
             self.variate_params, n_shots=n_shots
         )
-        
+
         # convert counts to probabilities
         wrapper_probs = {key: value / n_shots for key, value in wrapper_counts.items()}
         backend_probs = {key: value / n_shots for key, value in backend_counts.items()}
@@ -168,7 +168,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             assert np.isclose(
                 wrapper_probs[key], backend_probs[key], rtol=1e-1
             ), "The get_counts function in the trivial wrapper when negating both qubits returned a value too far from the original backend."
-            
+
         # Obtain counts for the trivial case with n_batches=5 and seed=26 which means applying X gates at random at every batch
         n_shots = 10**6  # more counts for accurate statistics
         wrapper_counts = self.wrapped_obj.get_counts(
@@ -177,7 +177,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         backend_counts = self.qiskit_shot_backend.get_counts(
             self.variate_params, n_shots=n_shots
         )
-        
+
         # convert counts to probabilities
         wrapper_probs = {key: value / n_shots for key, value in wrapper_counts.items()}
         backend_probs = {key: value / n_shots for key, value in backend_counts.items()}
@@ -186,7 +186,6 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             assert np.isclose(
                 wrapper_probs[key], backend_probs[key], rtol=1e-1
             ), "The get_counts function in the wrapper when negating random qubits returned a value too far from the original backend."
-
 
     def test_expectation_value_spam_twirled(self):
         """
@@ -235,7 +234,9 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         """
         Testing the expectation method of the SPAM Twirling wrapper which overrides the backend function as defined in basebackends.
         """
-        self.assertAlmostEqual(self.wrapped_obj.expectation(self.variate_params, n_shots=10000), -0.94, 1)
+        self.assertAlmostEqual(
+            self.wrapped_obj.expectation(self.variate_params, n_shots=10000), -0.94, 1
+        )
 
 
 if __name__ == "__main__":

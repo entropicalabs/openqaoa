@@ -86,7 +86,7 @@ class TSP(Problem):
                 )
 
             # Set edge weights to be the distances between corresponding cities
-            for (u, v) in G.edges():
+            for u, v in G.edges():
                 G[u][v]["weight"] = distance_matrix[u, v]
 
         # Set number of cities
@@ -177,7 +177,7 @@ class TSP(Problem):
             None
         """
         # Set edge weights to be the distances between corresponding cities
-        for (u, v, weight) in G.edges(data="weight"):
+        for u, v, weight in G.edges(data="weight"):
             print(weight)
             if not isinstance(weight, float) and not isinstance(weight, int):
                 raise TypeError("The edge weights must be of type float or int")
@@ -288,7 +288,7 @@ class TSP(Problem):
                     )
 
         # Constraint which penalizes going through edges which are not part of the graph
-        for (u, v) in nx.complement(self.graph).edges():
+        for u, v in nx.complement(self.graph).edges():
             for j in range(1, self.n_cities + 1):
                 interaction_terms.append(
                     (
@@ -301,7 +301,7 @@ class TSP(Problem):
                 )
 
         # Terms to account for the path cost
-        for (u, v) in self.graph.edges():
+        for u, v in self.graph.edges():
             for j in range(1, self.n_cities + 1):
                 interaction_terms.append(
                     (

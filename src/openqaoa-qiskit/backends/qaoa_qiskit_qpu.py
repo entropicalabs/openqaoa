@@ -1,5 +1,4 @@
 import time
-from copy import deepcopy
 from typing import Optional, List
 import warnings
 
@@ -131,26 +130,24 @@ class QAOAQiskitQPUBackend(
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-        parametric_circuit = deepcopy(self.parametric_circuit)
+        angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
+        memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
+        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
 
         if self.append_state:
-            parametric_circuit = parametric_circuit.compose(self.append_state)
+            circuit_with_angles = circuit_with_angles.compose(self.append_state)
 
         # only measure the problem qubits
         if self.final_mapping is None:
-            parametric_circuit.measure(self.problem_reg, self.creg)
+            circuit_with_angles.measure(self.problem_reg, self.creg)
         else:
             for idx, qubit in enumerate(self.final_mapping[0 : len(self.problem_reg)]):
                 cbit = self.creg[idx]
-                parametric_circuit.measure(qubit, cbit)
-                
+                circuit_with_angles.measure(qubit, cbit)
 
-        angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
-        memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        new_parametric_circuit = parametric_circuit.bind_parameters(memory_map)
         if self.qaoa_descriptor.routed == True:
             transpiled_circuit = transpile(
-                new_parametric_circuit,
+                circuit_with_angles,
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
                 optimization_level=0,
@@ -158,10 +155,11 @@ class QAOAQiskitQPUBackend(
             )
         else:
             transpiled_circuit = transpile(
-                new_parametric_circuit,
+                circuit_with_angles,
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
             )
+
         self.append_state = []  # reset
         return transpiled_circuit
 

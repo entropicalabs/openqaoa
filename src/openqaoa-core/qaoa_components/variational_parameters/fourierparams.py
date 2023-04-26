@@ -265,7 +265,6 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
         u_singles: List[Union[float, int]],
         u_pairs: List[Union[float, int]],
     ):
-
         # setup reg, qubits_singles and qubits_pairs
         super().__init__(qaoa_descriptor)
         if not self.cost_1q_coeffs or not self.cost_2q_coeffs:
@@ -326,7 +325,6 @@ class QAOAVariationalFourierWithBiasParams(QAOAVariationalBaseParams):
         return 2 * np.outer(self.gammas_pairs, self.cost_2q_coeffs)
 
     def update_from_raw(self, new_values):
-
         # overwrite x_rotation_angles with new ones
         self.v = np.array(new_values[0 : self.q])
         # cut x_rotation_angles from new_values
@@ -506,7 +504,6 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
         u_singles: List[Union[float, int]],
         u_pairs: List[Union[float, int]],
     ):
-
         # setup reg, qubits_singles and qubits_pairs
         super().__init__(qaoa_descriptor)
         assert q is not None, f"Depth q for {type(self).__name__} must be specified"
@@ -579,7 +576,6 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
             return 2 * (self.cost_2q_coeffs * np.empty(shape=(self.p, 0)))
 
     def update_from_raw(self, new_values):
-
         self.v_singles = np.array(new_values[: len(self.mixer_1q_coeffs) * self.q])
         self.v_singles = self.v_singles.reshape((self.q, len(self.mixer_1q_coeffs)))
         new_values = new_values[self.q * len(self.mixer_1q_coeffs) :]

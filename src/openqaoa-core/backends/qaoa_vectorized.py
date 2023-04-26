@@ -40,6 +40,7 @@ constCZ = csc_matrix(
 P0 = csc_matrix(np.array([[1, 0], [0, 0]]))
 P1 = csc_matrix(np.array([[0, 0], [0, 1]]))
 
+
 # Parametrised rotations
 def RX(theta: float) -> csc_matrix:
     return csc_matrix(expm(-1j * theta * constX / 2))
@@ -260,7 +261,6 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         init_hadamard: bool,
         cvar_alpha: float = 1,
     ):
-
         assert (
             cvar_alpha == 1
         ), "Please use the shot-based simulator for simulations with cvar_alpha < 1"
@@ -286,9 +286,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         # Handle prepend state
         if self.prepend_state is not None:
-
             if isinstance(self.prepend_state, np.ndarray):
-
                 if np.shape(self.prepend_state) == np.shape(self.wavefn):
                     self.wavefn = self.prepend_state
                 elif np.shape(self.prepend_state) == (2**self.n_qubits,):
@@ -306,11 +304,9 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         # Handle append state
         if self.append_state is not None:
-
             if isinstance(self.append_state, np.ndarray) and np.shape(
                 self.append_state
             ) == (2**self.n_qubits, 2**self.n_qubits):
-
                 # check unitarity of append_state matrix
                 if not np.allclose(
                     np.eye(2**self.n_qubits),
@@ -336,19 +332,17 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
     def apply_x(self, qubit_1: int):
         r"""
         Applies the X gate on ``qubit_1`` in a vectorized way.
-        
-        TODO check if correct 
-        
+
         Parameters
         ----------
         qubit_1:
             Qubit index to apply gate.
-            
+
         Returns
         -------
             None
         """
-        
+
         rotation_angle = np.pi
         C = np.cos(rotation_angle / 2)
         S = -1j * np.sin(rotation_angle / 2)
@@ -357,7 +351,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
         )
 
         self.wavefn = wfn
-        
+
     def apply_rx(self, qubit_1: int, rotation_angle: float):
         r"""
         Applies the RX($\theta$ = ``rotation_angle``) gate on ``qubit_1`` in a vectorized way.
@@ -847,7 +841,7 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
             None
         """
         gates_applicator = VectorizedGateApplicator()
-        
+
         # generate a job id for the wavefunction evaluation
         self.job_id = generate_uuid()
 
@@ -867,14 +861,12 @@ class QAOAvectorizedBackendSimulator(QAOABaseBackendStatevector):
 
         # Handle append state
         if self.append_state is not None:
-
             # Flatten (2,...,2) shaped wfn into a 2**n-dim column vector before multiplying with unitary matrix, ...
             self.wavefn = np.matmul(self.append_state, self.wavefn.flatten())
             # then re-shape it back to (2,...,2)
             self.wavefn = self.wavefn.reshape([2] * self.n_qubits)
 
     def wavefunction(self, params: Type[QAOAVariationalBaseParams] = None) -> list:
-
         """
         Get the wavefunction of the state produced by the parametric circuit.
 

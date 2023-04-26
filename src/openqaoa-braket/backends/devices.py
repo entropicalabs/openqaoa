@@ -34,7 +34,6 @@ class DeviceAWS(DeviceBase):
         aws_region: str = None,
         folder_name: str = "openqaoa",
     ):
-
         """Input the device arn and the name of the folder in which all the
         results for the QPU runs would be saved on the pre-defined s3 bucket.
         Note that the user is required to authenticate through the AWS CLI
@@ -66,7 +65,6 @@ class DeviceAWS(DeviceBase):
         self.qpu_connected = None
 
     def check_connection(self) -> bool:
-
         self.provider_connected = self._check_provider_connection()
 
         if self.provider_connected == False:
@@ -100,7 +98,6 @@ class DeviceAWS(DeviceBase):
             return False
 
     def _check_backend_connection(self) -> bool:
-
         if self.device_name in self.available_qpus:
             self.backend_device = AwsDevice(self.device_name, self.aws_session)
         else:
@@ -127,7 +124,6 @@ class DeviceAWS(DeviceBase):
             return True
 
     def _check_provider_connection(self) -> bool:
-
         try:
             sess = Session(region_name=self.aws_region)
             self.aws_session = AwsSession(sess, default_bucket=self.s3_bucket_name)

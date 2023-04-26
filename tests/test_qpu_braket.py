@@ -115,7 +115,6 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
             qaoa_descriptor, aws_device, shots, None, None, True, 1.0
         )
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
-        
 
         # Standard Decomposition
         main_circuit = Circuit()
@@ -244,7 +243,6 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
             qaoa_descriptor, aws_device, shots, None, append_circuit, True, 1.0
         )
         qpu_circuit = aws_backend.qaoa_circuit(variate_params)
-        
 
         # Standard Decomposition
         main_circuit = Circuit()

@@ -183,7 +183,6 @@ def derivative(
     params = deepcopy(params)
 
     if derivative_type == "gradient":
-
         if derivative_method == "finite_difference":
             out = grad_fd(backend_obj, params, derivative_options, logger)
         elif derivative_method == "param_shift":
@@ -207,7 +206,6 @@ def derivative(
             out = grad_spsa(backend_obj, params, derivative_options, logger)
 
     elif derivative_type == "gradient_w_variance":
-
         if derivative_method == "finite_difference":
             out = grad_fd(
                 backend_obj, params, derivative_options, logger, variance=True
@@ -243,7 +241,6 @@ def derivative(
             )
 
     elif derivative_type == "hessian":
-
         if derivative_method == "finite_difference":
             out = hessian_fd(backend_obj, params, derivative_options, logger)
         else:
@@ -498,7 +495,6 @@ def grad_fd(backend_obj, params, gradient_options, logger, variance: bool = Fals
     eta = gradient_options["stepsize"]
 
     def grad_fd_func(args, n_shots=None):
-
         # get the function to compute the gradient and its variance
         __gradient_function = __gradient(args, backend_obj, params, logger, variance)
 
@@ -602,7 +598,6 @@ def grad_ps(
     )  # the i-th coefficient is associated with extended parameters with indices in range [l[i], l[i+1]]
 
     def grad_ps_func(args, n_shots=None):
-
         # Convert standard to extended parameters before applying parameter shift
         args_ext = params.convert_to_ext(args)
 
@@ -753,7 +748,6 @@ def grad_spsa(backend_obj, params, gradient_options, logger, variance: bool = Fa
     eta = gradient_options["stepsize"]
 
     def grad_spsa_func(args, n_shots=None):
-
         # if variance is True, add the number of shots per argument to the logger
         if variance:
             logger.log_variables({"n_shots": [n_shots]})

@@ -21,7 +21,6 @@ def iCANS(
     callback=None,
     **options
 ):
-
     # check that the stepsize is small enough
     lipschitz = np.sum(np.abs(coeffs))
     if not stepsize < 2 / lipschitz:
@@ -49,7 +48,6 @@ def iCANS(
     testy = besty
 
     while improved and not stop and niter < maxiter:
-
         # compute gradient and variance
         gradient, variance, n_shots_used = jac_w_variance(testx, n_shots=list(n_shots))
 

@@ -24,7 +24,6 @@ class MaximumCut(Problem):
     DEFAULT_EDGE_WEIGHT = 1.0
 
     def __init__(self, G):
-
         self.G = G
 
     @property
@@ -33,7 +32,6 @@ class MaximumCut(Problem):
 
     @G.setter
     def G(self, input_networkx_graph):
-
         if not isinstance(input_networkx_graph, nx.Graph):
             raise TypeError("Input problem graph must be a networkx Graph.")
 

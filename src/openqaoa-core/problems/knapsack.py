@@ -45,7 +45,6 @@ class Knapsack(Problem):
 
     @values.setter
     def values(self, input_values):
-
         if not isinstance(input_values, list):
             raise TypeError("The input parameter, values, has to be a list")
 
@@ -61,7 +60,6 @@ class Knapsack(Problem):
 
     @weights.setter
     def weights(self, input_weights):
-
         if not isinstance(input_weights, list):
             raise TypeError("The input parameter, weights, has to be a list")
 
@@ -77,7 +75,6 @@ class Knapsack(Problem):
 
     @weight_capacity.setter
     def weight_capacity(self, input_weight_capacity):
-
         if not isinstance(input_weight_capacity, int):
             raise TypeError(
                 "The input parameter, weight_capacity, has to be of type int"
@@ -96,7 +93,6 @@ class Knapsack(Problem):
 
     @penalty.setter
     def penalty(self, input_penalty):
-
         if not isinstance(input_penalty, int) and not isinstance(input_penalty, float):
             raise TypeError(
                 "The input parameter, penalty, has to be of type float or int"
@@ -260,7 +256,6 @@ class SlackFreeKnapsack(Knapsack):
     __name__ = "slack_free_knapsack"
 
     def __init__(self, values, weights, weight_capacity, penalty):
-
         super().__init__(values, weights, weight_capacity, penalty)
 
     @staticmethod
