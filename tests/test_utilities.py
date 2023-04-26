@@ -805,8 +805,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Compute list of expectation values and correlation matrix
         comp_exp_val_list, comp_corr_matrix = exp_val_hamiltonian_termwise(
-            variational_params=None,
-            qaoa_backend=None,
             hamiltonian=hamiltonian,
             p=1,
             mixer_type="x",
@@ -878,8 +876,6 @@ class TestingUtilities(unittest.TestCase):
             qaoa_results_optimized["measurement_outcomes"]
         )
         num_exp_vals_z, num_corr_matrix = exp_val_hamiltonian_termwise(
-            variational_params,
-            qaoa_backend,
             hamiltonian,
             "x",
             p,
@@ -890,8 +886,6 @@ class TestingUtilities(unittest.TestCase):
 
         # Analytical expectation values
         exp_vals_z, corr_matrix = exp_val_hamiltonian_termwise(
-            variational_params,
-            qaoa_backend,
             hamiltonian,
             "x",
             p,
@@ -1051,27 +1045,26 @@ class TestingUtilities(unittest.TestCase):
         assert (
             output_calibration_factors == expected_calibration_factors
         ), f"Calibration factors have not been calculated correctly in the presense of probabalistic errors."
-        
-        
+
         ### Calibration factors are 0 as a result of a faulty measurement (probability of an error is 0.5)
         ##### Raise a ValueError
         calibration_measurements = {
             "0000000": 10000 * 0.5,
             "0001000": 10000 * 0.5,
         }
-        
-        
+
         exception = False
         try:
             output_calibration_factors = calculate_calibration_factors(
-            hamiltonian, calibration_measurements, calibration_registers, qubit_mapping
-        )
+                hamiltonian,
+                calibration_measurements,
+                calibration_registers,
+                qubit_mapping,
+            )
         except:
             exception = True
 
         assert exception, "Calibration factors 0 didn't fail"
-
-
 
     def test_energy_expectation_analytical(self):
         """

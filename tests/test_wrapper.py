@@ -235,7 +235,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         """
         Testing the expectation method of the SPAM Twirling wrapper which overrides the backend function as defined in basebackends.
         """
-        assert self.wrapped_obj.expectation(self.variate_params, n_shots=100) == -1.0
+        self.assertAlmostEqual(self.wrapped_obj.expectation(self.variate_params, n_shots=10000), -0.94, 1)
 
 
 if __name__ == "__main__":

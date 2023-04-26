@@ -135,15 +135,14 @@ class QAOAQiskitBackendShotBasedSimulator(
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-        parametric_circuit = deepcopy(self.parametric_circuit)
-
-        if self.append_state:
-            parametric_circuit = parametric_circuit.compose(self.append_state)
-        parametric_circuit.measure_all()
-
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        circuit_with_angles = parametric_circuit.bind_parameters(memory_map)
+        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+
+        if self.append_state:
+            circuit_with_angles = circuit_with_angles.compose(self.append_state)
+        circuit_with_angles.measure_all()
+
         self.append_state = []
         return circuit_with_angles
 

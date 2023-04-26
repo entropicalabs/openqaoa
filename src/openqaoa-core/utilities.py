@@ -1038,8 +1038,6 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
 
 
 def exp_val_hamiltonian_termwise(
-    variational_params: QAOAVariationalBaseParams,
-    qaoa_backend,
     hamiltonian: Hamiltonian,
     mixer_type: str,
     p: int,
