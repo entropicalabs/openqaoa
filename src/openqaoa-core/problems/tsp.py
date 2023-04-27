@@ -4,6 +4,7 @@ import scipy
 
 from ..utilities import check_kwargs
 from .problem import Problem
+from .vehiclerouting import VRP
 from .qubo import QUBO
 
 
@@ -350,3 +351,44 @@ class TSP(Problem):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(n, terms, weights)
         return QUBO(n, ising_terms, ising_weights, self.problem_instance)
+
+class TSP_LP(VRP):
+    """
+    Creates an instance of the traveling salesman problem (TSP) based on the 
+    integer linear programming formulation.
+    https://en.wikipedia.org/wiki/Travelling_salesman_problem
+
+    Parameters
+    ----------
+    G: networkx.Graph
+        Networkx graph of the problem
+    pos: list[list]
+        position x, y of each node
+    n_vehicles: int
+        the number of vehicles used in the solution
+    depot: int
+        the node where all the vehicles leave for and return after
+    subtours: list[list]
+        if -1 (Default value): All the possible subtours are added to the constraints. Avoid it for large instances.
+        if there are subtours that want be avoided in the solution, e.g, a 8 nodes
+        VRP with an optimal solution showing subtour between nodes 4, 5, and 8 can be
+        avoided introducing the constraint subtours=[[4,5,8]]. To additional information
+        about subtours refer to https://de.wikipedia.org/wiki/Datei:TSP_short_cycles.png
+    all_subtours:
+    penalty: float
+        Penalty for the constraints. If the method is 'unbalanced' three values are needed,
+        one for the equality constraints and two for the inequality constraints.
+    method: str
+        Two available methods for the inequality constraints ["slack", "unbalanced"]
+        For 'unblanced' see https://arxiv.org/abs/2211.13914
+    Returns
+    -------
+        An instance of the VRP problem.
+    """
+    def __init__(self, G, pos, subtours, penalty, method):
+        super(VRP, self).__init__(G, pos, n_vehicles=1,subtours=subtours,
+                                  method=method,penalty=penalty)
+
+    def get_distance(self):
+        
+    
