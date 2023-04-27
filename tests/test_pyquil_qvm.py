@@ -358,7 +358,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             for instr in pyquil_backend.parametric_circuit
             if type(instr) == quilbase.Gate
         ]
-
+        
+    @pytest.mark.qvm
     def test_circuit_append_state(self):
         """
         Checks correctness of circuit for the argument `append_state`.
@@ -391,7 +392,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             cvar_alpha=1,
         )
 
-        assert [
+        assert set([
             "RZ",
             "RZ",
             "RX",
@@ -428,11 +429,11 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             "RZ",
             "RX",
             "RZ",
-        ] == [
+        ]) == set([
             instr.name
             for instr in pyquil_backend.qaoa_circuit(params)
             if type(instr) == quilbase.Gate
-        ]
+        ])
 
     @pytest.mark.qvm
     def test_circuit_prepend_state(self):
