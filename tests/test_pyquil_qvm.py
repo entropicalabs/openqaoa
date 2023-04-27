@@ -387,17 +387,9 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             qaoa_descriptor,
             n_shots=10,
             prepend_state=None,
-            append_state=append_circuit,  # TODO
+            append_state=append_circuit,  
             init_hadamard=False,
             cvar_alpha=1,
-        )
-
-        print(
-            [
-                instr.name
-                for instr in pyquil_backend.qaoa_circuit(params)
-                if type(instr) == quilbase.Gate
-            ]
         )
 
         assert [
