@@ -6,6 +6,7 @@ from openqaoa.problems import (
     NumberPartition,
     QUBO,
     TSP,
+    TSP_LP,
     Knapsack,
     ShortestPath,
     SlackFreeKnapsack,
@@ -1051,6 +1052,16 @@ class TestProblem(unittest.TestCase):
             shortest_path_qubo = shortest_path_problem.qubo
 
         self.assertRaises(Exception, test_assertion_fn)
+        
+    # TESTING TSP PROBLEM CLASS
+    def test_tsp_lp_terms_weights_constant(self):
+        """Testing TSP problem creation"""
+        tsp_qubo = TSP_LP.random_instance.qubo
+
+        self.assertTrue(terms_list_equality(expected_terms, vrp_qubo.terms))
+        self.assertEqual(expected_weights, vrp_qubo.weights)
+        self.assertEqual(expected_constant, vrp_qubo.constant)
+
 
     # TESTING VRP PROBLEM CLASS
 

@@ -364,17 +364,12 @@ class TSP_LP(VRP):
         Networkx graph of the problem
     pos: list[list]
         position x, y of each node
-    n_vehicles: int
-        the number of vehicles used in the solution
-    depot: int
-        the node where all the vehicles leave for and return after
     subtours: list[list]
         if -1 (Default value): All the possible subtours are added to the constraints. Avoid it for large instances.
         if there are subtours that want be avoided in the solution, e.g, a 8 nodes
-        VRP with an optimal solution showing subtour between nodes 4, 5, and 8 can be
-        avoided introducing the constraint subtours=[[4,5,8]]. To additional information
+        TSP with an optimal solution showing subtour between nodes 4, 5, and 8 can be
+        avoided introducing the constraint subtours=[[4,5,8]]. Additional information
         about subtours refer to https://de.wikipedia.org/wiki/Datei:TSP_short_cycles.png
-    all_subtours:
     penalty: float
         Penalty for the constraints. If the method is 'unbalanced' three values are needed,
         one for the equality constraints and two for the inequality constraints.
@@ -383,12 +378,42 @@ class TSP_LP(VRP):
         For 'unblanced' see https://arxiv.org/abs/2211.13914
     Returns
     -------
-        An instance of the VRP problem.
+        An instance of the TSP problem for the linear programming formulation.
     """
     def __init__(self, G, pos, subtours, penalty, method):
         super(VRP, self).__init__(G, pos, n_vehicles=1,subtours=subtours,
                                   method=method,penalty=penalty)
+    @staticmethod
+    def random_instance(**kwargs):
+        kwargs["n_vehicles"] = 1
+        return VRP.random_instance(**kwargs)
 
-    def get_distance(self):
+    def get_distance(self, sol):
+        """
+        Get the TSP solution distance
+
+        Parameters
+        ----------
+        sol : str, dict
+            Solution of the TSP problem.
+
+        Returns
+        -------
+        total_distance : float
+            Total distance of the current solution.
+
+        """
+        cities = self.G.number_of_nodes()
+        if isinstance(sol, str):
+            solution = {}
+            for n, var in enumerate(self.docplex_model.iter_binary_vars()):
+                solution[var.name] = int(sol[n])
+            sol = solution
+        total_distance = 0
+        for i in range(cities):
+            for j in range(i+1, cities):
+                if sol[f"x_{i}_{j}"]:
+                    total_distance += self.G.edges[i, j]["weight"]
+        return total_distance
         
     
