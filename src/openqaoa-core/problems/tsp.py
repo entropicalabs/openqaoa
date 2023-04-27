@@ -380,6 +380,8 @@ class TSP_LP(VRP):
     -------
         An instance of the TSP problem for the linear programming formulation.
     """
+    __name__ = "tsp_lp"
+    
     def __init__(self, G, pos, subtours, penalty, method):
         super(VRP, self).__init__(G, pos, n_vehicles=1,subtours=subtours,
                                   method=method,penalty=penalty)
