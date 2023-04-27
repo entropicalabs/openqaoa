@@ -5,10 +5,8 @@ import numpy as np
 from .qaoa_result import QAOAResult
 from ..workflow_properties import CircuitProperties
 from ..baseworkflow import Workflow, check_compiled
-from ...backends.basebackend import QAOABaseBackendStatevector
 from ...backends import QAOABackendAnalyticalSimulator
-from ...backends.cost_function import cost_function
-from ...backends.devices_core import DeviceLocal, DeviceBase
+from ...backends.devices_core import DeviceLocal
 from ...backends.qaoa_backend import get_qaoa_backend
 from ...problems import QUBO
 from ...qaoa_components import (
@@ -262,11 +260,24 @@ class QAOA(Workflow):
             optimizer_dict=self.classical_optimizer.asdict(),
         )
 
+        # Set the header properties
+        self.header["target"] = self.device.device_name
+        self.header["cloud"] = self.device.device_location
+
+        metadata = {
+            "p": self.circuit_properties.p,
+            "param_type": self.circuit_properties.param_type,
+            "init_type": self.circuit_properties.init_type,
+            "optimizer_method": self.classical_optimizer.method,
+        }
+
+        self.set_exp_tags(tags=metadata)
+
         self.compiled = True
 
         if verbose:
             print("\t \033[1m ### Summary ###\033[0m")
-            print(f"OpenQAOA has been compiled with the following properties")
+            print("OpenQAOA has been compiled with the following properties")
             print(
                 f"Solving QAOA with \033[1m {self.device.device_name} \033[0m on"
                 f"\033[1m{self.device.device_location}\033[0m"
@@ -296,7 +307,7 @@ class QAOA(Workflow):
         A method running the classical optimisation loop
         """
 
-        if self.compiled == False:
+        if self.compiled is False:
             raise ValueError("Please compile the QAOA before optimizing it!")
 
         # timestamp for the start of the optimization
@@ -310,7 +321,7 @@ class QAOA(Workflow):
         self.header["execution_time_end"] = generate_timestamp()
 
         if verbose:
-            print(f"optimization completed.")
+            print("Optimization completed.")
         return
 
     def evaluate_circuit(
@@ -338,10 +349,11 @@ class QAOA(Workflow):
         """
 
         # before evaluating the circuit we check that the QAOA object has been compiled
-        if self.compiled == False:
+        if self.compiled is False:
             raise ValueError("Please compile the QAOA before optimizing it!")
 
-        ## Check the type of the input parameters and save them as a QAOAVariationalBaseParams object at the variable `params_obj`
+        # Check the type of the input parameters and save them as a
+        # QAOAVariationalBaseParams object at the variable `params_obj`
 
         # if the parameters are passed as a dictionary we copy and update the variational parameters of the QAOA object
         if isinstance(params, dict):
@@ -382,7 +394,7 @@ class QAOA(Workflow):
                 f"The input params must be a list or a dictionary. Instead, received {type(params)}"
             )
 
-        ## Evaluate the QAOA circuit and return the results
+        # Evaluate the QAOA circuit and return the results
         output_dict = {
             "cost": None,
             "uncertainty": None,
@@ -409,7 +421,7 @@ class QAOA(Workflow):
         return output_dict
 
     def _serializable_dict(
-        self, complex_to_string: bool = False, intermediate_mesurements: bool = True
+        self, complex_to_string: bool = False, intermediate_measurements: bool = True
     ):
         """
         Returns all values and attributes of the object that we want to return in
@@ -426,7 +438,7 @@ class QAOA(Workflow):
         serializable_dict: dict
             A dictionary containing all the values and attributes of the object
             that we want to return in `asdict` and `dump(s)` methods.
-        intermediate_mesurements: bool
+        intermediate_measurements: bool
             If True, intermediate measurements are included in the dump.
             If False, intermediate measurements are not included in the dump.
             Default is True.
@@ -435,7 +447,7 @@ class QAOA(Workflow):
         # we call the _serializable_dict method of the parent class,
         # specifying the keys to delete from the results dictionary
         serializable_dict = super()._serializable_dict(
-            complex_to_string, intermediate_mesurements
+            complex_to_string, intermediate_measurements
         )
 
         # we add the keys of the QAOA object that we want to return

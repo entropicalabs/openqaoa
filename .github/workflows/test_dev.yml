@@ -63,7 +63,7 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          pytest tests/ -v -m 'not (qpu or sim)' --cov --cov-report=xml:coverage.xml
+          pytest tests/ -m 'not (qpu or sim)' --cov --cov-report=xml:coverage.xml
 
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3

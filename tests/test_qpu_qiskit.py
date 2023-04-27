@@ -40,6 +40,9 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
 
     @pytest.mark.api
     def setUp(self):
+        """
+        Setting up the credentials
+        """
         bashCommand = "az resource list"
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
@@ -61,7 +64,8 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
 
     @pytest.mark.sim
     def check_shots_tally(self):
-        """There is a known bug in the qiskit backend for azure where if the shots
+        """
+        There is a known bug in the qiskit backend for azure where if the shots
         argument might be ignored. This test checks that the output from the azure
         computation matches the input requirements.
         """
@@ -81,6 +85,9 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
         q.set_classical_optimizer(maxiter=1)
         q.compile(problem_qubo)
         q.optimize()
+
+
+        q.dump(file_name="check_shots_tally", prepend_id=False, overwrite=True)
 
         comp_shots = sum(q.result.optimized["optimized measurement outcomes"].values())
 
@@ -106,7 +113,9 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
         )
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
+
+        # Try to compute the variate params
+        _ = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         # We mock the potential Exception that could occur in the Device class
         azure_device = DeviceAzure("", "", "")
@@ -150,8 +159,9 @@ class TestingQAOAQiskitQPUBackendAzure(unittest.TestCase):
 
         mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
         qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
+
+# Check the creation of the varitional parms
         _ = create_qaoa_variational_params(qaoa_descriptor, "standard", "rand")
-        )
 
         azure_device = DeviceAzure(
             "rigetti.sim.qvm", self.RESOURCE_ID, self.AZ_LOCATION
@@ -177,6 +187,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
     @pytest.mark.api
     def setUp(self):
+        """
+        Define the credentials
+        """
         self.HUB = "ibm-q"
         self.GROUP = "open"
         self.PROJECT = "main"
@@ -449,7 +462,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         )
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
-        variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
+
+        # Check the creation of the varitional parms
+        _ = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         # We mock the potential Exception that could occur in the Device class
         qiskit_device = DeviceQiskit("", "", "", "")
@@ -561,9 +576,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
         qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
-        variate_params = create_qaoa_variational_params(
-            qaoa_descriptor, "standard", "rand"
-        )
+
+        # Check the creation of the varitional parms
+        _ = create_qaoa_variational_params(qaoa_descriptor, "standard", "rand")
 
         qiskit_device = DeviceQiskit("ibmq_manila", self.HUB, self.GROUP, self.PROJECT)
 
