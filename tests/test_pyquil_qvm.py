@@ -359,7 +359,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             if type(instr) == quilbase.Gate
         ]
 
-    @pytest.mark.qvm
     def test_circuit_append_state(self):
         """
         Checks correctness of circuit for the argument `append_state`.
