@@ -242,6 +242,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         )
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        params = create_qaoa_variational_params(qaoa_descriptor, "standard", "ramp")
         backend_obj_pyquil = QAOAPyQuilQPUBackend(
             qaoa_descriptor=qaoa_descriptor,
             device=device_pyquil,
