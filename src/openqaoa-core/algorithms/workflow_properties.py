@@ -277,9 +277,9 @@ class ErrorMitigationProperties(WorkflowProperties):
 
     def __init__(
         self,
-        error_mitigation_technique=None,
-        n_batches=10,
-        calibration_data_location=None,
+        error_mitigation_technique: Optional[str] = None,
+        n_batches: Optional[int] = 10,
+        calibration_data_location: Optional[str] = None,
     ):
         self.error_mitigation_technique = (
             error_mitigation_technique.lower()

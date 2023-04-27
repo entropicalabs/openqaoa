@@ -75,9 +75,6 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             noise_model=None,
         )
 
-        # way to access the seed_simulator
-        # print(self.backend.backend_simulator.__dict__['_options'].seed_simulator)
-
         self.wrapped_obj = SPAMTwirlingWrapper(
             self.qiskit_shot_backend,
             n_batches=self.n_batches,
@@ -89,7 +86,8 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             n_batches=1,
             calibration_data_location=self.calibration_data_location,
         )
-
+        
+    @pytest.mark.qvm
     def test_wrap_any_backend(self):
         """
         Testing if the wrapper is backend-agnostic by checking if it can take any of the relevant backend objects as an argument.

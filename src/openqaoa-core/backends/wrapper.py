@@ -153,6 +153,7 @@ class SPAMTwirlingWrapper(BaseWrapper):
                     counts.update([(key, negated_counts[key])])
 
         self.measurement_outcomes = counts
+        self.append_state = []  # reset
 
         return counts
 

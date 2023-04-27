@@ -197,8 +197,6 @@ class QAOAPyQuilQPUBackend(
         for i, param_name in enumerate(angle_declarations):
             prog_exe.write_memory(region_name=param_name, value=angles_list[i])
 
-        self.append_state = []  # reset
-
         return prog_exe
 
     @property

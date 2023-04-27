@@ -153,7 +153,6 @@ class QAOAAWSQPUBackend(
         )
         circuit_with_angles = parametric_circuit.make_bound_circuit(memory_map)
 
-        self.append_state = []
         return circuit_with_angles
 
     @property

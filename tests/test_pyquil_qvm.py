@@ -194,6 +194,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp("Z", (0,)), PauliOp("Z", (1,))], [1, 1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        params = create_qaoa_variational_params(qaoa_descriptor, "standard", "ramp")
         backend_obj_pyquil = QAOAPyQuilQPUBackend(
             qaoa_descriptor=qaoa_descriptor,
             device=device_pyquil,
@@ -227,7 +228,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         measurement_gate_no = len(
             [
                 instr
-                for instr in backend_obj_pyquil.qaoa_circuit
+                for instr in backend_obj_pyquil.qaoa_circuit(params)
                 if type(instr) == quilbase.Measurement
             ]
         )
@@ -277,7 +278,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         measurement_gate_no = len(
             [
                 instr
-                for instr in backend_obj_pyquil.parametric_circuit
+                for instr in backend_obj_pyquil.qaoa_circuit(params)
                 if type(instr) == quilbase.Measurement
             ]
         )
@@ -376,6 +377,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
 
+        params = create_qaoa_variational_params(qaoa_descriptor, "standard", "ramp")
+
         append_circuit = Program().inst(RX(np.pi, 0), RY(np.pi / 2, 1), RZ(np.pi, 0))
 
         pyquil_backend = QAOAPyQuilQPUBackend(
@@ -383,14 +386,59 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             qaoa_descriptor,
             n_shots=10,
             prepend_state=None,
-            append_state=append_circuit,
+            append_state=append_circuit,  # TODO
             init_hadamard=False,
             cvar_alpha=1,
         )
 
-        assert ["RZ", "RZ", "RZ", "RZ", "CPHASE", "RX", "RX", "RX", "RY", "RZ"] == [
+        print(
+            [
+                instr.name
+                for instr in pyquil_backend.qaoa_circuit(params)
+                if type(instr) == quilbase.Gate
+            ]
+        )
+
+        assert [
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "CZ",
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "CZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+        ] == [
             instr.name
-            for instr in pyquil_backend.qaoa_circuit
+            for instr in pyquil_backend.qaoa_circuit(params)
             if type(instr) == quilbase.Gate
         ]
 

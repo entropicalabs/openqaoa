@@ -142,7 +142,6 @@ class QAOAQiskitBackendShotBasedSimulator(
             circuit_with_angles = circuit_with_angles.compose(self.append_state)
         circuit_with_angles.measure_all()
 
-        self.append_state = []
         return circuit_with_angles
 
     @property

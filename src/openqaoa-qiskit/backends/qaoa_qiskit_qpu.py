@@ -160,7 +160,6 @@ class QAOAQiskitQPUBackend(
                 initial_layout=self.initial_qubit_mapping,
             )
 
-        self.append_state = []  # reset
         return transpiled_circuit
 
     @property
