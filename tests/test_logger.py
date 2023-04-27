@@ -14,7 +14,6 @@ from openqaoa.optimizers.logger_vqa import (
 
 class TestingLoggerClass(unittest.TestCase):
     def test_logger_var_setting_1(self):
-
         test_var = LoggerVariable("test_var", EmptyValue, EmptyValue)
 
         test_var.update(10)
@@ -23,7 +22,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [])
 
     def test_logger_var_setting_2(self):
-
         test_var = LoggerVariable("test_var", AppendValue, AppendValue)
 
         test_var.update(5)
@@ -33,7 +31,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [5, 10])
 
     def test_logger_var_setting_3(self):
-
         test_var = LoggerVariable("test_var", ReplaceValue, ReplaceValue)
 
         test_var.update(5)
@@ -43,7 +40,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [10])
 
     def test_logger_var_setting_4(self):
-
         test_var = LoggerVariable(
             "test_var", IfLowerDo(EmptyValue), IfLowerDo(EmptyValue)
         )
@@ -60,7 +56,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [])
 
     def test_logger_var_setting_5(self):
-
         test_var = LoggerVariable(
             "test_var", IfLowerDo(AppendValue), IfLowerDo(AppendValue)
         )
@@ -77,7 +72,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [5, 1])
 
     def test_logger_var_setting_6(self):
-
         test_var = LoggerVariable(
             "test_var", IfLowerDo(ReplaceValue), IfLowerDo(ReplaceValue)
         )
@@ -94,7 +88,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [1])
 
     def test_logger_var_setting_7(self):
-
         test_var = LoggerVariable(
             "test_var", IfHigherDo(EmptyValue), IfHigherDo(EmptyValue)
         )
@@ -111,7 +104,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [])
 
     def test_logger_var_setting_8(self):
-
         test_var = LoggerVariable(
             "test_var", IfHigherDo(AppendValue), IfHigherDo(AppendValue)
         )
@@ -128,7 +120,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [5, 10])
 
     def test_logger_var_setting_9(self):
-
         test_var = LoggerVariable(
             "test_var", IfHigherDo(ReplaceValue), IfHigherDo(ReplaceValue)
         )
@@ -145,7 +136,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, [10])
 
     def test_logger_var_methods(self):
-
         test_var = LoggerVariable("test_var", ReplaceValue, ReplaceValue)
         test_var_2 = LoggerVariable("test_var", ReplaceValue, ReplaceValue)
 
@@ -158,7 +148,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(test_var.best, test_var_2.best)
 
     def test_logger_var_fact_hist_bool(self):
-
         var_1 = LoggerVariableFactory.create_logger_variable(
             "new_attribute", True, "Replace"
         )
@@ -178,7 +167,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(var_2.history, [])
 
     def test_logger_var_fact_best_str(self):
-
         """
         Testing all possible settings of a variable created through the Factory
         Class
@@ -221,7 +209,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(var_6.best, [10])
 
     def test_logger_obj_update_struct_1(self):
-
         """
         The best update structure ensures that the best value for that particular
         attribute respects a relation with another attribute.
@@ -310,7 +297,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(logger_obj.attribute_3.best, ["string 4"])
 
     def test_logger_obj_update_struct_2(self):
-
         """
         Single layer test
         """
@@ -385,7 +371,6 @@ class TestingLoggerClass(unittest.TestCase):
         self.assertEqual(logger_obj.attribute_3.best, ["string 4"])
 
     def test_logger_obj_update_struct_3(self):
-
         """
         Multi layer test
         """

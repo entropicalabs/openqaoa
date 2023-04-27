@@ -164,7 +164,6 @@ def create_qaoa_variational_params(
                 f" dictionary with correct {VARIATIONAL_PARAMS_DICT_KEYS[params_type]} keys"
             )
     elif init_type == "ramp":
-
         if isinstance(linear_ramp_time, float) or isinstance(linear_ramp_time, int):
             assert (
                 linear_ramp_time > 0

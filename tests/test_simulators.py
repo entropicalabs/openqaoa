@@ -17,7 +17,6 @@ class TestSimulators(unittest.TestCase):
 
         # loop over all simulators
         for n in SUPPORTED_LOCAL_SIMULATORS:
-
             # initialize
             q = QAOA()
 

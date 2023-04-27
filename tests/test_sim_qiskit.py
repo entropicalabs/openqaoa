@@ -26,7 +26,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
     """
 
     def test_circuit_angle_assignment_statevec_backend(self):
-
         """
         A tests that checks if the circuit created by the Qiskit Backend
         has the appropriate angles assigned before the circuit is executed.
@@ -45,7 +44,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         constants = [np.random.rand() for i in range(ntrials)]
 
         for i in range(ntrials):
-
             gammas = [np.random.rand() * np.pi for i in range(p)]
             betas = [np.random.rand() * np.pi for i in range(p)]
 
@@ -90,7 +88,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             )
 
     def test_circuit_angle_assignment_statevec_backend_w_hadamard(self):
-
         """
         Checks for consistent if init_hadamard is set to True.
         """
@@ -107,7 +104,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         constants = [np.random.rand() for i in range(ntrials)]
 
         for i in range(ntrials):
-
             gammas = [np.random.rand() * np.pi for i in range(p)]
             betas = [np.random.rand() * np.pi for i in range(p)]
 
@@ -150,7 +146,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             )
 
     def test_prepend_circuit(self):
-
         """
         Checks if prepended circuit has been prepended correctly.
         """
@@ -207,7 +202,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         )
 
     def test_append_circuit(self):
-
         """
         Checks if appended circuit is appropriately appended to the back of the
         QAOA Circuit.
@@ -265,7 +259,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         )
 
     def test_qaoa_circuit_wavefunction_expectation_equivalence_1(self):
-
         """
         The following tests with a similar naming scheme check for consistency
         between the outputs of the qiskit statevector simulator and the
@@ -281,7 +274,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         betas = [[1], [1 / 8]]
 
         for i in range(2):
-
             cost_hamil = Hamiltonian(
                 [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
                 weights,
@@ -317,7 +309,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
                 )
 
     def test_qaoa_circuit_wavefunction_expectation_equivalence_2(self):
-
         """Due to the difference in the constructions of the statevector simulators,
         there is a global phase difference between the results obtained from
         qiskit's statevector simulator and OpenQAOA's vectorised simulator. In order to
@@ -332,7 +323,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         betas = [[1], [1 / 8 * np.pi]]
 
         for i in range(2):
-
             cost_hamil = Hamiltonian(
                 [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
                 weights,
@@ -379,7 +369,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             self.assertAlmostEqual(qiskit_expectation, vector_expectation)
 
     def test_qaoa_circuit_wavefunction_expectation_equivalence_3(self):
-
         """Due to the difference in the constructions of the statevector simulators,
         there is a global phase difference between the results obtained from
         qiskit's statevector simulator and OpenQAOA's vectorised simulator. In order to
@@ -396,7 +385,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         betas = [[1], [1 / 8 * np.pi]]
 
         for i in range(2):
-
             cost_hamil = Hamiltonian(
                 [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
                 weights,
@@ -443,7 +431,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             self.assertAlmostEqual(qiskit_expectation, vector_expectation)
 
     def test_qaoa_circuit_wavefunction_expectation_equivalence_4(self):
-
         """Due to the difference in the constructions of the statevector simulators,
         there is a global phase difference between the results obtained from
         qiskit's statevector simulator and OpenQAOA's vectorised simulator. In order to
@@ -460,7 +447,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         betas = [[1], [1 / 8 * np.pi]]
 
         for i in range(2):
-
             cost_hamil = Hamiltonian(
                 [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
                 weights,
@@ -544,7 +530,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         assert np.isclose(exp_qiskit_statevec, -6)
 
     def test_get_wavefunction(self):
-
         n_qubits = 3
         terms = [[0, 1], [0, 2], [0]]
         weights = [1, 1, -0.5]
@@ -627,7 +612,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         assert correct_config in config_qiskit
 
     def test_expectation_w_uncertainty(self):
-
         """
         Test the standard deviation equality. Expectation w uncertainty.
         """
@@ -687,7 +671,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         assert np.isclose(exp_unc_qiskit_statevec, std_dev2)
 
     def test_expectation_w_randomizing_variables(self):
-
         """
         Run ntrials sets of randomized input parameters and compares the
         expectation value output between the qiskit statevector simulator and
@@ -706,7 +689,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         constants = [np.random.rand() for i in range(ntrials)]
 
         for i in range(ntrials):
-
             gammas = [np.random.rand() * np.pi for i in range(p[i])]
             betas = [np.random.rand() * np.pi for i in range(p[i])]
 
@@ -740,7 +722,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
             self.assertAlmostEqual(qiskit_expectation, vector_expectation)
 
     def test_shot_based_simulator(self):
-
         """
         Test get_counts in shot-based qiskit simulator.
         """
@@ -770,7 +751,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         self.assertEqual(type(shot_result), dict)
 
     def test_cvar_alpha_expectation(self):
-
         """
         Test computing the expectation value by changing the alpha of the cvar.
         """
@@ -808,7 +788,6 @@ class TestingQAOAQiskitSimulatorBackend(unittest.TestCase):
         self.assertEqual(type(float(expectation_value_075)), float)
 
     def test_standard_decomposition_branch_in_circuit_construction(self):
-
         """
         XY Pauli is not an implemented low level gate. Produces NotImplementedError
         as the standard decomposition for the XY PauliGate doesnt exist.

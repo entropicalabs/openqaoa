@@ -32,7 +32,6 @@ class NumberPartition(Problem):
 
     @numbers.setter
     def numbers(self, input_numbers):
-
         if not isinstance(input_numbers, list):
             raise TypeError("The input parameter, numbers, has to be a list")
 
@@ -82,7 +81,6 @@ class NumberPartition(Problem):
         # Consider every pair of numbers (ordered)
         for i in range(self.n_numbers):
             for j in range(i, self.n_numbers):
-
                 # If i equals j, then whatever random sign we choose, if we square
                 # it we can back 1. So we have a constant term.
                 if i == j:

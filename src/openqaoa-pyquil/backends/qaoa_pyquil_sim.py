@@ -34,7 +34,6 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
         init_hadamard: bool = True,
         cvar_alpha: float = 1,
     ):
-
         QAOABaseBackendStatevector.__init__(
             self,
             qaoa_descriptor,
@@ -60,7 +59,7 @@ class QAOAPyQuilWavefunctionSimulatorBackend(QAOABaseBackendStatevector):
                 A pyquil.Program object.
         """
         gates_applicator = PyquilGateApplicator()
-        
+
         self.assign_angles(params)
 
         circuit = Program()

@@ -29,6 +29,7 @@ __doc__ = (
     "NumPy with automatic differentiation support, provided by Autograd and PennyLane."
 )
 
+
 # Hotfix since _np.asarray doesn't have a gradient rule defined.
 @primitive
 def asarray(vals, *args, **kwargs):

@@ -34,21 +34,18 @@ from openqaoa_pyquil.backends.gates_pyquil import PyquilGateApplicator
 
 
 class TestingGate(unittest.TestCase):
-    
     def setUp(self):
-        
         self.braket_gate_applicator = BraketGateApplicator()
         self.qiskit_gate_applicator = QiskitGateApplicator()
         self.pyquil_gate_applicator = PyquilGateApplicator()
-    
+
     def test_braket_gates_1q(self):
-        
         # Braket Gate Applicator
         gate_applicator = self.braket_gate_applicator
 
         # One Qubit Gate Tests
         rotation_angle_obj = RotationAngle(lambda x: x, [], FreeParameter("test_angle"))
-        
+
         empty_circuit = Circuit()
         llgate = RY(gate_applicator, 0, rotation_angle_obj)
         output_circuit = llgate.apply_gate(empty_circuit)
@@ -80,7 +77,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
     def test_braket_gates_2q(self):
-        
         # Braket Gate Applicator
         gate_applicator = self.braket_gate_applicator
 
@@ -104,7 +100,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
     def test_braket_gates_2q_w_gates(self):
-        
         # Braket Gate Applicator
         gate_applicator = self.braket_gate_applicator
 
@@ -162,7 +157,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
     def test_ibm_gates_1q(self):
-        
         # Qiskit Gate Applicator
         gate_applicator = self.qiskit_gate_applicator
 
@@ -206,7 +200,6 @@ class TestingGate(unittest.TestCase):
         )
 
     def test_ibm_gates_2q(self):
-        
         # Qiskit Gate Applicator
         gate_applicator = self.qiskit_gate_applicator
 
@@ -235,24 +228,23 @@ class TestingGate(unittest.TestCase):
             output_circuit.to_instruction().definition,
         )
 
-#         empty_circuit = QuantumCircuit(2)
-#         llgate = CX(gate_applicator)
-#         output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
+    #         empty_circuit = QuantumCircuit(2)
+    #         llgate = CX(gate_applicator)
+    #         output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
 
-#         test_circuit = QuantumCircuit(2)
-#         test_circuit.ry(np.pi / 2, 1)
-#         test_circuit.rx(np.pi, 1)
-#         test_circuit.cz(0, 1)
-#         test_circuit.ry(np.pi / 2, 1)
-#         test_circuit.rx(np.pi, 1)
+    #         test_circuit = QuantumCircuit(2)
+    #         test_circuit.ry(np.pi / 2, 1)
+    #         test_circuit.rx(np.pi, 1)
+    #         test_circuit.cz(0, 1)
+    #         test_circuit.ry(np.pi / 2, 1)
+    #         test_circuit.rx(np.pi, 1)
 
-#         self.assertEqual(
-#             test_circuit.to_instruction().definition,
-#             output_circuit.to_instruction().definition,
-#         )
+    #         self.assertEqual(
+    #             test_circuit.to_instruction().definition,
+    #             output_circuit.to_instruction().definition,
+    #         )
 
     def test_ibm_gates_2q_w_gates(self):
-        
         # Qiskit Gate Applicator
         gate_applicator = self.qiskit_gate_applicator
 
@@ -320,7 +312,6 @@ class TestingGate(unittest.TestCase):
         )
 
     def test_pyquil_gates_1q(self):
-        
         # Pyquil Gate Applicator
         gate_applicator = self.pyquil_gate_applicator
 
@@ -370,7 +361,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
     def test_pyquil_gates_2q(self):
-        
         # Pyquil Gate Applicator
         gate_applicator = self.pyquil_gate_applicator
 
@@ -404,7 +394,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
     def test_pyquil_gates_2q_w_gates(self):
-        
         # Pyquil Gate Applicator
         gate_applicator = self.pyquil_gate_applicator
 

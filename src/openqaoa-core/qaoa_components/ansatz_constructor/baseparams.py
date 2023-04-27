@@ -237,7 +237,6 @@ class QAOADescriptor(AnsatzDescriptor):
             return self.cost_hamiltonian.n_qubits
 
     def __repr__(self):
-
         """Return an overview over the parameters and hyperparameters
 
         Todo
@@ -278,7 +277,6 @@ class QAOADescriptor(AnsatzDescriptor):
     def _assign_coefficients(
         self, input_block: List[RotationGateMap], input_coeffs: List[float]
     ) -> None:
-
         """
         Splits the coefficients and gatemaps into qubit singles and qubit pairs.
         """
@@ -293,7 +291,6 @@ class QAOADescriptor(AnsatzDescriptor):
                 "The number of terms/gatemaps must match the number of coefficients provided."
             )
         for each_gatemap, each_coeff in zip(input_block, input_coeffs):
-
             if each_gatemap.gate_label.n_qubits == 1:
                 single_qubit_coeffs.append(each_coeff)
                 # Giving a string name to each gatemap (?)
@@ -308,7 +305,6 @@ class QAOADescriptor(AnsatzDescriptor):
     def block_setter(
         input_object: Union[List["RotationGateMap"], Hamiltonian], block_type: Enum
     ) -> List["RotationGateMap"]:
-
         """
         Converts a Hamiltonian Object into a List of RotationGateMap Objects with
         the appropriate block_type and sequence assigned to the GateLabel
@@ -355,7 +351,6 @@ class QAOADescriptor(AnsatzDescriptor):
     def set_block_sequence(
         input_gatemap_list: List["RotationGateMap"],
     ) -> List["RotationGateMap"]:
-
         """
         This method assigns the sequence attribute to all RotationGateMap objects in the list.
         The sequence of the GateMaps are implied based on their positions in the list.
@@ -397,7 +392,6 @@ class QAOADescriptor(AnsatzDescriptor):
         of SWAPs in the cost layer
         """
         for gate in gates_block:
-
             if layer_number % 2 == 0:
                 mapping = self.final_mapping
                 gate.qubit_1 = mapping[gate.qubit_1]
@@ -483,7 +477,6 @@ class QAOADescriptor(AnsatzDescriptor):
 
     @property
     def abstract_circuit(self):
-
         # even layer inversion if the circuit contains SWAP gates
         even_layer_inversion = -1 if self.routed == True else 1
         _abstract_circuit = []

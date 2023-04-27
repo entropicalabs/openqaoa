@@ -35,7 +35,6 @@ class QAOABackendAnalyticalSimulator(QAOABaseBackend):
         init_hadamard=True,
         cvar_alpha=1,
     ):
-
         # checking if not supported parameters are passed
         for k, val in {
             "Prepend_state": (prepend_state, None),

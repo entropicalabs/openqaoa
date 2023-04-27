@@ -122,7 +122,6 @@ class QAOABaseBackend(VQABaseBackend):
         init_hadamard: bool,
         cvar_alpha: float,
     ):
-
         super().__init__(prepend_state, append_state)
 
         self.qaoa_descriptor = qaoa_descriptor
@@ -150,7 +149,6 @@ class QAOABaseBackend(VQABaseBackend):
             self.final_mapping = None
 
     def assign_angles(self, params: QAOAVariationalBaseParams) -> None:
-
         """
         Assigns the angle values of the variational parameters to the circuit gates
         specified as a list of gates in the ``abstract_circuit``.
@@ -523,7 +521,6 @@ class QAOABaseBackendShotBased(QAOABaseBackend):
         init_hadamard: bool,
         cvar_alpha: float,
     ):
-
         super().__init__(
             qaoa_descriptor, prepend_state, append_state, init_hadamard, cvar_alpha
         )

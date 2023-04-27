@@ -127,7 +127,6 @@ def quick_create_mixer_for_topology(
     qubit_connectivity: Union[List[list], List[tuple], str] = "full",
     coeffs: List[float] = None,
 ) -> Tuple[List[TwoQubitRotationGateMap], List[float]]:
-
     """
     Quickly generates a gatemap list and coeffs for a specific topology.
     Can only be used with 2-Qubit Gates.
@@ -295,7 +294,6 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
 
     # Add each term to the graph as an attribute
     for term, weight in zip(hamiltonian.terms, hamiltonian.coeffs):
-
         # Extract indices from Pauli term
         term_tuple = term.qubit_indices
 
@@ -395,7 +393,6 @@ def random_k_regular_graph(
 
     # Add edges between nodes
     for edge in G.edges():
-
         # If weighted attribute is False, all weights are set to 1
         if not weighted:
             G[edge[0]][edge[1]]["weight"] = 1
@@ -565,7 +562,6 @@ def random_classical_hamiltonian(
 
     # Generate quiadratic terms, scanning all possible combinations
     for q1, q2 in itertools.combinations(reg, 2):
-
         # Choose at random to couple terms
         are_coupled = np.random.randint(2)
 
@@ -631,7 +627,6 @@ def ground_state_hamiltonian(
 
     # Obtain spectrum, scanning term by term
     for i, term in enumerate(hamiltonian.terms):
-
         # Extract coefficient
         out = np.real(hamiltonian.coeffs[i])
 
@@ -683,7 +678,6 @@ def bitstring_energy(
 
     # Compute energy contribution term by term
     for i, term in enumerate(hamiltonian.terms):
-
         # Compute sign of spin interaction term
         variables_product = np.prod(
             [(-1) ** int(bitstring[k]) for k in term.qubit_indices]
@@ -724,7 +718,6 @@ def energy_expectation(hamiltonian: Hamiltonian, measurement_counts: dict) -> fl
 
     # Compute average energy adding one by one the contribution from each state
     for state, prob in measurement_counts.items():
-
         # Number of ones (spins pointing down) from the specific
         # configuration for each Hamiltonian term
         num_ones_list = [
@@ -781,7 +774,6 @@ def energy_spectrum_hamiltonian(hamiltonian: Hamiltonian) -> np.ndarray:
 
     # Obtain spectrum, scanning term by term
     for i, term in enumerate(hamiltonian.terms):
-
         # Extract coefficients
         out = np.real(hamiltonian.coeffs[i])
 
@@ -997,7 +989,6 @@ def exp_val_single(spin: int, prob_dict: dict):
 
     # Compute correlation
     for bitstring, prob in prob_dict.items():
-
         # If 0, spin is pointing up, else it is pointing down
         Z = int(bitstring[spin])
 
@@ -1037,7 +1028,6 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
     norm = sum(prob_dict.values())
     # Compute correlation
     for bitstring, prob in prob_dict.items():
-
         # If 0 or 2, spins are aligned, else they are anti-aligned
         num_ones = sum([int(bitstring[i]) for i in spins])
 
@@ -1048,8 +1038,6 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
 
 
 def exp_val_hamiltonian_termwise(
-    variational_params: QAOAVariationalBaseParams,
-    qaoa_backend,
     hamiltonian: Hamiltonian,
     mixer_type: str,
     p: int,
@@ -1063,10 +1051,6 @@ def exp_val_hamiltonian_termwise(
 
     Parameters
     ----------
-    variational_params: `QAOAVariationalBaseParams`
-        Set of variational parameters in the QAOA ansatz.
-    qaoa_backend: `QAOABaseBackend`
-        Chosen backend on which QAOA is performed.
     hamiltonian: `Hamiltonian`
         Hamiltonian object containing the problem statement.
     p: `int`
@@ -1104,10 +1088,8 @@ def exp_val_hamiltonian_termwise(
         and mixer_type == "x"
         and isinstance(qaoa_optimized_angles, list)
     ):
-
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
-
             # If bias term compute expectation value
             if len(term) == 1:
                 i = term.qubit_indices[0]
@@ -1121,14 +1103,11 @@ def exp_val_hamiltonian_termwise(
                 corr_matrix[i][j] = exp_val_pair_analytical(
                     (i, j), hamiltonian, qaoa_optimized_angles
                 )
-
-            # If constant term, ignore
             else:
                 continue
 
     # If multilayer ansatz, perform numerical computation
     else:
-
         if isinstance(qaoa_optimized_counts, dict):
             counts_dict = qaoa_optimized_counts
         else:
@@ -1138,7 +1117,6 @@ def exp_val_hamiltonian_termwise(
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
-
             # If bias term compute expectation value
             if len(term) == 1:
                 i = term.qubit_indices[0]
@@ -1149,14 +1127,97 @@ def exp_val_hamiltonian_termwise(
                 i, j = term.qubit_indices
                 corr_matrix[i][j] = exp_val_pair((i, j), counts_dict)
 
-            # If constant term, ignore
-            if len(term) == 0:
+            else:
                 continue
 
     # Remove expectation value contribution from the correlations
     corr_matrix -= np.outer(exp_vals_z, exp_vals_z)
 
     return exp_vals_z, corr_matrix
+
+
+@round_value
+def calculate_calibration_factors(
+    hamiltonian: Hamiltonian,
+    calibration_measurements: dict,
+    calibration_registers: list,
+    qubit_mapping: list,
+) -> Dict:
+    """
+    Computes the single spin and pairs of spins calibration factors, which are the expectation value of the observables found in the particular Hamiltonian, <Z_{i}> and <Z_{i}Z_{j}>, from the calibration data provided. The calibration data is obtained under BFA on an empty (initial state = |000..0>) QAOA circuit.
+    See arXiv:2012.09738 and arXiv:2106.05800.
+
+    Parameters
+    ----------
+    hamiltonian: `Hamiltonian`
+        Hamiltonian object containing the problem statement.
+    calibration_measurements: `dict`
+        Dictionary containing the measurement counts of an empty QAOA circuit.
+    calibration_registers: `list`
+        List specifying the physical (device) qubits on which the calibration data has been obtained.
+        This is required because the calibration is usually performed over the whole device and hence the measurement outcomes (the calibration data) are strings with the size of the whole device while usually only a particular section is used.
+    qubit_mapping: `list`
+        List specifying the physical (device) qubits on which the QAOA circuit is executed. Related to qubit selection and qubit routing.
+
+    Returns
+    -------
+    calibration_factors: `dict`
+        Calibration factors as a dict.
+    """
+    calibration_registers_dict = {v: k for k, v in enumerate(calibration_registers)}
+
+    # Define number of qubits, problem hamiltonian and QAOA parameters
+    n_qubits = hamiltonian.n_qubits
+
+    # Extract Hamiltonian terms
+    terms = list(hamiltonian.terms)
+
+    if qubit_mapping == None:
+        qubit_mapping = np.arange(0, n_qubits)
+
+    # Initialize an empty dict
+    calibration_factors = {}
+
+    # Compute single spin and pairs of spins expectation values of terms present in the Hamiltonian
+    for term in terms:
+        # If bias term compute single spins expectation value
+        if len(term) == 1:
+            i = term.qubit_indices[0]
+            i_phys = qubit_mapping[i]
+            i_cal = calibration_registers_dict[i_phys]
+            exp_val_z = exp_val_single(i_cal, calibration_measurements)
+            calibration_factors.update({(i,): exp_val_z})
+
+        # If two-body term compute pairs of spins expectation values
+        elif len(term) == 2:
+            i, j = term.qubit_indices  # problem indices, ex: (0,1)
+            i_phys, j_phys = (
+                qubit_mapping[i],
+                qubit_mapping[j],
+            )  # physical indices, ex: (133, 131) after routing
+            i_cal, j_cal = (
+                calibration_registers_dict[i_phys],
+                calibration_registers_dict[j_phys],
+            )  # calibration indices, i.e. to which location on the measurement string each physical qubit corresponds to, ex: (63, 61)
+            exp_val_zz = exp_val_pair((i_cal, j_cal), calibration_measurements)
+
+            calibration_factors.update(
+                {(i, j): exp_val_zz}
+            )  # calibration factors are calculated for the terms in the hamiltonian/problem
+
+        # If constant term, ignore
+        if len(term) == 0:
+            continue
+
+    assert all(
+        value != 0 for value in calibration_factors.values()
+    ), "One (or more) of the calibration factors is 0 which means that the measurement is faulty. Please check the data."
+
+    assert all(
+        value <= 1 for value in calibration_factors.values()
+    ), "One (or more) of the calibration factors is larger than 1 which is not physical. Please check the data."
+
+    return calibration_factors
 
 
 ################################################################################
@@ -1215,7 +1276,6 @@ def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: 
 
     # Loop over edges connecting u and v to other spins
     for n in iter_qubits:
-
         # Edges between the spin and others in the register
         edge = tuple([min(spin, n), max(spin, n)])
 
@@ -1300,7 +1360,6 @@ def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles:
 
     # Loop over edges connecting u and v to other spins
     for n in iter_qubits:
-
         # Edges between u,v and another spin in the register
         edge1 = tuple([min(u, n), max(u, n)])
         edge2 = tuple([min(v, n), max(v, n)])
@@ -1345,13 +1404,10 @@ def energy_expectation_analytical(angles: Union[list, tuple], hamiltonian: Hamil
 
     # Compute the expectation value of each term and add its local energy contribution
     for coeff, term in zip(coeffs, terms):
-
         if len(term) == 2:
-
             local_energy = exp_val_pair_analytical(term, hamiltonian, angles)
 
         else:
-
             local_energy = exp_val_single_analytical(term[0], hamiltonian, angles)
 
         energy += coeff * local_energy
@@ -1427,6 +1483,76 @@ def flip_counts(counts_dictionary: dict) -> dict:
     return output_counts_dictionary
 
 
+def permute_counts_dictionary(
+    counts_dictionary: dict, final_qubit_layout: List[int]
+) -> dict:
+    """Permutes the order of the qubits in the counts dictionary to the
+    original order if SWAP gates were used leading to modified qubit layout.
+    Parameters
+    ----------
+    counts_dictionary : `dict`
+        The measurement outcomes obtained from the Simulator/QPU
+    original_qubit_layout: List[int]
+        The qubit layout in which the qubits were initially
+    final_qubit_layout: List[int]
+        The final qubit layout after application of SWAPs
+
+    Returns
+    -------
+    `dict`
+        The permuted counts dictionary with qubits in the original place
+    """
+
+    # Create a mapping of original positions to final positions
+    original_qubit_layout = list(range(len(final_qubit_layout)))
+    mapping = {
+        original_qubit_layout[i]: final_qubit_layout[i]
+        for i in range(len(original_qubit_layout))
+    }
+    permuted_counts = {}
+
+    for basis, counts in counts_dictionary.items():
+
+        def permute_string(basis_state: str = basis, mapping: dict = mapping):
+            # Use the mapping to permute the string
+            permuted_string = "".join(
+                [basis_state[mapping[i]] for i in range(len(basis_state))]
+            )
+            return permuted_string
+
+        permuted_counts.update({permuted_string: counts})
+
+    return permuted_counts
+
+
+def negate_counts_dictionary(counts_dictionary: dict, s: int) -> dict:
+    """Negates every bitstring of the counts dictionary according to
+    the position of the X gates before the measurement.
+    Used in SPAM Twirling.
+    Parameters
+    ----------
+    counts_dictionary : `dict`
+        The measurement outcomes obtained from the Simulator/QPU
+    s: int
+        Syndrome whose binary representation denotes the negated qubits. For example, 4 = 100, signifies that the first qubit had an X gate just before the measurement, which requires the first digit of the every key to be classically negated inside this function.
+
+    Returns
+    -------
+    `dict`
+        The negated counts dictionary
+    """
+    negated_counts = {}
+    for key in counts_dictionary.keys():
+        n_qubits = len(key)
+        negated_key = s ^ int(
+            key, 2
+        )  # bitwise XOR to classically negate randomly chosen qubits, specified by s
+        negated_counts.update(
+            [(format(negated_key, "b").zfill(n_qubits), counts_dictionary[key])]
+        )
+    return negated_counts
+
+
 @round_value
 def qaoa_probabilities(statevector) -> dict:
     """
@@ -1453,7 +1579,6 @@ def qaoa_probabilities(statevector) -> dict:
     prob_dict = {}
 
     for x in range(len(prob_vec)):
-
         # Define binary representation of each state, with qubit-0 most significant bit
         key = np.binary_repr(x, n_qubits)[::-1]
 

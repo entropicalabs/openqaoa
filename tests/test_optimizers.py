@@ -44,7 +44,6 @@ cost_hamiltonian_1 = Hamiltonian(
 
 class TestQAOACostBaseClass(unittest.TestCase):
     def setUp(self):
-
         self.log = Logger(
             {
                 "func_evals": {
@@ -148,7 +147,6 @@ class TestQAOACostBaseClass(unittest.TestCase):
             )
 
         for i, optimizer_dict in enumerate(optimizer_dicts):
-
             optimizer_dict["jac"] = derivative(
                 backend_obj_vectorized,
                 variate_params,
@@ -233,7 +231,6 @@ class TestQAOACostBaseClass(unittest.TestCase):
         )
 
         for i, optimizer_dict in enumerate(optimizer_dicts):
-
             # Optimize
             vector_optimizer = get_optimizer(
                 backend_obj_vectorized, variate_params, optimizer_dict=optimizer_dict
@@ -547,7 +544,6 @@ class TestQAOACostBaseClass(unittest.TestCase):
             assert np.isclose(yi, y_opt[i], rtol=1e-05, atol=1e-05)
 
     def test_optimize_loop_crash(self):
-
         """
         This tests that the optimization loop doesnt crash silently.
         An Exception gets raised.
@@ -590,7 +586,6 @@ class TestQAOACostBaseClass(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-
         output_csv = ["oq_saved_info_job_ids.csv", "oq_saved_info_param_log.csv"]
         for each_csv in output_csv:
             if os.path.exists(each_csv):

@@ -30,7 +30,8 @@ from openqaoa.optimizers import (
 def _brute_optimizer(fun, num_steps, bounds=None, **kwargs):
     r"""Brute force optimizer, wrapper of scipy.optimize.brute that repeats it
     ``num_steps`` times. Signature is as expected by ``RotosolveOptimizer._min_numeric``
-    below, returning a scalar minimal position and the function value at that position."""
+    below, returning a scalar minimal position and the function value at that position.
+    """
     Ns = kwargs.pop("Ns")
     width = bounds[0][1] - bounds[0][0]
     center = (bounds[0][1] + bounds[0][0]) / 2

@@ -1,5 +1,6 @@
 from collections import Counter
 import numpy as np
+from copy import deepcopy
 from pyquil import Program, gates, quilbase
 from typing import List, Optional
 import warnings
@@ -21,7 +22,6 @@ from openqaoa.utilities import generate_uuid
 
 
 def check_edge_connectivity(executable: Program, device: DevicePyquil):
-
     '''
     Check that the program does not contain 2-qubit terms that is not present
     in the QPU's topology (to prevent quilc from crashing).
@@ -49,7 +49,6 @@ def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
     for term in pair_instrs:
         if len(term) == 2:
-
             assert (
                 term in qpu_graph.edges()
             ), f"Term {term} is not an edge on the QPU graph of {device.device_name}."
@@ -104,7 +103,6 @@ class QAOAPyQuilQPUBackend(
         rewiring: str = "",
         initial_qubit_mapping: Optional[List[int]] = None,
     ):
-
         QAOABaseBackendShotBased.__init__(
             self,
             qaoa_descriptor,
@@ -115,6 +113,8 @@ class QAOAPyQuilQPUBackend(
             cvar_alpha,
         )
         QAOABaseBackendCloud.__init__(self, device)
+
+        self.gate_applicator = PyquilGateApplicator()
 
         self.active_reset = active_reset
         self.rewiring = rewiring
@@ -142,12 +142,6 @@ class QAOAPyQuilQPUBackend(
             )
 
         self.parametric_circuit = self.parametric_qaoa_circuit
-        native_prog = self.device.quantum_computer.compiler.quil_to_native_quil(
-            self.parametric_circuit
-        )
-        self.prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
-            native_prog
-        )
 
         # Check program connectivity against QPU connectivity
         # TODO: reconcile with PRAGMA PRESERVE
@@ -167,16 +161,43 @@ class QAOAPyQuilQPUBackend(
         `pyquil.Program`
             A pyquil.Program (executable) object.
         """
+        parametric_circuit = deepcopy(self.parametric_circuit)
+        # declare the read-out register
+        ro = parametric_circuit.declare("ro", "BIT", self.problem_qubits)
+
+        if self.append_state:
+            parametric_circuit += self.append_state
+
+        if self.final_mapping is None:
+            for i, qbit in enumerate(self.problem_reg):
+                parametric_circuit += gates.MEASURE(self.qubit_mapping[qbit], ro[i])
+        else:
+            # Measurement instructions
+            for i, qubit in enumerate(self.final_mapping[0 : len(self.problem_reg)]):
+                cbit = ro[i]
+                parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
+        parametric_circuit.wrap_in_numshots_loop(self.n_shots)
+
+        native = self.device.quantum_computer.compiler.quil_to_native_quil(
+            parametric_circuit
+        )
+
+        prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
+            native
+        )
+
         angles_list = np.array(
             self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
             dtype=float,
         )
-        angle_declarations = list(self.parametric_circuit.declarations.keys())
-        angle_declarations.remove("ro")
-        for i, param_name in enumerate(angle_declarations):
-            self.prog_exe.write_memory(region_name=param_name, value=angles_list[i])
+        angle_declarations = list(parametric_circuit.declarations.keys())
 
-        return self.prog_exe
+        angle_declarations.remove("ro")
+
+        for i, param_name in enumerate(angle_declarations):
+            prog_exe.write_memory(region_name=param_name, value=angles_list[i])
+
+        return prog_exe
 
     @property
     def parametric_qaoa_circuit(self) -> Program:
@@ -195,8 +216,7 @@ class QAOAPyQuilQPUBackend(
         `pyquil.Program`
             A pyquil.Program object.
         """
-        gates_applicator = PyquilGateApplicator()
-        
+
         if self.active_reset:
             parametric_circuit = Program(gates.RESET())
         else:
@@ -217,9 +237,6 @@ class QAOAPyQuilQPUBackend(
                     'PRAGMA INITIAL_REWIRING "PARTIAL"'
                     ""
                 )
-
-        # declare the read-out register
-        ro = parametric_circuit.declare("ro", "BIT", self.problem_qubits)
 
         if self.prepend_state:
             parametric_circuit += self.prepend_state
@@ -260,26 +277,14 @@ class QAOAPyQuilQPUBackend(
                 if not isinstance(qubits, list):
                     qubits = [qubits]
                 new_qubits = [self.qubit_mapping[qubit] for qubit in qubits]
-                    
+
                 if rotation_angle is None:
-                    gate = each_tuple[0](gates_applicator, *new_qubits)
+                    gate = each_tuple[0](self.gate_applicator, *new_qubits)
                 else:
-                    gate = each_tuple[0](gates_applicator, *new_qubits, rotation_angle)
+                    gate = each_tuple[0](
+                        self.gate_applicator, *new_qubits, rotation_angle
+                    )
                 gate.apply_gate(parametric_circuit)
-
-        if self.append_state:
-            parametric_circuit += self.append_state
-
-        if self.final_mapping is None:
-            for i, qbit in enumerate(self.problem_reg):
-                parametric_circuit += gates.MEASURE(self.qubit_mapping[qbit], ro[i])
-        else:
-            # Measurement instructions
-            for i, qubit in enumerate(self.final_mapping[0 : len(self.problem_reg)]):
-                cbit = ro[i]
-                parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
-
-        parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 
         return parametric_circuit
 

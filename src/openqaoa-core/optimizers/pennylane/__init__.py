@@ -21,6 +21,7 @@ from . import numpy
 from . import math
 from . import fourier
 
+
 # empty class to be used as a placeholder for the QNode class from PennyLane
 class QNode:
     def __init__(self):

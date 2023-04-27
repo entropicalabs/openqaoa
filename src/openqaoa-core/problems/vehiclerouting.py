@@ -143,14 +143,14 @@ class VRP(Problem):
     @property
     def docplex_model(self):
         """
-        Return a docplex model of the vehicle routing problem using the linear 
-        programming approach. In this approach, the edges between different nodes 
-        of the graph are the variables of the problem. Therefore, x_i_j will represent 
+        Return a docplex model of the vehicle routing problem using the linear
+        programming approach. In this approach, the edges between different nodes
+        of the graph are the variables of the problem. Therefore, x_i_j will represent
         if the path between nodes i and j is selected. The idea is to minimize the distance
         traveled
-        
+
         sum_{i, j > i} r_{ij} x_{ij}.
-        
+
         where r_{ij} is the distance between nodes i and j (self.G.edges[i, j]["weight"]).
 
         Returns
@@ -196,7 +196,7 @@ class VRP(Problem):
             # When subtours are not added, by default all the possible subtours are added.
             # However, it is really costly for large instances (above 10 nodes)
             list_subtours = [[i for i in range(num_nodes) if i != self.depot]]
-            for nodes in list_subtours: # costly for large instances
+            for nodes in list_subtours:  # costly for large instances
                 for i in range(3, num_nodes - 2 * self.n_vehicles):
                     for subtour in itertools.combinations(nodes, i):
                         tour = sorted(subtour)
@@ -229,7 +229,9 @@ class VRP(Problem):
                         <= n_subtour - 1
                     )
         else:
-            raise ValueError(f"{type(self.subtour)} is not a valid format for the subtours.")
+            raise ValueError(
+                f"{type(self.subtour)} is not a valid format for the subtours."
+            )
         return mdl
 
     @property
@@ -359,7 +361,9 @@ class VRP(Problem):
             i += 1
         return {"paths": paths, "subtours": subtours}
 
-    def plot_solution(self, solution: Union[dict, str], ax=None, edge_width=4, colors=None):
+    def plot_solution(
+        self, solution: Union[dict, str], ax=None, edge_width=4, colors=None
+    ):
         """
         A visualization method for the vehicle routing problem solution.
         Parameters
@@ -376,8 +380,10 @@ class VRP(Problem):
 
         colors = colormaps["jet"] if colors is None else colors
         if type(colors) is list and len(colors) != self.n_vehicles:
-            raise ValueError(f"The length of colors {len(colors)} and the number of vehicles {self.n_vehicles} do not match")
-            
+            raise ValueError(
+                f"The length of colors {len(colors)} and the number of vehicles {self.n_vehicles} do not match"
+            )
+
         if isinstance(solution, str):
             sol = {}
             for n, var in enumerate(self.docplex_model.iter_binary_vars()):

@@ -278,7 +278,6 @@ class RQAOA(Workflow):
             self.rqaoa_parameters.rqaoa_type == "custom"
             and self.rqaoa_parameters.n_cutoff <= problem.n
         ):
-
             n_cutoff = self.rqaoa_parameters.n_cutoff
             n_qubits = problem.n
             counter = self.rqaoa_parameters.counter
@@ -379,7 +378,6 @@ class RQAOA(Workflow):
 
         # If above cutoff, loop quantumly, else classically
         while n_qubits > n_cutoff:
-
             # put a tag to the qaoa object to know which step it is
             q.set_exp_tags({"rqaoa_counter": counter})
 
@@ -521,8 +519,6 @@ class RQAOA(Workflow):
         analytical = isinstance(qaoa_backend, QAOABackendAnalyticalSimulator)
 
         return exp_val_hamiltonian_termwise(
-            variational_params,
-            qaoa_backend,
             cost_hamiltonian,
             mixer_type,
             p,

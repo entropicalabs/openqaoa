@@ -147,7 +147,6 @@ class PauliOp:
 
         # Sorting
         for index, string in sorted(zip(qubit_indices, pauli_str)):
-
             # Ensure string is a valid Pauli operator
             if string not in PAULIS_SET:
                 raise ValueError(
@@ -467,7 +466,6 @@ class Hamiltonian:
         self.constant = constant
 
         for term, coeff in zip(pauli_terms, coeffs):
-
             # Identity terms are added to the constant
             if term._is_trivial:
                 self.constant += coeff
@@ -666,7 +664,6 @@ class Hamiltonian:
         pauli_coeffs = []
 
         for term, coeff in zip(terms, coeffs):
-
             # Check coeffcient type
             if not isinstance(coeff, int) and not isinstance(coeff, float):
                 raise ValueError(

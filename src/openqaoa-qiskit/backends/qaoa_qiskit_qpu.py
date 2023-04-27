@@ -64,7 +64,6 @@ class QAOAQiskitQPUBackend(
         initial_qubit_mapping: Optional[List[int]] = None,
         cvar_alpha: float = 1,
     ):
-
         QAOABaseBackendShotBased.__init__(
             self,
             qaoa_descriptor,
@@ -78,6 +77,10 @@ class QAOAQiskitQPUBackend(
 
         self.qureg = QuantumRegister(self.n_qubits)
         self.problem_reg = self.qureg[0 : self.problem_qubits]
+        self.creg = ClassicalRegister(len(self.problem_reg))
+
+        self.gate_applicator = QiskitGateApplicator()
+
         if self.initial_qubit_mapping is None:
             self.initial_qubit_mapping = (
                 initial_qubit_mapping
@@ -103,7 +106,6 @@ class QAOAQiskitQPUBackend(
             )
 
         else:
-
             raise Exception(
                 "Error connecting to {}.".format(self.device.device_location.upper())
             )
@@ -128,10 +130,21 @@ class QAOAQiskitQPUBackend(
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+
+        if self.append_state:
+            circuit_with_angles = circuit_with_angles.compose(self.append_state)
+
+        # only measure the problem qubits
+        if self.final_mapping is None:
+            circuit_with_angles.measure(self.problem_reg, self.creg)
+        else:
+            for idx, qubit in enumerate(self.final_mapping[0 : len(self.problem_reg)]):
+                cbit = self.creg[idx]
+                circuit_with_angles.measure(qubit, cbit)
+
         if self.qaoa_descriptor.routed == True:
             transpiled_circuit = transpile(
                 circuit_with_angles,
@@ -146,6 +159,7 @@ class QAOAQiskitQPUBackend(
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
             )
+
         return transpiled_circuit
 
     @property
@@ -161,9 +175,7 @@ class QAOAQiskitQPUBackend(
                 Object of type QAOAVariationalBaseParams
         """
         # self.reset_circuit()
-        creg = ClassicalRegister(len(self.problem_reg))
-        parametric_circuit = QuantumCircuit(self.qureg, creg)
-        gate_applicator = QiskitGateApplicator()
+        parametric_circuit = QuantumCircuit(self.qureg, self.creg)
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -181,19 +193,8 @@ class QAOAQiskitQPUBackend(
             decomposition = each_gate.decomposition("standard")
             # using the list above, construct the circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](gate_applicator, *each_tuple[1])
+                gate = each_tuple[0](self.gate_applicator, *each_tuple[1])
                 gate.apply_gate(parametric_circuit)
-
-        if self.append_state:
-            parametric_circuit = parametric_circuit.compose(self.append_state)
-
-        # only measure the problem qubits
-        if self.final_mapping is None:
-            parametric_circuit.measure(self.problem_reg, creg)
-        else:
-            for idx, qubit in enumerate(self.final_mapping[0 : len(self.problem_reg)]):
-                cbit = creg[idx]
-                parametric_circuit.measure(qubit, cbit)
 
         return parametric_circuit
 
