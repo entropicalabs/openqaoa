@@ -217,7 +217,7 @@ class QAOA(Workflow):
 
         # connect to the QPU specified
         self.device.check_connection()
-        # we compile the method of the parent class to genereate the id and
+        # we compile the method of the parent class to generate the id and
         # check the problem is a QUBO object and save it
         super().compile(problem=problem)
 

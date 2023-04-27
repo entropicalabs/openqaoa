@@ -62,9 +62,9 @@ class QAOAQiskitQPUBackend(
         append_state: Optional[QuantumCircuit],
         init_hadamard: bool,
         initial_qubit_mapping: Optional[List[int]] = None,
+        qiskit_optimization_level: Optional[int] = 1,
         cvar_alpha: float = 1,
     ):
-
         QAOABaseBackendShotBased.__init__(
             self,
             qaoa_descriptor,
@@ -103,7 +103,6 @@ class QAOAQiskitQPUBackend(
             )
 
         else:
-
             raise Exception(
                 "Error connecting to {}.".format(self.device.device_location.upper())
             )
@@ -111,6 +110,13 @@ class QAOAQiskitQPUBackend(
         if self.device.n_qubits < self.n_qubits:
             raise Exception(
                 "There are lesser qubits on the device than the number of qubits required for the circuit."
+            )
+
+        if qiskit_optimization_level >= 0 & qiskit_optimization_level < 4:
+            self.qiskit_optimization_level = qiskit_optimization_level
+        else:
+            raise Exception(
+                f"qiskit_optimization_level should be between 0 and 3; Instead I got {qiskit_optimization_level}."
             )
         # For parametric circuits
         self.parametric_circuit = self.parametric_qaoa_circuit
@@ -132,7 +138,7 @@ class QAOAQiskitQPUBackend(
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
         circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
-        if self.qaoa_descriptor.routed == True:
+        if self.qaoa_descriptor.routed is True:
             transpiled_circuit = transpile(
                 circuit_with_angles,
                 self.backend_qpu,
@@ -145,6 +151,7 @@ class QAOAQiskitQPUBackend(
                 circuit_with_angles,
                 self.backend_qpu,
                 initial_layout=self.initial_qubit_mapping,
+                optimization_level=self.qiskit_optimization_level,
             )
         return transpiled_circuit
 
@@ -215,7 +222,7 @@ class QAOAQiskitQPUBackend(
             as its value.
         """
 
-        n_shots = self.n_shots if n_shots == None else n_shots
+        n_shots = self.n_shots if n_shots is None else n_shots
 
         circuit = self.qaoa_circuit(params)
 
@@ -223,7 +230,7 @@ class QAOAQiskitQPUBackend(
         no_of_job_retries = 0
         max_job_retries = 5
 
-        while job_state == False:
+        while job_state is False:
             # initial_layout only passed if not azure device
             # if type(self.device).__name__ == "DeviceAzure":
             # job = self.backend_qpu.run(circuit, **input_items)
@@ -233,7 +240,7 @@ class QAOAQiskitQPUBackend(
             no_of_api_retries = 0
             max_api_retries = 5
 
-            while api_contact == False:
+            while api_contact is False:
                 try:
                     self.job_id = job.job_id()
                     counts = job.result().get_counts()

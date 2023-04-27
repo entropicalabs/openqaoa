@@ -153,10 +153,11 @@ class Workflow(ABC):
                 "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
             )
 
-        if experiment_id != None:
+        if experiment_id is not None:
             if not is_valid_uuid(experiment_id):
                 raise ValueError(
-                    "The experiment_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+                    "The experiment_id is not a valid uuid, \
+                        example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
                 )
             else:
                 self.header["experiment_id"] = experiment_id
@@ -225,8 +226,16 @@ class Workflow(ABC):
                 The value of alpha for the CVaR cost function
             noise_model: `qiskit.providers.aer.noise.NoiseModel`
                     The Qiskit noise model to be used for the simulation.
+            initial_qubit_mapping: Union[List[int], numpy.ndarray]
+                Mapping from physical to logical qubit indices, used to eventually
+                construct the quantum circuit.  For example, for a system composed by 3 qubits
+                `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`,
+                where the left hand side is the physical qubit
+                and the right hand side is the logical qubits
             qiskit_simulation_method: str, optional
                 The method to be used for the simulation.
+            qiskit_optimization_level: int
+                The desired value for the qiskit transpile module. Choose between 0,1,2,3
             seed_simulator: int
                 Optional argument to initialize a pseudorandom solution. Default None
             active_reset:

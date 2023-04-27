@@ -77,7 +77,6 @@ class CircuitProperties(WorkflowProperties):
         mixer_coeffs: Optional[float] = None,
         seed: Optional[int] = None,
     ):
-
         self.param_type = param_type
         self.init_type = init_type
         self.qubit_register = qubit_register
@@ -207,6 +206,8 @@ class BackendProperties(WorkflowProperties):
         construct the quantum circuit.  For example, for a system composed by 3 qubits
        `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit
         and the right hand side is the logical qubits
+    qiskit_optimization_level: int
+        The desired value for the qiskit transpile module. Choose between 0,1,2,3
     qiskit_simulation_method: str
         Specify the simulation method to use with the `qiskit.AerSimulator`
     seed_simulator: int
@@ -230,13 +231,13 @@ class BackendProperties(WorkflowProperties):
         cvar_alpha: float = 1,
         noise_model=None,
         initial_qubit_mapping: Optional[Union[List[int], np.ndarray]] = None,
+        qiskit_optimization_level: Optional[int] = 1,
         qiskit_simulation_method: Optional[str] = None,
         seed_simulator: Optional[int] = None,
         active_reset: Optional[bool] = None,
         rewiring: Optional[str] = None,
         disable_qubit_rewiring: Optional[bool] = None,
     ):
-
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state
@@ -244,6 +245,7 @@ class BackendProperties(WorkflowProperties):
         self.cvar_alpha = cvar_alpha
         self.noise_model = noise_model
         self.initial_qubit_mapping = initial_qubit_mapping
+        self.qiskit_optimization_level = qiskit_optimization_level
         self.seed_simulator = seed_simulator
         self.qiskit_simulation_method = qiskit_simulation_method
         self.active_reset = active_reset
