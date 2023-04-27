@@ -27,8 +27,6 @@ sphinx:
 # Optionally set the version of Python and requirements required to build your docs
 python:
   install:
-    - method: poetry
-      path: .
     - method: pip
       path: ./src/openqaoa-core
       extra_requirements:
