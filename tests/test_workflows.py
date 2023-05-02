@@ -660,6 +660,128 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         self.assertRaises(AttributeError, lambda: q.backend.n_shots)
 
+    def test_set_error_mitigation_properties_change(self):
+        """
+        Ensure that once a property has been changed via set_error_mitigation_properties the attribute has been appropriately updated.
+        Updating all attributes at the same time.
+        """
+
+        default_pairings = {
+            "error_mitigation_technique": None,
+            "n_batches": 10,
+            "calibration_data_location": None,
+        }
+
+        q = QAOA()
+
+        for each_key, each_value in default_pairings.items():
+            self.assertEqual(
+                getattr(q.error_mitigation_properties, each_key), each_value
+            )
+
+        update_pairings = {
+            "error_mitigation_technique": "spam_twirling",
+            "n_batches": 20,
+            "calibration_data_location": "./tests/qpu_calibration_data/spam_twirling_mock.json",
+        }
+
+        q.set_error_mitigation_properties(**update_pairings)
+
+        for each_key, each_value in update_pairings.items():
+            self.assertEqual(
+                getattr(q.error_mitigation_properties, each_key), each_value
+            )
+
+    def test_set_error_mitigation_properties_check_user_input(self):
+        """
+        These tests check for the validity of various user inputs.
+        First, check if a ValueError is raised if the user tries to pass an error mitigation technique which is not currently supported. Also, check if capitalization does not impact the functionality.
+        Second, check if the number of batches is non-positive.
+        Thirdly, check if the calibration data file doesn't exist, is of the wrong format, or has a different structure than the one expected.
+        """
+        filename = "./tests/qpu_calibration_data/spam_twirling_mock.json"
+
+        nodes = 3
+        edge_probability = 0.6
+        g = nw.generators.fast_gnp_random_graph(n=nodes, p=edge_probability)
+        problem = MinimumVertexCover(g, field=1.0, penalty=10)
+        qubo_problem = problem.qubo
+
+        q = QAOA()
+        self.assertRaises(
+            ValueError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="THIS_IS_NOT_SUPPORTED",
+                n_batches=10,
+                calibration_data_location=filename,
+            ),
+        )
+
+        q = QAOA()
+        q.set_error_mitigation_properties(
+            error_mitigation_technique="SPaM_TwIRLING",
+            n_batches=10,
+            calibration_data_location=filename,
+        )
+        self.assertEqual(
+            q.error_mitigation_properties.error_mitigation_technique, "spam_twirling"
+        )
+
+        q = QAOA()
+        self.assertRaises(
+            ValueError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=-1,
+                calibration_data_location=filename,
+            ),
+        )
+
+        q = QAOA()
+        self.assertRaises(
+            ValueError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=0,
+                calibration_data_location=filename,
+            ),
+        )
+        q = QAOA()
+        filename = "./tests/qpu_calibration_data/non-existing-location.json"
+        self.assertRaises(
+            FileNotFoundError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=10,
+                calibration_data_location=filename,
+            ),
+        )
+        q = QAOA()
+
+        filename = "./tests/qpu_calibration_data/wrong_format.txt"
+
+        self.assertRaises(
+            ValueError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=10,
+                calibration_data_location=filename,
+            ),
+        )
+
+        q = QAOA()
+
+        filename = "./tests/qpu_calibration_data/wrong_structure.json"
+
+        self.assertRaises(
+            KeyError,
+            lambda: q.set_error_mitigation_properties(
+                error_mitigation_technique="spam_twirling",
+                n_batches=10,
+                calibration_data_location=filename,
+            ),
+        )
+
     def test_set_classical_optimizer_defaults(self):
         """
         Check if the fields in the default classical_optimizer dict are correct

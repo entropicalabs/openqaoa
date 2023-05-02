@@ -112,7 +112,6 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
         return 2 * (self.cost_2q_coeffs * self.gammas_pairs)
 
     def update_from_raw(self, new_values):
-
         self.betas_singles = np.array(new_values[: len(self.mixer_1q_coeffs) * self.p])
         self.betas_singles = self.betas_singles.reshape(
             (self.p, len(self.mixer_1q_coeffs))
@@ -285,7 +284,6 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
         return all_constraints
 
     def plot(self, ax=None, **kwargs):
-
         list_names_ = ["betas singles", "betas pairs", "gammas singles", "gammas pairs"]
         list_values_ = [
             self.betas_singles % (2 * (np.pi)),

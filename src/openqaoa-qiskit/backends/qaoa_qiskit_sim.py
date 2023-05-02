@@ -96,7 +96,6 @@ class QAOAQiskitBackendShotBasedSimulator(
         seed_simulator: Optional[int] = None,
         noise_model: Optional[NoiseModel] = None,
     ):
-
         QAOABaseBackendShotBased.__init__(
             self,
             qaoa_descriptor,
@@ -106,7 +105,7 @@ class QAOAQiskitBackendShotBasedSimulator(
             init_hadamard,
             cvar_alpha,
         )
-
+        self.gate_applicator = QiskitGateApplicator()
         self.qureg = QuantumRegister(self.n_qubits)
 
         if self.prepend_state:
@@ -135,11 +134,15 @@ class QAOAQiskitBackendShotBasedSimulator(
         qaoa_circuit: `QuantumCircuit`
             The final QAOA circuit after binding angles from variational parameters.
         """
-
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
-        return new_parametric_circuit
+        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+
+        if self.append_state:
+            circuit_with_angles = circuit_with_angles.compose(self.append_state)
+        circuit_with_angles.measure_all()
+
+        return circuit_with_angles
 
     @property
     def parametric_qaoa_circuit(self) -> QuantumCircuit:
@@ -149,8 +152,9 @@ class QAOAQiskitBackendShotBasedSimulator(
         the circuit.
         """
         # self.reset_circuit()
-        parametric_circuit = QuantumCircuit(self.qureg)
-        gate_applicator = QiskitGateApplicator()
+        parametric_circuit = QuantumCircuit(
+            self.qureg
+        )  # consider changing this too with my new function
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -174,12 +178,8 @@ class QAOAQiskitBackendShotBasedSimulator(
                 decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](gate_applicator,*each_tuple[1])
+                gate = each_tuple[0](self.gate_applicator, *each_tuple[1])
                 gate.apply_gate(parametric_circuit)
-
-        if self.append_state:
-            parametric_circuit = parametric_circuit.compose(self.append_state)
-        parametric_circuit.measure_all()
 
         return parametric_circuit
 
@@ -276,7 +276,6 @@ class QAOAQiskitBackendStatevecSimulator(
         init_hadamard: bool,
         cvar_alpha: float = 1,
     ):
-
         QAOABaseBackendStatevector.__init__(
             self,
             qaoa_descriptor,
@@ -291,6 +290,7 @@ class QAOAQiskitBackendStatevecSimulator(
         ), "Please use the shot-based simulator for simulations with cvar_alpha < 1"
 
         self.qureg = QuantumRegister(self.n_qubits)
+        self.gate_applicator = QiskitGateApplicator()
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
@@ -347,8 +347,8 @@ class QAOAQiskitBackendStatevecSimulator(
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        new_parametric_circuit = self.parametric_circuit.bind_parameters(memory_map)
-        return new_parametric_circuit
+        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+        return circuit_with_angles
 
     @property
     def parametric_qaoa_circuit(self) -> QuantumCircuit:
@@ -364,7 +364,6 @@ class QAOAQiskitBackendStatevecSimulator(
         """
         # self.reset_circuit()
         parametric_circuit = QuantumCircuit(self.qureg)
-        gate_applicator = QiskitGateApplicator()
 
         if self.prepend_state:
             parametric_circuit = parametric_circuit.compose(self.prepend_state)
@@ -388,7 +387,7 @@ class QAOAQiskitBackendStatevecSimulator(
                 decomposition = each_gate.decomposition("standard")
             # Create Circuit
             for each_tuple in decomposition:
-                gate = each_tuple[0](gate_applicator,*each_tuple[1])
+                gate = each_tuple[0](self.gate_applicator, *each_tuple[1])
                 gate.apply_gate(parametric_circuit)
 
         if self.append_state:

@@ -51,7 +51,6 @@ def pennylane_optimizer(
     shifts=None,
     **options
 ):
-
     """
     Minimize a function `fun` using some pennylane method.
     To check available methods look at the available_methods_dict variable.

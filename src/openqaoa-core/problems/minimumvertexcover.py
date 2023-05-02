@@ -27,7 +27,6 @@ class MinimumVertexCover(Problem):
     __name__ = "minimum_vertex_cover"
 
     def __init__(self, G, field, penalty):
-
         self.G = G
         self.field = field
         self.penalty = penalty
@@ -38,7 +37,6 @@ class MinimumVertexCover(Problem):
 
     @G.setter
     def G(self, input_networkx_graph):
-
         if not isinstance(input_networkx_graph, nx.Graph):
             raise TypeError("Input problem graph must be a networkx Graph.")
 
@@ -54,7 +52,6 @@ class MinimumVertexCover(Problem):
 
     @field.setter
     def field(self, input_field):
-
         if not isinstance(input_field, int) and not isinstance(input_field, float):
             raise TypeError(
                 "The input parameter, field, has to be of type float or int"
@@ -68,7 +65,6 @@ class MinimumVertexCover(Problem):
 
     @penalty.setter
     def penalty(self, input_penalty):
-
         if not isinstance(input_penalty, int) and not isinstance(input_penalty, float):
             raise TypeError(
                 "The input parameter, penalty, has to be of type float or int"

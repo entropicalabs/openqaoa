@@ -7,6 +7,7 @@ from .problem import Problem
 from .converters import FromDocplex2IsingModel
 from .qubo import QUBO
 
+
 class BinPacking(Problem):
     """
     Creates an instance of the bin packing problem.
@@ -44,10 +45,14 @@ class BinPacking(Problem):
             )
         for weight in weights:
             if int(weight) != weight:
-                raise TypeError(f"The weights must be integer numbers. Format {type(weight)} found.")
-        
+                raise TypeError(
+                    f"The weights must be integer numbers. Format {type(weight)} found."
+                )
+
         if int(weight_capacity) != weight_capacity:
-            raise TypeError(f"The weight_capacity must be integer. Format {type(weight_capacity)} found.")
+            raise TypeError(
+                f"The weight_capacity must be integer. Format {type(weight_capacity)} found."
+            )
         self.weights = [int(weight) for weight in weights]
         self.weight_capacity = weight_capacity
         self.penalty = penalty
@@ -71,7 +76,7 @@ class BinPacking(Problem):
         -------
         solution : dict
         Dictionary with keys equal to the variables of the problem and values 0, 1, or None
-        None for those values to be optimized otherwise the simplifications that can be 
+        None for those values to be optimized otherwise the simplifications that can be
         used in this problem.
 
         """
@@ -151,7 +156,7 @@ class BinPacking(Problem):
             list_items = range(1, self.n_items)
         else:
             list_items = range(self.n_items)
-            
+
         eq_constraints = {}
         ineq_constraints = {}
         for i in list_items:
@@ -225,9 +230,12 @@ class BinPacking(Problem):
                 )
 
         ising_model = qubo_docplex.ising_model
-        return QUBO(n_vars, ising_model.terms+[[]],
-                    ising_model.weights + [ising_model.constant],
-                    self.problem_instance)
+        return QUBO(
+            n_vars,
+            ising_model.terms + [[]],
+            ising_model.weights + [ising_model.constant],
+            self.problem_instance,
+        )
 
     def classical_solution(self, string: bool = False):
         """
@@ -253,9 +261,7 @@ class BinPacking(Problem):
         docplex_sol = cplex_model.solve()
 
         if docplex_sol is None:
-            raise ValueError(
-                f"solution not found: {cplex_model.solve_details.status}"
-            )
+            raise ValueError(f"solution not found: {cplex_model.solve_details.status}")
 
         if string:
             solution = ""
@@ -287,6 +293,7 @@ class BinPacking(Problem):
         """
         import matplotlib.pyplot as plt
         from matplotlib import colormaps
+
         cplex_model = self.docplex_model
         if isinstance(solution, str):
             sol = self.solution.copy()
@@ -308,7 +315,7 @@ class BinPacking(Problem):
                             self.weights[i],
                             bottom=sum_items,
                             label=f"item {i}",
-                            color=colors(i/self.n_items),
+                            color=colors(i / self.n_items),
                             alpha=0.7,
                             edgecolor="black",
                         )

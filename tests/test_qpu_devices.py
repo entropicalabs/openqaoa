@@ -26,7 +26,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def setUp(self):
-
         self.HUB = "ibm-q"
         self.GROUP = "open"
         self.PROJECT = "main"
@@ -34,7 +33,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_changing_provider(self):
-
         """
         This test checks that the specified hub,group and project in the
         initialisation of DeviceQiskit changes the provider to the appropriate
@@ -47,9 +45,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         provider_instances = device_obj.provider.instances()
 
         if len(provider_instances) >= 2:
-
             for each_item in provider_instances[:2]:
-
                 [hub, group, project] = each_item.split("/")
                 device_obj2 = DeviceQiskit(
                     device_name="ibmq_manila", hub=hub, group=group, project=project
@@ -60,7 +56,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_hub_group_project(self):
-
         """
         Hub, group and project must always be specified together.
         If either the hub, group or project is wrongly specified, check_connection should
@@ -74,9 +69,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         for each_combi in itertools.product(
             ["invalid_hub", None], ["invalid_group", None], ["invalid_project", None]
         ):
-
             if each_combi != (None, None, None):
-
                 device_obj = DeviceQiskit(
                     device_name="",
                     hub=each_combi[0],
@@ -90,7 +83,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_no_backend_provided_credentials(self):
-
         """
         If no information about the device name, but the credentials
         used are correct, check_connection should return True.
@@ -107,7 +99,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_right_backend_provided_credentials(self):
-
         """
         If the correct device name is provided and the credentials
         used are correct, check_connection should return True.
@@ -135,7 +126,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
-
         """
         If device name provided is incorrect, and not empty, and the credentials
         used are correct, check_connection should return False.
@@ -163,14 +153,12 @@ class TestingDeviceLocal(unittest.TestCase):
     """
 
     def test_supported_device_names(self):
-
         for each_device_name in SUPPORTED_LOCAL_SIMULATORS:
             device_obj = DeviceLocal(each_device_name)
 
             self.assertEqual(device_obj.check_connection(), True)
 
     def test_unsupported_device_names(self):
-
         device_obj = DeviceLocal("unsupported_device")
 
         self.assertEqual(device_obj.check_connection(), False)
@@ -186,7 +174,6 @@ class TestingDeviceAWS(unittest.TestCase):
 
     @pytest.mark.braket_api
     def test_changing_aws_region(self):
-
         device_obj = DeviceAWS(
             device_name="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             aws_region="us-east-1",
@@ -209,7 +196,6 @@ class TestingDeviceAWS(unittest.TestCase):
 
     @pytest.mark.braket_api
     def test_changing_s3_bucket_names(self):
-
         device_obj = DeviceAWS(
             device_name="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             s3_bucket_name="random_new_name",
@@ -222,7 +208,6 @@ class TestingDeviceAWS(unittest.TestCase):
 
     @pytest.mark.braket_api
     def test_check_connection_provider_no_backend_provided_credentials(self):
-
         """
         If no information about the device name, but the credentials
         used are correct, check_connection should return True.
@@ -237,7 +222,6 @@ class TestingDeviceAWS(unittest.TestCase):
 
     @pytest.mark.braket_api
     def test_check_connection_provider_right_backend_provided_credentials(self):
-
         """
         If the correct device name is provided and the credentials
         used are correct, check_connection should return True.
@@ -258,7 +242,6 @@ class TestingDeviceAWS(unittest.TestCase):
 
     @pytest.mark.braket_api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
-
         """
         If device name provided is incorrect, and not empty, and the credentials
         used are correct, check_connection should return False.
@@ -284,7 +267,6 @@ class TestingDeviceAzure(unittest.TestCase):
 
     @pytest.mark.api
     def setUp(self):
-
         bashCommand = "az resource list"
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
@@ -306,7 +288,6 @@ class TestingDeviceAzure(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_no_resource_id_or_az_location(self):
-
         """
         If no information about about the workspace is provided, the resource id
         or az location, check_connection and provider_connected should return False.
@@ -315,11 +296,9 @@ class TestingDeviceAzure(unittest.TestCase):
         for resource_id, az_location in itertools.product(
             ["", self.RESOURCE_ID], ["", self.AZ_LOCATION]
         ):
-
             if not (
                 resource_id == self.RESOURCE_ID and az_location == self.AZ_LOCATION
             ):
-
                 device_obj = DeviceAzure(
                     device_name="", resource_id=resource_id, az_location=az_location
                 )
@@ -332,7 +311,6 @@ class TestingDeviceAzure(unittest.TestCase):
     def test_check_connection_provider_no_backend_provided_resource_id_and_az_location(
         self,
     ):
-
         """
         If no information about the device name, but the resource id and azure
         location used are correct, check_connection should return True.
@@ -351,7 +329,6 @@ class TestingDeviceAzure(unittest.TestCase):
     def test_check_connection_provider_right_backend_provided_resource_id_and_az_location(
         self,
     ):
-
         """
         If the correct device name is provided and the resource id and azure
         location used are correct, check_connection should return True.
@@ -380,7 +357,6 @@ class TestingDeviceAzure(unittest.TestCase):
     def test_check_connection_provider_wrong_backend_provided_resource_id_and_az_location(
         self,
     ):
-
         """
         If device name provided is incorrect, and not empty, and the resource id
         and azure location used are correct, check_connection should return False.

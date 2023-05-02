@@ -19,7 +19,6 @@ ALLOWED_LOCAL_SIMUALTORS = SUPPORTED_LOCAL_SIMULATORS
 
 
 def _compare_qaoa_results(dict_old, dict_new, bool_cmplx_str):
-
     for key in dict_old.keys():
         if key == "cost_hamiltonian":  ## CHECK WHAT DO WITH THIS
             pass
@@ -98,7 +97,6 @@ class TestingResultOutputs(unittest.TestCase):
     """
 
     def test_flags_result_outputs_workflow(self):
-
         """
         Run an optimization problem for 5 iterations.
         Should expect certain fields of the results output to be filled based
@@ -117,9 +115,7 @@ class TestingResultOutputs(unittest.TestCase):
         recorded_evals = [0, 5]
 
         for device_name in ALLOWED_LOCAL_SIMUALTORS:
-
             for each_choice in choice_combination:
-
                 q = QAOA()
                 q.set_classical_optimizer(
                     method="cobyla",
@@ -334,7 +330,6 @@ class TestingResultOutputs(unittest.TestCase):
             create_device(location="local", name="qiskit.shot_simulator"),
             create_device(location="local", name="vectorized"),
         ]:
-
             q = QAOA()
             q.set_device(device)
             q.set_circuit_properties(
@@ -505,7 +500,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # test the methods for the intermediate steps
         for i in range(results["number_steps"]):
-
             # methods for intermediate qaao results
             assert (
                 results.get_qaoa_results(i)
@@ -691,7 +685,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
             create_device(location="local", name="qiskit.shot_simulator"),
             create_device(location="local", name="vectorized"),
         ]:
-
             r = RQAOA()
             r.set_device(device)
             r.set_circuit_properties(
@@ -708,7 +701,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # for each rqaoa object, we check that we can create a new results object from the dictionary of the old one
         for r in rqaoas:
-
             new_results = RQAOAResult.from_dict(r.result.asdict())
             old_results = r.result
 

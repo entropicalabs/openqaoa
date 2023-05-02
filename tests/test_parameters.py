@@ -29,7 +29,6 @@ mixer_hamiltonian = X_mixer_hamiltonian(len(register))
 
 class TestingQAOADescriptor(unittest.TestCase):
     def setUp(self):
-
         self.p = 2
         self.cost_hamil = Hamiltonian(
             [
@@ -46,7 +45,6 @@ class TestingQAOADescriptor(unittest.TestCase):
         self.mixer_gatemap_coeffs = self.mixer_hamil.coeffs
 
     def test_QAOADescriptor(self):
-
         """
         QAOADescriptor accept 2 types of inputs for mixer_blocks argument on initilisation. This test checks that the same mixer block when presented in Hamiltonian or as a List of RotationGateMap, plus the appropriate mixer coefficients, produces similar internal attributes.
         """
@@ -84,7 +82,6 @@ class TestingQAOADescriptor(unittest.TestCase):
         )
 
     def test_QAOADescriptor_mixer_coeffs_selector_hamiltonian(self):
-
         """
         If a mixer hamiltonian is used for mixer_block, the coefficients will be obtained from it. Even if the user inputs his own mixer coefficient, it will be ignored.
         """
@@ -102,7 +99,6 @@ class TestingQAOADescriptor(unittest.TestCase):
         self.assertEqual(qaoa_descriptor_2.mixer_block_coeffs, verify_mixer_coeffs)
 
     def test_QAOADescriptor_mixer_coeffs_selector_gatemap(self):
-
         """
         If a mixer gatemap is used for mixer_block, the user is required to input his own mixer coefficients, there should be an error message if the user does not input the appropriate number of mixer coefficients.
         """
@@ -126,7 +122,6 @@ class TestingQAOADescriptor(unittest.TestCase):
             )
 
     def test_QAOADescriptor_assign_coefficients(self):
-
         """
         The method should split the coefficients and gatemaps in the proper order. Regardless of their positions within the hamiltonian or gatemap list.
         """
@@ -187,7 +182,6 @@ class TestingQAOADescriptor(unittest.TestCase):
         )
 
     def test_QAOADescriptor_cost_blocks(self):
-
         """
         cost_blocks property should always return a list of RotationGateMaps based on the input cost hamiltonian.
         """
@@ -210,7 +204,6 @@ class TestingQAOADescriptor(unittest.TestCase):
             )
 
     def test_QAOADescriptor_mixer_blocks(self):
-
         """
         mixer_blocks property should always return a list of RotationGateMaps based on the input cost hamiltonian.
         """
@@ -233,7 +226,6 @@ class TestingQAOADescriptor(unittest.TestCase):
             )
 
     def test_QAOADescriptor_weird_cases(self):
-
         """
         Testing various weird cases
         """
@@ -253,7 +245,6 @@ class TestingQAOADescriptor(unittest.TestCase):
         )
 
     def test_QAOADescriptor_abstract_circuit(self):
-
         """
         The abstract circuit should be consistent with the cost hamiltonian, mixer block and the p value.
         """
@@ -350,7 +341,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert type(params) == QAOAVariationalStandardWithBiasParams
 
     def test_QAOAVariationalAnnealingParamsCustomInitialisation(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
         schedule = [0.4, 1.0]
         annealing_params = QAOAVariationalAnnealingParams(
@@ -360,7 +350,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert type(annealing_params) == QAOAVariationalAnnealingParams
 
     def test_QAOAVariationalFourierParamsCustomInitialisation(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
         v = [0.4, 1.0]
         u = [0.5, 1.2]
@@ -371,7 +360,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert type(fourier_params) == QAOAVariationalFourierParams
 
     def test_QAOAVariationalFourierExtendedParamsCustomInitialisation(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
         v_singles = [[0.4] * 3, [1.0] * 3]
         v_pairs = []
@@ -394,7 +382,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert type(fourier_params) == QAOAVariationalFourierExtendedParams
 
     def test_QAOAVariationalAnnealingParams(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
         params = QAOAVariationalAnnealingParams.linear_ramp_from_hamiltonian(
             qaoa_descriptor, total_annealing_time=2
@@ -413,7 +400,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert np.allclose(raw, params.raw())
 
     def test_QAOAVariationalStandardWithBiasParams(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
         params = QAOAVariationalStandardWithBiasParams.linear_ramp_from_hamiltonian(
             qaoa_descriptor, time=2
@@ -431,7 +417,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert np.allclose(raw, params.raw())
 
     def test_QAOAVariationalStandardParams(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
         params = QAOAVariationalStandardParams.linear_ramp_from_hamiltonian(
             qaoa_descriptor, time=2
@@ -472,7 +457,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert np.allclose(p2.cost_2q_angles, p3.cost_2q_angles)
 
     def test_QAOAVariationalFourierParams(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=3)
         params = QAOAVariationalFourierParams.linear_ramp_from_hamiltonian(
             qaoa_descriptor, q=2, time=2
@@ -488,7 +472,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert np.allclose(raw, params.raw())
 
     def test_QAOAVariationalFourierWithBiasParams(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=3)
         params = QAOAVariationalFourierWithBiasParams.linear_ramp_from_hamiltonian(
             qaoa_descriptor, q=2, time=2
@@ -505,7 +488,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert np.allclose(raw, params.raw())
 
     def test_QAOAVariationalFourierExtendedParams(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=3)
         params = QAOAVariationalFourierExtendedParams.linear_ramp_from_hamiltonian(
             qaoa_descriptor, q=2, time=2
@@ -547,7 +529,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         assert np.allclose(params1.cost_2q_angles, params3.cost_2q_angles)
 
     def test_inputChecking(self):
-
         # Check that an error is raised if we pass in an extra angle in `betas` (depth is 3, here we give 4 beta values)
         reg = [0, 1]
         terms = [[0, 1]]
@@ -571,7 +552,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         )
 
     def test_str_and_repr(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
 
         for each_key_value in PARAMS_CLASSES_MAPPER.keys():
@@ -586,7 +566,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
             self.assertEqual(variate_params.__str__(), variate_params.__repr__())
 
     def test_qaoa_variational_params_asdict(self):
-
         p = 4
         q = 2
 
@@ -613,7 +592,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=p)
 
         for each_key_value in PARAMS_CLASSES_MAPPER.keys():
-
             # create the variational params object
             variate_params = create_qaoa_variational_params(
                 qaoa_descriptor,
@@ -658,7 +636,6 @@ class TestingQAOAVariationalParameters(unittest.TestCase):
             ), f"asdict() should return a dict with the correct values, it did not for type: '{each_key_value}'."
 
     def test_qaoa_variational_params_update_from_dict(self):
-
         qaoa_descriptor = QAOADescriptor(cost_hamiltonian, mixer_hamiltonian, p=2)
 
         for each_key_value in PARAMS_CLASSES_MAPPER.keys():

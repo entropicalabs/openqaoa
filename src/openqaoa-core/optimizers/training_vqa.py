@@ -31,7 +31,6 @@ from typing import Any
 
 
 def save_parameter(parameter_name: str, parameter_value: Any):
-
     filename = "oq_saved_info_" + parameter_name
 
     try:
@@ -96,7 +95,6 @@ class OptimizeVQA(ABC):
         variational_params: Type[QAOAVariationalBaseParams],
         optimizer_dict: dict,
     ):
-
         if not isinstance(vqa_object, VQABaseBackend):
             raise TypeError(f"The specified cost object must be of type VQABaseBackend")
 
@@ -362,7 +360,6 @@ class ScipyOptimizer(OptimizeVQA):
         variational_params: Type[QAOAVariationalBaseParams],
         optimizer_dict: dict,
     ):
-
         super().__init__(vqa_object, variational_params, optimizer_dict)
 
         self.vqa_object = vqa_object
@@ -570,7 +567,6 @@ class CustomScipyGradientOptimizer(OptimizeVQA):
         variational_params: Type[QAOAVariationalBaseParams],
         optimizer_dict: dict,
     ):
-
         super().__init__(vqa_object, variational_params, optimizer_dict)
 
         self.vqa_object = vqa_object
@@ -784,7 +780,6 @@ class PennyLaneOptimizer(OptimizeVQA):
         variational_params: Type[QAOAVariationalBaseParams],
         optimizer_dict: dict,
     ):
-
         super().__init__(vqa_object, variational_params, optimizer_dict)
 
         self.vqa_object = vqa_object

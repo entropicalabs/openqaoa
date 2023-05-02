@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Union, Optional, List
 import numpy as np
 
@@ -166,7 +167,7 @@ def get_qaoa_backend(
                 cvar_alpha=cvar_alpha,
                 **backend_kwargs,
             )
+
     except Exception as e:
         raise ValueError(f"The backend returned an error: {e}")
-
     return backend_obj

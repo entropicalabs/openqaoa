@@ -26,7 +26,6 @@ from openqaoa.qaoa_components.ansatz_constructor.gatemaplabel import GateMapType
 
 class TestingCustomMixer(unittest.TestCase):
     def setUp(self):
-
         nodes = 6
         edge_probability = 0.7
         g = nx.generators.fast_gnp_random_graph(n=nodes, p=edge_probability, seed=34)
@@ -94,14 +93,12 @@ class TestingCustomMixer(unittest.TestCase):
         ]
 
     def test_custom_mixer_basic_workflow(self):
-
         """
         Check that using custom mixers works.
         Custom Mixers are only available in Manual mode.
         """
 
         for each_gatemap_list, each_gatemap_coeffs, _ in self.TESTING_GATEMAPS:
-
             custom_mixer_block_gatemap = each_gatemap_list
             custom_mixer_block_coeffs = each_gatemap_coeffs
 
@@ -122,7 +119,6 @@ class TestingCustomMixer(unittest.TestCase):
             optimizer.optimize()
 
     def test_mixer_block_properties_sequence(self):
-
         """
         The custom mixers should have sequences that are correct.
         The sequence values are based on the position of the gate in the block
@@ -134,20 +130,16 @@ class TestingCustomMixer(unittest.TestCase):
             each_gatemap_coeffs,
             correct_seq,
         ) in self.TESTING_GATEMAPS:
-
             gatemap_list_sequence = []
             one_qubit_count = 0
             two_qubit_count = 0
 
             for each_gatemap in each_gatemap_list:
-
                 if each_gatemap.gate_label.n_qubits == 1:
-
                     gatemap_list_sequence.append(one_qubit_count)
                     one_qubit_count += 1
 
                 elif each_gatemap.gate_label.n_qubits == 2:
-
                     gatemap_list_sequence.append(two_qubit_count)
                     two_qubit_count += 1
 
@@ -170,7 +162,6 @@ class TestingCustomMixer(unittest.TestCase):
             self.assertEqual(descriptor_mixer_seq, correct_seq)
 
     def test_set_block_sequence(self):
-
         """
         Check that the set block sequence method is correct.
         """
@@ -180,7 +171,6 @@ class TestingCustomMixer(unittest.TestCase):
             each_gatemap_coeffs,
             correct_seq,
         ) in self.TESTING_GATEMAPS:
-
             output_gatemap_list = QAOADescriptor.set_block_sequence(each_gatemap_list)
             output_seq = [
                 each_gatemap.gate_label.sequence for each_gatemap in output_gatemap_list
@@ -189,7 +179,6 @@ class TestingCustomMixer(unittest.TestCase):
             self.assertEqual(output_seq, correct_seq)
 
     def test_set_block_sequence_error_raises(self):
-
         """
         Check that the set block sequence method raises the right error when the
         wrong type is passed. A TypeError should be raised if the input_gatemap_list
@@ -203,7 +192,6 @@ class TestingCustomMixer(unittest.TestCase):
                 QAOADescriptor.set_block_sequence(each_iterable)
 
     def test_block_setter(self):
-
         """
         Check that block_setter method correctly maps the sequence and the type
         of the RotationGateMap Objects returned.
@@ -216,7 +204,6 @@ class TestingCustomMixer(unittest.TestCase):
             each_gatemap_coeffs,
             correct_seq,
         ) in self.TESTING_GATEMAPS:
-
             output_gatemap_list = QAOADescriptor.block_setter(
                 each_gatemap_list, input_enum_type
             )
@@ -235,7 +222,6 @@ class TestingCustomMixer(unittest.TestCase):
             )
 
     def test_block_setter_error_raises(self):
-
         """
         The block_setter method should raise a ValueError if the input_object is
         not of the type Hamiltonian or List. It should also raise a TypeError if
@@ -263,7 +249,6 @@ class TestingCustomMixer(unittest.TestCase):
                 )
 
     def test_block_setter_equivalence_simple(self):
-
         """
         A Hamiltonian Object and a list of RotationGateMap should have both their
         sequence and type assigned the same if they represent the same gate sequence.

@@ -251,7 +251,6 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
         gammas_singles: List[Union[float, int]],
         gammas_pairs: List[Union[float, int]],
     ):
-
         super().__init__(qaoa_descriptor)
         if not self.cost_1q_coeffs or not self.cost_2q_coeffs:
             raise RuntimeError(
