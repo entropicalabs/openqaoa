@@ -92,7 +92,6 @@ class TestQAOACostBaseClass(unittest.TestCase):
     """
 
     def setUp(self):
-
         self.log = Logger(
             {
                 "func_evals": {
@@ -192,11 +191,9 @@ class TestQAOACostBaseClass(unittest.TestCase):
         test_points = [[0, 0], [np.pi / 2, np.pi / 3], [1, 2]]
 
         for point in test_points:
-
             for gradient_fun, gradient_name in zip(
                 gradients_fun_list, gradients_types_list
             ):
-
                 # compute gradient for each point with number of shots 1000 for ech function evaluation
                 grad, var, n_shots = gradient_fun(point, n_shots=1000)
 

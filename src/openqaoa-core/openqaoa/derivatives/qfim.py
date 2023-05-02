@@ -10,7 +10,6 @@ from ..qaoa_components.variational_parameters.variational_baseparams import (
 
 
 def log_qfim_evals(logger: Logger) -> Logger:
-
     current_total_eval = logger.func_evals.best[0]
     current_total_eval += 1
     current_qfim_eval = logger.qfim_func_evals.best[0]
@@ -28,7 +27,6 @@ def qfim(
     logger: Logger,
     eta: float = 0.00000001,
 ):
-
     """
     Returns a callable qfim_fun(args) that computes the
     Quantum Fisher Information Matrix at `args` according to :
@@ -64,7 +62,6 @@ def qfim(
     copied_params = deepcopy(params)
 
     def qfim_fun(args):
-
         for i in range(len(args)):
             for j in range(i + 1):
                 vi, vj = np.zeros(len(args)), np.zeros(len(args))

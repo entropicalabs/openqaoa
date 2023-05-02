@@ -1,5 +1,6 @@
 from typing import List, Optional, Union
 import numpy as np
+import json
 from scipy.optimize._minimize import MINIMIZE_METHODS
 
 from ..optimizers.training_vqa import CustomScipyGradientOptimizer, PennyLaneOptimizer
@@ -77,7 +78,6 @@ class CircuitProperties(WorkflowProperties):
         mixer_coeffs: Optional[float] = None,
         seed: Optional[int] = None,
     ):
-
         self.param_type = param_type
         self.init_type = init_type
         self.qubit_register = qubit_register
@@ -236,7 +236,6 @@ class BackendProperties(WorkflowProperties):
         rewiring: Optional[str] = None,
         disable_qubit_rewiring: Optional[bool] = None,
     ):
-
         self.init_hadamard = init_hadamard
         self.n_shots = n_shots
         self.prepend_state = prepend_state
@@ -260,6 +259,71 @@ class BackendProperties(WorkflowProperties):
     #         raise ValueError(
     #             f"cvar_alpha must be between 0 and 1. Received {value}.")
     #     self._cvar_alpha = value
+
+
+class ErrorMitigationProperties(WorkflowProperties):
+    """
+    Optional, choose an error mitigation technique for the QAOA circuit. Currently supports only SPAM Twirling.
+
+    Parameters
+    ----------
+    error_mitigation_technique: str
+        The name of the error mitigation technique. Only 'spam_twirling' supported for now.
+    n_batches: Optional[int] = int
+        Number of batches in which the total number of shots is divided to. For every batch, we choose a set of qubits at random to which we apply X gates and classical negating. The dafault value is set to 10 to be comparable with most problem sizes in NISQ without creating too much of an overhead.
+    calibration_data_location: str
+        The path to the file containing calibration data for the specific device.
+    """
+
+    def __init__(
+        self,
+        error_mitigation_technique: Optional[str] = None,
+        n_batches: Optional[int] = 10,
+        calibration_data_location: Optional[str] = None,
+    ):
+        self.error_mitigation_technique = (
+            error_mitigation_technique.lower()
+            if type(error_mitigation_technique) == str
+            else error_mitigation_technique
+        )
+
+        if isinstance(n_batches, int) and n_batches > 0:
+            self.n_batches = n_batches
+        else:
+            raise ValueError("n_batches must be a positive integer.")
+
+        if calibration_data_location != None:
+            try:
+                with open(calibration_data_location, "r") as file:
+                    # Parse the JSON file
+                    calibration_data = json.load(file)
+
+                    # Check if the file has the expected structure
+                    calibration_measurements = calibration_data["results"][
+                        "measurement_outcomes"
+                    ]
+                    calibration_registers = calibration_data["register"]
+
+            except FileNotFoundError:
+                raise FileNotFoundError(
+                    "Calibration data file not found at specified location: {}".format(
+                        calibration_data_location
+                    )
+                )
+            except ValueError:
+                raise ValueError(
+                    "Calibration data file {} is not a valid JSON file".format(
+                        calibration_data_location
+                    )
+                )
+            except KeyError:
+                raise KeyError(
+                    "Calibration data file {} structure not as expected".format(
+                        calibration_data_location
+                    )
+                )
+
+        self.calibration_data_location = calibration_data_location
 
 
 class ClassicalOptimizer(WorkflowProperties):

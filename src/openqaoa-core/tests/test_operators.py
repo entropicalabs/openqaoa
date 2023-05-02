@@ -68,7 +68,6 @@ class TestingOperators(unittest.TestCase):
 
         # Test the exceptions are raised
         for string, index in zip(input_exc_strings, input_exc_indices):
-
             # Attempt construction of Pauli operator
             with self.assertRaises(AssertionError) as context:
                 pauli = PauliOp(string, index)
@@ -136,7 +135,6 @@ class TestingOperators(unittest.TestCase):
 
         # Test the exceptions are raised
         for string, index in zip(input_exc_strings, input_exc_indices):
-
             # Extract exception from string
             non_pauli_operator = list(set(string) - PAULIS_SET)[0]
 
@@ -898,7 +896,6 @@ class TestingOperators(unittest.TestCase):
         lengths = []
 
         for n_qubits in range(3, 10):
-
             # Compute correct lengths
             correct_lengths.append(n_qubits + n_qubits * (n_qubits - 1) / 2)
 
@@ -1043,7 +1040,6 @@ class TestingOperators(unittest.TestCase):
 
         # Add terms and coefficients from the other hamiltonian
         for term, coeff in zip(other_input_terms, other_input_coefficients):
-
             # If term was absent add it together with coefficient
             if correct_hamiltonian_dict.get(term.qubit_indices) is None:
                 correct_hamiltonian_dict.update({term.qubit_indices: coeff})
@@ -1224,7 +1220,6 @@ class TestingOperators(unittest.TestCase):
 
         # Check for every coefficient type
         for coefficients_exc in coefficients_exc_types:
-
             # Test the exception is raised - Attempt construction of Hamiltonian
             with self.assertRaises(ValueError) as context:
                 hamiltonian_exc = Hamiltonian.classical_hamiltonian(

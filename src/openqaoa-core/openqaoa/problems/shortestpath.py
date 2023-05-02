@@ -26,7 +26,6 @@ class ShortestPath(Problem):
     __name__ = "shortest_path"
 
     def __init__(self, G, source, dest):
-
         # Relabel nodes to integers starting from 0
         mapping = dict(zip(G, range(G.number_of_nodes())))
         self.G = nx.relabel_nodes(G, mapping)
@@ -73,7 +72,7 @@ class ShortestPath(Problem):
 
         DEFAULT_WEIGHTS = 1.0
 
-        for (u, v) in G.edges():
+        for u, v in G.edges():
             G.edges[u, v]["weight"] = DEFAULT_WEIGHTS
         for w in G.nodes():
             G.nodes[w]["weight"] = DEFAULT_WEIGHTS

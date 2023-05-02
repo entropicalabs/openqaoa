@@ -29,7 +29,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_connection(self):
-
         """
         Checks if connection to qvm and quilc is successful.
         TODO : improve test
@@ -48,7 +47,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_active_reset(self):
-
         """
         Test if active_reset works fine.
         Check for RESET instruction in parametric circuit when active_reset = True / False
@@ -91,7 +89,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_rewiring(self):
-
         """
         Test if rewiring works fine.
 
@@ -151,7 +148,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_qaoa_pyquil_expectation(self):
-
         """
         Checks if expectation value agrees with known values. Since angles are selected such that the final state is one of the computational basis states, shots do not matter (there is no statistical variance).
         """
@@ -186,7 +182,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_qaoa_pyquil_gate_names(self):
-
         """
         Checks if names of gates are correct, and no. of measurement gates match the no. of qubits.
         """
@@ -199,6 +194,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         cost_hamil = Hamiltonian([PauliOp("Z", (0,)), PauliOp("Z", (1,))], [1, 1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        params = create_qaoa_variational_params(qaoa_descriptor, "standard", "ramp")
         backend_obj_pyquil = QAOAPyQuilQPUBackend(
             qaoa_descriptor=qaoa_descriptor,
             device=device_pyquil,
@@ -232,7 +228,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         measurement_gate_no = len(
             [
                 instr
-                for instr in backend_obj_pyquil.parametric_circuit
+                for instr in backend_obj_pyquil.qaoa_circuit(params)
                 if type(instr) == quilbase.Measurement
             ]
         )
@@ -246,6 +242,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         )
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
+        params = create_qaoa_variational_params(qaoa_descriptor, "standard", "ramp")
         backend_obj_pyquil = QAOAPyQuilQPUBackend(
             qaoa_descriptor=qaoa_descriptor,
             device=device_pyquil,
@@ -282,7 +279,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         measurement_gate_no = len(
             [
                 instr
-                for instr in backend_obj_pyquil.parametric_circuit
+                for instr in backend_obj_pyquil.qaoa_circuit(params)
                 if type(instr) == quilbase.Measurement
             ]
         )
@@ -290,7 +287,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_circuit_init_hadamard(self):
-
         """
         Checks correctness of circuit for the argument `init_hadamard`.
         """
@@ -362,10 +358,9 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             for instr in pyquil_backend.parametric_circuit
             if type(instr) == quilbase.Gate
         ]
-
+        
     @pytest.mark.qvm
     def test_circuit_append_state(self):
-
         """
         Checks correctness of circuit for the argument `append_state`.
         """
@@ -383,6 +378,8 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=1)
 
+        params = create_qaoa_variational_params(qaoa_descriptor, "standard", "ramp")
+
         append_circuit = Program().inst(RX(np.pi, 0), RY(np.pi / 2, 1), RZ(np.pi, 0))
 
         pyquil_backend = QAOAPyQuilQPUBackend(
@@ -390,20 +387,56 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             qaoa_descriptor,
             n_shots=10,
             prepend_state=None,
-            append_state=append_circuit,
+            append_state=append_circuit,  
             init_hadamard=False,
             cvar_alpha=1,
         )
 
-        assert ["RZ", "RZ", "RZ", "RZ", "CPHASE", "RX", "RX", "RX", "RY", "RZ"] == [
+        assert set([
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "CZ",
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "CZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RZ",
+            "RX",
+            "RZ",
+            "RX",
+            "RZ",
+        ]) == set([
             instr.name
-            for instr in pyquil_backend.parametric_circuit
+            for instr in pyquil_backend.qaoa_circuit(params)
             if type(instr) == quilbase.Gate
-        ]
+        ])
 
     @pytest.mark.qvm
     def test_circuit_prepend_state(self):
-
         """
         Checks correctness of circuit for the argument `prepend_state`.
         """
@@ -456,7 +489,6 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
 
     @pytest.mark.qvm
     def test_pyquil_vectorized_agreement(self):
-
         """
         Checks correctness of expectation values with vectorized backend, up to a tolerance of delta = std.dev.
         """

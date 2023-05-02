@@ -3,7 +3,6 @@ from typing import Union
 
 
 class GateMapType(Enum):
-
     MIXER = "MIXER"
     COST = "COST"
     FIXED = "FIXED"

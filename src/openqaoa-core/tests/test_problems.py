@@ -1136,15 +1136,15 @@ class TestProblem(unittest.TestCase):
         n_vehicles = 2
 
         vrp_prob_random = VRP.random_instance(
-            n_nodes=n_nodes,
-            n_vehicles=n_vehicles,
-            seed=seed
+            n_nodes=n_nodes, n_vehicles=n_vehicles, seed=seed
         )
         vrp_sol = vrp_prob_random.classical_solution()
         vrp_sol_str = vrp_prob_random.classical_solution(string=True)
 
         self.assertTrue(isinstance(vrp_prob_random.plot_solution(vrp_sol), plt.Figure))
-        self.assertTrue(isinstance(vrp_prob_random.plot_solution(vrp_sol_str), plt.Figure))
+        self.assertTrue(
+            isinstance(vrp_prob_random.plot_solution(vrp_sol_str), plt.Figure)
+        )
 
     def test_vrp_type_checking(self):
         """
@@ -1325,7 +1325,8 @@ class TestProblem(unittest.TestCase):
         self.assertTrue(isinstance(figure, plt.Figure))
         fig, ax = plt.subplots(figsize=(5, 5))
         self.assertTrue(
-            porfolitooptimization_random_prob.plot_solution(sol, ax=ax) == None)
+            porfolitooptimization_random_prob.plot_solution(sol, ax=ax) == None
+        )
 
     # TESTING MAXIMAL INDEPENDENT SET PROBLEM
 
@@ -1594,7 +1595,7 @@ class TestProblem(unittest.TestCase):
                 ), "QUBO from dict method is not correct for problem type {}".format(
                     qubo.problem_instance["problem_type"]
                 )
-                
+
                 for key in qubo.__dict__:
                     if key != "terms" and key != "weights":
                         assert (

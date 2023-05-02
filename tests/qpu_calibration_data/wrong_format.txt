@@ -1,0 +1,1 @@
+This is NOT a JSON file. Wrong format of the calibration data file.

@@ -19,6 +19,7 @@ from ...qaoa_components.variational_parameters.variational_baseparams import (
 )
 from ...utilities import get_mixer_hamiltonian, generate_timestamp
 from ...optimizers.qaoa_optimizer import get_optimizer
+from ...backends.wrapper import SPAMTwirlingWrapper
 
 
 class QAOA(Workflow):
@@ -248,11 +249,25 @@ class QAOA(Workflow):
             total_annealing_time=self.circuit_properties.annealing_time,
         )
 
+        backend_dict = self.backend_properties.__dict__.copy()
+
         self.backend = get_qaoa_backend(
             qaoa_descriptor=self.qaoa_descriptor,
             device=self.device,
-            **self.backend_properties.__dict__,
+            **backend_dict,
         )
+
+        # Implementing SPAM Twirling error mitigation requires wrapping the backend.
+        # However, the BaseWrapper can have many more use cases.
+        if (
+            self.error_mitigation_properties.error_mitigation_technique
+            == "spam_twirling"
+        ):
+            self.backend = SPAMTwirlingWrapper(
+                backend=self.backend,
+                n_batches=self.error_mitigation_properties.n_batches,
+                calibration_data_location=self.error_mitigation_properties.calibration_data_location,
+            )
 
         self.optimizer = get_optimizer(
             vqa_object=self.backend,

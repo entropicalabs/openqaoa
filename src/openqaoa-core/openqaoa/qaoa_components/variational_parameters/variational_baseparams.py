@@ -28,7 +28,6 @@ class QAOAVariationalBaseParams(ABC):
     """
 
     def __init__(self, qaoa_descriptor: QAOADescriptor):
-
         self.qaoa_descriptor = qaoa_descriptor
         self.p = self.qaoa_descriptor.p
 
@@ -54,11 +53,9 @@ class QAOAVariationalBaseParams(ABC):
         raise NotImplementedError()
 
     def __repr__(self):
-
         raise NotImplementedError()
 
     def __str__(self):
-
         return self.__repr__()
 
     @property

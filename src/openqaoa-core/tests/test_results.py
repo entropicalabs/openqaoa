@@ -16,7 +16,6 @@ from openqaoa.problems import MinimumVertexCover, QUBO, MaximumCut
 from openqaoa.qaoa_components import Hamiltonian
 
 def _compare_qaoa_results(dict_old, dict_new, bool_cmplx_str):
-
     for key in dict_old.keys():
         if key == "cost_hamiltonian":  ## CHECK WHAT DO WITH THIS
             pass
@@ -95,7 +94,6 @@ class TestingResultOutputs(unittest.TestCase):
     """
 
     def test_flags_result_outputs_workflow(self):
-
         """
         Run an optimization problem for 5 iterations.
         Should expect certain fields of the results output to be filled based
@@ -116,7 +114,6 @@ class TestingResultOutputs(unittest.TestCase):
         for device_name in SUPPORTED_LOCAL_SIMULATORS:
 
             for each_choice in choice_combination:
-
                 q = QAOA()
                 q.set_classical_optimizer(
                     method="cobyla",
@@ -329,9 +326,15 @@ class TestingResultOutputs(unittest.TestCase):
         # run qaoa with different devices, and save the objects in a list
         qaoas = []
         for device in [
+<<<<<<< HEAD:src/openqaoa-core/tests/test_results.py
                 create_device(location="local", name=each_device_name) for each_device_name in SUPPORTED_LOCAL_SIMULATORS if each_device_name != "analytical_simulator"
             ]:
 
+=======
+            create_device(location="local", name="qiskit.shot_simulator"),
+            create_device(location="local", name="vectorized"),
+        ]:
+>>>>>>> dev:tests/test_results.py
             q = QAOA()
             q.set_device(device)
             q.set_circuit_properties(
@@ -502,7 +505,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # test the methods for the intermediate steps
         for i in range(results["number_steps"]):
-
             # methods for intermediate qaao results
             assert (
                 results.get_qaoa_results(i)
@@ -686,9 +688,15 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
         rqaoas = []
         
         for device in [
+<<<<<<< HEAD:src/openqaoa-core/tests/test_results.py
                 create_device(location="local", name=each_device_name) for each_device_name in SUPPORTED_LOCAL_SIMULATORS if each_device_name != "analytical_simulator"
             ]:
 
+=======
+            create_device(location="local", name="qiskit.shot_simulator"),
+            create_device(location="local", name="vectorized"),
+        ]:
+>>>>>>> dev:tests/test_results.py
             r = RQAOA()
             r.set_device(device)
             r.set_circuit_properties(
@@ -705,7 +713,6 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # for each rqaoa object, we check that we can create a new results object from the dictionary of the old one
         for r in rqaoas:
-
             new_results = RQAOAResult.from_dict(r.result.asdict())
             old_results = r.result
 

@@ -284,13 +284,11 @@ class QAOABenchmark:
 
         # loop over the benchmarked QAOA object and the reference QAOA object (if requested)
         for qaoa, values, string in zip(both_qaoa, both_values, both_strings):
-
             if verbose:
                 print(f"Running {string}.")
 
             # evaluate all the points in the grid, in the order provided by the function __ordered_points. We loop over the indices of the grid.
             for k, i_point in enumerate(self.__ordered_points(n_params, n_points_axis)):
-
                 if verbose:
                     self.__print_expected_time(
                         k, n_points_axis**n_params
@@ -439,7 +437,6 @@ class QAOABenchmark:
         count_sp = 0  # counter of subplots
         for key in values:
             if values[key][0]:  # skip the plot if it is not requested
-
                 # raise an exception if the values for a plo requested are not available
                 if values[key][1] is None:
                     raise Exception(

@@ -33,7 +33,6 @@ class TestingLoggerClass(unittest.TestCase):
         ) <= set([a for a in dir(q.result) if not a.startswith("__")])
 
     def test_most_probable_bitstring(self):
-
         cost_hamil = Hamiltonian(
             [
                 PauliOp("ZZ", (0, 3)),
@@ -104,7 +103,6 @@ class TestingLoggerClass(unittest.TestCase):
         )  # Subset for shot/qpu
 
     def test_plot_cost(self):
-
         # Create the problem
         g = nx.circulant_graph(6, [1])
         vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
@@ -116,7 +114,6 @@ class TestingLoggerClass(unittest.TestCase):
         q.result.plot_cost()
 
     def test_plot_probabilities(self):
-
         # Create the problem
         g = nx.circulant_graph(6, [1])
         vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
@@ -131,7 +128,6 @@ class TestingLoggerClass(unittest.TestCase):
         q_sv.result.plot_probabilities()
 
     def test_plot_n_shots(self):
-
         # Create the problem
         g = nx.circulant_graph(6, [1])
         vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
@@ -231,7 +227,6 @@ class TestingLoggerClass(unittest.TestCase):
             )
 
     def test_get_counts(self):
-
         # measurement outcome from a statevector_simulator backend
         optimized_measurement_outcomes_sv = np.array(
             [

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Union, Optional, List
 import numpy as np
 
@@ -8,23 +9,27 @@ from .devices_core import DeviceBase, DeviceLocal
 from .basebackend import QuantumCircuitBase, QAOABaseBackend
 from ..qaoa_components import QAOADescriptor
 
+
 def _create_mappers(input_plugin_dict: dict) -> dict:
-    
     DEVICE_NAME_TO_OBJECT_MAPPER = dict()
     DEVICE_ACCESS_OBJECT_MAPPER = dict()
-    
+
     DEVICE_NAME_TO_OBJECT_MAPPER["vectorized"] = QAOAvectorizedBackendSimulator
-    DEVICE_NAME_TO_OBJECT_MAPPER["analytical_simulator"] = QAOABackendAnalyticalSimulator
-    
+    DEVICE_NAME_TO_OBJECT_MAPPER[
+        "analytical_simulator"
+    ] = QAOABackendAnalyticalSimulator
+
     for each_entry_key, each_entry_value in input_plugin_dict.items():
-        if hasattr(each_entry_value, 'device_access'):
+        if hasattr(each_entry_value, "device_access"):
             DEVICE_ACCESS_OBJECT_MAPPER.update(each_entry_value.device_access)
-        if hasattr(each_entry_value, 'device_name_to_obj'):
+        if hasattr(each_entry_value, "device_name_to_obj"):
             DEVICE_NAME_TO_OBJECT_MAPPER.update(each_entry_value.device_name_to_obj)
-        
+
     return DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER
 
+
 DEVICE_NAME_TO_OBJECT_MAPPER, DEVICE_ACCESS_OBJECT_MAPPER = _create_mappers(PLUGIN_DICT)
+
 
 def _backend_arg_mapper(
     backend_obj: QAOABaseBackend,
@@ -37,19 +42,18 @@ def _backend_arg_mapper(
     disable_qubit_rewiring: Optional[bool] = None,
     initial_qubit_mapping=None,
 ):
-    
     BACKEND_ARGS_MAPPER = {
         QAOABackendAnalyticalSimulator: {},
         QAOAvectorizedBackendSimulator: {},
     }
-    
+
     local_vars = locals()
-    
+
     for each_plugin_entrypoint in PLUGIN_DICT.values():
-        if hasattr(each_plugin_entrypoint, 'backend_args'):
+        if hasattr(each_plugin_entrypoint, "backend_args"):
             for each_key, each_value in each_plugin_entrypoint.backend_args.items():
                 # Convert list of accepted parameters into a dictionary with
-                # the name of the variable as a key and the local value of the 
+                # the name of the variable as a key and the local value of the
                 # variable
                 var_values = [local_vars[each_name] for each_name in each_value]
                 input_dict = {each_key: dict(zip(each_value, var_values))}
@@ -160,7 +164,7 @@ def get_qaoa_backend(
                 cvar_alpha=cvar_alpha,
                 **backend_kwargs,
             )
+
     except Exception as e:
         raise ValueError(f"The backend returned an error: {e}")
-
     return backend_obj

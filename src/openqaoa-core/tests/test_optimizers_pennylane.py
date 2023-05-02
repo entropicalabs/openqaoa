@@ -40,7 +40,6 @@ qubo_problem_3 = QUBO.random_instance(6)
 
 class TestPennylaneOptimizers(unittest.TestCase):
     def setUp(self):
-
         self.log = Logger(
             {
                 "func_evals": {
@@ -208,7 +207,6 @@ class TestPennylaneOptimizers(unittest.TestCase):
 
         i = 0
         for method in list_optimizers:
-
             pennylane_method = method
 
             # copy the parameters

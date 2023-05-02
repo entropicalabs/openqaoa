@@ -82,7 +82,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
     """
 
     def test_permute(self):
-
         nqubits = 3
 
         arr = np.arange(2**nqubits)
@@ -96,7 +95,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         assert np.array_equal(permuted_arr, expected_arr)
 
     def test_get_perm(self):
-
         nqubits = 4
 
         perm1, perminv1 = _get_perm(nqubits, [1, 3])
@@ -118,7 +116,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
     ##########################################################
 
     def test_qaoa_circuit(self):
-
         # Test circuit with p = 1 on 3 qubits
         # Performs a round of ZZ rotations through pi, and a round of X mixer rotations through pi
         nqubits = 3
@@ -152,7 +149,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         assert np.allclose(wf, expected_wf)
 
     def test_wavefunction_single_terms(self):
-
         # Test wavefunction and expectation values with hamiltonian object, without 2-qubit terms
         cost_hamil = Hamiltonian([PauliOp("Z", (0,)), PauliOp("Z", (1,))], [1, 1], 1)
         mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
@@ -169,7 +165,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         assert np.isclose(backend_obj.expectation(variate_params), -1)
 
     def test_wavefunction(self):
-
         nqubits = 3
 
         # Test circuit with p = 1 on 3 qubits
@@ -213,7 +208,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         assert np.allclose(wf, expected_wf)
 
     def test_execute_exp_val(self):
-
         n_qubits = 8
         register, cost_hamil, qaoa_descriptor, variate_params = Disagrees_SetUp(
             n_qubits
@@ -282,7 +276,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         assert np.isclose(exp_vec, -6)
 
     def test_get_wavefunction(self):
-
         n_qubits = 3
         terms = [[0, 1], [0, 2], [0]]
         weights = [1, 1, -0.5]
@@ -367,7 +360,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
         # Make sure that exception is raised when Hamiltonian contains nonclassical (non-Z or ZZ terms)
 
         def test_nonclassical_hamiltonian_error():
-
             cost_hamil = Hamiltonian(
                 [PauliOp("Y", (0,)), PauliOp("Z", (1,))], [1, 1], 1
             )
@@ -387,7 +379,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
     ##########################################################
 
     def test_apply_rx(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_rx method
@@ -409,7 +400,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_ry(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_ry method
@@ -431,7 +421,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_rz(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_rz method
@@ -453,7 +442,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_rxx(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_rxx method
@@ -475,7 +463,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_ryy(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_ryy method
@@ -497,7 +484,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_rzz(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_rzz method
@@ -519,7 +505,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_rzx(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_rzx method
@@ -541,7 +526,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_rxz(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_rxz method
@@ -563,7 +547,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_rxy(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_rxy method
@@ -585,7 +568,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_ryx(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_ryx method
@@ -607,7 +589,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_ryz(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_ryz method
@@ -629,7 +610,6 @@ class TestingQAOAvectorizedBackend(unittest.TestCase):
             ), f"angle = {angle} failed, {vector_backend.wavefn} != {res_wfn}"
 
     def test_apply_rzy(self):
-
         constI, constX, constY, constZ = pauli_matrix_SetUp()
 
         # Result from apply_ryz method
