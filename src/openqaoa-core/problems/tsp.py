@@ -383,12 +383,54 @@ class TSP_LP(VRP):
     __name__ = "tsp_lp"
     
     def __init__(self, G, pos, subtours, penalty, method):
-        super(VRP, self).__init__(G, pos, n_vehicles=1,subtours=subtours,
-                                  method=method,penalty=penalty)
+        super().__init__(G, pos, n_vehicles=1, subtours=subtours,
+                         method=method, penalty=penalty)
     @staticmethod
     def random_instance(**kwargs):
-        kwargs["n_vehicles"] = 1
-        return VRP.random_instance(**kwargs)
+        """
+        Creates a random instance of the traveling salesman problem, whose graph is
+        random.
+
+        Parameters
+        ----------
+        **kwargs:
+            Required keyword arguments are:
+            n_nodes: int
+                The number of nodes (vertices) in the graph.
+            method: str
+                method for the inequality constraints ['slack', 'unbalanced'].
+                For the unbalaced method refer to https://arxiv.org/abs/2211.13914
+                For the slack method: https://en.wikipedia.org/wiki/Slack_variable
+            subtours: list[list]
+                Manually add the subtours to be avoided
+            seed: int
+                Seed for the random problems.
+
+        Returns
+        -------
+            A random instance of the vehicle routing problem.
+        """
+        n_nodes = kwargs.get("n_nodes", 6)
+        seed = kwargs.get("seed", None)
+        method = kwargs.get("method", "slack")
+        if method == "slack":
+            penalty = kwargs.get("penalty", 4)
+        elif method == "unbalanced":
+            penalty = kwargs.get("penalty", [4, 1, 1])
+        else:
+            raise ValueError(f"The method '{method}' is not valid.")
+        subtours = kwargs.get("subtours", -1)
+        np.random.seed(seed)
+        G = nx.Graph()
+        G.add_nodes_from(range(n_nodes))
+        pos = [[0, 0]]
+        pos += [list(2 * np.random.rand(2) - 1) for _ in range(n_nodes - 1)]
+        for i in range(n_nodes - 1):
+            for j in range(i + 1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
+                G.add_weighted_edges_from([(i, j, r)])
+
+        return TSP_LP(G, pos, subtours=subtours, method=method, penalty=penalty)
 
     def get_distance(self, sol):
         """
