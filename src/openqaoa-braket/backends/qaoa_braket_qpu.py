@@ -19,6 +19,7 @@ from openqaoa.qaoa_components import QAOADescriptor
 from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
+from openqaoa.utilities import permute_counts_dictionary
 
 
 class QAOAAWSQPUBackend(
@@ -63,7 +64,6 @@ class QAOAAWSQPUBackend(
         disable_qubit_rewiring: bool = False,
         initial_qubit_mapping: Optional[List[int]] = None,
     ):
-
         QAOABaseBackendShotBased.__init__(
             self,
             qaoa_descriptor,
@@ -183,12 +183,7 @@ class QAOAAWSQPUBackend(
         if self.append_state:
             parametric_circuit += self.append_state
 
-        if self.final_mapping is None:
-            parametric_circuit += Probability.probability(target=self.problem_reg)
-        else:
-            parametric_circuit += Probability.probability(
-                target=self.final_mapping[0 : len(self.problem_reg)]
-            )
+        parametric_circuit += Probability.probability(target=self.problem_reg)
 
         return parametric_circuit
 
@@ -257,13 +252,17 @@ class QAOAAWSQPUBackend(
                         "An Error Occurred with the Task(s) sent to AWS."
                     )
 
-        final_counts = counts
         # # Expose counts
+        if self.final_mapping is None:
+            final_counts = counts
+        else:
+            final_counts = permute_counts_dictionary(
+                counts, self.final_mapping[: self.problem_qubits]
+            )
         self.measurement_outcomes = final_counts
         return final_counts
 
     def log_with_backend(self, metric_name: str, value, iteration_number) -> None:
-
         """
         If using AWS Jobs, these values will be logged.
         """

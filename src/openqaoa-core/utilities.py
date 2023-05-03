@@ -127,7 +127,6 @@ def quick_create_mixer_for_topology(
     qubit_connectivity: Union[List[list], List[tuple], str] = "full",
     coeffs: List[float] = None,
 ) -> Tuple[List[TwoQubitRotationGateMap], List[float]]:
-
     """
     Quickly generates a gatemap list and coeffs for a specific topology.
     Can only be used with 2-Qubit Gates.
@@ -295,7 +294,6 @@ def graph_from_hamiltonian(hamiltonian: Hamiltonian) -> nx.Graph:
 
     # Add each term to the graph as an attribute
     for term, weight in zip(hamiltonian.terms, hamiltonian.coeffs):
-
         # Extract indices from Pauli term
         term_tuple = term.qubit_indices
 
@@ -395,7 +393,6 @@ def random_k_regular_graph(
 
     # Add edges between nodes
     for edge in G.edges():
-
         # If weighted attribute is False, all weights are set to 1
         if not weighted:
             G[edge[0]][edge[1]]["weight"] = 1
@@ -565,7 +562,6 @@ def random_classical_hamiltonian(
 
     # Generate quiadratic terms, scanning all possible combinations
     for q1, q2 in itertools.combinations(reg, 2):
-
         # Choose at random to couple terms
         are_coupled = np.random.randint(2)
 
@@ -631,7 +627,6 @@ def ground_state_hamiltonian(
 
     # Obtain spectrum, scanning term by term
     for i, term in enumerate(hamiltonian.terms):
-
         # Extract coefficient
         out = np.real(hamiltonian.coeffs[i])
 
@@ -683,7 +678,6 @@ def bitstring_energy(
 
     # Compute energy contribution term by term
     for i, term in enumerate(hamiltonian.terms):
-
         # Compute sign of spin interaction term
         variables_product = np.prod(
             [(-1) ** int(bitstring[k]) for k in term.qubit_indices]
@@ -724,7 +718,6 @@ def energy_expectation(hamiltonian: Hamiltonian, measurement_counts: dict) -> fl
 
     # Compute average energy adding one by one the contribution from each state
     for state, prob in measurement_counts.items():
-
         # Number of ones (spins pointing down) from the specific
         # configuration for each Hamiltonian term
         num_ones_list = [
@@ -781,7 +774,6 @@ def energy_spectrum_hamiltonian(hamiltonian: Hamiltonian) -> np.ndarray:
 
     # Obtain spectrum, scanning term by term
     for i, term in enumerate(hamiltonian.terms):
-
         # Extract coefficients
         out = np.real(hamiltonian.coeffs[i])
 
@@ -997,7 +989,6 @@ def exp_val_single(spin: int, prob_dict: dict):
 
     # Compute correlation
     for bitstring, prob in prob_dict.items():
-
         # If 0, spin is pointing up, else it is pointing down
         Z = int(bitstring[spin])
 
@@ -1037,7 +1028,6 @@ def exp_val_pair(spins: tuple, prob_dict: dict):
     norm = sum(prob_dict.values())
     # Compute correlation
     for bitstring, prob in prob_dict.items():
-
         # If 0 or 2, spins are aligned, else they are anti-aligned
         num_ones = sum([int(bitstring[i]) for i in spins])
 
@@ -1104,10 +1094,8 @@ def exp_val_hamiltonian_termwise(
         and mixer_type == "x"
         and isinstance(qaoa_optimized_angles, list)
     ):
-
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
-
             # If bias term compute expectation value
             if len(term) == 1:
                 i = term.qubit_indices[0]
@@ -1128,7 +1116,6 @@ def exp_val_hamiltonian_termwise(
 
     # If multilayer ansatz, perform numerical computation
     else:
-
         if isinstance(qaoa_optimized_counts, dict):
             counts_dict = qaoa_optimized_counts
         else:
@@ -1138,7 +1125,6 @@ def exp_val_hamiltonian_termwise(
 
         # Compute expectation values and correlations of terms present in the Hamiltonian
         for term in terms:
-
             # If bias term compute expectation value
             if len(term) == 1:
                 i = term.qubit_indices[0]
@@ -1215,7 +1201,6 @@ def exp_val_single_analytical(spin: int, hamiltonian: Hamiltonian, qaoa_angles: 
 
     # Loop over edges connecting u and v to other spins
     for n in iter_qubits:
-
         # Edges between the spin and others in the register
         edge = tuple([min(spin, n), max(spin, n)])
 
@@ -1300,7 +1285,6 @@ def exp_val_pair_analytical(spins: tuple, hamiltonian: Hamiltonian, qaoa_angles:
 
     # Loop over edges connecting u and v to other spins
     for n in iter_qubits:
-
         # Edges between u,v and another spin in the register
         edge1 = tuple([min(u, n), max(u, n)])
         edge2 = tuple([min(v, n), max(v, n)])
@@ -1345,13 +1329,10 @@ def energy_expectation_analytical(angles: Union[list, tuple], hamiltonian: Hamil
 
     # Compute the expectation value of each term and add its local energy contribution
     for coeff, term in zip(coeffs, terms):
-
         if len(term) == 2:
-
             local_energy = exp_val_pair_analytical(term, hamiltonian, angles)
 
         else:
-
             local_energy = exp_val_single_analytical(term[0], hamiltonian, angles)
 
         energy += coeff * local_energy
@@ -1453,7 +1434,6 @@ def qaoa_probabilities(statevector) -> dict:
     prob_dict = {}
 
     for x in range(len(prob_vec)):
-
         # Define binary representation of each state, with qubit-0 most significant bit
         key = np.binary_repr(x, n_qubits)[::-1]
 
@@ -1594,7 +1574,8 @@ def is_valid_uuid(uuid_to_test: str) -> bool:
 
 
 def permute_counts_dictionary(
-    counts_dictionary: dict, final_qubit_layout: List[int]
+    counts_dictionary: dict,
+    permutation_order: List[int],
 ) -> dict:
     """Permutes the order of the qubits in the counts dictionary to the
     original order if SWAP gates were used leading to modified qubit layout.
@@ -1612,24 +1593,22 @@ def permute_counts_dictionary(
     `dict`
         The permuted counts dictionary with qubits in the original place
     """
-
-    # Create a mapping of original positions to final positions
-    original_qubit_layout = list(range(len(final_qubit_layout)))
+    counts_dict_nqubits = len(list(counts_dictionary.keys())[0])
+    assert len(permutation_order) == counts_dict_nqubits, (
+        "The number of qubits in the permutation order should be equal"
+        "to the number of qubits in the counts dictionary."
+    )
+    original_order = list(range(len(permutation_order)))
     mapping = {
-        original_qubit_layout[i]: final_qubit_layout[i]
-        for i in range(len(original_qubit_layout))
+        original_order[i]: permutation_order[i] for i in range(len(original_order))
     }
     permuted_counts = {}
 
-    for basis, counts in counts_dictionary.items():
-
-        def permute_string(basis_state: str = basis, mapping: dict = mapping):
-            # Use the mapping to permute the string
-            permuted_string = "".join(
-                [basis_state[mapping[i]] for i in range(len(basis_state))]
-            )
-            return permuted_string
-
+    for basis_state, counts in counts_dictionary.items():
+        # Use the mapping to permute the string
+        permuted_string = "".join(
+            [basis_state[mapping[i]] for i in range(len(basis_state))]
+        )
         permuted_counts.update({permuted_string: counts})
 
     return permuted_counts
