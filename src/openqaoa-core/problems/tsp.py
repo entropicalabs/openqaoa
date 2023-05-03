@@ -366,12 +366,12 @@ class TSP_LP(VRP):
         position x, y of each node
     subtours: list[list]
         if -1 (Default value): All the possible subtours are added to the constraints. Avoid it for large instances.
-        if there are subtours that want be avoided in the solution, e.g, a 8 nodes
-        TSP with an optimal solution showing subtour between nodes 4, 5, and 8 can be
+        if there are subtours that want be avoided in the solution, e.g, a 8 cities
+        TSP with an optimal solution showing subtour between nodes 4, 5, and 8. It can be
         avoided introducing the constraint subtours=[[4,5,8]]. Additional information
         about subtours refer to https://de.wikipedia.org/wiki/Datei:TSP_short_cycles.png
     penalty: float
-        Penalty for the constraints. If the method is 'unbalanced' three values are needed,
+        Constraints penalty factor. If the method is 'unbalanced' three values are needed,
         one for the equality constraints and two for the inequality constraints.
     method: str
         Two available methods for the inequality constraints ["slack", "unbalanced"]
@@ -417,5 +417,3 @@ class TSP_LP(VRP):
                 if sol[f"x_{i}_{j}"]:
                     total_distance += self.G.edges[i, j]["weight"]
         return total_distance
-        
-    
