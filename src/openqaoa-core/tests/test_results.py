@@ -15,6 +15,7 @@ from openqaoa.backends.devices_core import SUPPORTED_LOCAL_SIMULATORS
 from openqaoa.problems import MinimumVertexCover, QUBO, MaximumCut
 from openqaoa.qaoa_components import Hamiltonian
 
+
 def _compare_qaoa_results(dict_old, dict_new, bool_cmplx_str):
     for key in dict_old.keys():
         if key == "cost_hamiltonian":  ## CHECK WHAT DO WITH THIS
@@ -112,7 +113,6 @@ class TestingResultOutputs(unittest.TestCase):
         recorded_evals = [0, 5]
 
         for device_name in SUPPORTED_LOCAL_SIMULATORS:
-
             for each_choice in choice_combination:
                 q = QAOA()
                 q.set_classical_optimizer(
@@ -326,15 +326,10 @@ class TestingResultOutputs(unittest.TestCase):
         # run qaoa with different devices, and save the objects in a list
         qaoas = []
         for device in [
-<<<<<<< HEAD:src/openqaoa-core/tests/test_results.py
-                create_device(location="local", name=each_device_name) for each_device_name in SUPPORTED_LOCAL_SIMULATORS if each_device_name != "analytical_simulator"
-            ]:
-
-=======
-            create_device(location="local", name="qiskit.shot_simulator"),
-            create_device(location="local", name="vectorized"),
+            create_device(location="local", name=each_device_name)
+            for each_device_name in SUPPORTED_LOCAL_SIMULATORS
+            if each_device_name != "analytical_simulator"
         ]:
->>>>>>> dev:tests/test_results.py
             q = QAOA()
             q.set_device(device)
             q.set_circuit_properties(
@@ -686,17 +681,12 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # run rqaoa with different devices, and save the objcets in a list
         rqaoas = []
-        
-        for device in [
-<<<<<<< HEAD:src/openqaoa-core/tests/test_results.py
-                create_device(location="local", name=each_device_name) for each_device_name in SUPPORTED_LOCAL_SIMULATORS if each_device_name != "analytical_simulator"
-            ]:
 
-=======
-            create_device(location="local", name="qiskit.shot_simulator"),
-            create_device(location="local", name="vectorized"),
+        for device in [
+            create_device(location="local", name=each_device_name)
+            for each_device_name in SUPPORTED_LOCAL_SIMULATORS
+            if each_device_name != "analytical_simulator"
         ]:
->>>>>>> dev:tests/test_results.py
             r = RQAOA()
             r.set_device(device)
             r.set_circuit_properties(
