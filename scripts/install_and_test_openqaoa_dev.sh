@@ -1,4 +1,4 @@
-# The script will stop if any intermediate file raises an error.
+#Exit immediately if a command exits with a non-zero status.
 set -e
 
 # TODO: Dynamically generate names (The order of installing is important here.)

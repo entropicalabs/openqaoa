@@ -1,3 +1,4 @@
+#Exit immediately if a command exits with a non-zero status.
 set -e
 
 # The order of install is important therefore the list cannot be dynamically generated
