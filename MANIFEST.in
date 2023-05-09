@@ -1,0 +1,1 @@
+recursive-include src/* README.md requirements*.txt
