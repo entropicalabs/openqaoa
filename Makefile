@@ -4,8 +4,44 @@
 .PHONY: dev-install
 dev-install:
 	pip install -e .
-	pip install -e ./openqaoa-core
-	pip install -e ./openqaoa-qiskit
-	pip install -e ./openqaoa-pyquil
-	pip install -e ./openqaoa-braket
-	pip install -e ./openqaoa-azure
+	pip install -e ./src/openqaoa-core
+	pip install -e ./src/openqaoa-qiskit
+	pip install -e ./src/openqaoa-pyquil
+	pip install -e ./src/openqaoa-braket
+	pip install -e ./src/openqaoa-azure
+
+.PHONY: dev-install-tests
+dev-install-tests:
+	pip install -e .
+	pip install -e ./src/openqaoa-core[tests]
+	pip install -e ./src/openqaoa-qiskit
+	pip install -e ./src/openqaoa-pyquil
+	pip install -e ./src/openqaoa-braket
+	pip install -e ./src/openqaoa-azure
+
+.PHONY: dev-install-docs
+dev-install-docs:
+	pip install -e .
+	pip install -e ./src/openqaoa-core[docs]
+	pip install -e ./src/openqaoa-qiskit
+	pip install -e ./src/openqaoa-pyquil
+	pip install -e ./src/openqaoa-braket
+	pip install -e ./src/openqaoa-azure
+
+.PHONY: dev-install-all
+dev-install-all:
+	pip install -e .
+	pip install -e ./src/openqaoa-core[all]
+	pip install -e ./src/openqaoa-qiskit
+	pip install -e ./src/openqaoa-pyquil
+	pip install -e ./src/openqaoa-braket
+	pip install -e ./src/openqaoa-azure
+
+.PHONY: dev-uninstall
+dev-uninstall:
+	pip uninstall openqaoa -y
+	pip uninstall openqaoa-core -y
+	pip uninstall openqaoa-qiskit -y
+	pip uninstall openqaoa-pyquil -y
+	pip uninstall openqaoa-braket -y
+	pip uninstall openqaoa-azure -y

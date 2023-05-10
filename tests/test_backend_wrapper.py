@@ -16,10 +16,6 @@ from openqaoa.qaoa_components import (
     QAOADescriptor,
 )
 
-from openqaoa_qiskit.backends import (
-    QAOAQiskitBackendShotBasedSimulator,
-)
-
 
 from openqaoa.backends.wrapper import SPAMTwirlingWrapper
 
@@ -38,8 +34,6 @@ def get_params():
     variational_params_std = create_qaoa_variational_params(
         qaoa_descriptor, "standard", "ramp"
     )
-
-    # variational_params_std = create_qaoa_variational_params(qaoa_descriptor, params_type = "standard", init_type = "custom", variational_params_dict = {'gammas':[0], 'betas':[0]})
 
     return qaoa_descriptor, variational_params_std
 
@@ -63,34 +57,44 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             "./tests/qpu_calibration_data/spam_twirling_mock.json"
         )
         self.qaoa_descriptor, self.variate_params = get_params()
-        self.qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
-            qaoa_descriptor=self.qaoa_descriptor,
-            n_shots=100,
-            prepend_state=None,
-            append_state=None,
-            init_hadamard=True,
-            cvar_alpha=1.0,
-            qiskit_simulation_method="automatic",
-            seed_simulator=2642,
-            noise_model=None,
-        )
 
-        self.wrapped_obj = SPAMTwirlingWrapper(
-            self.qiskit_shot_backend,
-            n_batches=self.n_batches,
-            calibration_data_location=self.calibration_data_location,
-        )
+        try:
+            from openqaoa_qiskit.backends import (
+                QAOAQiskitBackendShotBasedSimulator,
+            )
 
-        self.wrapped_obj_trivial = SPAMTwirlingWrapper(
-            self.qiskit_shot_backend,
-            n_batches=1,
-            calibration_data_location=self.calibration_data_location,
-        )
-        
+            self.qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
+                qaoa_descriptor=self.qaoa_descriptor,
+                n_shots=100,
+                prepend_state=None,
+                append_state=None,
+                init_hadamard=True,
+                cvar_alpha=1.0,
+                qiskit_simulation_method="automatic",
+                seed_simulator=2642,
+                noise_model=None,
+            )
+
+            self.wrapped_obj = SPAMTwirlingWrapper(
+                self.qiskit_shot_backend,
+                n_batches=self.n_batches,
+                calibration_data_location=self.calibration_data_location,
+            )
+
+            self.wrapped_obj_trivial = SPAMTwirlingWrapper(
+                self.qiskit_shot_backend,
+                n_batches=1,
+                calibration_data_location=self.calibration_data_location,
+            )
+
+        except ImportError:
+            print("Skipping Qiskit tests as Qiskit is not installed.")
+
     @pytest.mark.qvm
     def test_wrap_any_backend(self):
         """
-        Testing if the wrapper is backend-agnostic by checking if it can take any of the relevant backend objects as an argument.
+        Testing if the wrapper is backend-agnostic by checking if it can take
+        any of the relevant backend objects as an argument.
         """
 
         rigetti_args = {
@@ -98,11 +102,23 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             "execution_timeout": 10,
             "compiler_timeout": 100,
         }
-        device_list = [
-            create_device(location="local", name="qiskit.qasm_simulator"),
-            create_device(location="qcs", name="7q-noisy-qvm", **rigetti_args),
-            create_device(location="ibmq", name="ibm_perth", as_emulator=True),
-        ]
+        device_list = []
+        try:
+            device_list.append(
+                create_device(location="local", name="qiskit.qasm_simulator")
+            )
+            device_list.append(
+                create_device(location="ibmq", name="ibm_perth", as_emulator=True),
+            )
+        except ImportError:
+            print("Skipping Qiskit tests as Qiskit is not installed.")
+        try:
+            device_list.append(
+                create_device(location="qcs", name="7q-noisy-qvm", **rigetti_args)
+            )
+        except ImportError:
+            print("Skipping Rigetti tests as pyQuil is not installed.")
+
         for device in device_list:
             backend = get_qaoa_backend(
                 qaoa_descriptor=self.qaoa_descriptor,
@@ -115,8 +131,8 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
                     n_batches=self.n_batches,
                     calibration_data_location=self.calibration_data_location,
                 )
-            except:
-                raise ValueError("The {} backend cannot be wrapped.".format(backend))
+            except Exception as e:
+                raise ValueError("The {} backend cannot be wrapped.".format(backend), e)
 
     def test_setUp(self):
         assert (
@@ -130,9 +146,21 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         """
         Testing the get_counts method of the SPAM Twirling wrapper.
 
-        The test compares the probability dictionary returned from the get_counts method as overriden by the wrapper to the hardcoded one and the unwrapped backend. The later is only true for the very trivial case of a using a single batch and seed 1 which translates to not adding any X gates to the circuit.
-        The test also compares the outcome probabilitites obtained within the wrapper to the ones obtained form the original backend. These should be almost equal given that there's no measurement noise and enough shots.
+        The test compares the probability dictionary returned from the
+        get_counts method as overriden by the wrapper to the hardcoded one and
+        the unwrapped backend. The later is only true for the very trivial case
+        of a using a single batch and seed 1 which translates to not adding
+        any X gates to the circuit. The test also compares the outcome
+        probabilitites obtained within the wrapper to the ones obtained
+        form the original backend. These should be almost equal given that
+        there's no measurement noise and enough shots.
         """
+        try:
+            self.wrapped_obj
+            self.wrapped_obj_trivial
+        except NameError:
+            print("Skipping Qiskit tests as Qiskit is not installed.")
+            return None
 
         assert self.wrapped_obj.get_counts(
             self.variate_params, n_shots=100, seed=13
@@ -187,11 +215,23 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
 
     def test_expectation_value_spam_twirled(self):
         """
-        Testing the expectation_value_spam_twirled method of the SPAM Twirling wrapper in the following scenarious:
-            Given very trivial counts where only the 00 state is present and calibration factors 1.0, meaning no errors, the expectation value of the energy must be the energy of the 00 bitstring.
-            Given the same counts but calibration factors 0.5, the expectation value of the energy must be twice the energy of the 00 bitstring due to corrections coming from the calibration factors.
+        Testing the expectation_value_spam_twirled method of the SPAM Twirling
+        wrapper in the following scenarious:
+        Given very trivial counts where only the 00 state is present and
+        calibration factors 1.0, meaning no errors, the expectation value
+        of the energy must be the energy of the 00 bitstring.
+        Given the same counts but calibration factors 0.5, the expectation
+        value of the energy must be twice the energy of the 00 bitstring
+        due to corrections coming from the calibration factors.
 
         """
+        try:
+            self.wrapped_obj
+            self.wrapped_obj_trivial
+        except NameError:
+            print("Skipping Qiskit tests as Qiskit is not installed.")
+            return None
+
         counts = {"00": 100, "01": 0, "10": 0, "11": 0}
         hamiltonian = Hamiltonian.classical_hamiltonian(
             terms=[[0, 1], [0], [1]], coeffs=[1, 1, 1], constant=0
@@ -232,6 +272,13 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         """
         Testing the expectation method of the SPAM Twirling wrapper which overrides the backend function as defined in basebackends.
         """
+        try:
+            self.wrapped_obj
+            self.wrapped_obj_trivial
+        except NameError:
+            print("Skipping Qiskit tests as Qiskit is not installed.")
+            return None
+
         self.assertAlmostEqual(
             self.wrapped_obj.expectation(self.variate_params, n_shots=10000), -0.94, 1
         )

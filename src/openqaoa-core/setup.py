@@ -8,14 +8,14 @@ with open("README.md", "r") as fh:
 
 with open("openqaoa/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
-    
-requirements = open('requirements.txt').readlines()
+
+requirements = open("requirements.txt").readlines()
 requirements = [r.strip() for r in requirements]
 
-requirements_docs = open('requirements_docs.txt').readlines()
+requirements_docs = open("requirements_docs.txt").readlines()
 requirements_docs = [r.strip() for r in requirements_docs]
 
-requirements_test = open('requirements_test.txt').readlines()
+requirements_test = open("requirements_test.txt").readlines()
 requirements_test = [r.strip() for r in requirements_test]
 
 setup(
@@ -24,9 +24,7 @@ setup(
     version=version,
     author="Entropica Labs",
     packages=find_packages(where="."),
-    entry_points={
-        "openqaoa.plugins": []
-    },
+    entry_points={"openqaoa.plugins": []},
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",
@@ -39,7 +37,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent",
     ],
-    keywords="quantum optimisation SDK", 
+    keywords="quantum optimisation SDK",
     extras_require={
         "docs": requirements_docs,
         "tests": requirements_test,
