@@ -16,6 +16,9 @@ from openqaoa.qaoa_components import (
     QAOADescriptor,
 )
 
+from openqaoa_qiskit.backends import (
+    QAOAQiskitBackendShotBasedSimulator,
+)
 
 from openqaoa.backends.wrapper import SPAMTwirlingWrapper
 
@@ -58,39 +61,30 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         )
         self.qaoa_descriptor, self.variate_params = get_params()
 
-        try:
-            from openqaoa_qiskit.backends import (
-                QAOAQiskitBackendShotBasedSimulator,
-            )
+        self.qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
+            qaoa_descriptor=self.qaoa_descriptor,
+            n_shots=100,
+            prepend_state=None,
+            append_state=None,
+            init_hadamard=True,
+            cvar_alpha=1.0,
+            qiskit_simulation_method="automatic",
+            seed_simulator=2642,
+            noise_model=None,
+        )
 
-            self.qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
-                qaoa_descriptor=self.qaoa_descriptor,
-                n_shots=100,
-                prepend_state=None,
-                append_state=None,
-                init_hadamard=True,
-                cvar_alpha=1.0,
-                qiskit_simulation_method="automatic",
-                seed_simulator=2642,
-                noise_model=None,
-            )
+        self.wrapped_obj = SPAMTwirlingWrapper(
+            self.qiskit_shot_backend,
+            n_batches=self.n_batches,
+            calibration_data_location=self.calibration_data_location,
+        )
 
-            self.wrapped_obj = SPAMTwirlingWrapper(
-                self.qiskit_shot_backend,
-                n_batches=self.n_batches,
-                calibration_data_location=self.calibration_data_location,
-            )
+        self.wrapped_obj_trivial = SPAMTwirlingWrapper(
+            self.qiskit_shot_backend,
+            n_batches=1,
+            calibration_data_location=self.calibration_data_location,
+        )
 
-            self.wrapped_obj_trivial = SPAMTwirlingWrapper(
-                self.qiskit_shot_backend,
-                n_batches=1,
-                calibration_data_location=self.calibration_data_location,
-            )
-
-        except ImportError:
-            print("Skipping Qiskit tests as Qiskit is not installed.")
-
-    @pytest.mark.qvm
     def test_wrap_any_backend(self):
         """
         Testing if the wrapper is backend-agnostic by checking if it can take
@@ -103,21 +97,12 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             "compiler_timeout": 100,
         }
         device_list = []
-        try:
-            device_list.append(
-                create_device(location="local", name="qiskit.qasm_simulator")
-            )
-            device_list.append(
-                create_device(location="ibmq", name="ibm_perth", as_emulator=True),
-            )
-        except ImportError:
-            print("Skipping Qiskit tests as Qiskit is not installed.")
-        try:
-            device_list.append(
-                create_device(location="qcs", name="7q-noisy-qvm", **rigetti_args)
-            )
-        except ImportError:
-            print("Skipping Rigetti tests as pyQuil is not installed.")
+        device_list.append(
+            create_device(location="local", name="qiskit.qasm_simulator")
+        )
+        device_list.append(
+            create_device(location="ibmq", name="ibm_perth"),
+        )
 
         for device in device_list:
             backend = get_qaoa_backend(
