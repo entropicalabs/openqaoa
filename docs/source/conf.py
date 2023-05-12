@@ -22,6 +22,13 @@ import sys
 # sys.path.insert(0, os.path.abspath('.'))
 # sys.path.insert(0, os.path.abspath("../../"))
 sys.path.insert(0, os.path.abspath("../.."))
+for each_folder_name in os.listdir(os.path.abspath("../../src")):
+    sys.path.insert(0, os.path.abspath("../../src/" + each_folder_name))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-core"))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-qiskit"))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-pyquil"))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-braket"))
+# sys.path.insert(0, os.path.abspath("../../src/openqaoa-azure"))
 print(sys.path)
 
 # from openqaoa.qaoa_parameters.baseparams import shapedArray
@@ -49,6 +56,18 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",
     "nbsphinx",
     "sphinx.ext.intersphinx",
+]
+
+autodoc_mock_imports = [
+    "botocore",
+    "qiskit_aer",
+    "pyquil",
+    "azure",
+    "boto3",
+    "qcs_api_client",
+    "qiskit_ibm_provider",
+    "qiskit",
+    "braket",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

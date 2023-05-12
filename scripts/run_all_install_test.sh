@@ -1,0 +1,6 @@
+install_and_test_openqaoa_core.sh
+install_and_test_openqaoa_qiskit.sh
+install_and_test_openqaoa_pyquil.sh
+install_and_test_openqaoa_braket.sh
+install_and_test_openqaoa_azure.sh
+install_and_test_openqaoa_dev.sh

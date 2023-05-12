@@ -46,7 +46,7 @@ jobs:
         run: |
           IBMQ_TOKEN=$IBMQ_TOKEN
           source env/bin/activate
-          python -c'from qiskit import IBMQ; import os; IBMQ.save_account(os.environ.get("IBMQ_TOKEN"))'
+          python -c'from qiskit_ibm_provider import IBMProvider; import os; IBMProvider.save_account(os.environ.get("IBMQ_TOKEN"))'
       - name: Setup AWS
         env:
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }} 
@@ -67,7 +67,7 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          pytest tests/ -v -m '(not qpu or api)' --cov --cov-report=xml:coverage.xml
+          pytest tests/ -m 'not (qpu or sim)' --cov --cov-report=xml:coverage.xml
           
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3

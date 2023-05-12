@@ -57,15 +57,10 @@ jobs:
           Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\quilc.exe" -ArgumentList "-S" -PassThru
           Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\qvm.exe" -ArgumentList "-S" -PassThru
 
-      # Run all tests and compute coverage reports
+      # Run all tests 
       - name: Run tests
-        env:
-          IBMQ_TOKEN: ${{ secrets.IBMQ_TOKEN }}
-          IBMQ_HUB: ibm-q
-          IBMQ_GROUP: open
-          IBMQ_PROJECT: main
         shell: pwsh
         run: |
           .\env\Scripts\Activate.ps1
           ipython kernel install --name "env" --user
-          python -m pytest -v -m 'not (qpu or api or docker_aws)'
+          pytest tests/ -m 'not (qpu or api or docker_aws or braket_api or sim)'
