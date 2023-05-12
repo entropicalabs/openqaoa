@@ -142,7 +142,7 @@ class QAOAAWSQPUBackend(
         if self.append_state:
             parametric_circuit += self.append_state
 
-        parametric_circuit += Probability.probability(target=self.problem_reg))
+        parametric_circuit += Probability.probability(target=self.problem_reg)
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(
