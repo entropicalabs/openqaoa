@@ -23,8 +23,6 @@ from openqaoa.utilities import X_mixer_hamiltonian, bitstring_energy
 from openqaoa.backends.qaoa_device import create_device
 from openqaoa.backends.basebackend import QAOABaseBackendShotBased
 
-print(os.getcwd())
-
 
 def get_params():
     cost_hamil = Hamiltonian.classical_hamiltonian(
