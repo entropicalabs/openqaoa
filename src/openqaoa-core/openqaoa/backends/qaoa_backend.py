@@ -36,6 +36,7 @@ def _backend_arg_mapper(
     n_shots: Optional[int] = None,
     seed_simulator: Optional[int] = None,
     qiskit_simulation_method: Optional[str] = None,
+    qiskit_optimization_level: Optional[int] = None,
     noise_model=None,
     active_reset: Optional[bool] = None,
     rewiring=None,
