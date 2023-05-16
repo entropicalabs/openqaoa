@@ -60,6 +60,9 @@ git clone https://github.com/entropicalabs/openqaoa.git
 ```
 pip install .
 ```
+
+## For Developers
+
 If you are interested in installing OpenQAOA in the developer mode that lets you edit the source code, you need to run the installation via the Makefile. To do this, run the following command in your terminal
 
 ```
@@ -114,15 +117,7 @@ To run the test, first, make sure to have installed all the optional testing dep
 > :warning: **Some tests require authentication**: Please, check the flags in `pytest.ini`. Currently these testes are marked `qpu`, `api`, `docker_aws`, `braket_api`, `sim`
 
 > :warning: **Some tests require authentication**: Please, note that the PyQuil-Rigetti tests contained in `test_pyquil_qvm.py` requires an active `qvm` (see Rigetti's documentation [here](https://pyquil-docs.rigetti.com/en/v3.1.0/qvm.html))
-    
-## For Developers
-
-This repository was packaged with `poetry`. The default `pyproject.toml` file installs the internal plugin depedencies as editable through `poetry`. If you need to create an editable install of this repository do the following in the root directory of this repository:
-
-```bash
-poetry install
-```
- 
+     
 ## Contributing and feedback
 
 If you find any bugs or errors, have feature requests, or code you would like to contribute, feel free to open an issue or send us a pull request on GitHub.
