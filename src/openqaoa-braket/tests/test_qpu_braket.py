@@ -83,7 +83,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         main_circuit.rx(0, -2 * betas[1])
         main_circuit.rx(1, -2 * betas[1])
         main_circuit.rx(2, -2 * betas[1])
-        main_circuit.probability()
+        main_circuit.probability(target=aws_backend.problem_reg)
 
         self.assertEqual(main_circuit, qpu_circuit)
 
@@ -145,7 +145,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         main_circuit.rx(0, -2 * betas[1])
         main_circuit.rx(1, -2 * betas[1])
         main_circuit.rx(2, -2 * betas[1])
-        main_circuit.probability()
+        main_circuit.probability(target=aws_backend.problem_reg)
 
         self.assertEqual(main_circuit, qpu_circuit)
 
@@ -204,7 +204,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         main_circuit.rx(0, -2 * betas[0])
         main_circuit.rx(1, -2 * betas[0])
         main_circuit.rx(2, -2 * betas[0])
-        main_circuit.probability()
+        main_circuit.probability(target=aws_backend.problem_reg)
 
         self.assertEqual(main_circuit, qpu_circuit)
 
@@ -264,7 +264,7 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
         main_circuit.x(0)
         main_circuit.x(1)
         main_circuit.x(2)
-        main_circuit.probability()
+        main_circuit.probability(target=aws_backend.problem_reg)
 
         self.assertEqual(main_circuit, qpu_circuit)
 
