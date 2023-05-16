@@ -29,6 +29,16 @@ Check out OpenQAOA website [https://openqaoa.entropicalabs.com/](https://openqao
 
 ## Installation instructions
 
+OpenQAOA is divided into separately installable plugins based on the requirements of the user. Currently, OpenQAOA supports the following backends and each of them are separately installable.
+- `openqaoa-braket` for AWS Braket
+- `openqaoa-azure` for Microsoft Azure Quantum
+- `openqaoa-pyquil` for Rigetti Pyquil
+- `openqaoa-qiskit` for IBM Qiskit
+
+The key functionalities of OpenQAOA are placed in `openqaoa-core` which comes pre-installed with each flavour of OpenQAOA.
+
+The OpenQAOA metapackage allows you to install plug-ins of OpenQAOA together. 
+
 You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8, 3.9, 3.10 and then pip install openqaoa with the following command
 
 ```
@@ -50,10 +60,16 @@ git clone https://github.com/entropicalabs/openqaoa.git
 ```
 pip install .
 ```
-If you are interested in running the tests or the docs you can do so my using the installment modifiers `[docs]` and `[tests]`. For example,
+If you are interested in installing OpenQAOA in the developer mode that lets you edit the source code, you need to run the installation via the Makefile. To do this, run the following command in your terminal
 
 ```
-pip install .[tests]
+make dev-install
+```
+
+If you would like to install the extra requirements to be able run the tests module or generate the docs, you can run the following
+
+```
+make dev-install-tests/docs/all
 ```
 
 Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
