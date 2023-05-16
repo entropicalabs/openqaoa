@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 import numpy as np
 import pytest
 
@@ -438,6 +438,143 @@ class TestingQAOABraketQPUBackend(unittest.TestCase):
             qaoa_descriptor, aws_device, shots, None, None, True, 1.0
         )
         braket_backend.expectation(variate_params)
+
+    # Test to be improved, to be run when OQ starts supporting LocalSimulators from braket
+    # @pytest.mark.sim
+    # def test_braket_measurement_instructions(self):
+    #     """
+    #     When using the routing functionality within OpenQAOA, the
+    #     final order of qubits is changed. This function tests for
+    #     the functionality in the braket backend to reset the order
+    #     of qubits in the measurement instructions.
+
+    #     The goal is compare the output of a routed circuit to that of
+    #     a non-routed circuit on the SV1 simulator to test the correctness
+    #     of the output.
+    #     """
+    #     routing_function = MagicMock(
+    #         return_value=(
+    #             [
+    #                 [5, 7],
+    #                 [0, 4],
+    #                 [2, 6],
+    #                 [1, 6],
+    #                 [3, 7],
+    #                 [1, 3],
+    #                 [0, 5],
+    #                 [2, 4],
+    #                 [1, 6],
+    #                 [1, 3],
+    #                 [2, 6],
+    #                 [2, 4],
+    #                 [0, 4],
+    #                 [2, 6],
+    #                 [3, 7],
+    #                 [5, 7],
+    #                 [1, 3],
+    #                 [0, 5],
+    #                 [5, 7],
+    #                 [0, 4],
+    #                 [0, 4],
+    #                 [2, 4],
+    #                 [5, 7],
+    #                 [0, 5],
+    #                 [3, 7],
+    #                 [1, 6],
+    #                 [1, 3],
+    #                 [2, 6],
+    #                 [2, 4],
+    #                 [2, 6],
+    #                 [3, 7],
+    #                 [1, 3],
+    #                 [1, 6],
+    #                 [1, 3],
+    #                 [2, 6],
+    #                 [0, 5],
+    #                 [5, 7],
+    #                 [0, 4],
+    #                 [5, 7],
+    #                 [0, 4],
+    #                 [0, 5],
+    #             ],
+    #             [
+    #                 False,
+    #                 False,
+    #                 False,
+    #                 False,
+    #                 False,
+    #                 False,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 False,
+    #                 False,
+    #                 True,
+    #                 True,
+    #                 False,
+    #             ],
+    #             {1: 0, 5: 1, 3: 2, 6: 3, 2: 4, 0: 5, 4: 6, 7: 7},
+    #             [3, 6, 7, 4, 0, 2, 1, 5],
+    #         )
+    #     )
+    #     n_shots = 100
+    #     # generate a random set of 8 integers
+    #     set_of_numbers = [9, 4, 4, 7, 3, 1, 1, 9]
+    #     qubo = NumberPartition(set_of_numbers).qubo
+
+    #     mixer_hamil = X_mixer_hamiltonian(n_qubits=8)
+    #     aws_device = DeviceAWS("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+
+    #     qaoa_descriptor_routed = QAOADescriptor(
+    #         qubo.hamiltonian, mixer_hamil, p=1, routing_function=routing_function
+    #     )
+    #     variate_params = create_qaoa_variational_params(
+    #         qaoa_descriptor_routed, "standard", "rand"
+    #     )
+    #     braket_backend_routed = QAOAAWSQPUBackend(
+    #         qaoa_descriptor_routed, aws_device, n_shots, None, None, True, 1.0
+    #     )
+
+    #     qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
+    #     braket_backend = QAOAAWSQPUBackend(
+    #         qaoa_descriptor, aws_device, n_shots, None, None, True, 1.0
+    #     )
+
+    #     list_angles = [[1.0, 0.0]]#, [0.8, 0.2], [0.6, 0.4], [0.4, 0.6]]
+    #     for angles in list_angles:
+    #         variate_params.update_from_raw(angles)
+    #         # Run the circuit without routing
+    #         non_routed_exp = braket_backend.expectation(variate_params)
+    #         # Run the circuit with routing
+    #         routed_exp = braket_backend_routed.expectation(variate_params)
+    #         self.assertAlmostEqual(non_routed_exp, routed_exp, places=2)
 
 
 if __name__ == "__main__":
