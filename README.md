@@ -54,7 +54,7 @@ git clone https://github.com/entropicalabs/openqaoa.git
 pip install .
 ```
 
-## Installation for Developers
+### Installation instructions for Developers
 Users can install OpenQAOA in the developer mode via the Makefile. For a clean editable install of the package run the following command from the `openqaoa` folder.
 ```
 make dev-install
@@ -88,14 +88,13 @@ The API documentation for OpenQAOA can be found [here](https://el-openqaoa.readt
 
 Devices are serviced both locally and on the cloud. For the IBM Quantum experience, the available devices depend on the specified credentials. For QCS and Amazon Braket, the available devices are listed in the table below:
 
-| Device location  | Device Name |
-| ------------- | ------------- |
-| `local`  | `['qiskit.shot_simulator', 'qiskit.statevector_simulator', 'qiskit.qasm_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
+| Device location | Device Name |
+| --------------- | ----------- |
+| Local | `['qiskit.shot_simulator', 'qiskit.statevector_simulator', 'vectorized', 'pyquil.statevector_simulator']`  |
 | [Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html)    | IonQ, Rigetti, OQC, and simulators |
 | [IBMQ](https://quantum-computing.ibm.com/)    | Please check the IBMQ backends available to your account |
 | [Rigetti QCS](https://qcs.rigetti.com/sign-in)     | Aspen-11, Aspen-M-1, and QVM simulator |
 | [Azure](https://azure.microsoft.com/en-us/products/quantum) | IonQ, Quantinuum, Rigetti, QCI |
-
 
 ## Running the tests
 

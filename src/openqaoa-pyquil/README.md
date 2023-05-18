@@ -19,13 +19,11 @@
 
 # OpenQAOA-Pyquil Plugin
 
-A multi-backend python library for quantum optimization using QAOA on Quantum computers and Quantum computer simulators. This package is a plug-in extension that contains the code required to run OpenQAOA with quil for Rigetti's QCS.
+OpenQAOA is a multi-backend python library for quantum optimization using QAOA on Quantum computers and Quantum computer simulators. This package is part of a set of OpenQAOA plug-ins that lets users run QAOA computations on Rigetti's devices accessible through QCS, and devices that support quil instructions. Check out OpenQAOA website [https://openqaoa.entropicalabs.com/](https://openqaoa.entropicalabs.com/)
 
 **OpenQAOA is currently in OpenBeta.**
 
 Please, consider [joining our discord](https://discord.gg/ana76wkKBd) if you want to be part of our community and participate in the OpenQAOA's development. 
-
-Check out OpenQAOA website [https://openqaoa.entropicalabs.com/](https://openqaoa.entropicalabs.com/)
 
 ## Installation instructions
 
