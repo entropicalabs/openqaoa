@@ -81,7 +81,7 @@ The API documentation for OpenQAOA can be found [here](https://el-openqaoa.readt
 
 - **Recursive QAOA**. Run RQAOA with fully customisable schedules on simulators and QPUs alike. 
 
-- **QPU access**. Built in access for `IBM Quantum`, `Rigetti QCS`, and `Amazon Braket`.
+- **QPU access**. Built in access for `IBM Quantum`, `Rigetti QCS`, `Amazon Braket` and `Azure Quantum`.
 
 
 ### Available devives 

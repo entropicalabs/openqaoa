@@ -56,7 +56,7 @@ We also provide a set of tutorials to get you started. Among the many, perhaps y
 OpenQAOA-Qiskit services devices both locally and on the cloud. The QPU accessible through the cloud depends on the specified credentials. Moreover, users can also access `qiskit` local simulators.
 
 | Device location | Device Name |
-| ----------------| ----------- |
+| --------------- | ----------- |
 | `local`| `['qiskit.shot_simulator', 'qiskit.statevector_simulator']`  |
 | `ibmq` | Please check the IBMQ backends available to your [account](https://quantum-computing.ibm.com/) |
 
