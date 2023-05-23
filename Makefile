@@ -1,5 +1,5 @@
 #This file stores instructions to install openqaoa in developer mode.
-# Currently can only install all packages together for developer mode.
+#Currently can only install all packages together for developer mode.
 
 .PHONY: dev-install
 dev-install:
