@@ -253,7 +253,7 @@ Contents
    :maxdepth: 3
    :caption: openqaoa
    
-   openqaoa
+   openqaoa_metapackage
 
 
 .. toctree:: 
