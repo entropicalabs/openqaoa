@@ -3,4 +3,4 @@ set -e
 
 pip install .
 pytest tests/ src/*/tests -n auto
-pip uninstall -y openqaoa
+pip uninstall -y openqaoa-meta

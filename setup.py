@@ -21,7 +21,7 @@ requirements = [f"{each_folder_name}=={version}" for each_folder_name in os.list
 # ]
     
 setup(
-    name="openqaoa",
+    name="openqaoa-meta",
     python_requires=">=3.8, <3.11",
     version=version,
     author="Entropica Labs",
