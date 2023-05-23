@@ -37,27 +37,19 @@ Installing
 ----------
 
 OpenQAOA provides several installation options to choose from. The package consists of `openqaoa-core` and backend specific modules that let users selectively install the provider they wish to run QAOA on. 
-For instance, `openqaoa-qiskit` enables QAOA computations on IBMQ devices and simulators. For a complete installation including all supported cloud providers, users can simply install the full `openqaoa` metapackage.
-Do note, `openqaoa-core` is a dependency for all backend specific modules and the full `openqaoa` pacakge. Therefore, it ships by default with all flavors of OpenQAOA installations.
+For instance, `openqaoa-qiskit` enables QAOA computations on IBMQ devices and simulators, and qiskit supported devices. For a complete installation including all supported cloud providers,
+users can simply install the full `openqaoa` metapackage. Do note, `openqaoa-core` is a dependency for all backend specific modules and the full `openqaoa` pacakge. 
+Therefore, it ships by default with all flavors of OpenQAOA installations.
 
 You can install the latest variants of OpenQAOA directly from PyPI. First, we recommend you create a virtual environment with python>=3.10 and then pip install openqaoa variants with the following commands
-
-```
-- pip install openqaoa
-```
-```
-- pip install openqaoa-qiskit
-```
-```
-- pip install openqaoa-pyquil
-```
-```
-- pip install openqaoa-azure
-```
-```
-- pip install openqaoa-braket
-```
-
+- To install full OpenQAOA with all backend plugins and the `openqaoa` metapackage, users can
+   ```
+   pip install openqaoa
+   ```
+- To install specific backend plugin versions of OpenQAOA, users can install `openqaoa-{plugin}`, where `plugin` is populated with the backend of choice
+   ```
+   pip install openqaoa-<plugin>
+   ```
 
 Alternatively, you can install manually directly from the GitHub repository by
 
@@ -67,19 +59,23 @@ Alternatively, you can install manually directly from the GitHub repository by
 git clone https://github.com/entropicalabs/openqaoa.git
 ```
 
-2. Creating a python `virtual environment` for this project is recommended. (for instance, using conda). Instructions on how to create a virtual environment can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** (or newer) for the environment.
+2. We recommend creating a new python `virtual environment, for instance, using conda. Instructions on how to create a virtual environment using Anaconda can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** (or newer) for the environment.
 
 3. After cloning the repository `cd openqaoa` and pip install the package. 
 
 ```
 pip install .
 ```
-If you are interested in running the tests or the docs you can do so my using the installment modifiers `[docs]` and `[tests]`. For example,
+
+Additionally, users can install OpenQAOA in the developer mode via the Makefile. For a clean editable install of the package run the following command from the `openqaoa` folder.
+```
+make dev-install
+```
+The package can be installed as an editable with extra requirements defined in the `setup.py`. If you would like to install the extra requirements to be able run the tests module or generate the docs, you can run the following
 
 ```
-pip install .[tests]
+make dev-install-x,   with x = {tests, docs, all}
 ```
-
 Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
 
 
@@ -255,161 +251,40 @@ Contents
 
 .. toctree:: 
    :maxdepth: 3
-   :caption: OpenQAOA metapackage
+   :caption: openqaoa
    
    openqaoa
 
 
 .. toctree:: 
    :maxdepth: 3
-   :caption: OpenQAOA Core
+   :caption: openqaoa-core
    
-   openqaoa-core
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Core Installation
-
-      openqaoa_readme
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Core API reference 
-
-      algorithms
-      backends
-      derivatives
-      optimizers
-      problems
-      qaoa_components
-      utilities
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Core tutorials
-
-      notebooks/02_simulators_comparison.ipynb
-
+   openqaoa_core
 
 .. toctree:: 
    :maxdepth: 3
-   :caption: OpenQAOA Qiskit
+   :caption: openqaoa-qiskit
    
-   openqaoa-qiskit
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Qiskit installation
-
-      openqaoa_qiskit_readme
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Qiskit API reference
-
-      Qiskit Device
-      Qiskit Backends
-      Qiskit Gates
-
-   .. toctree:: 
-      :maxdepth: 3
-      :caption: OpenQAOA Qiskit tutorials
-
-      notebooks/03_qaoa_on_qpus.ipynb
-
+   openqaoa_qiskit
 
 .. toctree:: 
    :maxdepth: 3
-   :caption: OpenQAOA Braket
+   :caption: openqaoa-braket
    
-   openqaoa-braket
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Braket installation
-
-      openqaoa_braket_readme
-   
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Braket API reference
-
-      Braket Device
-      Braket Backends
-      Braket Gates
-   
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Braket tutorials
-
-      notebooks/10_workflows_on_Amazon_braket.ipynb
-
+   openqaoa_braket
 
 .. toctree:: 
    :maxdepth: 3
-   :caption: OpenQAOA Azure
+   :caption: openqaoa-azure
    
-   openqaoa-azure
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Azure installation
-
-      openqaoa_azure_readme
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Azure API reference
-
-      Azure Device
-      Azure Backends
-      Azure Gates
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA Azure tutorials
-
-      notebooks/11_workflows_on_Azure.ipynb
+   openqaoa_azure
 
 .. toctree:: 
    :maxdepth: 3
-   :caption: OpenQAOA PyQuil
+   :caption: openqaoa-pyquil
 
-   openqaoa-pyquil
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA PyQuil installation
-
-      openqaoa_pyquil_readme
-
-   .. toctree:: 
-      :maxdepth: 3
-      :caption: OpenQAOA PyQuil API reference
-
-      PyQuil Device
-      PyQuil Backends
-      PyQuil Gates
-
-   .. toctree::
-      :maxdepth: 3
-      :caption: OpenQAOA PyQuil tutorials
-
-      notebooks/03_qaoa_on_qpus.ipynb
-
-
-   .. toctree::
-   :maxdepth: 3
-   :caption: API reference
-
-   workflows
-   rqaoa
-   problems
-   qaoaparameters
-   backends
-   logger_and_results
-   optimizers
-   utilities
+   openqaoa_pyquil
 
 .. toctree::
    :maxdepth: 3
