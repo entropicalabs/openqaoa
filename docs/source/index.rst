@@ -260,31 +260,36 @@ Contents
    :maxdepth: 3
    :caption: openqaoa-core
    
-   openqaoa_core
+   openqaoa_core/openqaoa_core
+   
 
 .. toctree:: 
    :maxdepth: 3
    :caption: openqaoa-qiskit
    
-   openqaoa_qiskit
+   openqaoa_qiskit/openqaoa_qiskit
+
 
 .. toctree:: 
    :maxdepth: 3
    :caption: openqaoa-braket
    
-   openqaoa_braket
+   openqaoa_braket/openqaoa_braket
+
 
 .. toctree:: 
    :maxdepth: 3
    :caption: openqaoa-azure
    
-   openqaoa_azure
+   openqaoa_azure/openqaoa_azure
+
 
 .. toctree:: 
    :maxdepth: 3
    :caption: openqaoa-pyquil
 
-   openqaoa_pyquil
+   openqaoa_pyquil/openqaoa_pyquil
+   
 
 .. toctree::
    :maxdepth: 3
