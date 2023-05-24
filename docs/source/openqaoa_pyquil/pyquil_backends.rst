@@ -19,6 +19,7 @@ Local Backends
 
 Pyquil Cloud Backend
 --------------------
+
 .. autoclass:: openqaoa_pyquil.backends.qaoa_pyquil_qpu.QAOAPyQuilQPUBackend
     :members:
     :undoc-members:

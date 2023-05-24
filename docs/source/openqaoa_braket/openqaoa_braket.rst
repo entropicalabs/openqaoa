@@ -5,11 +5,10 @@ Install via PyPI
 ----------------
 You can install the latest version of openqaoa-braket directly from PyPi. We recommend creating a virtual environment with `python>=3.8` first and then simply pip install openqaoa-braket with the following command.
 
-**NOTE:** Installing `openqaoa-braket` installs `openqaoa-core` by default
+**NOTE:** Installing ``openqaoa-braket`` installs ``openqaoa-core`` by default
 
-```bash
-pip install openqaoa-braket
-```
+.. code-block:: bash
+   pip install openqaoa-braket
 
 Installation instructions for Developers
 ----------------------------------------
@@ -26,4 +25,3 @@ API reference
    :caption: OpenQAOA Braket API
    
    braket_backends
-

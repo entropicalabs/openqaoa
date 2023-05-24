@@ -6,11 +6,10 @@ Install via PyPI
 
 You can install the latest version of openqaoa-pyquil directly from PyPi. We recommend creating a virtual environment with `python>=3.8` first and then simply pip install openqaoa-pyquil with the following command.
 
-**NOTE:** Installing `openqaoa-pyquil` installs `openqaoa-core` by default
+**NOTE:** Installing ``openqaoa-pyquil`` installs ``openqaoa-core`` by default
 
-```bash
-pip install openqaoa-pyquil
-```
+.. code-block:: bash
+   pip install openqaoa-pyquil
 
 Installation instructions for Developers
 ----------------------------------------
@@ -24,4 +23,5 @@ API reference
 .. toctree::
    :maxdepth: 3
    :caption: OpenQAOA Pyquil API
+
    pyquil_backends

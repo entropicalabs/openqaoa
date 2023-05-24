@@ -43,39 +43,39 @@ Therefore, it ships by default with all flavors of OpenQAOA installations.
 
 You can install the latest variants of OpenQAOA directly from PyPI. First, we recommend you create a virtual environment with python>=3.10 and then pip install openqaoa variants with the following commands
 - To install full OpenQAOA with all backend plugins and the `openqaoa` metapackage, users can
-   ```
+
+.. code-block:: bash
    pip install openqaoa
-   ```
+
 - To install specific backend plugin versions of OpenQAOA, users can install `openqaoa-{plugin}`, where `plugin` is populated with the backend of choice
-   ```
+
+.. code-block:: bash
    pip install openqaoa-<plugin>
-   ```
 
 Alternatively, you can install manually directly from the GitHub repository by
 
 1. Clone the git repository:
 
-```
-git clone https://github.com/entropicalabs/openqaoa.git
-```
+.. code-block:: bash
+   git clone https://github.com/entropicalabs/openqaoa.git
 
 2. We recommend creating a new python `virtual environment, for instance, using conda. Instructions on how to create a virtual environment using Anaconda can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** (or newer) for the environment.
 
 3. After cloning the repository `cd openqaoa` and pip install the package. 
 
-```
-pip install .
-```
+.. code-block:: bash
+   pip install .
 
 Additionally, users can install OpenQAOA in the developer mode via the Makefile. For a clean editable install of the package run the following command from the `openqaoa` folder.
-```
-make dev-install
-```
+
+.. code-block:: bash
+   make dev-install
+
 The package can be installed as an editable with extra requirements defined in the `setup.py`. If you would like to install the extra requirements to be able run the tests module or generate the docs, you can run the following
 
-```
-make dev-install-x,   with x = {tests, docs, all}
-```
+.. code-block:: bash
+   make dev-install-x,   with x = {tests, docs, all}
+
 Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
 
 
