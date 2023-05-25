@@ -58,10 +58,10 @@ class VRP(Problem):
         penalty: Union[int, float, list] = 4,
     ):
         self.G = G
-        # if (len(pos) != 0) and (len(G.nodes) != len(pos)):
-        #     raise ValueError(
-        #         f"The number of nodes in G is {len(G.nodes)} while the x, y coordinates in pos is {len(pos)}"
-        #     )
+        if (len(pos) != 0) and (len(G.nodes) != len(pos)):
+            raise ValueError(
+                f"The number of nodes in G is {len(G.nodes)} while the x, y coordinates in pos is {len(pos)}"
+            )
         self.n_vehicles = n_vehicles
         self.pos = [] if pos is None else pos
         self.depot = depot
