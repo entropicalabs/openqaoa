@@ -21,10 +21,10 @@ class VRP(Problem):
     ----------
     G: networkx.Graph
         Networkx graph of the problem
-    pos: list[list]
-        position x, y of each node
     n_vehicles: int
         the number of vehicles used in the solution
+    pos: list[list]
+            position x, y of each node
     depot: int
         the node where all the vehicles leave for and return after
     subtours: list[list]
@@ -50,20 +50,20 @@ class VRP(Problem):
     def __init__(
         self,
         G,
-        pos,
         n_vehicles,
+        pos: list = None,
         depot: int = 0,
         subtours: list = -1,
         method: str = "slack",
         penalty: Union[int, float, list] = 4,
     ):
         self.G = G
-        if len(G.nodes) != len(pos):
-            raise ValueError(
-                f"The number of nodes in G is {len(G.nodes)} while the x, y coordinates in pos is {len(pos)}"
-            )
-        self.pos = pos
+        # if (len(pos) != 0) and (len(G.nodes) != len(pos)):
+        #     raise ValueError(
+        #         f"The number of nodes in G is {len(G.nodes)} while the x, y coordinates in pos is {len(pos)}"
+        #     )
         self.n_vehicles = n_vehicles
+        self.pos = [] if pos is None else pos
         self.depot = depot
         self.subtours = subtours
         self.method = method
@@ -88,6 +88,103 @@ class VRP(Problem):
             zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
         )
         self._G = nx.relabel_nodes(input_networkx_graph, mapping)
+
+    @staticmethod
+    def from_distance_matrix(**kwargs):
+        """
+        Creates a instance of the vehicle routing problem, from the distance 
+        matrix.
+
+        Parameters
+        ----------
+        **kwargs:
+            Required keyword arguments are:
+            matrix: list, array
+                The number of nodes (vertices) in the graph.
+            n_vehicles: int
+                Number of vehicles used in the problem
+            method: str
+                method for the inequality constraints ['slack', 'unbalanced'].
+                For the unbalaced method refer to https://arxiv.org/abs/2211.13914
+                For the slack method: https://en.wikipedia.org/wiki/Slack_variable
+            subtours: list[list]
+                Manually add the subtours to be avoided
+            seed: int
+                Seed for the random problems.
+
+        Returns
+        -------
+            A instance of the vehicle routing problem.
+        """
+        matrix = kwargs.get("matrix")
+        n_nodes = len(matrix)
+        n_vehicles = kwargs.get("n_vehicles", 2)
+        pos = kwargs.get("pos", [])
+        method = kwargs.get("method", "slack")
+        if method == "slack":
+            penalty = kwargs.get("penalty", 4)
+        elif method == "unbalanced":
+            penalty = kwargs.get("penalty", [4, 1, 1])
+        else:
+            raise ValueError(f"The method '{method}' is not valid.")
+        subtours = kwargs.get("subtours", -1)
+        G = nx.Graph()
+        G.add_nodes_from(range(n_nodes))
+        for i in range(n_nodes - 1):
+            for j in range(i + 1, n_nodes):
+                G.add_weighted_edges_from([(i, j, matrix[i][j])])
+        return VRP(
+            G, n_vehicles, pos=pos, subtours=subtours, method=method, penalty=penalty
+        )
+
+    @staticmethod
+    def from_coordinates(**kwargs):
+        """
+        Creates a instance of the vehicle routing problem, from the distance 
+        matrix.
+
+        Parameters
+        ----------
+        **kwargs:
+            Required keyword arguments are:
+            pos: list, array
+                The nodes x, y (vertices) in the graph.
+            n_vehicles: int
+                Number of vehicles used in the problem
+            method: str
+                method for the inequality constraints ['slack', 'unbalanced'].
+                For the unbalaced method refer to https://arxiv.org/abs/2211.13914
+                For the slack method: https://en.wikipedia.org/wiki/Slack_variable
+            subtours: list[list]
+                Manually add the subtours to be avoided
+            seed: int
+                Seed for the random problems.
+
+        Returns
+        -------
+            A instance of the vehicle routing problem.
+        """
+        pos = kwargs.get("pos")
+        n_nodes = len(pos)
+        n_vehicles = kwargs.get("n_vehicles", 2)
+        pos = kwargs.get("pos", [])
+        method = kwargs.get("method", "slack")
+        if method == "slack":
+            penalty = kwargs.get("penalty", 4)
+        elif method == "unbalanced":
+            penalty = kwargs.get("penalty", [4, 1, 1])
+        else:
+            raise ValueError(f"The method '{method}' is not valid.")
+        subtours = kwargs.get("subtours", -1)
+        G = nx.Graph()
+        G.add_nodes_from(range(n_nodes))
+        for i in range(n_nodes - 1):
+            for j in range(i + 1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
+                G.add_weighted_edges_from([(i, j, r)])
+        return VRP(
+            G, n_vehicles, pos=pos, subtours=subtours, method=method, penalty=penalty
+        )
 
     @staticmethod
     def random_instance(**kwargs):
@@ -137,7 +234,7 @@ class VRP(Problem):
                 r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
                 G.add_weighted_edges_from([(i, j, r)])
         return VRP(
-            G, pos, n_vehicles, subtours=subtours, method=method, penalty=penalty
+            G, n_vehicles, pos, subtours=subtours, method=method, penalty=penalty
         )
 
     @property
@@ -377,7 +474,9 @@ class VRP(Problem):
         fig : matplotlib.pyplot.Figure()
             The graph visualization of the solution.
         """
-
+        pos = self.pos
+        if pos is []:
+            raise ValueError(f"There are not [x, y] coordinates of the VRP in pos: {pos}.")
         colors = colormaps["jet"] if colors is None else colors
         if type(colors) is list and len(colors) != self.n_vehicles:
             raise ValueError(
@@ -407,7 +506,7 @@ class VRP(Problem):
             fig, ax = plt.subplots()
         else:
             fig = None
-        pos = self.pos
+        
         num_vertices = self.G.number_of_nodes()
         G = nx.Graph()
         G.add_nodes_from(range(num_vertices))
