@@ -1372,6 +1372,19 @@ class TestingVanillaQAOA(unittest.TestCase):
             error = True
         assert(error), f"An uncompiled QAOA should raise an error when brute-forcing it"
 
+        # Check if bounded=True disallows computation for more than 25 qubits
+        qaoa = QAOA()
+        large_problem = MaximumCut.random_instance(
+            n_nodes=26, edge_probability=1
+        ).qubo
+        qaoa.compile(large_problem)
+        error = False
+        try:
+            (min_energy_bf, config_strings_bf) = qaoa.brute_force()
+        except:
+            error = True
+        assert(error), f"Brute forcing should not compute for large problems (> 25 qubits) when bounded=True"
+
 
 
     def test_qaoa_evaluate_circuit(self):

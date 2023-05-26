@@ -324,9 +324,16 @@ class QAOA(Workflow):
             print("Optimization completed.")
         return
     
-    def brute_force(self):
+    def brute_force(self, bounded=True):
         """
         Computes the exact ground state and ground state energy of the cost hamiltonian.
+
+        Parameters
+        ----------
+        bounded: `bool`, optional
+            If set to True, the function will not perform computations for qubit
+            numbers above 25. If False, the user can specify any number. Defaults
+            to True.
 
         Returns
         -------
@@ -339,7 +346,7 @@ class QAOA(Workflow):
         """
         if self.compiled is False:
             raise ValueError("Please compile the QAOA before brute-forcing it!")
-        return ground_state_hamiltonian(self.cost_hamil, bounded=True)
+        return ground_state_hamiltonian(self.cost_hamil, bounded=bounded)
 
 
     def evaluate_circuit(
