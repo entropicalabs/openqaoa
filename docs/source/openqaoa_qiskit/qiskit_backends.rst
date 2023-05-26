@@ -1,16 +1,16 @@
+OpenQAOA Qiskit API Reference
+=============================
+
 IBM Cloud Devices
-=================
+-----------------
 
 .. autoclass:: openqaoa_qiskit.backends.devices.DeviceQiskit
     :members:
     :undoc-members:
     :inherited-members:
 
-Qiskit Backends
-===============
-
-Local Backends 
---------------
+Qiskit Local Backends 
+---------------------
 .. autoclass:: openqaoa_qiskit.backends.qaoa_qiskit_sim.QAOAQiskitBackendShotBasedSimulator
     :members:
     :undoc-members:

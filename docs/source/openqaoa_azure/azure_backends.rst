@@ -1,5 +1,8 @@
+OpenQAOA Azure API Reference
+============================
+
 Microsoft Azure Cloud Devices
-=============================
+-----------------------------
 
 .. autoclass:: openqaoa_azure.backends.devices.DeviceAzure
     :members:
@@ -7,12 +10,9 @@ Microsoft Azure Cloud Devices
     :inherited-members:
 
 Microsoft Azure Backends
-========================
+------------------------
 
 Azure supports quantum programs defined in qiskit
-
-Azure Cloud Backend
--------------------
 
 .. autoclass:: openqaoa_qiskit.backends.qaoa_qiskit_qpu.QAOAQiskitQPUBackend
     :members:

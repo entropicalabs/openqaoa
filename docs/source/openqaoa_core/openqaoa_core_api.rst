@@ -1,5 +1,5 @@
-API reference
-=============
+OpenQAOA Core API Reference
+===========================
 .. toctree::
    :maxdepth: 3
    :caption: OpenQAOA Core API

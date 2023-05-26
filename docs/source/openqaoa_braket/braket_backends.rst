@@ -1,13 +1,13 @@
+OpenQAOA Braket API Reference
+=============================
+
 AWS Braket Cloud Devices
-========================
+------------------------
 
 .. autoclass:: openqaoa_braket.backends.devices.DeviceAWS
     :members:
     :undoc-members:
     :inherited-members:
-
-Amazon Braket Backends
-======================
 
 Amazon Braket Cloud Backend
 ---------------------------
