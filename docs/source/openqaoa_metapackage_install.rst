@@ -47,9 +47,3 @@ make dev-install-x,   with x = {tests, docs, all}
 ```
 
 Should you face any issue during the installation, please drop us an email at openqaoa@entropicalabs.com or open an issue!
-
-API reference
-=============
-
-For detailed API reference for classes and functions defined within OpenQAOA refer to the select API reference for each individual plugin
-TODO: Add links to the API reference for each package

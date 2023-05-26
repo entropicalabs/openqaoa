@@ -252,7 +252,7 @@ Contents
    :maxdepth: 3
    :caption: Installation and setup
 
-   openqaoa_metapackage
+   openqaoa_metapackage_install
    
    openqaoa_core/openqaoa_core_install
 
@@ -267,8 +267,6 @@ Contents
 .. toctree::
    :maxdepth: 3
    :caption: API reference
-
-   openqaoa_metapackage
 
    openqaoa_core/openqaoa_core_api
 
