@@ -248,47 +248,37 @@ Contents
    faq
    changelog
 
-
-.. toctree:: 
+.. toctree::
    :maxdepth: 3
-   :caption: openqaoa
+   :caption: Installation and setup
+
+   openqaoa_metapackage
    
+   openqaoa_core/openqaoa_core_install
+
+   openqaoa_qiskit/openqaoa_qiskit_install
+
+   openqaoa_braket/openqaoa_braket_install
+
+   openqaoa_azure/openqaoa_azure_install
+
+   openqaoa_pyquil/openqaoa_pyquil_install
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API reference
+
    openqaoa_metapackage
 
+   openqaoa_core/openqaoa_core_api
 
-.. toctree:: 
-   :maxdepth: 3
-   :caption: openqaoa-core
-   
-   openqaoa_core/openqaoa_core
-   
+   openqaoa_qiskit/qiskit_backends
 
-.. toctree:: 
-   :maxdepth: 3
-   :caption: openqaoa-qiskit
-   
-   openqaoa_qiskit/openqaoa_qiskit
+   openqaoa_braket/braket_backends
 
+   openqaoa_azure/azure_backends
 
-.. toctree:: 
-   :maxdepth: 3
-   :caption: openqaoa-braket
-   
-   openqaoa_braket/openqaoa_braket
-
-
-.. toctree:: 
-   :maxdepth: 3
-   :caption: openqaoa-azure
-   
-   openqaoa_azure/openqaoa_azure
-
-
-.. toctree:: 
-   :maxdepth: 3
-   :caption: openqaoa-pyquil
-
-   openqaoa_pyquil/openqaoa_pyquil
+   openqaoa_pyquil/pyquil_backends
    
 
 .. toctree::
