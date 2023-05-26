@@ -57,7 +57,7 @@ class QAOA(Workflow):
     mixer_hamil: Hamiltonian
         The desired mixer hamiltonian
     cost_hamil: Hamiltonian
-        The desired cost hamiltonian
+        The cost hamiltonian
     qaoa_descriptor: QAOADescriptor
         the abstract and backend-agnostic representation of the underlying QAOA parameters
     variate_params: QAOAVariationalBaseParams
