@@ -1,4 +1,4 @@
-from typing import List, Callable, Optional, Union, Dict
+from typing import List, Callable, Optional, Union, Dict, Tuple
 from copy import deepcopy
 import numpy as np
 
@@ -17,7 +17,7 @@ from ...qaoa_components import (
 from ...qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
-from ...utilities import get_mixer_hamiltonian, generate_timestamp
+from ...utilities import get_mixer_hamiltonian, generate_timestamp, ground_state_hamiltonian
 from ...optimizers.qaoa_optimizer import get_optimizer
 
 
@@ -57,7 +57,7 @@ class QAOA(Workflow):
     mixer_hamil: Hamiltonian
         The desired mixer hamiltonian
     cost_hamil: Hamiltonian
-        The desired mixer hamiltonian
+        The desired cost hamiltonian
     qaoa_descriptor: QAOADescriptor
         the abstract and backend-agnostic representation of the underlying QAOA parameters
     variate_params: QAOAVariationalBaseParams
@@ -323,6 +323,24 @@ class QAOA(Workflow):
         if verbose:
             print("Optimization completed.")
         return
+    
+    def brute_force(self):
+        """
+        Computes the exact ground state and ground state energy of the cost hamiltonian.
+
+        Returns
+        -------
+        min_energy: `float`
+            The minimum eigenvalue of the cost Hamiltonian.
+
+        config: `np.array`
+            The minimum energy eigenvector as a binary array
+            configuration: qubit-0 as the first element in the sequence.
+        """
+        if self.compiled is False:
+            raise ValueError("Please compile the QAOA before brute-forcing it!")
+        return ground_state_hamiltonian(self.cost_hamil, bounded=True)
+
 
     def evaluate_circuit(
         self,
