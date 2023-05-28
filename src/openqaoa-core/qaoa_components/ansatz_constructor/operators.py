@@ -700,6 +700,10 @@ class Hamiltonian:
         H_mat:
             sparse matrix of Hamiltonian.
         """
+
+        if self.n_qubits>20:
+            raise ValueError('number of qubits exceeds maximum of 20')
+
         p_mat_dict = {'X': csr_matrix([[0, 1],
                                        [1, 0]]),
                       'Y': csr_matrix([[0., -1j],
