@@ -5,6 +5,9 @@ from collections import Counter
 from typing import List, Union, Tuple
 from sympy import Symbol
 import numpy as np
+from scipy.sparse import kron as sparse_kron
+from functools import reduce
+from scipy.sparse import csr_matrix
 
 Identity = np.array(([1, 0], [0, 1]), dtype=complex)
 PauliX = np.array(([0, 1], [1, 0]), dtype=complex)
@@ -686,3 +689,38 @@ class Hamiltonian:
                 raise ValueError("Hamiltonian only supports Linear and Quadratic terms")
 
         return cls(pauli_ops, pauli_coeffs, constant)
+
+    @property
+    def as_matrix(self):
+        """
+        Build sparse matrix of Hamiltonian
+
+        Returns
+        -------
+        H_mat:
+            sparse matrix of Hamiltonian.
+        """
+        p_mat_dict = {'X': csr_matrix([[0, 1],
+                                       [1, 0]]),
+                      'Y': csr_matrix([[0., -1j],
+                                       [1j, 0.]]),
+                      'Z': csr_matrix([[1, 0],
+                                       [0, -1]]),
+                      'I': csr_matrix([[1, 0], [0, 1]])}
+
+        converter = lambda s: p_mat_dict[s]
+        vfunc = np.vectorize(converter)
+
+        base = np.array(['I' for _ in range(self.n_qubits)])
+
+        H_mat = reduce(sparse_kron, vfunc(base)) * self.constant
+        for P, coeff in zip(self.terms, self.coeffs):
+            temp = base.copy()
+
+            P_str = np.array(list(P.pauli_str))
+            P_q_inds = np.array(P.qubit_indices)
+            temp[P_q_inds] = P_str
+
+            H_mat += reduce(sparse_kron, vfunc(temp)) * coeff
+
+        return H_mat
