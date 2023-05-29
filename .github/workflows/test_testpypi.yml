@@ -1,0 +1,33 @@
+name: Download TestPypi OpenQAOA
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:  
+  pypi_unittest:
+  
+    # Set up operating system
+    runs-on: ubuntu-latest
+
+    # Define job steps
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
+    - name: Check-out repository
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        
+    - name: Install OpenQAOA from Test PyPI
+      run: |
+        scripts/install_package_testpypi.sh
