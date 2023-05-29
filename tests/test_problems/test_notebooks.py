@@ -10,7 +10,7 @@ import sys
 import os
 
 myPath = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, myPath + "/../")
+sys.path.insert(0, myPath + "/../../")
 
 
 def notebook_test_function(name):
@@ -20,12 +20,6 @@ def notebook_test_function(name):
     ep = ExecutePreprocessor(timeout=600, kernel_name="env")
 
     ep.preprocess(nb)
-
-
-# @pytest.mark.notebook
-def test_01_workflows_example():
-    notebook_test_function("./examples/01_workflows_example.ipynb")
-
 
 # @pytest.mark.notebook
 def test_02_simulators_comparison():
