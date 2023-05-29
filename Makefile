@@ -36,6 +36,7 @@ dev-install-all:
 	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
+	pip install -e ./src/openqaoa-qb
 
 .PHONY: dev-uninstall
 dev-uninstall:

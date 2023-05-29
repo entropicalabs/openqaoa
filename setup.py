@@ -17,7 +17,8 @@ requirements = [
     f'openqaoa-qiskit @ file://localhost/{current_path}/src/openqaoa-qiskit',
     f'openqaoa-braket @ file://localhost/{current_path}/src/openqaoa-braket',
     f'openqaoa-pyquil @ file://localhost/{current_path}/src/openqaoa-pyquil',
-    f'openqaoa-azure @ file://localhost/{current_path}/src/openqaoa-azure'
+    f'openqaoa-azure @ file://localhost/{current_path}/src/openqaoa-azure',
+    f'openqaoa-qb @ file://localhost/{current_path}/src/openqaoa-qb'
 ]
     
 setup(
