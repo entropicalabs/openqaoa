@@ -31,3 +31,4 @@ jobs:
     - name: Install OpenQAOA from Test PyPI
       run: |
         scripts/install_package_testpypi.sh
+        python -c 'from openqaoa._version import __version__; print(__version__)'
