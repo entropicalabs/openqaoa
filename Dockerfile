@@ -5,4 +5,6 @@ RUN mkdir -p /openqaoa
 
 ADD ./ /openqaoa/
 
-RUN pip3 install /openqaoa/.
+RUN cd openqaoa
+
+RUN make dev-install-tests
