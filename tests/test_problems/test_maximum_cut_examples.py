@@ -1,6 +1,6 @@
 import sys
 import os
-import test_notebooks
+from test_notebooks import test_notebooks
 
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath + "/../../")
