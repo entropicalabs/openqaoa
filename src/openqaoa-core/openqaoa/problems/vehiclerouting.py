@@ -140,8 +140,8 @@ class VRP(Problem):
     @staticmethod
     def from_coordinates(**kwargs):
         """
-        Creates a instance of the vehicle routing problem, from the distance 
-        matrix.
+        Creates a instance of the vehicle routing problem, from the cartesian 
+        coordinates.
 
         Parameters
         ----------
@@ -167,7 +167,6 @@ class VRP(Problem):
         pos = kwargs.get("pos")
         n_nodes = len(pos)
         n_vehicles = kwargs.get("n_vehicles", 2)
-        pos = kwargs.get("pos", [])
         method = kwargs.get("method", "slack")
         if method == "slack":
             penalty = kwargs.get("penalty", 4)
@@ -476,7 +475,7 @@ class VRP(Problem):
         """
         pos = self.pos
         if pos is []:
-            raise ValueError(f"There are not [x, y] coordinates of the VRP in pos: {pos}.")
+            raise ValueError("There are no x, y coordinates for any of the nodes in the problem. You need to provide the coordinates of the nodes through the initialization parameter, pos.")
         colors = colormaps["jet"] if colors is None else colors
         if type(colors) is list and len(colors) != self.n_vehicles:
             raise ValueError(
