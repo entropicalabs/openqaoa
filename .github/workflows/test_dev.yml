@@ -34,7 +34,8 @@ jobs:
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          pip install .[tests]
+          pip install .
+          pip install -e ./src/openqaoa-core[tests]
           pip install ipykernel
       - name: Setup IBMQ account
         env:
@@ -63,8 +64,8 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          pytest tests/ -m 'not (qpu or sim)' --cov --cov-report=xml:coverage.xml
-
+          pip install pytest-xdist
+          pytest tests/ src/*/tests -m 'not (qpu or sim)' --cov -n auto
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
         with:
@@ -87,7 +88,8 @@ jobs:
       - name: Install OpenQAOA
         run: |
           python -m pip install --upgrade pip
-          pip install .[docs]
+          pip install .
+          pip install -e ./src/openqaoa-core[docs]
               
       - name: Install qvm
         run: |

@@ -28,6 +28,14 @@ sphinx:
 python:
   install:
     - method: pip
-      path: .
+      path: ./src/openqaoa-core
       extra_requirements:
         - docs
+    - method: pip
+      path: ./src/openqaoa-qiskit
+    - method: pip
+      path: ./src/openqaoa-pyquil
+    - method: pip
+      path: ./src/openqaoa-azure
+    - method: pip
+      path: ./src/openqaoa-braket
