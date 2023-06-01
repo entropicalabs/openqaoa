@@ -2,6 +2,8 @@ import unittest
 import networkx as nx
 import numpy as np
 from random import randint, random
+from io import StringIO
+import sys
 from openqaoa.problems import (
     NumberPartition,
     QUBO,
@@ -229,6 +231,52 @@ class TestProblem(unittest.TestCase):
         ), "Should have thrown an error when setting key qubo problem instance that is not json serializable"
 
     # TESTING NUMBER PARITION CLASS
+
+    def test_number_partitioning_handles_0_in_numbers(self):
+        """Test that the init function removes zeros from the list if not specified otherwise"""
+        # Check that instantiating with a list containing a 0 with keep0=True will not alter the list
+        list_numbers_with_0 = [0, 1, 2, 3]
+        np = NumberPartition(list_numbers_with_0, keep0=True)
+        assert (
+            np.numbers == list_numbers_with_0
+        ), f"The list should not be altered when keep0 is True"
+        # Check that n_numbers stays consistent
+        assert (
+            np.n_numbers == 4
+        ), f"n_numbers should be the same as the list's length when passed with keep0=True"
+
+        # Check that instantiating with default keep0=False will alter the list when the list contains 0
+        np = NumberPartition(list_numbers_with_0)
+        assert (
+            np.numbers == [1, 2, 3]
+        ), f"The numbers list should not be altered when the list does not contain 0"
+
+        # Check if n_numbers is still consistent
+        assert(
+            np.n_numbers == 3
+        ), f"n_numbers should not not change when the list does not contain 0"
+
+        list_number_without_0 = [1, 2, 3]
+        # Check that instantiating with default keep0=False will not alter the list when the list does not contain 0
+        np = NumberPartition(list_number_without_0)
+        assert (
+            np.numbers == [1, 2, 3]
+        ), f"The numbers list should not be altered when the list does not contain 0"
+        # Check if n_numbers is still consistent
+        assert (
+            np.n_numbers == 3
+        ), f"n_numbers should not change when the list does not contain 0"
+
+        # Check that instantiating with multiple 0s will remove them all
+        list_number_with_multiple_0s = [0, 1, 0, 2, 0, 3]
+        np = NumberPartition(list_number_with_multiple_0s)
+        assert (
+            np.numbers == [1, 2, 3]
+        ), f"The numbers list should remove all 0s when keep0 is True and the list contains at least two 0s"
+        assert (
+            np.n_numbers == 3
+        ), f"n_numbers should update when keep0 is True and the list contains at least two 0s"
+
 
     def test_number_partitioning_terms_weights_constant(self):
         """Test that Number Partitioning creates the correct terms, weights, constant"""

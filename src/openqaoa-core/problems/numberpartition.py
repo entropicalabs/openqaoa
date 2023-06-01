@@ -21,9 +21,15 @@ class NumberPartition(Problem):
 
     __name__ = "number_partition"
 
-    def __init__(self, numbers=None):
-        # Set the numbers to be partitioned. If not given, generate a random list with integers
-        self.numbers = numbers
+    def __init__(self, numbers=None, keep0=False):
+
+        # Set the numbers to be partitioned.
+        if 0 in numbers and keep0 is False:
+            print("Warning: Omitting zeros in the numbers list. Instantiate with keep0=True to keep 0 terms.")
+            self.numbers = list(filter(lambda elem: elem is not 0, numbers))
+        else:
+            self.numbers = numbers
+
         self.n_numbers = None if numbers == None else len(self.numbers)
 
     @property
