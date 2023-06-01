@@ -17,9 +17,8 @@ from ...qaoa_components import (
 from ...qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
-from ...utilities import get_mixer_hamiltonian, generate_timestamp
+from ...utilities import get_mixer_hamiltonian, generate_timestamp, ground_state_hamiltonian
 from ...optimizers.qaoa_optimizer import get_optimizer
-from ...utilities import ground_state_hamiltonian
 
 
 class QAOA(Workflow):
