@@ -693,7 +693,7 @@ class Hamiltonian:
     @property
     def as_matrix(self):
         """
-        Build sparse matrix of Hamiltonian
+        Build sparse matrix of Hamiltonian. Note this includes self.constant value.
 
         Returns
         -------
@@ -713,6 +713,8 @@ class Hamiltonian:
                       'I': csr_matrix([[1, 0], [0, 1]])}
 
         converter = lambda s: p_mat_dict[s]
+
+        # vectorized function to map single qubit pauli strings to sparse matrix
         vfunc = np.vectorize(converter)
 
         base = np.array(['I' for _ in range(self.n_qubits)])
@@ -721,10 +723,11 @@ class Hamiltonian:
         for P, coeff in zip(self.terms, self.coeffs):
             temp = base.copy()
 
-            P_str = np.array(list(P.pauli_str))
-            P_q_inds = np.array(P.qubit_indices)
-            temp[P_q_inds] = P_str
+            # replace single qubit pauli I in base term
+            # with single qubit pauli operators according to qubit_indices and pauli_strs in P
+            temp[np.array(P.qubit_indices)] = np.array(list(P.pauli_str))
 
+            # take kronecker product of sparse list of matrices
             H_mat += reduce(sparse_kron, vfunc(temp)) * coeff
 
         return H_mat
