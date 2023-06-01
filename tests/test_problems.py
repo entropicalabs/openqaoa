@@ -2,8 +2,6 @@ import unittest
 import networkx as nx
 import numpy as np
 from random import randint, random
-from io import StringIO
-import sys
 from openqaoa.problems import (
     NumberPartition,
     QUBO,
