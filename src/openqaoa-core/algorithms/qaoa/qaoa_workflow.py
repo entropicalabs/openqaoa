@@ -319,7 +319,7 @@ class QAOA(Workflow):
         """
 
         if self.compiled is False:
-            raise ValueError("Please compile the QAOA before optimizing it!")
+            raise ValueError("Please compile the QAOA before running the brute force solver!")
         
         # compute the exact ground state and ground state energy of the cost hamiltonian
         energy, configuration = ground_state_hamiltonian(self.cost_hamil, bounded=bounded)
