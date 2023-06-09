@@ -34,4 +34,4 @@ jobs:
         
     - name: Publish to Test PyPI
       run: |
-        scripts/push_package_testpypi.sh __token__ ${{secrets.TEST_PYPI_API_TOKEN}}
+        scripts/push_package_pypi.sh __token__ ${{secrets.PYPI_API_TOKEN}}
