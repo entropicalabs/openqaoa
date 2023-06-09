@@ -15,7 +15,7 @@ for entry in "${modulesList[@]}"; do
     rm -rf dist build
     pip install .
     python -m build
-    twine upload --repository testpypi dist/* --username $1 --password $2
+    twine upload dist/* --username $1 --password $2
     rm -rf dist build
     cd "../.."
 done
@@ -24,4 +24,4 @@ done
 rm -rf dist build
 pip install .
 python -m build
-twine upload --repository testpypi dist/* --username $1 --password $2
+twine upload dist/* --username $1 --password $2
