@@ -355,8 +355,10 @@ class TSP(Problem):
 class TSP_LP(VRP):
     """
     Creates an instance of the traveling salesman problem (TSP) based on the 
-    integer linear programming formulation.
+    linear programming (LP) formulation. Note that the LP formulation of the TSP
+    can be seen as a particular case of the Vehicle routing problem (VRP) with one vehicle.
     https://en.wikipedia.org/wiki/Travelling_salesman_problem
+    
 
     Parameters
     ----------
