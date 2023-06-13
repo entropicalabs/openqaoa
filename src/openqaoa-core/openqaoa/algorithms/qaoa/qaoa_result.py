@@ -641,7 +641,8 @@ class QAOAResult:
         """
         if len(self.intermediate["measurement_outcomes"]) == 0 and include_intermediate == True:
             raise ValueError(
-                "Please specify saving intermediate measurements during optimization."
+                "The underlying QAOA object does not seem to have any intermediate measurement result. Please, consider saving "
+                "intermediate measurements during optimization by setting `optimization_progress=True` in your workflow."
             )
 
         if isinstance(self.optimized["measurement_outcomes"], dict):

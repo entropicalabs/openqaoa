@@ -451,7 +451,7 @@ class TestingResultOutputs(unittest.TestCase):
         except ValueError as e:
             self.assertEqual(
                 str(e),
-                "Please specify saving intermediate measurements during optimization.",
+                "The underlying QAOA object does not seem to have any intermediate measurement result. Please, consider saving intermediate measurements during optimization by setting `optimization_progress=True` in your workflow.",
             )
 
 
