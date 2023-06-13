@@ -1,6 +1,6 @@
 import unittest
-import numpy as np
 from random import randint, random
+import numpy as np
 from openqaoa.problems import (
     NumberPartition,
     QUBO,
@@ -45,6 +45,7 @@ class TestQUBO(unittest.TestCase):
                 n_nodes=randint(3, 15), edge_probability=random()
             ),
             "bin_packing": BinPacking.random_instance(),
+            "portfolio_optimization": PortfolioOptimization.random_instance(),
         }
         qubo_random_instances = {
             k: v.qubo for k, v in problems_random_instances.items()
@@ -108,6 +109,15 @@ class TestQUBO(unittest.TestCase):
                 "min_bins",
                 "solution",
             ],
+            "portfolio_optimization": [
+                "problem_type",
+                "mu",
+                "sigma",
+                "risk_factor",
+                "penalty",
+                "num_assets",
+                "budget",
+            ],
             "generic_qubo": ["problem_type"],
         }
 
@@ -123,20 +133,6 @@ class TestQUBO(unittest.TestCase):
         """
         Test problem from instance method of the problem class.
         """
-        problem_mapper = {
-            "generic_qubo": QUBO,
-            "tsp": TSP,
-            "number_partition": NumberPartition,
-            "maximum_cut": MaximumCut,
-            "knapsack": Knapsack,
-            "slack_free_knapsack": SlackFreeKnapsack,
-            "minimum_vertex_cover": MinimumVertexCover,
-            "shortest_path": ShortestPath,
-            "maximal_independent_set": MIS,
-            "bin_packing": BinPacking,
-            "vehicle_routing": VRP,
-        }
-
         problems, qubos = self.__generate_random_problems()
 
         for type in qubos:

@@ -11,6 +11,7 @@ from .tsp import TSP
 from .vehiclerouting import VRP
 from .maximalindependentset import MIS
 from .binpacking import BinPacking
+from .portfoliooptimization import PortfolioOptimization
 from .qubo import QUBO
 
 
@@ -45,6 +46,7 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
         "vehicle_routing": VRP,
         "maximal_independent_set": MIS,
         "bin_packing": BinPacking,
+        "portfolio_optimization": PortfolioOptimization,
     }
 
     # check if the problem type is in the mapper
