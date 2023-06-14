@@ -360,6 +360,100 @@ class TestingResultOutputs(unittest.TestCase):
                     results.__dict__, results_from_dict.__dict__, bool_cmplx_str
                 )
 
+    def test_qaoa_results_calculate_statistics_full(self):
+
+        maxcut_qubo = MaximumCut(
+            nw.generators.fast_gnp_random_graph(n=6, p=0.6, seed=42)
+        ).qubo
+
+        qaoas = []
+        for device_name in SUPPORTED_LOCAL_SIMULATORS:
+            if device_name == "analytical_simulator":
+                continue
+
+            qaoa = QAOA()
+
+            qaoa.set_device(create_device("local", device_name))
+            qaoa.set_classical_optimizer(optimization_progress=True)
+
+            qaoa.compile(maxcut_qubo)
+            qaoa.optimize()
+
+            qaoas.append(qaoa)
+
+        for qaoa in qaoas:
+            result = qaoa.result.calculate_statistics(include_intermediate=True)
+            result_optimized = result['optimized']
+            result_intermediate = result['intermediate']
+            optimized_sorted, optimized_mean, optimized_std_deviation = list(result_optimized['sorted'].values()), \
+                result_optimized['mean'], result_optimized['std_deviation']
+
+            for ri in result_intermediate:
+                intermediate_sorted, intermediate_mean, intermediate_std_deviation = list(ri['sorted'].values()), ri['mean'], ri['std_deviation']
+
+                assert all(intermediate_sorted[i] >= intermediate_sorted[i + 1] for i in range(len(intermediate_sorted) - 1)), "Counts in descending order."
+                assert intermediate_mean > 0, "Mean is greater then zero."
+                assert intermediate_std_deviation > 0, "Standard deviation is greater than zero."
+
+            assert all(optimized_sorted[i] >= optimized_sorted[i + 1] for i in range(len(optimized_sorted) - 1)), "Counts in descending order."
+            assert optimized_mean > 0, "Mean is greater then zero."
+            assert optimized_std_deviation > 0, "Standard deviation is greater than zero."
+
+    def test_qaoa_results_calculate_statistics_without_intermediate(self):
+
+        maxcut_qubo = MaximumCut(
+            nw.generators.fast_gnp_random_graph(n=6, p=0.6, seed=42)
+        ).qubo
+
+        qaoas = []
+        for device_name in SUPPORTED_LOCAL_SIMULATORS:
+            if device_name == "analytical_simulator":
+                continue
+
+            qaoa = QAOA()
+            qaoa.set_device(create_device("local", device_name))
+            qaoa.set_classical_optimizer(optimization_progress=False)
+
+            qaoa.compile(maxcut_qubo)
+            qaoa.optimize()
+
+            qaoas.append(qaoa)
+
+        for qaoa in qaoas:
+            result = qaoa.result.calculate_statistics(include_intermediate=False)
+            result_optimized = result['optimized']
+            optimized_sorted, optimized_mean, optimized_std_deviation = list(result_optimized['sorted'].values()), \
+                result_optimized['mean'], result_optimized['std_deviation']
+
+            assert result['intermediate'] == [], "Statistics for intermediate measurements are empty."
+            assert all(optimized_sorted[i] >= optimized_sorted[i + 1] for i in range(len(optimized_sorted) - 1)), "Counts in descending order."
+            assert optimized_mean > 0, "Mean is greater then zero."
+            assert optimized_std_deviation > 0, "Standard deviation is greater than zero."
+
+    def test_qaoa_results_calculate_statistics_raise_value_error(self):
+        """
+        The method raise an error if the user requires statistics on all 
+        intermediate measurement outcomes but hasn't specified saving them during optimization.
+        """
+        maxcut_qubo = MaximumCut(
+            nw.generators.fast_gnp_random_graph(n=6, p=0.6, seed=42)
+        ).qubo
+
+        qaoa = QAOA()
+        qaoa.set_device(create_device(location="local", name="vectorized"))
+        qaoa.set_classical_optimizer(optimization_progress=False)
+
+        qaoa.compile(maxcut_qubo)
+        qaoa.optimize()
+
+        try:
+            qaoa.result.calculate_statistics(include_intermediate=True)
+        except ValueError as e:
+            self.assertEqual(
+                str(e),
+                "The underlying QAOA object does not seem to have any intermediate measurement result. Please, consider saving intermediate measurements during optimization by setting `optimization_progress=True` in your workflow.",
+            )
+
 
 class TestingRQAOAResultOutputs(unittest.TestCase):
     """
