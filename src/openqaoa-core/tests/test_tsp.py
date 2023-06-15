@@ -1,7 +1,7 @@
 import unittest
 import networkx as nx
 import numpy as np
-from openqaoa.problems import TSP
+from openqaoa.problems import TSP, TSP_LP
 
 
 def terms_list_equality(terms_list1, terms_list2):
@@ -239,6 +239,35 @@ class TestTSP(unittest.TestCase):
             TSP(G=G)
         self.assertEqual("Edge weights should be positive", str(e.exception))
 
+    # TESTING TSP PROBLEM CLASS
+class TestTSP_LP(unittest.TestCase):
+    """Tests for TSP LP class"""
+    def test_tsp_lp_terms_weights_constant(self):
+        """Testing TSP LP problem creation"""
+        tsp_qubo = TSP_LP.random_instance(n_nodes=3, seed=1234).qubo
+        expected_terms = [[0, 1], [0, 2], [1, 2], [0], [1], [2]]
+        expected_weights = [2.0, 2.0, 2.0, 7.66823080091817, 7.707925770071554, 7.704586691688892]
+        expected_constant = 18.919256737321383
+        self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
+        self.assertEqual(expected_weights, tsp_qubo.weights)
+        self.assertEqual(expected_constant, tsp_qubo.constant)
+
+    def test_tsp_lp_length(self):
+        """Testing TSP LP problem creation"""
+        cities = 3
+        tsp = TSP_LP.random_instance(n_nodes=cities, seed=111)
+        solution = tsp.classical_solution()
+        distance_expected = 2.503342058155561
+        self.assertEqual(distance_expected, tsp.get_distance(solution))
+    
+    def test_tsp_lp_plot(self):
+        """Testing TSP LP problem creation"""
+        from matplotlib.pyplot import Figure
+        cities = 6
+        tsp = TSP_LP.random_instance(n_nodes=cities, seed=123, subtours=[[1,3,4]])
+        solution = tsp.classical_solution()
+        fig = tsp.plot_solution(solution)  
+        self.assertTrue(isinstance(fig, Figure))
 
 if __name__ == "__main__":
     unittest.main()
