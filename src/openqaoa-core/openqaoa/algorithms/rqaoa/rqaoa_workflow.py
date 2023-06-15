@@ -74,7 +74,7 @@ class RQAOA(Workflow):
 
     >>> r = RQAOA()
     >>> r.compile(QUBO)
-    >>> r.optimise()
+    >>> r.optimize()
 
     Where `QUBO` is a an instance of `openqaoa.problems.problem.QUBO`
 
