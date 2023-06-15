@@ -3,9 +3,7 @@ from docplex.mp.model import Model
 from typing import Union
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
-import numpy as np
 
-from ..utilities import check_kwargs
 from .problem import Problem
 from .converters import FromDocplex2IsingModel
 from .qubo import QUBO
