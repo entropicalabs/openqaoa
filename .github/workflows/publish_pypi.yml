@@ -1,0 +1,37 @@
+name: Upload to Test PyPi
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:  
+  pypi_update:
+   
+    # Only run this job if new work is pushed to "main"
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    # Set up operating system
+    runs-on: ubuntu-latest
+
+    # Define job steps
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
+    - name: Check-out repository
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip build twine
+        pip install setuptools wheel twine
+        
+    - name: Publish to Test PyPI
+      run: |
+        scripts/push_package_pypi.sh __token__ ${{secrets.PYPI_API_TOKEN}}
