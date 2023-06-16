@@ -5,4 +5,4 @@ RUN mkdir -p /openqaoa
 
 ADD ./ /openqaoa/
 
-RUN cd openqaoa && make dev-install-tests
+RUN cd openqaoa && make dev-install
