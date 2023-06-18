@@ -1,1 +1,2 @@
-recursive-include src/* README.md requirements*.txt
+include README.md
+include _version.py
