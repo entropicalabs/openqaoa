@@ -4,8 +4,8 @@ Welcome to OpenQAOA's documentation!
 OpenQAOA is an advanced multi-backend SDK for quantum optimization designed to ease research efforts within the VQA environment while ensuring the reliability and reproducibility of results. The library is divided into individually installable backend plugins. 
 It includes `openqaoa-core` that consists of core functionalities required to run a QAOA computation on any Quantum hardware or simulator. Further it includes `openqaoa-qiskit`, `openqaoa-pyquil`, `openqaoa-azure`, `openqaoa-braket` for running
 QAOA on devices accessible through the respective cloud providers. Installing any plugin through PyPI ships `openqaoa-core` along with it to provide the complete set of tools required to run QAOA computations.
-Users can also easily install all OpenQAOA plugins available by installing `openqaoa` through PyPI. The `openqaoa` metapackage easily manages all OpenQAOA plugins and their dependencies. The `openqaoa` metapackage also provides users
-with the option of installing the entire OpenQAOA in developer mode. This allows users to easily contribute to the OpenQAOA project.
+Users can also easily install all OpenQAOA plugins available by installing `openqaoa` through PyPI. The `openqaoa` metapackage easily manages all OpenQAOA plugins and their dependencies. Users can also install `openqaoa` in developer mode by git cloning the repository and executing the install Makefile,
+instructions for which are provided in the installation section below. This allows users to easily contribute to the OpenQAOA project.
 
 
 Features
