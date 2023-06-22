@@ -8,6 +8,7 @@ You can install the latest version of openqaoa-braket directly from PyPi. We rec
 **NOTE:** Installing ``openqaoa-braket`` installs ``openqaoa-core`` by default
 
 .. code-block:: bash
+   
    pip install openqaoa-braket
 
 Installation instructions for Developers

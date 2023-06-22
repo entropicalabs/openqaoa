@@ -9,6 +9,7 @@ Install via PyPI
 You can install the latest version of openqaoa-core directly from PyPi. We recommend creating a virtual environment with ``python>=3.8`` first and then simply pip install openqaoa-core with the following command.
 
 .. code-block:: bash
+   
    pip install openqaoa-core
 
 

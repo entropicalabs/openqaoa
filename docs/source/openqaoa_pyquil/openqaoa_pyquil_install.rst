@@ -1,5 +1,5 @@
 OpenQAOA Pyquil Installation
-==========================
+============================
 
 Install via PyPI
 ----------------
@@ -9,6 +9,7 @@ You can install the latest version of openqaoa-pyquil directly from PyPi. We rec
 **NOTE:** Installing ``openqaoa-pyquil`` installs ``openqaoa-core`` by default
 
 .. code-block:: bash
+   
    pip install openqaoa-pyquil
 
 Installation instructions for Developers

@@ -1,5 +1,5 @@
 OpenQAOA Azure Installation
-==========================
+===========================
 
 Install via PyPI
 ----------------
@@ -9,6 +9,7 @@ You can install the latest version of openqaoa-azure directly from PyPi. We reco
 **NOTE:** Installing ``openqaoa-azure`` installs ``openqaoa-core`` and ``openqaoa-qiskit`` by default
 
 .. code-block:: bash
+   
    pip install openqaoa-azure
 
 Installation instructions for Developers

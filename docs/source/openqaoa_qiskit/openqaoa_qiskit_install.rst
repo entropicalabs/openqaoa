@@ -9,6 +9,7 @@ You can install the latest version of openqaoa-qiskit directly from PyPi. We rec
 **NOTE:** Installing ``openqaoa-qiskit`` installs ``openqaoa-core`` by default
 
 .. code-block:: bash
+   
    pip install openqaoa-qiskit
 
 Installation instructions for Developers
