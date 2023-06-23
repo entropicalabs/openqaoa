@@ -59,7 +59,7 @@ extensions = [
 ]
 
 autodoc_mock_imports = [
-    "openqaoa",
+    "openqaoa.backends.plugin_finder",
     "botocore",
     "qiskit_aer",
     "pyquil",
