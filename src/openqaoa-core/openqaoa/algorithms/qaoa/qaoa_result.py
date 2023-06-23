@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from ...qaoa_components import Hamiltonian
+from ...optimizers.logger_vqa import Logger
 from ...utilities import (
     qaoa_probabilities,
     bitstring_energy,
@@ -51,7 +52,7 @@ class QAOAResult:
 
     def __init__(
         self,
-        log: "Logger",
+        log: Logger,
         method: Type[str],
         cost_hamiltonian: Type[Hamiltonian],
         type_backend: Type[QAOABaseBackend],
