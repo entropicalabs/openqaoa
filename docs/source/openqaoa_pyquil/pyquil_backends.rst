@@ -10,7 +10,7 @@ Pyquil QCS Devices and QVMs
     :inherited-members:
 
 Pyquil Local Backends 
---------------
+---------------------
 
 .. autoclass:: openqaoa_pyquil.backends.qaoa_pyquil_sim.QAOAPyQuilWavefunctionSimulatorBackend
     :members:
