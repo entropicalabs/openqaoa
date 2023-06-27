@@ -130,7 +130,7 @@ class SK(Problem):
         else:
             return {var.name: model.solution.get_value(var) for var in model.iter_binary_vars()}
 
-    def plot_solution(self, solution):
+    def plot_solution(self, solution, ax=None):
         """
         Plots the solution of the SK problem.
 
@@ -145,7 +145,10 @@ class SK(Problem):
             The graph visualization of the solution.
         """
         colors = ["#5EB1EB", "#F29D55"]
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = None
         pos = nx.circular_layout(self.G)
         nx.draw(
             self.G,
