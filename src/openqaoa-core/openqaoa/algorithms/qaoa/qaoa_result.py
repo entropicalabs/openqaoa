@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Type, List, Union
+from typing import Type, List, Union, TYPE_CHECKING
 
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
 
 from ...qaoa_components import Hamiltonian
-from ...optimizers.logger_vqa import Logger
+if TYPE_CHECKING:
+    from ...optimizers.logger_vqa import Logger
 from ...utilities import (
     qaoa_probabilities,
     bitstring_energy,
