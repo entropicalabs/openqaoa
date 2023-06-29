@@ -29,9 +29,9 @@ Alternatively, you can install OpenQAOA manually from the GitHub repository by f
 ```
 git clone https://github.com/entropicalabs/openqaoa.git
 ```
-2. After cloning the repository `cd openqaoa` and pip install the package as follows 
+2. After cloning the repository `cd openqaoa` and pip install the package with instructions from the Makefile as follows
 ```
-pip install .
+make local-install
 ```
 
 Installation instructions for Developers
