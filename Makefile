@@ -1,6 +1,14 @@
 #This file stores instructions to install openqaoa in developer mode.
 #Currently can only install all packages together for developer mode.
 
+.PHONY: local-install
+	pip install ./src/openqaoa-core
+	pip install ./src/openqaoa-qiskit
+	pip install ./src/openqaoa-pyquil
+	pip install ./src/openqaoa-braket
+	pip install ./src/openqaoa-azure
+	pip install .
+
 .PHONY: dev-install
 dev-install:
 	pip install -e ./src/openqaoa-core
