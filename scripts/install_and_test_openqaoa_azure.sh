@@ -17,7 +17,3 @@ for entry in "${modulesList[@]}"; do
     pytest -n auto tests
     cd "../.."
 done
-
-for entry in "${modulesList[@]}"; do
-    pip uninstall -y $entry
-done
