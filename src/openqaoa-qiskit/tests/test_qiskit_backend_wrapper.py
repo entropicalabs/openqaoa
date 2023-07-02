@@ -41,12 +41,6 @@ def get_params():
     return qaoa_descriptor, variational_params_std
 
 
-class TestingBaseWrapper(unittest.TestCase):
-    """
-    These tests check that the methods of the wrapper around the backend are working properly.
-    """
-
-
 class TestingSPAMTwirlingWrapper(unittest.TestCase):
     """
     These tests check methods of the SPAM Twirling wrapper.
@@ -84,7 +78,8 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             n_batches=1,
             calibration_data_location=self.calibration_data_location,
         )
-
+    
+    @pytest.mark.qpu
     def test_wrap_any_backend(self):
         """
         Testing if the wrapper is backend-agnostic by checking if it can take
