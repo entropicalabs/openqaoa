@@ -1,3 +1,15 @@
+## Version v0.1.3 (April 21st, 2023)
+This version brings a set of new features in OpenQAOA
+
+## What's Changed
+* QAOA workflows now support `evaluate_circuit` which lets compute the energy and measurement outcomes for a QAOA circuit for a specified set of parameter values. 
+* The library design-wise is moving closer to modularization goal where each hardware provider backend can be installed independently (this feature is expected to fully functional in the next release)
+* OpenQAOA v0.1.3 brings in a list of new optimization problems contributed by @alemonbar, including:
+   * Maximal Independent Set (MIS)
+   * Vehicle Routing Problem (VRP)
+   * Bin Packing problem
+   * Portfolio Optimization problem
+
 ## Version v0.1.2 (March 23rd, 2023)
 
 There was a small bug in the code that resulted in qiskit circuit not compiling, resulting in erros on QPUs
