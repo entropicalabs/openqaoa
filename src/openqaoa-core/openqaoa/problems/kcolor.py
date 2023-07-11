@@ -10,7 +10,9 @@ from .qubo import QUBO
 
 class KColor(Problem):
     """
-    Creates an instance of the k-color problem.
+    Creates an instance of the k-color problem. It determines if given a set of
+    colors, a graph can be colored such that no nodes connected by an edge share
+    the same color.
     https://en.wikipedia.org/wiki/Graph_coloring
     Parameters
     ----------
@@ -88,15 +90,14 @@ class KColor(Problem):
         # Constraint: Each vertex must be assigned to exactly one color
         for vertex in self.G:
             mdl.add_constraint(mdl.sum(x[(vertex, color)] for color in range(self.k)) == 1)
-        
-        cost = mdl.sum(x[(vertex, color)] for vertex in self.G for color in range(self.k))
+        cost = 0 
         # Constraint: Adjacent vertices cannot have the same color
         for vertex1 in self.G:
             for vertex2 in self.G:
                 if vertex2 in self.G[vertex1]:
                     for color in range(self.k):
                         cost += self.penalty * x[(vertex1, color)] * x[(vertex2, color)]
-        # Objective function: Minimize the number of colors used
+        # Objective function: Minimize the cost, finding a valid solution.
         mdl.minimize(cost)
         return mdl
 
