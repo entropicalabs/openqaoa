@@ -1,7 +1,7 @@
 {
   "header": {
-    "atomic_id": "386997de-0e90-4e1c-8236-cd722801615f",
-    "experiment_id": "ce2f83d7-4000-4507-9e98-96e3f9afd55e",
+    "atomic_id": "d32eb15f-8b8c-4373-a24e-a2c38196d82f",
+    "experiment_id": "8d778c1a-a942-4997-bf69-13bd552f0ec6",
     "project_id": null,
     "algorithm": "rqaoa",
     "description": null,
@@ -227,6 +227,7 @@
         "initial_qubit_mapping": null,
         "seed_simulator": null,
         "qiskit_simulation_method": null,
+        "qiskit_optimization_level": null,
         "active_reset": null,
         "rewiring": null,
         "disable_qubit_rewiring": null

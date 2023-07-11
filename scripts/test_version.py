@@ -22,6 +22,9 @@ for each_file in os.listdir("src"):
 version_check = [
     each_item == version_dict["openqaoa-core"] for each_item in version_dict.values()
 ]
+with open("_version.py") as f:
+    meta_version = f.readlines()[-1].split()[-1].strip("\"'")
+version_check.append(meta_version == version_dict["openqaoa-core"])
 for each_check in version_check:
     if not each_check:
         raise Exception(

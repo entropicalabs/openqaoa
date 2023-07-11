@@ -11,7 +11,7 @@ from openqaoa import QAOA, RQAOA
 from openqaoa.problems import NumberPartition
 from openqaoa.algorithms import QAOAResult, RQAOAResult
 from openqaoa.algorithms.baseworkflow import Workflow
-from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid
+from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid, ground_state_hamiltonian
 from openqaoa.algorithms.workflow_properties import (
     BackendProperties,
     ClassicalOptimizer,
@@ -172,6 +172,49 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(
             q.qaoa_descriptor.cost_hamiltonian.expression, test_hamil.expression
         )
+
+    def test_qaoa_brute_force(self):
+        """
+        test the brute_force method
+        """
+        # problem
+        problem = MinimumVertexCover.random_instance(
+            n_nodes=6, edge_probability=0.8
+        ).qubo
+
+        # check if the brute force method gets the same results as the ground state hamiltonian method
+        qaoa = QAOA()
+        qaoa.compile(problem)
+        qaoa.solve_brute_force()
+        min_energy_bf, config_strings_bf = qaoa.brute_force_results["energy"], qaoa.brute_force_results["configuration"]
+        (min_energy_gsh, config_strings_ghs) = ground_state_hamiltonian(qaoa.cost_hamil)
+        assert (
+            min_energy_bf == min_energy_gsh and config_strings_bf == config_strings_ghs
+        ), f"The energy and config strings of brute forcing should match the ground state hamiltonian method results"
+
+        # Check if an uncompiled QAOA raises an error when calling its brute_force method
+        qaoa_uncompiled = QAOA()
+        error = False
+        try:
+            qaoa_uncompiled.brute_force()
+        except Exception:
+            error = True
+        assert(error), f"An uncompiled QAOA should raise an error when brute-forcing it"
+
+        # Check if bounded=True disallows computation for more than 25 qubits
+        qaoa = QAOA()
+        large_problem = MaximumCut.random_instance(
+            n_nodes=26, edge_probability=1
+        ).qubo
+        qaoa.compile(large_problem)
+        error = False
+        try:
+            qaoa.solve_brute_force()
+        except:
+            error = True
+        assert(error), f"Brute forcing should not compute for large problems (> 25 qubits) when bounded=True"
+
+    
 
     def test_set_circuit_properties_fourier_q(self):
         """

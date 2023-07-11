@@ -7,7 +7,7 @@ modulesList=("openqaoa-core")
 for entry in "${modulesList[@]}"; do
     echo "processing src/$entry/setup.py"
     cd src/$entry
-    pip install .
+    pip install .[tests]
     cd "../.."
 done
 
@@ -16,8 +16,4 @@ for entry in "${modulesList[@]}"; do
     cd src/$entry
     pytest -n auto tests
     cd "../.."
-done
-
-for entry in "${modulesList[@]}"; do
-    pip uninstall -y $entry
 done

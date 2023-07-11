@@ -1,14 +1,18 @@
 from __future__ import annotations
 from abc import ABC, abstractproperty
-from typing import List, Union, Tuple, Any, Callable, Iterable, Optional
+from typing import List, Union, Tuple, Any, Callable, Iterable, Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from ...backends.basedevice import DeviceBase
 import numpy as np
 from enum import Enum
 import copy
 
 from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
-from .gatemap import RotationGateMap, SWAPGateMap
+from .gatemap import RotationGateMap, SWAPGateMap, GateMap
 from .gatemaplabel import GateMapType
+
+
 
 
 def _is_iterable_empty(in_iterable):
@@ -303,8 +307,8 @@ class QAOADescriptor(AnsatzDescriptor):
 
     @staticmethod
     def block_setter(
-        input_object: Union[List["RotationGateMap"], Hamiltonian], block_type: Enum
-    ) -> List["RotationGateMap"]:
+        input_object: Union[List[RotationGateMap], Hamiltonian], block_type: Enum
+    ) -> List[RotationGateMap]:
         """
         Converts a Hamiltonian Object into a List of RotationGateMap Objects with
         the appropriate block_type and sequence assigned to the GateLabel
@@ -349,8 +353,8 @@ class QAOADescriptor(AnsatzDescriptor):
 
     @staticmethod
     def set_block_sequence(
-        input_gatemap_list: List["RotationGateMap"],
-    ) -> List["RotationGateMap"]:
+        input_gatemap_list: List[RotationGateMap],
+    ) -> List[RotationGateMap]:
         """
         This method assigns the sequence attribute to all RotationGateMap objects in the list.
         The sequence of the GateMaps are implied based on their positions in the list.
@@ -404,10 +408,10 @@ class QAOADescriptor(AnsatzDescriptor):
 
     @staticmethod
     def route_gates_list(
-        gates_to_route: List["GateMap"],
+        gates_to_route: List[GateMap],
         device: "DeviceBase",
         routing_function: Callable,
-    ) -> List["GateMap"]:
+    ) -> List[GateMap]:
         """
         Apply qubit routing to the abstract circuit gate list
         based on device information

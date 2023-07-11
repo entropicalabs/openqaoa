@@ -7,25 +7,16 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 # Dev package will share versions with the core in it.
-with open("src/openqaoa-core/openqaoa/_version.py") as f:
+with open("_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [f"{each_folder_name}=={version}" for each_folder_name in os.listdir("src") if "openqaoa-" in each_folder_name]
-
-requirements = [
-    f'openqaoa-core @ file://localhost/{current_path}/src/openqaoa-core',
-    f'openqaoa-qiskit @ file://localhost/{current_path}/src/openqaoa-qiskit',
-    f'openqaoa-braket @ file://localhost/{current_path}/src/openqaoa-braket',
-    f'openqaoa-pyquil @ file://localhost/{current_path}/src/openqaoa-pyquil',
-    f'openqaoa-azure @ file://localhost/{current_path}/src/openqaoa-azure'
-]
     
 setup(
     name="openqaoa",
     python_requires=">=3.8, <3.11",
     version=version,
     author="Entropica Labs",
-    packages=find_namespace_packages(where=".", exclude=["dist", "build"]),
     entry_points={"openqaoa.plugins": []},
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
