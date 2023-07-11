@@ -5,6 +5,9 @@ from collections import Counter
 from typing import List, Union, Tuple
 from sympy import Symbol
 import numpy as np
+from scipy.sparse import kron as sparse_kron
+from functools import reduce
+from scipy.sparse import csr_matrix
 
 Identity = np.array(([1, 0], [0, 1]), dtype=complex)
 PauliX = np.array(([0, 1], [1, 0]), dtype=complex)
@@ -683,3 +686,45 @@ class Hamiltonian:
                 raise ValueError("Hamiltonian only supports Linear and Quadratic terms")
 
         return cls(pauli_ops, pauli_coeffs, constant)
+
+    @property
+    def as_matrix(self):
+        """
+        Build sparse matrix of Hamiltonian. Note this includes self.constant value.
+
+        Returns
+        -------
+        H_mat:
+            sparse matrix of Hamiltonian.
+        """
+
+        if self.n_qubits>20:
+            raise ValueError('number of qubits exceeds maximum of 20')
+
+        p_mat_dict = {'X': csr_matrix([[0, 1],
+                                       [1, 0]]),
+                      'Y': csr_matrix([[0., -1j],
+                                       [1j, 0.]]),
+                      'Z': csr_matrix([[1, 0],
+                                       [0, -1]]),
+                      'I': csr_matrix([[1, 0], [0, 1]])}
+
+        converter = lambda s: p_mat_dict[s]
+
+        # vectorized function to map single qubit pauli strings to sparse matrix
+        vfunc = np.vectorize(converter)
+
+        base = np.array(['I' for _ in range(self.n_qubits)])
+
+        H_mat = reduce(sparse_kron, vfunc(base)) * self.constant
+        for P, coeff in zip(self.terms, self.coeffs):
+            temp = base.copy()
+
+            # replace single qubit pauli I in base term
+            # with single qubit pauli operators according to qubit_indices and pauli_strs in P
+            temp[np.array(P.qubit_indices)] = np.array(list(P.pauli_str))
+
+            # take kronecker product of sparse list of matrices
+            H_mat += reduce(sparse_kron, vfunc(temp)) * coeff
+
+        return H_mat
