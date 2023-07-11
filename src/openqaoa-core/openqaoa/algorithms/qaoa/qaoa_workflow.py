@@ -17,7 +17,7 @@ from ...qaoa_components import (
 from ...qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
-from ...utilities import get_mixer_hamiltonian, generate_timestamp
+from ...utilities import get_mixer_hamiltonian, generate_timestamp, ground_state_hamiltonian
 from ...optimizers.qaoa_optimizer import get_optimizer
 from ...backends.wrapper import SPAMTwirlingWrapper
 
@@ -316,6 +316,38 @@ class QAOA(Workflow):
                 )
 
         return None
+    
+    def solve_brute_force(self, bounded=True, verbose=False):
+        """
+        A method to solve the QAOA problem using brute force i.e. by 
+        evaluating the cost function at all possible bitstrings
+
+        Parameters
+        ----------
+        bounded: `bool`, optional
+            If set to True, the function will not perform computations for qubit
+            numbers above 25. If False, the user can specify any number. Defaults
+            to True.
+        verbose: `bool`, optional
+            If set to True, the function will print the results of the computation.
+            Defaults to False.
+        """
+
+        if self.compiled is False:
+            raise ValueError("Please compile the QAOA before running the brute force solver!")
+        
+        # compute the exact ground state and ground state energy of the cost hamiltonian
+        energy, configuration = ground_state_hamiltonian(self.cost_hamil, bounded=bounded)
+
+        if verbose:
+            print(f"Ground State energy: {energy}, Solution: {configuration}")
+
+        self.brute_force_results = {
+            "energy": energy,
+            "configuration": configuration,
+        }
+
+        return None
 
     def optimize(self, verbose=False):
         """
@@ -490,3 +522,4 @@ class QAOA(Workflow):
             ]["circuit_properties"]["q"]
 
         return serializable_dict
+    

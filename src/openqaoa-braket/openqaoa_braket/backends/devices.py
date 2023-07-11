@@ -145,4 +145,6 @@ class DeviceAWS(DeviceBase):
             return False
 
     def connectivity(self) -> List[List[int]]:
-        return self.backend_device.topology_graph.edges
+        aws_connectivity = self.backend_device.topology_graph.edges
+        connectivity_list = [list(edge) for edge in aws_connectivity]
+        return connectivity_list
