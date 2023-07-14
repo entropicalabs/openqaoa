@@ -100,17 +100,17 @@ class TestSK(unittest.TestCase):
         ).classical_solution()
 
         sol = {
-            "x_0": 1,
-            "x_1": 1,
-            "x_2": 0,
-            "x_3": 1,
-            "x_4": 0,
-            "x_5": 1,
-            "x_6": 0,
-            "x_7": 0,
-            "x_8": 0,
-            "x_9": 1,
-        }
+            'x_0': 1.0,
+            'x_1': 1.0,
+            'x_2': 0,
+            'x_3': 1.0,
+            'x_4': 0,
+            'x_5': 1.0,
+            'x_6': 0,
+            'x_7': 0,
+            'x_8': 0,
+            'x_9': 1.0
+            }
 
         self.assertEqual(sk_sol, sol)
 
@@ -123,17 +123,17 @@ class TestSK(unittest.TestCase):
             n_nodes=10, seed=seed
         )
         sol = {
-            "x_0": 1,
-            "x_1": 1,
-            "x_2": 0,
-            "x_3": 1,
-            "x_4": 0,
-            "x_5": 1,
-            "x_6": 0,
-            "x_7": 0,
-            "x_8": 0,
-            "x_9": 1,
-        }
+            'x_0': 1.0,
+            'x_1': 1.0,
+            'x_2': 0,
+            'x_3': 1.0,
+            'x_4': 0,
+            'x_5': 1.0,
+            'x_6': 0,
+            'x_7': 0,
+            'x_8': 0,
+            'x_9': 1.0
+            }
         fig = sk_random_prob.plot_solution(sol)
         self.assertTrue(isinstance(fig, Figure))
 
