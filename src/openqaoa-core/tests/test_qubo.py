@@ -89,8 +89,8 @@ class TestQUBO(unittest.TestCase):
             "vehicle_routing": [
                 "problem_type",
                 "G",
-                "pos",
                 "n_vehicles",
+                "pos",
                 "depot",
                 "subtours",
                 "method",
