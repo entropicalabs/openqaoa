@@ -23,5 +23,9 @@ backend_args = {
         "noise_model",
         "initial_qubit_mapping",
     ],
-    QAOAQiskitQPUBackend: ["n_shots", "initial_qubit_mapping"],
+    QAOAQiskitQPUBackend: [
+        "n_shots",
+        "initial_qubit_mapping",
+        "qiskit_optimization_level",
+    ],
 }

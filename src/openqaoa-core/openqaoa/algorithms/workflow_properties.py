@@ -209,6 +209,8 @@ class BackendProperties(WorkflowProperties):
         and the right hand side is the logical qubits
     qiskit_simulation_method: str
         Specify the simulation method to use with the `qiskit.AerSimulator`
+    qiskit_optimization_level: int, optional
+        Specify the qiskit.transpile optimization level. Choose from 0,1,2,3
     seed_simulator: int
         Specify a seed for `qiskit` simulators
     active_reset: bool
@@ -231,6 +233,7 @@ class BackendProperties(WorkflowProperties):
         noise_model=None,
         initial_qubit_mapping: Optional[Union[List[int], np.ndarray]] = None,
         qiskit_simulation_method: Optional[str] = None,
+        qiskit_optimization_level: Optional[int] = None,
         seed_simulator: Optional[int] = None,
         active_reset: Optional[bool] = None,
         rewiring: Optional[str] = None,
@@ -245,6 +248,7 @@ class BackendProperties(WorkflowProperties):
         self.initial_qubit_mapping = initial_qubit_mapping
         self.seed_simulator = seed_simulator
         self.qiskit_simulation_method = qiskit_simulation_method
+        self.qiskit_optimization_level = qiskit_optimization_level
         self.active_reset = active_reset
         self.rewiring = rewiring
         self.disable_qubit_rewiring = disable_qubit_rewiring

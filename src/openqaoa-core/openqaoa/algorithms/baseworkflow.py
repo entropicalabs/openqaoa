@@ -158,6 +158,11 @@ class Workflow(ABC):
                     "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
                 )
 
+        if not is_valid_uuid(project_id):
+            raise ValueError(
+                "The project_id is not a valid uuid, example of a valid uuid: 8353185c-b175-4eda-9628-b4e58cb0e41b"
+            )
+
         if experiment_id is not None:
             if not is_valid_uuid(experiment_id):
                 raise ValueError(
@@ -233,6 +238,8 @@ class Workflow(ABC):
                     The Qiskit noise model to be used for the simulation.
             qiskit_simulation_method: str, optional
                 The method to be used for the simulation.
+            qiskit_optimization_level: int, optional
+                The qiskit.transpile optimization level to use. Choose from 0,1,2,3
             seed_simulator: int
                 Optional argument to initialize a pseudorandom solution. Default None
             active_reset:
