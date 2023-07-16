@@ -142,7 +142,7 @@ class QAOAAWSQPUBackend(
         if self.append_state:
             parametric_circuit += self.append_state
 
-        parametric_circuit += Probability.probability(target=self.problem_reg)
+        parametric_circuit += Probability.probability()
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(
@@ -256,12 +256,13 @@ class QAOAAWSQPUBackend(
                     )
 
         # # Expose counts
-        if self.final_mapping is None:
-            final_counts = counts
-        else:
-            final_counts = permute_counts_dictionary(
-                counts, self.final_mapping[: self.problem_qubits]
-            )
+        if self.final_mapping is not None:
+            counts = permute_counts_dictionary(counts, self.final_mapping)
+
+        final_counts = {
+            key[: self.problem_qubits]: value for key, value in counts.items()
+        }
+
         self.measurement_outcomes = final_counts
         return final_counts
 
