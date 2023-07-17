@@ -376,7 +376,8 @@ class Workflow(ABC):
         if hasattr(self.device, "n_qubits"):
             if self.device.n_qubits < self.problem.n:
                 raise Exception(
-                    "There are lesser qubits on the device than the number of qubits required for the circuit."
+                    f"The number of qubits {self.problem.n} is more than the number of qubits available on the device."
+                    f"{self.device.name} features f{self.device.n_qubits} qubits"
                 )
 
         # the atomic id is generated every time that it is compiled
