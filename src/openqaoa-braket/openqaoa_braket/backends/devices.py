@@ -151,10 +151,9 @@ class DeviceAWS(DeviceBase):
         if hasattr(aws_device_properties, "topology_graph"):
             aws_device_topology = aws_device_properties.topology_gprah
             if aws_device_topology is not None:
-                aws_connectivity = aws_device_topology.edges
-                connectivity_list = [list(edge) for edge in aws_connectivity]
-                # return connectivity_list
-                self._connectivity = connectivity_list
+                self._connectivity_list = [
+                    list(edge) for edge in aws_device_topology.edges
+                ]
         # else:
         # return None
         return self._connectivity
