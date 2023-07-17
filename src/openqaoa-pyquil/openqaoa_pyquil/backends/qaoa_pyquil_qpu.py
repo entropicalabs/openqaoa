@@ -136,10 +136,10 @@ class QAOAPyQuilQPUBackend(
                 "Cannot attach a bigger circuit " "to the QAOA routine"
             )
 
-#         if self.device.n_qubits < self.n_qubits:
-#             raise Exception(
-#                 "There are lesser qubits on the device than the number of qubits required for the circuit."
-#             )
+        if self.device.n_qubits < self.n_qubits:
+            raise Exception(
+                "There are lesser qubits on the device than the number of qubits required for the circuit."
+            )
 
         self.parametric_circuit = self.parametric_qaoa_circuit
 
