@@ -259,9 +259,9 @@ class QAOAAWSQPUBackend(
         if self.final_mapping is not None:
             counts = permute_counts_dictionary(counts, self.final_mapping)
 
-        final_counts = {
-            key[: self.problem_qubits]: value for key, value in counts.items()
-        }
+        final_counts = {key[: self.problem_qubits]: 0 for key in counts.keys()}
+        for key, value in counts.items():
+            final_counts[key[: self.problem_qubits]] += value
 
         self.measurement_outcomes = final_counts
         return final_counts
