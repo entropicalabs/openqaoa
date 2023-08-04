@@ -63,6 +63,7 @@ class DeviceAWS(DeviceBase):
 
         self.provider_connected = None
         self.qpu_connected = None
+        self._connectivity = None
 
     def check_connection(self) -> bool:
         self.provider_connected = self._check_provider_connection()
@@ -144,7 +145,22 @@ class DeviceAWS(DeviceBase):
             )
             return False
 
+    @property
     def connectivity(self) -> List[List[int]]:
-        aws_connectivity = self.backend_device.topology_graph.edges
-        connectivity_list = [list(edge) for edge in aws_connectivity]
-        return connectivity_list
+        aws_device_properties = self.backend_device.properties
+        if hasattr(aws_device_properties, "topology_graph"):
+            aws_device_topology = aws_device_properties.topology_gprah
+            if aws_device_topology is not None:
+                self._connectivity = [
+                    list(edge) for edge in aws_device_topology.edges
+                ]
+        # else:
+        # return None
+        return self._connectivity
+
+    @connectivity.setter
+    def connectivity(self, value: List[List[int]]):
+        if isinstance(value, list):
+            self._connectivity = value
+        else:
+            raise TypeError("Connectivity must be a list of lists")

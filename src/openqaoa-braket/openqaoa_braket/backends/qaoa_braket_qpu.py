@@ -20,6 +20,7 @@ from openqaoa.qaoa_components import QAOADescriptor
 from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
+from openqaoa.utilities import permute_counts_dictionary
 
 
 class QAOAAWSQPUBackend(
@@ -85,9 +86,12 @@ class QAOAAWSQPUBackend(
                 else list(range(self.n_qubits))
             )
         else:
-            warnings.warn(
-                "Ignoring the initial_qubit_mapping since the routing algorithm chose one"
-            )
+            if isinstance(initial_qubit_mapping, list):
+                warnings.warn(
+                    "Ignoring the initial_qubit_mapping since the routing algorithm chose one"
+                )
+            else:
+                pass
         self.disable_qubit_rewiring = disable_qubit_rewiring
 
         if self.prepend_state:
@@ -138,7 +142,6 @@ class QAOAAWSQPUBackend(
         if self.append_state:
             parametric_circuit += self.append_state
 
-        # TODO: needs to be fixed --> measurement operations on problem qubits
         parametric_circuit += Probability.probability()
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
@@ -252,11 +255,14 @@ class QAOAAWSQPUBackend(
                         "An Error Occurred with the Task(s) sent to AWS."
                     )
 
-        final_counts = counts
-        # if self.final_mapping is not None:
-        #     final_counts = permute_counts_dictionary(final_counts,
-        #                                             self.final_mapping)
         # # Expose counts
+        if self.final_mapping is not None:
+            counts = permute_counts_dictionary(counts, self.final_mapping)
+
+        final_counts = {key[: self.problem_qubits]: 0 for key in counts.keys()}
+        for key, value in counts.items():
+            final_counts[key[: self.problem_qubits]] += value
+
         self.measurement_outcomes = final_counts
         return final_counts
 

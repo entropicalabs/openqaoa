@@ -94,6 +94,11 @@ class QAOAQiskitQPUBackend(
                 if initial_qubit_mapping is not None
                 else list(range(self.n_qubits))
             )
+        else:
+            if isinstance(initial_qubit_mapping, list):
+                warnings.warn(
+                    "Ignoring the initial_qubit_mapping since the routing algorithm chose one"
+                )
 
         if self.prepend_state:
             assert self.n_qubits >= len(prepend_state.qubits), (
