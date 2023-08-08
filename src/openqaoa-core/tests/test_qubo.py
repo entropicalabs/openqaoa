@@ -5,6 +5,7 @@ from openqaoa.problems import (
     NumberPartition,
     QUBO,
     TSP,
+    TSP_LP,
     Knapsack,
     ShortestPath,
     SlackFreeKnapsack,
@@ -25,6 +26,7 @@ class TestQUBO(unittest.TestCase):
     def __generate_random_problems(self):
         problems_random_instances = {
             "tsp": TSP.random_instance(n_cities=randint(2, 15)),
+            "tsp_lp":TSP_LP.random_instance(n_nodes=randint(2, 15)),
             "number_partition": NumberPartition.random_instance(
                 n_numbers=randint(2, 15)
             ),
@@ -68,6 +70,16 @@ class TestQUBO(unittest.TestCase):
 
         expected_keys = {
             "tsp": ["problem_type", "n_cities", "G", "A", "B"],
+            "tsp_lp": [
+                "problem_type",
+                "G",
+                "pos",
+                "n_vehicles",
+                "depot",
+                "subtours",
+                "method",
+                "penalty",
+            ],
             "number_partition": ["problem_type", "numbers", "n_numbers"],
             "maximum_cut": ["problem_type", "G"],
             "knapsack": [

@@ -1719,7 +1719,8 @@ def is_valid_uuid(uuid_to_test: str) -> bool:
 
 
 def permute_counts_dictionary(
-    counts_dictionary: dict, permutation_order: List[int]
+    counts_dictionary: dict,
+    permutation_order: List[int],
 ) -> dict:
     """Permutes the order of the qubits in the counts dictionary to the
     original order if SWAP gates were used leading to modified qubit layout.
@@ -1735,6 +1736,11 @@ def permute_counts_dictionary(
     `dict`
         The permuted counts dictionary with qubits in the original place
     """
+    counts_dict_nqubits = len(list(counts_dictionary.keys())[0])
+    assert len(permutation_order) == counts_dict_nqubits, (
+        "The number of qubits in the permutation order should be equal"
+        "to the number of qubits in the counts dictionary."
+    )
 
     # Create a mapping of original positions to final positions
     # original order always goes from 0 -> n-1
