@@ -373,6 +373,13 @@ class Workflow(ABC):
         assert isinstance(problem, QUBO), "The problem must be converted into QUBO form"
         self.problem = problem
 
+        if hasattr(self.device, "n_qubits"):
+            if self.device.n_qubits < self.problem.n:
+                raise Exception(
+                    f"The number of qubits {self.problem.n} is more than the number of qubits available on the device."
+                    f"{self.device.name} features f{self.device.n_qubits} qubits"
+                )
+
         # the atomic id is generated every time that it is compiled
         self.header["atomic_id"] = generate_uuid()
 

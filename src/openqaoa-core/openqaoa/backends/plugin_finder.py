@@ -19,8 +19,9 @@ def plugin_finder_dict() -> list:
     for each_plugin_entry_point in available_plugins:
         try:
             output_dict[each_plugin_entry_point.name] = each_plugin_entry_point.load()
-        except ModuleNotFoundError:
+        except ModuleNotFoundError as e:
             print("The {} module has not been installed.".format(each_plugin_entry_point.name))
+            print(e)
         except AttributeError:
             print("An error has occured when trying to attach the {} plugin.".format(each_plugin_entry_point.name))
     

@@ -7,7 +7,7 @@ from .maximumcut import MaximumCut
 from .minimumvertexcover import MinimumVertexCover
 from .numberpartition import NumberPartition
 from .shortestpath import ShortestPath
-from .tsp import TSP
+from .tsp import TSP, TSP_LP
 from .vehiclerouting import VRP
 from .maximalindependentset import MIS
 from .binpacking import BinPacking
@@ -37,6 +37,7 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
     problem_mapper = {
         "generic_qubo": QUBO,
         "tsp": TSP,
+        "tsp_lp": TSP_LP,
         "number_partition": NumberPartition,
         "maximum_cut": MaximumCut,
         "knapsack": Knapsack,

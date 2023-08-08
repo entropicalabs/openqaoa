@@ -127,6 +127,11 @@ class QAOAPyQuilQPUBackend(
                 if initial_qubit_mapping is not None
                 else list(range(self.n_qubits))
             )
+        else:
+            if isinstance(initial_qubit_mapping, list):
+                warnings.warn(
+                    "Ignoring the initial_qubit_mapping since the routing algorithm chose one"
+                )
 
         # self.qureg_placeholders = QubitPlaceholder.register(self.n_qubits)
         self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))
