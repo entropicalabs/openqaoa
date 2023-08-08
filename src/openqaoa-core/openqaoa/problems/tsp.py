@@ -4,6 +4,7 @@ import scipy
 
 from ..utilities import check_kwargs
 from .problem import Problem
+from .vehiclerouting import VRP
 from .qubo import QUBO
 
 
@@ -350,3 +351,113 @@ class TSP(Problem):
         # Convert to Ising equivalent since variables are in {0, 1} rather than {-1, 1}
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(n, terms, weights)
         return QUBO(n, ising_terms, ising_weights, self.problem_instance)
+
+class TSP_LP(VRP):
+    """
+    Creates an instance of the traveling salesman problem (TSP) based on the 
+    linear programming (LP) formulation. Note that the LP formulation of the TSP
+    can be seen as a particular case of the Vehicle routing problem (VRP) with one vehicle.
+    https://en.wikipedia.org/wiki/Travelling_salesman_problem
+    
+
+    Parameters
+    ----------
+    G: networkx.Graph
+        Networkx graph of the problem
+    pos: list[list]
+        position x, y of each node
+    subtours: list[list]
+        if -1 (Default value): All the possible subtours are added to the constraints. Avoid it for large instances.
+        if there are subtours that want be avoided in the solution, e.g, a 8 cities
+        TSP with an optimal solution showing subtour between nodes 4, 5, and 8. It can be
+        avoided introducing the constraint subtours=[[4,5,8]]. Additional information
+        about subtours refer to https://de.wikipedia.org/wiki/Datei:TSP_short_cycles.png
+    penalty: float
+        Constraints penalty factor. If the method is 'unbalanced' three values are needed,
+        one for the equality constraints and two for the inequality constraints.
+    method: str
+        Two available methods for the inequality constraints ["slack", "unbalanced"]
+        For 'unblanced' see https://arxiv.org/abs/2211.13914
+    Returns
+    -------
+        An instance of the TSP problem for the linear programming formulation.
+    """
+    __name__ = "tsp_lp"
+    
+    def __init__(self, G, pos, subtours, penalty, method):
+        super().__init__(G, pos, n_vehicles=1, subtours=subtours,
+                         method=method, penalty=penalty)
+    @staticmethod
+    def random_instance(**kwargs):
+        """
+        Creates a random instance of the traveling salesman problem, whose graph is
+        random.
+
+        Parameters
+        ----------
+        **kwargs:
+            Required keyword arguments are:
+            n_nodes: int
+                The number of nodes (vertices) in the graph.
+            method: str
+                method for the inequality constraints ['slack', 'unbalanced'].
+                For the unbalaced method refer to https://arxiv.org/abs/2211.13914
+                For the slack method: https://en.wikipedia.org/wiki/Slack_variable
+            subtours: list[list]
+                Manually add the subtours to be avoided
+            seed: int
+                Seed for the random problems.
+
+        Returns
+        -------
+            A random instance of the vehicle routing problem.
+        """
+        n_nodes = kwargs.get("n_nodes", 6)
+        seed = kwargs.get("seed", None)
+        method = kwargs.get("method", "slack")
+        if method == "slack":
+            penalty = kwargs.get("penalty", 4)
+        elif method == "unbalanced":
+            penalty = kwargs.get("penalty", [4, 1, 1])
+        else:
+            raise ValueError(f"The method '{method}' is not valid.")
+        subtours = kwargs.get("subtours", -1)
+        np.random.seed(seed)
+        G = nx.Graph()
+        G.add_nodes_from(range(n_nodes))
+        pos = [[0, 0]]
+        pos += [list(2 * np.random.rand(2) - 1) for _ in range(n_nodes - 1)]
+        for i in range(n_nodes - 1):
+            for j in range(i + 1, n_nodes):
+                r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
+                G.add_weighted_edges_from([(i, j, r)])
+
+        return TSP_LP(G, pos, subtours=subtours, method=method, penalty=penalty)
+
+    def get_distance(self, sol):
+        """
+        Get the TSP solution distance
+
+        Parameters
+        ----------
+        sol : str, dict
+            Solution of the TSP problem.
+
+        Returns
+        -------
+        total_distance : float
+            Total distance of the current solution.
+
+        """
+        cities = self.G.number_of_nodes()
+        if isinstance(sol, str):
+            solution = {}
+            for n, var in enumerate(self.docplex_model.iter_binary_vars()):
+                solution[var.name] = int(sol[n])
+            sol = solution
+        total_distance = 0
+        for i in range(cities):
+            for j in range(i+1, cities):
+                if sol[f"x_{i}_{j}"]:
+                    total_distance += self.G.edges[i, j]["weight"]
+        return total_distance

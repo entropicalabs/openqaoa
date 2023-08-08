@@ -2,6 +2,7 @@
 #Currently can only install all packages together for developer mode.
 
 .PHONY: local-install
+local-install:
 	pip install ./src/openqaoa-core
 	pip install ./src/openqaoa-qiskit
 	pip install ./src/openqaoa-pyquil
