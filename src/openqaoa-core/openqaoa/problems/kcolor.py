@@ -169,17 +169,14 @@ class KColor(Problem):
         """
         if isinstance(solution, str):
             sol = {}
-            for vertex, color in solution:
-                sol[vertex] = color
+            for n, var in enumerate(self.docplex_model.iter_binary_vars()):
+                sol[var.name] = int(solution[n])
             solution = sol
 
         if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = None
+            _ , ax = plt.subplots()
 
         colors = colormaps["jet"] if colors is None else colors
-        print([(col+1)/(self.k+1) for vertex in self.G for col in range(self.k) if solution[f"x_{vertex}_{col}"] == 1])
         pos = nx.circular_layout(self.G)
         nx.draw(
             self.G,
@@ -191,4 +188,3 @@ class KColor(Problem):
             alpha=0.85,
             **{"edgecolors":"black"}
         )
-        return fig
