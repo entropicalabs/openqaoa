@@ -6,6 +6,7 @@ import itertools
 import copy
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
+import warnings
 
 from .problem import Problem
 from .converters import FromDocplex2IsingModel
@@ -289,8 +290,7 @@ class VRP(Problem):
                 )
 
         if self.subtours == -1:
-            # When subtours are not added, by default all the possible subtours are added.
-            # However, it is really costly for large instances (above 10 nodes)
+            eq_const = mdl.number_of_constraints
             list_subtours = [[i for i in range(num_nodes) if i != self.depot]]
             for nodes in list_subtours:  # costly for large instances
                 for i in range(3, num_nodes - 2 * self.n_vehicles):
@@ -307,6 +307,11 @@ class VRP(Problem):
                             )
                             <= n_subtour - 1
                         )
+
+            if num_nodes >= 10:
+                warnings.warn(
+                    f"All the possible subtour constraints are added. The number of inequality constraints is {mdl.number_of_constraints - eq_const}. Consider reducing the number of subtour constraints."
+                                        )
         # Subtour constraints if any
         elif isinstance(self.subtours, list):
             list_subtours = self.subtours
@@ -458,7 +463,7 @@ class VRP(Problem):
         return {"paths": paths, "subtours": subtours}
 
     def plot_solution(
-        self, solution: Union[dict, str], ax=None, edge_width=4, colors=None
+        self, solution: Union[dict, str], ax=None, edge_width:float=4, colors: list=None
     ):
         """
         A visualization method for the vehicle routing problem solution.
@@ -468,6 +473,10 @@ class VRP(Problem):
             The solution of the specific vehicle routing problem as a string or dictionary.
         ax : matplotlib axes, optional
             The default is None.
+        edge_width: float, optional
+            Edges width, default is 4
+        colors: list
+            List of colors of the different vehicles' route. The default is None
         Returns
         -------
         fig : matplotlib.pyplot.Figure()
