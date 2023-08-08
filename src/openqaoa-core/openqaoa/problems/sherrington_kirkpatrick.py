@@ -164,5 +164,3 @@ class SK(Problem):
         ax.plot([], [], color=colors[1], label=r"$S_{+1}$", marker="o", linewidth=0)
         ax.legend()
         return fig
-
-
