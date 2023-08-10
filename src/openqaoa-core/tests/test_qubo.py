@@ -71,8 +71,8 @@ class TestQUBO(unittest.TestCase):
             "tsp_lp": [
                 "problem_type",
                 "G",
-                "pos",
                 "n_vehicles",
+                "pos",
                 "depot",
                 "subtours",
                 "method",
