@@ -175,9 +175,10 @@ class TestKColor(unittest.TestCase):
                                                     k=k,
                                                     seed=seed)
         sol = kcolor_random_prob.classical_solution()
-        fig = kcolor_random_prob.plot_solution(sol)
+        fig, ax = plt.subplots()
+        kcolor_random_prob.plot_solution(sol, ax=ax)
     
-        self.assertTrue(isinstance(fig, plt.Figure))
+        self.assertTrue(isinstance(ax, plt.Axes))
 
 
 if __name__ == "__main__":
