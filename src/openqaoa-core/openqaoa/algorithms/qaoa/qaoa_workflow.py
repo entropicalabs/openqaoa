@@ -402,7 +402,7 @@ class QAOA(Workflow):
         # Check the type of the input parameters and save them as a
         # QAOAVariationalBaseParams object at the variable `params_obj`
 
-        # if the parameters are passed as a dictionary we copy and update the variational parameters of the QAOA object
+            # if the parameters are passed as a dictionary we copy and update the variational parameters of the QAOA object
         if isinstance(params, dict):
             params_obj = deepcopy(self.variate_params)
             # we check that the dictionary contains all the parameters of the QAOA object that are not empty
@@ -450,6 +450,20 @@ class QAOA(Workflow):
         # if the backend is the analytical simulator, we just return the expectation value of the cost Hamiltonian
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             output_dict.update({"cost": self.backend.expectation(params_obj)[0]})
+        # if the workflow implements SPAM Twirling, uncertainty is not implemented
+        elif isinstance(self.backend, SPAMTwirlingWrapper):
+            cost = self.backend.expectation(params_obj)
+            measurement_results = (
+                self.backend.measurement_outcomes
+                if isinstance(self.backend.measurement_outcomes, dict)
+                else self.backend.measurement_outcomes.tolist()
+            )
+            output_dict.update(
+                {
+                    "cost": cost,
+                    "measurement_results": measurement_results,
+                }
+            )
 
         else:
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
