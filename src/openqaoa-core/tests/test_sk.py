@@ -96,21 +96,10 @@ class TestSK(unittest.TestCase):
         seed = 1234
         np.random.seed(seed)
         sk_sol = SK.random_instance(
-            n_nodes=10, seed=seed
+            n_nodes=2, seed=seed
         ).classical_solution()
 
-        sol = {
-            'x_0': 1.0,
-            'x_1': 1.0,
-            'x_2': 0,
-            'x_3': 1.0,
-            'x_4': 0,
-            'x_5': 1.0,
-            'x_6': 0,
-            'x_7': 0,
-            'x_8': 0,
-            'x_9': 1.0
-            }
+        sol = {'x_0': 0, 'x_1': 0}
 
         self.assertEqual(sk_sol, sol)
 

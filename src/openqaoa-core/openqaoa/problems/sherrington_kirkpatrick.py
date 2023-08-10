@@ -122,8 +122,8 @@ class SK(Problem):
         """
         model = self.docplex_model
         model.solve()
-        status = model.get_solve_status().name
-        if status != 'OPTIMAL_SOLUTION':
+        status = model.solve_details.status
+        if status != 'integer optimal solution':
             print(status) 
         if string:
             return "".join(str(round(model.solution.get_value(var))) for var in model.iter_binary_vars())
