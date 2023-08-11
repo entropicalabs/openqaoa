@@ -450,7 +450,8 @@ class QAOA(Workflow):
         # if the backend is the analytical simulator, we just return the expectation value of the cost Hamiltonian
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             output_dict.update({"cost": self.backend.expectation(params_obj)[0]})
-        # if the workflow implements SPAM Twirling, uncertainty is not implemented
+        # if the workflow implements SPAM Twirling, 
+        # we just return the expectation value of the cost Hamiltonian and measurement outcomes
         elif isinstance(self.backend, SPAMTwirlingWrapper):
             cost = self.backend.expectation(params_obj)
             measurement_results = (
