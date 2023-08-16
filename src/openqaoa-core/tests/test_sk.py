@@ -105,7 +105,7 @@ class TestSK(unittest.TestCase):
 
     def test_sk_plot(self):
         """Test SK random instance method"""
-        from matplotlib.pyplot import Figure
+        import matplotlib.pyplot as plt
 
         seed = 1234
         sk_random_prob = SK.random_instance(
@@ -123,8 +123,10 @@ class TestSK(unittest.TestCase):
             'x_8': 0,
             'x_9': 1.0
             }
-        fig = sk_random_prob.plot_solution(sol)
-        self.assertTrue(isinstance(fig, Figure))
+        
+        fig, ax = plt.subplots()
+        sk_random_prob.plot_solution(sol, ax=ax)
+        self.assertTrue(isinstance(ax, plt.Axes))
 
 
 if __name__ == "__main__":
