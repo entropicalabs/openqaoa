@@ -1,31 +1,35 @@
-from setuptools import setup
-import os
+from setuptools import setup, find_packages
+from os import getcwd
 
-current_path = os.getcwd()
+current_path = getcwd()
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-# Dev package will share versions with the core in it.
-with open("_version.py") as f:
+with open("openqaoa_qir/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    f"{each_folder_name}=={version}"
-    for each_folder_name in os.listdir("src")
-    if "openqaoa-" in each_folder_name
+    "openqaoa-core=={}".format(version),
+    "openqaoa-azure=={}".format(version),
 ]
 
+add_requirements = open("requirements.txt").readlines()
+add_requirements = [r.strip() for r in add_requirements]
+
+requirements.extend(add_requirements)
+
 setup(
-    name="openqaoa",
+    name="openqaoa-qir",
     python_requires=">=3.8, <3.11",
     version=version,
     author="Entropica Labs",
-    entry_points={"openqaoa.plugins": []},
+    packages=find_packages(where="."),
+    entry_points={"openqaoa.plugins": ["qir = openqaoa_qir.backend_config"]},
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",
-    description="OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators",
+    description="QIR Plug-in for OpenQAOA",
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
