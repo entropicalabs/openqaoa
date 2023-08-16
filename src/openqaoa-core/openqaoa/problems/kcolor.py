@@ -62,6 +62,8 @@ class KColor(Problem):
             The number of nodes (vertices) in the graph.
         edge_probability: float
             The probability with which an edge is added to the graph.
+        k: int
+            Maximum number of colors.
         seed: int, optional
             Random seed for reproducibility.
         penalty: Union(int, float) Optional
