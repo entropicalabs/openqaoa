@@ -26,8 +26,37 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
+        
+    - name: Install OpenQAOA-Core
+      run: |
+        pip install openqaoa-core
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+        
+    
+    - name: Install OpenQAOA-Qiskit
+      run: |
+        pip install openqaoa-qiskit
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+        
+    
+    - name: Install OpenQAOA-Pyquil
+      run: |
+        pip install openqaoa-pyquil
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+        
+    
+    - name: Install OpenQAOA-Braket
+      run: |
+        pip install openqaoa-braket
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+        
+    
+    - name: Install OpenQAOA-Azure
+      run: |
+        pip install openqaoa-azure
+        python -c 'from openqaoa._version import __version__; print(__version__)'
 
-    - name: Install OpenQAOA
+    - name: Install OpenQAOA (Full)
       run: |
         pip install openqaoa
         python -c 'from openqaoa._version import __version__; print(__version__)'

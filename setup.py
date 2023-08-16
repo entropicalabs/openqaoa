@@ -1,14 +1,16 @@
 from setuptools import setup, find_namespace_packages
-from os import getcwd
+import os
 
-current_path = getcwd()
+current_path = os.getcwd()
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("src/openqaoa-core/_version.py") as f:
+# Dev package will share versions with the core in it.
+with open("_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
+<<<<<<< HEAD
 requirements = [
     "amazon-braket-sdk>=1.23.0",
     "pandas>=1.3.5",
@@ -76,11 +78,16 @@ for each_package_name in packages_import:
             )
             continue
 
+=======
+requirements = [f"{each_folder_name}=={version}" for each_folder_name in os.listdir("src") if "openqaoa-" in each_folder_name]
+    
+>>>>>>> dev
 setup(
     name="openqaoa",
     python_requires=">=3.8, <3.11",
     version=version,
     author="Entropica Labs",
+<<<<<<< HEAD
     packages=updated_packages,
     package_dir={
         "": "src",
@@ -100,6 +107,9 @@ setup(
             "ir = openqaoa_ir.config",
         ]
     },
+=======
+    entry_points={"openqaoa.plugins": []},
+>>>>>>> dev
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",
@@ -113,9 +123,4 @@ setup(
         "Operating System :: OS Independent",
     ],
     keywords="quantum optimisation SDK",
-    extras_require={
-        "docs": requirements_docs,
-        "tests": requirements_test,
-        "all": requirements_docs + requirements_test,
-    },
 )

@@ -10,16 +10,9 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    if : github.event.pull_request.draft == false
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        python: [3.8]  
-    # The type of runner that the job will run on
-    runs-on:  ${{ matrix.os }}
+  test-dev:
+    runs-on: ubuntu-latest
+    if : ${{ github.event.pull_request.head.repo.fork == false }} # runs only when fork==false
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -30,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python }}
+          python-version: 3.8
       - name: Log in with Azure
         uses: azure/login@v1
         with:
@@ -41,7 +34,7 @@ jobs:
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          pip install .[tests]
+          make dev-install-tests
           pip install ipykernel
       - name: Setup IBMQ account
         env:
@@ -49,7 +42,7 @@ jobs:
         run: |
           IBMQ_TOKEN=$IBMQ_TOKEN
           source env/bin/activate
-          python -c'from qiskit import IBMQ; import os; IBMQ.save_account(os.environ.get("IBMQ_TOKEN"))'
+          python -c'from qiskit_ibm_provider import IBMProvider; import os; IBMProvider.save_account(os.environ.get("IBMQ_TOKEN"))'
       - name: Setup AWS
         env:
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }} 
@@ -70,8 +63,7 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          pytest tests/ -v -m '(not qpu or sim)' --cov --cov-report=xml:coverage.xml
-          
+          pytest tests/ src/*/tests -m 'not (qpu or sim)' --cov -n auto
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
         with:
@@ -79,8 +71,8 @@ jobs:
           files: ./coverage.xml
 
   docs:
-    if : github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    if : github.event.pull_request.draft == false &&  github.event.pull_request.head.repo.fork == false
     steps:
       - name: Check out openqaoa
         uses: actions/checkout@v3
@@ -94,7 +86,7 @@ jobs:
       - name: Install OpenQAOA
         run: |
           python -m pip install --upgrade pip
-          pip install .[docs]
+          make dev-install-docs
               
       - name: Install qvm
         run: |

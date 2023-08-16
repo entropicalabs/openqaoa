@@ -25,12 +25,17 @@ sphinx:
 #    - pdf
 
 # Optionally set the version of Python and requirements required to build your docs
-# python:
-#    version: 3.8
-#    install:
-#    - method: pip
-#      path: .
-
 python:
   install:
-    - requirements: docs/requirements.txt
+    - method: pip
+      path: ./src/openqaoa-core
+      extra_requirements:
+        - docs
+    - method: pip
+      path: ./src/openqaoa-qiskit
+    - method: pip
+      path: ./src/openqaoa-pyquil
+    - method: pip
+      path: ./src/openqaoa-azure
+    - method: pip
+      path: ./src/openqaoa-braket

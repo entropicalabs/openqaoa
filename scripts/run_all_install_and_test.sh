@@ -1,0 +1,8 @@
+set -e
+
+scripts/install_and_test_openqaoa_core.sh
+scripts/install_and_test_openqaoa_qiskit.sh
+scripts/install_and_test_openqaoa_pyquil.sh
+scripts/install_and_test_openqaoa_braket.sh
+scripts/install_and_test_openqaoa_azure.sh
+scripts/install_and_test_openqaoa_dev.sh
