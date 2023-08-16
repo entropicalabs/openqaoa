@@ -130,7 +130,7 @@ class SK(Problem):
         else:
             return {var.name: model.solution.get_value(var) for var in model.iter_binary_vars()}
 
-    def plot_solution(self, solution, ax=None):
+    def plot_solution(self, solution:Union[str, dict], ax=None):
         """
         Plots the solution of the SK problem.
 
@@ -145,10 +145,14 @@ class SK(Problem):
             The graph visualization of the solution.
         """
         colors = ["#5EB1EB", "#F29D55"]
+        if isinstance(solution, str):
+            sol = {}
+            for n, var in enumerate(self.docplex_model.iter_binary_vars()):
+                sol[var.name] = int(solution[n])
+            solution = sol
         if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = None
+            _, ax = plt.subplots()
+
         pos = nx.circular_layout(self.G)
         nx.draw(
             self.G,
@@ -159,8 +163,15 @@ class SK(Problem):
             ax=ax,
             edge_color="#0B2340",
         )
+        edge_labels = nx.get_edge_attributes(self.G, 'weight')
+
+        nx.draw_networkx_edge_labels(
+            self.G,
+            pos=pos,
+            edge_labels=edge_labels,
+            ax=ax
+            )
         ax.set_title("SK Problem Solution")
         ax.plot([], [], color=colors[0], label=r"$S_{-1}$", marker="o", linewidth=0)
         ax.plot([], [], color=colors[1], label=r"$S_{+1}$", marker="o", linewidth=0)
         ax.legend()
-        return fig
