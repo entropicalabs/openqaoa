@@ -196,7 +196,7 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa_uncompiled = QAOA()
         error = False
         try:
-            qaoa_uncompiled.brute_force()
+            qaoa_uncompiled.solve_brute_force()
         except Exception:
             error = True
         assert(error), f"An uncompiled QAOA should raise an error when brute-forcing it"
