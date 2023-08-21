@@ -385,7 +385,7 @@ class TSP_LP(VRP):
     __name__ = "tsp_lp"
     
     def __init__(self, G, pos, subtours, penalty, method):
-        super().__init__(G, pos, n_vehicles=1, subtours=subtours,
+        super().__init__(G, pos=pos, n_vehicles=1, subtours=subtours,
                          method=method, penalty=penalty)
     @staticmethod
     def random_instance(**kwargs):
@@ -432,7 +432,7 @@ class TSP_LP(VRP):
                 r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
                 G.add_weighted_edges_from([(i, j, r)])
 
-        return TSP_LP(G, pos, subtours=subtours, method=method, penalty=penalty)
+        return TSP_LP(G, pos=pos, subtours=subtours, method=method, penalty=penalty)
 
     def get_distance(self, sol):
         """
