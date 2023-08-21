@@ -451,34 +451,37 @@ class QAOA(Workflow):
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             output_dict.update({"cost": self.backend.expectation(params_obj)[0]})
 
-        # with all the other backends, the measurement outcomes are returned
-        else:
+        # if the workflow implements SPAM Twirling, 
+        # we just return the expectation value of the cost Hamiltonian and the measurement outcomes
+        elif isinstance(self.backend, SPAMTwirlingWrapper):
+            cost = self.backend.expectation(params_obj)
             measurement_results = (
                 self.backend.measurement_outcomes
                 if isinstance(self.backend.measurement_outcomes, dict)
                 else self.backend.measurement_outcomes.tolist()
             )
-            # if the workflow implements SPAM Twirling, 
-            # we just return the expectation value of the cost Hamiltonian and measurement outcomes
-            if isinstance(self.backend, SPAMTwirlingWrapper):
-                cost = self.backend.expectation(params_obj)
-                output_dict.update(
-                    {
-                        "cost": cost,
-                        "measurement_results": measurement_results,
-                    }
-                )
+            output_dict.update(
+                {
+                    "cost": cost,
+                    "measurement_results": measurement_results,
+                }
+            )
             # in all other cases, we return the expectation value of the cost Hamiltonian, 
             # the associated uncertainty and the measurement outcomes
-            else:
-                cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
-                output_dict.update(
-                    {
-                        "cost": cost,
-                        "uncertainty": uncertainty,
-                        "measurement_results": measurement_results,
-                    }
-                )
+        else:
+            cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
+            measurement_results = (
+                self.backend.measurement_outcomes
+                if isinstance(self.backend.measurement_outcomes, dict)
+                else self.backend.measurement_outcomes.tolist()
+            )
+            output_dict.update(
+                {
+                    "cost": cost,
+                    "uncertainty": uncertainty,
+                    "measurement_results": measurement_results,
+                }
+            )
         return output_dict
 
     def _serializable_dict(

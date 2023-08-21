@@ -1416,7 +1416,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             ), "When using a shot-based simulator, `evaluate_circuit` should return a cost"
             assert (
                 abs(result["uncertainty"]) > 0
-            ), "When using a shot-based simulator, `evaluate_circuit` should return an uncertanty"
+            ), "When using a shot-based simulator, `evaluate_circuit` should return an uncertainty"
 
             cost = cost_function(
                 result["measurement_results"],
