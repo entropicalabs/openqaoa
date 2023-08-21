@@ -1,1 +1,0 @@
-from .intermediate_representation import QAOAQIR

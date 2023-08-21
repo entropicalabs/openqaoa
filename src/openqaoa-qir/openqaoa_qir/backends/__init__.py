@@ -1,1 +1,1 @@
-from .qaoa_qir import QAOAQIR
+from .qaoa_qir import QAOAQIRBackend
