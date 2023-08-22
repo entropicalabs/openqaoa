@@ -4,7 +4,7 @@ numpy>=1.22.3
 networkx>=2.8
 matplotlib>=3.4.3
 scipy>=1.8
-docplex>=2.23.1
+docplex==2.25.236
 autograd>=1.4
 semantic_version>=2.10
 autoray>=0.3.1
