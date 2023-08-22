@@ -10,6 +10,7 @@ from .shortestpath import ShortestPath
 from .tsp import TSP, TSP_LP
 from .vehiclerouting import VRP
 from .maximalindependentset import MIS
+from .kcolor import KColor
 from .binpacking import BinPacking
 from .portfoliooptimization import PortfolioOptimization
 from .sherrington_kirkpatrick import SK
@@ -48,6 +49,7 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
         "vehicle_routing": VRP,
         "maximal_independent_set": MIS,
         "bin_packing": BinPacking,
+        "k_color": KColor,
         "portfolio_optimization": PortfolioOptimization,
         "sherrington_kirkpatrick": SK,
     }
