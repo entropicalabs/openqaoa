@@ -15,6 +15,7 @@ from openqaoa.problems import (
     PortfolioOptimization,
     MIS,
     BinPacking,
+    SK,
     KColor,
 )
 from openqaoa.utilities import convert2serialize
@@ -49,6 +50,7 @@ class TestQUBO(unittest.TestCase):
             ),
             "bin_packing": BinPacking.random_instance(),
             "portfolio_optimization": PortfolioOptimization.random_instance(),
+            "sherrington_kirkpatrick": SK.random_instance(n_nodes=randint(2, 10)),
             "k_color":KColor.random_instance(n_nodes=randint(3, 8), k=randint(2, 5)),
         }
         qubo_random_instances = {
@@ -132,6 +134,9 @@ class TestQUBO(unittest.TestCase):
                 "num_assets",
                 "budget",
             ],
+            "sherrington_kirkpatrick": [
+                "problem_type",
+                "G"],
             "k_color": ["problem_type", "G", "k", "penalty"],
             "generic_qubo": ["problem_type"],
         }
