@@ -11,6 +11,7 @@ with open("openqaoa_qir/_version.py") as f:
 
 requirements = [
     "openqaoa-core=={}".format(version),
+    "openqaoa-qiskit=={}".format(version),
     "openqaoa-azure=={}".format(version),
 ]
 

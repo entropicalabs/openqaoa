@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from typing import Optional, List
-from pyqir.generator import BasicQisBuilder, SimpleModule, ir_to_bitcode
+from pyqir import BasicQisBuilder, SimpleModule, Module, Context
 
 from openqaoa.qaoa_components.ansatz_constructor import (
     QAOADescriptor,
@@ -239,7 +239,7 @@ class QAOAQIRBackend(QAOAIntermediateBaseRepresentation):
         """
         ir = self.convert_to_ir(params)
 
-        bitcode = ir_to_bitcode(ir)
+        bitcode = Module.from_ir(Context(), ir, "QAOA").bitcode
         return bitcode
 
     def get_counts(self, params: QAOAVariationalBaseParams, n_shots=None) -> dict:

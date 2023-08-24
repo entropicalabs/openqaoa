@@ -1,5 +1,5 @@
 from openqaoa.qaoa_components.ansatz_constructor import gates, RotationAngle
-from pyqir.generator import BasicQisBuilder, SimpleModule
+from pyqir import BasicQisBuilder, SimpleModule
 from typing import Callable
 
 
