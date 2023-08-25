@@ -388,7 +388,7 @@ class QAOA(Workflow):
         -------
         result: dict
             A dictionary containing the results of the evaluation:
-            - "expectation": the expectation value of the cost Hamiltonian
+            - "cost": the expectation value of the cost Hamiltonian
             - "uncertainty": the uncertainty of the expectation value of the cost Hamiltonian
             - "measurement_results": either the state of the QAOA circuit output (if the QAOA circuit is
             evaluated on a state simulator) or the counts of the QAOA circuit output
@@ -451,6 +451,23 @@ class QAOA(Workflow):
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             output_dict.update({"cost": self.backend.expectation(params_obj)[0]})
 
+        # if the workflow implements SPAM Twirling, 
+        # we just return the expectation value of the cost Hamiltonian and the measurement outcomes
+        elif isinstance(self.backend, SPAMTwirlingWrapper):
+            cost = self.backend.expectation(params_obj)
+            measurement_results = (
+                self.backend.measurement_outcomes
+                if isinstance(self.backend.measurement_outcomes, dict)
+                else self.backend.measurement_outcomes.tolist()
+            )
+            output_dict.update(
+                {
+                    "cost": cost,
+                    "measurement_results": measurement_results,
+                }
+            )
+            # in all other cases, we return the expectation value of the cost Hamiltonian, 
+            # the associated uncertainty and the measurement outcomes
         else:
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
             measurement_results = (

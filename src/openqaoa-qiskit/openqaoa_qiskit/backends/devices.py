@@ -33,7 +33,7 @@ class DeviceQiskit(DeviceBase):
         """The user's IBMQ account has to be authenticated through qiskit in
         order to use this backend. This can be done through `IBMQ.save_account`.
 
-        See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq
+        See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq 
 
         Parameters
         ----------
@@ -132,7 +132,7 @@ class DeviceQiskit(DeviceBase):
             print(
                 "An Exception has occured when trying to connect with the provider."
                 "Please note that you are required to set up your IBMQ account locally first."
-                "See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq"
+                "See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq "
                 "for how to save your IBMQ account locally. \n {}".format(e)
             )
             return False
