@@ -16,7 +16,7 @@ from openqaoa.backends.basebackend import (
     QAOABaseBackendShotBased,
 )
 from openqaoa_azure.backends import DeviceAzure
-from .backends import QIRGateApplicator
+from .gates_pyqir import QIRGateApplicator
 
 
 class QAOAIntermediateBaseRepresentation(QAOABaseBackendShotBased):
