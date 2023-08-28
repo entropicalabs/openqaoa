@@ -7,7 +7,7 @@ from openqaoa.qaoa_components.ansatz_constructor import (
     TwoQubitRotationGateMap,
     RotationGateMap,
 )
-from openqaoa.qaoa_components.variational_parameters import (
+from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
 
