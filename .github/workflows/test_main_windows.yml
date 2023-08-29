@@ -42,7 +42,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade setuptools
           pip install wheel
-          pip install .[tests]
+          make dev-install-tests
           pip install ipykernel
 
       # Install Rigetti Forest SDK and launch QUILC + QVM services
