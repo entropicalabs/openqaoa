@@ -33,7 +33,7 @@ class DeviceQiskit(DeviceBase):
         """The user's IBMQ account has to be authenticated through qiskit in
         order to use this backend. This can be done through `IBMQ.save_account`.
 
-        See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq 
+        See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq
 
         Parameters
         ----------

@@ -11,10 +11,10 @@ with open("openqaoa_azure/_version.py") as f:
 
 requirements = [
     "openqaoa-core=={}".format(version),
-    "openqaoa-qiskit=={}".format(version)
+    "openqaoa-qiskit=={}".format(version),
 ]
 
-add_requirements = open('requirements.txt').readlines()
+add_requirements = open("requirements.txt").readlines()
 add_requirements = [r.strip() for r in add_requirements]
 
 requirements.extend(add_requirements)
@@ -25,11 +25,7 @@ setup(
     version=version,
     author="Entropica Labs",
     packages=find_packages(where="."),
-    entry_points={
-        "openqaoa.plugins": [
-            "azure = openqaoa_azure.backend_config"
-        ]
-    },
+    entry_points={"openqaoa.plugins": ["azure = openqaoa_azure.backend_config"]},
     url="https://github.com/entropicalabs/openqaoa",
     install_requires=requirements,
     license="MIT",

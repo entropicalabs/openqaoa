@@ -19,7 +19,6 @@ def there_is_an_error(function, **kwargs):
 
 
 class TestingBenchmark(unittest.TestCase):
-
     def test_simple_benchmark(self):
         "Test the simplest benchmark."
 
@@ -312,7 +311,9 @@ class TestingBenchmark(unittest.TestCase):
         "Test the property difference and difference_mean."
 
         if "qiskit.shot_simulator" not in SUPPORTED_LOCAL_SIMULATORS:
-            self.skipTest(reason="The Qiskit Shot Simulator is currently not available. Please install the openqaoa-qiskit plugin.")
+            self.skipTest(
+                reason="The Qiskit Shot Simulator is currently not available. Please install the openqaoa-qiskit plugin."
+            )
 
         # device shot-based
         qaoa = QAOA()

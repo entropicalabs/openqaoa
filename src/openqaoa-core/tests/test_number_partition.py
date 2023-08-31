@@ -34,8 +34,10 @@ def terms_list_isclose(terms_list1, terms_list2):
 
     return bool
 
+
 class TestNumberPartition(unittest.TestCase):
     """Tests for NumberPartition class"""
+
     def test_number_partitioning_terms_weights_constant(self):
         """Test that Number Partitioning creates the correct terms, weights, constant"""
         list_numbers = [1, 2, 3]

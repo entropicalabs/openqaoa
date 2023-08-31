@@ -15,12 +15,19 @@ class TestImports(unittest.TestCase):
         """
         Test all the main module imports for OQ
         """
-        
-        folder_names = [each_file for each_file in os.listdir('src') if 'openqaoa-' in each_file]
-        
+
+        folder_names = [
+            each_file for each_file in os.listdir("src") if "openqaoa-" in each_file
+        ]
+
         packages_import = []
         for each_file_name in folder_names:
-            packages_import.extend(find_namespace_packages(where="./src/"+each_file_name, exclude=['dist', 'build', 'build.*', 'tests', 'tests.*']))
+            packages_import.extend(
+                find_namespace_packages(
+                    where="./src/" + each_file_name,
+                    exclude=["dist", "build", "build.*", "tests", "tests.*"],
+                )
+            )
         print(packages_import)
         packages_import = sorted(packages_import)
         for each_package in packages_import:

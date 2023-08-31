@@ -12,14 +12,12 @@ class TestingDeviceLocal(unittest.TestCase):
     """
 
     def test_supported_device_names(self):
-
         for each_device_name in SUPPORTED_LOCAL_SIMULATORS:
             device_obj = DeviceLocal(each_device_name)
 
             self.assertEqual(device_obj.check_connection(), True)
 
     def test_unsupported_device_names(self):
-
         device_obj = DeviceLocal("unsupported_device")
 
         self.assertEqual(device_obj.check_connection(), False)

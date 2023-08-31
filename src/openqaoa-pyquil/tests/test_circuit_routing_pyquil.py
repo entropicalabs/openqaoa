@@ -596,7 +596,6 @@ class ExpectedRouting:
 
 class TestingQubitRouting(unittest.TestCase):
     def setUp(self):
-
         # case qubits device > qubits problem (RIGETTI)
         self.RIGETTI_SHORTESTPATH = ExpectedRouting(
             qubo=ShortestPath.random_instance(

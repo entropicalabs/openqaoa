@@ -7,10 +7,9 @@ from openqaoa.problems import MinimumVertexCover
 from openqaoa_pyquil.backends import DevicePyquil
 from openqaoa_pyquil.backends import QAOAPyQuilWavefunctionSimulatorBackend
 
+
 class TestingVanillaQAOA(unittest.TestCase):
-
     def test_set_backend_properties_check_backend_pyquil_statevector(self):
-
         """
         Check if the backend returned by set_backend_properties is correct
         Based on the input device. For pyquil statevector simulator.
@@ -37,5 +36,3 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.backend.cvar_alpha, 1)
 
         self.assertRaises(AttributeError, lambda: q.backend.n_shots)
-        
-

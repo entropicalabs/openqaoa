@@ -17,7 +17,11 @@ from ...qaoa_components import (
 from ...qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
-from ...utilities import get_mixer_hamiltonian, generate_timestamp, ground_state_hamiltonian
+from ...utilities import (
+    get_mixer_hamiltonian,
+    generate_timestamp,
+    ground_state_hamiltonian,
+)
 from ...optimizers.qaoa_optimizer import get_optimizer
 from ...backends.wrapper import SPAMTwirlingWrapper
 
@@ -316,10 +320,10 @@ class QAOA(Workflow):
                 )
 
         return None
-    
+
     def solve_brute_force(self, bounded=True, verbose=False):
         """
-        A method to solve the QAOA problem using brute force i.e. by 
+        A method to solve the QAOA problem using brute force i.e. by
         evaluating the cost function at all possible bitstrings
 
         Parameters
@@ -334,10 +338,14 @@ class QAOA(Workflow):
         """
 
         if self.compiled is False:
-            raise ValueError("Please compile the QAOA before running the brute force solver!")
-        
+            raise ValueError(
+                "Please compile the QAOA before running the brute force solver!"
+            )
+
         # compute the exact ground state and ground state energy of the cost hamiltonian
-        energy, configuration = ground_state_hamiltonian(self.cost_hamil, bounded=bounded)
+        energy, configuration = ground_state_hamiltonian(
+            self.cost_hamil, bounded=bounded
+        )
 
         if verbose:
             print(f"Ground State energy: {energy}, Solution: {configuration}")
@@ -451,7 +459,7 @@ class QAOA(Workflow):
         if isinstance(self.backend, QAOABackendAnalyticalSimulator):
             output_dict.update({"cost": self.backend.expectation(params_obj)[0]})
 
-        # if the workflow implements SPAM Twirling, 
+        # if the workflow implements SPAM Twirling,
         # we just return the expectation value of the cost Hamiltonian and the measurement outcomes
         elif isinstance(self.backend, SPAMTwirlingWrapper):
             cost = self.backend.expectation(params_obj)
@@ -466,7 +474,7 @@ class QAOA(Workflow):
                     "measurement_results": measurement_results,
                 }
             )
-            # in all other cases, we return the expectation value of the cost Hamiltonian, 
+            # in all other cases, we return the expectation value of the cost Hamiltonian,
             # the associated uncertainty and the measurement outcomes
         else:
             cost, uncertainty = self.backend.expectation_w_uncertainty(params_obj)
@@ -539,4 +547,3 @@ class QAOA(Workflow):
             ]["circuit_properties"]["q"]
 
         return serializable_dict
-    

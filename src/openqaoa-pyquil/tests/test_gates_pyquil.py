@@ -28,13 +28,10 @@ from openqaoa_pyquil.backends.gates_pyquil import PyquilGateApplicator
 
 
 class TestingGate(unittest.TestCase):
-    
     def setUp(self):
-        
         self.pyquil_gate_applicator = PyquilGateApplicator()
 
     def test_pyquil_gates_1q(self):
-        
         # Pyquil Gate Applicator
         gate_applicator = self.pyquil_gate_applicator
 
@@ -84,7 +81,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
     def test_pyquil_gates_2q(self):
-        
         # Pyquil Gate Applicator
         gate_applicator = self.pyquil_gate_applicator
 
@@ -118,7 +114,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(output_gate_names, test_gate_names)
 
     def test_pyquil_gates_2q_w_gates(self):
-        
         # Pyquil Gate Applicator
         gate_applicator = self.pyquil_gate_applicator
 

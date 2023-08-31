@@ -59,7 +59,6 @@ class ExpectedRouting:
 class TestingQubitRouting(unittest.TestCase):
     @pytest.mark.qpu
     def setUp(self):
-
         # case qubits device > qubits problem (IBM NAIROBI)
         self.IBM_NAIROBI_KNAPSACK = ExpectedRouting(
             qubo=Knapsack.random_instance(n_items=3, seed=20).qubo,
@@ -379,7 +378,6 @@ class TestingQubitRouting(unittest.TestCase):
 
     @pytest.mark.qpu
     def test_qubit_routing(self):
-
         for i, case in enumerate(self.list_of_cases):
             print("Test case {} out of {}:".format(i + 1, len(self.list_of_cases)))
             self.__compare_results(case, p=i % 4 + 1)

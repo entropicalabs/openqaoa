@@ -21,13 +21,10 @@ from openqaoa_qiskit.backends.gates_qiskit import QiskitGateApplicator
 
 
 class TestingGate(unittest.TestCase):
-    
     def setUp(self):
-        
         self.qiskit_gate_applicator = QiskitGateApplicator()
 
     def test_ibm_gates_1q(self):
-        
         # Qiskit Gate Applicator
         gate_applicator = self.qiskit_gate_applicator
 
@@ -71,7 +68,6 @@ class TestingGate(unittest.TestCase):
         )
 
     def test_ibm_gates_2q(self):
-        
         # Qiskit Gate Applicator
         gate_applicator = self.qiskit_gate_applicator
 
@@ -100,24 +96,23 @@ class TestingGate(unittest.TestCase):
             output_circuit.to_instruction().definition,
         )
 
-#         empty_circuit = QuantumCircuit(2)
-#         llgate = CX(gate_applicator)
-#         output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
+    #         empty_circuit = QuantumCircuit(2)
+    #         llgate = CX(gate_applicator)
+    #         output_circuit = llgate.apply_ibm_gate([0, 1], empty_circuit)
 
-#         test_circuit = QuantumCircuit(2)
-#         test_circuit.ry(np.pi / 2, 1)
-#         test_circuit.rx(np.pi, 1)
-#         test_circuit.cz(0, 1)
-#         test_circuit.ry(np.pi / 2, 1)
-#         test_circuit.rx(np.pi, 1)
+    #         test_circuit = QuantumCircuit(2)
+    #         test_circuit.ry(np.pi / 2, 1)
+    #         test_circuit.rx(np.pi, 1)
+    #         test_circuit.cz(0, 1)
+    #         test_circuit.ry(np.pi / 2, 1)
+    #         test_circuit.rx(np.pi, 1)
 
-#         self.assertEqual(
-#             test_circuit.to_instruction().definition,
-#             output_circuit.to_instruction().definition,
-#         )
+    #         self.assertEqual(
+    #             test_circuit.to_instruction().definition,
+    #             output_circuit.to_instruction().definition,
+    #         )
 
     def test_ibm_gates_2q_w_gates(self):
-        
         # Qiskit Gate Applicator
         gate_applicator = self.qiskit_gate_applicator
 

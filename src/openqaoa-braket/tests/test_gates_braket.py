@@ -23,19 +23,16 @@ from openqaoa_braket.backends.gates_braket import BraketGateApplicator
 
 
 class TestingGate(unittest.TestCase):
-    
     def setUp(self):
-        
         self.braket_gate_applicator = BraketGateApplicator()
-    
+
     def test_braket_gates_1q(self):
-        
         # Braket Gate Applicator
         gate_applicator = self.braket_gate_applicator
 
         # One Qubit Gate Tests
         rotation_angle_obj = RotationAngle(lambda x: x, [], FreeParameter("test_angle"))
-        
+
         empty_circuit = Circuit()
         llgate = RY(gate_applicator, 0, rotation_angle_obj)
         output_circuit = llgate.apply_gate(empty_circuit)
@@ -67,7 +64,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
     def test_braket_gates_2q(self):
-        
         # Braket Gate Applicator
         gate_applicator = self.braket_gate_applicator
 
@@ -91,7 +87,6 @@ class TestingGate(unittest.TestCase):
         self.assertEqual(test_circuit, output_circuit)
 
     def test_braket_gates_2q_w_gates(self):
-        
         # Braket Gate Applicator
         gate_applicator = self.braket_gate_applicator
 

@@ -560,7 +560,10 @@ class QAOABaseBackendCloud:
 
     def __init__(self, device: DeviceBase):
         self.device = device
-        if getattr(self.device, "provider_connected", None) is None and getattr(self.device, "qpu_connected", None) is None:
+        if (
+            getattr(self.device, "provider_connected", None) is None
+            and getattr(self.device, "qpu_connected", None) is None
+        ):
             self.device.check_connection()
 
 

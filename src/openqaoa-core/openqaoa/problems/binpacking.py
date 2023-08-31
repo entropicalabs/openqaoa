@@ -173,9 +173,8 @@ class BinPacking(Problem):
             # Second set of constraints: weight constraints
             mdl.add_constraint(
                 mdl.sum(
-                    (self.weights[i] * vars_[f"x_{i}_{j}"]
-                    for i in range(self.n_items)
-                ))
+                    (self.weights[i] * vars_[f"x_{i}_{j}"] for i in range(self.n_items))
+                )
                 <= self.weight_capacity * vars_[f"y_{j}"]
             )
             if self.simplifications and j < self.min_bins:

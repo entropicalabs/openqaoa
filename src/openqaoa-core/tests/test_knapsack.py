@@ -34,8 +34,10 @@ def terms_list_isclose(terms_list1, terms_list2):
 
     return bool
 
+
 class TestKnapsack(unittest.TestCase):
     """Tests for Knapsack class"""
+
     def test_knapsack_terms_weights_constant(self):
         """Test that Knapsack creates the correct QUBO problem"""
 
@@ -260,6 +262,7 @@ class TestKnapsack(unittest.TestCase):
 
 class TestSlackFreeKnapsack(unittest.TestCase):
     """Tests for SlackFreeKnapsack class"""
+
     def test_slackfreeknapsack_terms_weights_constant(self):
         """Test that SlackFreeKnapsack creates the correct QUBO problem"""
 

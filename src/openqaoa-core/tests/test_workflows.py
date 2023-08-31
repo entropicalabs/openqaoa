@@ -11,7 +11,12 @@ from openqaoa import QAOA, RQAOA
 from openqaoa.problems import NumberPartition
 from openqaoa.algorithms import QAOAResult, RQAOAResult
 from openqaoa.algorithms.baseworkflow import Workflow
-from openqaoa.utilities import X_mixer_hamiltonian, XY_mixer_hamiltonian, is_valid_uuid, ground_state_hamiltonian
+from openqaoa.utilities import (
+    X_mixer_hamiltonian,
+    XY_mixer_hamiltonian,
+    is_valid_uuid,
+    ground_state_hamiltonian,
+)
 from openqaoa.algorithms.workflow_properties import (
     BackendProperties,
     ClassicalOptimizer,
@@ -186,7 +191,10 @@ class TestingVanillaQAOA(unittest.TestCase):
         qaoa = QAOA()
         qaoa.compile(problem)
         qaoa.solve_brute_force()
-        min_energy_bf, config_strings_bf = qaoa.brute_force_results["energy"], qaoa.brute_force_results["configuration"]
+        min_energy_bf, config_strings_bf = (
+            qaoa.brute_force_results["energy"],
+            qaoa.brute_force_results["configuration"],
+        )
         (min_energy_gsh, config_strings_ghs) = ground_state_hamiltonian(qaoa.cost_hamil)
         assert (
             min_energy_bf == min_energy_gsh and config_strings_bf == config_strings_ghs
@@ -199,22 +207,20 @@ class TestingVanillaQAOA(unittest.TestCase):
             qaoa_uncompiled.solve_brute_force()
         except Exception:
             error = True
-        assert(error), f"An uncompiled QAOA should raise an error when brute-forcing it"
+        assert error, f"An uncompiled QAOA should raise an error when brute-forcing it"
 
         # Check if bounded=True disallows computation for more than 25 qubits
         qaoa = QAOA()
-        large_problem = MaximumCut.random_instance(
-            n_nodes=26, edge_probability=1
-        ).qubo
+        large_problem = MaximumCut.random_instance(n_nodes=26, edge_probability=1).qubo
         qaoa.compile(large_problem)
         error = False
         try:
             qaoa.solve_brute_force()
         except:
             error = True
-        assert(error), f"Brute forcing should not compute for large problems (> 25 qubits) when bounded=True"
-
-    
+        assert (
+            error
+        ), f"Brute forcing should not compute for large problems (> 25 qubits) when bounded=True"
 
     def test_set_circuit_properties_fourier_q(self):
         """
@@ -1380,14 +1386,15 @@ class TestingVanillaQAOA(unittest.TestCase):
                   not passing any param"
 
     def test_qaoa_evaluate_circuit_shot(self):
-
         # problem
         problem = MinimumVertexCover.random_instance(
             n_nodes=6, edge_probability=0.8
         ).qubo
 
         if "qiskit.qasm_simulator" not in SUPPORTED_LOCAL_SIMULATORS:
-            self.skipTest(reason="Qiskit QASM Simulator is not available. Please install the qiskit plugin: openqaoa-qiskit.")
+            self.skipTest(
+                reason="Qiskit QASM Simulator is not available. Please install the qiskit plugin: openqaoa-qiskit."
+            )
         else:
             # check that it works with shots
             q = QAOA()
@@ -1437,7 +1444,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct uncertainty"
 
     def test_qaoa_evaluate_circuit_analytical_sim(self):
-
         # problem
         problem = MinimumVertexCover.random_instance(
             n_nodes=6, edge_probability=0.8
@@ -1461,7 +1467,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         ), "When using an analytical simulator, `evaluate_circuit` should return no measurement results"
 
     def test_change_properties_after_compilation(self):
-
         device = create_device(location="local", name="vectorized")
         q = QAOA()
         q.compile(QUBO.random_instance(4))

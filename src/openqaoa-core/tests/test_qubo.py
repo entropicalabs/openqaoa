@@ -24,10 +24,11 @@ from openqaoa.problems.helper_functions import create_problem_from_dict
 
 class TestQUBO(unittest.TestCase):
     """Tests for the QUBO class"""
+
     def __generate_random_problems(self):
         problems_random_instances = {
             "tsp": TSP.random_instance(n_cities=randint(2, 15)),
-            "tsp_lp":TSP_LP.random_instance(n_nodes=randint(2, 15)),
+            "tsp_lp": TSP_LP.random_instance(n_nodes=randint(2, 15)),
             "number_partition": NumberPartition.random_instance(
                 n_numbers=randint(2, 15)
             ),
@@ -51,7 +52,7 @@ class TestQUBO(unittest.TestCase):
             "bin_packing": BinPacking.random_instance(),
             "portfolio_optimization": PortfolioOptimization.random_instance(),
             "sherrington_kirkpatrick": SK.random_instance(n_nodes=randint(2, 10)),
-            "k_color":KColor.random_instance(n_nodes=randint(3, 8), k=randint(2, 5)),
+            "k_color": KColor.random_instance(n_nodes=randint(3, 8), k=randint(2, 5)),
         }
         qubo_random_instances = {
             k: v.qubo for k, v in problems_random_instances.items()
@@ -134,9 +135,7 @@ class TestQUBO(unittest.TestCase):
                 "num_assets",
                 "budget",
             ],
-            "sherrington_kirkpatrick": [
-                "problem_type",
-                "G"],
+            "sherrington_kirkpatrick": ["problem_type", "G"],
             "k_color": ["problem_type", "G", "k", "penalty"],
             "generic_qubo": ["problem_type"],
         }
@@ -205,6 +204,7 @@ class TestQUBO(unittest.TestCase):
                         ), "QUBO from dict method is not correct for problem type {}".format(
                             qubo.problem_instance["problem_type"]
                         )
+
     def test_qubo_terms_and_weight_same_size(self):
         """
         Test that creating a QUBO problem with invalid terms and weights

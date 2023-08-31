@@ -11,15 +11,14 @@ class TestingDeviceAWS(unittest.TestCase):
     For any tests using provided credentials, the tests will only pass if those
     details provided are correct/valid with AWS Braket.
     """
-    
+
     @pytest.mark.braket_api
     def test_changing_aws_region(self):
-        
         device_obj = DeviceAWS(
-          device_name='arn:aws:braket:::device/quantum-simulator/amazon/sv1',
-          aws_region='us-east-1'
+            device_name="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            aws_region="us-east-1",
         )
-        
+
         device_obj.check_connection()
         default_region = device_obj.aws_region
 
@@ -32,12 +31,11 @@ class TestingDeviceAWS(unittest.TestCase):
 
         device_obj.check_connection()
         custom_region = device_obj.aws_region
-        
-        self.assertEqual('us-west-1', custom_region)
-        
+
+        self.assertEqual("us-west-1", custom_region)
+
     @pytest.mark.braket_api
     def test_changing_s3_bucket_names(self):
-
         device_obj = DeviceAWS(
             device_name="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             s3_bucket_name="random_new_name",
@@ -45,12 +43,11 @@ class TestingDeviceAWS(unittest.TestCase):
 
         device_obj.check_connection()
         custom_bucket = device_obj.s3_bucket_name
-        
-        self.assertEqual('random_new_name', custom_bucket)
-        
-    @pytest.mark.braket_api      
-    def test_check_connection_provider_no_backend_provided_credentials(self):
 
+        self.assertEqual("random_new_name", custom_bucket)
+
+    @pytest.mark.braket_api
+    def test_check_connection_provider_no_backend_provided_credentials(self):
         """
         If no information about the device name, but the credentials
         used are correct, check_connection should return True.
@@ -63,10 +60,8 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, None)
 
-
     @pytest.mark.braket_api
     def test_check_connection_provider_right_backend_provided_credentials(self):
-
         """
         If the correct device name is provided and the credentials
         used are correct, check_connection should return True.
@@ -85,10 +80,8 @@ class TestingDeviceAWS(unittest.TestCase):
         self.assertEqual(device_obj.provider_connected, True)
         self.assertEqual(device_obj.qpu_connected, True)
 
-
     @pytest.mark.braket_api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
-
         """
         If device name provided is incorrect, and not empty, and the credentials
         used are correct, check_connection should return False.

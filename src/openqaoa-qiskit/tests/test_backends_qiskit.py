@@ -1,9 +1,7 @@
 import unittest
 import pytest
 
-from openqaoa.backends.qaoa_backend import (
-    DEVICE_ACCESS_OBJECT_MAPPER
-)
+from openqaoa.backends.qaoa_backend import DEVICE_ACCESS_OBJECT_MAPPER
 from openqaoa.qaoa_components import (
     Hamiltonian,
     create_qaoa_variational_params,
@@ -11,6 +9,7 @@ from openqaoa.qaoa_components import (
 )
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa_qiskit.backends import DeviceQiskit
+
 
 def get_params():
     cost_hamil = Hamiltonian.classical_hamiltonian([[0, 1]], [1], constant=0)
@@ -31,7 +30,6 @@ class TestingBackendQPUs(unittest.TestCase):
 
     @pytest.mark.qpu
     def setUp(self):
-
         self.HUB = "ibm-q"
         self.GROUP = "open"
         self.PROJECT = "main"
@@ -40,7 +38,7 @@ class TestingBackendQPUs(unittest.TestCase):
     def test_get_counts_and_expectation_n_shots(self):
         """
         TODO: test needs to be updated as DEVICE_ACCESS_OBJECT_MAPPER is now dynamically filled based on whether a module exists.
-        
+
         Check that the .get_counts, .expectation and .expecation_w_uncertainty methods admit n_shots as an argument for the backends of all QPUs.
         """
 
@@ -55,7 +53,7 @@ class TestingBackendQPUs(unittest.TestCase):
         ]
 
         assert DeviceQiskit in DEVICE_ACCESS_OBJECT_MAPPER.keys()
-        
+
         device = DeviceQiskit
         backend = DEVICE_ACCESS_OBJECT_MAPPER[DeviceQiskit]
         device_attributes = list_device_attributes[0]
@@ -94,12 +92,9 @@ class TestingBackendQPUs(unittest.TestCase):
                 QPU_name
             )
             backend.expectation(params=variational_params_std, n_shots=58)
-            backend.expectation_w_uncertainty(
-                params=variational_params_std, n_shots=58
-            )
+            backend.expectation_w_uncertainty(params=variational_params_std, n_shots=58)
 
         except Exception as e:
-
             raise e from type(e)(f"Error raised for `{QPU_name}`: " + str(e))
 
         print("Test passed for {} backend.".format(QPU_name))

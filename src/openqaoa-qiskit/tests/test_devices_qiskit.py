@@ -19,7 +19,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def setUp(self):
-
         self.HUB = "ibm-q"
         self.GROUP = "open"
         self.PROJECT = "main"
@@ -27,7 +26,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_changing_provider(self):
-
         """
         This test checks that the specified hub,group and project in the
         initialisation of DeviceQiskit changes the provider to the appropriate
@@ -40,9 +38,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         provider_instances = device_obj.provider.instances()
 
         if len(provider_instances) >= 2:
-
             for each_item in provider_instances[:2]:
-
                 [hub, group, project] = each_item.split("/")
                 device_obj2 = DeviceQiskit(
                     device_name="ibmq_manila", hub=hub, group=group, project=project
@@ -53,7 +49,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_no_backend_wrong_hub_group_project(self):
-
         """
         Hub, group and project must always be specified together.
         If either the hub, group or project is wrongly specified, check_connection should
@@ -67,9 +62,7 @@ class TestingDeviceQiskit(unittest.TestCase):
         for each_combi in itertools.product(
             ["invalid_hub", None], ["invalid_group", None], ["invalid_project", None]
         ):
-
             if each_combi != (None, None, None):
-
                 device_obj = DeviceQiskit(
                     device_name="",
                     hub=each_combi[0],
@@ -83,7 +76,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_no_backend_provided_credentials(self):
-
         """
         If no information about the device name, but the credentials
         used are correct, check_connection should return True.
@@ -100,7 +92,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_right_backend_provided_credentials(self):
-
         """
         If the correct device name is provided and the credentials
         used are correct, check_connection should return True.
@@ -128,7 +119,6 @@ class TestingDeviceQiskit(unittest.TestCase):
 
     @pytest.mark.api
     def test_check_connection_provider_wrong_backend_provided_credentials(self):
-
         """
         If device name provided is incorrect, and not empty, and the credentials
         used are correct, check_connection should return False.

@@ -35,8 +35,10 @@ def terms_list_isclose(terms_list1, terms_list2):
 
     return bool
 
+
 class TestTSP(unittest.TestCase):
     """Tests for TSP class"""
+
     def test_tsp_terms_weights_constant(self):
         """Testing TSP problem creation"""
         city_coordinates = [(4, 1), (4, 4), (3, 3), (1, 3.5)]
@@ -240,13 +242,23 @@ class TestTSP(unittest.TestCase):
         self.assertEqual("Edge weights should be positive", str(e.exception))
 
     # TESTING TSP PROBLEM CLASS
+
+
 class TestTSP_LP(unittest.TestCase):
     """Tests for TSP LP class"""
+
     def test_tsp_lp_terms_weights_constant(self):
         """Testing TSP LP problem creation"""
         tsp_qubo = TSP_LP.random_instance(n_nodes=3, seed=1234).qubo
         expected_terms = [[0, 1], [0, 2], [1, 2], [0], [1], [2]]
-        expected_weights = [2.0, 2.0, 2.0, 7.66823080091817, 7.707925770071554, 7.704586691688892]
+        expected_weights = [
+            2.0,
+            2.0,
+            2.0,
+            7.66823080091817,
+            7.707925770071554,
+            7.704586691688892,
+        ]
         expected_constant = 18.919256737321383
         self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
         self.assertEqual(expected_weights, tsp_qubo.weights)
@@ -259,15 +271,17 @@ class TestTSP_LP(unittest.TestCase):
         solution = tsp.classical_solution()
         distance_expected = 2.503342058155561
         self.assertEqual(distance_expected, tsp.get_distance(solution))
-    
+
     def test_tsp_lp_plot(self):
         """Testing TSP LP problem creation"""
         from matplotlib.pyplot import Figure
+
         cities = 6
-        tsp = TSP_LP.random_instance(n_nodes=cities, seed=123, subtours=[[1,3,4]])
+        tsp = TSP_LP.random_instance(n_nodes=cities, seed=123, subtours=[[1, 3, 4]])
         solution = tsp.classical_solution()
-        fig = tsp.plot_solution(solution)  
+        fig = tsp.plot_solution(solution)
         self.assertTrue(isinstance(fig, Figure))
+
 
 if __name__ == "__main__":
     unittest.main()

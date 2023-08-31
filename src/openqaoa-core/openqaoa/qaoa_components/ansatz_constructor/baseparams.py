@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractproperty
 from typing import List, Union, Tuple, Any, Callable, Iterable, Optional, TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ...backends.basedevice import DeviceBase
 import numpy as np
@@ -11,8 +12,6 @@ from .operators import Hamiltonian
 from .hamiltonianmapper import HamiltonianMapper
 from .gatemap import RotationGateMap, SWAPGateMap, GateMap
 from .gatemaplabel import GateMapType
-
-
 
 
 def _is_iterable_empty(in_iterable):

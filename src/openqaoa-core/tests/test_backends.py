@@ -38,7 +38,6 @@ class TestingBackendLocal(unittest.TestCase):
         """
         print(DEVICE_NAME_TO_OBJECT_MAPPER)
         for device_name in DEVICE_NAME_TO_OBJECT_MAPPER.keys():
-
             # Analytical device doesn't have any of those so we are skipping it in the tests.
             if device_name in ["analytical_simulator"]:
                 continue

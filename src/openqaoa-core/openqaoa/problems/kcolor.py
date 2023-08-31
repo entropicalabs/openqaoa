@@ -8,6 +8,7 @@ from .problem import Problem
 from .converters import FromDocplex2IsingModel
 from .qubo import QUBO
 
+
 class KColor(Problem):
     """
     Creates an instance of the k-color problem. It determines if given a set of
@@ -68,7 +69,7 @@ class KColor(Problem):
             Random seed for reproducibility.
         penalty: Union(int, float) Optional
             Penalty for the edge constraints.
-            
+
 
         Returns
         -------
@@ -87,12 +88,18 @@ class KColor(Problem):
     def docplex_model(self):
         mdl = Model("k_color")
 
-        x = {(vertex, color): mdl.binary_var(name=f'x_{vertex}_{color}') for vertex in self.G for color in range(self.k)}
+        x = {
+            (vertex, color): mdl.binary_var(name=f"x_{vertex}_{color}")
+            for vertex in self.G
+            for color in range(self.k)
+        }
 
         # Constraint: Each vertex must be assigned to exactly one color
         for vertex in self.G:
-            mdl.add_constraint(mdl.sum(x[(vertex, color)] for color in range(self.k)) == 1)
-        cost = 0 
+            mdl.add_constraint(
+                mdl.sum(x[(vertex, color)] for color in range(self.k)) == 1
+            )
+        cost = 0
         # Constraint: Adjacent vertices cannot have the same color
         for vertex1 in self.G:
             for vertex2 in self.G:
@@ -176,17 +183,22 @@ class KColor(Problem):
             solution = sol
 
         if ax is None:
-            _ , ax = plt.subplots()
+            _, ax = plt.subplots()
 
         colors = colormaps["jet"] if colors is None else colors
         pos = nx.circular_layout(self.G)
         nx.draw(
             self.G,
             pos=pos,
-            node_color=[colors((col+1)/(self.k+1)) for vertex in self.G for col in range(self.k) if solution[f"x_{vertex}_{col}"] == 1],
-            edge_color='black',
+            node_color=[
+                colors((col + 1) / (self.k + 1))
+                for vertex in self.G
+                for col in range(self.k)
+                if solution[f"x_{vertex}_{col}"] == 1
+            ],
+            edge_color="black",
             with_labels=True,
             ax=ax,
             alpha=0.85,
-            **{"edgecolors":"black"}
+            **{"edgecolors": "black"},
         )

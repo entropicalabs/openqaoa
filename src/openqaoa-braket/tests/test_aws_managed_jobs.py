@@ -28,7 +28,9 @@ from openqaoa.backends import create_device
 class TestingAwsJobs(unittest.TestCase):
     def setUp(self):
         # the input data directory opt/braket/input/data
-        os.environ["AMZN_BRAKET_INPUT_DIR"] = "./src/openqaoa-braket/tests/jobs_test_input/"
+        os.environ[
+            "AMZN_BRAKET_INPUT_DIR"
+        ] = "./src/openqaoa-braket/tests/jobs_test_input/"
         # the output directory opt/braket/model to write ob results to
         os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"] = "/oq_release_tests/testing_jobs/"
         # the name of the job

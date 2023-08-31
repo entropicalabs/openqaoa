@@ -133,5 +133,6 @@ class TestGetSamplesMethod(unittest.TestCase):
             prob_wf_qiskit, samples_prob_qiskit, decimal=3
         )
 
+
 if __name__ == "__main__":
     unittest.main()

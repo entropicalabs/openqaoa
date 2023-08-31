@@ -35,8 +35,10 @@ def terms_list_isclose(terms_list1, terms_list2):
 
     return bool
 
+
 class TestMaximumCut(unittest.TestCase):
     """Tests for MaximumCut class"""
+
     def test_maximumcut_terms_weights_constant(self):
         """Test that MaximumCut creates a correct QUBO from the provided graph"""
 

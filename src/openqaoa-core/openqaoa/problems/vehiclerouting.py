@@ -93,7 +93,7 @@ class VRP(Problem):
     @staticmethod
     def from_distance_matrix(**kwargs):
         """
-        Creates a instance of the vehicle routing problem, from the distance 
+        Creates a instance of the vehicle routing problem, from the distance
         matrix.
 
         Parameters
@@ -141,7 +141,7 @@ class VRP(Problem):
     @staticmethod
     def from_coordinates(**kwargs):
         """
-        Creates a instance of the vehicle routing problem, from the cartesian 
+        Creates a instance of the vehicle routing problem, from the cartesian
         coordinates.
 
         Parameters
@@ -311,7 +311,7 @@ class VRP(Problem):
             if num_nodes >= 10:
                 warnings.warn(
                     f"All the possible subtour constraints are added. The number of inequality constraints is {mdl.number_of_constraints - eq_const}. Consider reducing the number of subtour constraints."
-                                        )
+                )
         # Subtour constraints if any
         elif isinstance(self.subtours, list):
             list_subtours = self.subtours
@@ -463,7 +463,11 @@ class VRP(Problem):
         return {"paths": paths, "subtours": subtours}
 
     def plot_solution(
-        self, solution: Union[dict, str], ax=None, edge_width:float=4, colors: list=None
+        self,
+        solution: Union[dict, str],
+        ax=None,
+        edge_width: float = 4,
+        colors: list = None,
     ):
         """
         A visualization method for the vehicle routing problem solution.
@@ -484,7 +488,9 @@ class VRP(Problem):
         """
         pos = self.pos
         if pos is []:
-            raise ValueError("There are no x, y coordinates for any of the nodes in the problem. You need to provide the coordinates of the nodes through the initialization parameter, pos.")
+            raise ValueError(
+                "There are no x, y coordinates for any of the nodes in the problem. You need to provide the coordinates of the nodes through the initialization parameter, pos."
+            )
         colors = colormaps["jet"] if colors is None else colors
         if type(colors) is list and len(colors) != self.n_vehicles:
             raise ValueError(
@@ -514,7 +520,7 @@ class VRP(Problem):
             fig, ax = plt.subplots()
         else:
             fig = None
-        
+
         num_vertices = self.G.number_of_nodes()
         G = nx.Graph()
         G.add_nodes_from(range(num_vertices))

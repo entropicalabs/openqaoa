@@ -91,7 +91,6 @@ class TestGetSamplesMethod(unittest.TestCase):
         )
         samples_dict_vec = {bin(x)[2:].zfill(n_qubits): 0 for x in range(2**n_qubits)}
 
-
         for shot_result in samples_vec:
             samples_dict_vec[shot_result] += 1 / nshots
 

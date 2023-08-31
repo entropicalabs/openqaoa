@@ -3,6 +3,7 @@ import logging
 
 logging.getLogger().setLevel(logging.ERROR)
 
+
 class DeviceBase(metaclass=abc.ABCMeta):
     """An object that contains the relevant information required to access
     certain backends. Other Access Objects have to inherit from this object.

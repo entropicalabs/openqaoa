@@ -18,7 +18,7 @@ class SK(Problem):
     ----------
     G: networkx.Graph
         Networkx graph of the problem
-    
+
 
     Returns
     -------
@@ -38,7 +38,7 @@ class SK(Problem):
     def G(self, input_networkx_graph):
         if not isinstance(input_networkx_graph, nx.Graph):
             raise TypeError("Input problem graph must be a networkx Graph.")
-    
+
         # Relabel nodes to integers starting from 0
         mapping = dict(
             zip(input_networkx_graph, range(input_networkx_graph.number_of_nodes()))
@@ -72,10 +72,16 @@ class SK(Problem):
         sigma = kwargs.get("sigma", 1)
         seed = kwargs.get("seed", None)
         np.random.seed(seed)
-        
+
         G = nx.Graph()
-        G.add_weighted_edges_from([[i, j, round(np.random.normal(mu, sigma),3)] for i in range(n_nodes) for j in range(i+1, n_nodes)])
-        
+        G.add_weighted_edges_from(
+            [
+                [i, j, round(np.random.normal(mu, sigma), 3)]
+                for i in range(n_nodes)
+                for j in range(i + 1, n_nodes)
+            ]
+        )
+
         return SK(G)
 
     @property
@@ -85,8 +91,10 @@ class SK(Problem):
 
         x = {i: mdl.binary_var(name=f"x_{i}") for i in range(num_spins)}
 
-        energy = -1 * mdl.sum((2*x[i] - 1) * (2*x[j] - 1) * self.G[i][j]['weight']
-                         for i, j in self.G.edges())
+        energy = -1 * mdl.sum(
+            (2 * x[i] - 1) * (2 * x[j] - 1) * self.G[i][j]["weight"]
+            for i, j in self.G.edges()
+        )
 
         mdl.minimize(energy)
 
@@ -123,14 +131,20 @@ class SK(Problem):
         model = self.docplex_model
         model.solve()
         status = model.solve_details.status
-        if status != 'integer optimal solution':
-            print(status) 
+        if status != "integer optimal solution":
+            print(status)
         if string:
-            return "".join(str(round(model.solution.get_value(var))) for var in model.iter_binary_vars())
+            return "".join(
+                str(round(model.solution.get_value(var)))
+                for var in model.iter_binary_vars()
+            )
         else:
-            return {var.name: model.solution.get_value(var) for var in model.iter_binary_vars()}
+            return {
+                var.name: model.solution.get_value(var)
+                for var in model.iter_binary_vars()
+            }
 
-    def plot_solution(self, solution:Union[str, dict], ax=None):
+    def plot_solution(self, solution: Union[str, dict], ax=None):
         """
         Plots the solution of the SK problem.
 
@@ -159,18 +173,13 @@ class SK(Problem):
             pos=pos,
             edgecolors="black",
             node_color=[colors[round(solution[spin])] for spin in solution],
-            labels={n:n for n in range(len(solution))},
+            labels={n: n for n in range(len(solution))},
             ax=ax,
             edge_color="#0B2340",
         )
-        edge_labels = nx.get_edge_attributes(self.G, 'weight')
+        edge_labels = nx.get_edge_attributes(self.G, "weight")
 
-        nx.draw_networkx_edge_labels(
-            self.G,
-            pos=pos,
-            edge_labels=edge_labels,
-            ax=ax
-            )
+        nx.draw_networkx_edge_labels(self.G, pos=pos, edge_labels=edge_labels, ax=ax)
         ax.set_title("SK Problem Solution")
         ax.plot([], [], color=colors[0], label=r"$S_{-1}$", marker="o", linewidth=0)
         ax.plot([], [], color=colors[1], label=r"$S_{+1}$", marker="o", linewidth=0)

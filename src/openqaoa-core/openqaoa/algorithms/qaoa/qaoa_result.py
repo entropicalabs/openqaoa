@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from ...qaoa_components import Hamiltonian
+
 if TYPE_CHECKING:
     from ...optimizers.logger_vqa import Logger
 from ...utilities import (
@@ -631,7 +632,7 @@ class QAOAResult:
             ],
         }
         return best_results
-    
+
     def calculate_statistics(self, include_intermediate=False) -> dict:
         """
         A function to calculate statistics of measurement outcomes associated with a QAOA workflow
@@ -641,7 +642,10 @@ class QAOAResult:
         include_intermediate: `bool`
             Whether it is necessary to calculate statistics for intermediate results. Defaults to False.
         """
-        if len(self.intermediate["measurement_outcomes"]) == 0 and include_intermediate == True:
+        if (
+            len(self.intermediate["measurement_outcomes"]) == 0
+            and include_intermediate == True
+        ):
             raise ValueError(
                 "The underlying QAOA object does not seem to have any intermediate measurement result. Please, consider saving "
                 "intermediate measurements during optimization by setting `optimization_progress=True` in your workflow."
@@ -661,9 +665,16 @@ class QAOAResult:
         if isinstance(self.intermediate["measurement_outcomes"], list):
             if len(self.intermediate["measurement_outcomes"]) > 0:
                 if isinstance(self.intermediate["measurement_outcomes"][0], dict):
-                    intermediate_measurement_outcomes = self.intermediate["measurement_outcomes"]
-                elif isinstance(self.intermediate["measurement_outcomes"][0], np.ndarray):
-                    intermediate_measurement_outcomes = [self.get_counts(i) for i in self.intermediate["measurement_outcomes"]]
+                    intermediate_measurement_outcomes = self.intermediate[
+                        "measurement_outcomes"
+                    ]
+                elif isinstance(
+                    self.intermediate["measurement_outcomes"][0], np.ndarray
+                ):
+                    intermediate_measurement_outcomes = [
+                        self.get_counts(i)
+                        for i in self.intermediate["measurement_outcomes"]
+                    ]
                 else:
                     raise TypeError(
                         f"The measurement outcome {type(self.intermediate['measurement_outcomes'][0])} is not valid."
@@ -676,12 +687,18 @@ class QAOAResult:
         def sorted_mean_std_deviation(counts: dict):
             values = list(counts.values())
             return {
-                'sorted': dict(sorted(counts.items(), key=lambda x: x[1], reverse=True)),
-                'mean': np.mean(values),
-                'std_deviation': np.std(values)
+                "sorted": dict(
+                    sorted(counts.items(), key=lambda x: x[1], reverse=True)
+                ),
+                "mean": np.mean(values),
+                "std_deviation": np.std(values),
             }
 
         return {
-            'intermediate': [sorted_mean_std_deviation(i) for i in intermediate_measurement_outcomes] if include_intermediate else [],
-            'optimized': sorted_mean_std_deviation(optimized_measurement_outcomes)
+            "intermediate": [
+                sorted_mean_std_deviation(i) for i in intermediate_measurement_outcomes
+            ]
+            if include_intermediate
+            else [],
+            "optimized": sorted_mean_std_deviation(optimized_measurement_outcomes),
         }

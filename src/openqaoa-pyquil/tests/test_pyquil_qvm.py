@@ -358,7 +358,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             for instr in pyquil_backend.parametric_circuit
             if type(instr) == quilbase.Gate
         ]
-        
+
     @pytest.mark.qvm
     def test_circuit_append_state(self):
         """
@@ -387,53 +387,57 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             qaoa_descriptor,
             n_shots=10,
             prepend_state=None,
-            append_state=append_circuit,  
+            append_state=append_circuit,
             init_hadamard=False,
             cvar_alpha=1,
         )
 
-        assert set([
-            "RZ",
-            "RZ",
-            "RX",
-            "RZ",
-            "RX",
-            "CZ",
-            "RZ",
-            "RZ",
-            "RX",
-            "RZ",
-            "RX",
-            "RZ",
-            "RX",
-            "RZ",
-            "RX",
-            "CZ",
-            "RZ",
-            "RX",
-            "RZ",
-            "RX",
-            "RZ",
-            "RX",
-            "RZ",
-            "RZ",
-            "RX",
-            "RZ",
-            "RX",
-            "RZ",
-            "RZ",
-            "RX",
-            "RZ",
-            "RZ",
-            "RX",
-            "RZ",
-            "RX",
-            "RZ",
-        ]) == set([
-            instr.name
-            for instr in pyquil_backend.qaoa_circuit(params)
-            if type(instr) == quilbase.Gate
-        ])
+        assert set(
+            [
+                "RZ",
+                "RZ",
+                "RX",
+                "RZ",
+                "RX",
+                "CZ",
+                "RZ",
+                "RZ",
+                "RX",
+                "RZ",
+                "RX",
+                "RZ",
+                "RX",
+                "RZ",
+                "RX",
+                "CZ",
+                "RZ",
+                "RX",
+                "RZ",
+                "RX",
+                "RZ",
+                "RX",
+                "RZ",
+                "RZ",
+                "RX",
+                "RZ",
+                "RX",
+                "RZ",
+                "RZ",
+                "RX",
+                "RZ",
+                "RZ",
+                "RX",
+                "RZ",
+                "RX",
+                "RZ",
+            ]
+        ) == set(
+            [
+                instr.name
+                for instr in pyquil_backend.qaoa_circuit(params)
+                if type(instr) == quilbase.Gate
+            ]
+        )
 
     @pytest.mark.qvm
     def test_circuit_prepend_state(self):

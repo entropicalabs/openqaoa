@@ -698,23 +698,22 @@ class Hamiltonian:
             sparse matrix of Hamiltonian.
         """
 
-        if self.n_qubits>20:
-            raise ValueError('number of qubits exceeds maximum of 20')
+        if self.n_qubits > 20:
+            raise ValueError("number of qubits exceeds maximum of 20")
 
-        p_mat_dict = {'X': csr_matrix([[0, 1],
-                                       [1, 0]]),
-                      'Y': csr_matrix([[0., -1j],
-                                       [1j, 0.]]),
-                      'Z': csr_matrix([[1, 0],
-                                       [0, -1]]),
-                      'I': csr_matrix([[1, 0], [0, 1]])}
+        p_mat_dict = {
+            "X": csr_matrix([[0, 1], [1, 0]]),
+            "Y": csr_matrix([[0.0, -1j], [1j, 0.0]]),
+            "Z": csr_matrix([[1, 0], [0, -1]]),
+            "I": csr_matrix([[1, 0], [0, 1]]),
+        }
 
         converter = lambda s: p_mat_dict[s]
 
         # vectorized function to map single qubit pauli strings to sparse matrix
         vfunc = np.vectorize(converter)
 
-        base = np.array(['I' for _ in range(self.n_qubits)])
+        base = np.array(["I" for _ in range(self.n_qubits)])
 
         H_mat = reduce(sparse_kron, vfunc(base)) * self.constant
         for P, coeff in zip(self.terms, self.coeffs):

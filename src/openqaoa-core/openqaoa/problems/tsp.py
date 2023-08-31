@@ -352,13 +352,14 @@ class TSP(Problem):
         ising_terms, ising_weights = QUBO.convert_qubo_to_ising(n, terms, weights)
         return QUBO(n, ising_terms, ising_weights, self.problem_instance)
 
+
 class TSP_LP(VRP):
     """
-    Creates an instance of the traveling salesman problem (TSP) based on the 
+    Creates an instance of the traveling salesman problem (TSP) based on the
     linear programming (LP) formulation. Note that the LP formulation of the TSP
     can be seen as a particular case of the Vehicle routing problem (VRP) with one vehicle.
     https://en.wikipedia.org/wiki/Travelling_salesman_problem
-    
+
 
     Parameters
     ----------
@@ -382,11 +383,14 @@ class TSP_LP(VRP):
     -------
         An instance of the TSP problem for the linear programming formulation.
     """
+
     __name__ = "tsp_lp"
-    
+
     def __init__(self, G, pos, subtours, penalty, method):
-        super().__init__(G, pos=pos, n_vehicles=1, subtours=subtours,
-                         method=method, penalty=penalty)
+        super().__init__(
+            G, pos=pos, n_vehicles=1, subtours=subtours, method=method, penalty=penalty
+        )
+
     @staticmethod
     def random_instance(**kwargs):
         """
@@ -457,7 +461,7 @@ class TSP_LP(VRP):
             sol = solution
         total_distance = 0
         for i in range(cities):
-            for j in range(i+1, cities):
+            for j in range(i + 1, cities):
                 if sol[f"x_{i}_{j}"]:
                     total_distance += self.G.edges[i, j]["weight"]
         return total_distance

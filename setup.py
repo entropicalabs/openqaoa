@@ -10,8 +10,12 @@ with open("README.md", "r") as fh:
 with open("_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
-requirements = [f"{each_folder_name}=={version}" for each_folder_name in os.listdir("src") if "openqaoa-" in each_folder_name]
-    
+requirements = [
+    f"{each_folder_name}=={version}"
+    for each_folder_name in os.listdir("src")
+    if "openqaoa-" in each_folder_name
+]
+
 setup(
     name="openqaoa",
     python_requires=">=3.8, <3.11",

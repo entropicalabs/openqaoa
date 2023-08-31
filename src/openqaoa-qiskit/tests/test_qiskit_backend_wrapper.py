@@ -78,7 +78,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             n_batches=1,
             calibration_data_location=self.calibration_data_location,
         )
-    
+
     @pytest.mark.qpu
     def test_wrap_any_backend(self):
         """

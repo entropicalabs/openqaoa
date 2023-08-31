@@ -35,8 +35,10 @@ def terms_list_isclose(terms_list1, terms_list2):
 
     return bool
 
+
 class TestMIS(unittest.TestCase):
     """Tests for the MIS class"""
+
     def test_mis_terms_weights_constant(self):
         """Test that MIS creates a correct QUBO from the provided graph"""
 

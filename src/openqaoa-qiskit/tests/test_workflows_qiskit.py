@@ -51,7 +51,6 @@ LOCAL_DEVICES = ALLOWED_LOCAL_SIMUALTORS + ["6q-qvm", "Aspen-11"]
 
 
 def _compare_qaoa_results(dict_old, dict_new):
-
     for key in dict_old.keys():
         if key == "cost_hamiltonian":  ## CHECK WHAT DO WITH THIS
             pass
@@ -142,7 +141,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertRaises(ValueError, lambda: q.optimize())
 
     def test_set_backend_properties_check_backend_qiskit_qasm(self):
-
         """
         Check if the backend returned by set_backend_properties is correct
         Based on the input device. For qiskit qasm simulator.
@@ -168,7 +166,6 @@ class TestingVanillaQAOA(unittest.TestCase):
         self.assertEqual(q.backend.n_shots, 100)
 
     def test_set_backend_properties_check_backend_qiskit_statevector(self):
-
         """
         Check if the backend returned by set_backend_properties is correct
         Based on the input device. For qiskit statevector simulator.
@@ -235,10 +232,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # run rqaoa with different devices, and save the objcets in a list
         qaoas = []
-        for device in [
-            create_device(location="local", name="qiskit.shot_simulator")
-        ]:
-
+        for device in [create_device(location="local", name="qiskit.shot_simulator")]:
             q = QAOA()
             q.set_device(device)
             q.set_circuit_properties(
@@ -273,7 +267,6 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # for each rqaoa object, create a new rqaoa object from dict, json string, json file, and compressed json file and compare them with the original object
         for q in qaoas:
-
             new_q_list = []
 
             # get new qaoa from dict
@@ -290,7 +283,6 @@ class TestingVanillaQAOA(unittest.TestCase):
             os.remove("test.json.gz")  # delete file test.json
 
             for new_q in new_q_list:
-
                 # check that the new object is an QAOA object
                 assert isinstance(new_q, QAOA), "new_r is not an RQAOA object"
 
@@ -407,7 +399,6 @@ class TestingRQAOA(unittest.TestCase):
         name_device="qiskit.statevector_simulator",
         return_object=False,
     ):
-
         if problem == None:
             problem = MaximumCut.random_instance(
                 n_nodes=8, edge_probability=0.5, seed=2
@@ -479,7 +470,6 @@ class TestingRQAOA(unittest.TestCase):
         ), "RQAOA should not be able to optimize twice without compilation"
 
     def test_example_1_adaptive_custom(self):
-
         # Number of qubits
         n_qubits = 12
 
@@ -517,7 +507,6 @@ class TestingRQAOA(unittest.TestCase):
                 assert solution[key] == exact_soutions[key]
 
     def test_example_2_adaptive_custom(self):
-
         # Elimination scheme
         n_cutoff = 3
 
@@ -539,7 +528,6 @@ class TestingRQAOA(unittest.TestCase):
                 assert solution[key] == exact_soutions[key]
 
     def test_example_3_adaptive_custom(self):
-
         # Elimination scheme
         step = 2
         nmax = 4
@@ -574,7 +562,6 @@ class TestingRQAOA(unittest.TestCase):
                 assert solution[key] == exact_soutions[key]
 
     def test_example_4_adaptive_custom(self):
-
         # Number of qubits
         n_qubits = 10
 
@@ -973,7 +960,6 @@ class TestingRQAOA(unittest.TestCase):
             ), "Dump file does not contain the correct data, when compressing"
         os.remove(full_name + ".gz")
 
-
     def __test_expected_keys(self, obj, exclude_keys=[], method="asdict"):
         """
         method to test if the dictionary has all the expected keys
@@ -1205,11 +1191,9 @@ class TestingRQAOA(unittest.TestCase):
 
         # check if the files have the expected keys
         for atomic_id, dictionary in files.items():
-
             file_name = file_names[atomic_id]
 
             if r.header["atomic_id"] == atomic_id:  # rqaoa files
-
                 rqaoa_files += 1
 
                 assert (
@@ -1230,7 +1214,6 @@ class TestingRQAOA(unittest.TestCase):
                     ), f"File {file_name} has intermediate mesuraments, but it should not have them."
 
             else:  # qaoa files
-
                 qaoa_files += 1
 
                 assert (
@@ -1275,7 +1258,6 @@ class TestingRQAOA(unittest.TestCase):
         for device in [
             create_device(location="local", name="qiskit.shot_simulator"),
         ]:
-
             r = RQAOA()
             r.set_device(device)
             r.set_circuit_properties(
@@ -1311,7 +1293,6 @@ class TestingRQAOA(unittest.TestCase):
 
         # for each rqaoa object, create a new rqaoa object from dict, json string, json file, and compressed json file and compare them with the original object
         for r in rqaoas:
-
             new_r_list = []
 
             # get new qaoa from dict
@@ -1328,7 +1309,6 @@ class TestingRQAOA(unittest.TestCase):
             os.remove("test.json.gz")  # delete file test.json
 
             for new_r in new_r_list:
-
                 # check that the new object is an RQAOA object
                 assert isinstance(new_r, RQAOA), "new_r is not an RQAOA object"
 

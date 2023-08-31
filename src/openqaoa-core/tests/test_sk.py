@@ -35,16 +35,36 @@ def terms_list_isclose(terms_list1, terms_list2):
 
     return bool
 
+
 class TestSK(unittest.TestCase):
     """Tests for the SK class"""
+
     def test_sk_terms_weights_constant(self):
         """Test that SK creates a correct QUBO from the provided graph"""
-        
+
         n_nodes = 5
         np.random.seed(1234)
         G = nx.Graph()
-        G.add_weighted_edges_from([[i, j, round(2*np.random.rand()-1)] for i in range(n_nodes) for j in range(i+1, n_nodes)])
-        gr_edges = [[0, 1], [0, 4], [1, 2], [2, 3], [2, 4], [3, 4], [0], [1], [2], [3], [4]]
+        G.add_weighted_edges_from(
+            [
+                [i, j, round(2 * np.random.rand() - 1)]
+                for i in range(n_nodes)
+                for j in range(i + 1, n_nodes)
+            ]
+        )
+        gr_edges = [
+            [0, 1],
+            [0, 4],
+            [1, 2],
+            [2, 3],
+            [2, 4],
+            [3, 4],
+            [0],
+            [1],
+            [2],
+            [3],
+            [4],
+        ]
         gr_weights = [1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
         sk_prob_qubo = SK(G).qubo
@@ -61,17 +81,18 @@ class TestSK(unittest.TestCase):
         sigma = 1
         np.random.seed(seed)
         G = nx.Graph()
-        G.add_weighted_edges_from([[i, j, round(np.random.normal(loc=mu, scale=sigma),3)] for i in range(n_nodes) for j in range(i+1, n_nodes)])
+        G.add_weighted_edges_from(
+            [
+                [i, j, round(np.random.normal(loc=mu, scale=sigma), 3)]
+                for i in range(n_nodes)
+                for j in range(i + 1, n_nodes)
+            ]
+        )
         sk_manual_prob = SK(G).qubo
 
-        
-        sk_random_prob = SK.random_instance(
-            n_nodes=n_nodes, seed=seed
-        ).qubo
+        sk_random_prob = SK.random_instance(n_nodes=n_nodes, seed=seed).qubo
 
-        self.assertTrue(
-            terms_list_equality(sk_manual_prob.terms, sk_random_prob.terms)
-        )
+        self.assertTrue(terms_list_equality(sk_manual_prob.terms, sk_random_prob.terms))
         self.assertEqual(sk_manual_prob.weights, sk_random_prob.weights)
         self.assertEqual(sk_manual_prob.constant, sk_random_prob.constant)
 
@@ -95,11 +116,9 @@ class TestSK(unittest.TestCase):
 
         seed = 1234
         np.random.seed(seed)
-        sk_sol = SK.random_instance(
-            n_nodes=2, seed=seed
-        ).classical_solution()
+        sk_sol = SK.random_instance(n_nodes=2, seed=seed).classical_solution()
 
-        sol = {'x_0': 0, 'x_1': 0}
+        sol = {"x_0": 0, "x_1": 0}
 
         self.assertEqual(sk_sol, sol)
 
@@ -108,22 +127,20 @@ class TestSK(unittest.TestCase):
         import matplotlib.pyplot as plt
 
         seed = 1234
-        sk_random_prob = SK.random_instance(
-            n_nodes=10, seed=seed
-        )
+        sk_random_prob = SK.random_instance(n_nodes=10, seed=seed)
         sol = {
-            'x_0': 1.0,
-            'x_1': 1.0,
-            'x_2': 0,
-            'x_3': 1.0,
-            'x_4': 0,
-            'x_5': 1.0,
-            'x_6': 0,
-            'x_7': 0,
-            'x_8': 0,
-            'x_9': 1.0
-            }
-        
+            "x_0": 1.0,
+            "x_1": 1.0,
+            "x_2": 0,
+            "x_3": 1.0,
+            "x_4": 0,
+            "x_5": 1.0,
+            "x_6": 0,
+            "x_7": 0,
+            "x_8": 0,
+            "x_9": 1.0,
+        }
+
         fig, ax = plt.subplots()
         sk_random_prob.plot_solution(sol, ax=ax)
         self.assertTrue(isinstance(ax, plt.Axes))

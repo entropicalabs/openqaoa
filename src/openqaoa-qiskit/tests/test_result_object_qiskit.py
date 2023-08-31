@@ -5,9 +5,9 @@ from openqaoa import QAOA
 from openqaoa.problems import MinimumVertexCover
 from openqaoa.backends import create_device
 
+
 class TestingLoggerClass(unittest.TestCase):
     def test_plot_probabilities(self):
-        
         # Create the problem
         g = nx.circulant_graph(6, [1])
         vc = MinimumVertexCover(g, field=1.0, penalty=10).qubo
