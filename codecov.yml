@@ -1,3 +1,9 @@
+ignore:
+  - "path/to/folder"  # ignore folders and all its contents
+  - "src/*/*/backends/backend_config.py" # ignore the backend_config.py file for all plugins
+  - "**/__init__.py"
+  
+  
 coverage:
   status:
     patch:
