@@ -63,4 +63,4 @@ jobs:
         run: |
           .\env\Scripts\Activate.ps1
           ipython kernel install --name "env" --user
-          pytest tests/ -m 'not (qpu or api or docker_aws or braket_api or sim)'
+          pytest tests/ src/*/tests -m 'not (qpu or api or docker_aws or braket_api or sim)'
