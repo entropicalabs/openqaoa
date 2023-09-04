@@ -64,4 +64,4 @@ jobs:
           .\env\Scripts\Activate.ps1
           ipython kernel install --name "env" --user
           pytest \tests -m 'not (qpu or api or docker_aws or braket_api or sim)'
-          for /D %d in (src\*tests*) do pytest %~fd -m
+          Get-ChildItem -Directory | ForEach-Object { pytest $_.FullName }
