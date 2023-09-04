@@ -2,6 +2,32 @@ ignore:
   - "path/to/folder"  # ignore folders and all its contents
   - "src/*/*/backends/backend_config.py" # ignore the backend_config.py file for all plugins
   - "**/__init__.py"
+
+comment:
+  layout: "header, diff, flags, components"
+
+component_management:
+  individual_components:
+  - component_id: openqaoa-core
+    name: core
+    paths:
+      - src/openqaoa-core
+  - component_id: openqaoa-qiskit
+    name: qiskit
+    paths:
+      - src/openqaoa-qiskit
+  - component_id: openqaoa-braket
+    name: braket
+    paths:
+      - src/openqaoa-braket
+  - component_id: openqaoa-azure
+    name: azure
+    paths:
+      - src/openqaoa-azure
+  - component_id: openqaoa-pyquil
+    name: pyquil
+    paths:
+      - src/openqaoa-pyquil
   
   
 coverage:
