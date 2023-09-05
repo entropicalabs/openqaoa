@@ -9,6 +9,7 @@ import subprocess
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 from qiskit.tools.monitor import job_monitor
+from qiskit_ibm_provider.job.exceptions import IBMJobError
 
 from openqaoa.qaoa_components import (
     create_qaoa_variational_params,
@@ -515,7 +516,10 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         while job.status().name not in ["DONE", "CANCELLED", "ERROR"]:
             # if the job is queued, cancel the job
             if job.status().name == "QUEUED":
-                job.cancel()
+                try:
+                    job.cancel()
+                except IBMJobError as e:
+                    print(f"Job cancellation issue on IBMs end: {e}")
             else:
                 time.sleep(1)
 
