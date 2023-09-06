@@ -125,8 +125,8 @@ class TestingQubitRouting(unittest.TestCase):
             final_logical_qubit_order=[5, 4, 0, 1, 2, 3],
         )
 
-        # case qubits problem == 2 (IBM OSLO)
-        self.IBM_OSLO_QUBO2 = ExpectedRouting(
+        # case qubits problem == 2 (IBM perth)
+        self.IBM_perth_QUBO2 = ExpectedRouting(
             qubo=QUBO.from_dict(
                 {
                     "terms": [[0, 1], [1]],
@@ -135,7 +135,7 @@ class TestingQubitRouting(unittest.TestCase):
                 }
             ),
             device_location="ibmq",
-            device_name="ibm_oslo",
+            device_name="ibm_perth",
             qpu_credentials={
                 "hub": "ibm-q",
                 "group": "open",
@@ -150,11 +150,11 @@ class TestingQubitRouting(unittest.TestCase):
             final_logical_qubit_order=[2, 1, 0],
         )
 
-        # case qubits device == qubits problem (IBM OSLO)
-        self.IBM_OSLO_NPARTITION = ExpectedRouting(
+        # case qubits device == qubits problem (IBM perth)
+        self.IBM_perth_NPARTITION = ExpectedRouting(
             qubo=NumberPartition.random_instance(n_numbers=7, seed=2).qubo,
             device_location="ibmq",
-            device_name="ibm_oslo",
+            device_name="ibm_perth",
             qpu_credentials={
                 "hub": "ibm-q",
                 "group": "open",
