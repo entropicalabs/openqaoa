@@ -153,6 +153,10 @@ class TestingAwsJobs(unittest.TestCase):
             input_data={"input_data": input_data_path},
         )
 
+        print("FLAG")
+
+        raise Exception("Another flag hopefully coming out of Docker")
+
         assert (job.state() == "COMPLETED") and (job.result() != None) == True
 
 
