@@ -75,10 +75,10 @@ class PortfolioOptimization(Problem):
         risk_factor = kwargs.get("risk_factor", 0.1)
         penalty = kwargs.get("penalty", 2)
 
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
 
         mu = [
-            (mu_bounds[1] - mu_bounds[0]) * np.random.rand() + mu_bounds[0]
+            (mu_bounds[1] - mu_bounds[0]) * rng.random() + mu_bounds[0]
             for _ in range(num_assets)
         ]
         sigma = [[0 for i in range(num_assets)] for j in range(num_assets)]
@@ -86,7 +86,7 @@ class PortfolioOptimization(Problem):
             for j in range(num_assets):
                 sigma[i][j] = (
                     sigma_bounds[1] - sigma_bounds[0]
-                ) * np.random.rand() + sigma_bounds[0]
+                ) * rng.random() + sigma_bounds[0]
 
         return PortfolioOptimization(mu, sigma, risk_factor, budget, penalty)
 

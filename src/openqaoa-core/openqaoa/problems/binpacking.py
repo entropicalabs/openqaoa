@@ -121,7 +121,7 @@ class BinPacking(Problem):
             A random instance of the bin packing problem.
         """
         seed = kwargs.get("seed", 1234)
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         weight_capacity = kwargs.get("weight_capacity", 15)
         n_items = kwargs.get("n_items", 3)
         n_bins = n_items
@@ -131,7 +131,7 @@ class BinPacking(Problem):
             raise ValueError(
                 f"min_weight: {min_weight} must be < max_weight:{max_weight}"
             )
-        weights = [np.random.randint(min_weight, max_weight) for _ in range(n_items)]
+        weights = [rng.integers(min_weight, max_weight) for _ in range(n_items)]
         simplification = kwargs.get("simplification", True)
         penalty = kwargs.get("penalty", [])
         method = kwargs.get("method", "slack")

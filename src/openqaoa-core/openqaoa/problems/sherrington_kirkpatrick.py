@@ -71,12 +71,12 @@ class SK(Problem):
         mu = kwargs.get("mu", 0)
         sigma = kwargs.get("sigma", 1)
         seed = kwargs.get("seed", None)
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
 
         G = nx.Graph()
         G.add_weighted_edges_from(
             [
-                [i, j, round(np.random.normal(mu, sigma), 3)]
+                [i, j, round(rng.normal(mu, sigma), 3)]
                 for i in range(n_nodes)
                 for j in range(i + 1, n_nodes)
             ]
