@@ -115,7 +115,7 @@ class QUBO(object):
     @n.setter
     def n(self, input_n):
         if not isinstance(input_n, int):
-            raise TypeError("The input parameter, n, has to be of type int it is of type")
+            raise TypeError(f"The input parameter, n, has to be of type int it is currently {type(input_n)}")
 
         if input_n <= 0:
             raise TypeError(
