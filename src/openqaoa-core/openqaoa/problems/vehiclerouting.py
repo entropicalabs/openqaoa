@@ -224,11 +224,11 @@ class VRP(Problem):
         else:
             raise ValueError(f"The method '{method}' is not valid.")
         subtours = kwargs.get("subtours", -1)
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         G = nx.Graph()
         G.add_nodes_from(range(n_nodes))
         pos = [[0, 0]]
-        pos += [list(2 * np.random.rand(2) - 1) for _ in range(n_nodes - 1)]
+        pos += [list(2 * rng.random(2) - 1) for _ in range(n_nodes - 1)]
         for i in range(n_nodes - 1):
             for j in range(i + 1, n_nodes):
                 r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)

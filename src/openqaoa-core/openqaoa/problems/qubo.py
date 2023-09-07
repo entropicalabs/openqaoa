@@ -237,9 +237,11 @@ class QUBO(object):
         )
 
     @staticmethod
-    def random_instance(n, density=0.5, format_m="coo", max_abs_value=100):
+    def random_instance(n, density=0.5, format_m="coo", max_abs_value=100, **kwargs):
+        seed = kwargs.get("seed", None)
+
         # Generate a random matrix (elements in [0, 1]) of type sparse
-        random_matrix = scipy.sparse.rand(n, n, density=density, format=format_m)
+        random_matrix = scipy.sparse.rand(n, n, density=density, format=format_m, random_state=seed)
 
         # Retrieve the indices of non-zero elements of the matrix as list of tuples
         terms = np.transpose(random_matrix.nonzero())
