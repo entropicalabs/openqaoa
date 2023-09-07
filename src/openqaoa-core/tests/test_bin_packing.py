@@ -474,12 +474,12 @@ class TestBinPacking(unittest.TestCase):
         """Test Bin Packing random instance method"""
 
         seed = 1234
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         min_weight = 1
         max_weight = 7
         n_items = 3
         weight_capacity = 15
-        weights = list(np.random.randint(min_weight, max_weight, n_items))
+        weights = list(rng.integers(min_weight, max_weight, n_items, dtype=int))
         binpacking_manual_prob = BinPacking(weights, weight_capacity).qubo
 
         binpacking_random_prob = BinPacking.random_instance(
@@ -500,24 +500,23 @@ class TestBinPacking(unittest.TestCase):
         """Test the Bin Packing random instance method classical solution"""
 
         seed = 1234
-        np.random.seed(seed)
         binpacking_sol = BinPacking.random_instance(
             n_items=3, seed=seed
         ).classical_solution()
 
         sol = {
-            "y_0": 1,
-            "y_1": 0,
-            "y_2": 0,
-            "x_0_0": 1,
-            "x_0_1": 0,
-            "x_0_2": 0,
-            "x_1_0": 1,
-            "x_1_1": 0,
-            "x_1_2": 0,
-            "x_2_0": 1,
-            "x_2_1": 0,
-            "x_2_2": 0,
+            'y_0': 1, 
+            'y_1': 1, 
+            'y_2': 0, 
+            'x_0_0': 1, 
+            'x_0_1': 0, 
+            'x_0_2': 0, 
+            'x_1_0': 0, 
+            'x_1_1': 1, 
+            'x_1_2': 0, 
+            'x_2_0': 0, 
+            'x_2_1': 1, 
+            'x_2_2': 0
         }
 
         self.assertEqual(binpacking_sol, sol)
