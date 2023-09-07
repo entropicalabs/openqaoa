@@ -43,29 +43,28 @@ class TestSK(unittest.TestCase):
         """Test that SK creates a correct QUBO from the provided graph"""
 
         n_nodes = 5
-        np.random.seed(1234)
+        rng = np.random.default_rng(1234)
         G = nx.Graph()
         G.add_weighted_edges_from(
             [
-                [i, j, round(2 * np.random.rand() - 1)]
+                [i, j, round(2 * rng.random() - 1)]
                 for i in range(n_nodes)
                 for j in range(i + 1, n_nodes)
             ]
         )
         gr_edges = [
-            [0, 1],
-            [0, 4],
-            [1, 2],
-            [2, 3],
-            [2, 4],
-            [3, 4],
-            [0],
-            [1],
-            [2],
-            [3],
-            [4],
+            [0, 1], 
+            [0, 3], 
+            [1, 3], 
+            [1, 4], 
+            [2, 4], 
+            [0], 
+            [1], 
+            [2], 
+            [3], 
+            [4]
         ]
-        gr_weights = [1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        gr_weights = [-1.0, -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
         sk_prob_qubo = SK(G).qubo
         self.assertTrue(terms_list_equality(gr_edges, sk_prob_qubo.terms))
@@ -79,11 +78,11 @@ class TestSK(unittest.TestCase):
         n_nodes = 5
         mu = 0
         sigma = 1
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         G = nx.Graph()
         G.add_weighted_edges_from(
             [
-                [i, j, round(np.random.normal(loc=mu, scale=sigma), 3)]
+                [i, j, round(rng.normal(loc=mu, scale=sigma), 3)]
                 for i in range(n_nodes)
                 for j in range(i + 1, n_nodes)
             ]
@@ -115,10 +114,9 @@ class TestSK(unittest.TestCase):
         """Test the SK random instance method classical solution"""
 
         seed = 1234
-        np.random.seed(seed)
         sk_sol = SK.random_instance(n_nodes=2, seed=seed).classical_solution()
 
-        sol = {"x_0": 0, "x_1": 0}
+        sol = {"x_0": 1, "x_1": 0}
 
         self.assertEqual(sk_sol, sol)
 

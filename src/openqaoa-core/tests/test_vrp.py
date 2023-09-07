@@ -62,13 +62,13 @@ class TestVRP(unittest.TestCase):
     def test_vrp_random_instance(self):
         """Testing the random_instance method of the VRP problem class"""
         seed = 1234
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         n_nodes = 3
         n_vehicles = 1
         G = nx.Graph()
         G.add_nodes_from(range(n_nodes))
         pos = [[0, 0]]
-        pos += [list(2 * np.random.rand(2) - 1) for _ in range(n_nodes - 1)]
+        pos += [list(2 * rng.random(2) - 1) for _ in range(n_nodes - 1)]
         for i in range(n_nodes - 1):
             for j in range(i + 1, n_nodes):
                 r = np.sqrt((pos[i][0] - pos[j][0]) ** 2 + (pos[i][1] - pos[j][1]) ** 2)
@@ -193,7 +193,6 @@ class TestVRP(unittest.TestCase):
         unbalanced penalization method
         """
         seed = 1234
-        np.random.seed(seed)
         n_nodes = 8
         n_vehicles = 2
         n_vars = n_nodes * (n_nodes - 1) // 2
@@ -208,7 +207,7 @@ class TestVRP(unittest.TestCase):
 
         self.assertTrue(vrp_prob_random.n == n_vars)
         self.assertTrue(vrp_prob_random.weights[0] == 0.05)
-        self.assertTrue(vrp_prob_random.weights[-1] == -0.688413325464513)
+        self.assertTrue(vrp_prob_random.weights[-1] == -0.793013310265329)
         self.assertTrue(vrp_prob_random.terms[0] == [0, 1])
         self.assertTrue(vrp_prob_random.terms[-1] == [27])
 

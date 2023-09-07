@@ -62,7 +62,7 @@ class TestPortfolioOptimization(unittest.TestCase):
     def test_portfoliooptimization_random_instance(self):
         """Test random instance method of PortfolioOptimization problem class"""
         seed = 1234
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         num_assets = 3
         risk_factor = 0.1
         budget = 2
@@ -70,7 +70,7 @@ class TestPortfolioOptimization(unittest.TestCase):
         mu_bounds = [-0.1, 0.1]
         sigma_bounds = [-0.01, 0.01]
         mu = [
-            (mu_bounds[1] - mu_bounds[0]) * np.random.rand() + mu_bounds[0]
+            (mu_bounds[1] - mu_bounds[0]) * rng.random() + mu_bounds[0]
             for _ in range(num_assets)
         ]
         sigma = [[0 for i in range(num_assets)] for j in range(num_assets)]
@@ -78,7 +78,7 @@ class TestPortfolioOptimization(unittest.TestCase):
             for j in range(num_assets):
                 sigma[i][j] = (
                     sigma_bounds[1] - sigma_bounds[0]
-                ) * np.random.rand() + sigma_bounds[0]
+                ) * rng.random() + sigma_bounds[0]
 
         qubo = PortfolioOptimization(mu, sigma, risk_factor, budget, penalty).qubo
 
@@ -99,22 +99,21 @@ class TestPortfolioOptimization(unittest.TestCase):
         """Test the portfolio optimization set random instance method classical solution"""
 
         seed = 1234
-        np.random.seed(seed)
         po_sol = PortfolioOptimization.random_instance(
             num_assets=10, seed=seed
         ).classical_solution()
 
         sol = {
-            "asset_0": 0,
-            "asset_1": 0,
-            "asset_2": 0,
-            "asset_3": 1,
-            "asset_4": 1,
-            "asset_5": 0,
-            "asset_6": 0,
-            "asset_7": 1,
-            "asset_8": 1,
-            "asset_9": 1,
+            'asset_0': 1.0, 
+            'asset_1': 1.0, 
+            'asset_2': 1.0, 
+            'asset_3': 0, 
+            'asset_4': 0, 
+            'asset_5': 0, 
+            'asset_6': 0, 
+            'asset_7': 1.0, 
+            'asset_8': 1.0, 
+            'asset_9': 0
         }
 
         self.assertEqual(po_sol, sol)
