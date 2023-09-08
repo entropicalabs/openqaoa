@@ -1,3 +1,21 @@
+## Version v0.2.0 (September 8th, 2023)
+
+This new version brings an import change to OpenQAOA, separately installable plugins to access 
+different providers.
+
+## What's changed
+
+This version brings the following new features:
+* Independently installable plugins
+* New problem classes
+  * Sherrington-Kirkpatrick (SK)
+  * k-Coloring (KColor)
+  * TSP in linear programming (TSP_LP)
+* Error mitigation technique implementation
+  * SPAM twirling
+* Improved Github workflows for internal/external release testing
+* Additional bug fixes
+
 ## Version v0.1.3 (April 21st, 2023)
 This version brings a set of new features in OpenQAOA
 
