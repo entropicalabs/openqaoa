@@ -104,16 +104,16 @@ class TestPortfolioOptimization(unittest.TestCase):
         ).classical_solution()
 
         sol = {
-            'asset_0': 1.0, 
-            'asset_1': 1.0, 
-            'asset_2': 1.0, 
-            'asset_3': 0, 
-            'asset_4': 0, 
-            'asset_5': 0, 
-            'asset_6': 0, 
-            'asset_7': 1.0, 
-            'asset_8': 1.0, 
-            'asset_9': 0
+            "asset_0": 1.0,
+            "asset_1": 1.0,
+            "asset_2": 1.0,
+            "asset_3": 0,
+            "asset_4": 0,
+            "asset_5": 0,
+            "asset_6": 0,
+            "asset_7": 1.0,
+            "asset_8": 1.0,
+            "asset_9": 0,
         }
 
         self.assertEqual(po_sol, sol)

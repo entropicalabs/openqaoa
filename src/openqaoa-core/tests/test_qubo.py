@@ -30,36 +30,54 @@ class TestQUBO(unittest.TestCase):
         rng = np.random.default_rng(seed)
         problems_random_instances = {
             "tsp": TSP.random_instance(n_cities=int(rng.integers(2, 10)), seed=seed),
-            "tsp_lp": TSP_LP.random_instance(n_nodes=int(rng.integers(2, 10)), seed=seed),
+            "tsp_lp": TSP_LP.random_instance(
+                n_nodes=int(rng.integers(2, 10)), seed=seed
+            ),
             "number_partition": NumberPartition.random_instance(
                 n_numbers=int(rng.integers(2, 10)), seed=seed
             ),
             "maximum_cut": MaximumCut.random_instance(
-                n_nodes=int(rng.integers(2, 10)), edge_probability=rng.random(), seed=seed
+                n_nodes=int(rng.integers(2, 10)),
+                edge_probability=rng.random(),
+                seed=seed,
             ),
-            "knapsack": Knapsack.random_instance(n_items=int(rng.integers(2, 10)), seed=seed),
+            "knapsack": Knapsack.random_instance(
+                n_items=int(rng.integers(2, 10)), seed=seed
+            ),
             "slack_free_knapsack": SlackFreeKnapsack.random_instance(
                 n_items=int(rng.integers(2, 10)), seed=seed
             ),
             "minimum_vertex_cover": MinimumVertexCover.random_instance(
-                n_nodes=int(rng.integers(2, 10)), edge_probability=rng.random(), seed=seed
+                n_nodes=int(rng.integers(2, 10)),
+                edge_probability=rng.random(),
+                seed=seed,
             ),
             "shortest_path": ShortestPath.random_instance(
-                n_nodes=int(rng.integers(3, 10)), edge_probability=rng.random(), seed=seed
+                n_nodes=int(rng.integers(3, 10)),
+                edge_probability=rng.random(),
+                seed=seed,
             ),
             "vehicle_routing": VRP.random_instance(seed=seed),
             "maximal_independent_set": MIS.random_instance(
-                n_nodes=int(rng.integers(3, 10)), edge_probability=rng.random(), seed=seed
+                n_nodes=int(rng.integers(3, 10)),
+                edge_probability=rng.random(),
+                seed=seed,
             ),
             "bin_packing": BinPacking.random_instance(seed=seed),
             "portfolio_optimization": PortfolioOptimization.random_instance(seed=seed),
-            "sherrington_kirkpatrick": SK.random_instance(n_nodes=int(rng.integers(2, 10)), seed=seed),
-            "k_color": KColor.random_instance(n_nodes=int(rng.integers(3, 8)), k=int(rng.integers(2, 5)), seed=seed),
+            "sherrington_kirkpatrick": SK.random_instance(
+                n_nodes=int(rng.integers(2, 10)), seed=seed
+            ),
+            "k_color": KColor.random_instance(
+                n_nodes=int(rng.integers(3, 8)), k=int(rng.integers(2, 5)), seed=seed
+            ),
         }
         qubo_random_instances = {
             k: v.qubo for k, v in problems_random_instances.items()
         }
-        qubo_random_instances["generic_qubo"] = QUBO.random_instance(int(rng.integers(2, 10)), seed=seed)
+        qubo_random_instances["generic_qubo"] = QUBO.random_instance(
+            int(rng.integers(2, 10)), seed=seed
+        )
         return problems_random_instances, qubo_random_instances
 
     def test_problem_instance(self):

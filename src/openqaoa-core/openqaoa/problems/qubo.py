@@ -115,7 +115,9 @@ class QUBO(object):
     @n.setter
     def n(self, input_n):
         if not isinstance(input_n, int):
-            raise TypeError(f"The input parameter, n, has to be of type int it is currently {type(input_n)}")
+            raise TypeError(
+                f"The input parameter, n, has to be of type int it is currently {type(input_n)}"
+            )
 
         if input_n <= 0:
             raise TypeError(
@@ -241,7 +243,9 @@ class QUBO(object):
         seed = kwargs.get("seed", None)
 
         # Generate a random matrix (elements in [0, 1]) of type sparse
-        random_matrix = scipy.sparse.rand(n, n, density=density, format=format_m, random_state=seed)
+        random_matrix = scipy.sparse.rand(
+            n, n, density=density, format=format_m, random_state=seed
+        )
 
         # Retrieve the indices of non-zero elements of the matrix as list of tuples
         terms = np.transpose(random_matrix.nonzero())

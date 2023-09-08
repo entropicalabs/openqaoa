@@ -250,15 +250,15 @@ class TestTSP_LP(unittest.TestCase):
     def test_tsp_lp_terms_weights_constant(self):
         """Testing TSP LP problem creation"""
         tsp_qubo = TSP_LP.random_instance(n_nodes=3, seed=1234).qubo
-        expected_terms =  [[0, 1], [0, 2], [1, 2], [0], [1], [2]]
+        expected_terms = [[0, 1], [0, 2], [1, 2], [0], [1], [2]]
         expected_weights = [
-            2.0, 
-            2.0, 
-            2.0, 
-            7.508476115048767, 
-            7.514275926847963, 
-            7.86999878870526
-        ] 
+            2.0,
+            2.0,
+            2.0,
+            7.508476115048767,
+            7.514275926847963,
+            7.86999878870526,
+        ]
         expected_constant = 19.10724916939801
         self.assertTrue(terms_list_equality(expected_terms, tsp_qubo.terms))
         self.assertEqual(expected_weights, tsp_qubo.weights)
