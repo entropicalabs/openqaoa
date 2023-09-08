@@ -1,0 +1,62 @@
+name: Test the PyPi pre-release install weekly
+
+on:
+  # schedule:
+    # - cron: "0 0 * * 1,3,5" #“At 00:00 on Monday, Wednesday, and Friday.” https://crontab.guru/#0_0_*_*_1,3,5
+  workflow_dispatch:
+
+jobs:  
+  test_pypi:
+    strategy:
+        fail-fast: false
+        matrix:
+          os: [ubuntu-latest]
+          python: ['3.8', '3.9', '3.10', '3.11']
+    # The type of runner that the job will run on
+    runs-on:  ${{ matrix.os }}
+
+    # Define job steps
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Check-out repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        
+    - name: Install OpenQAOA-Core release candidate
+      run: |
+        pip install --pre openqaoa-core
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+        
+    
+    - name: Install OpenQAOA-Qiskit release candidate
+      run: |
+        pip install --pre openqaoa-qiskit
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+        
+    
+    - name: Install OpenQAOA-Pyquil release candidate
+      run: |
+        pip install --pre openqaoa-pyquil
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+        
+    
+    - name: Install OpenQAOA-Braket release candidate
+      run: |
+        pip install --pre openqaoa-braket
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+        
+    
+    - name: Install OpenQAOA-Azure release candidate
+      run: |
+        pip install --pre openqaoa-azure
+        python -c 'from openqaoa._version import __version__; print(__version__)'
+
+    - name: Install OpenQAOA (Full) release candidate
+      run: |
+        pip install --pre openqaoa
+        python -c 'from openqaoa._version import __version__; print(__version__)'

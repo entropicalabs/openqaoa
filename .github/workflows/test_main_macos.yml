@@ -49,11 +49,11 @@ jobs:
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          pip install .[tests]
+          make dev-install-tests
           pip install ipykernel
 
       - name: Run tests
         run: |
           source env/bin/activate
           ipython kernel install --user --name "env"
-          pytest tests/ -m 'not (qpu or api or docker_aws or braket_api or sim)'
+          pytest tests/ src/*/tests -m 'not (qpu or api or docker_aws or braket_api or sim)'

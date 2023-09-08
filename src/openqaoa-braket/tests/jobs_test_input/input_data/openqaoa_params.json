@@ -1,0 +1,286 @@
+{
+  "header": {
+    "atomic_id": "d32eb15f-8b8c-4373-a24e-a2c38196d82f",
+    "experiment_id": "8d778c1a-a942-4997-bf69-13bd552f0ec6",
+    "project_id": null,
+    "algorithm": "rqaoa",
+    "description": null,
+    "run_by": null,
+    "provider": null,
+    "target": null,
+    "cloud": null,
+    "client": null,
+    "execution_time_start": null,
+    "execution_time_end": null,
+    "metadata": {
+      "qubit_number": 10,
+      "problem_type": "minimum_vertex_cover",
+      "n_shots": 100,
+      "optimizer_method": "cobyla",
+      "param_type": "standard",
+      "init_type": "ramp",
+      "p": 1,
+      "rqaoa_type": "custom",
+      "rqaoa_n_max": 1,
+      "rqaoa_n_cutoff": 6
+    }
+  },
+  "data": {
+    "exp_tags": {
+      "qubit_number": 10
+    },
+    "input_problem": {
+      "terms": [
+        [
+          0,
+          9
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ],
+        [
+          4
+        ],
+        [
+          5
+        ],
+        [
+          6
+        ],
+        [
+          7
+        ],
+        [
+          8
+        ],
+        [
+          9
+        ]
+      ],
+      "weights": [
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        4.5,
+        4.5,
+        4.5,
+        4.5,
+        4.5,
+        4.5,
+        4.5,
+        4.5,
+        4.5,
+        4.5
+      ],
+      "constant": 30.0,
+      "n": 10,
+      "problem_instance": {
+        "problem_type": "minimum_vertex_cover",
+        "G": {
+          "directed": false,
+          "multigraph": false,
+          "graph": {},
+          "nodes": [
+            {
+              "id": 0
+            },
+            {
+              "id": 1
+            },
+            {
+              "id": 2
+            },
+            {
+              "id": 3
+            },
+            {
+              "id": 4
+            },
+            {
+              "id": 5
+            },
+            {
+              "id": 6
+            },
+            {
+              "id": 7
+            },
+            {
+              "id": 8
+            },
+            {
+              "id": 9
+            }
+          ],
+          "links": [
+            {
+              "source": 0,
+              "target": 9
+            },
+            {
+              "source": 0,
+              "target": 1
+            },
+            {
+              "source": 1,
+              "target": 2
+            },
+            {
+              "source": 2,
+              "target": 3
+            },
+            {
+              "source": 3,
+              "target": 4
+            },
+            {
+              "source": 4,
+              "target": 5
+            },
+            {
+              "source": 5,
+              "target": 6
+            },
+            {
+              "source": 6,
+              "target": 7
+            },
+            {
+              "source": 7,
+              "target": 8
+            },
+            {
+              "source": 8,
+              "target": 9
+            }
+          ]
+        },
+        "field": 1.0,
+        "penalty": 10
+      },
+      "metadata": {}
+    },
+    "input_parameters": {
+      "device": {
+        "device_location": "aws",
+        "device_name": "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+      },
+      "backend_properties": {
+        "init_hadamard": true,
+        "n_shots": 100,
+        "prepend_state": null,
+        "append_state": null,
+        "cvar_alpha": 1,
+        "noise_model": null,
+        "initial_qubit_mapping": null,
+        "seed_simulator": null,
+        "qiskit_simulation_method": null,
+        "qiskit_optimization_level": null,
+        "active_reset": null,
+        "rewiring": null,
+        "disable_qubit_rewiring": null
+      },
+      "classical_optimizer": {
+        "optimize": true,
+        "method": "cobyla",
+        "maxiter": 3,
+        "maxfev": null,
+        "jac": null,
+        "hess": null,
+        "constraints": null,
+        "bounds": null,
+        "tol": null,
+        "optimizer_options": null,
+        "jac_options": null,
+        "hess_options": null,
+        "parameter_log": true,
+        "optimization_progress": false,
+        "cost_progress": true,
+        "save_intermediate": false
+      },
+      "circuit_properties": {
+        "param_type": "standard",
+        "init_type": "ramp",
+        "qubit_register": [],
+        "p": 1,
+        "q": null,
+        "variational_params_dict": {
+          "q": null,
+          "total_annealing_time": 0.7
+        },
+        "annealing_time": 0.7,
+        "linear_ramp_time": 0.7,
+        "mixer_hamiltonian": "x",
+        "mixer_qubit_connectivity": null,
+        "mixer_coeffs": null,
+        "seed": null
+      },
+      "rqaoa_parameters": {
+        "rqaoa_type": "custom",
+        "n_max": 1,
+        "steps": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "n_cutoff": 6,
+        "original_hamiltonian": null,
+        "counter": 0
+      }
+    },
+    "result": null
+  }
+}

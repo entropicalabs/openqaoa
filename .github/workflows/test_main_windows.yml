@@ -42,7 +42,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade setuptools
           pip install wheel
-          pip install .[tests]
+          make dev-install-tests
           pip install ipykernel
 
       # Install Rigetti Forest SDK and launch QUILC + QVM services
@@ -63,4 +63,5 @@ jobs:
         run: |
           .\env\Scripts\Activate.ps1
           ipython kernel install --name "env" --user
-          pytest tests/ -m 'not (qpu or api or docker_aws or braket_api or sim)'
+          pytest \tests -m 'not (qpu or api or docker_aws or braket_api or sim)'
+          Get-ChildItem -Directory | ForEach-Object { pytest $_.FullName -m 'not (qpu or api or docker_aws or braket_api or sim)'}
