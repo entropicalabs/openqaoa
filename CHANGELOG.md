@@ -1,3 +1,7 @@
+## Version v0.2.1 (September 11th, 2023)
+
+This version fixes an issue detecting the plugins when installing `openqaoa-core` from PyPI.
+
 ## Version v0.2.0 (September 8th, 2023)
 
 This new version brings an import change to OpenQAOA, separately installable plugins to access 
