@@ -13,7 +13,7 @@ def plugin_finder_dict() -> list:
     if sys.version_info >= (3, 10):
         available_plugins = entry_points().select(group="openqaoa.plugins")
     else:
-        available_plugins = entry_points()["openqaoa.plugins"]
+        available_plugins = entry_points().get("openqaoa.plugins", [])
 
     output_dict = dict()
     for each_plugin_entry_point in available_plugins:
