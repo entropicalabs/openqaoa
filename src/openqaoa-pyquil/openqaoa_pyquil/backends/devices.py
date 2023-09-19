@@ -1,5 +1,5 @@
 from typing import List
-from qcs_api_client.client import QCSClientConfiguration
+from pyquil.api import QCSClient
 from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
 
@@ -25,7 +25,7 @@ class DevicePyquil(DeviceBase):
         noisy: bool = None,
         compiler_timeout: float = 20.0,
         execution_timeout: float = 20.0,
-        client_configuration: QCSClientConfiguration = None,
+        client_configuration: QCSClient = None,
         endpoint_id: str = None,
         engagement_manager: EngagementManager = None,
     ):
