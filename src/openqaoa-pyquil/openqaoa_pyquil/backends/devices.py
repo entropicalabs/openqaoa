@@ -54,7 +54,7 @@ class DevicePyquil(DeviceBase):
             Time limit for compilation requests, in seconds.
         execution_timeout: float
             Time limit for execution requests, in seconds.
-        client_configuration: QCSClientConfiguration
+        client_configuration: QCSClient
             Optional client configuration. If none is provided, a default one
             will be loaded.
         endpoint_id: str
