@@ -423,16 +423,16 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         shots = 100
 
-        set_of_numbers = np.random.randint(1, 10, 6).tolist()
+        set_of_numbers = np.random.randint(1, 10, 8).tolist()
         qubo = NumberPartition(set_of_numbers).qubo
 
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=8)
         qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
 
         # Check the creation of the varitional parms
         _ = create_qaoa_variational_params(qaoa_descriptor, "standard", "rand")
 
-        qiskit_device = DeviceQiskit("ibmq_manila", self.HUB, self.GROUP, self.PROJECT)
+        qiskit_device = DeviceQiskit("ibm_perth", self.HUB, self.GROUP, self.PROJECT)
 
         try:
             QAOAQiskitQPUBackend(
