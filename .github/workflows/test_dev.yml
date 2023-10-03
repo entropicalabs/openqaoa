@@ -45,12 +45,12 @@ jobs:
           python -c'from qiskit_ibm_provider import IBMProvider; import os; IBMProvider.save_account(os.environ.get("IBMQ_TOKEN"))'
       - name: Setup AWS
         env:
-          ACCESS_KEY: ${{ secrets.ACCESS_KEY }} 
-          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }} 
+          ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
         run: |
           python -m pip install awscli
-          aws configure set aws_access_key_id $ACCESS_KEY
-          aws configure set aws_secret_access_key $SECRET_ACCESS_KEY
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY
+          aws configure set aws_secret_access_key $AWS_SECRET_KEY
           aws configure set region us-west-1
           aws configure set output json
       - name: Build the docker stack
