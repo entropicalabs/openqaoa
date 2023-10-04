@@ -99,9 +99,9 @@ class QAOAAWSQPUBackend(
                 "Cannot attach a bigger circuit" " to the QAOA routine"
             )
 
-        if self.device.provider_connected and self.device.qpu_connected:
-            self.backend_qpu = self.device.backend_device
-        elif (
+        # if self.device.provider_connected and self.device.qpu_connected:
+        #     self.backend_qpu = self.device.backend_device
+        if (
             self.device.provider_connected is True
             and self.device.qpu_connected is False
         ):
@@ -217,7 +217,7 @@ class QAOAAWSQPUBackend(
         max_job_retries = 5
 
         while job_state == False:
-            job = self.backend_qpu.run(
+            job = self.device.backend_device.run(
                 circuit,
                 (self.device.s3_bucket_name, self.device.folder_name),
                 shots=n_shots,
