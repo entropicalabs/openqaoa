@@ -105,9 +105,9 @@ class QAOAQiskitQPUBackend(
                 "Cannot attach a bigger circuit" "to the QAOA routine"
             )
 
-        if self.device.provider_connected and self.device.qpu_connected:
-            self.backend_qpu = self.device.backend_device
-        elif self.device.provider_connected and self.device.qpu_connected in [
+        # if self.device.provider_connected and self.device.qpu_connected:
+        #     self.backend_qpu = self.device.backend_device
+        if self.device.provider_connected and self.device.qpu_connected in [
             False,
             None,
         ]:
@@ -160,7 +160,7 @@ class QAOAQiskitQPUBackend(
         if self.qaoa_descriptor.routed is True:
             transpiled_circuit = transpile(
                 circuit_with_angles,
-                self.backend_qpu,
+                self.device.backend_device,
                 initial_layout=self.initial_qubit_mapping,
                 optimization_level=self.qiskit_optimziation_level,
                 routing_method="none",
@@ -168,7 +168,7 @@ class QAOAQiskitQPUBackend(
         else:
             transpiled_circuit = transpile(
                 circuit_with_angles,
-                self.backend_qpu,
+                self.device.backend_device,
                 initial_layout=self.initial_qubit_mapping,
                 optimization_level=self.qiskit_optimziation_level,
             )
@@ -241,7 +241,8 @@ class QAOAQiskitQPUBackend(
             # initial_layout only passed if not azure device
             # if type(self.device).__name__ == "DeviceAzure":
             # job = self.backend_qpu.run(circuit, **input_items)
-            job = self.backend_qpu.run(circuit, shots=n_shots)
+            job = self.device.backend_device.run(circuit, shots=n_shots)
+            print(self.device.backend_device.get_latest_session_id())
 
             api_contact = False
             no_of_api_retries = 0
