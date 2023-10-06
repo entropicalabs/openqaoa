@@ -117,7 +117,7 @@ class QAOAQiskitQPUBackend(
                 )
             )
 
-        else:
+        elif not (self.device.provider_connected and self.device.qpu_connected):
             raise Exception(
                 "Error connecting to {}.".format(self.device.device_location.upper())
             )
@@ -242,7 +242,6 @@ class QAOAQiskitQPUBackend(
             # if type(self.device).__name__ == "DeviceAzure":
             # job = self.backend_qpu.run(circuit, **input_items)
             job = self.device.backend_device.run(circuit, shots=n_shots)
-            print(self.device.backend_device.get_latest_session_id())
 
             api_contact = False
             no_of_api_retries = 0

@@ -114,7 +114,7 @@ class QAOAAWSQPUBackend(
             raise Exception(
                 "Connection to AWS was made. A device name was not specified."
             )
-        else:
+        elif not (self.device.provider_connected and self.device.qpu_connected):
             raise Exception("Error connecting to AWS.")
 
         if self.device.n_qubits < self.n_qubits:
