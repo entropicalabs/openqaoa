@@ -394,10 +394,6 @@ class RQAOA(Workflow):
             # put a tag to the qaoa object to know which step it is
             q.set_exp_tags({"rqaoa_counter": counter})
 
-
-            f = open("debug.txt", "a")
-            f.write(f"Before optimization: device:{q.device}, id:{q.device.backend_device.get_latest_session_id()}\n")
-            f.close()
             # Run QAOA
             q.optimize()
 
@@ -450,13 +446,7 @@ class RQAOA(Workflow):
             problem = new_problem
 
             # Compile qaoa with the problem
-            f = open("debug.txt", "a")
-            f.write(f"Before recompilation: device:{q.device}, id:{q.device.backend_device.get_latest_session_id()}\n")
-            f.close()
             q.compile(problem, verbose=False)
-            f = open("debug.txt", "a")
-            f.write(f"After recompilation: device:{q.device}, id:{q.device.backend_device.get_latest_session_id()}\n")
-            f.close()
 
             # Add one step to the counter
             counter += 1
