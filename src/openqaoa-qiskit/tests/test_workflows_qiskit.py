@@ -1206,12 +1206,12 @@ class TestingRQAOA(unittest.TestCase):
                     dictionary["header"]["algorithm"] == "rqaoa"
                 ), f"File {file_name} has a different algorithm than rqaoa, which is the expected algorithm."
 
-                # check that the intermediate mesuraments are empty
+                # check that the intermediate measurements are empty
                 for step in dictionary["data"]["result"]["intermediate_steps"]:
                     assert (
                         step["qaoa_results"]["intermediate"]["measurement_outcomes"]
                         == []
-                    ), f"File {file_name} has intermediate mesuraments, but it should not have them."
+                    ), f"File {file_name} has intermediate measurements, but it should not have them."
 
             else:  # qaoa files
                 qaoa_files += 1
@@ -1231,14 +1231,14 @@ class TestingRQAOA(unittest.TestCase):
                         ]
                     )
                     > 0
-                ), f"File {file_name} does not have intermediate mesuraments, but it should have them."
+                ), f"File {file_name} does not have intermediate measurements, but it should have them."
 
         assert rqaoa_files == 1, f"Expected 1 rqaoa file, but {rqaoa_files} were found."
         assert qaoa_files == len(
             r.result["atomic_ids"]
         ), f'Expected {len(r.result["atomic_ids"])} qaoa files, but {qaoa_files} were found.'
 
-        # erease the files
+        # erase the files
         for file_name in file_names.values():
             os.remove(file_name)
 
