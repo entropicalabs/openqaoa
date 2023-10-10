@@ -670,7 +670,7 @@ class WrappedQAOA(QAOA):
 
         # we compile the method of the parent class to genereate the id and
         # check the problem is a QUBO object and save it
-        Workflow().compile(problem=problem)
+        Workflow.compile(self, problem=problem)
 
         self.cost_hamil = Hamiltonian.classical_hamiltonian(
             terms=problem.terms, coeffs=problem.weights, constant=problem.constant
