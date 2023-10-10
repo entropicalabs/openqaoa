@@ -642,8 +642,8 @@ class WrappedQAOA(QAOA):
         routing_function: Optional[Callable] = None,
     ):
         """
-        Initialise the trainable parameters for QAOA according to the specified
-        strategies and by passing the problem statement
+        Override of QAOA.compile(). Initialise the trainable parameters for QAOA according to the specified
+        strategies and by passing the problem statement. The device.compile() is called in RQAOA.compile() only.
 
         .. note::
             Compilation is necessary because it is the moment where the problem statement and
