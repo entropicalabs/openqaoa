@@ -8,6 +8,7 @@ import itertools
 import numpy as np
 import uuid
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 import networkx as nx
 import datetime
 
@@ -424,7 +425,7 @@ def plot_graph(G: nx.Graph, ax=None, colormap="seismic") -> None:
     """
 
     # Create plot figure
-    fig = plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6), ncols=1)
 
     # Extract all graph attributes
     biases_and_nodes = nx.get_node_attributes(G, "weight")
@@ -446,7 +447,7 @@ def plot_graph(G: nx.Graph, ax=None, colormap="seismic") -> None:
             cmap=cmap, norm=plt.Normalize(vmin=edge_vmin, vmax=edge_vmax)
         )
         # Add colormap to plot
-        cbar = plt.colorbar(sm, pad=0.08)
+        cbar = plt.colorbar(sm, ax=ax, pad=0.08)
         cbar.ax.set_ylabel("Edge Weights", rotation=270, labelpad=15)
     else:
         weights = [1] * len(G.edges())
@@ -460,7 +461,7 @@ def plot_graph(G: nx.Graph, ax=None, colormap="seismic") -> None:
         vmin = min(biases)
         vmax = max(biases)
         sm2 = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
-        cbar2 = plt.colorbar(sm2, location="left")
+        cbar2 = plt.colorbar(sm2, ax=ax, location="left")
         cbar2.ax.set_ylabel("Single Qubit Biases", rotation=90)
 
         # Draw graph

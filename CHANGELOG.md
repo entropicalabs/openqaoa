@@ -1,3 +1,7 @@
+## Version v0.2.2 (September 20th, 2023)
+
+This version fixes the version of `pyquil` to prevent breaking changes occuring with v4.0.0.
+
 ## Version v0.2.1 (September 11th, 2023)
 
 This version fixes an issue detecting the plugins when installing `openqaoa-core` from PyPI.
