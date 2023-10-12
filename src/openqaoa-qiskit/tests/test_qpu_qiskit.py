@@ -536,7 +536,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             qaoa_descriptor, qiskit_device, shots, None, None, False
         )
         circuit = qiskit_backend.qaoa_circuit(variate_params)
-        job = qiskit_backend.backend_qpu.run(circuit, shots=qiskit_backend.n_shots)
+        job = qiskit_backend.device.backend_device.run(circuit, shots=qiskit_backend.n_shots)
 
         # check if the cirucit is validated by IBMQ servers when submitted for execution
         # check the status of the job and keep retrying until its completed or queued
