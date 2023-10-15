@@ -179,6 +179,60 @@ class BPSP(Problem):
         ising_graph.add_nodes_from(range(num_cars))
 
         return ising_graph
+    
+    @property
+    def docplex_bpsp_model(self):
+        """
+        Construct a CPLEX model for the Binary Paint Shop Problem (BPSP).
+
+        This method encodes the BPSP into a linear optimization problem.
+        The BPSP seeks to determine a painting sequence for cars such that adjacent cars
+        in the sequence don't receive the same color if they are the same car type.
+        The sequence length is twice the number of cars as each car passes the painting station twice.
+
+        The decision variables represent the paint color (binary: 0 or 1) for each car at each position in the sequence.
+        The objective function aims to minimize the absolute difference between adjacent paint values in the sequence.
+
+        Attributes
+        ----------
+        car_sequence : list
+            A list representing the sequence of cars as they pass the paint shop.
+            Each car is represented by its identifier (e.g., integer), and appears twice in the sequence.
+        
+        car_positions : dict
+            A dictionary mapping each car to its two positions in the car_sequence.
+            For example, if car 'a' appears in positions 2 and 5 in car_sequence, then
+            car_positions['a'] = [2, 5].
+
+        Returns
+        -------
+        Model
+            A CPLEX model instance representing the BPSP, ready to be solved.
+        """
+        
+        mdl = Model("BPSP_Problem")
+        sequence = self.car_sequence
+        car_pos = self.car_positions
+
+        # Dictionary for storing the paint value for car 'x' at position 'j'.
+        w_vars = {f"{w}_{i}": mdl.binary_var(name=f"w_{w}_{i}") for i, w in enumerate(sequence)}
+
+        # This loop adds the constraint that a particular car cannot have the same paint
+        # at both occurrences in the paint sequence. If the first occurrence is 0, the other has to 
+        # be 1 and vice-versa.
+        for car, positions in car_pos.items():
+            w_key1, w_key2 = f"{car}_{positions[0]}", f"{car}_{positions[1]}"
+            mdl.add_constraint(w_vars[w_key1] + w_vars[w_key2] == 1)
+
+        # Encode the objective function: sum_i^2n-1 |paint[i] - paint[i+1]|. Since docplex accepts abs operator, 
+        # you can directly utilize it for the objective. This makes the model simpler than in Gurobi.
+        w_keys = list(w_vars.keys())
+        objective_function = mdl.sum(mdl.abs(w_vars[w_keys[i]] - w_vars[w_keys[i + 1]]) for i in range(len(w_keys) - 1))
+        
+        # Set the objective to minimize.
+        mdl.minimize(objective_function)
+
+        return mdl
 
 
 
