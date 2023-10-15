@@ -235,5 +235,32 @@ class BPSP(Problem):
         return mdl
 
 
+    @property
+    def qubo(self):
+        """
+        Returns the QUBO encoding of the Binary Paint Shop Problem.
+
+        This function provides a QUBO representation of the BPSP, where the objective is to minimize the
+        total weight of violations. The violations here refer to two adjacent cars in the sequence receiving 
+        the same color.
+
+        Returns
+        -------
+        QUBO
+            The QUBO encoding of the BPSP. This is a representation that describes 
+            the quadratic objective function over binary variables.
+        """
+        
+        # Iterate over edges (with weight) and store accordingly
+        terms = []
+        weights = []
+
+        # Here, we use self.bpsp_graph to gather terms and weights.
+        for u, v, edge_weight in self.bpsp_graph.edges(data="weight"):
+            terms.append([u, v])
+
+            weights.append(edge_weight)  
+
+        return QUBO(self.bpsp_graph.number_of_nodes(), terms, weights)
 
 
