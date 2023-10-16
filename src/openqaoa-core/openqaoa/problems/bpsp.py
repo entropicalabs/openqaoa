@@ -528,12 +528,12 @@ class BPSP(Problem):
 
         Parameters:
         ----------
-        self.car_sequence : list[int]
-            List containing the order of cars to be painted.
+        self.car_sequence : numpy.ndarray[int]
+            Numpy array containing the order of cars to be painted.
         
-        paint_sequence : list[int]
-            List containing 0 or 1 for each car in `self.car_sequence`. A 0 indicates the car
-            is painted Blue, while a 1 indicates it's painted Red.
+        paint_sequence : list[int] or numpy.ndarray[int]
+            List or numpy array containing 0 or 1 for each car in `self.car_sequence`. 
+            A 0 indicates the car is painted Blue, while a 1 indicates it's painted Red.
 
         ax : matplotlib.axes.Axes, optional
             Axes object to plot on. If not provided, a new figure is created.
@@ -554,22 +554,22 @@ class BPSP(Problem):
         plot_colors = [color_map[color] for color in paint_sequence]
 
         # Dynamically determine the width of the figure based on the number of cars in self.car_sequence
-        fig_width = len(self.car_sequence) * 0.8  # This provides each bar approximately 0.8 inch width
+        fig_width = self.car_sequence.size * 0.8  # This provides each bar approximately 0.8 inch width
 
         # If no ax (subplot) is provided, create a new figure with the determined width
         if ax is None:
             fig, ax = plt.subplots(figsize=(fig_width, 2))
         
         # Plot bars for each car, colored based on the paint_sequence
-        ax.bar(self.car_sequence, [1]*len(self.car_sequence), color=plot_colors, width=1, align='center')
+        ax.bar(self.car_sequence, np.ones_like(self.car_sequence), color=plot_colors, width=1, align='center')
         ax.set_title("BPSP Solution")
-        ax.set_xlim(min(self.car_sequence)-0.5, max(self.car_sequence)+0.5)  # Set x limits to tightly fit bars
+        ax.set_xlim(np.min(self.car_sequence)-0.5, np.max(self.car_sequence)+0.5)  # Set x limits to tightly fit bars
         ax.set_ylim(0, 1)  # Set y limits from 0 to 1 as the bars have a fixed height of 1
         ax.yaxis.set_visible(False)  # Hide the y-axis as it's not relevant
         
         # Set x-ticks to indicate car numbers and label them as "Car 1", "Car 2", etc.
         ax.set_xticks(self.car_sequence)
-        ax.set_xticklabels([f"Car {car}" for car in self.car_sequence])
+        ax.set_xticklabels([f"Car {int(car)}" for car in self.car_sequence])
 
         # Hide the top, right, and left spines for cleaner visuals
         ax.spines['top'].set_visible(False)
