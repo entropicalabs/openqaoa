@@ -1,5 +1,6 @@
 import time
 import numpy as np
+from typing import Optional, Callable
 
 from .rqaoa_workflow_properties import RqaoaParameters
 from ..baseworkflow import Workflow, check_compiled
@@ -11,10 +12,20 @@ from ...utilities import (
     ground_state_hamiltonian,
     exp_val_hamiltonian_termwise,
     generate_timestamp,
+    get_mixer_hamiltonian,
+)
+from ...qaoa_components import (
+    Hamiltonian,
+    QAOADescriptor,
+    create_qaoa_variational_params,
 )
 from ...backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
 from . import rqaoa_utils
 from .rqaoa_result import RQAOAResult
+from ...backends.wrapper import SPAMTwirlingWrapper
+from ...optimizers.qaoa_optimizer import get_optimizer
+from ...backends.qaoa_backend import get_qaoa_backend
+
 
 
 class RQAOA(Workflow):
@@ -295,7 +306,7 @@ class RQAOA(Workflow):
             ), f"Schedule is incomplete, add {np.abs(n_qubits - n_cutoff - counter) - sum(self.rqaoa_parameters.steps)} more eliminations"
 
         # Create the qaoa object with the properties
-        self.__q = QAOA(self.device)
+        self.__q = WrappedQAOA(self.device)
         self.__q.circuit_properties = self.circuit_properties
         self.__q.backend_properties = self.backend_properties
         self.__q.classical_optimizer = self.classical_optimizer
@@ -307,6 +318,8 @@ class RQAOA(Workflow):
             "algorithm"
         ] = "qaoa"  # change the algorithm name to qaoa, since this is a qaoa object
 
+        # connect to the QPU specified
+        self.device.check_connection()
         # compile qaoa object
         self.__q.compile(problem, verbose=verbose)
 
@@ -610,3 +623,148 @@ class RQAOA(Workflow):
         ]["input_parameters"]["rqaoa_parameters"]["n_cutoff"]
 
         return serializable_dict
+
+class WrappedQAOA(QAOA):
+    """
+    A class implementing the QAOA object to use in RQAOA, here check_connection() is used outside of the QAOA 
+    compilation to make sure it's only used once.
+
+    Args:
+        QAOA (_type_): _description_
+    """
+    def __init__(self, device=DeviceLocal("vectorized")):
+        super().__init__(device)
+
+    def compile(
+        self,
+        problem: QUBO = None,
+        verbose: bool = False,
+        routing_function: Optional[Callable] = None,
+    ):
+        """
+        Override of QAOA.compile(). Initialise the trainable parameters for QAOA according to the specified
+        strategies and by passing the problem statement. The device.compile() is called in RQAOA.compile() only.
+
+        .. note::
+            Compilation is necessary because it is the moment where the problem statement and
+            the QAOA instructions are used to build the actual QAOA circuit.
+
+        .. tip::
+            Set Verbose to false if you are running batch computations!
+
+        Parameters
+        ----------
+        problem: `Problem`
+            QUBO problem to be solved by QAOA
+        verbose: bool
+            Set True to have a summary of QAOA to displayed after compilation
+        """
+        # if isinstance(routing_function,Callable):
+        #     #assert that routing_function is supported only for Standard QAOA.
+        #     if (
+        #         self.backend_properties.append_state is not None or\
+        #         self.backend_properties.prepend_state is not None or\
+        #         self.circuit_properties.mixer_hamiltonian is not 'x' or\
+
+        #     )
+
+        # we compile the method of the parent class to genereate the id and
+        # check the problem is a QUBO object and save it
+        Workflow.compile(self, problem=problem)
+
+        self.cost_hamil = Hamiltonian.classical_hamiltonian(
+            terms=problem.terms, coeffs=problem.weights, constant=problem.constant
+        )
+
+        self.mixer_hamil = get_mixer_hamiltonian(
+            n_qubits=self.cost_hamil.n_qubits,
+            mixer_type=self.circuit_properties.mixer_hamiltonian,
+            qubit_connectivity=self.circuit_properties.mixer_qubit_connectivity,
+            coeffs=self.circuit_properties.mixer_coeffs,
+        )
+
+        self.qaoa_descriptor = QAOADescriptor(
+            self.cost_hamil,
+            self.mixer_hamil,
+            p=self.circuit_properties.p,
+            routing_function=routing_function,
+            device=self.device,
+        )
+        self.variate_params = create_qaoa_variational_params(
+            qaoa_descriptor=self.qaoa_descriptor,
+            params_type=self.circuit_properties.param_type,
+            init_type=self.circuit_properties.init_type,
+            variational_params_dict=self.circuit_properties.variational_params_dict,
+            linear_ramp_time=self.circuit_properties.linear_ramp_time,
+            q=self.circuit_properties.q,
+            seed=self.circuit_properties.seed,
+            total_annealing_time=self.circuit_properties.annealing_time,
+        )
+
+        backend_dict = self.backend_properties.__dict__.copy()
+
+        self.backend = get_qaoa_backend(
+            qaoa_descriptor=self.qaoa_descriptor,
+            device=self.device,
+            **backend_dict,
+        )
+
+        # Implementing SPAM Twirling error mitigation requires wrapping the backend.
+        # However, the BaseWrapper can have many more use cases.
+        if (
+            self.error_mitigation_properties.error_mitigation_technique
+            == "spam_twirling"
+        ):
+            self.backend = SPAMTwirlingWrapper(
+                backend=self.backend,
+                n_batches=self.error_mitigation_properties.n_batches,
+                calibration_data_location=self.error_mitigation_properties.calibration_data_location,
+            )
+
+        self.optimizer = get_optimizer(
+            vqa_object=self.backend,
+            variational_params=self.variate_params,
+            optimizer_dict=self.classical_optimizer.asdict(),
+        )
+
+        # Set the header properties
+        self.header["target"] = self.device.device_name
+        self.header["cloud"] = self.device.device_location
+
+        metadata = {
+            "p": self.circuit_properties.p,
+            "param_type": self.circuit_properties.param_type,
+            "init_type": self.circuit_properties.init_type,
+            "optimizer_method": self.classical_optimizer.method,
+        }
+
+        self.set_exp_tags(tags=metadata)
+
+        self.compiled = True
+
+        if verbose:
+            print("\t \033[1m ### Summary ###\033[0m")
+            print("OpenQAOA has been compiled with the following properties")
+            print(
+                f"Solving QAOA with \033[1m {self.device.device_name} \033[0m on"
+                f"\033[1m{self.device.device_location}\033[0m"
+            )
+            print(
+                f"Using p={self.circuit_properties.p} with {self.circuit_properties.param_type}"
+                f"parameters initialized as {self.circuit_properties.init_type}"
+            )
+
+            if hasattr(self.backend, "n_shots"):
+                print(
+                    f"OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}"
+                    f"\033[0m, with up to \033[1m{self.classical_optimizer.maxiter}"
+                    f"\033[0m maximum iterations. Each iteration will contain"
+                    f"\033[1m{self.backend_properties.n_shots} shots\033[0m"
+                )
+            else:
+                print(
+                    f"OpenQAOA will optimize using \033[1m{self.classical_optimizer.method}\033[0m,"
+                    "with up to \033[1m{self.classical_optimizer.maxiter}\033[0m maximum iterations"
+                )
+
+        return None

@@ -5,11 +5,13 @@ import json
 import numpy as np
 import pytest
 import subprocess
+from collections import OrderedDict
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 from qiskit.tools.monitor import job_monitor
 from qiskit_ibm_provider.job.exceptions import IBMJobError
+from qiskit.converters import circuit_to_dag, dag_to_circuit
 
 from openqaoa.qaoa_components import (
     create_qaoa_variational_params,
@@ -26,6 +28,27 @@ from openqaoa_qiskit.backends import (
 from openqaoa.utilities import X_mixer_hamiltonian
 from openqaoa.problems import NumberPartition
 from openqaoa import QAOA, create_device
+
+
+def remove_idle_qwires(circ):
+    """Function that removes qubits that are not actred upon in a QuantumCircuit
+
+    Args:
+        circ (QuantumCircuit): quantum circuit that has unused qubits
+
+    Returns:
+        QuantumCircuit: quantum circuit without unused qubits
+    """
+    dag = circuit_to_dag(circ)
+
+    idle_wires = list(dag.idle_wires())
+    for w in idle_wires:
+        dag._remove_idle_wire(w)
+        dag.qubits.remove(w)
+
+    dag.qregs = OrderedDict()
+
+    return dag_to_circuit(dag)
 
 
 class TestingQAOAQiskitQPUBackend(unittest.TestCase):
@@ -107,6 +130,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.rx(-2 * betas[1], 2)
 
         qpu_circuit.remove_final_measurements(inplace=True)
+        qpu_circuit = remove_idle_qwires(qpu_circuit)
         qpu_circuit_operator = Operator(qpu_circuit)
         main_circuit_operator = Operator(main_circuit)
 
@@ -172,6 +196,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.rx(-2 * betas[1], 2)
 
         qpu_circuit.remove_final_measurements(inplace=True)
+        qpu_circuit = remove_idle_qwires(qpu_circuit)
         qpu_circuit_operator = Operator(qpu_circuit)
         main_circuit_operator = Operator(main_circuit)
 
@@ -230,6 +255,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.rx(-2 * betas[0], 2)
 
         qpu_circuit.remove_final_measurements(inplace=True)
+        qpu_circuit = remove_idle_qwires(qpu_circuit)
         qpu_circuit_operator = Operator(qpu_circuit)
         main_circuit_operator = Operator(main_circuit)
 
@@ -289,6 +315,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.x([0, 1, 2])
 
         qpu_circuit.remove_final_measurements(inplace=True)
+        qpu_circuit = remove_idle_qwires(qpu_circuit)
         qpu_circuit_operator = Operator(qpu_circuit)
         main_circuit_operator = Operator(main_circuit)
 
@@ -423,16 +450,16 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         shots = 100
 
-        set_of_numbers = np.random.randint(1, 10, 6).tolist()
+        set_of_numbers = np.random.randint(1, 10, 8).tolist()
         qubo = NumberPartition(set_of_numbers).qubo
 
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=6)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=8)
         qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
 
         # Check the creation of the varitional parms
         _ = create_qaoa_variational_params(qaoa_descriptor, "standard", "rand")
 
-        qiskit_device = DeviceQiskit("ibmq_manila", self.HUB, self.GROUP, self.PROJECT)
+        qiskit_device = DeviceQiskit("ibm_perth", self.HUB, self.GROUP, self.PROJECT)
 
         try:
             QAOAQiskitQPUBackend(
@@ -509,7 +536,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             qaoa_descriptor, qiskit_device, shots, None, None, False
         )
         circuit = qiskit_backend.qaoa_circuit(variate_params)
-        job = qiskit_backend.backend_qpu.run(circuit, shots=qiskit_backend.n_shots)
+        job = qiskit_backend.device.backend_device.run(circuit, shots=qiskit_backend.n_shots)
 
         # check if the cirucit is validated by IBMQ servers when submitted for execution
         # check the status of the job and keep retrying until its completed or queued
