@@ -1,30 +1,137 @@
+"""
+bpsp.py
+
+This module provides an implementation for the Binary Paint Shop Problem (BPSP), a combinatorial optimization problem arising from automotive paint shops. 
+Given a fixed sequence of cars, each requiring two distinct colors, the objective is to determine the order of painting such that color changes between 
+adjacent cars are minimized. The problem is NP-hard, and approximating it is also challenging. The module offers various solution strategies, including 
+greedy and quantum approximate optimization approaches.
+
+This implementation is based on the following works:
+    - "Beating classical heuristics for the binary paint shop problem with the 
+       quantum approximate optimization algorithm" 
+       (https://journals.aps.org/pra/abstract/10.1103/PhysRevA.104.012403)
+    - "Some heuristics for the binary paint shop problem and their expected number 
+       of colour changes"
+       (https://www.sciencedirect.com/science/article/pii/S1570866710000559)
+    - Upcoming/unpublished work by V Vijendran et al.
+
+Author: V Vijendran (Vijey)
+GitHub: https://github.com/vijeycreative
+Email: v.vijendran@anu.edu.au
+"""
+
+
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from typing import Union
 from docplex.mp.model import Model
+from collections import defaultdict
 
 from .problem import Problem
 from .qubo import QUBO
 
 
 class BPSP(Problem):
+    """
+    Binary Paint Shop Problem (BPSP)
 
+    This class is dedicated to solving the Binary Paint Shop Problem (BPSP), a combinatorial 
+    optimization challenge drawn from an automotive paint shop context. In this problem, there 
+    exists a specific sequence of cars, with each car making two appearances in the sequence. 
+    The primary objective is to find the best coloring sequence such that consecutive cars in the 
+    sequence necessitate the fewest color switches.
+
+    When initializing, the solver accepts a list of car numbers indicative of a valid BPSP instance 
+    and subsequently establishes a Binary Paint Shop Problem instance based on this.
+
+    To elaborate on the problem:
+    
+    Imagine we have 'n' distinct cars, labeled as c_1, c_2, ..., c_n. These cars are presented 
+    in a sequence of length '2n', such that each car c_i makes two appearances. This sequence 
+    is represented as w_1, w_2, ..., w_2n, with every w_i being one of the cars from the set.
+
+    The challenge further presents two paint colors, represented as 1 and 2. For every car 
+    in the sequence, a decision must be made on which color to paint it first, resulting in a 
+    color assignment sequence like f_1, f_2, ..., f_2n. It's crucial to ensure that if two 
+    occurrences in the sequence pertain to the same car, their color designations differ.
+
+    The main goal is to choose a sequence of colors such that we minimize the instances where 
+    consecutive cars require different paint colors. This is quantified by computing the difference 
+    between color assignments for consecutive cars and aggregating this difference for the entire sequence.
+    """
 
     __name__ = "Binary_Paint_Shop_Problem"
 
     def __init__(self, car_sequence):
+        """
+        Initialize the Binary Paint Shop Problem (BPSP) instance.
+
+        Parameters:
+        - car_sequence : list[int]
+            A list of integers representing car numbers, denoting the sequence 
+            in which cars appear in the BPSP. Each car number appears exactly 
+            twice, symbolizing the two distinct color coatings each car requires.
+
+        Attributes Set:
+        - self.car_sequence : list[int]
+            Stores the sequence of car numbers.
+
+        - self.car_positions : dict[int, tuple]
+            Maps each car number to a tuple of its two positions in the car_sequence. 
+            Determined by the `car_pos` property.
+
+        - self.bpsp_graph : networkx.Graph
+            Represents the BPSP as a graph where nodes are car positions and edges 
+            indicate adjacent car positions in the sequence. Constructed by the 
+            `construct_bpsp_graph` method.
+
+        Returns:
+        None
+        """
         
         self.car_sequence = car_sequence
-        self.car_positions = self.get_pos()
-        self.bpsp_graph = self.construct_bpsp_graph()
+        self.car_positions = self.car_pos
+        self.bpsp_graph = self.construct_bpsp_graph
+
 
     @property
     def car_sequence(self):
+        """
+        Getter for the 'car_sequence' property.
+
+        This method retrieves the current value of the `_car_sequence` attribute, which represents 
+        the sequence of cars to be painted. Each car is identified by a unique integer ID, 
+        and each ID must appear exactly twice in the sequence, indicating the two times the car 
+        is painted.
+
+        Returns:
+        -------
+        list[int]
+            The current sequence of car IDs. Each ID appears exactly twice in the sequence.
+        """
         return self._car_sequence
 
     @car_sequence.setter
     def car_sequence(self, sequence):
+        """
+        Setter for the 'car_sequence' property.
+
+        This method validates and sets a new value for the `_car_sequence` attribute. 
+        The validation ensures:
+        1. Each car ID appears exactly twice in the sequence.
+        2. The range of car IDs is continuous (e.g., for IDs 0, 1, 2, both 0 and 2 cannot appear without 1).
+
+        Parameters:
+        ----------
+        sequence : list[int]
+            A new sequence of car IDs to be assigned to `_car_sequence`. 
+
+        Raises:
+        ------
+        ValueError:
+            If any of the validation checks fail, a ValueError is raised with an appropriate error message.
+
+        """
         # Check if each car ID appears exactly twice
         unique_ids, counts = np.unique(sequence, return_counts=True)
         if not all(count == 2 for count in counts):
@@ -36,7 +143,6 @@ class BPSP(Problem):
 
         # If all checks pass, assign the sequence to the private attribute
         self._car_sequence = sequence
-    
 
     @staticmethod
     def random_instance(**kwargs):
@@ -75,8 +181,8 @@ class BPSP(Problem):
         # Return a BPSP instance using the shuffled car_sequence.
         return BPSP(car_sequence)
     
-
-    def get_pos(self):
+    @property
+    def car_pos(self):
         """
         Retrieve the positions of each car ID in the car sequence.
         
@@ -111,8 +217,8 @@ class BPSP(Problem):
 
         return car_pos
     
-
-    def construct_bpsp_graph(self):
+    @property
+    def bpsp_graph(self):
         """
         Construct a graph to represent the Binary Paint Shop Problem (BPSP) using the Ising model.
 
@@ -231,7 +337,6 @@ class BPSP(Problem):
 
         return mdl
 
-
     @property
     def qubo(self):
         """
@@ -260,19 +365,218 @@ class BPSP(Problem):
 
         return QUBO(self.bpsp_graph.number_of_nodes(), terms, weights)
 
-
-    def classical_solution(self):
+    def cplex_solution(self):
         """
-        Solves the SK problem and returns the CPLEX solution.
+        Solves the BPSP using the CPLEX solver and returns the solution and its objective value.
+
+        The Binary Paintshop Problem (BPSP) solution represents a sequence of paint choices 
+        where a value of 0 represents blue paint and a value of 1 represents red paint.
 
         Returns
         -------
-        solution : dict
-            A dictionary containing the solution found with spin values.
+        tuple
+            A tuple where the first element is a list containing the paint choices 
+            (0 for blue, 1 for red) and the second element is the objective value.
         """
+        
+        # Retrieve the model for BPSP
         model = self.docplex_bpsp_model
+        
+        # Solve the BPSP using CPLEX
         model.solve()
+        
+        # Check the status of the solution
         status = model.solve_details.status
         if status != "integer optimal solution":
             print(status)
-        return [int(model.solution.get_value(var)) for var in model.iter_binary_vars()]
+        
+        # Extract the solution values representing paint choices
+        solution = [int(model.solution.get_value(var)) for var in model.iter_binary_vars()]
+        
+        # Get the objective value of the solution
+        objective_value = model.objective_value
+        
+        # Return the paint choices and their corresponding objective value
+        return solution, objective_value
+
+    def qaoa_solution(self, bitstring):
+        """
+        Transforms a sequence of initial car colors to a paint sequence and computes the number of paint swaps.
+        
+        Given a bitstring sequence of car colors ('0' or '1'), this function transforms it into 
+        a paint sequence. Each car's colors are determined by two consecutive positions in 
+        the sequence. The function also computes the number of times the paint changes (swaps) 
+        between consecutive positions in the paint sequence.
+        
+        Parameters
+        ----------
+        colors : str
+            A string of car colors where each character is either '0' or '1'.
+        
+        Returns
+        -------
+        tuple
+            A tuple where the first element is a list representing the paint sequence 
+            (0 for blue, 1 for red) and the second element is the number of paint swaps.
+        """
+        
+        # Convert the input string colors to a list of integers
+        colors = [int(color) for color in bitstring]
+        
+        # Initialize the paint sequence with zeros
+        paint_sequence = [0 for _ in range(2 * len(colors))]
+        
+        # Fill the paint sequence based on the input colors and car positions
+        for car, color in enumerate(colors):
+            pos1, pos2 = self.car_positions[car]
+            
+            paint_sequence[pos1] = color
+            paint_sequence[pos2] = 1 - color  # The opposite color
+        
+        # Compute the number of paint swaps in the sequence
+        color_swaps = sum(abs(paint_sequence[i] - paint_sequence[i + 1]) for i in range(len(paint_sequence) - 1))
+        
+        return paint_sequence, color_swaps
+
+    def red_first_solution(self):
+        """
+        The `red_first_solution` method applies a heuristic to generate a paint sequence for cars. 
+        Specifically, it colors the first occurrence of each car as Red (1) and the second 
+        occurrence as Blue (0). On average, this heuristic may not be as efficient as the greedy 
+        algorithm.
+
+        Attributes:
+        ----------
+        self.car_sequence : list[int]
+            A list containing the sequence of cars that need to be painted.
+
+        Returns:
+        -------
+        tuple
+            A tuple containing two elements:
+            1. A list representing the paint sequence with '1' indicating Red and '0' indicating Blue.
+            2. An integer representing the total number of paint swaps in the sequence.
+        """
+        
+        # Dictionary to keep track of whether a car has been painted or not
+        cars_painted = defaultdict(bool)
+        
+        # Create the paint sequence
+        paint_sequence = []
+        for car in self.car_sequence:
+            if not cars_painted[car]:
+                paint_sequence.append(1)
+                cars_painted[car] = True
+            else:
+                paint_sequence.append(0)
+
+        # Compute the number of color swaps in the sequence
+        color_swaps = sum(abs(paint_sequence[i] - paint_sequence[i + 1]) for i in range(len(self.car_sequence) - 1))
+            
+        return paint_sequence, color_swaps
+
+    def greedy_solution(self):
+        """
+        The `greedy_solution` method determines a feasible paint sequence for cars using a 
+        greedy approach. It processes the car sequence from left to right, coloring the 
+        first occurrence of each car based on its predecessor and the second occurrence 
+        with the opposite color.
+
+        Attributes:
+        ----------
+        self.car_sequence : list[int]
+            A list containing the sequence of cars that need to be painted.
+        self.car_positions : dict[int, tuple]
+            A dictionary mapping each car to a tuple containing the
+            first and second position of the car's occurrence in `car_sequence`.
+
+        Returns:
+        -------
+        tuple
+            A tuple containing two elements:
+            1. A list representing the paint sequence with '1' indicating Red and '0' indicating Blue.
+            2. An integer representing the total number of paint swaps in the sequence.
+        """
+        
+        # Dictionary to keep track of whether a car has been painted or not
+        cars_painted = defaultdict(bool)
+        
+        # List to store the paint sequence
+        paint_sequence = []
+        
+        # Variable to keep track of the last used color
+        last_color = 0
+        
+        # Create the paint sequence
+        for car in self.car_sequence:
+            if not cars_painted[car]:
+                if paint_sequence:  # if paint_sequence is not empty
+                    last_color = paint_sequence[-1]
+                paint_sequence.append(last_color)
+                cars_painted[car] = True
+            else:
+                paint_sequence.append(1 - paint_sequence[self.car_positions[car][0]])
+
+        # Compute the number of color swaps in the sequence
+        color_swaps = sum(abs(paint_sequence[i] - paint_sequence[i + 1]) for i in range(len(self.car_sequence) - 1))
+            
+        return paint_sequence, color_swaps
+
+    def plot_colored_cars(self, paint_sequence, ax=None):
+        """
+        Plot a bar chart showing the colors assigned to cars based on the given paint_sequence.
+
+        Parameters:
+        ----------
+        self.car_sequence : list[int]
+            List containing the order of cars to be painted.
+        
+        paint_sequence : list[int]
+            List containing 0 or 1 for each car in `self.car_sequence`. A 0 indicates the car
+            is painted Blue, while a 1 indicates it's painted Red.
+
+        ax : matplotlib.axes.Axes, optional
+            Axes object to plot on. If not provided, a new figure is created.
+        
+        Returns:
+        -------
+        None
+
+        Note:
+        -----
+        This function uses a blue-red color mapping and plots bars without any gaps to visually 
+        represent the paint sequence of cars. The plot's size is dynamically adjusted based on 
+        the number of cars.
+        """
+        
+        # Define color mapping for 0s and 1s in the paint_sequence to 'blue' and 'red' respectively
+        color_map = {0: '#f25c54', 1: '#48cae4'}  # shades of blue and red
+        plot_colors = [color_map[color] for color in paint_sequence]
+
+        # Dynamically determine the width of the figure based on the number of cars in self.car_sequence
+        fig_width = len(self.car_sequence) * 0.8  # This provides each bar approximately 0.8 inch width
+
+        # If no ax (subplot) is provided, create a new figure with the determined width
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(fig_width, 2))
+        
+        # Plot bars for each car, colored based on the paint_sequence
+        ax.bar(self.car_sequence, [1]*len(self.car_sequence), color=plot_colors, width=1, align='center')
+        ax.set_title("BPSP Solution")
+        ax.set_xlim(min(self.car_sequence)-0.5, max(self.car_sequence)+0.5)  # Set x limits to tightly fit bars
+        ax.set_ylim(0, 1)  # Set y limits from 0 to 1 as the bars have a fixed height of 1
+        ax.yaxis.set_visible(False)  # Hide the y-axis as it's not relevant
+        
+        # Set x-ticks to indicate car numbers and label them as "Car 1", "Car 2", etc.
+        ax.set_xticks(self.car_sequence)
+        ax.set_xticklabels([f"Car {car}" for car in self.car_sequence])
+
+        # Hide the top, right, and left spines for cleaner visuals
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        
+        # If no ax is provided, show the plot directly
+        if ax is None:
+            plt.tight_layout()
+            plt.show()
