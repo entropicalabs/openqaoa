@@ -83,7 +83,7 @@ class BPSP(Problem):
         - self.bpsp_graph : networkx.Graph
             Represents the BPSP as a graph where nodes are car positions and edges 
             indicate adjacent car positions in the sequence. Constructed by the 
-            `construct_bpsp_graph` method.
+            `bpsp_graph` method.
 
         Returns:
         None
@@ -91,7 +91,7 @@ class BPSP(Problem):
         
         self.car_sequence = car_sequence
         self.car_positions = self.car_pos
-        self.bpsp_graph = self.construct_bpsp_graph
+        self.bpsp_graph = self.graph
 
 
     @property
@@ -218,7 +218,7 @@ class BPSP(Problem):
         return car_pos
     
     @property
-    def bpsp_graph(self):
+    def graph(self):
         """
         Construct a graph to represent the Binary Paint Shop Problem (BPSP) using the Ising model.
 
@@ -438,7 +438,7 @@ class BPSP(Problem):
         
         return paint_sequence, color_swaps
 
-    def red_first_solution(self):
+    def redfirst_solution(self):
         """
         The `red_first_solution` method applies a heuristic to generate a paint sequence for cars. 
         Specifically, it colors the first occurrence of each car as Red (1) and the second 
@@ -522,7 +522,7 @@ class BPSP(Problem):
             
         return paint_sequence, color_swaps
 
-    def plot_colored_cars(self, paint_sequence, ax=None):
+    def plot_paint_sequence(self, paint_sequence, ax=None):
         """
         Plot a bar chart showing the colors assigned to cars based on the given paint_sequence.
 
