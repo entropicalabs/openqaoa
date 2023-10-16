@@ -16,7 +16,6 @@ class BPSP(Problem):
     def __init__(self, car_sequence):
         
         self.car_sequence = car_sequence
-        self._car_sequence = None
         self.car_positions = self.get_pos()
         self.bpsp_graph = self.construct_bpsp_graph()
 
@@ -65,7 +64,6 @@ class BPSP(Problem):
 
         # Generate a list with two occurrences of each car ID, i.e., [0, 1, ..., n, 0, 1, ..., n].
         car_sequence = np.array(list(range(num_cars)) + list(range(num_cars)))
-        
         # Apply the Fisher-Yates shuffle to the car_sequence.
         # Start from the end of the list and swap the current element with a randomly chosen earlier element.
         for i in range(len(car_sequence)-1, 0, -1):
@@ -263,7 +261,7 @@ class BPSP(Problem):
         return QUBO(self.bpsp_graph.number_of_nodes(), terms, weights)
 
 
-    def classical_solution(self, string: bool = False):
+    def classical_solution(self):
         """
         Solves the SK problem and returns the CPLEX solution.
 
@@ -272,18 +270,9 @@ class BPSP(Problem):
         solution : dict
             A dictionary containing the solution found with spin values.
         """
-        model = self.docplex_model
+        model = self.docplex_bpsp_model
         model.solve()
         status = model.solve_details.status
         if status != "integer optimal solution":
             print(status)
-        if string:
-            return "".join(
-                str(round(model.solution.get_value(var)))
-                for var in model.iter_binary_vars()
-            )
-        else:
-            return {
-                var.name: model.solution.get_value(var)
-                for var in model.iter_binary_vars()
-            }
+        return [int(model.solution.get_value(var)) for var in model.iter_binary_vars()]
