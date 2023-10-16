@@ -57,6 +57,7 @@ extensions = [
     "nbsphinx",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    # "myst_nb",
 ]
 
 autodoc_mock_imports = [
@@ -125,3 +126,6 @@ html_logo = "../../.github/images/Entropica_logo.png"
 
 # def setup(app):
 #     app.connect(skip)
+
+# pygments_style = 'sphinx'
+# suppress_warnings = ["myst_header"]

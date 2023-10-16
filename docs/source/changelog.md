@@ -1,2 +1,4 @@
+# CHANGELOG
+
 ```{include} ../../CHANGELOG.md
-``` 
+```
