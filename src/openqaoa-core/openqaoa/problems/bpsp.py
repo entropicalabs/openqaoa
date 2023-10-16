@@ -5,7 +5,6 @@ from typing import Union
 from docplex.mp.model import Model
 
 from .problem import Problem
-from .converters import FromDocplex2IsingModel
 from .qubo import QUBO
 
 
@@ -264,3 +263,27 @@ class BPSP(Problem):
         return QUBO(self.bpsp_graph.number_of_nodes(), terms, weights)
 
 
+    def classical_solution(self, string: bool = False):
+        """
+        Solves the SK problem and returns the CPLEX solution.
+
+        Returns
+        -------
+        solution : dict
+            A dictionary containing the solution found with spin values.
+        """
+        model = self.docplex_model
+        model.solve()
+        status = model.solve_details.status
+        if status != "integer optimal solution":
+            print(status)
+        if string:
+            return "".join(
+                str(round(model.solution.get_value(var)))
+                for var in model.iter_binary_vars()
+            )
+        else:
+            return {
+                var.name: model.solution.get_value(var)
+                for var in model.iter_binary_vars()
+            }
