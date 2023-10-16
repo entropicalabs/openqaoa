@@ -561,14 +561,13 @@ class BPSP(Problem):
             fig, ax = plt.subplots(figsize=(fig_width, 2))
         
         # Plot bars for each car, colored based on the paint_sequence
-        ax.bar(self.car_sequence, np.ones_like(self.car_sequence), color=plot_colors, width=1, align='center')
-        ax.set_title("BPSP Solution")
-        ax.set_xlim(np.min(self.car_sequence)-0.5, np.max(self.car_sequence)+0.5)  # Set x limits to tightly fit bars
+        ax.bar(range(len(self.car_sequence)), np.ones_like(self.car_sequence), color=plot_colors, width=1, align='center')
+        ax.set_xlim(-0.5, len(self.car_sequence) - 0.5)  # Set x limits to tightly fit bars
         ax.set_ylim(0, 1)  # Set y limits from 0 to 1 as the bars have a fixed height of 1
         ax.yaxis.set_visible(False)  # Hide the y-axis as it's not relevant
         
-        # Set x-ticks to indicate car numbers and label them as "Car 1", "Car 2", etc.
-        ax.set_xticks(self.car_sequence)
+        # Set x-ticks to indicate car numbers and label them as "Car 3", "Car 2", "Car 2", etc.
+        ax.set_xticks(range(len(self.car_sequence)))
         ax.set_xticklabels([f"Car {int(car)}" for car in self.car_sequence])
 
         # Hide the top, right, and left spines for cleaner visuals
