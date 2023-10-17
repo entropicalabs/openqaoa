@@ -60,7 +60,7 @@ class BPSP(Problem):
     between color assignments for consecutive cars and aggregating this difference for the entire sequence.
     """
 
-    __name__ = "Binary_Paint_Shop_Problem"
+    __name__ = "binary_paint_shop_problem"
 
     def __init__(self, car_sequence):
         """
@@ -92,6 +92,28 @@ class BPSP(Problem):
         self.car_sequence = car_sequence
         self.car_positions = self.car_pos
         self.bpsp_graph = self.graph
+
+    @property
+    def problem_instance(self):
+        instance = super().problem_instance  # Get the original problem_instance
+        return self.convert_ndarrays(instance)
+
+    @staticmethod
+    def convert_ndarrays(obj):
+        """
+        Recursively convert numpy objects in the given object to their Python counterparts.
+        Converts numpy.ndarrays to Python lists and numpy.int64 to Python int.
+        """
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.int64):
+            return int(obj)
+        elif isinstance(obj, dict):
+            return {k: BPSP.convert_ndarrays(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [BPSP.convert_ndarrays(item) for item in obj]
+        else:
+            return obj
 
 
     @property
@@ -158,6 +180,8 @@ class BPSP(Problem):
             num_cars: int
                 The number of distinct cars to be considered in the sequence. Each car will appear twice in the 
                 final sequence.
+            seed: int, optional
+                The seed for the random number generator. If provided, the output will be deterministic based on this seed.
         
         Returns
         -------
@@ -165,11 +189,19 @@ class BPSP(Problem):
                 A random instance of the BPSP problem, based on the shuffled sequence of cars.
         """
 
-        # Extract the number of cars from the provided keyword arguments.
+        # Extract the number of cars and the seed from the provided keyword arguments.
         num_cars = kwargs.get("num_cars")
+        seed = kwargs.get("seed", None)  # Default value is None if not provided.
+
+        # Assert that the number of cars is greater than 0.
+        assert num_cars > 0, "The number of cars must be greater than 0."
 
         # Generate a list with two occurrences of each car ID, i.e., [0, 1, ..., n, 0, 1, ..., n].
         car_sequence = np.array(list(range(num_cars)) + list(range(num_cars)))
+
+        # Set the seed for numpy's random module.
+        np.random.seed(seed)
+
         # Apply the Fisher-Yates shuffle to the car_sequence.
         # Start from the end of the list and swap the current element with a randomly chosen earlier element.
         for i in range(len(car_sequence)-1, 0, -1):
@@ -177,7 +209,7 @@ class BPSP(Problem):
             j = np.random.randint(0, i+1)
             # Swap the elements at indices i and j.
             car_sequence[i], car_sequence[j] = car_sequence[j], car_sequence[i]
-            
+
         # Return a BPSP instance using the shuffled car_sequence.
         return BPSP(car_sequence)
     
@@ -204,18 +236,22 @@ class BPSP(Problem):
         
         # Enumerate through each car ID in the sequence to track its positions.
         for idx, car in enumerate(self.car_sequence):
+            # Convert the car to int type (assuming it's of type np.int64 or similar)
+            car_key = int(car)
+
             # If the car ID is already in the dictionary, append the new position.
-            if car in car_pos:
-                car_pos[car].append(idx)
+            if car_key in car_pos:
+                car_pos[car_key].append(idx)
             # If this is the first occurrence of the car ID, initialize a list with the position.
             else:
-                car_pos[car] = [idx]
+                car_pos[car_key] = [idx]
         
         # Convert the lists of positions to tuples for a consistent output format.
-        for car, positions in car_pos.items():
-            car_pos[car] = tuple(positions)
+        for car_key, positions in car_pos.items():
+            car_pos[car_key] = tuple(positions)
 
         return car_pos
+
     
     @property
     def graph(self):
@@ -363,7 +399,7 @@ class BPSP(Problem):
 
             weights.append(edge_weight)  
 
-        return QUBO(self.bpsp_graph.number_of_nodes(), terms, weights)
+        return QUBO(self.bpsp_graph.number_of_nodes(), terms, weights, self.problem_instance,)
 
     def cplex_solution(self):
         """
@@ -550,7 +586,7 @@ class BPSP(Problem):
         """
         
         # Define color mapping for 0s and 1s in the paint_sequence to 'blue' and 'red' respectively
-        color_map = {0: '#f25c54', 1: '#48cae4'}  # shades of blue and red
+        color_map = {0: '#48cae4', 1: '#f25c54'}  # shades of blue and red
         plot_colors = [color_map[color] for color in paint_sequence]
 
         # Dynamically determine the width of the figure based on the number of cars in self.car_sequence
