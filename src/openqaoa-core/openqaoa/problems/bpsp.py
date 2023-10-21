@@ -285,7 +285,7 @@ class BPSP(Problem):
         # Helper function to add or update an edge in the graph.
         def add_edge(u, v, weight):
             # Sort the vertices to maintain a consistent edge representation.
-            edge = (u, v) if u < v else (v, u)
+            edge = (u, v) #if u < v else (v, u)
             # Add the weight or update the existing weight of the edge.
             graph[edge] = graph.get(edge, 0) + weight
 
@@ -430,7 +430,8 @@ class BPSP(Problem):
         solution = [int(np.round(model.solution.get_value(var))) for var in model.iter_binary_vars()]
         
         # Get the objective value of the solution
-        objective_value = model.objective_value
+        diff_sum = lambda lst: sum(abs(lst[i] - lst[i+1]) for i in range(len(lst)-1))
+        objective_value = diff_sum(solution)
         # Return the paint choices and their corresponding objective value
         return solution, objective_value
 
