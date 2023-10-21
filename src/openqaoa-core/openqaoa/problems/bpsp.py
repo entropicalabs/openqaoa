@@ -427,11 +427,10 @@ class BPSP(Problem):
             print(status)
         
         # Extract the solution values representing paint choices
-        solution = [int(model.solution.get_value(var)) for var in model.iter_binary_vars()]
+        solution = [int(np.round(model.solution.get_value(var))) for var in model.iter_binary_vars()]
         
         # Get the objective value of the solution
         objective_value = model.objective_value
-        
         # Return the paint choices and their corresponding objective value
         return solution, objective_value
 
