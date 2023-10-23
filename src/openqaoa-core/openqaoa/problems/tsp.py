@@ -179,7 +179,6 @@ class TSP(Problem):
         """
         # Set edge weights to be the distances between corresponding cities
         for u, v, weight in G.edges(data="weight"):
-            print(weight)
             if not isinstance(weight, float) and not isinstance(weight, int):
                 raise TypeError("The edge weights must be of type float or int")
 
