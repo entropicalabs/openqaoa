@@ -71,7 +71,7 @@ class QAOAVariationalBaseParams(ABC):
     def mixer_2q_angles(self) -> np.ndarray:
         """2D array with the XX and YY-rotation angles.
 
-        1st index goes over p and the 2nd index over the qubit pairs, 
+        1st index goes over p and the 2nd index over the qubit pairs,
         to apply XX and YY-rotations on.
         """
         raise NotImplementedError()

@@ -27,7 +27,6 @@ from ...optimizers.qaoa_optimizer import get_optimizer
 from ...backends.qaoa_backend import get_qaoa_backend
 
 
-
 class RQAOA(Workflow):
     """
     A class implementing a RQAOA workflow end to end.
@@ -624,14 +623,16 @@ class RQAOA(Workflow):
 
         return serializable_dict
 
+
 class WrappedQAOA(QAOA):
     """
-    A class implementing the QAOA object to use in RQAOA, here check_connection() is used outside of the QAOA 
+    A class implementing the QAOA object to use in RQAOA, here check_connection() is used outside of the QAOA
     compilation to make sure it's only used once.
 
     Args:
         QAOA (_type_): _description_
     """
+
     def __init__(self, device=DeviceLocal("vectorized")):
         super().__init__(device)
 
