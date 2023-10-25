@@ -17,7 +17,7 @@ from openqaoa.problems import (
     BinPacking,
     SK,
     KColor,
-    BPSP
+    BPSP,
 )
 from openqaoa.utilities import convert2serialize
 from openqaoa.problems.helper_functions import create_problem_from_dict
@@ -72,7 +72,7 @@ class TestQUBO(unittest.TestCase):
             "k_color": KColor.random_instance(
                 n_nodes=int(rng.integers(3, 8)), k=int(rng.integers(2, 5)), seed=seed
             ),
-            "binary_paint_shop_problem": BPSP.random_instance(num_cars = 10, seed = seed),
+            "binary_paint_shop_problem": BPSP.random_instance(num_cars=10, seed=seed),
         }
         qubo_random_instances = {
             k: v.qubo for k, v in problems_random_instances.items()
@@ -159,7 +159,7 @@ class TestQUBO(unittest.TestCase):
             ],
             "sherrington_kirkpatrick": ["problem_type", "G"],
             "k_color": ["problem_type", "G", "k", "penalty"],
-            "binary_paint_shop_problem": ["problem_type", 'car_sequence', 'car_positions', 'bpsp_graph'],
+            "binary_paint_shop_problem": ["problem_type", "car_sequence", "car_positions", "bpsp_graph"],
             "generic_qubo": ["problem_type"],
         }
 

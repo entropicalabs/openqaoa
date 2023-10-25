@@ -26,14 +26,6 @@ class TestBPSP(unittest.TestCase):
     including QUBO creation, car sequencing, solution methods, and more.
     """
 
-    def setUp(self):
-        """
-        Set up testing data before each test.
-
-        This method initializes a BPSP instance with a specific car sequence.
-        """
-        self.bp = BPSP(np.array([0, 1, 0, 1]))
-
     def test_bpsp_terms_weights_constant(self):
         """
         Test the correct QUBO formation from a provided graph.
@@ -53,69 +45,77 @@ class TestBPSP(unittest.TestCase):
         self.assertEqual(gr_weights, bpsp_prob_qubo.weights)
         self.assertEqual(0.0, bpsp_prob_qubo.constant)
 
-    def test_car_sequence_raises(self):
+    def test_bpsp_car_sequence_raises(self):
         """
         Test if ValueErrors are raised for invalid car sequences.
 
         Certain car sequences are expected to be invalid based on their content.
         This method checks if setting such sequences raises a ValueError.
         """
+        bpsp = BPSP(np.array([0, 1, 0, 1]))
         with self.assertRaises(ValueError):
-            self.bp.car_sequence = np.array([0, 1, 0])
+            bpsp.car_sequence = np.array([0, 1, 0])
         with self.assertRaises(ValueError):
-            self.bp.car_sequence = np.array([0, 0, 1, 2, 2, 3, 3, 3])
+            bpsp.car_sequence = np.array([0, 0, 1, 2, 2, 3, 3, 3])
 
-    def test_random_instance(self):
+    def test_bpsp_random_instance(self):
         """
         Test the generation of a random BPSP instance.
 
         Validates that the generated random BPSP instance has one of the
         expected car sequences.
         """
-        instance = BPSP.random_instance(num_cars=2)
-        self.assertTrue(all(np.array([0, 1, 0, 1]) == instance.car_sequence) or 
-                        all(np.array([1, 1, 0, 0]) == instance.car_sequence) or 
-                        all(np.array([0, 0, 1, 1]) == instance.car_sequence) or 
-                        all(np.array([1, 0, 1, 0]) == instance.car_sequence))
+        bpsp = BPSP.random_instance(num_cars=2, seed=1234)
+        self.assertTrue(all(np.array([0, 1, 0, 1]) == bpsp.car_sequence) or 
+                        all(np.array([1, 1, 0, 0]) == bpsp.car_sequence) or 
+                        all(np.array([0, 0, 1, 1]) == bpsp.car_sequence) or 
+                        all(np.array([1, 0, 1, 0]) == bpsp.car_sequence))
 
-    def test_car_pos(self):
+    def test_bpsp_car_pos(self):
         """Test the retrieval of car positions."""
-        self.assertEqual(self.bp.car_positions, {0: (0, 2), 1: (1, 3)})
+        bpsp = BPSP(np.array([0, 1, 0, 1]))
+        self.assertEqual(bpsp.car_positions, {0: (0, 2), 1: (1, 3)})
 
-    def test_graph(self):
+    def test_bpsp_graph(self):
         """Test the generation of a graph representation of the BPSP instance."""
-        self.assertEqual(len(self.bp.bpsp_graph.nodes), 2)
+        bpsp = BPSP.random_instance(num_cars=2, seed=1234)
+        self.assertEqual(len(bpsp.bpsp_graph.nodes), 2)
 
-    def test_docplex_bpsp_model(self):
+    def test_bpsp_docplex_bpsp_model(self):
         """Test if the docplex model representation of BPSP is generated."""
-        self.assertIsNotNone(self.bp.docplex_bpsp_model)
+        bpsp = BPSP.random_instance(num_cars=2, seed=1234)
+        self.assertIsNotNone(bpsp.docplex_bpsp_model)
 
-    def test_cplex_solution(self):
+    def test_bpsp_cplex_solution(self):
         """
         Test the solution of the BPSP problem using CPLEX.
 
         This test assumes that CPLEX is installed and functional. It checks
         the length of the solution and the objective value.
         """
-        solution, objective_value = self.bp.cplex_solution()
+        bpsp = BPSP(np.array([0, 1, 0, 1]))
+        solution, objective_value = bpsp.solve_cplex()
         self.assertEqual(len(solution), 4)
         self.assertIn(objective_value, [1, 3])
 
-    def test_qaoa_solution(self):
+    def test_bpsp_qaoa_solution(self):
         """Test the solution of the BPSP problem using QAOA."""
-        sequence, color_swaps = self.bp.qaoa_solution('10')
+        bpsp = BPSP(np.array([0, 1, 0, 1]))
+        sequence, color_swaps = bpsp.paintseq_from_bits('10')
         self.assertEqual(sequence, [1, 0, 0, 1])
         self.assertEqual(color_swaps, 2)
 
-    def test_redfirst_solution(self):
+    def test_bpsp_redfirst_solution(self):
         """Test the solution of the BPSP problem using the Red-First method."""
-        sequence, color_swaps = self.bp.redfirst_solution()
+        bpsp = BPSP(np.array([0, 1, 0, 1]))
+        sequence, color_swaps = bpsp.solve_redfirst()
         self.assertEqual(sequence, [1, 1, 0, 0])
         self.assertEqual(color_swaps, 1)
 
-    def test_greedy_solution(self):
+    def test_bpsp_greedy_solution(self):
         """Test the solution of the BPSP problem using the Greedy method."""
-        sequence, color_swaps = self.bp.greedy_solution()
+        bpsp = BPSP(np.array([0, 1, 0, 1]))
+        sequence, color_swaps = bpsp.solve_greedy()
         self.assertEqual(sequence, [0, 0, 1, 1])
         self.assertEqual(color_swaps, 1)
 

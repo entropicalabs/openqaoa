@@ -13,7 +13,7 @@ This implementation is based on the following works:
     - "Some heuristics for the binary paint shop problem and their expected number 
        of colour changes"
        (https://www.sciencedirect.com/science/article/pii/S1570866710000559)
-    - Upcoming/unpublished work by V Vijendran et al.
+    - Upcoming/unpublished work by V Vijendran et al from A*STAR and CQC2T.
 
 Author: V Vijendran (Vijey)
 GitHub: https://github.com/vijeycreative
@@ -86,7 +86,8 @@ class BPSP(Problem):
             `bpsp_graph` method.
 
         Returns:
-        None
+        -------
+            The initialized BPSP object.
         """
         
         self.car_sequence = car_sequence
@@ -199,19 +200,20 @@ class BPSP(Problem):
         # Generate a list with two occurrences of each car ID, i.e., [0, 1, ..., n, 0, 1, ..., n].
         car_sequence = np.array(list(range(num_cars)) + list(range(num_cars)))
 
-        # Set the seed for numpy's random module.
-        np.random.seed(seed)
+        # Create a new instance of the default random number generator.
+        rng = np.random.default_rng(seed)
 
         # Apply the Fisher-Yates shuffle to the car_sequence.
         # Start from the end of the list and swap the current element with a randomly chosen earlier element.
-        for i in range(len(car_sequence)-1, 0, -1):
-            # Select a random index between 0 and i (inclusive).
-            j = np.random.randint(0, i+1)
+        for i in range(len(car_sequence) - 1, 0, -1):
+            # Select a random index between 0 and i (inclusive) using the rng instance.
+            j = rng.integers(0, i + 1)
             # Swap the elements at indices i and j.
             car_sequence[i], car_sequence[j] = car_sequence[j], car_sequence[i]
 
         # Return a BPSP instance using the shuffled car_sequence.
         return BPSP(car_sequence)
+
     
     @property
     def car_pos(self):
@@ -401,7 +403,7 @@ class BPSP(Problem):
 
         return QUBO(self.bpsp_graph.number_of_nodes(), terms, weights, self.problem_instance,)
 
-    def cplex_solution(self):
+    def solve_cplex(self):
         """
         Solves the BPSP using the CPLEX solver and returns the solution and its objective value.
 
@@ -435,7 +437,7 @@ class BPSP(Problem):
         # Return the paint choices and their corresponding objective value
         return solution, objective_value
 
-    def qaoa_solution(self, bitstring):
+    def paintseq_from_bits(self, bitstring):
         """
         Transforms a sequence of initial car colors to a paint sequence and computes the number of paint swaps.
         
@@ -474,7 +476,7 @@ class BPSP(Problem):
         
         return paint_sequence, color_swaps
 
-    def redfirst_solution(self):
+    def solve_redfirst(self):
         """
         The `red_first_solution` method applies a heuristic to generate a paint sequence for cars. 
         Specifically, it colors the first occurrence of each car as Red (1) and the second 
@@ -511,7 +513,7 @@ class BPSP(Problem):
             
         return paint_sequence, color_swaps
 
-    def greedy_solution(self):
+    def solve_greedy(self):
         """
         The `greedy_solution` method determines a feasible paint sequence for cars using a 
         greedy approach. It processes the car sequence from left to right, coloring the 
