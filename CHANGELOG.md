@@ -1,11 +1,9 @@
-## Version v0.2.3rc1 (October 25th, 2023)
+## Version v0.2.3 (October 25th, 2023)
 
 This version brings the following changes:
 * Fix QPU tests due to provider changes
 * Fix `backend_qpu`/`device.backend_device` duplicate
 * Compatibility of QAOA and RQAOA with Azure Quantum sessions
-
-
 
 ## Version v0.2.2 (September 20th, 2023)
 
