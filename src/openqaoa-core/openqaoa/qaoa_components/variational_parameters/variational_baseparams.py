@@ -62,36 +62,35 @@ class QAOAVariationalBaseParams(ABC):
     def mixer_1q_angles(self) -> np.ndarray:
         """2D array with the X-rotation angles.
 
-        1st index goes over p and the 2nd index over the qubits to
-        apply X-rotations on.
+        1st index goes over p and the 2nd index over the qubits,
+        to apply X-rotations on.
         """
         raise NotImplementedError()
 
     @property
     def mixer_2q_angles(self) -> np.ndarray:
-        """2D array with the X-rotation angles.
+        """2D array with the XX and YY-rotation angles.
 
-        1st index goes over p and the 2nd index over the qubits to
-        apply X-rotations on.
+        1st index goes over p and the 2nd index over the qubit pairs,
+        to apply XX and YY-rotations on.
         """
         raise NotImplementedError()
 
     @property
     def cost_1q_angles(self) -> np.ndarray:
-        """2D array with the ZZ-rotation angles.
+        """2D array with the Z-rotation angles.
 
-        1st index goes over the p and the 2nd index over the qubit
-        pairs, to apply ZZ-rotations on.
+        1st index goes over the p and the 2nd index over the qubits,
+        to apply Z-rotations on.
         """
         raise NotImplementedError()
 
     @property
     def cost_2q_angles(self) -> np.ndarray:
-        """2D array with Z-rotation angles.
+        """2D array with ZZ-rotation angles.
 
         1st index goes over the p and the 2nd index over the qubit
-        pairs, to apply Z-rotations on. These are needed by
-        ``qaoa.cost_function.make_qaoa_memory_map``
+        pairs, to apply ZZ-rotations on.
         """
         raise NotImplementedError()
 

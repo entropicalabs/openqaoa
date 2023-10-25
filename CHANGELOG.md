@@ -1,3 +1,10 @@
+## Version v0.2.3 (October 25th, 2023)
+
+This version brings the following changes:
+* Fix QPU tests due to provider changes
+* Fix `backend_qpu`/`device.backend_device` duplicate
+* Compatibility of QAOA and RQAOA with Azure Quantum sessions
+
 ## Version v0.2.2 (September 20th, 2023)
 
 This version fixes the version of `pyquil` to prevent breaking changes occuring with v4.0.0.
@@ -11,7 +18,7 @@ This version fixes an issue detecting the plugins when installing `openqaoa-core
 This new version brings an import change to OpenQAOA, separately installable plugins to access 
 different providers.
 
-## What's changed
+### What's changed
 
 This version brings the following new features:
 * Independently installable plugins
@@ -27,7 +34,7 @@ This version brings the following new features:
 ## Version v0.1.3 (April 21st, 2023)
 This version brings a set of new features in OpenQAOA
 
-## What's Changed
+### What's Changed
 * QAOA workflows now support `evaluate_circuit` which lets compute the energy and measurement outcomes for a QAOA circuit for a specified set of parameter values. 
 * The library design-wise is moving closer to modularization goal where each hardware provider backend can be installed independently (this feature is expected to fully functional in the next release)
 * OpenQAOA v0.1.3 brings in a list of new optimization problems contributed by @alemonbar, including:
@@ -48,7 +55,7 @@ This release brings the following new features:
 * The ability to plug in custom qubit routing solutions for QAOA circuits. 
 * AWS managed jobs are now supported through OpenQAOA
 
-## What's Changed
+### What's Changed
 
 * Refactor
   * The new `GateMapLabel` introduces an updated and a more consistent way to label QAOA gates in the circuit. 
@@ -63,7 +70,7 @@ This is OpenQAOA's first major release! V0.1.0 contains many new features and qu
 
 **notice**: the license has been changed from `apache 2.0` to `MIT`
 
-## What's Changed
+### What's Changed
 
 * Refactor
   * The code underwent a considerable refactoring effort. The most noticeable change is in the new `openqaoa-core` and other library plugins in the form `openqaoa-xyz`.
@@ -85,7 +92,7 @@ This is OpenQAOA's first major release! V0.1.0 contains many new features and qu
 
 This release brings improvements to RQAOA workflow and AWS authentication, and a bugfix to TSP problem class.
 
-## What's Changed
+### What's Changed
 * Refactor
   * Authentication Refactor by @shahidee44 in https://github.com/entropicalabs/openqaoa/pull/126
   * RQAOA workflow by @raulconchello in https://github.com/entropicalabs/openqaoa/pull/109
@@ -105,7 +112,7 @@ This release brings improvements to RQAOA workflow and AWS authentication, and a
 
 A release to fix two QPU-related bugs
 
-## What's Changed
+### What's Changed
 * Fixes
   * Now save_intermediate works for backends with no jobid #110 
   * Fix a bug that prevented the correct usage of Rigetti's QPUs when on QCS #116 
