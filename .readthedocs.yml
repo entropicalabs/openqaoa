@@ -39,3 +39,5 @@ python:
       path: ./src/openqaoa-azure
     - method: pip
       path: ./src/openqaoa-braket
+    - method: pip
+      path: ./src/openqaoa-qir

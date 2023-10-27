@@ -172,7 +172,6 @@ class QAOAQiskitQPUBackend(
                 initial_layout=self.initial_qubit_mapping,
                 optimization_level=self.qiskit_optimziation_level,
             )
-
         return transpiled_circuit
 
     @property

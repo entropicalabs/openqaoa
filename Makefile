@@ -8,6 +8,7 @@ local-install:
 	pip install ./src/openqaoa-pyquil
 	pip install ./src/openqaoa-braket
 	pip install ./src/openqaoa-azure
+	pip install ./src/openqaoa-qir
 	pip install .
 
 .PHONY: dev-install
@@ -17,6 +18,7 @@ dev-install:
 	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
+	pip install -e ./src/openqaoa-qir
 	pip install -e .
 
 .PHONY: dev-install-tests
@@ -26,6 +28,7 @@ dev-install-tests:
 	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
+	pip install -e ./src/openqaoa-qir
 	pip install -e .
 
 .PHONY: dev-install-docs
@@ -35,6 +38,7 @@ dev-install-docs:
 	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
+	pip install -e ./src/openqaoa-qir
 	pip install -e .
 
 .PHONY: dev-install-all
@@ -44,6 +48,7 @@ dev-install-all:
 	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
+	pip install -e ./src/openqaoa-qir
 	pip install -e .
 
 .PHONY: dev-uninstall
@@ -54,3 +59,4 @@ dev-uninstall:
 	pip uninstall openqaoa-pyquil -y
 	pip uninstall openqaoa-braket -y
 	pip uninstall openqaoa-azure -y
+	pip uninstall openqaoa-qir -y	
