@@ -245,7 +245,7 @@ class TestPyquilGateApplicator(unittest.TestCase):
 
         self.assertEqual(
             [
-                each_instruction.get_qubits()
+                each_instruction.get_qubit_indices()
                 for each_instruction in circuit.instructions
             ],
             [{0}],
@@ -284,7 +284,7 @@ class TestPyquilGateApplicator(unittest.TestCase):
             )
             self.assertEqual(
                 [
-                    each_instruction.get_qubits()
+                    each_instruction.get_qubit_indices()
                     for each_instruction in circuit.instructions
                 ],
                 [{0}],
@@ -322,7 +322,7 @@ class TestPyquilGateApplicator(unittest.TestCase):
 
                 self.assertEqual(
                     [
-                        each_instruction.get_qubits()
+                        each_instruction.get_qubit_indices()
                         for each_instruction in circuit.instructions
                     ],
                     [{0, 1}],
@@ -369,7 +369,7 @@ class TestPyquilGateApplicator(unittest.TestCase):
                 )
                 self.assertEqual(
                     [
-                        each_instruction.get_qubits()
+                        each_instruction.get_qubit_indices()
                         for each_instruction in circuit.instructions
                     ],
                     [{0, 1}],
