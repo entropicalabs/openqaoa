@@ -44,7 +44,7 @@ def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
     instrs = [instr for instr in executable if type(instr) == quilbase.Gate]
     pair_instrs = [
-        list(instr.get_qubits()) for instr in instrs if len(instr.get_qubits()) == 2
+        list(instr.get_qubit_indices()) for instr in instrs if len(instr.get_qubit_indices()) == 2
     ]
 
     for term in pair_instrs:
@@ -137,7 +137,7 @@ class QAOAPyQuilQPUBackend(
         self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))
 
         if self.prepend_state:
-            assert self.n_qubits >= len(prepend_state.get_qubits()), (
+            assert self.n_qubits >= len(prepend_state.get_qubit_indices()), (
                 "Cannot attach a bigger circuit " "to the QAOA routine"
             )
 
