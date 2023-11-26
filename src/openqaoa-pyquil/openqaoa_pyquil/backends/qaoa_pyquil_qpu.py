@@ -183,13 +183,13 @@ class QAOAPyQuilQPUBackend(
                 parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 
-        native = self.device.quantum_computer.compiler.quil_to_native_quil(
-            parametric_circuit
-        )
+        # native = self.device.quantum_computer.compiler.quil_to_native_quil(
+        #     parametric_circuit
+        # )
 
-        prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
-            native
-        )
+        # prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
+        #     native
+        # )
 
         angles_list = np.array(
             self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
@@ -200,7 +200,13 @@ class QAOAPyQuilQPUBackend(
         angle_declarations.remove("ro")
 
         for i, param_name in enumerate(angle_declarations):
-            prog_exe.write_memory(region_name=param_name, value=angles_list[i])
+            self.memory_map = {param_name : [angles_list[i]]}
+            parametric_circuit.declare(param_name, "REAL")
+
+        f = open("debug.txt", "a")
+        f.write(f"{parametric_circuit}")
+        f.close()
+        prog_exe = self.device.quantum_computer.compile(parametric_circuit)
 
         return prog_exe
 
@@ -264,7 +270,7 @@ class QAOAPyQuilQPUBackend(
                     if each_gate.gate_label.n_qubits == 1
                     else "two" + gatelabel_pyquil[1:]
                 )
-                angle_param = parametric_circuit.declare(gatelabel_pyquil, "REAL", 1)
+                angle_param = parametric_circuit.declare(gatelabel_pyquil.lower(), "REAL", 1)
                 each_gate.angle_value = angle_param
             if isinstance(each_gate, RZZGateMap) or isinstance(each_gate, SWAPGateMap):
                 decomposition = each_gate.decomposition("standard2")
@@ -317,7 +323,11 @@ class QAOAPyQuilQPUBackend(
         if n_shots is not None:
             executable_program.wrap_in_numshots_loop(n_shots)
 
-        result = self.device.quantum_computer.run(executable_program)
+        f = open("debug.txt", "a")
+        f.write(f"{executable_program}")
+        f.close()
+
+        result = self.device.quantum_computer.run(executable_program, memory_map=self.memory_map)
         # we create an uuid for the job
         self.job_id = generate_uuid()
 
