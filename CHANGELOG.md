@@ -1,3 +1,13 @@
+## Version v0.2.4 (November 27th, 2023)
+
+This version brings two main changes:
+* Temporary removing pyquil from the openqaoa meta package. Pyquil is still installable as a standalone package with `pip install openqaoa-pyquil`, it will not be included in `pip install openqaoa` until the issue has been fixed - https://github.com/entropicalabs/openqaoa/issues/293
+  * Installation was made impossible by conflicting dependencies between pyquil and the rest of openqaoa
+  * We removed pyquil temporarily
+  * We will be updating pyquil and fixing breaking changes in the next release
+* New problem class
+  * Binary Paint Shop Problem
+
 ## Version v0.2.3 (October 25th, 2023)
 
 This version brings the following changes:
