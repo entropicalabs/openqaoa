@@ -14,6 +14,7 @@ from .kcolor import KColor
 from .binpacking import BinPacking
 from .portfoliooptimization import PortfolioOptimization
 from .sherrington_kirkpatrick import SK
+from .bpsp import BPSP
 from .qubo import QUBO
 
 
@@ -52,6 +53,7 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
         "k_color": KColor,
         "portfolio_optimization": PortfolioOptimization,
         "sherrington_kirkpatrick": SK,
+        "binary_paint_shop_problem": BPSP,
     }
 
     # check if the problem type is in the mapper

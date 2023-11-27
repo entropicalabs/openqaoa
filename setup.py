@@ -13,7 +13,7 @@ with open("_version.py") as f:
 requirements = [
     f"{each_folder_name}=={version}"
     for each_folder_name in os.listdir("src")
-    if "openqaoa-" in each_folder_name
+    if ("openqaoa-" in each_folder_name and "openqaoa-pyquil" not in each_folder_name)
 ]
 
 setup(
