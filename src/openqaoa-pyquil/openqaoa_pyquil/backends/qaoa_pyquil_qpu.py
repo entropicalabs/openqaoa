@@ -200,7 +200,6 @@ class QAOAPyQuilQPUBackend(
         angle_declarations.remove("ro")
 
         for i, param_name in enumerate(angle_declarations):
-            self.memory_map = {param_name : [angles_list[i]]}
             parametric_circuit.declare(param_name, "REAL")
 
         f = open("debug.txt", "a")
@@ -319,15 +318,27 @@ class QAOAPyQuilQPUBackend(
 
         executable_program = self.qaoa_circuit(params)
 
+        angles_list = np.array(
+            self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
+            dtype=float,
+        )
+        angle_declarations = list(executable_program.declarations.keys())
+
+        angle_declarations.remove("ro")
+        f = open("debug.txt", "a")
+        f.write(f"{executable_program}")
+        f.close()
+        memory_map = None
+        for i, param_name in enumerate(angle_declarations):
+            memory_map = {param_name : [angles_list[i]]}
+
         # if n_shots is given change the number of shots
         if n_shots is not None:
             executable_program.wrap_in_numshots_loop(n_shots)
 
-        f = open("debug.txt", "a")
-        f.write(f"{executable_program}")
-        f.close()
+        
 
-        result = self.device.quantum_computer.run(executable_program, memory_map=self.memory_map)
+        result = self.device.quantum_computer.run(executable_program, memory_map=memory_map)
         # we create an uuid for the job
         self.job_id = generate_uuid()
 
