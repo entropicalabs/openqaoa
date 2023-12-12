@@ -3,6 +3,7 @@ import unittest
 from qiskit.circuit import gate as qsk_gate
 from qiskit.circuit import controlledgate as qsk_c_gate
 from qiskit.circuit.library import standard_gates as qsk_s_gate
+
 # from qiskit.circuit import singleton as qsk_sgt
 from qiskit import QuantumCircuit
 
