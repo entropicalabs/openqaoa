@@ -345,7 +345,7 @@ class QAOAPyQuilQPUBackend(
         # TODO: check the endian (big or little) ordering of measurement outcomes
         meas_list = [
             "".join(str(bit) for bit in bitstring)
-            for bitstring in result.readout_data["ro"]
+            for bitstring in result.get_register_map().get("ro")
         ]
 
         # Expose counts
