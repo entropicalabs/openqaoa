@@ -96,7 +96,7 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
             create_device(location="local", name="qiskit.qasm_simulator")
         )
         device_list.append(
-            create_device(location="ibmq", name="ibm_perth"),
+            create_device(location="ibmq", name="ibm_kyoto"),
         )
 
         for device in device_list:

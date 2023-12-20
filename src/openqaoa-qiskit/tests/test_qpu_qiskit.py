@@ -459,7 +459,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         # Check the creation of the varitional parms
         _ = create_qaoa_variational_params(qaoa_descriptor, "standard", "rand")
 
-        qiskit_device = DeviceQiskit("ibm_perth", self.HUB, self.GROUP, self.PROJECT)
+        qiskit_device = DeviceQiskit("ibm_kyoto", self.HUB, self.GROUP, self.PROJECT)
 
         try:
             QAOAQiskitQPUBackend(
@@ -494,7 +494,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
         variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
         qiskit_device = DeviceQiskit(
-            "ibm_perth",
+            "ibm_kyoto",
             self.HUB,
             self.GROUP,
             self.PROJECT,
@@ -530,7 +530,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
         variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
-        qiskit_device = DeviceQiskit("ibm_perth", self.HUB, self.GROUP, self.PROJECT)
+        qiskit_device = DeviceQiskit("ibm_kyoto", self.HUB, self.GROUP, self.PROJECT)
 
         qiskit_backend = QAOAQiskitQPUBackend(
             qaoa_descriptor, qiskit_device, shots, None, None, False
