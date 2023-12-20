@@ -1,3 +1,7 @@
+## Version v0.2.5 (December 20th, 2023)
+
+This version fixes some breaking changes appearing with qiskit 0.45
+
 ## Version v0.2.4 (November 27th, 2023)
 
 This version brings two main changes:

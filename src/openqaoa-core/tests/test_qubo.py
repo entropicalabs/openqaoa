@@ -159,7 +159,12 @@ class TestQUBO(unittest.TestCase):
             ],
             "sherrington_kirkpatrick": ["problem_type", "G"],
             "k_color": ["problem_type", "G", "k", "penalty"],
-            "binary_paint_shop_problem": ["problem_type", "car_sequence", "car_positions", "bpsp_graph"],
+            "binary_paint_shop_problem": [
+                "problem_type",
+                "car_sequence",
+                "car_positions",
+                "bpsp_graph",
+            ],
             "generic_qubo": ["problem_type"],
         }
 
