@@ -20,6 +20,7 @@
 # OpenQAOA
 
 A multi-backend python library for quantum optimization using QAOA on Quantum computers and Quantum computer simulators. Check out the OpenQAOA website at [https://openqaoa.entropicalabs.com/](https://openqaoa.entropicalabs.com/)
+This is Marco's branch
  
 **OpenQAOA is currently in OpenBeta.**
 
