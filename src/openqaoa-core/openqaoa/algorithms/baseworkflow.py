@@ -98,7 +98,7 @@ class Workflow(ABC):
         self.classical_optimizer = ClassicalOptimizer()
         self.local_simulators = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
         self.cloud_provider = list(DEVICE_ACCESS_OBJECT_MAPPER.keys())
-        self.available_error_mitigation_techniques = ["spam_twirling"]
+        self.available_error_mitigation_techniques = ["spam_twirling","mitiq_zne"]
         self.compiled = False
 
         # Initialize the identifier stamps, we initialize all the stamps needed to None

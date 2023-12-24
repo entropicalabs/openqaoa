@@ -1,0 +1,5 @@
+{
+   "factory":"Richardson",
+   "scaling":"fold_gates_at_random",
+   "scale_factor": [20.2,2.3]
+}

@@ -302,11 +302,16 @@ class ErrorMitigationProperties(WorkflowProperties):
                     # Parse the JSON file
                     calibration_data = json.load(file)
 
-                    # Check if the file has the expected structure
-                    calibration_measurements = calibration_data["results"][
-                        "measurement_outcomes"
-                    ]
-                    calibration_registers = calibration_data["register"]
+                    # Check if the file has the expected structure depending the technique
+                    if(self.error_mitigation_technique == 'spam_twirling'):
+                        calibration_measurements = calibration_data["results"][
+                            "measurement_outcomes"
+                        ]
+                        calibration_registers = calibration_data["register"]
+                    elif(self.error_mitigation_technique == 'mitiq_zne'):
+                        factory = calibration_data["factory"]
+                        scaling = calibration_data["scaling"]
+                        scale_factor = calibration_data["scale_factor"]
 
             except FileNotFoundError:
                 raise FileNotFoundError(
@@ -329,6 +334,14 @@ class ErrorMitigationProperties(WorkflowProperties):
 
         self.calibration_data_location = calibration_data_location
 
+
+    #Check that JSON structure for SPAM twirling calibration data.
+    def check_SPAM_twirling_calibration_data_file_structure(calibration_data_location):
+        print("TODO")
+
+    #Check that JSON structure for Mitiq ZNE calibration data.
+    def check_mitiq_ZNE_data_file_structure(calibration_data_location):
+        print("TODO")
 
 class ClassicalOptimizer(WorkflowProperties):
     """

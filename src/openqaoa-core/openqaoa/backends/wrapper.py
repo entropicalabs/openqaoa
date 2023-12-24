@@ -4,7 +4,11 @@ import json
 from mitiq import QPROGRAM, Executor, Observable, QuantumResult
 from mitiq.zne.inference import RichardsonFactory, LinearFactory, PolyExpFactory, PolyFactory, AdaExpFactory, FakeNodesFactory, ExpFactory
 from mitiq.zne.scaling import fold_gates_at_random, fold_gates_from_left, fold_gates_from_right
-from qiskit import qasm_simulator, shot_simulator, statevector_simulator, QuantumCircuit, transpile
+from mitiq.zne import execute_with_zne
+
+from qiskit import QuantumCircuit, transpile #,qasm_simulator, shot_simulator, statevector_simulator
+
+from .qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER
 
 from .basebackend import VQABaseBackend
 
@@ -75,6 +79,7 @@ class ZNEWrapper(BaseWrapper):
         super().__init__(backend)
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
+
         with open(self.calibration_data_location, "r") as f:
             calibration_data = json.load(f)
 
@@ -100,56 +105,61 @@ class ZNEWrapper(BaseWrapper):
 
             assert(factory in available_factories), "Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp"
             assert(scaling in available_scaling), "Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left"
-            assert(type(scale_factor) == float), "Scale factor must be a float value"
-            assert(scale_factor >= 1), "Scale factor must be >= 1"
+            assert(
+                type(scale_factor) == list and
+                (type(x) == float and x >=1) for x in scale_factor
+                ), "Scale factor must be a list of floats greater or equal to 1"
+            #assert(scale_factor >= 1), "Scale factor must be >= 1"
+            
             if(scaling == "fold_gates_at_random"):
                 try:
-                    seed = calibration_data["seed"]
+                    self.seed = calibration_data["seed"]
                     assert(type(seed) == int), "Seed must be an integer"
                     assert(seed >= 0), "Seed must be >= 0"
                 except:
                     seed = -1
 
-            factory_obj = None
+            self.factory_obj = None
             if factory == "Richardson":
-                factory_obj = RichardsonFactory(scale_factor = scale_factor)
+                self.factory_obj = RichardsonFactory(scale_factors = scale_factor)
             elif factory == "Linear":
-                factory_obj = LinearFactory(scale_factor = scale_factor)
+                self.factory_obj = LinearFactory(scale_factors = scale_factor)
             elif factory == "Exp":
-                factory_obj = ExpFactory(scale_factor = scale_factor)
+                self.factory_obj = ExpFactory(scale_factors = scale_factor)
             elif factory == "Poly":
-                factory_obj = PolyFactory(scale_factor = scale_factor)
+                self.factory_obj = PolyFactory(scale_factors = scale_factor)
             elif factory == "PolyExp":
-                factory_obj = PolyExpFactory(scale_factor = scale_factor)
+                self.factory_obj = PolyExpFactory(scale_factors = scale_factor)
             elif factory == "AdaExp":
-                factory_obj = AdaExpFactory(scale_factor = scale_factor)
+                self.factory_obj = AdaExpFactory(scale_factors = scale_factor)
             elif factory == "FakeNodes":
-                factory_obj = FakeNodesFactory(scale_factor = scale_factor)
+                self.factory_obj = FakeNodesFactory(scale_factors = scale_factor)
 
-            scale_noise = None
+            self.scale_noise = None
             if scaling == "fold_gates_at_random":
-                scale_noise = fold_gates_at_random
+                self.scale_noise = fold_gates_at_random
             elif scaling == "fold_gates_from_left":
-                scale_noise = fold_gates_from_left
+                self.scale_noise = fold_gates_from_left
             elif scaling == "fold_gates_form_right":
-                scale_noise = fold_gates_from_right
+                self.scale_noise = fold_gates_from_right
+            
+            self.scale_factor = scale_factor
 
     def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
-        
         def executor(circuit: QuantumCircuit) -> float:
 
-                qc = transpile(circuit, backend.backend_simulator)
-                job = backend.backend_simulator.run(qc, shots=n_shots)
+                qc = transpile(circuit, self.backend.backend_simulator)
+                job = self.backend.backend_simulator.run(qc, shots=n_shots)
                 rho = job.result().data()["density_matrix"]
                 expectation = np.real(np.trace(rho @ self.backend.qaoa_descriptor.cost_hamiltonian))
                 return expectation
 
         return execute_with_zne(
-            circuit = backend.qaoa_circuit(),
+            circuit = self.backend.qaoa_circuit(),
             executor = executor,
             observable = self.backend.qaoa_descriptor.cost_hamiltonian,
-            factory = factory_obj,
-            scale_noise = scale_noise)
+            factory = self.factory_obj,
+            scale_noise = self.scale_noise)
 """
 execute_with_zne(
     circuit: QPROGRAM,
