@@ -5,9 +5,11 @@ from mitiq import QPROGRAM, Executor, Observable, QuantumResult
 from mitiq.zne.inference import RichardsonFactory, LinearFactory, PolyExpFactory, PolyFactory, AdaExpFactory, FakeNodesFactory, ExpFactory
 from mitiq.zne.scaling import fold_gates_at_random, fold_gates_from_left, fold_gates_from_right
 from mitiq.zne import execute_with_zne
+from cirq import DensityMatrixSimulator, depolarize
+from mitiq.interface import convert_to_mitiq, mitiq_cirq
 
 from qiskit import QuantumCircuit, transpile #,qasm_simulator, shot_simulator, statevector_simulator
-
+from qiskit.quantum_info import DensityMatrix
 from .qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER
 
 from .basebackend import VQABaseBackend
@@ -145,19 +147,25 @@ class ZNEWrapper(BaseWrapper):
             
             self.scale_factor = scale_factor
 
-    def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
+    def expectation(self, params: QAOAVariationalBaseParams, n_shots=1024) -> float:
+        #TODO = manage default value for n_shots
         def executor(circuit: QuantumCircuit) -> float:
 
                 qc = transpile(circuit, self.backend.backend_simulator)
                 job = self.backend.backend_simulator.run(qc, shots=n_shots)
-                rho = job.result().data()["density_matrix"]
-                expectation = np.real(np.trace(rho @ self.backend.qaoa_descriptor.cost_hamiltonian))
-                return expectation
-
+                # Get the measurement data  
+                counts = job.result().get_counts()
+                self.measurement_outcomes = counts
+                # Return the observable 
+                return counts[list(counts.keys())[0]] / n_shots
+                """ expectation = np.real(np.trace(rho @ self.backend.qaoa_descriptor.cost_hamiltonian))
+                return expectation """
+        qiskit_circ = self.backend.qaoa_circuit(params)
+        qiskit_circ = transpile(qiskit_circ, basis_gates=["u1", "u2", "u3", "cx"])
         return execute_with_zne(
-            circuit = self.backend.qaoa_circuit(),
+            circuit = qiskit_circ,
             executor = executor,
-            observable = self.backend.qaoa_descriptor.cost_hamiltonian,
+            observable = None,
             factory = self.factory_obj,
             scale_noise = self.scale_noise)
 """
