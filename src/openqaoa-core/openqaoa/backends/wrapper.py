@@ -30,6 +30,9 @@ from ..utilities import (
     round_value,
 )
 
+from .cost_function import cost_function
+ 
+
 
 class BaseWrapper(VQABaseBackend):
     """
@@ -77,7 +80,7 @@ available_scaling = [
 class ZNEWrapper(BaseWrapper):
     """
     """
-    def __init__(self, backend, n_batches, calibration_data_location, n_shots):
+    def __init__(self, backend, n_batches, calibration_data_location):
         super().__init__(backend)
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
@@ -146,24 +149,31 @@ class ZNEWrapper(BaseWrapper):
                 self.scale_noise = fold_gates_from_right
             
             self.scale_factor = scale_factor
+        
 
-    def expectation(self, params: QAOAVariationalBaseParams, n_shots=1024) -> float:
-        #TODO = manage default value for n_shots
-        def executor(circuit: QuantumCircuit) -> float:
-
-                qc = transpile(circuit, self.backend.backend_simulator)
-                job = self.backend.backend_simulator.run(qc, shots=n_shots)
+    def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
+        
+        def executor(qc: QuantumCircuit) -> float:
+                #qc will not be used, because is getted and used inside self.backend.get_counts()
+                
+                counts = self.backend.get_counts(params, n_shots)
                 # Get the measurement data  
-                counts = job.result().get_counts()
+                #job = self.backend.backend_simulator.run(qc, shots=n_shots)
+                #counts = job.result().get_counts()
                 self.measurement_outcomes = counts
-                # Return the observable 
-                return counts[list(counts.keys())[0]] / n_shots
+                
+                # Return the observable expectation value
+                cost = cost_function(
+                    counts,
+                    self.backend.qaoa_descriptor.cost_hamiltonian)
+                return cost
                 """ expectation = np.real(np.trace(rho @ self.backend.qaoa_descriptor.cost_hamiltonian))
                 return expectation """
-        qiskit_circ = self.backend.qaoa_circuit(params)
-        qiskit_circ = transpile(qiskit_circ, basis_gates=["u1", "u2", "u3", "cx"])
+
+        qc = self.backend.qaoa_circuit(params)
+        qc = transpile(qc, basis_gates=["u1", "u2", "u3", "cx"])
         return execute_with_zne(
-            circuit = qiskit_circ,
+            circuit = qc,
             executor = executor,
             observable = None,
             factory = self.factory_obj,

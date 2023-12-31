@@ -279,8 +279,7 @@ class QAOA(Workflow):
             self.backend = ZNEWrapper(
                 backend=self.backend,
                 n_batches=self.error_mitigation_properties.n_batches,
-                calibration_data_location=self.error_mitigation_properties.calibration_data_location,
-                n_shots=self.backend.n_shots #TODO: Not necesary this parameter, we can just take it from backend inside the ZNEWrapper init
+                calibration_data_location=self.error_mitigation_properties.calibration_data_location
             )
         
         self.optimizer = get_optimizer(

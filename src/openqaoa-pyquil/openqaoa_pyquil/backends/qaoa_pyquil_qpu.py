@@ -310,7 +310,6 @@ class QAOAPyQuilQPUBackend(
         counts : dictionary
             A dictionary with the bitstring as the key and the number of counts as its value.
         """
-
         executable_program = self.qaoa_circuit(params)
 
         # if n_shots is given change the number of shots

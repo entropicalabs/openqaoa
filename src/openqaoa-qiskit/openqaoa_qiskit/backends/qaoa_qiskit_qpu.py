@@ -228,7 +228,6 @@ class QAOAQiskitQPUBackend(
             A dictionary with the bitstring as the key and the number of counts
             as its value.
         """
-
         n_shots = self.n_shots if n_shots is None else n_shots
 
         circuit = self.qaoa_circuit(params)

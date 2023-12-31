@@ -311,7 +311,6 @@ class QAOAResult:
             The count dictionary obtained either throught the statevector or
             the actual measurement counts.
         """
-
         if isinstance(measurement_outcomes, type(np.array([]))):
             measurement_outcomes = qaoa_probabilities(measurement_outcomes)
 
