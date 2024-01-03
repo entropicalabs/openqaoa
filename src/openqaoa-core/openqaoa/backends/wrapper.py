@@ -31,7 +31,7 @@ from ..utilities import (
 )
 
 from .cost_function import cost_function
- 
+from openqaoa_qiskit.backends.qaoa_qiskit_qpu import QAOAQiskitQPUBackend
 
 
 class BaseWrapper(VQABaseBackend):
@@ -98,11 +98,10 @@ class ZNEWrapper(BaseWrapper):
             # Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp 
             # fold_gates_at_random, fold_gates_from_right, fold_gates_from_left
             # scale factor
-
             assert(type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'] or 
                    type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'] or
                    type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator']
-                   ), "Only Qiskit backends are supported."
+                   or type(backend) == QAOAQiskitQPUBackend), "Only Qiskit backends are supported."
 
             factory = calibration_data["factory"]
             scaling = calibration_data["scaling"]
