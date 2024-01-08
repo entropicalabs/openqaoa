@@ -487,7 +487,7 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
             ),
         ]
 
-        device_name_lst = ["2q-qvm", "3q-qvm", "Aspen-M-3"]
+        device_name_lst = ["2q-qvm", "3q-qvm", "9q-qvm"]
 
         shots = 2
         seed = 1
