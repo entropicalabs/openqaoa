@@ -1,0 +1,50 @@
+maxcut instance:
+{'problem_type': 'maximum_cut', 'G': {'directed': False, 'multigraph': False, 'graph': {}, 'nodes': [{'id': 0}, {'id': 1}, {'id': 2}, {'id': 3}, {'id': 4}, {'id': 5}, {'id': 6}, {'id': 7}, {'id': 8}, {'id': 9}], 'links': [{'source': 0, 'target': 3}, {'source': 0, 'target': 4}, {'source': 0, 'target': 5}, {'source': 0, 'target': 8}, {'source': 0, 'target': 9}, {'source': 1, 'target': 3}, {'source': 1, 'target': 6}, {'source': 1, 'target': 9}, {'source': 2, 'target': 6}, {'source': 2, 'target': 8}, {'source': 3, 'target': 5}, {'source': 4, 'target': 5}, {'source': 4, 'target': 8}, {'source': 4, 'target': 9}, {'source': 5, 'target': 7}, {'source': 5, 'target': 8}, {'source': 6, 'target': 7}]}}
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+qaoa properties:
+qiskit_device = create_device(location='local', name='qiskit.shot_simulator')
+q1.set_device(qiskit_device)
+
+q1.set_circuit_properties(p=4,param_type='standard', init_type='rand', mixer_hamiltonian='x')
+
+q1.set_backend_properties(n_shots=5000, seed_simulator=1)
+
+q1.set_classical_optimizer(method='nelder-mead', maxiter=200, tol=0.001,
+                          optimization_progress=True, cost_progress=True, parameter_log=True)
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Noise model:
+one_qubit_gates = ['h','rx']
+two_qubits_gates = ['rzz']
+
+#create depol. noise
+def add_depolarizing_error(noise_model,prob):
+    noise_model = add_one_qubit_depolarizing_error(noise_model,prob)
+    noise_model = add_two_qubits_depolarizing_error(noise_model,prob)
+    return noise_model
+
+#create 1 qubit depol. noise
+def add_one_qubit_depolarizing_error(noise_model,prob):
+    error = depolarizing_error(prob, 1)
+    noise_model.add_all_qubit_quantum_error(error,one_qubit_gates)
+    return noise_model
+
+#create 2 qubits depol.noise
+def add_two_qubits_depolarizing_error(noise_model,prob):
+    error = depolarizing_error(prob, 2)
+    noise_model.add_all_qubit_quantum_error(error, two_qubits_gates)
+    return noise_model
+
+noise_model = add_depolarizing_error(NoiseModel(),0.05)
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+zne calibration data:
+{
+   "factory":"Richardson",
+   "scaling":"fold_gates_at_random",
+   "scale_factor": [2, 3, 7]
+}
