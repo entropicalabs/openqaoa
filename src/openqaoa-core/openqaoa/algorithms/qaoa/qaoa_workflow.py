@@ -411,7 +411,7 @@ class QAOA(Workflow):
             evaluated on a state simulator) or the counts of the QAOA circuit output
             (if the QAOA circuit is evaluated on a QPU or shot-based simulator)
         """
-
+        print('DENTROOO')
         # before evaluating the circuit we check that the QAOA object has been compiled
         if self.compiled is False:
             raise ValueError("Please compile the QAOA before optimizing it!")
@@ -499,6 +499,7 @@ class QAOA(Workflow):
                     "measurement_results": measurement_results,
                 }
             )
+        print('TODO BIEN BROOO')
         return output_dict
 
     def _serializable_dict(
