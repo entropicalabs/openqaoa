@@ -131,9 +131,9 @@ class ZNEWrapper(BaseWrapper):
             elif factory == "Exp":
                 self.factory_obj = ExpFactory(scale_factors = scale_factor)
             elif factory == "Poly":
-                self.factory_obj = PolyFactory(scale_factors = scale_factor)
+                self.factory_obj = PolyFactory(scale_factors = scale_factor, order = len(scale_factor) - 1)
             elif factory == "PolyExp":
-                self.factory_obj = PolyExpFactory(scale_factors = scale_factor)
+                self.factory_obj = PolyExpFactory(scale_factors = scale_factor, order = len(scale_factor) - 2)
             elif factory == "AdaExp":
                 self.factory_obj = AdaExpFactory(scale_factors = scale_factor)
             elif factory == "FakeNodes":
