@@ -144,7 +144,7 @@ class ZNEWrapper(BaseWrapper):
                 self.scale_noise = fold_gates_at_random
             elif scaling == "fold_gates_from_left":
                 self.scale_noise = fold_gates_from_left
-            elif scaling == "fold_gates_form_right":
+            elif scaling == "fold_gates_from_right":
                 self.scale_noise = fold_gates_from_right
             
             self.scale_factor = scale_factor
