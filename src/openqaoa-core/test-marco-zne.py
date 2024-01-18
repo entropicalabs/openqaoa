@@ -100,7 +100,7 @@ for p in ps:
                     plt.savefig("%s-%s-%s-%s-%s-2.png" % (str(p), str(param_type), str(init_type), str(mixer_hamiltonian), str(optimizer))) """
 import json
 #factories = [ "Exp", "FakeNodes", "Linear", "Richardson"]
-factories = ["PolyExp", "AdaExp"]
+factories = ["AdaExp"]
 scales = ["fold_gates_at_random", "fold_gates_from_left", "fold_gates_from_right"]
 
 for factory in factories:
