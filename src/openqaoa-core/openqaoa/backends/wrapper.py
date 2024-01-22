@@ -131,11 +131,11 @@ class ZNEWrapper(BaseWrapper):
             elif factory == "Exp":
                 self.factory_obj = ExpFactory(scale_factors = scale_factor)
             elif factory == "Poly":
-                self.factory_obj = PolyFactory(scale_factors = scale_factor)
+                self.factory_obj = PolyFactory(scale_factors = scale_factor, order = len(scale_factor) - 1)
             elif factory == "PolyExp":
-                self.factory_obj = PolyExpFactory(scale_factors = scale_factor)
+                self.factory_obj = PolyExpFactory(scale_factors = scale_factor, order = len(scale_factor) - 2)
             elif factory == "AdaExp":
-                self.factory_obj = AdaExpFactory(scale_factors = scale_factor)
+                self.factory_obj = AdaExpFactory(steps = 10)
             elif factory == "FakeNodes":
                 self.factory_obj = FakeNodesFactory(scale_factors = scale_factor)
 
@@ -144,7 +144,7 @@ class ZNEWrapper(BaseWrapper):
                 self.scale_noise = fold_gates_at_random
             elif scaling == "fold_gates_from_left":
                 self.scale_noise = fold_gates_from_left
-            elif scaling == "fold_gates_form_right":
+            elif scaling == "fold_gates_from_right":
                 self.scale_noise = fold_gates_from_right
             
             self.scale_factor = scale_factor
