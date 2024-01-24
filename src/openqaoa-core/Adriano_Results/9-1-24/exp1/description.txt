@@ -1,0 +1,7 @@
+We run 3 different circuits over an Maxcut instance:
+
+1- QAOA algorithm with OpenQAOA
+2- QAOA algorithm with OpenQAOA adding a noise model
+3- QAOA algorithm with OpenQAOA, adding a noise model and mitigation with ZNE from Mitiq.
+
+For that, we plot multiple cost histories and probabilities distributions.
