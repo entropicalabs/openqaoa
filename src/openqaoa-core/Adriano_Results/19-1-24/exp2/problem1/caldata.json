@@ -1,5 +1,5 @@
 {
-    "factory": "AdaExp",
+    "factory": "Linear",
     "scaling": "fold_gates_from_right",
     "seed": 1,
     "scale_factor": [
