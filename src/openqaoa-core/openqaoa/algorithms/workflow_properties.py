@@ -304,14 +304,20 @@ class ErrorMitigationProperties(WorkflowProperties):
 
                     # Check if the file has the expected structure depending the technique
                     if(self.error_mitigation_technique == 'spam_twirling'):
+                        '''
                         calibration_measurements = calibration_data["results"][
                             "measurement_outcomes"
                         ]
                         calibration_registers = calibration_data["register"]
+                        '''
+                        self.check_SPAMtwirling_calibrationdata_filestructure(calibration_data)
                     elif(self.error_mitigation_technique == 'mitiq_zne'):
+                        '''
                         factory = calibration_data["factory"]
                         scaling = calibration_data["scaling"]
                         scale_factor = calibration_data["scale_factor"]
+                        '''
+                        self.check_mitiq_ZNE_data_file_structure(calibration_data)
 
             except FileNotFoundError:
                 raise FileNotFoundError(
@@ -336,12 +342,15 @@ class ErrorMitigationProperties(WorkflowProperties):
 
 
     #Check that JSON structure for SPAM twirling calibration data.
-    def check_SPAM_twirling_calibration_data_file_structure(calibration_data_location):
-        print("TODO")
+    def check_SPAMtwirling_calibrationdata_filestructure(calibration_data):
+        calibration_measurements = calibration_data["results"]["measurement_outcomes"]
+        calibration_registers = calibration_data["register"]
 
-    #Check that JSON structure for Mitiq ZNE calibration data.
-    def check_mitiq_ZNE_data_file_structure(calibration_data_location):
-        print("TODO")
+    #Check that JSON structure for Mitiq's ZNE calibration data.
+    def check_mitiq_ZNE_data_file_structure(calibration_data):
+        factory = calibration_data["factory"]
+        scaling = calibration_data["scaling"]
+        scale_factor = calibration_data["scale_factor"]
 
 class ClassicalOptimizer(WorkflowProperties):
     """
