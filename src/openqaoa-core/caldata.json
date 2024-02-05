@@ -1,5 +1,5 @@
 {
-    "factory":"FakeNodes",
-    "scaling":"fold_gates_at_random",
-    "scale_factor": [2, 5, 8]
+    "factory":"Linear",
+    "scaling":"fold_gates_from_right",
+    "scale_factor": [2, 3, 7]
  }
