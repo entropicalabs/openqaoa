@@ -271,12 +271,16 @@ class Workflow(ABC):
         Parameters
         ----------
             error_mitigation_technique: str
-                The specific technique used to mitigate the errors. Only a simple state preparation and measurement twirling with bitflip averages, under the name "spam_twirling" is currently supported.
+                The specific technique used to mitigate the errors. Currently, the availables techniques are:
+                    *   A simple state preparation and measurement twirling with bitflip averages, under the name "spam_twirling".
+                    *   Zero Noise Extrapolation (ZNE), integrated from Mitiq framework.
             n_batches: int
                 The number of batches specifies the different negating schedules at random. Total number of shots is distributed accordingly.
             calibration_data_location: str
-                The location of the json file containing calibration data. For spam twirling this is the measurement outcomes of an empty circuit under the bit-flip averaging.
-
+                The location of the json file containing calibration data.
+                    *   For spam twirling this is the measurement outcomes of an empty circuit under the bit-flip averaging.
+                    *   For Zero Noise Extrapolation (ZNE) these are the factory, the scaling, the seed(only for fold_gates_at_random scaling)
+                        and the scale factors.
         """
         for key, value in kwargs.items():
             if hasattr(self.error_mitigation_properties, key) and (

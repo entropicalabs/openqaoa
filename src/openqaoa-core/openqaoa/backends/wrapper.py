@@ -61,6 +61,8 @@ class BaseWrapper(VQABaseBackend):
     def exact_solution(self, *args, **kwargs):
         return self.backend.exact_solution(*args, **kwargs)
 
+
+#------------------------ZNE WRAPPER---------------------------------
 available_factories = [
     "Richardson",
     "Linear",
@@ -70,50 +72,55 @@ available_factories = [
     "AdaExp",
     "FakeNodes"
 ]
-
 available_scaling = [
     "fold_gates_at_random",
     "fold_gates_from_right",
     "fold_gates_from_left"
 ]
-
 class ZNEWrapper(BaseWrapper):
     """
+    This class inherits from the BaseWrapper and need to be backend agnostic
+    to QAOA implementations on different devices and their respectives SDKs. It 
+    implements Zero Noise Extrapolation (ZNE) from Mitiq framework. ZNE is an 
+    error mitigation technique used to extrapolate the noiseless expectation
+    value of an observable from a range of expectation values computed at 
+    different noise levels.
+
+    Parameters
+    ----------
+    n_batches: `int`
+        Number of batches.
+    calibration_data_location: `str`
+        The location of the calibration data file.
     """
+
     def __init__(self, backend, n_batches, calibration_data_location):
         super().__init__(backend)
         self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
 
+
+        # only qiskit backends are supported
+        assert( type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'] or 
+                type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'] or
+                type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator']
+                or type(backend) == QAOAQiskitQPUBackend), "Only Qiskit backends are supported."
+
+
         with open(self.calibration_data_location, "r") as f:
             calibration_data = json.load(f)
 
-            """ calibration_measurements = calibration_data["results"]["measurement_outcomes"]
-            calibration_registers = calibration_data["register"]
+        factory = calibration_data["factory"]
+        scaling = calibration_data["scaling"]
+        scale_factor = calibration_data["scale_factor"]
 
-            assert (
-                len(calibration_registers) >= self.backend.n_qubits
-            ), "Problem requires more qubits than present in the calibration data."
-            "Make sure that the calibration data file is for the correct device." """
-            # Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp 
-            # fold_gates_at_random, fold_gates_from_right, fold_gates_from_left
-            # scale factor
-            assert(type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'] or 
-                   type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'] or
-                   type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator']
-                   or type(backend) == QAOAQiskitQPUBackend), "Only Qiskit backends are supported."
-
-            factory = calibration_data["factory"]
-            scaling = calibration_data["scaling"]
-            scale_factor = calibration_data["scale_factor"]
-
-            assert(factory in available_factories), "Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp"
-            assert(scaling in available_scaling), "Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left"
-            assert(
-                type(scale_factor) == list and
-                (type(x) == float and x >=1) for x in scale_factor
-                ), "Scale factor must be a list of floats greater or equal to 1"
-            #assert(scale_factor >= 1), "Scale factor must be >= 1"
+        # preconditions over calibration data
+        assert(factory in available_factories), "Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp"
+        assert(scaling in available_scaling), "Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left"
+        assert(
+            type(scale_factor) == list and
+            (type(x) == float and x >=1) for x in scale_factor
+            ), "Scale factor must be a list of floats greater or equal to 1"
             
             try:
                 seed = calibration_data["seed"]
@@ -138,59 +145,68 @@ class ZNEWrapper(BaseWrapper):
             elif factory == "FakeNodes":
                 self.factory_obj = FakeNodesFactory(scale_factors = scale_factor, seed = seed)
 
-            self.scale_noise = None
-            if scaling == "fold_gates_at_random":
-                self.scale_noise = fold_gates_at_random
-            elif scaling == "fold_gates_from_left":
-                self.scale_noise = fold_gates_from_left
-            elif scaling == "fold_gates_from_right":
-                self.scale_noise = fold_gates_from_right
-            
-            self.scale_factor = scale_factor
+        # setting the scaling
+        self.scale_noise = None
+        if scaling == "fold_gates_at_random":
+            self.scale_noise = fold_gates_at_random
+        elif scaling == "fold_gates_from_left":
+            self.scale_noise = fold_gates_from_left
+        elif scaling == "fold_gates_from_right":
+            self.scale_noise = fold_gates_from_right
+
+        #setting the scale_factor  
+        self.scale_factor = scale_factor
         
 
     def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
-        
-        def executor(qc: QuantumCircuit) -> float:
-                #qc will not be used, because is getted and used inside self.backend.get_counts()
-                
+        """
+        This method overrrides the one from the basebackend to allow for
+        correcting the expectation values of each term in the Hamiltonian
+        before providing the energy to the optimized. It does this by using
+        execute_with_zne() method from Mitiq. This method estimates the
+        error-mitigated expectation value associated with a circuit, via
+        the application of ZNE.
+
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+            The QAOA parameters - an object of one of the parameter classes,
+            containing variable parameters.
+        n_shots: `int`
+            The number of shots to be used for the measurement. If None,
+            the backend default.
+
+        Returns
+        -------
+        float:
+            The error mitigated expectation value of cost operator wrt to
+            quantum state produced by QAOA circuit
+        """
+
+        # executor used by Mitiq
+        def executor(qc: QuantumCircuit) -> float:                
+                # calculate the counts
                 counts = self.backend.get_counts(params, n_shots)
-                # Get the measurement data  
-                #job = self.backend.backend_simulator.run(qc, shots=n_shots)
-                #counts = job.result().get_counts()
                 self.measurement_outcomes = counts
                 
-                # Return the observable expectation value
+                # calculate and return the cost
                 cost = cost_function(
                     counts,
                     self.backend.qaoa_descriptor.cost_hamiltonian)
                 return cost
-                """ expectation = np.real(np.trace(rho @ self.backend.qaoa_descriptor.cost_hamiltonian))
-                return expectation """
 
+        # this quantum circuit is NOT used.
+        # this quantum circuit is just created because of the parameter needs of execute_with_zne()
+        # the quantum circuit to be used is inside the executor's get_counts()
         qc = self.backend.qaoa_circuit(params)
         qc = transpile(qc, basis_gates=["u1", "u2", "u3", "cx"])
+
         return execute_with_zne(
             circuit = qc,
             executor = executor,
             observable = None,
             factory = self.factory_obj,
             scale_noise = self.scale_noise)
-"""
-execute_with_zne(
-    circuit: QPROGRAM,
-    executor: Union[Executor, Callable[[QPROGRAM], QuantumResult]],
-    observable: Optional[Observable] = None,
-    *,
-    factory: Optional[Factory] = None,
-    scale_noise: Callable[
-        [QPROGRAM, float], QPROGRAM
-    ] = fold_gates_at_random,  # type: ignore [has-type]
-    num_to_average: int = 1,
-) -> float:
-"""          
-
-
 
 
 class SPAMTwirlingWrapper(BaseWrapper):
