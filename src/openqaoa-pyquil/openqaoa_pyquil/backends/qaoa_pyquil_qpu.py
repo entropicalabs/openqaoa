@@ -236,41 +236,10 @@ class QAOAPyQuilQPUBackend(
                 parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 
-        # native = self.device.quantum_computer.compiler.quil_to_native_quil(
-        #     parametric_circuit
-        # )
-
-        # prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
-        #     native
-        # )
         angle_values_and_names= self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
-        # angles_list = np.array(
-        #     angle_values,
-        #     dtype=float,
-        # )
-        from pprint import pprint
-        # print("angle_list")
-        # pprint(angles_list)
-        angle_declarations = list(parametric_circuit.declarations)
-        print("angle_declarations")
-        pprint(angle_declarations)
-
-        angle_declarations.remove("ro")
-
-        # for i, param_name in enumerate(angle_declarations):
         
-        # memory_map = {param_name : [angles_list[i]] for i, param_name in enumerate(angle_declarations)}
         memory_map = {value_name[1] : [value_name[0]] for value_name in angle_values_and_names}
-        from pprint import pprint
-        # for i, param_name in enumerate(angle_declarations):
-        #     parametric_circuit.declare(param_name, "REAL")
         
-
-        print(f"\n\nmemory map in qaoa_circuit\n")
-        pprint(memory_map)
-        f = open("debug.txt", "a")
-        f.write(f"\n memory map in qaoa_circuit\n{memory_map}\n")
-        f.close()
         prog_exe = self.device.quantum_computer.compile(parametric_circuit)
 
         return prog_exe, memory_map
@@ -382,36 +351,10 @@ class QAOAPyQuilQPUBackend(
             A dictionary with the bitstring as the key and the number of counts as its value.
         """
 
-        # parametric_circuit = self.parametric_circuit
         executable_program, memory_map = self.qaoa_circuit(params)
-        # f = open("debug.txt", "a")
-        # f.write(f"abstract_circuit\n{self.abstract_circuit}\n\n")
-        # f.close()
-
-        # angles_list = np.array(
-        #     self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
-        #     dtype=float,
-        # )
-        # angle_declarations = list(parametric_circuit.declarations.keys())
-        # f = open("debug.txt", "a")
-        # f.write(f"angles_list\n{angles_list}\n")
-        # f.write(f"angles_declaration\n{angle_declarations}\n\n")
-        # f.close()
-
-        # angle_declarations.remove("ro")
-        # f = open("debug.txt", "a")
-        # f.write(f"full_program\n{executable_program}\n\n")
-        # f.close()
-        # memory_map = {param_name : [angles_list[i]] for i, param_name in enumerate(angle_declarations)}
         
-        f = open("debug.txt", "a")
-        f.write(f"memory_map in get_counts():\n{memory_map}\n")
-        f.close()
-
-        # if n_shots is given change the number of shots
         if n_shots is not None:
             executable_program.wrap_in_numshots_loop(n_shots)
-
         
         result = self.device.quantum_computer.run(executable_program, memory_map=memory_map)
         # we create an uuid for the job

@@ -120,9 +120,7 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
             p = p_lst[i]
             args = args_lst[i]
             cost_hamil = cost_hamil_lst[i]
-            f=open("debug.txt", "a")
-            f.write(f"\n\n\n\ntest \n{p, args, cost_hamil}\n\n")
-            f.close()
+            
             # With routing
             mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
             qaoa_descriptor = QAOADescriptor(
@@ -133,9 +131,7 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
             )
 
             variate_params.update_from_raw(args)
-            f=open("debug.txt", "a")
-            f.write(f"\nVariate params w routing \n{variate_params}\n\n")
-            f.close()
+            
             backend_obj_pyquil = QAOAPyQuilQPUBackend(
                 qaoa_descriptor=qaoa_descriptor,
                 device=device_pyquil,
@@ -155,9 +151,7 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
             )
 
             variate_params.update_from_raw(args)
-            f=open("debug.txt", "a")
-            f.write(f"\nVariate params wout routing \n{variate_params}\n\n")
-            f.close()
+            
             backend_obj_pyquil = QAOAPyQuilQPUBackend(
                 qaoa_descriptor=qaoa_descriptor,
                 device=device_pyquil,
