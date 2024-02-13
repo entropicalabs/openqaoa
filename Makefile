@@ -5,7 +5,7 @@
 local-install:
 	pip install ./src/openqaoa-core
 	pip install ./src/openqaoa-qiskit
-	pip install ./src/openqaoa-pyquil
+#	pip install ./src/openqaoa-pyquil
 	pip install ./src/openqaoa-braket
 	pip install ./src/openqaoa-azure
 	pip install .
@@ -14,7 +14,7 @@ local-install:
 dev-install:
 	pip install -e ./src/openqaoa-core
 	pip install -e ./src/openqaoa-qiskit
-	pip install -e ./src/openqaoa-pyquil
+#	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
 	pip install -e .
@@ -23,7 +23,7 @@ dev-install:
 dev-install-tests:
 	pip install -e ./src/openqaoa-core[tests]
 	pip install -e ./src/openqaoa-qiskit
-	pip install -e ./src/openqaoa-pyquil
+#	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
 	pip install -e .
@@ -32,7 +32,7 @@ dev-install-tests:
 dev-install-docs:
 	pip install -e ./src/openqaoa-core[docs]
 	pip install -e ./src/openqaoa-qiskit
-	pip install -e ./src/openqaoa-pyquil
+#	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
 	pip install -e .
@@ -41,7 +41,7 @@ dev-install-docs:
 dev-install-all:
 	pip install -e ./src/openqaoa-core[all]
 	pip install -e ./src/openqaoa-qiskit
-	pip install -e ./src/openqaoa-pyquil
+#	pip install -e ./src/openqaoa-pyquil
 	pip install -e ./src/openqaoa-braket
 	pip install -e ./src/openqaoa-azure
 	pip install -e .
