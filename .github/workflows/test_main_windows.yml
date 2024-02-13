@@ -63,5 +63,5 @@ jobs:
         run: |
           .\env\Scripts\Activate.ps1
           ipython kernel install --name "env" --user
-          pytest tests/ src/openqaoa-core/tests src/openqaoa-azure/tests src/openqaoa-braket/tests src/openqaoa-qiskit/tests -m 'not (qpu or api or docker_aws or braket_api or sim)'
+          pytest tests/ src/*/tests -m 'not (qpu or api or docker_aws or braket_api or sim)'
           Get-ChildItem -Directory | ForEach-Object { pytest $_.FullName -m 'not (qpu or api or docker_aws or braket_api or sim)'}
