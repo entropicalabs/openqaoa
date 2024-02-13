@@ -133,7 +133,7 @@ class TestPortfolioOptimization(unittest.TestCase):
         self.assertTrue(
             portfoliooptimization_random_prob.plot_solution(sol, ax=ax) == None
         )
-
+        plt.close(fig)
 
 if __name__ == "__main__":
     unittest.main()
