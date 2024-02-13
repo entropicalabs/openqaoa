@@ -17,9 +17,7 @@ class TestImports(unittest.TestCase):
         """
 
         folder_names = [
-            each_file
-            for each_file in os.listdir("src")
-            if ("openqaoa-" in each_file and not "openqaoa-pyquil")
+            each_file for each_file in os.listdir("src") if "openqaoa" in each_file
         ]
 
         packages_import = []
