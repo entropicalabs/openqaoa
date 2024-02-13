@@ -135,7 +135,7 @@ class QAOAQiskitBackendShotBasedSimulator(
         """
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+        circuit_with_angles = self.parametric_circuit.assign_parameters(memory_map)
 
         if self.append_state:
             circuit_with_angles = circuit_with_angles.compose(self.append_state)
@@ -346,7 +346,7 @@ class QAOAQiskitBackendStatevecSimulator(
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+        circuit_with_angles = self.parametric_circuit.assign_parameters(memory_map)
         return circuit_with_angles
 
     @property
