@@ -224,11 +224,11 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             "RX",
             "RX",
         ]
-
+        program, _ = backend_obj_pyquil.qaoa_circuit(params)
         measurement_gate_no = len(
             [
                 instr
-                for instr in backend_obj_pyquil.qaoa_circuit(params)
+                for instr in program
                 if type(instr) == quilbase.Measurement
             ]
         )
@@ -276,10 +276,11 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             "RX",
         ]
 
+        program, _ = backend_obj_pyquil.qaoa_circuit(params)
         measurement_gate_no = len(
             [
                 instr
-                for instr in backend_obj_pyquil.qaoa_circuit(params)
+                for instr in program
                 if type(instr) == quilbase.Measurement
             ]
         )
@@ -391,7 +392,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
             init_hadamard=False,
             cvar_alpha=1,
         )
-
+        program, _ = pyquil_backend.qaoa_circuit(params)
         assert set(
             [
                 "RZ",
@@ -434,7 +435,7 @@ class TestingQAOACostPyquilQVM(unittest.TestCase):
         ) == set(
             [
                 instr.name
-                for instr in pyquil_backend.qaoa_circuit(params)
+                for instr in program
                 if type(instr) == quilbase.Gate
             ]
         )

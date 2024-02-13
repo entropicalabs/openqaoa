@@ -2,7 +2,7 @@ from collections import Counter
 import numpy as np
 from copy import deepcopy
 from pyquil import Program, gates, quilbase
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import warnings
 
 from .devices import DevicePyquil
@@ -16,7 +16,7 @@ from openqaoa.qaoa_components import QAOADescriptor
 from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
-from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap
+from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap, GateMap
 from openqaoa.qaoa_components.ansatz_constructor.rotationangle import RotationAngle
 from openqaoa.utilities import generate_uuid
 
@@ -153,7 +153,58 @@ class QAOAPyQuilQPUBackend(
 
         # check_edge_connectivity(self.prog_exe, device)
 
-    def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
+    def obtain_angles_for_pauli_list(
+            self, input_gate_list: List[GateMap], params: QAOAVariationalBaseParams
+        ) -> List[Tuple[float, str]]:
+        """
+        This method uses the pauli gate list information to obtain the pauli angles
+        from the VariationalBaseParams object. The floats in the list are in the order
+        of the input GateMaps list.
+
+        Parameters
+        ----------
+        input_gate_list: `List[GateMap]`
+            The GateMap list including rotation gates
+        params: `QAOAVariationalBaseParams`
+            The variational parameters(angles) to be assigned to the circuit gates
+
+        Returns
+        -------
+        angles_list: `List[Tuple[float, str]]`
+            The list of angles and their names in the order of gates in the `GateMap` list
+        """
+        angle_list = []
+
+        for each_gate in input_gate_list:
+            gate_label_layer = each_gate.gate_label.layer
+            gate_label_seq = each_gate.gate_label.sequence
+
+            if each_gate.gate_label.n_qubits == 2:
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle_list.append(
+                        (params.mixer_2q_angles[gate_label_layer, gate_label_seq],
+                         f"twoq_mixer_seq{gate_label_seq}_layer{gate_label_layer}")
+                    )
+                elif each_gate.gate_label.type.value == "COST":
+                    angle_list.append(
+                        (params.cost_2q_angles[gate_label_layer, gate_label_seq],
+                         f"twoq_cost_seq{gate_label_seq}_layer{gate_label_layer}")
+                    )
+            elif each_gate.gate_label.n_qubits == 1:
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle_list.append(
+                        (params.mixer_1q_angles[gate_label_layer, gate_label_seq],
+                         f"oneq_mixer_seq{gate_label_seq}_layer{gate_label_layer}")
+                    )
+                elif each_gate.gate_label.type.value == "COST":
+                    angle_list.append(
+                        (params.cost_1q_angles[gate_label_layer, gate_label_seq],
+                         f"oneq_cost_seq{gate_label_seq}_layer{gate_label_layer}")
+                    )
+
+        return angle_list
+
+    def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Tuple[Program, dict]:
         """
         Injects angles into created executable parametric circuit.
 
@@ -165,6 +216,8 @@ class QAOAPyQuilQPUBackend(
         -------
         `pyquil.Program`
             A pyquil.Program (executable) object.
+        dict
+            A dictionary of the memory map for the program.
         """
         parametric_circuit = deepcopy(self.parametric_circuit)
         # declare the read-out register
@@ -190,24 +243,37 @@ class QAOAPyQuilQPUBackend(
         # prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
         #     native
         # )
-
-        angles_list = np.array(
-            self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
-            dtype=float,
-        )
-        angle_declarations = list(parametric_circuit.declarations.keys())
+        angle_values_and_names= self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
+        # angles_list = np.array(
+        #     angle_values,
+        #     dtype=float,
+        # )
+        from pprint import pprint
+        # print("angle_list")
+        # pprint(angles_list)
+        angle_declarations = list(parametric_circuit.declarations)
+        print("angle_declarations")
+        pprint(angle_declarations)
 
         angle_declarations.remove("ro")
 
-        for i, param_name in enumerate(angle_declarations):
-            parametric_circuit.declare(param_name, "REAL")
+        # for i, param_name in enumerate(angle_declarations):
+        
+        # memory_map = {param_name : [angles_list[i]] for i, param_name in enumerate(angle_declarations)}
+        memory_map = {value_name[1] : [value_name[0]] for value_name in angle_values_and_names}
+        from pprint import pprint
+        # for i, param_name in enumerate(angle_declarations):
+        #     parametric_circuit.declare(param_name, "REAL")
+        
 
+        print(f"\n\nmemory map in qaoa_circuit\n")
+        pprint(memory_map)
         f = open("debug.txt", "a")
-        f.write(f"{parametric_circuit}")
+        f.write(f"\n memory map in qaoa_circuit\n{memory_map}\n")
         f.close()
         prog_exe = self.device.quantum_computer.compile(parametric_circuit)
 
-        return prog_exe
+        return prog_exe, memory_map
 
     @property
     def parametric_qaoa_circuit(self) -> Program:
@@ -316,28 +382,37 @@ class QAOAPyQuilQPUBackend(
             A dictionary with the bitstring as the key and the number of counts as its value.
         """
 
-        executable_program = self.qaoa_circuit(params)
+        # parametric_circuit = self.parametric_circuit
+        executable_program, memory_map = self.qaoa_circuit(params)
+        # f = open("debug.txt", "a")
+        # f.write(f"abstract_circuit\n{self.abstract_circuit}\n\n")
+        # f.close()
 
-        angles_list = np.array(
-            self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
-            dtype=float,
-        )
-        angle_declarations = list(executable_program.declarations.keys())
+        # angles_list = np.array(
+        #     self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
+        #     dtype=float,
+        # )
+        # angle_declarations = list(parametric_circuit.declarations.keys())
+        # f = open("debug.txt", "a")
+        # f.write(f"angles_list\n{angles_list}\n")
+        # f.write(f"angles_declaration\n{angle_declarations}\n\n")
+        # f.close()
 
-        angle_declarations.remove("ro")
+        # angle_declarations.remove("ro")
+        # f = open("debug.txt", "a")
+        # f.write(f"full_program\n{executable_program}\n\n")
+        # f.close()
+        # memory_map = {param_name : [angles_list[i]] for i, param_name in enumerate(angle_declarations)}
+        
         f = open("debug.txt", "a")
-        f.write(f"{executable_program}")
+        f.write(f"memory_map in get_counts():\n{memory_map}\n")
         f.close()
-        memory_map = None
-        for i, param_name in enumerate(angle_declarations):
-            memory_map = {param_name : [angles_list[i]]}
 
         # if n_shots is given change the number of shots
         if n_shots is not None:
             executable_program.wrap_in_numshots_loop(n_shots)
 
         
-
         result = self.device.quantum_computer.run(executable_program, memory_map=memory_map)
         # we create an uuid for the job
         self.job_id = generate_uuid()
