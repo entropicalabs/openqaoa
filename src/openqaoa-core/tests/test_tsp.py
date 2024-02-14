@@ -1,6 +1,7 @@
 import unittest
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 from openqaoa.problems import TSP, TSP_LP
 
 
@@ -274,13 +275,14 @@ class TestTSP_LP(unittest.TestCase):
 
     def test_tsp_lp_plot(self):
         """Testing TSP LP problem creation"""
-        from matplotlib.pyplot import Figure
 
         cities = 6
         tsp = TSP_LP.random_instance(n_nodes=cities, seed=123, subtours=[[1, 3, 4]])
         solution = tsp.classical_solution()
-        fig = tsp.plot_solution(solution)
-        self.assertTrue(isinstance(fig, Figure))
+        fig, ax = tsp.plot_solution(solution)
+        self.assertTrue(isinstance(fig, plt.Figure))
+        self.assertTrue(isinstance(ax, plt.Axes))
+        plt.close(fig)
 
 
 if __name__ == "__main__":

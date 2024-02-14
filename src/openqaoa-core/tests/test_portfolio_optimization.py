@@ -127,12 +127,14 @@ class TestPortfolioOptimization(unittest.TestCase):
             num_assets=12, budget=8, seed=seed
         )
         sol = portfoliooptimization_random_prob.classical_solution()
-        figure = portfoliooptimization_random_prob.plot_solution(sol)
-        self.assertTrue(isinstance(figure, plt.Figure))
+        fig, ax = portfoliooptimization_random_prob.plot_solution(sol)
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
+        plt.close(fig)
         fig, ax = plt.subplots(figsize=(5, 5))
-        self.assertTrue(
-            portfoliooptimization_random_prob.plot_solution(sol, ax=ax) == None
-        )
+        fig, ax = portfoliooptimization_random_prob.plot_solution(sol, ax=ax)
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
         plt.close(fig)
 
 if __name__ == "__main__":

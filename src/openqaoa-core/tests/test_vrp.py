@@ -1,6 +1,7 @@
 import unittest
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 from openqaoa.problems import VRP
 
 
@@ -216,7 +217,6 @@ class TestVRP(unittest.TestCase):
         Testing the random_instance method of the VRP problem class using the
         unbalanced penalization method
         """
-        import matplotlib.pyplot as plt
 
         seed = 1234
         np.random.seed(seed)
@@ -227,12 +227,16 @@ class TestVRP(unittest.TestCase):
             n_nodes=n_nodes, n_vehicles=n_vehicles, seed=seed
         )
         vrp_sol = vrp_prob_random.classical_solution()
-        vrp_sol_str = vrp_prob_random.classical_solution(string=True)
+        fig_vrp, ax_vrp = vrp_prob_random.plot_solution(vrp_sol)
+        self.assertEqual(type(fig_vrp), plt.Figure)
+        self.assertEqual(type(ax_vrp), plt.Axes)
+        plt.close(fig_vrp)
 
-        self.assertTrue(isinstance(vrp_prob_random.plot_solution(vrp_sol), plt.Figure))
-        self.assertTrue(
-            isinstance(vrp_prob_random.plot_solution(vrp_sol_str), plt.Figure)
-        )
+        vrp_sol_str = vrp_prob_random.classical_solution(string=True)
+        fig_vrp_str, ax_vrp_str = vrp_prob_random.plot_solution(vrp_sol_str)
+        self.assertEqual(type(fig_vrp_str), plt.Figure)
+        self.assertEqual(type(ax_vrp_str), plt.Axes)
+        plt.close(fig_vrp_str)
 
     def test_vrp_type_checking(self):
         """
@@ -311,7 +315,8 @@ class TestVRP(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             seed = 1234
             vrp = VRP.random_instance(n_nodes=6, n_vehicles=2, seed=seed)
-            vrp.plot_solution(vrp.classical_solution(), colors=["tab:blue"])
+            fig, ax = vrp.plot_solution(vrp.classical_solution(), colors=["tab:blue"])
+            plt.close(fig)
         self.assertEqual(
             "The length of colors 1 and the number of vehicles 2 do not match",
             str(e.exception),
