@@ -209,6 +209,7 @@ class TestingLoggerClass(unittest.TestCase):
                     self.assertEqual(type(fig), plt.Figure)
                     self.assertEqual(type(ax), plt.Axes)
                     plt.close(fig)
+                plt.close()
 
             # function to test that errors are raised, when trying to plot with incorrect inputs
             def test_incorrect_arguments(argument: str, inputs_to_try: list):
