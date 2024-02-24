@@ -88,15 +88,12 @@ class ZNEWrapper(BaseWrapper):
 
     Parameters
     ----------
-    n_batches: `int`
-        Number of batches.
     calibration_data_location: `str`
         The location of the calibration data file.
     """
 
-    def __init__(self, backend, n_batches, calibration_data_location):
+    def __init__(self, backend, calibration_data_location):
         super().__init__(backend)
-        self.n_batches = n_batches
         self.calibration_data_location = calibration_data_location
 
 
@@ -189,7 +186,8 @@ class ZNEWrapper(BaseWrapper):
         # executor used by Mitiq
         def executor(qc: QuantumCircuit) -> float:                
                 # calculate the counts
-                counts = self.backend.get_counts(params, n_shots)
+                #counts = self.backend.get_counts(params, n_shots)
+                counts = self.get_counts(qc,n_shots)
                 self.measurement_outcomes = counts
                 
                 # calculate and return the cost
@@ -210,6 +208,45 @@ class ZNEWrapper(BaseWrapper):
             observable = None,
             factory = self.factory_obj,
             scale_noise = self.scale_noise)
+    
+    def get_counts(self,qc:QuantumCircuit,n_shots):
+        print(self.backend.backend_simulator)
+        counts = (
+            self.backend.backend_simulator.run(qc, shots=n_shots)
+            .result()
+            .get_counts()
+            )  
+        return counts
+
+    def get_counts2(self,params: QAOAVariationalBaseParams,n_shots = None):
+        
+        # executor used by Mitiq
+        def executor(qc: QuantumCircuit) -> float:                
+            # calculate the counts
+            counts = (
+            self.backend_simulator.run(qc, shots=n_shots)
+            .result()
+            .get_counts()
+            )                
+            self.measurement_outcomes = counts
+                
+            # calculate and return the cost
+            cost = cost_function(
+                counts,
+                self.backend.qaoa_descriptor.cost_hamiltonian)
+            return cost
+
+        qc = self.backend.qaoa_circuit(params)
+        qc = transpile(qc, basis_gates=["u1", "u2", "u3", "cx"])
+
+        execute_with_zne(
+            circuit = qc,
+            executor = executor,
+            observable = None,
+            factory = self.factory_obj,
+            scale_noise = self.scale_noise) 
+
+        return self.measurement_outcomes
 
 
 class SPAMTwirlingWrapper(BaseWrapper):

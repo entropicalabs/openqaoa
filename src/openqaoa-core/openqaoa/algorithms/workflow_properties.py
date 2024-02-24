@@ -342,12 +342,12 @@ class ErrorMitigationProperties(WorkflowProperties):
 
 
     #Check that JSON structure for SPAM twirling calibration data.
-    def check_SPAMtwirling_calibrationdata_filestructure(calibration_data):
+    def check_SPAMtwirling_calibrationdata_filestructure(self,calibration_data):
         calibration_measurements = calibration_data["results"]["measurement_outcomes"]
         calibration_registers = calibration_data["register"]
 
     #Check that JSON structure for Mitiq's ZNE calibration data.
-    def check_mitiq_ZNE_data_file_structure(calibration_data):
+    def check_mitiq_ZNE_data_file_structure(self,calibration_data):
         factory = calibration_data["factory"]
         scaling = calibration_data["scaling"]
         scale_factor = calibration_data["scale_factor"]
