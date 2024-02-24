@@ -119,31 +119,28 @@ class ZNEWrapper(BaseWrapper):
             (type(x) == float and x >=1) for x in scale_factor
             ), "Scale factor must be a list of floats greater or equal to 1"
             
-        # precondition over seed
-        if(scaling == "fold_gates_at_random"):
-            try:
-                seed = calibration_data["seed"]
-                assert(type(seed) == int and seed >= 0), "Seed must be an integer greater or equal to 0"
-                self.seed = seed
-            except:
-                self.seed = -1
+        try:
+            seed = calibration_data["seed"]
+            assert(type(seed) == int), "Seed must be an integer"
+            assert(seed >= 0), "Seed must be >= 0"
+        except:
+            seed = self.seed
 
-        # setting the factory
         self.factory_obj = None
         if factory == "Richardson":
-                self.factory_obj = RichardsonFactory(scale_factors = scale_factor)
+            self.factory_obj = RichardsonFactory(scale_factors = scale_factor, seed = seed)
         elif factory == "Linear":
-            self.factory_obj = LinearFactory(scale_factors = scale_factor)
+            self.factory_obj = LinearFactory(scale_factors = scale_factor, seed = seed)
         elif factory == "Exp":
-            self.factory_obj = ExpFactory(scale_factors = scale_factor)
+            self.factory_obj = ExpFactory(scale_factors = scale_factor, seed = seed)
         elif factory == "Poly":
-            self.factory_obj = PolyFactory(scale_factors = scale_factor, order = len(scale_factor) - 1)
+            self.factory_obj = PolyFactory(scale_factors = scale_factor, order = calibration_data["order"], seed = seed)
         elif factory == "PolyExp":
-            self.factory_obj = PolyExpFactory(scale_factors = scale_factor, order = len(scale_factor) - 2)
+            self.factory_obj = PolyExpFactory(scale_factors = scale_factor, order = calibration_data["order"], seed = seed)
         elif factory == "AdaExp":
-            self.factory_obj = AdaExpFactory(steps = 10)
+            self.factory_obj = AdaExpFactory(scale_factors = scale_factor, steps = calibration_data["steps"], seed = seed)
         elif factory == "FakeNodes":
-            self.factory_obj = FakeNodesFactory(scale_factors = scale_factor)
+            self.factory_obj = FakeNodesFactory(scale_factors = scale_factor, seed = seed)
 
         # setting the scaling
         self.scale_noise = None
