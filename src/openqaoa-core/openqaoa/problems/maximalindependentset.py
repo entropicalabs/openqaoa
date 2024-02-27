@@ -158,6 +158,8 @@ class MIS(Problem):
         -------
         fig : matplotlib.pyplot.Figure()
             The graph visualization of the solution.
+        ax : matplotlib.pyplot.Axes()
+            The graph visualization of the solution.
         """
         if isinstance(solution, str):
             sol = self.solution.copy()
@@ -168,7 +170,7 @@ class MIS(Problem):
         if ax is None:
             fig, ax = plt.subplots()
         else:
-            fig = None
+            fig = ax.get_figure()
         pos = nx.circular_layout(self.G)
         num_vertices = self.G.number_of_nodes()
         nx.draw(
@@ -191,4 +193,4 @@ class MIS(Problem):
             markeredgecolor="black",
         )
         ax.legend(loc="upper center", bbox_to_anchor=[0.5, 1.1])
-        return fig
+        return fig, ax

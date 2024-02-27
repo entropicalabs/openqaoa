@@ -1,6 +1,7 @@
 import unittest
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 from openqaoa.problems import MIS
 
 
@@ -123,8 +124,6 @@ class TestMIS(unittest.TestCase):
 
     def test_mis_plot(self):
         """Test maximal independent set random instance method"""
-        from matplotlib.pyplot import Figure
-
         seed = 1234
         mis_random_prob = MIS.random_instance(
             n_nodes=10, edge_probability=0.7, seed=seed
@@ -141,8 +140,10 @@ class TestMIS(unittest.TestCase):
             "x_8": 1,
             "x_9": 0,
         }
-        fig = mis_random_prob.plot_solution(sol)
-        self.assertTrue(isinstance(fig, Figure))
+        fig, ax = mis_random_prob.plot_solution(sol)
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
+        plt.close(fig)
 
 
 if __name__ == "__main__":

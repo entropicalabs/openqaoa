@@ -111,7 +111,10 @@ class TestingLoggerClass(unittest.TestCase):
         q.compile(vc, verbose=False)
         q.optimize()
 
-        q.result.plot_cost()
+        fig, ax = q.result.plot_cost()
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
+        plt.close(fig)
 
     def test_plot_probabilities(self):
         # Create the problem
@@ -125,7 +128,10 @@ class TestingLoggerClass(unittest.TestCase):
 
         q_sv.optimize()
 
-        q_sv.result.plot_probabilities()
+        fig, ax = q_sv.result.plot_probabilities()
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
+        plt.close(fig)
 
     def test_plot_n_shots(self):
         # Create the problem
@@ -148,7 +154,10 @@ class TestingLoggerClass(unittest.TestCase):
             q.compile(vc, verbose=False)
             q.optimize()
 
-            q.result.plot_n_shots()
+            fig, ax = q.result.plot_n_shots()
+            self.assertEqual(type(fig), plt.Figure)
+            self.assertEqual(type(ax), plt.Axes)
+            plt.close(fig)
 
             # all combinations to check
             test_dict = {
@@ -190,21 +199,25 @@ class TestingLoggerClass(unittest.TestCase):
                 for label, line, color in zip(
                     value[1]["label"], value[1]["linestyle"], value[1]["color"]
                 ):
-                    q.result.plot_n_shots(
+                    fig, ax = q.result.plot_n_shots(
                         param_to_plot=value[0],
                         label=label,
                         linestyle=line,
                         color=color,
                         title=f"method: {method}, param_to_plot: {value[0]}, label: {label}, linestyle: {line}, color: {color}",
                     )
-                    plt.close()
+                    self.assertEqual(type(fig), plt.Figure)
+                    self.assertEqual(type(ax), plt.Axes)
+                    plt.close(fig)
+                plt.close()
 
             # function to test that errors are raised, when trying to plot with incorrect inputs
             def test_incorrect_arguments(argument: str, inputs_to_try: list):
                 for x in inputs_to_try:
                     error = False
                     try:
-                        q.result.plot_n_shots(**{argument: x})
+                        fig, ax = q.result.plot_n_shots(**{argument: x})
+                        plt.close(fig)
                     except Exception as e:
                         assert len(str(e)) > 0, "No error message was raised"
                         error = True

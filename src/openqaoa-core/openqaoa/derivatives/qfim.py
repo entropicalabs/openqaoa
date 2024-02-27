@@ -87,9 +87,9 @@ def qfim(
                 di_psi = (wavefunction_plus_i - wavefunction_minus_i) / eta
                 dj_psi = (wavefunction_plus_j - wavefunction_minus_j) / eta
 
-                qfim_array[i][j] = np.real(np.vdot(di_psi, dj_psi)) - np.vdot(
+                qfim_array[i][j] = np.real(np.vdot(di_psi, dj_psi)) - np.real(np.vdot(
                     di_psi, psi
-                ) * np.vdot(psi, dj_psi)
+                ) * np.vdot(psi, dj_psi))
 
                 if i != j:
                     qfim_array[j][i] = qfim_array[i][j]
