@@ -278,8 +278,12 @@ class QAOA(Workflow):
         ):
             self.backend = ZNEWrapper(
                 backend=self.backend,
-                n_batches=self.error_mitigation_properties.n_batches,
-                calibration_data_location=self.error_mitigation_properties.calibration_data_location
+                factory=self.error_mitigation_properties.factory,
+                scaling=self.error_mitigation_properties.scaling,
+                seed=self.error_mitigation_properties.seed,
+                scale_factors=self.error_mitigation_properties.scale_factors,
+                order=self.error_mitigation_properties.order,
+                steps=self.error_mitigation_properties.steps
             )
         
         self.optimizer = get_optimizer(

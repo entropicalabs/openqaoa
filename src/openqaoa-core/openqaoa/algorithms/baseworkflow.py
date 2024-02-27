@@ -21,6 +21,8 @@ from os.path import exists
 from .workflow_properties import (
     BackendProperties,
     ErrorMitigationProperties,
+    Mitiq_Zne_ErrorMitigationProperties,
+    Spam_Twirling_ErrorMitigationProperties,
     ClassicalOptimizer,
 )
 from ..backends.devices_core import DeviceBase, DeviceLocal
@@ -282,18 +284,35 @@ class Workflow(ABC):
                     *   For Zero Noise Extrapolation (ZNE) these are the factory, the scaling, the seed(only for fold_gates_at_random scaling)
                         and the scale factors.
         """
+
+        # validate a supported error mitigation technique
+        if kwargs["error_mitigation_technique"].lower() in self.available_error_mitigation_techniques:
+            pass
+        else:
+            raise ValueError(
+                    f"Specified error mitigation technique is not supported"
+                )
+
+        # get the ErrorMitigationProperty structure to validate
+        error_mitigation_technique = kwargs["error_mitigation_technique"].lower()
+        if error_mitigation_technique == 'mitiq_zne':
+            self.error_mitigation_properties = Mitiq_Zne_ErrorMitigationProperties()
+            error_mitigation_properties = Mitiq_Zne_ErrorMitigationProperties
+        elif error_mitigation_technique == 'spam_twirling':
+            self.error_mitigation_properties = Spam_Twirling_ErrorMitigationProperties()
+            error_mitigation_properties = Spam_Twirling_ErrorMitigationProperties
+
+        # validate ErrorMitigationProperty structure
         for key, value in kwargs.items():
-            if hasattr(self.error_mitigation_properties, key) and (
-                kwargs["error_mitigation_technique"].lower()
-                in self.available_error_mitigation_techniques
-            ):
+            if hasattr(self.error_mitigation_properties, key):
                 pass  # setattr(self.error_mitigation, key, value)
             else:
                 raise ValueError(
                     f"Specified argument `{value}` for `{key}` in set_error_mitigation_properties is not supported"
                 )
+            
+        self.error_mitigation_properties = error_mitigation_properties(**kwargs)  
 
-        self.error_mitigation_properties = ErrorMitigationProperties(**kwargs)
         return None
 
     @check_compiled

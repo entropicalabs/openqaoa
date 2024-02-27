@@ -264,15 +264,34 @@ class BackendProperties(WorkflowProperties):
     #             f"cvar_alpha must be between 0 and 1. Received {value}.")
     #     self._cvar_alpha = value
 
-
 class ErrorMitigationProperties(WorkflowProperties):
     """
-    Optional, choose an error mitigation technique for the QAOA circuit. Currently supports only SPAM Twirling.
+    Optional, choose an error mitigation technique for the QAOA circuit.
 
     Parameters
     ----------
     error_mitigation_technique: str
-        The name of the error mitigation technique. Only 'spam_twirling' supported for now.
+        The name of the error mitigation technique.
+    """
+    
+    def __init__(
+        self,
+        error_mitigation_technique: Optional[str] = None,
+    ):
+        self.error_mitigation_technique = (
+            error_mitigation_technique.lower()
+            if type(error_mitigation_technique) == str
+            else error_mitigation_technique
+        )
+
+class Spam_Twirling_ErrorMitigationProperties(ErrorMitigationProperties):
+    """
+    choose Spam Twirling as your error mitigation technique for the QAOA circuit.
+
+    Parameters
+    ----------
+    error_mitigation_technique: str
+        The name of the error mitigation technique.
     n_batches: Optional[int] = int
         Number of batches in which the total number of shots is divided to. For every batch, we choose a set of qubits at random to which we apply X gates and classical negating. The dafault value is set to 10 to be comparable with most problem sizes in NISQ without creating too much of an overhead.
     calibration_data_location: str
@@ -284,12 +303,8 @@ class ErrorMitigationProperties(WorkflowProperties):
         error_mitigation_technique: Optional[str] = None,
         n_batches: Optional[int] = 10,
         calibration_data_location: Optional[str] = None,
-    ):
-        self.error_mitigation_technique = (
-            error_mitigation_technique.lower()
-            if type(error_mitigation_technique) == str
-            else error_mitigation_technique
-        )
+    ):         
+        super().__init__(error_mitigation_technique)
 
         if isinstance(n_batches, int) and n_batches > 0:
             self.n_batches = n_batches
@@ -302,23 +317,11 @@ class ErrorMitigationProperties(WorkflowProperties):
                     # Parse the JSON file
                     calibration_data = json.load(file)
 
-                    # Check if the file has the expected structure depending the technique
-                    if(self.error_mitigation_technique == 'spam_twirling'):
-                        '''
-                        calibration_measurements = calibration_data["results"][
-                            "measurement_outcomes"
-                        ]
-                        calibration_registers = calibration_data["register"]
-                        '''
-                        self.check_SPAMtwirling_calibrationdata_filestructure(calibration_data)
-                    elif(self.error_mitigation_technique == 'mitiq_zne'):
-                        '''
-                        factory = calibration_data["factory"]
-                        scaling = calibration_data["scaling"]
-                        scale_factor = calibration_data["scale_factor"]
-                        '''
-                        self.check_mitiq_ZNE_data_file_structure(calibration_data)
-
+                    # Check if the file has the expected structure
+                    calibration_measurements = calibration_data["results"][
+                        "measurement_outcomes"
+                    ]
+                    calibration_registers = calibration_data["register"]
             except FileNotFoundError:
                 raise FileNotFoundError(
                     "Calibration data file not found at specified location: {}".format(
@@ -340,17 +343,46 @@ class ErrorMitigationProperties(WorkflowProperties):
 
         self.calibration_data_location = calibration_data_location
 
+class Mitiq_Zne_ErrorMitigationProperties(ErrorMitigationProperties):
+    """
+    choose ZNE from Mitiq as your error mitigation technique for the QAOA circuit.
 
-    #Check that JSON structure for SPAM twirling calibration data.
-    def check_SPAMtwirling_calibrationdata_filestructure(self,calibration_data):
-        calibration_measurements = calibration_data["results"]["measurement_outcomes"]
-        calibration_registers = calibration_data["register"]
+    Parameters
+    ----------
+    error_mitigation_technique: str
+        The name of the error mitigation technique.
+    factory: str
+        d
+    scaling: str
+        d
+    seed: int
+        d
+    scale_factors: List[str]
+        d
+    order: int
+        d
+    steps: int
+        d
+    """
 
-    #Check that JSON structure for Mitiq's ZNE calibration data.
-    def check_mitiq_ZNE_data_file_structure(self,calibration_data):
-        factory = calibration_data["factory"]
-        scaling = calibration_data["scaling"]
-        scale_factor = calibration_data["scale_factor"]
+    def __init__(
+        self,
+        error_mitigation_technique: Optional[str] = None,
+        factory: str = 'Linear',
+        scaling: str = 'fold_gates_at_random',
+        seed: int = 1,
+        scale_factors: List[str] = [1,2,3],
+        order: int = 1, 
+        steps: int = 3
+    ):         
+        super().__init__(error_mitigation_technique)
+        self.factory = factory
+        self.scaling = scaling
+        self.seed = seed
+        self.scale_factors = scale_factors
+        self.order = order
+        self.steps = steps
+
 
 class ClassicalOptimizer(WorkflowProperties):
     """

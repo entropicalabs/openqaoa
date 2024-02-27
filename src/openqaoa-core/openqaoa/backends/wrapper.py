@@ -92,10 +92,8 @@ class ZNEWrapper(BaseWrapper):
         The location of the calibration data file.
     """
 
-    def __init__(self, backend, calibration_data_location):
+    def __init__(self, backend, factory, scaling, seed, scale_factors, order, steps):
         super().__init__(backend)
-        self.calibration_data_location = calibration_data_location
-
 
         # only qiskit backends are supported
         assert( type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'] or 
@@ -103,44 +101,42 @@ class ZNEWrapper(BaseWrapper):
                 type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator']
                 or type(backend) == QAOAQiskitQPUBackend), "Only Qiskit backends are supported."
 
-
-        with open(self.calibration_data_location, "r") as f:
-            calibration_data = json.load(f)
-
-        factory = calibration_data["factory"]
-        scaling = calibration_data["scaling"]
-        scale_factor = calibration_data["scale_factor"]
-
-        # preconditions over calibration data
         assert(factory in available_factories), "Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp"
         assert(scaling in available_scaling), "Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left"
         assert(
-            type(scale_factor) == list and
-            (type(x) == float and x >=1) for x in scale_factor
-            ), "Scale factor must be a list of floats greater or equal to 1"
+            isinstance(scale_factors, list) and 
+            all(isinstance(x, int) and x >= 1 for x in scale_factors)
+            ), "Scale factor must be a list of ints greater or equal to 1"
             
-        try:
-            seed = calibration_data["seed"]
-            assert(type(seed) == int), "Seed must be an integer"
-            assert(seed >= 0), "Seed must be >= 0"
-        except:
-            seed = self.seed
+        if scaling == "fold_gates_at_random":
+                assert(type(seed) == int), "Seed must be an integer"
+                assert(seed >= 0), "Seed must be >= 0"
+
+        assert(type(order) == int and order >=1),"Order must a int >=1"
+        assert(type(steps) == int),"Order must a int"
 
         self.factory_obj = None
         if factory == "Richardson":
-            self.factory_obj = RichardsonFactory(scale_factors = scale_factor, seed = seed)
+            self.factory_obj = RichardsonFactory(scale_factors = scale_factors, #seed = seed
+                                                 )
         elif factory == "Linear":
-            self.factory_obj = LinearFactory(scale_factors = scale_factor, seed = seed)
+            self.factory_obj = LinearFactory(scale_factors = scale_factors, #seed = seed
+                                             )
         elif factory == "Exp":
-            self.factory_obj = ExpFactory(scale_factors = scale_factor, seed = seed)
+            self.factory_obj = ExpFactory(scale_factors = scale_factors, #seed = seed
+                                          )
         elif factory == "Poly":
-            self.factory_obj = PolyFactory(scale_factors = scale_factor, order = calibration_data["order"], seed = seed)
+            self.factory_obj = PolyFactory(scale_factors = scale_factors, order = order, #seed = seed
+                                           )
         elif factory == "PolyExp":
-            self.factory_obj = PolyExpFactory(scale_factors = scale_factor, order = calibration_data["order"], seed = seed)
+            self.factory_obj = PolyExpFactory(scale_factors = scale_factors, order = order, #seed = seed
+                                              )
         elif factory == "AdaExp":
-            self.factory_obj = AdaExpFactory(scale_factors = scale_factor, steps = calibration_data["steps"], seed = seed)
+            self.factory_obj = AdaExpFactory(scale_factors = scale_factors, steps = steps, #seed = seed
+                                             )
         elif factory == "FakeNodes":
-            self.factory_obj = FakeNodesFactory(scale_factors = scale_factor, seed = seed)
+            self.factory_obj = FakeNodesFactory(scale_factors = scale_factors, #seed = seed
+                                                )
 
         # setting the scaling
         self.scale_noise = None
@@ -151,8 +147,8 @@ class ZNEWrapper(BaseWrapper):
         elif scaling == "fold_gates_from_right":
             self.scale_noise = fold_gates_from_right
 
-        #setting the scale_factor  
-        self.scale_factor = scale_factor
+        #setting the scale_factors 
+        self.scale_factors = scale_factors
         
 
     def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
@@ -183,7 +179,6 @@ class ZNEWrapper(BaseWrapper):
         # executor used by Mitiq
         def executor(qc: QuantumCircuit) -> float:                
                 # calculate the counts
-                #counts = self.backend.get_counts(params, n_shots)
                 counts = self.get_counts(qc,n_shots)
                 self.measurement_outcomes = counts
                 
@@ -193,9 +188,6 @@ class ZNEWrapper(BaseWrapper):
                     self.backend.qaoa_descriptor.cost_hamiltonian)
                 return cost
 
-        # this quantum circuit is NOT used.
-        # this quantum circuit is just created because of the parameter needs of execute_with_zne()
-        # the quantum circuit to be used is inside the executor's get_counts()
         qc = self.backend.qaoa_circuit(params)
         qc = transpile(qc, basis_gates=["u1", "u2", "u3", "cx"])
 
@@ -207,7 +199,6 @@ class ZNEWrapper(BaseWrapper):
             scale_noise = self.scale_noise)
     
     def get_counts(self,qc:QuantumCircuit,n_shots):
-        print(self.backend.backend_simulator)
         counts = (
             self.backend.backend_simulator.run(qc, shots=n_shots)
             .result()
