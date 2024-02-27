@@ -152,11 +152,15 @@ class SK(Problem):
         ----------
         solution : dict
             A dictionary containing the solution with spin values.
+        ax : matplotlib.pyplot.Axes(), optional
+            The axis of the graph visualization. If None, a new figure is created.
 
         Returns
         -------
         fig : matplotlib.pyplot.Figure()
             The graph visualization of the solution.
+        ax : matplotlib.pyplot.Axes()
+            The axis of the graph visualization.
         """
         colors = ["#5EB1EB", "#F29D55"]
         if isinstance(solution, str):
@@ -165,7 +169,7 @@ class SK(Problem):
                 sol[var.name] = int(solution[n])
             solution = sol
         if ax is None:
-            _, ax = plt.subplots()
+            fig, ax = plt.subplots()
 
         pos = nx.circular_layout(self.G)
         nx.draw(
@@ -184,3 +188,4 @@ class SK(Problem):
         ax.plot([], [], color=colors[0], label=r"$S_{-1}$", marker="o", linewidth=0)
         ax.plot([], [], color=colors[1], label=r"$S_{+1}$", marker="o", linewidth=0)
         ax.legend()
+        return fig, ax

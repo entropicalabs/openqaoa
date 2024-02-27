@@ -288,7 +288,8 @@ class BinPacking(Problem):
         -------
         fig : matplotlib.pyplot.Figure()
             The plot visualization of the solution.
-
+        ax : matplotlib.pyplot.Axes()
+            The axis of the plot visualization.
         """
         import matplotlib.pyplot as plt
         from matplotlib import colormaps
@@ -303,7 +304,7 @@ class BinPacking(Problem):
         if ax is None:
             fig, ax = plt.subplots()
         else:
-            fig = None
+            fig = ax.get_figure()
         for j in range(self.n_bins):
             sum_items = 0
             if solution[f"y_{j}"]:
@@ -337,4 +338,4 @@ class BinPacking(Problem):
             fancybox=True,
             shadow=True,
         )
-        return fig
+        return fig, ax

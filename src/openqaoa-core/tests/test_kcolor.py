@@ -1,6 +1,7 @@
 import unittest
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 from openqaoa.problems import KColor
 
 
@@ -176,8 +177,6 @@ class TestKColor(unittest.TestCase):
 
     def test_kcolor_plot(self):
         """Test k-color random instance method"""
-        import matplotlib.pyplot as plt
-
         seed = 1234
         n_nodes = 10
         edge_probability = 0.7
@@ -188,9 +187,10 @@ class TestKColor(unittest.TestCase):
         )
         sol = kcolor_random_prob.classical_solution()
         fig, ax = plt.subplots()
-        kcolor_random_prob.plot_solution(sol, ax=ax)
-
-        self.assertTrue(isinstance(ax, plt.Axes))
+        fig, ax = kcolor_random_prob.plot_solution(sol, ax=ax)
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
+        plt.close(fig)
 
 
 if __name__ == "__main__":

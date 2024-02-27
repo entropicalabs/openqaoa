@@ -5,8 +5,7 @@ from typing import Union, List, Tuple, Optional
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.providers.aer import AerSimulator
 from qiskit.providers.aer.noise import NoiseModel
-from qiskit.opflow.primitive_ops import PauliSumOp
-from qiskit.quantum_info import Statevector
+from qiskit.quantum_info import Statevector, SparsePauliOp
 from qiskit.circuit import Parameter
 
 from .gates_qiskit import QiskitGateApplicator
@@ -136,7 +135,7 @@ class QAOAQiskitBackendShotBasedSimulator(
         """
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+        circuit_with_angles = self.parametric_circuit.assign_parameters(memory_map)
 
         if self.append_state:
             circuit_with_angles = circuit_with_angles.compose(self.append_state)
@@ -306,7 +305,7 @@ class QAOAQiskitBackendStatevecSimulator(
     def qiskit_cost_hamiltonian(self):
         """
         The qiskit cost hamiltonian for the QAOA circuit represented
-        as a `PauliSumOp` object.
+        as a `SparsePauliOp` object.
         """
         cost_hamil = self.cost_hamiltonian
         n_qubits = cost_hamil.n_qubits
@@ -326,7 +325,7 @@ class QAOAQiskitBackendStatevecSimulator(
             for pauli_strings, coeff in zip(pauli_strings_list, pauli_coeffs)
         ]
         qiskit_pauli_op.append(["I" * n_qubits, cost_hamil.constant])
-        qiskit_cost_hamil = PauliSumOp.from_list(qiskit_pauli_op)
+        qiskit_cost_hamil = SparsePauliOp.from_list(qiskit_pauli_op)
         return qiskit_cost_hamil
 
     def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> QuantumCircuit:
@@ -347,7 +346,7 @@ class QAOAQiskitBackendStatevecSimulator(
 
         angles_list = self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
         memory_map = dict(zip(self.qiskit_parameter_list, angles_list))
-        circuit_with_angles = self.parametric_circuit.bind_parameters(memory_map)
+        circuit_with_angles = self.parametric_circuit.assign_parameters(memory_map)
         return circuit_with_angles
 
     @property
