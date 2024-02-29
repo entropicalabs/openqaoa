@@ -352,17 +352,18 @@ class Mitiq_Zne_ErrorMitigationProperties(ErrorMitigationProperties):
     error_mitigation_technique: str
         The name of the error mitigation technique.
     factory: str
-        d
+        The name of the object that determines the zero-noise extrapolation method.
     scaling: str
-        d
-    seed: int
-        d
+        The name of the function for scaling the noise of a quantum circuit.
     scale_factors: List[str]
-        d
+        Sequence of noise scale factors at which expectation values should be measured.
+        For AdaExpFactory, just the first element of the list will be considered.
     order: int
-        d
+        Extrapolation order (degree of the polynomial fit). It cannot exceed len(scale_factors) - 1.
+        Just used for PolyFactory and PolyExpFactory.
     steps: int
-        d
+        The number of optimization steps. At least 3 are necessary.
+        Just used for AdaExpFactory.
     """
 
     def __init__(
@@ -370,15 +371,13 @@ class Mitiq_Zne_ErrorMitigationProperties(ErrorMitigationProperties):
         error_mitigation_technique: Optional[str] = None,
         factory: str = 'Linear',
         scaling: str = 'fold_gates_at_random',
-        seed: int = 1,
         scale_factors: List[str] = [1,2,3],
         order: int = 1, 
-        steps: int = 3
+        steps: int = 4
     ):         
         super().__init__(error_mitigation_technique)
         self.factory = factory
         self.scaling = scaling
-        self.seed = seed
         self.scale_factors = scale_factors
         self.order = order
         self.steps = steps

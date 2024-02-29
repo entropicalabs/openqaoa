@@ -280,7 +280,6 @@ class QAOA(Workflow):
                 backend=self.backend,
                 factory=self.error_mitigation_properties.factory,
                 scaling=self.error_mitigation_properties.scaling,
-                seed=self.error_mitigation_properties.seed,
                 scale_factors=self.error_mitigation_properties.scale_factors,
                 order=self.error_mitigation_properties.order,
                 steps=self.error_mitigation_properties.steps

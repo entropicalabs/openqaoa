@@ -88,11 +88,22 @@ class ZNEWrapper(BaseWrapper):
 
     Parameters
     ----------
-    calibration_data_location: `str`
-        The location of the calibration data file.
+    factory: str
+        The name of the object that determines the zero-noise extrapolation method.
+    scaling: str
+        The name of the function for scaling the noise of a quantum circuit.
+    scale_factors: List[str]
+        Sequence of noise scale factors at which expectation values should be measured.
+        For AdaExpFactory, just the first element of the list will be considered.
+    order: int
+        Extrapolation order (degree of the polynomial fit). It cannot exceed len(scale_factors) - 1.
+        Just used for PolyFactory and PolyExpFactory.
+    steps: int
+        The number of optimization steps. At least 3 are necessary.
+        Just used for AdaExpFactory.
     """
 
-    def __init__(self, backend, factory, scaling, seed, scale_factors, order, steps):
+    def __init__(self, backend, factory, scaling, scale_factors, order, steps):
         super().__init__(backend)
 
         # only qiskit backends are supported
@@ -108,35 +119,25 @@ class ZNEWrapper(BaseWrapper):
             all(isinstance(x, int) and x >= 1 for x in scale_factors)
             ), "Scale factor must be a list of ints greater or equal to 1"
             
-        if scaling == "fold_gates_at_random":
-                assert(type(seed) == int), "Seed must be an integer"
-                assert(seed >= 0), "Seed must be >= 0"
-
         assert(type(order) == int and order >=1),"Order must a int >=1"
         assert(type(steps) == int),"Order must a int"
 
         self.factory_obj = None
         if factory == "Richardson":
-            self.factory_obj = RichardsonFactory(scale_factors = scale_factors, #seed = seed
-                                                 )
+            self.factory_obj = RichardsonFactory(scale_factors = scale_factors)
         elif factory == "Linear":
-            self.factory_obj = LinearFactory(scale_factors = scale_factors, #seed = seed
-                                             )
+            self.factory_obj = LinearFactory(scale_factors = scale_factors)
         elif factory == "Exp":
-            self.factory_obj = ExpFactory(scale_factors = scale_factors, #seed = seed
-                                          )
+            self.factory_obj = ExpFactory(scale_factors = scale_factors)
         elif factory == "Poly":
-            self.factory_obj = PolyFactory(scale_factors = scale_factors, order = order, #seed = seed
-                                           )
+            self.factory_obj = PolyFactory(scale_factors = scale_factors, order = order)
         elif factory == "PolyExp":
-            self.factory_obj = PolyExpFactory(scale_factors = scale_factors, order = order, #seed = seed
-                                              )
+            self.factory_obj = PolyExpFactory(scale_factors = scale_factors, order = order)
         elif factory == "AdaExp":
-            self.factory_obj = AdaExpFactory(scale_factors = scale_factors, steps = steps, #seed = seed
-                                             )
+            #for AdaExp, just one scale factor is needed.
+            self.factory_obj = AdaExpFactory(scale_factor= scale_factors[0], steps = steps)
         elif factory == "FakeNodes":
-            self.factory_obj = FakeNodesFactory(scale_factors = scale_factors, #seed = seed
-                                                )
+            self.factory_obj = FakeNodesFactory(scale_factors = scale_factors)
 
         # setting the scaling
         self.scale_noise = None
@@ -189,14 +190,16 @@ class ZNEWrapper(BaseWrapper):
                 return cost
 
         qc = self.backend.qaoa_circuit(params)
-        qc = transpile(qc, basis_gates=["u1", "u2", "u3", "cx"])
+        qc = transpile(qc, basis_gates=["h","rx","cx"])
 
-        return execute_with_zne(
+        expectation = execute_with_zne(
             circuit = qc,
             executor = executor,
             observable = None,
             factory = self.factory_obj,
             scale_noise = self.scale_noise)
+        display(self.factory_obj.plot_fit())
+        return expectation
     
     def get_counts(self,qc:QuantumCircuit,n_shots):
         counts = (
@@ -205,36 +208,6 @@ class ZNEWrapper(BaseWrapper):
             .get_counts()
             )  
         return counts
-
-    def get_counts2(self,params: QAOAVariationalBaseParams,n_shots = None):
-        
-        # executor used by Mitiq
-        def executor(qc: QuantumCircuit) -> float:                
-            # calculate the counts
-            counts = (
-            self.backend_simulator.run(qc, shots=n_shots)
-            .result()
-            .get_counts()
-            )                
-            self.measurement_outcomes = counts
-                
-            # calculate and return the cost
-            cost = cost_function(
-                counts,
-                self.backend.qaoa_descriptor.cost_hamiltonian)
-            return cost
-
-        qc = self.backend.qaoa_circuit(params)
-        qc = transpile(qc, basis_gates=["u1", "u2", "u3", "cx"])
-
-        execute_with_zne(
-            circuit = qc,
-            executor = executor,
-            observable = None,
-            factory = self.factory_obj,
-            scale_noise = self.scale_noise) 
-
-        return self.measurement_outcomes
 
 
 class SPAMTwirlingWrapper(BaseWrapper):
