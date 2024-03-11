@@ -21,6 +21,8 @@ from os.path import exists
 from .workflow_properties import (
     BackendProperties,
     ErrorMitigationProperties,
+    Mitiq_Zne_ErrorMitigationProperties,
+    Spam_Twirling_ErrorMitigationProperties,
     ClassicalOptimizer,
 )
 from ..backends.devices_core import DeviceBase, DeviceLocal
@@ -98,7 +100,7 @@ class Workflow(ABC):
         self.classical_optimizer = ClassicalOptimizer()
         self.local_simulators = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
         self.cloud_provider = list(DEVICE_ACCESS_OBJECT_MAPPER.keys())
-        self.available_error_mitigation_techniques = ["spam_twirling"]
+        self.available_error_mitigation_techniques = ["spam_twirling","mitiq_zne"]
         self.compiled = False
 
         # Initialize the identifier stamps, we initialize all the stamps needed to None
@@ -271,25 +273,46 @@ class Workflow(ABC):
         Parameters
         ----------
             error_mitigation_technique: str
-                The specific technique used to mitigate the errors. Only a simple state preparation and measurement twirling with bitflip averages, under the name "spam_twirling" is currently supported.
+                The specific technique used to mitigate the errors. Currently, the availables techniques are:
+                    *   A simple state preparation and measurement twirling with bitflip averages, under the name "spam_twirling".
+                    *   Zero Noise Extrapolation (ZNE), integrated from Mitiq framework.
             n_batches: int
                 The number of batches specifies the different negating schedules at random. Total number of shots is distributed accordingly.
             calibration_data_location: str
-                The location of the json file containing calibration data. For spam twirling this is the measurement outcomes of an empty circuit under the bit-flip averaging.
-
+                The location of the json file containing calibration data.
+                    *   For spam twirling this is the measurement outcomes of an empty circuit under the bit-flip averaging.
+                    *   For Zero Noise Extrapolation (ZNE) these are the factory, the scaling, the seed(only for fold_gates_at_random scaling)
+                        and the scale factors.
         """
+
+        # validate a supported error mitigation technique
+        if kwargs["error_mitigation_technique"].lower() in self.available_error_mitigation_techniques:
+            pass
+        else:
+            raise ValueError(
+                    f"Specified error mitigation technique is not supported"
+                )
+
+        # get the ErrorMitigationProperty structure to validate
+        error_mitigation_technique = kwargs["error_mitigation_technique"].lower()
+        if error_mitigation_technique == 'mitiq_zne':
+            self.error_mitigation_properties = Mitiq_Zne_ErrorMitigationProperties()
+            error_mitigation_properties = Mitiq_Zne_ErrorMitigationProperties
+        elif error_mitigation_technique == 'spam_twirling':
+            self.error_mitigation_properties = Spam_Twirling_ErrorMitigationProperties()
+            error_mitigation_properties = Spam_Twirling_ErrorMitigationProperties
+
+        # validate ErrorMitigationProperty structure
         for key, value in kwargs.items():
-            if hasattr(self.error_mitigation_properties, key) and (
-                kwargs["error_mitigation_technique"].lower()
-                in self.available_error_mitigation_techniques
-            ):
+            if hasattr(self.error_mitigation_properties, key):
                 pass  # setattr(self.error_mitigation, key, value)
             else:
                 raise ValueError(
                     f"Specified argument `{value}` for `{key}` in set_error_mitigation_properties is not supported"
                 )
+            
+        self.error_mitigation_properties = error_mitigation_properties(**kwargs)  
 
-        self.error_mitigation_properties = ErrorMitigationProperties(**kwargs)
         return None
 
     @check_compiled

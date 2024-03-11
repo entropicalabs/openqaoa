@@ -23,7 +23,7 @@ from ...utilities import (
     ground_state_hamiltonian,
 )
 from ...optimizers.qaoa_optimizer import get_optimizer
-from ...backends.wrapper import SPAMTwirlingWrapper
+from ...backends.wrapper import SPAMTwirlingWrapper,ZNEWrapper
 
 
 class QAOA(Workflow):
@@ -261,7 +261,7 @@ class QAOA(Workflow):
             **backend_dict,
         )
 
-        # Implementing SPAM Twirling error mitigation requires wrapping the backend.
+        # Implementing SPAM Twirling and MITIQs error mitigation requires wrapping the backend.
         # However, the BaseWrapper can have many more use cases.
         if (
             self.error_mitigation_properties.error_mitigation_technique
@@ -272,7 +272,19 @@ class QAOA(Workflow):
                 n_batches=self.error_mitigation_properties.n_batches,
                 calibration_data_location=self.error_mitigation_properties.calibration_data_location,
             )
-
+        elif(
+            self.error_mitigation_properties.error_mitigation_technique
+            == "mitiq_zne"
+        ):
+            self.backend = ZNEWrapper(
+                backend=self.backend,
+                factory=self.error_mitigation_properties.factory,
+                scaling=self.error_mitigation_properties.scaling,
+                scale_factors=self.error_mitigation_properties.scale_factors,
+                order=self.error_mitigation_properties.order,
+                steps=self.error_mitigation_properties.steps
+            )
+        
         self.optimizer = get_optimizer(
             vqa_object=self.backend,
             variational_params=self.variate_params,
@@ -402,7 +414,6 @@ class QAOA(Workflow):
             evaluated on a state simulator) or the counts of the QAOA circuit output
             (if the QAOA circuit is evaluated on a QPU or shot-based simulator)
         """
-
         # before evaluating the circuit we check that the QAOA object has been compiled
         if self.compiled is False:
             raise ValueError("Please compile the QAOA before optimizing it!")
