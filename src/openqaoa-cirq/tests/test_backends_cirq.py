@@ -8,7 +8,7 @@ from openqaoa.qaoa_components import (
     QAOADescriptor,
 )
 from openqaoa.utilities import X_mixer_hamiltonian
-from openqaoa_qiskit.backends import DeviceQiskit
+from openqaoa_cirq.backends import DeviceCirq
 
 
 def get_params():
@@ -44,7 +44,7 @@ class TestingBackendQPUs(unittest.TestCase):
 
         list_device_attributes = [
             {
-                "QPU": "Qiskit",
+                "QPU": "Cirq",
                 "device_name": "ibmq_qasm_simulator",
                 "hub": self.HUB,
                 "group": self.GROUP,
@@ -52,10 +52,10 @@ class TestingBackendQPUs(unittest.TestCase):
             }
         ]
 
-        assert DeviceQiskit in DEVICE_ACCESS_OBJECT_MAPPER.keys()
+        assert DeviceCirq in DEVICE_ACCESS_OBJECT_MAPPER.keys()
 
-        device = DeviceQiskit
-        backend = DEVICE_ACCESS_OBJECT_MAPPER[DeviceQiskit]
+        device = DeviceCirq
+        backend = DEVICE_ACCESS_OBJECT_MAPPER[DeviceCirq]
         device_attributes = list_device_attributes[0]
 
         qaoa_descriptor, variational_params_std = get_params()
