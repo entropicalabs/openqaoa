@@ -18,7 +18,7 @@ device_args = {
         "execution_timeout",
         "client_configuration",
         "endpoint_id",
-        "engagement_manager",
+        # "engagement_manager",
     ]
 }
 backend_args = {

@@ -139,3 +139,6 @@ braket-job*/
 
 # Visual Studio code
 .vscode/
+
+debug.txt
+debug_copy.txt
