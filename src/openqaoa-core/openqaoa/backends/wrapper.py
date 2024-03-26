@@ -26,6 +26,7 @@ from ..qaoa_components import Hamiltonian
 from ..utilities import (
     exp_val_pair,
     exp_val_single,
+    flip_counts,
     negate_counts_dictionary,
     calculate_calibration_factors,
     round_value,
@@ -113,7 +114,7 @@ class ZNEWrapper(BaseWrapper):
                 type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator']
                 or type(backend) == QAOAQiskitQPUBackend), "Only Qiskit backends are supported."
         # for Mitiq integration, is necessary to transpile the circit. Mitiq doesn't support the RZZ gate.
-        self.parametric_circuit = transpile(self.backend.parametric_circuit, basis_gates=["h","rx","cx"])
+        #self.parametric_circuit = transpile(self.backend.parametric_circuit, basis_gates=["h","rx","cx"])
 
         assert(factory in available_factories), "Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp"
         assert(scaling in available_scaling), "Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left"
@@ -188,7 +189,7 @@ class ZNEWrapper(BaseWrapper):
                 # calculate the counts
                 counts = self.get_counts(qc,n_shots)
                 self.measurement_outcomes = counts
-                
+
                 # calculate and return the cost
                 cost = cost_function(
                     counts,
@@ -204,16 +205,20 @@ class ZNEWrapper(BaseWrapper):
             observable = None,
             factory = self.factory_obj,
             scale_noise = self.scale_noise)
-        #display(self.factory_obj.plot_fit())
+
         self.result_factory_objs.append(copy.copy(self.factory_obj))
+        #display(self.factory_obj.plot_fit())
         return expectation
     
     def get_counts(self,qc:QuantumCircuit,n_shots):
+        #TODO MARCO COULD YOU CHECK WHY IS THE N_SHOTS NOT BEING MODIFIED CORRECTLY???
+        #n_shots = 5000
         counts = (
             self.backend.backend_simulator.run(qc, shots=n_shots)
             .result()
             .get_counts()
             )  
+        counts = flip_counts(counts)
         return counts
 
 
