@@ -275,7 +275,7 @@ class Workflow(ABC):
             error_mitigation_technique: str
                 The specific technique used to mitigate the errors. Currently, the availables techniques are:
                     *   A simple state preparation and measurement twirling with bitflip averages, under the name "spam_twirling".
-                    *   Zero Noise Extrapolation (ZNE), integrated from Mitiq framework.
+                    *   Zero Noise Extrapolation (ZNE), integrated from Mitiq framework, under the name "mitiq-zne".
             n_batches: int
                 The number of batches specifies the different negating schedules at random. Total number of shots is distributed accordingly.
             calibration_data_location: str
