@@ -108,7 +108,7 @@ class ZNEWrapper(BaseWrapper):
         super().__init__(backend)
 
         # only qiskit backends are supported
-        if( type(backend) not in [DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'],  
+        if(type(backend) not in [DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'],  
                 DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'],
                 DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator'],
                 QAOAQiskitQPUBackend]):
@@ -162,7 +162,7 @@ class ZNEWrapper(BaseWrapper):
 
     def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
         """
-        This method overrrides the one from the basebackend to allow for
+        This method overrides the one from the basebackend to allow for
         correcting the expectation values of each term in the Hamiltonian
         before providing the energy to the optimized. It does this by using
         execute_with_zne() method from Mitiq. This method estimates the
