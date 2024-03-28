@@ -1,7 +1,7 @@
 import random
 import numpy as np
 import json
-from mitiq import QPROGRAM, Executor, Observable, QuantumResult
+
 from mitiq.zne.inference import RichardsonFactory, LinearFactory, PolyExpFactory, PolyFactory, AdaExpFactory, FakeNodesFactory, ExpFactory
 from mitiq.zne.scaling import fold_gates_at_random, fold_gates_from_left, fold_gates_from_right
 from mitiq.zne import execute_with_zne
