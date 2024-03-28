@@ -306,15 +306,13 @@ class Workflow(ABC):
         # get the ErrorMitigationProperty structure to validate
         error_mitigation_technique = kwargs["error_mitigation_technique"].lower()
         if error_mitigation_technique == 'mitiq_zne':
-            self.error_mitigation_properties = Mitiq_Zne_ErrorMitigationProperties()
             error_mitigation_properties = Mitiq_Zne_ErrorMitigationProperties
         elif error_mitigation_technique == 'spam_twirling':
-            self.error_mitigation_properties = Spam_Twirling_ErrorMitigationProperties()
             error_mitigation_properties = Spam_Twirling_ErrorMitigationProperties
 
         # validate ErrorMitigationProperty structure
         for key, value in kwargs.items():
-            if hasattr(self.error_mitigation_properties, key):
+            if hasattr(error_mitigation_properties, key):
                 pass  # setattr(self.error_mitigation, key, value)
             else:
                 raise ValueError(
