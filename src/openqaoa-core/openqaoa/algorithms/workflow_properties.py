@@ -371,7 +371,7 @@ class Mitiq_Zne_ErrorMitigationProperties(ErrorMitigationProperties):
         error_mitigation_technique: Optional[str] = None,
         factory: str = 'Linear',
         scaling: str = 'fold_gates_at_random',
-        scale_factors: List[str] = [1,2,3],
+        scale_factors: List[int] = [1,2,3],
         order: int = 1, 
         steps: int = 4
     ):         
