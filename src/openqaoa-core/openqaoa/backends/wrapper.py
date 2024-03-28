@@ -110,9 +110,8 @@ class ZNEWrapper(BaseWrapper):
         # only qiskit backends are supported
         if(type(backend) not in [DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'],  
                 DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'],
-                DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator'],
                 QAOAQiskitQPUBackend]):
-            raise ValueError("Only Qiskit backends are supported.")
+            raise ValueError("Only Qiskit backends are supported, with the expection of the StateVector simulator.")
         # for Mitiq integration, is necessary to transpile the circit. Mitiq doesn't support the RZZ gate.
         #self.parametric_circuit = transpile(self.backend.parametric_circuit, basis_gates=["h","rx","cx"])
 
