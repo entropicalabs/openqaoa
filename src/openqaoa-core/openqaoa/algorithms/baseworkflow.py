@@ -21,8 +21,8 @@ from os.path import exists
 from .workflow_properties import (
     BackendProperties,
     ErrorMitigationProperties,
-    Mitiq_Zne_ErrorMitigationProperties,
-    Spam_Twirling_ErrorMitigationProperties,
+    MitiqZNEProperties,
+    SpamProperties,
     ClassicalOptimizer,
 )
 from ..backends.devices_core import DeviceBase, DeviceLocal
@@ -306,9 +306,9 @@ class Workflow(ABC):
         # get the ErrorMitigationProperty structure to validate
         error_mitigation_technique = kwargs["error_mitigation_technique"].lower()
         if error_mitigation_technique == 'mitiq_zne':
-            error_mitigation_properties = Mitiq_Zne_ErrorMitigationProperties
+            error_mitigation_properties = MitiqZNEProperties
         elif error_mitigation_technique == 'spam_twirling':
-            error_mitigation_properties = Spam_Twirling_ErrorMitigationProperties
+            error_mitigation_properties = SpamProperties
 
         # validate ErrorMitigationProperty structure
         for key, value in kwargs.items():

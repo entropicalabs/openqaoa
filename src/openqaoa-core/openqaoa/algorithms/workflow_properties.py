@@ -284,7 +284,7 @@ class ErrorMitigationProperties(WorkflowProperties):
             else error_mitigation_technique
         )
 
-class Spam_Twirling_ErrorMitigationProperties(ErrorMitigationProperties):
+class SpamProperties(ErrorMitigationProperties):
     """
     Class containing all the required parameters for the execution of the SPAM twirling mitigation technique.
 
@@ -343,7 +343,7 @@ class Spam_Twirling_ErrorMitigationProperties(ErrorMitigationProperties):
 
         self.calibration_data_location = calibration_data_location
 
-class Mitiq_Zne_ErrorMitigationProperties(ErrorMitigationProperties):
+class MitiqZNEProperties(ErrorMitigationProperties):
     """
     Class containing all the required parameters for the execution of the Mitiq Zero-Noise Extrapolation mitigation technique.
 
