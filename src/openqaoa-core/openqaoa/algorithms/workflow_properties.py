@@ -271,7 +271,7 @@ class ErrorMitigationProperties(WorkflowProperties):
     Parameters
     ----------
     error_mitigation_technique: str
-        The name of the error mitigation technique.
+        The name of the error mitigation technique. Currently supported values: "spam_twirling" for the Spam Twirling mitigation method, and "mitiq_zne" for the Zero-Noise Extrapolation (ZNE) mitigation method from Mitiq framework.
     """
     
     def __init__(
