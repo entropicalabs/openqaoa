@@ -5,12 +5,11 @@ from mitiq import QPROGRAM, Executor, Observable, QuantumResult
 from mitiq.zne.inference import RichardsonFactory, LinearFactory, PolyExpFactory, PolyFactory, AdaExpFactory, FakeNodesFactory, ExpFactory
 from mitiq.zne.scaling import fold_gates_at_random, fold_gates_from_left, fold_gates_from_right
 from mitiq.zne import execute_with_zne
-from cirq import DensityMatrixSimulator, depolarize
-from mitiq.interface import convert_to_mitiq, mitiq_cirq
+
 import copy
 
-from qiskit import QuantumCircuit, transpile #,qasm_simulator, shot_simulator, statevector_simulator
-from qiskit.quantum_info import DensityMatrix
+from qiskit import QuantumCircuit, transpile
+
 from .qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER
 
 from .basebackend import VQABaseBackend
