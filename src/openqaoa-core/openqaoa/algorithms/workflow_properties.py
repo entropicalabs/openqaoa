@@ -286,7 +286,7 @@ class ErrorMitigationProperties(WorkflowProperties):
 
 class Spam_Twirling_ErrorMitigationProperties(ErrorMitigationProperties):
     """
-    choose Spam Twirling as your error mitigation technique for the QAOA circuit.
+    Class containing all the required parameters for the execution of the SPAM twirling mitigation technique.
 
     Parameters
     ----------
@@ -345,7 +345,7 @@ class Spam_Twirling_ErrorMitigationProperties(ErrorMitigationProperties):
 
 class Mitiq_Zne_ErrorMitigationProperties(ErrorMitigationProperties):
     """
-    choose ZNE from Mitiq as your error mitigation technique for the QAOA circuit.
+    Class containing all the required parameters for the execution of the Mitiq Zero-Noise Extrapolation mitigation technique.
 
     Parameters
     ----------
