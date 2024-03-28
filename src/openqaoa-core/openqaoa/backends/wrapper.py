@@ -91,18 +91,18 @@ class ZNEWrapper(BaseWrapper):
     Parameters
     ----------
     factory: str
-        The name of the object that determines the zero-noise extrapolation method.
+        The name of the zero-noise extrapolation method. Supported values: "Richardson", "Linear", "Poly", "Exp", "PolyExp", "AdaExp", "FakeNodes".
     scaling: str
-        The name of the function for scaling the noise of a quantum circuit.
+        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random", "fold_gates_from_right", "fold_gates_from_left".
     scale_factors: List[int]
         Sequence of noise scale factors at which expectation values should be measured.
-        For AdaExpFactory, just the first element of the list will be considered.
+        For factory = "AdaExp", just the first element of the list will be considered.
     order: int
         Extrapolation order (degree of the polynomial fit). It cannot exceed len(scale_factors) - 1.
-        Just used for PolyFactory and PolyExpFactory.
+        Only used for factory = "Poly" or "PolyExp".
     steps: int
         The number of optimization steps. At least 3 are necessary.
-        Just used for AdaExpFactory.
+        Only used for factory = "AdaExp".
     """
 
     def __init__(self, backend, factory, scaling, scale_factors, order, steps):
