@@ -4,7 +4,7 @@ from qiskit.circuit import gate as qsk_gate
 from qiskit.circuit import controlledgate as qsk_c_gate
 from qiskit.circuit.library import standard_gates as qsk_s_gate
 
-# from qiskit.circuit import singleton as qsk_sgt
+from qiskit.circuit import singleton as qsk_sgt
 from qiskit import QuantumCircuit
 
 import openqaoa
@@ -24,18 +24,18 @@ class TestQiskitGateApplicator(unittest.TestCase):
                 for each_subclass_gate in qsk_c_gate.ControlledGate.__subclasses__()
             ]
         )
-        # available_gates.extend(
-        #     [
-        #         each_subclass_gate
-        #         for each_subclass_gate in qsk_sgt.SingletonGate.__subclasses__()
-        #     ]
-        # )
-        # available_gates.extend(
-        #     [
-        #         each_subclass_gate
-        #         for each_subclass_gate in qsk_sgt.SingletonControlledGate.__subclasses__()
-        #     ]
-        # )
+        available_gates.extend(
+            [
+                each_subclass_gate
+                for each_subclass_gate in qsk_sgt.SingletonGate.__subclasses__()
+            ]
+        )
+        available_gates.extend(
+            [
+                each_subclass_gate
+                for each_subclass_gate in qsk_sgt.SingletonControlledGate.__subclasses__()
+            ]
+        )
 
         available_qiskit_gates_name = [
             each_gate.__name__.lower() for each_gate in available_gates
@@ -262,7 +262,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
 
         self.assertEqual(
             [
-                each_qubit_ci.index
+                output_circuit.find_bit(each_qubit_ci).index
                 for circuit_instruction in output_circuit.data
                 for each_qubit_ci in circuit_instruction.qubits
             ],
@@ -306,7 +306,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
             )
             self.assertEqual(
                 [
-                    each_qubit_ci.index
+                    output_circuit.find_bit(each_qubit_ci).index
                     for circuit_instruction in output_circuit.data
                     for each_qubit_ci in circuit_instruction.qubits
                 ],
@@ -345,7 +345,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
 
                 self.assertEqual(
                     [
-                        each_qubit_ci.index
+                        output_circuit.find_bit(each_qubit_ci).index
                         for circuit_instruction in output_circuit.data
                         for each_qubit_ci in circuit_instruction.qubits
                     ],
@@ -393,7 +393,7 @@ class TestQiskitGateApplicator(unittest.TestCase):
                 )
                 self.assertEqual(
                     [
-                        each_qubit_ci.index
+                        output_circuit.find_bit(each_qubit_ci).index
                         for circuit_instruction in output_circuit.data
                         for each_qubit_ci in circuit_instruction.qubits
                     ],

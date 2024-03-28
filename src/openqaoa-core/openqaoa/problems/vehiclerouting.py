@@ -485,6 +485,8 @@ class VRP(Problem):
         -------
         fig : matplotlib.pyplot.Figure()
             The graph visualization of the solution.
+        ax : matplotlib.pyplot.Axes()
+            The axis of the graph visualization.
         """
         pos = self.pos
         if pos is []:
@@ -519,7 +521,7 @@ class VRP(Problem):
         if ax is None:
             fig, ax = plt.subplots()
         else:
-            fig = None
+            fig = ax.get_figure()
 
         num_vertices = self.G.number_of_nodes()
         G = nx.Graph()
@@ -541,4 +543,4 @@ class VRP(Problem):
             ax=ax,
             edgecolors="black",
         )
-        return fig
+        return fig, ax

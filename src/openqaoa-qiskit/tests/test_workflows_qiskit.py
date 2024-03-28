@@ -6,7 +6,7 @@ import datetime
 
 from qiskit.providers.fake_provider import FakeVigo
 from qiskit.providers.aer.noise import NoiseModel
-from qiskit.providers.aer import QasmSimulator
+from qiskit_aer import AerSimulator
 
 from openqaoa import QAOA, RQAOA
 from openqaoa.algorithms import QAOAResult, RQAOAResult
@@ -196,7 +196,7 @@ class TestingVanillaQAOA(unittest.TestCase):
     def test_qaoa_asdict_with_noise(self):
         """test to check that we can serialize a QAOA object with noise"""
         device_backend = FakeVigo()
-        device = QasmSimulator.from_backend(device_backend)
+        device = AerSimulator.from_backend(device_backend)
         noise_model = NoiseModel.from_backend(device)
         q_noisy_shot = QAOA()
 

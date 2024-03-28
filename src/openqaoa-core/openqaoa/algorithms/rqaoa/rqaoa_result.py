@@ -151,3 +151,4 @@ class RQAOAResult(dict):
         """
         plt.imshow(self.get_corr_matrix(step=step), cmap=cmap)
         plt.colorbar()
+        plt.show()

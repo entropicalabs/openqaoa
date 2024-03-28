@@ -1,6 +1,7 @@
 from typing import List
-from qcs_api_client.client import QCSClientConfiguration
-from pyquil.api._engagement_manager import EngagementManager
+# from qcs_api_client.client import QCSClientConfiguration
+from pyquil.api import QCSClient
+# from pyquil.api._engagement_manager import EngagementManager
 from pyquil import get_qc
 
 from openqaoa.backends.devices_core import DeviceBase
@@ -25,9 +26,9 @@ class DevicePyquil(DeviceBase):
         noisy: bool = None,
         compiler_timeout: float = 20.0,
         execution_timeout: float = 20.0,
-        client_configuration: QCSClientConfiguration = None,
+        client_configuration: QCSClient = None,
         endpoint_id: str = None,
-        engagement_manager: EngagementManager = None,
+        # engagement_manager: EngagementManager = None,
     ):
         """
         Parameters
@@ -56,15 +57,15 @@ class DevicePyquil(DeviceBase):
             Time limit for compilation requests, in seconds.
         execution_timeout: float
             Time limit for execution requests, in seconds.
-        client_configuration: QCSClientConfiguration
+        client_configuration: QCSClient
             Optional client configuration. If none is provided, a default one
             will be loaded.
         endpoint_id: str
             Optional quantum processor endpoint ID, as used in the
             `QCS API Docs`_.
-        engagement_manager: EngagementManager
-            Optional engagement manager. If none is provided, a default one will
-            be created.
+        # engagement_manager: EngagementManager
+        #     Optional engagement manager. If none is provided, a default one will
+        #     be created.
         """
 
         self.device_name = device_name
@@ -75,7 +76,7 @@ class DevicePyquil(DeviceBase):
         self.execution_timeout = execution_timeout
         self.client_configuration = client_configuration
         self.endpoint_id = endpoint_id
-        self.engagement_manager = engagement_manager
+        # self.engagement_manager = engagement_manager
 
         self.quantum_computer = get_qc(
             name=self.device_name,
@@ -85,7 +86,7 @@ class DevicePyquil(DeviceBase):
             execution_timeout=self.execution_timeout,
             client_configuration=self.client_configuration,
             endpoint_id=self.endpoint_id,
-            engagement_manager=self.engagement_manager,
+            # engagement_manager=self.engagement_manager,
         )
         self.n_qubits = len(self.quantum_computer.qubits())
 

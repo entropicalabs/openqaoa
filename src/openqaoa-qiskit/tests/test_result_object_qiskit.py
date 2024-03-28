@@ -1,5 +1,6 @@
 import unittest
 import networkx as nx
+import matplotlib.pyplot as plt
 
 from openqaoa import QAOA
 from openqaoa.problems import MinimumVertexCover
@@ -20,4 +21,7 @@ class TestingLoggerClass(unittest.TestCase):
         q_shot.compile(vc)
         q_shot.optimize()
 
-        q_shot.result.plot_probabilities()
+        fig, ax = q_shot.result.plot_probabilities()
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
+        plt.close(fig)
