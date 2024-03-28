@@ -94,7 +94,7 @@ class ZNEWrapper(BaseWrapper):
         The name of the object that determines the zero-noise extrapolation method.
     scaling: str
         The name of the function for scaling the noise of a quantum circuit.
-    scale_factors: List[str]
+    scale_factors: List[int]
         Sequence of noise scale factors at which expectation values should be measured.
         For AdaExpFactory, just the first element of the list will be considered.
     order: int
