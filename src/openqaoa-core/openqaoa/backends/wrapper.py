@@ -108,22 +108,24 @@ class ZNEWrapper(BaseWrapper):
         super().__init__(backend)
 
         # only qiskit backends are supported
-        assert( type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'] or 
-                type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'] or
-                type(backend) == DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator']
-                or type(backend) == QAOAQiskitQPUBackend), "Only Qiskit backends are supported."
+        if( type(backend) not in [DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'],  
+                DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'],
+                DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.statevector_simulator'],
+                QAOAQiskitQPUBackend]):
+            raise ValueError("Only Qiskit backends are supported.")
         # for Mitiq integration, is necessary to transpile the circit. Mitiq doesn't support the RZZ gate.
         #self.parametric_circuit = transpile(self.backend.parametric_circuit, basis_gates=["h","rx","cx"])
 
-        assert(factory in available_factories), "Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp"
-        assert(scaling in available_scaling), "Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left"
-        assert(
-            isinstance(scale_factors, list) and 
-            all(isinstance(x, int) and x >= 1 for x in scale_factors)
-            ), "Scale factor must be a list of ints greater or equal to 1"
-            
-        assert(type(order) == int and order >=1),"Order must a int >=1"
-        assert(type(steps) == int),"Order must a int"
+        if(factory not in available_factories):
+            raise ValueError("Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp")
+        if(scaling not in available_scaling):
+            raise ValueError("Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left")
+        if(not isinstance(scale_factors, list) or not all(isinstance(x, int) and x >= 1 for x in scale_factors)): 
+            raise ValueError("Scale factor must be a list of ints greater than or equal to 1") 
+        if(type(order) != int or order < 1):
+            raise ValueError("Order must an int greater than or equal to 1")
+        if(type(steps) != int):
+            raise ValueError("Order must be an int")
 
         self.factory_obj = None
         if factory == "Richardson":
