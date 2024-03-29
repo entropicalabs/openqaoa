@@ -20,12 +20,12 @@ from openqaoa_qiskit.backends import (
     QAOAQiskitBackendShotBasedSimulator,
 )
 
-from openqaoa.backends.wrapper import SPAMTwirlingWrapper
+from openqaoa.backends.wrapper import SPAMTwirlingWrapper, ZNEWrapper
 
 from openqaoa.utilities import X_mixer_hamiltonian, bitstring_energy
 from openqaoa.backends.qaoa_device import create_device
 from openqaoa.backends.basebackend import QAOABaseBackendShotBased
-
+from qiskit import QuantumCircuit, transpile
 
 def get_params():
     cost_hamil = Hamiltonian.classical_hamiltonian(
@@ -262,6 +262,104 @@ class TestingSPAMTwirlingWrapper(unittest.TestCase):
         self.assertAlmostEqual(
             self.wrapped_obj.expectation(self.variate_params, n_shots=10000), -0.94, 1
         )
+
+
+
+class TestingZNEWrapper(unittest.TestCase):
+    """
+    These tests check methods of the ZNE wrapper.
+    """
+    @pytest.mark.qpu
+    def test_zne_wrap_any_backend(self):
+        """
+        Testing if the wrapper is backend-agnostic by checking if it can take
+        any of the relevant backend objects as an argument.
+        """
+        self.factory = "Linear"
+        self.scaling = "fold_gates_at_random"
+        self.scale_factors = [1,2,3]
+        self.order = 1
+        self.steps = 1
+        self.qaoa_descriptor, self.variate_params = get_params()
+
+        device_list = []
+        device_list.append(
+            create_device(location="local", name="qiskit.qasm_simulator")
+        )
+        device_list.append(
+            create_device(location="local", name='qiskit.shot_simulator'),
+        )
+
+        for device in device_list:
+            backend = get_qaoa_backend(
+                qaoa_descriptor=self.qaoa_descriptor,
+                device=device,
+                n_shots=42,
+            )
+            try:
+                ZNEWrapper(
+                    backend,
+                    factory=self.factory,
+                    scaling=self.scaling,
+                    scale_factors=self.scale_factors,
+                    order = self.order,
+                    steps = self.steps,
+                )
+            except Exception as e:
+                raise ValueError("The {} backend cannot be wrapped.".format(backend), e)
+
+
+    def test_zne_get_counts(self):
+        """
+        Testing the get_counts method of the ZNE wrapper.
+        """
+        self.factory = "Linear"
+        self.scaling = "fold_gates_at_random"
+        self.scale_factors = [1, 1]
+
+        self.order = 1
+        self.steps = 1
+
+        self.qaoa_descriptor, self.variate_params = get_params()
+
+        self.qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
+            qaoa_descriptor=self.qaoa_descriptor,
+            n_shots=100,
+            prepend_state=None,
+            append_state=None,
+            init_hadamard=True,
+            cvar_alpha=1.0,
+            qiskit_simulation_method="automatic",
+            seed_simulator=2642,
+            noise_model=None,
+        )
+
+        try:
+            self.wrapped_obj_zne = ZNEWrapper(
+                self.qiskit_shot_backend,
+                factory=self.factory,
+                scaling=self.scaling,
+                scale_factors=self.scale_factors,
+                order=self.order,
+                steps=self.steps,
+            )
+            #self.wrapped_obj_trivial
+        except NameError:
+            print("Skipping Qiskit tests as Qiskit is not installed.")
+            return None
+        qc =  self.qiskit_shot_backend.qaoa_circuit(self.variate_params)
+        #qc = transpile(qc, basis_gates=["h","rx","cx"])
+        print(self.wrapped_obj_zne.get_counts(
+            qc, n_shots=100,
+        ) )
+
+        assert self.wrapped_obj_zne.get_counts(
+            qc, n_shots=100,
+        ) == {
+            "01": 35,
+            "10": 29,
+            "11": 36
+        }, "The get_counts function in the wrapper didn't return the expected counts."
 
 
 if __name__ == "__main__":
