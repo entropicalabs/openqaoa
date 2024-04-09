@@ -348,10 +348,6 @@ class TestingZNEWrapper(unittest.TestCase):
             print("Skipping Qiskit tests as Qiskit is not installed.")
             return None
         qc =  self.qiskit_shot_backend.qaoa_circuit(self.variate_params)
-        #qc = transpile(qc, basis_gates=["h","rx","cx"])
-        print(self.wrapped_obj_zne.get_counts(
-            qc, n_shots=100,
-        ) )
 
         assert self.wrapped_obj_zne.get_counts(
             qc, n_shots=100,
@@ -360,6 +356,67 @@ class TestingZNEWrapper(unittest.TestCase):
             "10": 29,
             "11": 36
         }, "The get_counts function in the wrapper didn't return the expected counts."
+
+    def test_expectation_zne(self):
+        """
+        Testing the expectation method of the ZNE wrapper which overrides the backend function as defined in basebackends.
+        Also, the trivial case compared with the original backend
+        """
+        self.factory = "Linear"
+        self.scaling = "fold_gates_at_random"
+        self.scale_factors = [1, 1]
+
+        self.order = 1
+        self.steps = 1
+
+        self.qaoa_descriptor, self.variate_params = get_params()
+
+        self.qiskit_shot_backend = QAOAQiskitBackendShotBasedSimulator(
+            qaoa_descriptor=self.qaoa_descriptor,
+            n_shots=10000,
+            prepend_state=None,
+            append_state=None,
+            init_hadamard=True,
+            cvar_alpha=1.0,
+            qiskit_simulation_method="automatic",
+            seed_simulator=2642,
+            noise_model=None,
+        )
+        try:
+            self.wrapped_obj_zne = ZNEWrapper(
+                self.qiskit_shot_backend,
+                factory=self.factory,
+                scaling=self.scaling,
+                scale_factors=self.scale_factors,
+                order=self.order,
+                steps=self.steps,
+            )
+        except NameError:
+            print("Skipping Qiskit tests as Qiskit is not installed.")
+            return None
+
+        self.assertAlmostEqual(
+            self.wrapped_obj_zne.expectation(self.variate_params), -0.47, 1
+        )
+
+        qc = self.qiskit_shot_backend.qaoa_circuit(self.variate_params)
+        # qc = transpile(qc, basis_gates=["h","rx","cx"])
+
+        wrapper_counts_zne = self.wrapped_obj_zne.get_counts(
+            qc, n_shots=10000
+        )
+        backend_counts_qiskit = self.qiskit_shot_backend.get_counts(
+            self.variate_params, n_shots=10000
+        )
+
+        # convert counts to probabilities
+        wrapper_zne_probs = {key: value / 10000 for key, value in wrapper_counts_zne.items()}
+        backend_qiskit_probs = {key: value / 10000 for key, value in backend_counts_qiskit.items()}
+
+        for key in wrapper_zne_probs:
+            assert np.isclose(
+                wrapper_zne_probs[key], backend_qiskit_probs[key], rtol=1e-1
+            ), "The get_counts function in the wrapper with trivial scaling qubits returns a value too far from the original backend."
 
 
 if __name__ == "__main__":
