@@ -112,8 +112,6 @@ class ZNEWrapper(BaseWrapper):
                 DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'],
                 QAOAQiskitQPUBackend]):
             raise ValueError("Only Qiskit backends are supported, with the expection of the StateVector simulator.")
-        # for Mitiq integration, is necessary to transpile the circit. Mitiq doesn't support the RZZ gate.
-        #self.parametric_circuit = transpile(self.backend.parametric_circuit, basis_gates=["h","rx","cx"])
 
         if(factory not in available_factories):
             raise ValueError("Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp")
@@ -159,7 +157,7 @@ class ZNEWrapper(BaseWrapper):
         self.result_factory_objs = []
         
 
-    def expectation(self, params: QAOAVariationalBaseParams, n_shots=None) -> float:
+    def expectation(self, params: QAOAVariationalBaseParams) -> float:
         """
         This method overrides the one from the basebackend to allow for
         correcting the expectation values of each term in the Hamiltonian
@@ -173,9 +171,6 @@ class ZNEWrapper(BaseWrapper):
         params: `QAOAVariationalBaseParams`
             The QAOA parameters - an object of one of the parameter classes,
             containing variable parameters.
-        n_shots: `int`
-            The number of shots to be used for the measurement. If None,
-            the backend default.
 
         Returns
         -------
@@ -187,7 +182,7 @@ class ZNEWrapper(BaseWrapper):
         # executor used by Mitiq
         def executor(qc: QuantumCircuit) -> float:                
                 # calculate the counts
-                counts = self.get_counts(qc,n_shots)
+                counts = self.get_counts(qc,self.n_shots)
                 self.measurement_outcomes = counts
 
                 # calculate and return the cost
@@ -197,6 +192,7 @@ class ZNEWrapper(BaseWrapper):
                 return cost
 
         qc = self.backend.qaoa_circuit(params)
+        # for Mitiq integration, is necessary to transpile the circuit. Mitiq doesn't support the RZZ gate.
         qc = transpile(qc, basis_gates=["h","rx","cx"])
 
         expectation = execute_with_zne(
@@ -211,8 +207,6 @@ class ZNEWrapper(BaseWrapper):
         return expectation
     
     def get_counts(self,qc:QuantumCircuit,n_shots):
-        #TODO MARCO COULD YOU CHECK WHY IS THE N_SHOTS NOT BEING MODIFIED CORRECTLY???
-        #n_shots = 5000
         counts = (
             self.backend.backend_simulator.run(qc, shots=n_shots)
             .result()
