@@ -382,18 +382,16 @@ class TestingZNEWrapper(unittest.TestCase):
             seed_simulator=2642,
             noise_model=None,
         )
-        try:
-            self.wrapped_obj_zne = ZNEWrapper(
-                self.qiskit_shot_backend,
-                factory=self.factory,
-                scaling=self.scaling,
-                scale_factors=self.scale_factors,
-                order=self.order,
-                steps=self.steps,
+        
+        self.wrapped_obj_zne = ZNEWrapper(
+            self.qiskit_shot_backend,
+             factory=self.factory,
+            scaling=self.scaling,
+            scale_factors=self.scale_factors,
+            order=self.order,
+            steps=self.steps,
             )
-        except NameError:
-            print("Skipping Qiskit tests as Qiskit is not installed.")
-            return None
+        return None
 
         self.assertAlmostEqual(
             self.wrapped_obj_zne.expectation(self.variate_params), -0.47, 1

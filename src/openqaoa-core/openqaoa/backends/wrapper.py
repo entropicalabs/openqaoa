@@ -111,7 +111,7 @@ class ZNEWrapper(BaseWrapper):
         if(type(backend) not in [DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'],  
                 DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'],
                 QAOAQiskitQPUBackend]):
-            raise ValueError("Only Qiskit backends are supported, with the expection of the StateVector simulator.")
+            raise ValueError("Only Qiskit backends are supported, with the exception of the StateVector simulator.")
 
         if(factory not in available_factories):
             raise ValueError("Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp")
