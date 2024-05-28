@@ -83,6 +83,9 @@ def test_13_optimizers():
 def test_14_benchmark():
     notebook_test_function("./examples/14_qaoa_benchmark.ipynb")
 
+def test_15_zne():
+    notebook_test_function("./examples/15_Zero_Noise_Extrapolation.ipynb")
+
 
 def test_X_dumping_data():
     notebook_test_function("./examples/X_dumping_data.ipynb")
