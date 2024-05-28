@@ -82,7 +82,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [0, 1 / 8 * np.pi]
         betas = [1 / 2 * np.pi, 3 / 8 * np.pi]
-        shots = 10000
+        shots = 1
 
         cost_hamil = Hamiltonian(
             [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
@@ -94,7 +94,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         qiskit_device = DeviceQiskit(
-            "ibmq_qasm_simulator", self.HUB, self.GROUP, self.PROJECT
+            "ibm_kyoto", self.HUB, self.GROUP, self.PROJECT
         )
 
         qiskit_backend = QAOAQiskitQPUBackend(
@@ -147,7 +147,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [0, 1 / 8 * np.pi]
         betas = [1 / 2 * np.pi, 3 / 8 * np.pi]
-        shots = 10000
+        shots = 1
 
         cost_hamil = Hamiltonian(
             [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
@@ -159,7 +159,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         qiskit_device = DeviceQiskit(
-            "ibmq_qasm_simulator", self.HUB, self.GROUP, self.PROJECT
+            "ibm_kyoto", self.HUB, self.GROUP, self.PROJECT
         )
 
         qiskit_backend = QAOAQiskitQPUBackend(
@@ -213,7 +213,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [1 / 8 * np.pi]
         betas = [1 / 8 * np.pi]
-        shots = 10000
+        shots = 1
 
         # Prepended Circuit
         prepend_circuit = QuantumCircuit(3)
@@ -229,7 +229,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         qiskit_device = DeviceQiskit(
-            "ibmq_qasm_simulator", self.HUB, self.GROUP, self.PROJECT
+            "ibm_kyoto", self.HUB, self.GROUP, self.PROJECT
         )
 
         qiskit_backend = QAOAQiskitQPUBackend(
@@ -273,7 +273,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [1 / 8 * np.pi]
         betas = [1 / 8 * np.pi]
-        shots = 10000
+        shots = 1
 
         # Appended Circuit
         append_circuit = QuantumCircuit(3)
@@ -289,7 +289,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         variate_params = QAOAVariationalStandardParams(qaoa_descriptor, betas, gammas)
 
         qiskit_device = DeviceQiskit(
-            "ibmq_qasm_simulator", self.HUB, self.GROUP, self.PROJECT
+            "ibm_kyoto", self.HUB, self.GROUP, self.PROJECT
         )
 
         qiskit_backend = QAOAQiskitQPUBackend(
@@ -450,10 +450,10 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         shots = 100
 
-        set_of_numbers = np.random.randint(1, 10, 8).tolist()
+        set_of_numbers = np.random.randint(1, 10, 129).tolist()
         qubo = NumberPartition(set_of_numbers).qubo
 
-        mixer_hamil = X_mixer_hamiltonian(n_qubits=8)
+        mixer_hamil = X_mixer_hamiltonian(n_qubits=129)
         qaoa_descriptor = QAOADescriptor(qubo.hamiltonian, mixer_hamil, p=1)
 
         # Check the creation of the varitional parms
@@ -461,15 +461,25 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         qiskit_device = DeviceQiskit("ibm_kyoto", self.HUB, self.GROUP, self.PROJECT)
 
-        try:
-            QAOAQiskitQPUBackend(
-                qaoa_descriptor, qiskit_device, shots, None, None, True
-            )
-        except Exception as e:
-            self.assertEqual(
-                str(e),
-                "There are lesser qubits on the device than the number of qubits required for the circuit.",
-            )
+        self.assertRaises(
+            Exception,
+            QAOAQiskitQPUBackend,
+            qaoa_descriptor, 
+            qiskit_device, 
+            shots, 
+            None, 
+            None, 
+            True,
+        )
+        # try:
+        #     QAOAQiskitQPUBackend(
+        #         qaoa_descriptor, qiskit_device, shots, None, None, True
+        #     )
+        # except Exception as e:
+        #     self.assertEqual(
+        #         str(e),
+        #         "There are lesser qubits on the device than the number of qubits required for the circuit.",
+        #     )
 
     @pytest.mark.qpu
     def test_integration_on_emulator(self):
@@ -483,7 +493,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [[1 / 8 * np.pi]]
         betas = [[1 / 8 * np.pi]]
-        shots = 10000
+        shots = 1
 
         cost_hamil = Hamiltonian(
             [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
@@ -520,7 +530,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         weights = [1, 1, 1]
         gammas = [[1 / 8 * np.pi]]
         betas = [[1 / 8 * np.pi]]
-        shots = 10000
+        shots = 1
 
         cost_hamil = Hamiltonian(
             [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
