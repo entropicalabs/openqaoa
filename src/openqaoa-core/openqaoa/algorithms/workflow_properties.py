@@ -354,7 +354,7 @@ class MitiqZNEProperties(ErrorMitigationProperties):
     factory: str
         The name of the zero-noise extrapolation method. Supported values: "Richardson", "Linear", "Poly", "Exp", "PolyExp", "AdaExp", "FakeNodes".
     scaling: str
-        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random", "fold_gates_from_right", "fold_gates_from_left".
+        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random" ("fold_gates_from_right", "fold_gates_from_left" not supported as version 0.8).
     scale_factors: List[int]
         Sequence of noise scale factors at which expectation values should be measured.
         For factory = "AdaExp", just the first element of the list will be considered.

@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 from mitiq.zne.inference import RichardsonFactory, LinearFactory, PolyExpFactory, PolyFactory, AdaExpFactory, FakeNodesFactory, ExpFactory
-from mitiq.zne.scaling import fold_gates_at_random, fold_gates_from_left, fold_gates_from_right
+from mitiq.zne.scaling import fold_gates_at_random
 from mitiq.zne import execute_with_zne
 
 import copy
@@ -75,8 +75,6 @@ available_factories = [
 ]
 available_scaling = [
     "fold_gates_at_random",
-    "fold_gates_from_right",
-    "fold_gates_from_left"
 ]
 class ZNEWrapper(BaseWrapper):
     """
@@ -92,7 +90,7 @@ class ZNEWrapper(BaseWrapper):
     factory: str
         The name of the zero-noise extrapolation method. Supported values: "Richardson", "Linear", "Poly", "Exp", "PolyExp", "AdaExp", "FakeNodes".
     scaling: str
-        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random", "fold_gates_from_right", "fold_gates_from_left".
+        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random" ("fold_gates_from_right", "fold_gates_from_left" not supported as version 0.8).
     scale_factors: List[int]
         Sequence of noise scale factors at which expectation values should be measured.
         For factory = "AdaExp", just the first element of the list will be considered.
@@ -116,7 +114,7 @@ class ZNEWrapper(BaseWrapper):
         if(factory not in available_factories):
             raise ValueError("Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp")
         if(scaling not in available_scaling):
-            raise ValueError("Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left")
+            raise ValueError("Supported scaling methods are: fold_gates_at_random")
         if(not isinstance(scale_factors, list) or not all(isinstance(x, int) and x >= 1 for x in scale_factors)): 
             raise ValueError("Scale factor must be a list of ints greater than or equal to 1") 
         if(type(order) != int or order < 1):
@@ -145,10 +143,10 @@ class ZNEWrapper(BaseWrapper):
         self.scale_noise = None
         if scaling == "fold_gates_at_random":
             self.scale_noise = fold_gates_at_random
-        elif scaling == "fold_gates_from_left":
-            self.scale_noise = fold_gates_from_left
-        elif scaling == "fold_gates_from_right":
-            self.scale_noise = fold_gates_from_right
+        # elif scaling == "fold_gates_from_left":
+        #     self.scale_noise = fold_gates_from_left
+        # elif scaling == "fold_gates_from_right":
+        #     self.scale_noise = fold_gates_from_right
 
         #setting the scale_factors 
         self.scale_factors = scale_factors

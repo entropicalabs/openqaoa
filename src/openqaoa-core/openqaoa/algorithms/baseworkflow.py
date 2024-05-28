@@ -283,7 +283,7 @@ class Workflow(ABC):
             factory: str
                 Used in "mitiq_zne". The name of the zero-noise extrapolation method. Supported values: "Richardson", "Linear", "Poly", "Exp", "PolyExp", "AdaExp", "FakeNodes".
             scaling: str
-                Used in "mitiq_zne". The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random", "fold_gates_from_right", "fold_gates_from_left".
+                Used in "mitiq_zne". The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random" ("fold_gates_from_right", "fold_gates_from_left" not supported as version 0.8)
             scale_factors: List[int]
                 Used in "mitiq_zne". Sequence of noise scale factors at which expectation values should be measured.
                 For factory = "AdaExp", just the first element of the list will be considered.
