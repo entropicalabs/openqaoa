@@ -4,7 +4,7 @@ OpenQAOA Metapackage Installation
 
 The following instructions install OpenQAOA along with all optional plugins
 
-OpenQAOA is divided into separately installable plugins based on the requirements of the user. The core elements of the package are placed in ``openqaoa-core`` which comes pre-installed with each flavour of OpenQAOA. 
+OpenQAOA is divided into separately installable plugins based on the requirements of the user. The core elements of the package are placed in ``openqaoa-core`` which comes pre-installed with each flavour of OpenQAOA.
 
 Currently, OpenQAOA supports the following backends and each can be installed exclusively with the exception of ``openqaoa-azure`` which installs ``openqaoa-qiskit`` as an additional requirement because Azure backends support circuit submissions via `qiskit`.
 
@@ -17,7 +17,7 @@ The OpenQAOA metapackage allows you to install all OpenQAOA plug-ins together.
 
 Install via PyPI
 ----------------
-You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8, 3.9, 3.10 and then pip install openqaoa with the following command
+You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8, 3.9, 3.11 and then pip install openqaoa with the following command
 .. code-block:: bash
 
 pip install openqaoa
@@ -25,14 +25,14 @@ pip install openqaoa
 
 Install via git clone
 ---------------------
-Alternatively, you can install OpenQAOA manually from the GitHub repository by following the instructions below. 
+Alternatively, you can install OpenQAOA manually from the GitHub repository by following the instructions below.
 
 **NOTE:** We recommend creating a python virtual environment for this project using a python environment manager, for instance Anaconda. Instructions can be found `here <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`_. Make sure to use **python 3.8** (or newer) for the environment.
 
 1. Clone the git repository:
 
 .. code-block:: bash
- 
+
     git clone https://github.com/entropicalabs/openqaoa.git
 
 

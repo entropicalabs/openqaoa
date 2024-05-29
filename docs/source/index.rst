@@ -1,7 +1,7 @@
 Welcome to OpenQAOA's documentation!
 ====================================
 
-OpenQAOA is an advanced multi-backend SDK for quantum optimization designed to ease research efforts within the VQA environment while ensuring the reliability and reproducibility of results. The library is divided into individually installable backend plugins. 
+OpenQAOA is an advanced multi-backend SDK for quantum optimization designed to ease research efforts within the VQA environment while ensuring the reliability and reproducibility of results. The library is divided into individually installable backend plugins.
 The core functionalities of the package are contained within `openqaoa-core`, required to run QAOA computations on any Quantum hardware or simulator. Further it includes `openqaoa-qiskit`, `openqaoa-pyquil`, `openqaoa-azure`, `openqaoa-braket` for running
 QAOA on devices accessible through the respective cloud providers. Installing any plugin through PyPI ships `openqaoa-core` along with it to provide the complete set of tools required to run QAOA computations.
 Users can also easily install all OpenQAOA plugins available by installing `openqaoa` through PyPI. The `openqaoa` metapackage easily manages all OpenQAOA plugins and their dependencies. Users can also install `openqaoa` in developer mode by git cloning the repository and executing the install Makefile,
@@ -36,12 +36,12 @@ Getting started
 Installing
 ----------
 
-OpenQAOA provides several installation options to choose from. The package consists of `openqaoa-core` and backend specific modules that let users selectively install the provider they wish to run QAOA on. 
+OpenQAOA provides several installation options to choose from. The package consists of `openqaoa-core` and backend specific modules that let users selectively install the provider they wish to run QAOA on.
 For instance, `openqaoa-qiskit` enables QAOA computations on IBMQ devices and simulators, and qiskit supported devices. For a complete installation including all supported cloud providers,
-users can simply install the full `openqaoa` metapackage. Do note, `openqaoa-core` is a dependency for all backend specific modules and the full `openqaoa` pacakge. 
+users can simply install the full `openqaoa` metapackage. Do note, `openqaoa-core` is a dependency for all backend specific modules and the full `openqaoa` pacakge.
 Therefore, it ships by default with all flavors of OpenQAOA installations.
 
-You can install the latest variants of OpenQAOA directly from PyPI. First, we recommend you create a virtual environment with python>=3.10 and then pip install openqaoa variants with the following commands
+You can install the latest variants of OpenQAOA directly from PyPI. First, we recommend you create a virtual environment with python>=3.11 and then pip install openqaoa variants with the following commands
 - To install full OpenQAOA with all backend plugins and the `openqaoa` metapackage, users can
 
 .. code-block:: bash
@@ -64,7 +64,7 @@ Alternatively, you can install manually directly from the GitHub repository by
 
 2. We recommend creating a new python `virtual environment`, for instance, using conda. Instructions on how to create a virtual environment using Anaconda can be found [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands). Make sure to use **python 3.8** (or newer) for the environment.
 
-3. After cloning the repository `cd openqaoa` and pip install the package. 
+3. After cloning the repository `cd openqaoa` and pip install the package.
 
 .. code-block:: bash
 
@@ -102,11 +102,11 @@ First, create a problem instance. For example, an instance of vertex cover:
 
 Where [networkx](https://networkx.org/) is an open source Python package that can easily, among other things, create graphs.
 
-Once the binary problem is defined, the simplest workflow can be defined as 
+Once the binary problem is defined, the simplest workflow can be defined as
 
 .. code-block:: python
-   
-   from openqaoa import QAOA  
+
+   from openqaoa import QAOA
    q = QAOA()
    q.compile(qubo_problem)
    q.optimize()
@@ -173,7 +173,7 @@ rqaoa_type can take two values which select elimination strategies. The user can
 
 Factory mode
 ------------
-The user is also free to directly access the source code without using the workflow API. 
+The user is also free to directly access the source code without using the workflow API.
 
 A few reference notebooks can be found:
 * [comparing vectorized, pyquil, and qiskit backents](examples/test_backends_correctness.ipynb)
@@ -202,7 +202,7 @@ then, specify terms and weights in order to define the cost hamiltonian
 
    cost_hamil = Hamiltonian.classical_hamiltonian(terms=terms,coeffs=coeffs,constant=0)
    mixer_hamil = X_mixer_hamiltonian(n_qubits=n_qubits)
-   
+
 After having created the hamiltonians it is time to create the Circuit parameters and the Variational Parameters
 
 .. code-block:: python
@@ -213,7 +213,7 @@ After having created the hamiltonians it is time to create the Circuit parameter
 Then proceed by instantiating the backend device
 
 .. code-block:: python
-   
+
    backend_obj = QAOAvectorizedBackendSimulator(qaoa_descriptor = qaoa_descriptor, append_state = None, prepend_state = None, init_hadamard = True)
 
 And finally, create the classical optimizer and minimize the objective function
@@ -225,7 +225,7 @@ And finally, create the classical optimizer and minimize the objective function
    optimizer_obj()
 
 
-The result of the optimization will the be accessible as 
+The result of the optimization will the be accessible as
 
 .. code-block:: python
 
@@ -259,7 +259,7 @@ Contents
    :caption: Installation and setup
 
    openqaoa_metapackage_install
-   
+
    openqaoa_core/openqaoa_core_install
 
    openqaoa_qiskit/openqaoa_qiskit_install
@@ -283,7 +283,7 @@ Contents
    openqaoa_azure/azure_backends
 
    openqaoa_pyquil/pyquil_backends
-   
+
 
 .. toctree::
    :maxdepth: 3
