@@ -20,7 +20,7 @@ requirements.extend(add_requirements)
 
 setup(
     name="openqaoa-qiskit",
-    python_requires=">=3.8, <3.11",
+    python_requires=">=3.8, <3.12",
     version=version,
     author="Entropica Labs",
     packages=find_packages(where="."),

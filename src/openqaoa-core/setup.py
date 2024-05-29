@@ -20,7 +20,7 @@ requirements_test = [r.strip() for r in requirements_test]
 
 setup(
     name="openqaoa-core",
-    python_requires=">=3.8, <3.11",
+    python_requires=">=3.8, <3.12",
     version=version,
     author="Entropica Labs",
     packages=find_packages(where="."),
