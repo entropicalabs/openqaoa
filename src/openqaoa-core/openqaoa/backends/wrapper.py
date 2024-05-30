@@ -2,6 +2,16 @@ import random
 import numpy as np
 import json
 
+from mitiq.zne.inference import RichardsonFactory, LinearFactory, PolyExpFactory, PolyFactory, AdaExpFactory, FakeNodesFactory, ExpFactory
+from mitiq.zne.scaling import fold_gates_at_random, fold_gates_from_left, fold_gates_from_right
+from mitiq.zne import execute_with_zne
+
+import copy
+
+from qiskit import QuantumCircuit, transpile
+
+from .qaoa_backend import DEVICE_NAME_TO_OBJECT_MAPPER
+
 from .basebackend import VQABaseBackend
 
 from ..qaoa_components.ansatz_constructor.gates import X
@@ -15,10 +25,14 @@ from ..qaoa_components import Hamiltonian
 from ..utilities import (
     exp_val_pair,
     exp_val_single,
+    flip_counts,
     negate_counts_dictionary,
     calculate_calibration_factors,
     round_value,
 )
+
+from .cost_function import cost_function
+from openqaoa_qiskit.backends.qaoa_qiskit_qpu import QAOAQiskitQPUBackend
 
 
 class BaseWrapper(VQABaseBackend):
@@ -47,6 +61,159 @@ class BaseWrapper(VQABaseBackend):
 
     def exact_solution(self, *args, **kwargs):
         return self.backend.exact_solution(*args, **kwargs)
+
+
+#------------------------ZNE WRAPPER---------------------------------
+available_factories = [
+    "Richardson",
+    "Linear",
+    "Poly",
+    "Exp",
+    "PolyExp",
+    "AdaExp",
+    "FakeNodes"
+]
+available_scaling = [
+    "fold_gates_at_random",
+    "fold_gates_from_right",
+    "fold_gates_from_left"
+]
+class ZNEWrapper(BaseWrapper):
+    """
+    This class inherits from the BaseWrapper and need to be backend agnostic
+    to QAOA implementations on different devices and their respectives SDKs. It 
+    implements Zero Noise Extrapolation (ZNE) from Mitiq framework. ZNE is an 
+    error mitigation technique used to extrapolate the noiseless expectation
+    value of an observable from a range of expectation values computed at 
+    different noise levels.
+
+    Parameters
+    ----------
+    factory: str
+        The name of the zero-noise extrapolation method. Supported values: "Richardson", "Linear", "Poly", "Exp", "PolyExp", "AdaExp", "FakeNodes".
+    scaling: str
+        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random", "fold_gates_from_right", "fold_gates_from_left".
+    scale_factors: List[int]
+        Sequence of noise scale factors at which expectation values should be measured.
+        For factory = "AdaExp", just the first element of the list will be considered.
+    order: int
+        Extrapolation order (degree of the polynomial fit). It cannot exceed len(scale_factors) - 1.
+        Only used for factory = "Poly" or "PolyExp".
+    steps: int
+        The number of optimization steps. At least 3 are necessary.
+        Only used for factory = "AdaExp".
+    """
+
+    def __init__(self, backend, factory, scaling, scale_factors, order, steps):
+        super().__init__(backend)
+
+        # only qiskit backends are supported
+        if(type(backend) not in [DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.qasm_simulator'],  
+                DEVICE_NAME_TO_OBJECT_MAPPER['qiskit.shot_simulator'],
+                QAOAQiskitQPUBackend]):
+            raise ValueError("Only Qiskit backends are supported, with the exception of the StateVector simulator.")
+
+        if(factory not in available_factories):
+            raise ValueError("Supported factories are: Poly, Richardson, Exp, FakeNodes, Linear, PolyExp, AdaExp")
+        if(scaling not in available_scaling):
+            raise ValueError("Supported scaling methods are: fold_gates_at_random, fold_gates_from_right, fold_gates_from_left")
+        if(not isinstance(scale_factors, list) or not all(isinstance(x, int) and x >= 1 for x in scale_factors)): 
+            raise ValueError("Scale factor must be a list of ints greater than or equal to 1") 
+        if(type(order) != int or order < 1):
+            raise ValueError("Order must an int greater than or equal to 1")
+        if(type(steps) != int):
+            raise ValueError("Order must be an int")
+
+        self.factory_obj = None
+        if factory == "Richardson":
+            self.factory_obj = RichardsonFactory(scale_factors = scale_factors)
+        elif factory == "Linear":
+            self.factory_obj = LinearFactory(scale_factors = scale_factors)
+        elif factory == "Exp":
+            self.factory_obj = ExpFactory(scale_factors = scale_factors)
+        elif factory == "Poly":
+            self.factory_obj = PolyFactory(scale_factors = scale_factors, order = order)
+        elif factory == "PolyExp":
+            self.factory_obj = PolyExpFactory(scale_factors = scale_factors, order = order)
+        elif factory == "AdaExp":
+            #for AdaExp, just one scale factor is needed.
+            self.factory_obj = AdaExpFactory(scale_factor= scale_factors[0], steps = steps)
+        elif factory == "FakeNodes":
+            self.factory_obj = FakeNodesFactory(scale_factors = scale_factors)
+
+        # setting the scaling
+        self.scale_noise = None
+        if scaling == "fold_gates_at_random":
+            self.scale_noise = fold_gates_at_random
+        elif scaling == "fold_gates_from_left":
+            self.scale_noise = fold_gates_from_left
+        elif scaling == "fold_gates_from_right":
+            self.scale_noise = fold_gates_from_right
+
+        #setting the scale_factors 
+        self.scale_factors = scale_factors
+
+        #
+        self.result_factory_objs = []
+        
+
+    def expectation(self, params: QAOAVariationalBaseParams) -> float:
+        """
+        This method overrides the one from the basebackend to allow for
+        correcting the expectation values of each term in the Hamiltonian
+        before providing the energy to the optimized. It does this by using
+        execute_with_zne() method from Mitiq. This method estimates the
+        error-mitigated expectation value associated with a circuit, via
+        the application of ZNE.
+
+        Parameters
+        ----------
+        params: `QAOAVariationalBaseParams`
+            The QAOA parameters - an object of one of the parameter classes,
+            containing variable parameters.
+
+        Returns
+        -------
+        float:
+            The error mitigated expectation value of cost operator wrt to
+            quantum state produced by QAOA circuit
+        """
+
+        # executor used by Mitiq
+        def executor(qc: QuantumCircuit) -> float:                
+                # calculate the counts
+                counts = self.get_counts(qc,self.n_shots)
+                self.measurement_outcomes = counts
+
+                # calculate and return the cost
+                cost = cost_function(
+                    counts,
+                    self.backend.qaoa_descriptor.cost_hamiltonian)
+                return cost
+
+        qc = self.backend.qaoa_circuit(params)
+        # for Mitiq integration, is necessary to transpile the circuit. Mitiq doesn't support the RZZ gate.
+        qc = transpile(qc, basis_gates=["h","rx","cx"])
+
+        expectation = execute_with_zne(
+            circuit = qc,
+            executor = executor,
+            observable = None,
+            factory = self.factory_obj,
+            scale_noise = self.scale_noise)
+
+        self.result_factory_objs.append(copy.copy(self.factory_obj))
+        #display(self.factory_obj.plot_fit())
+        return expectation
+    
+    def get_counts(self,qc:QuantumCircuit,n_shots):
+        counts = (
+            self.backend.backend_simulator.run(qc, shots=n_shots)
+            .result()
+            .get_counts()
+            )  
+        counts = flip_counts(counts)
+        return counts
 
 
 class SPAMTwirlingWrapper(BaseWrapper):

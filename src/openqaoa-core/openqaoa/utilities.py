@@ -497,7 +497,7 @@ def plot_graph(G: nx.Graph, ax=None, colormap="seismic") -> None:
 
     # Show plot
 
-    plt.show
+    plt.show()
     return None
 
 

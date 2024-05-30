@@ -304,7 +304,7 @@ Contents
    notebooks/13_optimizers.ipynb
    notebooks/14_qaoa_benchmark.ipynb
    notebooks/X_dumping_data.ipynb
-
+   notebooks/15_Zero_Noise_Extrapolation.ipynb
 
 Indices and tables
 ==================

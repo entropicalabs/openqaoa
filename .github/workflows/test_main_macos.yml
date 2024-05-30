@@ -56,4 +56,4 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --user --name "env"
-          pytest tests/ src/openqaoa-core/tests src/openqaoa-azure/tests src/openqaoa-braket/tests src/openqaoa-qiskit/tests -m 'not (qpu or api or docker_aws or braket_api or sim)'
+          pytest tests/ src/*/tests -m 'not (qpu or api or docker_aws or braket_api or sim)'
