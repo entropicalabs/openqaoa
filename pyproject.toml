@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "openqaoa"
 version = "0.2.5"
-authors=[{name = "Entropica Labs"}]
-description="OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators"
+authors = [{ name = "Entropica Labs" }]
+description = "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators"
 readme = "README.md"
 requires-python = ">=3.8, <3.13"
-license= {file = "LICENSE"}
-urls={"Homepage" = "https://github.com/entropicalabs/openqaoa"}
-classifiers=[
+license = { file = "LICENSE" }
+urls = { "Homepage" = "https://github.com/entropicalabs/openqaoa" }
+classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -19,13 +19,12 @@ classifiers=[
     "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent"
 ]
-keywords=["quantum optimisation SDK"]
+keywords = ["quantum", "optimisation", "SDK"]
 
 dependencies = [
-  "openqaoa-azure   ==0.2.5",
-  "openqaoa-braket ==0.2.5",
-  "openqaoa-core    ==0.2.5",
-  "openqaoa-pyquil  ==0.2.5",
-  "openqaoa-qiskit  ==0.2.5"
+    "openqaoa-azure==0.2.5",
+    "openqaoa-braket==0.2.5",
+    "openqaoa-core==0.2.5",
+    "openqaoa-pyquil==0.2.5",
+    "openqaoa-qiskit==0.2.5"
 ]
-
