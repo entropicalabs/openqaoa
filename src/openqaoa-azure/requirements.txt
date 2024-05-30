@@ -1,4 +1,0 @@
-qdk
-qiskit-qir
-qiskit-ionq
-azure-quantum[qiskit]
