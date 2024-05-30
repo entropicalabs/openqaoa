@@ -115,11 +115,12 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
         )
         device_pyquil.quantum_computer.qam.random_seed = seed
 
-        for i in range(len(p_lst)):
+        # for i in range(len(p_lst)):
+        for i in [0,1,2,3,4]:
             p = p_lst[i]
             args = args_lst[i]
             cost_hamil = cost_hamil_lst[i]
-
+            
             # With routing
             mixer_hamil = X_mixer_hamiltonian(n_qubits=2)
             qaoa_descriptor = QAOADescriptor(
@@ -130,6 +131,7 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
             )
 
             variate_params.update_from_raw(args)
+            
             backend_obj_pyquil = QAOAPyQuilQPUBackend(
                 qaoa_descriptor=qaoa_descriptor,
                 device=device_pyquil,
@@ -149,6 +151,7 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
             )
 
             variate_params.update_from_raw(args)
+            
             backend_obj_pyquil = QAOAPyQuilQPUBackend(
                 qaoa_descriptor=qaoa_descriptor,
                 device=device_pyquil,
@@ -487,7 +490,7 @@ class TestingQAOAPyquilQVM_QR(unittest.TestCase):
             ),
         ]
 
-        device_name_lst = ["2q-qvm", "3q-qvm", "Aspen-M-3"]
+        device_name_lst = ["2q-qvm", "3q-qvm", "9q-qvm"]
 
         shots = 2
         seed = 1

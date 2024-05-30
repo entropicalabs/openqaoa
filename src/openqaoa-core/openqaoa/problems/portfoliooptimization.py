@@ -171,6 +171,23 @@ class PortfolioOptimization(Problem):
         return solution
 
     def plot_solution(self, solution, ax=None):
+        """
+        A visualization method for the portfolio optimization solution.
+        Parameters
+        ----------
+        solution : dict
+            The solution of the specific portfolio optimization problem as a dictionary.
+        ax : matplotlib.pyplot.Axes(), optional
+            The axis of the graph visualization. If None, a new figure is created.
+
+        Returns
+        -------
+        fig : matplotlib.pyplot.Figure()
+            The graph visualization of the solution.
+        ax : matplotlib.pyplot.Axes()
+            The axis of the graph visualization.
+        """
+
         G = nx.Graph()
         G.add_nodes_from(range(self.num_assets))
         edge_list = []
@@ -184,7 +201,7 @@ class PortfolioOptimization(Problem):
         if ax is None:
             fig, ax = plt.subplots()
         else:
-            fig = None
+            fig = ax.get_figure()
         graph_colors_sol = [
             "#F29D55" if int(i) else "#28C9C9" for i in solution.values()
         ]
@@ -221,4 +238,4 @@ class PortfolioOptimization(Problem):
         )
 
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.08), ncol=2)
-        return fig
+        return fig, ax

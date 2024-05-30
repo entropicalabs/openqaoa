@@ -2,7 +2,7 @@ from collections import Counter
 import numpy as np
 from copy import deepcopy
 from pyquil import Program, gates, quilbase
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import warnings
 
 from .devices import DevicePyquil
@@ -16,7 +16,7 @@ from openqaoa.qaoa_components import QAOADescriptor
 from openqaoa.qaoa_components.variational_parameters.variational_baseparams import (
     QAOAVariationalBaseParams,
 )
-from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap
+from openqaoa.qaoa_components.ansatz_constructor.gatemap import RZZGateMap, SWAPGateMap, GateMap
 from openqaoa.qaoa_components.ansatz_constructor.rotationangle import RotationAngle
 from openqaoa.utilities import generate_uuid
 
@@ -44,7 +44,7 @@ def check_edge_connectivity(executable: Program, device: DevicePyquil):
 
     instrs = [instr for instr in executable if type(instr) == quilbase.Gate]
     pair_instrs = [
-        list(instr.get_qubits()) for instr in instrs if len(instr.get_qubits()) == 2
+        list(instr.get_qubit_indices()) for instr in instrs if len(instr.get_qubit_indices()) == 2
     ]
 
     for term in pair_instrs:
@@ -137,7 +137,7 @@ class QAOAPyQuilQPUBackend(
         self.qubit_mapping = dict(zip(self.qureg, self.initial_qubit_mapping))
 
         if self.prepend_state:
-            assert self.n_qubits >= len(prepend_state.get_qubits()), (
+            assert self.n_qubits >= len(prepend_state.get_qubit_indices()), (
                 "Cannot attach a bigger circuit " "to the QAOA routine"
             )
 
@@ -153,7 +153,58 @@ class QAOAPyQuilQPUBackend(
 
         # check_edge_connectivity(self.prog_exe, device)
 
-    def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Program:
+    def obtain_angles_for_pauli_list(
+            self, input_gate_list: List[GateMap], params: QAOAVariationalBaseParams
+        ) -> List[Tuple[float, str]]:
+        """
+        This method uses the pauli gate list information to obtain the pauli angles
+        from the VariationalBaseParams object. The floats in the list are in the order
+        of the input GateMaps list.
+
+        Parameters
+        ----------
+        input_gate_list: `List[GateMap]`
+            The GateMap list including rotation gates
+        params: `QAOAVariationalBaseParams`
+            The variational parameters(angles) to be assigned to the circuit gates
+
+        Returns
+        -------
+        angles_list: `List[Tuple[float, str]]`
+            The list of angles and their names in the order of gates in the `GateMap` list
+        """
+        angle_list = []
+
+        for each_gate in input_gate_list:
+            gate_label_layer = each_gate.gate_label.layer
+            gate_label_seq = each_gate.gate_label.sequence
+
+            if each_gate.gate_label.n_qubits == 2:
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle_list.append(
+                        (params.mixer_2q_angles[gate_label_layer, gate_label_seq],
+                         f"twoq_mixer_seq{gate_label_seq}_layer{gate_label_layer}")
+                    )
+                elif each_gate.gate_label.type.value == "COST":
+                    angle_list.append(
+                        (params.cost_2q_angles[gate_label_layer, gate_label_seq],
+                         f"twoq_cost_seq{gate_label_seq}_layer{gate_label_layer}")
+                    )
+            elif each_gate.gate_label.n_qubits == 1:
+                if each_gate.gate_label.type.value == "MIXER":
+                    angle_list.append(
+                        (params.mixer_1q_angles[gate_label_layer, gate_label_seq],
+                         f"oneq_mixer_seq{gate_label_seq}_layer{gate_label_layer}")
+                    )
+                elif each_gate.gate_label.type.value == "COST":
+                    angle_list.append(
+                        (params.cost_1q_angles[gate_label_layer, gate_label_seq],
+                         f"oneq_cost_seq{gate_label_seq}_layer{gate_label_layer}")
+                    )
+
+        return angle_list
+
+    def qaoa_circuit(self, params: QAOAVariationalBaseParams) -> Tuple[Program, dict]:
         """
         Injects angles into created executable parametric circuit.
 
@@ -165,6 +216,8 @@ class QAOAPyQuilQPUBackend(
         -------
         `pyquil.Program`
             A pyquil.Program (executable) object.
+        dict
+            A dictionary of the memory map for the program.
         """
         parametric_circuit = deepcopy(self.parametric_circuit)
         # declare the read-out register
@@ -183,26 +236,13 @@ class QAOAPyQuilQPUBackend(
                 parametric_circuit += gates.MEASURE(self.qubit_mapping[qubit], cbit)
         parametric_circuit.wrap_in_numshots_loop(self.n_shots)
 
-        native = self.device.quantum_computer.compiler.quil_to_native_quil(
-            parametric_circuit
-        )
+        angle_values_and_names= self.obtain_angles_for_pauli_list(self.abstract_circuit, params)
+        
+        memory_map = {value_name[1] : [value_name[0]] for value_name in angle_values_and_names}
+        
+        prog_exe = self.device.quantum_computer.compile(parametric_circuit)
 
-        prog_exe = self.device.quantum_computer.compiler.native_quil_to_executable(
-            native
-        )
-
-        angles_list = np.array(
-            self.obtain_angles_for_pauli_list(self.abstract_circuit, params),
-            dtype=float,
-        )
-        angle_declarations = list(parametric_circuit.declarations.keys())
-
-        angle_declarations.remove("ro")
-
-        for i, param_name in enumerate(angle_declarations):
-            prog_exe.write_memory(region_name=param_name, value=angles_list[i])
-
-        return prog_exe
+        return prog_exe, memory_map
 
     @property
     def parametric_qaoa_circuit(self) -> Program:
@@ -264,7 +304,7 @@ class QAOAPyQuilQPUBackend(
                     if each_gate.gate_label.n_qubits == 1
                     else "two" + gatelabel_pyquil[1:]
                 )
-                angle_param = parametric_circuit.declare(gatelabel_pyquil, "REAL", 1)
+                angle_param = parametric_circuit.declare(gatelabel_pyquil.lower(), "REAL", 1)
                 each_gate.angle_value = angle_param
             if isinstance(each_gate, RZZGateMap) or isinstance(each_gate, SWAPGateMap):
                 decomposition = each_gate.decomposition("standard2")
@@ -311,20 +351,19 @@ class QAOAPyQuilQPUBackend(
             A dictionary with the bitstring as the key and the number of counts as its value.
         """
 
-        executable_program = self.qaoa_circuit(params)
-
-        # if n_shots is given change the number of shots
+        executable_program, memory_map = self.qaoa_circuit(params)
+        
         if n_shots is not None:
             executable_program.wrap_in_numshots_loop(n_shots)
-
-        result = self.device.quantum_computer.run(executable_program)
+        
+        result = self.device.quantum_computer.run(executable_program, memory_map=memory_map)
         # we create an uuid for the job
         self.job_id = generate_uuid()
 
         # TODO: check the endian (big or little) ordering of measurement outcomes
         meas_list = [
             "".join(str(bit) for bit in bitstring)
-            for bitstring in result.readout_data["ro"]
+            for bitstring in result.get_register_map().get("ro")
         ]
 
         # Expose counts

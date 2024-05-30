@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import matplotlib.pyplot as plt
 from openqaoa.problems import BinPacking
 
 
@@ -523,8 +524,6 @@ class TestBinPacking(unittest.TestCase):
 
     def test_binpacking_plot(self):
         """Test Bin Packing random instance method"""
-        from matplotlib.pyplot import Figure
-
         seed = 1234
         binpacking_random_prob = BinPacking.random_instance(n_items=3, seed=seed)
         sol = {
@@ -541,8 +540,10 @@ class TestBinPacking(unittest.TestCase):
             "x_2_1": 0,
             "x_2_2": 0,
         }
-        fig = binpacking_random_prob.plot_solution(sol)
-        self.assertTrue(isinstance(fig, Figure))
+        fig, ax = binpacking_random_prob.plot_solution(sol)
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
+        plt.close(fig)
 
     def test_binpacking_method_checking(self):
         """

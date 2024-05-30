@@ -285,7 +285,7 @@ class TestQAOACostBaseClass(unittest.TestCase):
             # check that the number of shots are correct
             n_shots_used = np.array(vector_optimizer.qaoa_result.n_shots)
             assert (
-                np.sum(np.int0(n_shots_used < 5) + np.int8(n_shots_used > 200)) == 0
+                np.sum(np.intp(n_shots_used < 5) + np.int8(n_shots_used > 200)) == 0
             ), "Optimizer {} did not use the correct number of shots.".format(
                 optimizer_dict["method"]
             )

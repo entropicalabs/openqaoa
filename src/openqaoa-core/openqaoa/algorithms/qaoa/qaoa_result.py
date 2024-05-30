@@ -311,7 +311,7 @@ class QAOAResult:
             The count dictionary obtained either throught the statevector or
             the actual measurement counts.
         """
-
+        
         if isinstance(measurement_outcomes, type(np.array([]))):
             measurement_outcomes = qaoa_probabilities(measurement_outcomes)
 
@@ -333,9 +333,20 @@ class QAOAResult:
             The linestyle of the poloit. Defaults to '--'.
         color: `str`
             The color of the line. Defaults to 'b'.
+        ax: 'matplotlib.axes._subplots.AxesSubplot'
+            Axis on which to plot the graph. Defaults to None
+
+        Returns
+        -------
+        fig: 'matplotlib.figure.Figure'
+            The figure object
+        ax: 'matplotlib.axes._subplots.AxesSubplot'
+            The axis object
         """
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = ax.get_figure()
 
         ax.plot(
             range(
@@ -356,7 +367,7 @@ class QAOAResult:
         ax.legend()
         ax.set_title("Cost history")
 
-        return
+        return fig, ax
 
     def plot_probabilities(
         self,
@@ -383,7 +394,14 @@ class QAOAResult:
         color: `str`
             The color of the line. Defaults to 'tab:blue'.
         ax: 'matplotlib.axes._subplots.AxesSubplot'
-            Axis on which to plot the graph. Deafults to None
+            Axis on which to plot the graph. Defaults to None
+
+        Returns
+        -------
+        fig: 'matplotlib.figure.Figure'
+            The figure object
+        ax: 'matplotlib.axes._subplots.AxesSubplot'
+            The axis object
         """
 
         outcome = self.optimized["measurement_outcomes"]
@@ -442,6 +460,8 @@ class QAOAResult:
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = ax.get_figure()
 
         colors = [color for _ in range(n_states_to_keep)] + ["xkcd:magenta"]
 
@@ -453,7 +473,7 @@ class QAOAResult:
         ax.grid(True, axis="y", linestyle="--")
 
         print("states kept:", n_states_to_keep)
-        return
+        return fig, ax
 
     def plot_n_shots(
         self,
@@ -498,7 +518,9 @@ class QAOAResult:
         """
 
         if ax is None:
-            ax = plt.subplots(figsize=figsize)[1]
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = ax.get_figure()
 
         # creating a list of parameters to plot
         # if param_to_plot is not given, plot all the parameters
@@ -579,6 +601,8 @@ class QAOAResult:
         ax.set_xlabel(xlabel)
         ax.legend()
         ax.set_title(title)
+
+        return fig, ax
 
     def lowest_cost_bitstrings(self, n_bitstrings: int = 1) -> dict:
         """
