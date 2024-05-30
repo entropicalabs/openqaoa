@@ -4,8 +4,8 @@ import networkx as nw
 import numpy as np
 import datetime
 
-from qiskit.providers.fake_provider import FakeVigo
-from qiskit.providers.aer.noise import NoiseModel
+from qiskit_ibm_runtime.fake_provider import FakeVigo
+from qiskit_aer.noise import NoiseModel
 from qiskit_aer import AerSimulator
 
 from openqaoa import QAOA, RQAOA

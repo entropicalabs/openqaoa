@@ -5,7 +5,6 @@ from typing import Union, List, Tuple, Optional
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel
-from qiskit.opflow.primitive_ops import PauliSumOp
 from qiskit.quantum_info import Statevector, SparsePauliOp
 from qiskit.circuit import Parameter
 
