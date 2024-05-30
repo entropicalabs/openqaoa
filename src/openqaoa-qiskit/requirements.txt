@@ -2,3 +2,4 @@ qiskit~=1.0.0
 qiskit-ibm-provider
 qiskit-aer
 qiskit-ibm-runtime
+pydantic~=2.7.2
