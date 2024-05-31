@@ -17,7 +17,7 @@ The OpenQAOA metapackage allows you to install all OpenQAOA plug-ins together.
 
 Install via PyPI
 ----------------
-You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.8, 3.9, 3.11, 3.12 and then pip install openqaoa with the following command
+You can install the latest version of OpenQAOA directly from PyPI. First, create a virtual environment with python3.9, 3.10, 3.11 and then pip install openqaoa with the following command
 .. code-block:: bash
 
 pip install openqaoa
