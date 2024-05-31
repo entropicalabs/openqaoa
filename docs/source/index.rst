@@ -38,7 +38,7 @@ Installing
 
 OpenQAOA provides several installation options to choose from. The package consists of `openqaoa-core` and backend specific modules that let users selectively install the provider they wish to run QAOA on.
 For instance, `openqaoa-qiskit` enables QAOA computations on IBMQ devices and simulators, and qiskit supported devices. For a complete installation including all supported cloud providers,
-users can simply install the full `openqaoa` metapackage. Do note, `openqaoa-core` is a dependency for all backend specific modules and the full `openqaoa` pacakge.
+users can simply install the full `openqaoa` metapackage. Do note, `openqaoa-core` is a dependency for all backend specific modules and the full `openqaoa` package.
 Therefore, it ships by default with all flavors of OpenQAOA installations.
 
 You can install the latest variants of OpenQAOA directly from PyPI. First, we recommend you create a virtual environment with python>=3.11 and then pip install openqaoa variants with the following commands
