@@ -8,11 +8,10 @@ version = "0.2.5"
 authors = [{ name = "Entropica Labs" }]
 description = "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators"
 readme = "README.md"
-requires-python = ">=3.8, <3.13"
+requires-python = ">=3.9, <3.12"
 license = { file = "LICENSE" }
 urls = { "Homepage" = "https://github.com/entropicalabs/openqaoa" }
 classifiers = [
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",

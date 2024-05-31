@@ -8,32 +8,31 @@ version = "0.2.5"
 authors = [{ name = "Entropica Labs" }]
 description = "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators"
 readme = "README.md"
-requires-python = ">=3.8, <3.13"
+requires-python = ">=3.9, <3.12"
 license = { file = "LICENSE" }
 urls = { "Homepage" = "https://github.com/entropicalabs/openqaoa" }
 classifiers = [
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent"
 ]
 keywords = ["quantum", "optimisation", "SDK"]
 
 dependencies = [
-    "pandas>=2.0",
+    "pandas>=2.2.2",
     "sympy>=1.12",
     "numpy>=1.23",
     "networkx>=2.8",
     "matplotlib>=3.6",
-    "scipy>=1.10",
+    "scipy>=1.9.0",
     "docplex==2.25.236",
     "autograd>=1.6",
     "semantic_version>=2.10",
     "autoray>=0.6",
-    "requests",
-    "ipython>=8.19"
+    "requests>=2.32.3",
+    "ipython>=8.18.1",
+    "mitiq>=0.30.0, <0.36.0"
 ]
 
 [project.optional-dependencies]
@@ -53,7 +52,6 @@ tests = [
     "nbconvert>=6.5.1",
     "pandas>=1.4.3",
     "plotly>=5.9.0",
-    "cplex>=22.1.0.0"
 ]
 all = [
     "openqaoa-core[docs,tests]"
