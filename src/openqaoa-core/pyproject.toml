@@ -24,7 +24,7 @@ dependencies = [
     "sympy>=1.12",
     "numpy>=1.23",
     "networkx>=2.8",
-    "matplotlib>=3.6",
+    "matplotlib>=3.6, <3.9",
     "scipy>=1.9.0",
     "docplex==2.25.236",
     "autograd>=1.6",
@@ -41,7 +41,6 @@ docs = [
     "sphinx-autodoc-typehints>=1.18.1",
     "sphinx-rtd-theme>=1.0.0",
     "nbsphinx>=0.8.9",
-    "ipython>=8.10.0",
     "nbconvert>=6.5.1",
     "myst_parser>=2.0.0"
 ]
