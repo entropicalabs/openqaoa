@@ -25,6 +25,7 @@ dependencies = [
     "qiskit-qir",
     "qiskit-ionq",
     "azure-quantum[qiskit]",
+    "qdk"
 ]
 
 [project.entry-points."openqaoa.plugins"]

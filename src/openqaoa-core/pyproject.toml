@@ -49,7 +49,6 @@ tests = [
     "pytest-xdist",
     "pytest-cov>=3.0.0",
     "nbconvert>=6.5.1",
-    "pandas>=1.4.3",
     "plotly>=5.9.0",
     "cplex"
 ]
