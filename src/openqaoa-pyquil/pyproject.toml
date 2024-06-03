@@ -23,3 +23,6 @@ dependencies = [
     "openqaoa-core==0.2.5",
     "pyquil>=4.0.0"
 ]
+
+[project.entry-points."openqaoa.plugins"]
+braket = "openqaoa_pyquil.backend_config"

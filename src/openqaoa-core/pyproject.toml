@@ -50,7 +50,7 @@ tests = [
     "pytest-cov>=3.0.0",
     "nbconvert>=6.5.1",
     "plotly>=5.9.0",
-    "cplex"
+    "cplex>=22.1.0.0"
 ]
 all = [
     "openqaoa-core[docs,tests]"
