@@ -90,7 +90,7 @@ class ZNEWrapper(BaseWrapper):
     factory: str
         The name of the zero-noise extrapolation method. Supported values: "Richardson", "Linear", "Poly", "Exp", "PolyExp", "AdaExp", "FakeNodes".
     scaling: str
-        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random" ("fold_gates_from_right", "fold_gates_from_left" not supported as version 0.8).
+        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random" ("fold_gates_from_right", "fold_gates_from_left" not supported as of version 0.8).
     scale_factors: List[int]
         Sequence of noise scale factors at which expectation values should be measured.
         For factory = "AdaExp", just the first element of the list will be considered.
@@ -143,10 +143,6 @@ class ZNEWrapper(BaseWrapper):
         self.scale_noise = None
         if scaling == "fold_gates_at_random":
             self.scale_noise = fold_gates_at_random
-        # elif scaling == "fold_gates_from_left":
-        #     self.scale_noise = fold_gates_from_left
-        # elif scaling == "fold_gates_from_right":
-        #     self.scale_noise = fold_gates_from_right
 
         #setting the scale_factors 
         self.scale_factors = scale_factors
