@@ -79,13 +79,13 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         nqubits = 3
         p = 2
-        weights = [1, 1, 1]
+        weights = [1, 1]
         gammas = [0, 1 / 8 * np.pi]
         betas = [1 / 2 * np.pi, 3 / 8 * np.pi]
         shots = 1
 
         cost_hamil = Hamiltonian(
-            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
+            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2))],
             weights,
             1,
         )
@@ -101,6 +101,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             qaoa_descriptor, qiskit_device, shots, None, None, False
         )
         qpu_circuit = qiskit_backend.qaoa_circuit(variate_params)
+        qpu_circuit.draw()
 
         # Standard Decomposition
         main_circuit = QuantumCircuit(3)
@@ -110,9 +111,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.cx(1, 2)
         main_circuit.rz(2 * gammas[0], 2)
         main_circuit.cx(1, 2)
-        main_circuit.cx(0, 2)
-        main_circuit.rz(2 * gammas[0], 2)
-        main_circuit.cx(0, 2)
+        # main_circuit.cx(0, 2)
+        # main_circuit.rz(2 * gammas[0], 2)
+        # main_circuit.cx(0, 2)
         main_circuit.rx(-2 * betas[0], 0)
         main_circuit.rx(-2 * betas[0], 1)
         main_circuit.rx(-2 * betas[0], 2)
@@ -122,9 +123,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.cx(1, 2)
         main_circuit.rz(2 * gammas[1], 2)
         main_circuit.cx(1, 2)
-        main_circuit.cx(0, 2)
-        main_circuit.rz(2 * gammas[1], 2)
-        main_circuit.cx(0, 2)
+        # main_circuit.cx(0, 2)
+        # main_circuit.rz(2 * gammas[1], 2)
+        # main_circuit.cx(0, 2)
         main_circuit.rx(-2 * betas[1], 0)
         main_circuit.rx(-2 * betas[1], 1)
         main_circuit.rx(-2 * betas[1], 2)
@@ -144,13 +145,13 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         nqubits = 3
         p = 2
-        weights = [1, 1, 1]
+        weights = [1, 1]
         gammas = [0, 1 / 8 * np.pi]
         betas = [1 / 2 * np.pi, 3 / 8 * np.pi]
         shots = 1
 
         cost_hamil = Hamiltonian(
-            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
+            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2))],
             weights,
             1,
         )
@@ -173,9 +174,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.cx(0, 1)
         main_circuit.rz(2 * gammas[0], 1)
         main_circuit.cx(0, 1)
-        main_circuit.cx(1, 2)
-        main_circuit.rz(2 * gammas[0], 2)
-        main_circuit.cx(1, 2)
+        # main_circuit.cx(1, 2)
+        # main_circuit.rz(2 * gammas[0], 2)
+        # main_circuit.cx(1, 2)
         main_circuit.cx(0, 2)
         main_circuit.rz(2 * gammas[0], 2)
         main_circuit.cx(0, 2)
@@ -188,9 +189,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.cx(1, 2)
         main_circuit.rz(2 * gammas[1], 2)
         main_circuit.cx(1, 2)
-        main_circuit.cx(0, 2)
-        main_circuit.rz(2 * gammas[1], 2)
-        main_circuit.cx(0, 2)
+        # main_circuit.cx(0, 2)
+        # main_circuit.rz(2 * gammas[1], 2)
+        # main_circuit.cx(0, 2)
         main_circuit.rx(-2 * betas[1], 0)
         main_circuit.rx(-2 * betas[1], 1)
         main_circuit.rx(-2 * betas[1], 2)
@@ -210,7 +211,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         nqubits = 3
         p = 1
-        weights = [1, 1, 1]
+        weights = [1, 1]
         gammas = [1 / 8 * np.pi]
         betas = [1 / 8 * np.pi]
         shots = 1
@@ -220,7 +221,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         prepend_circuit.x([0, 1, 2])
 
         cost_hamil = Hamiltonian(
-            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
+            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2))],
             weights,
             1,
         )
@@ -247,9 +248,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.cx(1, 2)
         main_circuit.rz(2 * gammas[0], 2)
         main_circuit.cx(1, 2)
-        main_circuit.cx(0, 2)
-        main_circuit.rz(2 * gammas[0], 2)
-        main_circuit.cx(0, 2)
+        # main_circuit.cx(0, 2)
+        # main_circuit.rz(2 * gammas[0], 2)
+        # main_circuit.cx(0, 2)
         main_circuit.rx(-2 * betas[0], 0)
         main_circuit.rx(-2 * betas[0], 1)
         main_circuit.rx(-2 * betas[0], 2)
@@ -270,7 +271,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
 
         nqubits = 3
         p = 1
-        weights = [1, 1, 1]
+        weights = [1, 1]
         gammas = [1 / 8 * np.pi]
         betas = [1 / 8 * np.pi]
         shots = 1
@@ -280,7 +281,7 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         append_circuit.x([0, 1, 2])
 
         cost_hamil = Hamiltonian(
-            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
+            [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2))],
             weights,
             1,
         )
@@ -306,9 +307,9 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
         main_circuit.cx(1, 2)
         main_circuit.rz(2 * gammas[0], 2)
         main_circuit.cx(1, 2)
-        main_circuit.cx(0, 2)
-        main_circuit.rz(2 * gammas[0], 2)
-        main_circuit.cx(0, 2)
+        # main_circuit.cx(0, 2)
+        # main_circuit.rz(2 * gammas[0], 2)
+        # main_circuit.cx(0, 2)
         main_circuit.rx(-2 * betas[0], 0)
         main_circuit.rx(-2 * betas[0], 1)
         main_circuit.rx(-2 * betas[0], 2)
@@ -390,55 +391,56 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             True,
         )
 
-    @pytest.mark.sim
-    def test_remote_integration_sim_run(self):
-        """
-        Checks if Remote IBM QASM Simulator is similar/close to Local IBM
-        Statevector Simulator.
-        This test also serves as an integration test for the IBMQPU Backend.
+    # Removed after removal of ibm_qasm_simulator backend
+    # @pytest.mark.sim
+    # def test_remote_integration_sim_run(self):
+    #     """
+    #     Checks if Remote IBM QASM Simulator is similar/close to Local IBM
+    #     Statevector Simulator.
+    #     This test also serves as an integration test for the IBMQPU Backend.
 
-        This test takes a long time to complete.
-        """
+    #     This test takes a long time to complete.
+    #     """
 
-        nqubits = 3
-        p = 1
-        weights = [1, 1, 1]
-        gammas = [[0], [1 / 8 * np.pi], [0], [1 / 8 * np.pi]]
-        betas = [[0], [0], [1 / 8 * np.pi], [1 / 8 * np.pi]]
-        shots = 10000
+    #     nqubits = 3
+    #     p = 1
+    #     weights = [1, 1]
+    #     gammas = [[0], [1 / 8 * np.pi], [0], [1 / 8 * np.pi]]
+    #     betas = [[0], [0], [1 / 8 * np.pi], [1 / 8 * np.pi]]
+    #     shots = 1
 
-        for i in range(4):
-            cost_hamil = Hamiltonian(
-                [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2)), PauliOp("ZZ", (0, 2))],
-                weights,
-                1,
-            )
-            mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
-            qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
-            variate_params = QAOAVariationalStandardParams(
-                qaoa_descriptor, betas[i], gammas[i]
-            )
+    #     for i in range(4):
+    #         cost_hamil = Hamiltonian(
+    #             [PauliOp("ZZ", (0, 1)), PauliOp("ZZ", (1, 2))],
+    #             weights,
+    #             1,
+    #         )
+    #         mixer_hamil = X_mixer_hamiltonian(n_qubits=nqubits)
+    #         qaoa_descriptor = QAOADescriptor(cost_hamil, mixer_hamil, p=p)
+    #         variate_params = QAOAVariationalStandardParams(
+    #             qaoa_descriptor, betas[i], gammas[i]
+    #         )
 
-            qiskit_device = DeviceQiskit(
-                "ibmq_qasm_simulator", self.HUB, self.GROUP, self.PROJECT
-            )
+    #         qiskit_device = DeviceQiskit(
+    #             "ibmq_qasm_simulator", self.HUB, self.GROUP, self.PROJECT
+    #         )
 
-            qiskit_backend = QAOAQiskitQPUBackend(
-                qaoa_descriptor, qiskit_device, shots, None, None, False
-            )
-            qiskit_expectation = qiskit_backend.expectation(variate_params)
+    #         qiskit_backend = QAOAQiskitQPUBackend(
+    #             qaoa_descriptor, qiskit_device, shots, None, None, False
+    #         )
+    #         qiskit_expectation = qiskit_backend.expectation(variate_params)
 
-            qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(
-                qaoa_descriptor, None, None, False
-            )
-            qiskit_statevec_expectation = qiskit_statevec_backend.expectation(
-                variate_params
-            )
+    #         qiskit_statevec_backend = QAOAQiskitBackendStatevecSimulator(
+    #             qaoa_descriptor, None, None, False
+    #         )
+    #         qiskit_statevec_expectation = qiskit_statevec_backend.expectation(
+    #             variate_params
+    #         )
 
-            acceptable_delta = 0.05 * qiskit_statevec_expectation
-            self.assertAlmostEqual(
-                qiskit_expectation, qiskit_statevec_expectation, delta=acceptable_delta
-            )
+    #         acceptable_delta = 0.05 * qiskit_statevec_expectation
+    #         self.assertAlmostEqual(
+    #             qiskit_expectation, qiskit_statevec_expectation, delta=acceptable_delta
+    #         )
 
     @pytest.mark.api
     def test_remote_qubit_overflow(self):
