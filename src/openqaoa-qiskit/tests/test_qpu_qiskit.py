@@ -455,15 +455,6 @@ class TestingQAOAQiskitQPUBackend(unittest.TestCase):
             None, 
             True,
         )
-        # try:
-        #     QAOAQiskitQPUBackend(
-        #         qaoa_descriptor, qiskit_device, shots, None, None, True
-        #     )
-        # except Exception as e:
-        #     self.assertEqual(
-        #         str(e),
-        #         "There are lesser qubits on the device than the number of qubits required for the circuit.",
-        #     )
 
     @pytest.mark.qpu
     def test_integration_on_emulator(self):
