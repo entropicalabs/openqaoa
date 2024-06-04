@@ -25,4 +25,4 @@ dependencies = [
 ]
 
 [project.entry-points."openqaoa.plugins"]
-braket = "openqaoa_pyquil.backend_config"
+pyquil = "openqaoa_pyquil.backend_config"
