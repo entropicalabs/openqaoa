@@ -4,12 +4,12 @@ OpenQAOA Azure Installation
 Install via PyPI
 ----------------
 
-You can install the latest version of openqaoa-azure directly from PyPi. We recommend creating a virtual environment with ``python>=3.8`` first and then simply pip install openqaoa-azure with the following command.
+You can install the latest version of openqaoa-azure directly from PyPi. We recommend creating a virtual environment with ``python>=3.9`` first and then simply pip install openqaoa-azure with the following command.
 
 **NOTE:** Installing ``openqaoa-azure`` installs ``openqaoa-core`` and ``openqaoa-qiskit`` by default
 
 .. code-block:: bash
-   
+
    pip install openqaoa-azure
 
 Installation instructions for Developers

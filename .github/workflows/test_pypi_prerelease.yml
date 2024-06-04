@@ -30,33 +30,33 @@ jobs:
     - name: Install OpenQAOA-Core release candidate
       run: |
         pip install --pre openqaoa-core
-        python -c 'from openqaoa._version import __version__; print(__version__)'
+        python -c 'from openqaoa import __version__; print(__version__)'
 
 
     - name: Install OpenQAOA-Qiskit release candidate
       run: |
         pip install --pre openqaoa-qiskit
-        python -c 'from openqaoa._version import __version__; print(__version__)'
+        python -c 'from openqaoa import __version__; print(__version__)'
 
 
     - name: Install OpenQAOA-Pyquil release candidate
       run: |
         pip install --pre openqaoa-pyquil
-        python -c 'from openqaoa._version import __version__; print(__version__)'
+        python -c 'from openqaoa import __version__; print(__version__)'
 
 
     - name: Install OpenQAOA-Braket release candidate
       run: |
         pip install --pre openqaoa-braket
-        python -c 'from openqaoa._version import __version__; print(__version__)'
+        python -c 'from openqaoa import __version__; print(__version__)'
 
 
     - name: Install OpenQAOA-Azure release candidate
       run: |
         pip install --pre openqaoa-azure
-        python -c 'from openqaoa._version import __version__; print(__version__)'
+        python -c 'from openqaoa import __version__; print(__version__)'
 
     - name: Install OpenQAOA (Full) release candidate
       run: |
         pip install --pre openqaoa
-        python -c 'from openqaoa._version import __version__; print(__version__)'
+        python -c 'from openqaoa import __version__; print(__version__)'

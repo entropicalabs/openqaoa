@@ -4,12 +4,12 @@ OpenQAOA Qiskit Installation
 Install via PyPI
 ----------------
 
-You can install the latest version of openqaoa-qiskit directly from PyPi. We recommend creating a virtual environment with ``python>=3.8`` first and then simply pip install openqaoa-qiskit with the following command.
+You can install the latest version of openqaoa-qiskit directly from PyPi. We recommend creating a virtual environment with ``python>=3.9`` first and then simply pip install openqaoa-qiskit with the following command.
 
 **NOTE:** Installing ``openqaoa-qiskit`` installs ``openqaoa-core`` by default
 
 .. code-block:: bash
-   
+
    pip install openqaoa-qiskit
 
 Installation instructions for Developers

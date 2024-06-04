@@ -27,7 +27,7 @@ Install via git clone
 ---------------------
 Alternatively, you can install OpenQAOA manually from the GitHub repository by following the instructions below.
 
-**NOTE:** We recommend creating a python virtual environment for this project using a python environment manager, for instance Anaconda. Instructions can be found `here <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`_. Make sure to use **python 3.8** (or newer) for the environment.
+**NOTE:** We recommend creating a python virtual environment for this project using a python environment manager, for instance Anaconda. Instructions can be found `here <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`_. Make sure to use **python 3.9** (or newer) for the environment.
 
 1. Clone the git repository:
 
@@ -52,7 +52,7 @@ Users can install OpenQAOA in the developer mode via the Makefile. For a clean e
     make dev-install
 
 
-The package can be installed as an editable with extra requirements defined in the ``setup.py``. If you would like to install the extra requirements to be able run the tests module or generate the docs, you can run the following
+The package can be installed as an editable with extra requirements defined in the ``pyproject.toml``. If you would like to install the extra requirements to be able run the tests module or generate the docs, you can run the following
 
 .. code-block:: bash
 
