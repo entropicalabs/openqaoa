@@ -436,7 +436,7 @@ def plot_graph(G: nx.Graph, ax=None, colormap="seismic") -> None:
     # extract minimum and maximum weights for side bar limits
     weights = list(edges_and_weights.values())
     # Define color map
-    cmap = plt.cm.get_cmap(colormap)
+    cmap = plt.get_cmap(colormap)
 
     if len(set(weights)) > 1:
         edge_vmin = min(weights)
