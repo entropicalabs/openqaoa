@@ -58,7 +58,7 @@ pip install openqaoa-qiskit
 
 OpenQAOA-Qiskit does not yet support developer install as a standalone package.
 If you wish to work in developer mode, please install the entire library.
-Instructions are available [here]()
+Instructions are available [here](https://github.com/entropicalabs/openqaoa/blob/dev/README.md)
 
 Should you face any issue during the installation, please drop us an email at
 openqaoa@entropicalabs.com or open an issue!
@@ -75,14 +75,14 @@ you can get started with the following ones:
 - Using QPU
 - Using Qiskit Simulators
 
-### Available devives
+### Available devices
 
 OpenQAOA-Qiskit services devices both locally and on the cloud. The QPU
 accessible through the cloud depends on the specified credentials. Moreover,
 users can also access `qiskit` local simulators.
 
-| Device location | Device Name                                                                                    |
-| --------------- | ---------------------------------------------------------------------------------------------- |
+| Device location | Device Name |
+| --------------- | ----------- |
 | `local`         | `['qiskit.shot_simulator', 'qiskit.statevector_simulator']`                                    |
 | `ibmq`          | Please check the IBMQ backends available to your [account](https://quantum-computing.ibm.com/) |
 

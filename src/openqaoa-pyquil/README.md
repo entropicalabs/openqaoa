@@ -59,7 +59,7 @@ pip install openqaoa-pyquil
 
 OpenQAOA-Qiskit does not yet support developer install as a standalone package.
 If you wish to work in developer mode, please install the entire library.
-Instructions are available [here]()
+Instructions are available [here](https://github.com/entropicalabs/openqaoa/blob/dev/README.md)
 
 Should you face any issue during the installation, please drop us an email at
 openqaoa@entropicalabs.com or open an issue!
@@ -76,7 +76,7 @@ you can get started with the following ones:
 - Using QPU
 - Using as QVM
 
-### Available devives
+### Available devices
 
 OpenQAOA-Pyquil services devices both locally and on the cloud. The Rigetti
 supports access to their QPUs through the QCS platform. Moreover, users can also
@@ -85,8 +85,8 @@ requires installation of Rigetti Forest SDK that does not come pre-installed
 with OpenQAOA. If required the user may install the SDK
 [here](https://qcs.rigetti.com/sdk-downloads)
 
-| Device location                                | Device Name                            |
-| ---------------------------------------------- | -------------------------------------- |
+| Device location | Device Name |
+| --------------- | ----------- |
 | [Rigetti QCS](https://qcs.rigetti.com/sign-in) | Aspen-11, Aspen-M-1, and QVM simulator |
 
 ## Running the tests

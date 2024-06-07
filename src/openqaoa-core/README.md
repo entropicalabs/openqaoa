@@ -61,7 +61,7 @@ pip install openqaoa-core
 
 OpenQAOA-Core does not yet support developer install as a standalone package. If
 you wish to work in developer mode, please install the entire library.
-Instructions are available [here]()
+Instructions are available [here](https://github.com/entropicalabs/openqaoa/blob/dev/README.md)
 
 Should you face any issue during the installation, please drop us an email at
 openqaoa@entropicalabs.com or open an issue!
@@ -92,14 +92,14 @@ you can get started with the following ones:
   `Amazon Braket` and `Azure Quantum` (Please install the OpenQAOA plugin
   corresponding to the QPU platform for running QAOA on these devices).
 
-### Available devives
+### Available devices
 
 Devices are serviced both locally and on the cloud. For the IBM Quantum
 experience, the available devices depend on the specified credentials. For QCS
 and Amazon Braket, the available devices are listed in the table below:
 
-| Device location | Device Name                              |
-| --------------- | ---------------------------------------- |
+| Device location | Device Name |
+| --------------- | ----------- |
 | `local`         | `['vectorized', 'analytical_simulator']` |
 
 ## Running the tests

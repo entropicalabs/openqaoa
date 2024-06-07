@@ -59,7 +59,7 @@ pip install openqaoa-braket
 
 OpenQAOA-Braket does not yet support developer install as a standalone package.
 If you wish to work in developer mode, please install the entire library.
-Instructions are available [here]()
+Instructions are available [here](https://github.com/entropicalabs/openqaoa/blob/dev/README.md)
 
 Should you face any issue during the installation, please drop us an email at
 openqaoa@entropicalabs.com or open an issue!
@@ -74,13 +74,13 @@ you can get started with the following ones:
 
 - Link Braket notebook to get started
 
-### Available devives
+### Available devices
 
 OpenQAOA-Braket serves devices accessible to the user through their AWS account.
 The available devices depend on the specified credentials.
 
-| Device location                                                                               | Device Name                        |
-| --------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Device location | Device Name |
+| --------------- | ----------- |
 | [Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html) | IonQ, Rigetti, OQC, and simulators |
 
 ## Running the tests
