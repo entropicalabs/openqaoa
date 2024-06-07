@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.8', '3.9', '3.10']  
+        python: ['3.9', '3.10', '3.11']
         forest-sdk-version: [2.23.0]
 
     # Run on a Windows machine
@@ -33,7 +33,7 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
 
-      # Install OpenQAOA        
+      # Install OpenQAOA
       - name: Install OpenQAOA
         shell: pwsh
         run: |
@@ -57,7 +57,7 @@ jobs:
           Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\quilc.exe" -ArgumentList "-S" -PassThru
           Start-Process -FilePath "C:\Program Files\Rigetti Computing\Forest SDK for Windows\qvm.exe" -ArgumentList "-S" -PassThru
 
-      # Run all tests 
+      # Run all tests
       - name: Run tests
         shell: pwsh
         run: |

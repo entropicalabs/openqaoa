@@ -1,3 +1,39 @@
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "openqaoa"
+version = "0.2.5"
+authors = [{ name = "Entropica Labs" }]
+description = "OpenQAOA is a python open-source multi-backend Software Development Kit to create, customise and execute the Quantum Approximate Optimisation Algorithm (QAOA) on Noisy Intermediate-Scale Quantum (NISQ) devices, and simulators"
+readme = "README.md"
+requires-python = ">=3.9, <3.12"
+license = { file = "LICENSE" }
+urls = { "Homepage" = "https://github.com/entropicalabs/openqaoa" }
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent"
+]
+keywords = ["quantum", "optimisation", "SDK"]
+
+dependencies = [
+    "openqaoa-azure==0.2.5",
+    "openqaoa-braket==0.2.5",
+    "openqaoa-core==0.2.5",
+    "openqaoa-pyquil==0.2.5",
+    "openqaoa-qiskit==0.2.5"
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "qpu: marks tests that require a QPU connection (deselect with '-m \"not qpu\"')",
+    "api: marks tests that require a connection to a QC cloud (deselect with '-m \"not api\"')",
+    "qvm: marks tests that require an active Rigetti QVM and QILC compiler (deselect with '-m \"not qvm\"')",
+    "docker_aws: marks tests that require to build aws docker (deselect with '-m \"not docker_aws\"')",
+    "braket_api: marks tests that require valid AWS credentials (no QPU) (deselect with '-m \"not braket_api\"')",
+    "notebook: marks tests that run on jupyter notebooks (deselect with '-m \"not notebook\"')",
+    "sim: marks tests that run on remote Simulators (deselect with '-m \"not sim\"')"
+]

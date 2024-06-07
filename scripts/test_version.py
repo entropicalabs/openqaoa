@@ -1,29 +1,21 @@
 import os
-import importlib
+import toml
 
 version_dict = {}
 for each_file in os.listdir("src"):
     if each_file.startswith("openqaoa-"):
-        __version__ = ""
-        if not each_file == "openqaoa-core":
-            exec(
-                open(
-                    "./src/"
-                    + each_file
-                    + "/"
-                    + each_file.replace("-", "_")
-                    + "/_version.py"
-                ).read()
-            )
-        else:
-            exec(open("./src/" + each_file + "/openqaoa/_version.py").read())
-        version_dict.update({each_file: __version__})
+        library = (
+            each_file.replace("-", "_") if each_file != "openqaoa-core" else "openqaoa"
+        )
+        version = __import__(library).__version__
+        version_dict.update({each_file: version})
 
 version_check = [
     each_item == version_dict["openqaoa-core"] for each_item in version_dict.values()
 ]
-with open("_version.py") as f:
-    meta_version = f.readlines()[-1].split()[-1].strip("\"'")
+
+pyproject_data = toml.load("pyproject.toml")
+meta_version = pyproject_data["project"]["version"]
 version_check.append(meta_version == version_dict["openqaoa-core"])
 for each_check in version_check:
     if not each_check:

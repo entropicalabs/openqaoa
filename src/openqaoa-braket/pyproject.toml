@@ -1,3 +1,31 @@
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[project]
+name = "openqaoa-braket"
+version = "0.2.5"
+authors = [{ name = "Entropica Labs" }]
+description = "Braket Plug-in for OpenQAOA"
+readme = "README.md"
+requires-python = ">=3.9, <3.12"
+license = { file = "LICENSE" }
+urls = { "Homepage" = "https://github.com/entropicalabs/openqaoa" }
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+keywords = ["quantum", "optimisation", "SDK"]
+
+dependencies = [
+    "openqaoa-core==0.2.5",
+    "amazon-braket-sdk>=1.23.0"
+]
+
+[project.entry-points."openqaoa.plugins"]
+braket = "openqaoa_braket.backend_config"

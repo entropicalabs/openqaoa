@@ -4,8 +4,6 @@ set -e
 # TODO: Dynamically generate names (The order of installing and pushing is important here.)
 modulesList=("src/openqaoa-core" "src/openqaoa-qiskit" "src/openqaoa-braket" "src/openqaoa-pyquil" "src/openqaoa-azure")
 
-python scripts/test_version.py
- 
 pip install build twine
 
 # build and install plugins
