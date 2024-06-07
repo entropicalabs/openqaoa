@@ -35,7 +35,7 @@ dependencies = [
     "autoray>=0.6",
     "requests>=2.32.3",
     "ipython>=8.18.1",
-    "mitiq>=0.30.0, <0.36.0"
+    "mitiq>=0.30.0"
 ]
 
 [project.optional-dependencies]
