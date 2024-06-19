@@ -657,7 +657,8 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # test the plot_corr_matrix method
         for i in range(results["number_steps"]):
-            results.plot_corr_matrix(step=i)
+            fig, _ = results.plot_corr_matrix(step=i)
+            fig.close()
 
     def test_rqaoa_result_asdict(self):
         """
