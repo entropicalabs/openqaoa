@@ -621,6 +621,8 @@ class BPSP(Problem):
         # If no ax (subplot) is provided, create a new figure with the determined width
         if ax is None:
             fig, ax = plt.subplots(figsize=(fig_width, 2))
+        else:
+            fig = ax.get_figure()
 
         # Plot bars for each car, colored based on the paint_sequence
         ax.bar(
@@ -647,7 +649,4 @@ class BPSP(Problem):
         ax.spines["right"].set_visible(False)
         ax.spines["left"].set_visible(False)
 
-        # If no ax is provided, show the plot directly
-        if ax is None:
-            plt.tight_layout()
-            plt.show()
+        return fig, ax

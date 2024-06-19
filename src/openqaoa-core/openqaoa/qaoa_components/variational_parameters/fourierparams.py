@@ -706,19 +706,6 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
         return cls(qaoa_descriptor, q, v_singles, v_pairs, u_singles, u_pairs)
 
     def plot(self, ax=None, **kwargs):
-        # if ax is None:
-        #     fig, ax = plt.subplots()
-
-        # ax.plot(dct(self.v, n=self.p, axis=0),
-        #         label="betas", marker="s", ls="", **kwargs)
-        # if not _is_iterable_empty(self.u_singles):
-        #     ax.plot(dst(self.u_singles, n=self.p),
-        #             label="gammas_singles", marker="^", ls="", **kwargs)
-        # if not _is_iterable_empty(self.u_pairs):
-        #     ax.plot(dst(self.u_pairs, n=self.p),
-        #             label="gammas_pairs", marker="v", ls="", **kwargs)
-        # ax.set_xlabel("timestep")
-        # ax.legend()
 
         betas_singles = dct(self.v_singles, n=self.p, axis=0)
         betas_pairs = dct(self.v_pairs, n=self.p, axis=0)
@@ -767,6 +754,8 @@ class QAOAVariationalFourierExtendedParams(QAOAVariationalBaseParams):
 
         if ax is None:
             fig, ax = plt.subplots((n + 1) // 2, 2, figsize=(9, 4 * (n + 1) // 2))
+        else:
+            fig = ax.get_figure()
 
         fig.tight_layout(pad=4.0)
 
