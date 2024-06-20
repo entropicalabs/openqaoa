@@ -41,7 +41,7 @@ setup(
     extras_require={
         "docs": requirements_docs,
         "tests": requirements_test,
-        "tests_cplex": requirements_test + ["cplex>=22.1.1"],
+        "tests-cplex": requirements_test + ["cplex>=22.1.1"],
         "all": requirements_docs + requirements_test + ["cplex>=22.1.1"],
     },
 )
