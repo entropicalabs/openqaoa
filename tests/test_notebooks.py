@@ -112,5 +112,6 @@ def test_portfolio_optimization():
 
 
 # @pytest.mark.notebook
+@pytest.mark.cplex
 def test_binpacking():
     notebook_test_function("./examples/community_tutorials/04_binpacking.ipynb")

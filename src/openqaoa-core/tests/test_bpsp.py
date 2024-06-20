@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import numpy as np
 import networkx as nx
 from docplex.mp.model import Model
@@ -193,6 +194,7 @@ class TestBPSP(unittest.TestCase):
             "Objective should be of type 'minimize'",
         )
 
+    @pytest.mark.cplex
     def test_bpsp_solve_cplex(self):
         """
         Test the solution of the BPSP problem using CPLEX.
