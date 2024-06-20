@@ -38,7 +38,7 @@ jobs:
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          make dev-install-tests_cplex
+          make dev-install-tests-cplex
           pip install ipykernel
       - name: Setup IBMQ account
         env:
