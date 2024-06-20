@@ -155,7 +155,7 @@ class RQAOAResult(dict):
         else:
             fig = ax.get_figure()
 
-        ax.imshow(self.get_corr_matrix(step=step), cmap=cmap)
-        fig.colorbar()
+        im = ax.imshow(self.get_corr_matrix(step=step), cmap=cmap)
+        cbar = ax.figure.colorbar(im, ax=ax)
         
         return fig, ax
