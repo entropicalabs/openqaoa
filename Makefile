@@ -28,6 +28,15 @@ dev-install-tests:
 	pip install -e ./src/openqaoa-azure
 	pip install -e .
 
+.PHONY: dev-install-tests
+dev-install-tests:
+	pip install -e ./src/openqaoa-core[tests_cplex]
+	pip install -e ./src/openqaoa-qiskit
+	pip install -e ./src/openqaoa-pyquil
+	pip install -e ./src/openqaoa-braket
+	pip install -e ./src/openqaoa-azure
+	pip install -e .
+
 .PHONY: dev-install-docs
 dev-install-docs:
 	pip install -e ./src/openqaoa-core[docs]
