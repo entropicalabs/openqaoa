@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import List, Union, Callable
-from gatemaplabel import GateMapLabel
 
 
 class RotationAngle(object):
