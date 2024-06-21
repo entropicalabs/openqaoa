@@ -300,9 +300,9 @@ class QAOAPyQuilQPUBackend(
             if each_gate.gate_label.type.value in ["MIXER", "COST"]:
                 gatelabel_pyquil = each_gate.gate_label.__repr__()
                 gatelabel_pyquil = (
-                    "one" + gatelabel_pyquil[1:]
+                    "one" + gatelabel_pyquil[3:]
                     if each_gate.gate_label.n_qubits == 1
-                    else "two" + gatelabel_pyquil[1:]
+                    else "two" + gatelabel_pyquil[3:]
                 )
                 angle_param = parametric_circuit.declare(gatelabel_pyquil.lower(), "REAL", 1)
                 each_gate.angle_value = angle_param
