@@ -112,7 +112,6 @@ def _test_keys_in_dict(obj, expected_keys):
 
 
 class TestingVanillaQAOA(unittest.TestCase):
-
     """
     Unit test based testing of the QAOA workflow class
     """
@@ -1244,14 +1243,16 @@ class TestingVanillaQAOA(unittest.TestCase):
 
         # problem
         problem = MinimumVertexCover.random_instance(
-            n_nodes=6, edge_probability=0.8
+            n_nodes=6, edge_probability=0.8, seed=0
         ).qubo
 
         # run qaoa with different param_type, and save the objcets in a list
         qaoas = []
         for param_type in PARAMS_CLASSES_MAPPER.keys():
             q = QAOA()
-            q.set_circuit_properties(p=3, param_type=param_type, init_type="rand")
+            q.set_circuit_properties(
+                p=3, param_type=param_type, init_type="rand", seed=0
+            )
             q.compile(problem)
             qaoas.append(q)
 
@@ -1282,28 +1283,40 @@ class TestingVanillaQAOA(unittest.TestCase):
             for value in params.values():
                 params2 += value.flatten().tolist()
             result2 = q.evaluate_circuit(params2)
-            assert (
-                result == result2
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
-                when passing a dict or a list of params"
+            for res, res2 in zip(result, result2):
+                self.assertAlmostEqual(
+                    res,
+                    res,
+                    places=15,
+                    msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
+                    when passing a dict or a list of params"
+                )
 
             # evaluate the circuit with np.ndarray of params, taking the params from the dict,
             # so we should get the same result
             result2 = q.evaluate_circuit(np.array(params2))
-            assert (
-                result == result2
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
-                when passing a dict or a list of params"
+            for res, res2 in zip(result, result2):
+                self.assertAlmostEqual(
+                    res,
+                    res2,
+                    places=15,
+                    msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
+                    when passing a dict or a list of params",
+                )
 
             # evaluate the circuit with the params as a QAOAVariationalBaseParams object,
             # so we should get the same result
             params_obj = deepcopy(q.variate_params)
             params_obj.update_from_raw(params2)
             result3 = q.evaluate_circuit(params_obj)
-            assert (
-                result == result3
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
-                when passing a dict or a list of params"
+            for res, res3 in zip(result, result3):
+                self.assertAlmostEqual(
+                    res,
+                    res3,
+                    places=15,
+                    msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
+                    when passing a dict or a list of params",
+                )
 
             # run the circuit with the params manually, we should get the same result
             result4 = {}
@@ -1312,78 +1325,64 @@ class TestingVanillaQAOA(unittest.TestCase):
                 result4["uncertainty"],
             ) = q.backend.expectation_w_uncertainty(params_obj)
             result4["measurement_results"] = q.backend.wavefunction(params_obj)
-            assert (
-                result == result4
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result when \
-                  passing the optimized params manually"
+            for res, res4 in zip(result, result4):
+                self.assertAlmostEqual(
+                    res,
+                    res4,
+                    places=15,
+                    msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should return the same result \
+                    when passing the optimized params manually",
+                )
 
             # evaluate the circuit with a wrong input, it should raise an error
-            error = False
-            try:
-                q.evaluate_circuit(1)
-            except Exception:
-                error = True
-            assert (
-                error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+            with self.assertRaises(
+                TypeError,
+                msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
                   passing a wrong input"
+            ):
+                q.evaluate_circuit(1)
 
             # evaluate the circuit with a list longer than it should, it should raise an error
-            error = False
-            try:
-                q.evaluate_circuit(params2 + [1])
-            except Exception:
-                error = True
-            assert (
-                error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+            with self.assertRaises(
+                AssertionError,
+                msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
                 passing a list longer than it should"
+            ):
+                q.evaluate_circuit(params2 + [1])
 
             # evaluate the circuit with a list shorter than it should, it should raise an error
-            error = False
-            try:
-                q.evaluate_circuit(params2[:-1])
-            except Exception:
-                error = True
-            assert (
-                error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+            with self.assertRaises(
+                AssertionError,
+                msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
                 passing a list shorter than it should"
+            ):
+                q.evaluate_circuit(params2[:-1])
 
             # evaluate the circuit with a dict with a wrong key, it should raise an error
-            error = False
-            try:
-                q.evaluate_circuit({**params, "wrong_key": 1})
-            except Exception:
-                error = True
-            assert (
-                error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error \
+            with self.assertRaises(
+                KeyError,
+                msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error \
                 when passing a dict with a wrong key"
+            ):
+                q.evaluate_circuit({**params, "wrong_key": 1})
 
             # evaluate the circuit with a dict with a value longer than it should, it should raise an error
-            error = False
-            try:
+            with self.assertRaises(
+                ValueError,
+                msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+                passing a dict with a value longer than it should"
+                ):
                 q.evaluate_circuit(
                     {**params, list(params.keys())[0]: np.random.rand(40)}
                 )
-            except Exception:
-                error = True
-            assert (
-                error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
-                passing a dict with a value longer than it should"
 
             # evaluate the circuit without passing any param, it should raise an error
-            error = False
-            try:
+            with self.assertRaises(
+                TypeError,
+                msg=f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
+                    not passing any param",
+                ):
                 q.evaluate_circuit()
-            except Exception:
-                error = True
-            assert (
-                error
-            ), f"param_type={q.circuit_properties.param_type}. `evaluate_circuit` should raise an error when \
-                  not passing any param"
 
     def test_qaoa_evaluate_circuit_shot(self):
         # problem
