@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 from openqaoa.problems import BinPacking
@@ -497,6 +498,7 @@ class TestBinPacking(unittest.TestCase):
             binpacking_manual_prob.constant, binpacking_random_prob.constant
         )
 
+    @pytest.mark.cplex
     def test_binpacking_classical_sol(self):
         """Test the Bin Packing random instance method classical solution"""
 
@@ -572,6 +574,7 @@ class TestBinPacking(unittest.TestCase):
             str(e.exception),
         )
 
+    @pytest.mark.cplex
     def test_binpacking_classical_sol_checking(self):
         """
         Checks if the unfeasible classical solution returns the right error.

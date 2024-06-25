@@ -155,8 +155,12 @@ class QAOAVariationalAnnealingParams(QAOAVariationalBaseParams):
     def plot(self, ax=None, **kwargs):
         if ax is None:
             fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
 
         ax.plot(self.schedule, marker="s", **kwargs)
         ax.set_xlabel("p", fontsize=14)
         ax.set_ylabel("s(t)", fontsize=14)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+        return fig, ax

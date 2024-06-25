@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -100,6 +101,7 @@ class TestSK(unittest.TestCase):
                 "Input problem graph must be a networkx Graph.", str(e.exception)
             )
 
+    @pytest.mark.cplex
     def test_sk_classical_sol(self):
         """Test the SK random instance method classical solution"""
 

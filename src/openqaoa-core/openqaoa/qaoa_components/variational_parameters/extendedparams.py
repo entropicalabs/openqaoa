@@ -306,6 +306,8 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
 
         if ax is None:
             fig, ax = plt.subplots((n + 1) // 2, 2, figsize=(9, 9 if n > 2 else 5))
+        else:
+            fig = ax.get_figure()
 
         fig.tight_layout(pad=4.0)
 
@@ -342,3 +344,5 @@ class QAOAVariationalExtendedParams(QAOAVariationalBaseParams):
             ax[1].axis("off")
         elif k == 2:
             ax[1, 1].axis("off")
+
+        return fig, ax

@@ -162,12 +162,16 @@ class QAOAVariationalStandardParams(QAOAVariationalBaseParams):
     def plot(self, ax=None, **kwargs):
         if ax is None:
             fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
 
         ax.plot(self.betas, label="betas", marker="s", ls="", **kwargs)
         ax.plot(self.gammas, label="gammas", marker="^", ls="", **kwargs)
         ax.set_xlabel("p", fontsize=12)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.legend()
+
+        return fig, ax
 
     def convert_to_ext(self, args_std):
         """
@@ -382,6 +386,8 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
     def plot(self, ax=None, **kwargs):
         if ax is None:
             fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
 
         ax.plot(self.betas, label="betas", marker="s", ls="", **kwargs)
         if not _is_iterable_empty(self.gammas_singles):
@@ -396,3 +402,5 @@ class QAOAVariationalStandardWithBiasParams(QAOAVariationalBaseParams):
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         # ax.grid(linestyle='--')
         ax.legend()
+
+        return fig, ax

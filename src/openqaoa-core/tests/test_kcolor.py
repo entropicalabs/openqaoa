@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -156,6 +157,7 @@ class TestKColor(unittest.TestCase):
                 "Input problem graph must be a networkx Graph.", str(e.exception)
             )
 
+    @pytest.mark.cplex
     def test_kcolor_classical_sol(self):
         """Test the k-color random instance method classical solution"""
 
@@ -175,6 +177,7 @@ class TestKColor(unittest.TestCase):
         for i in range(n_nodes):
             self.assertTrue(kcolor_sol[i * k : (i + 1) * k].count("1") == 1)
 
+    @pytest.mark.cplex
     def test_kcolor_plot(self):
         """Test k-color random instance method"""
         seed = 1234

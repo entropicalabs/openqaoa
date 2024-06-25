@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install qvm
         run: |
           find /usr/lib -name "libffi.so*"
@@ -53,7 +53,7 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          pytest tests/ src/*/tests/ -v -m 'not (qpu or docker_aws or api or sim or braket_api)'
+          pytest tests/ src/*/tests/ -v -m 'not (qpu or docker_aws or api or sim or braket_api or cplex)'
 
   docs-ext:
     runs-on: ubuntu-latest
@@ -66,7 +66,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install OpenQAOA
         run: |
