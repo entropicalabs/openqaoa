@@ -1,3 +1,14 @@
+## Version v0.2.6 (July 10th, 2024)
+
+This version brings two main changes:
+* Reintroducing pyquil as part of the main package after fixing a long standing incompatibility with other packages
+* Implementation of Zero Noise Extrapolation by @mar-ven , @AdrianoLusso and @victor-onofre
+
+Other minor bugfixes include:
+* Figure handling
+* Incompatibility of CPLEX with the workflow pipelines
+* Naming conventions of rotation angles
+
 ## Version v0.2.5 (December 20th, 2023)
 
 This version fixes some breaking changes appearing with qiskit 0.45
