@@ -1,6 +1,8 @@
 import unittest
+import pytest
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 from openqaoa.problems import TSP, TSP_LP
 
 
@@ -264,6 +266,7 @@ class TestTSP_LP(unittest.TestCase):
         self.assertEqual(expected_weights, tsp_qubo.weights)
         self.assertEqual(expected_constant, tsp_qubo.constant)
 
+    @pytest.mark.cplex
     def test_tsp_lp_length(self):
         """Testing TSP LP problem creation"""
         cities = 3
@@ -272,15 +275,17 @@ class TestTSP_LP(unittest.TestCase):
         distance_expected = 2.4792766646401967
         self.assertEqual(distance_expected, tsp.get_distance(solution))
 
+    @pytest.mark.cplex
     def test_tsp_lp_plot(self):
         """Testing TSP LP problem creation"""
-        from matplotlib.pyplot import Figure
 
         cities = 6
         tsp = TSP_LP.random_instance(n_nodes=cities, seed=123, subtours=[[1, 3, 4]])
         solution = tsp.classical_solution()
-        fig = tsp.plot_solution(solution)
-        self.assertTrue(isinstance(fig, Figure))
+        fig, ax = tsp.plot_solution(solution)
+        self.assertTrue(isinstance(fig, plt.Figure))
+        self.assertTrue(isinstance(ax, plt.Axes))
+        plt.close(fig)
 
 
 if __name__ == "__main__":

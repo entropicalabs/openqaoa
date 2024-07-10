@@ -1,6 +1,8 @@
 import unittest
+import pytest
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 from openqaoa.problems import SK
 
 
@@ -99,6 +101,7 @@ class TestSK(unittest.TestCase):
                 "Input problem graph must be a networkx Graph.", str(e.exception)
             )
 
+    @pytest.mark.cplex
     def test_sk_classical_sol(self):
         """Test the SK random instance method classical solution"""
 
@@ -111,7 +114,6 @@ class TestSK(unittest.TestCase):
 
     def test_sk_plot(self):
         """Test SK random instance method"""
-        import matplotlib.pyplot as plt
 
         seed = 1234
         sk_random_prob = SK.random_instance(n_nodes=10, seed=seed)
@@ -128,9 +130,10 @@ class TestSK(unittest.TestCase):
             "x_9": 1.0,
         }
 
-        fig, ax = plt.subplots()
-        sk_random_prob.plot_solution(sol, ax=ax)
-        self.assertTrue(isinstance(ax, plt.Axes))
+        fig, ax = sk_random_prob.plot_solution(sol)
+        self.assertEqual(type(fig), plt.Figure)
+        self.assertEqual(type(ax), plt.Axes)
+        plt.close(fig)
 
 
 if __name__ == "__main__":

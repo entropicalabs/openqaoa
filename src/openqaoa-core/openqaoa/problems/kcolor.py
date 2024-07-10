@@ -175,6 +175,8 @@ class KColor(Problem):
         -------
         fig : matplotlib.pyplot.Figure()
             The graph visualization of the solution.
+        ax : matplotlib.pyplot.Axes()
+            The axis of the graph visualization.
         """
         if isinstance(solution, str):
             sol = {}
@@ -183,7 +185,9 @@ class KColor(Problem):
             solution = sol
 
         if ax is None:
-            _, ax = plt.subplots()
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
 
         colors = colormaps["jet"] if colors is None else colors
         pos = nx.circular_layout(self.G)
@@ -202,3 +206,4 @@ class KColor(Problem):
             alpha=0.85,
             **{"edgecolors": "black"},
         )
+        return fig, ax

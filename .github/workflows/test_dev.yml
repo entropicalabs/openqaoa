@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Log in with Azure
         uses: azure/login@v1
         with:
@@ -34,7 +34,7 @@ jobs:
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          make dev-install-tests
+          make dev-install-tests-cplex
           pip install ipykernel
       - name: Setup IBMQ account
         env:
@@ -63,7 +63,7 @@ jobs:
         run: |
           source env/bin/activate
           ipython kernel install --name "env" --user
-          pytest tests/ src/openqaoa-core/tests src/openqaoa-azure/tests src/openqaoa-braket/tests src/openqaoa-qiskit/tests -m 'not (qpu or sim)' --cov -n auto
+          pytest tests/ src/*/tests -m 'not (qpu or sim)' --cov -n auto
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
         with:
@@ -81,7 +81,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install OpenQAOA
         run: |

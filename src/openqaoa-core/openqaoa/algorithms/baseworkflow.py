@@ -21,6 +21,8 @@ from os.path import exists
 from .workflow_properties import (
     BackendProperties,
     ErrorMitigationProperties,
+    MitiqZNEProperties,
+    SpamProperties,
     ClassicalOptimizer,
 )
 from ..backends.devices_core import DeviceBase, DeviceLocal
@@ -98,7 +100,7 @@ class Workflow(ABC):
         self.classical_optimizer = ClassicalOptimizer()
         self.local_simulators = list(DEVICE_NAME_TO_OBJECT_MAPPER.keys())
         self.cloud_provider = list(DEVICE_ACCESS_OBJECT_MAPPER.keys())
-        self.available_error_mitigation_techniques = ["spam_twirling"]
+        self.available_error_mitigation_techniques = ["spam_twirling","mitiq_zne"]
         self.compiled = False
 
         # Initialize the identifier stamps, we initialize all the stamps needed to None
@@ -271,25 +273,54 @@ class Workflow(ABC):
         Parameters
         ----------
             error_mitigation_technique: str
-                The specific technique used to mitigate the errors. Only a simple state preparation and measurement twirling with bitflip averages, under the name "spam_twirling" is currently supported.
+                The specific technique used to mitigate the errors. Currently, the availables techniques are:
+                    *   A simple state preparation and measurement twirling with bitflip averages, under the name "spam_twirling".
+                    *   Zero Noise Extrapolation (ZNE), integrated from Mitiq framework, under the name "mitiq_zne".
             n_batches: int
-                The number of batches specifies the different negating schedules at random. Total number of shots is distributed accordingly.
+                Used in "spam_twirling". The number of batches specifies the different negating schedules at random. Total number of shots is distributed accordingly.
             calibration_data_location: str
-                The location of the json file containing calibration data. For spam twirling this is the measurement outcomes of an empty circuit under the bit-flip averaging.
-
+                Used in "spam_twirling". The location of the json file containing calibration data. This is the measurement outcomes of an empty circuit under the bit-flip averaging.
+            factory: str
+                Used in "mitiq_zne". The name of the zero-noise extrapolation method. Supported values: "Richardson", "Linear", "Poly", "Exp", "PolyExp", "AdaExp", "FakeNodes".
+            scaling: str
+                Used in "mitiq_zne". The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random" ("fold_gates_from_right", "fold_gates_from_left" not supported as of version 0.8)
+            scale_factors: List[int]
+                Used in "mitiq_zne". Sequence of noise scale factors at which expectation values should be measured.
+                For factory = "AdaExp", just the first element of the list will be considered.
+            order: int
+                Used in "mitiq_zne". Extrapolation order (degree of the polynomial to fit). It cannot exceed len(scale_factors) - 1, and it must be greater than or equal to 1.
+                Only used for factory = "Poly" or "PolyExp".
+            steps: int
+                Used in "mitiq_zne". The number of optimization steps. At least 3 are necessary.
+                Only used for factory = "AdaExp".
         """
+
+        # validate a supported error mitigation technique
+        if kwargs["error_mitigation_technique"].lower() in self.available_error_mitigation_techniques:
+            pass
+        else:
+            raise ValueError(
+                    f"Specified error mitigation technique is not supported"
+                )
+
+        # get the ErrorMitigationProperty structure to validate
+        error_mitigation_technique = kwargs["error_mitigation_technique"].lower()
+        if error_mitigation_technique == 'mitiq_zne':
+            error_mitigation_properties = MitiqZNEProperties
+        elif error_mitigation_technique == 'spam_twirling':
+            error_mitigation_properties = SpamProperties
+        self.error_mitigation_properties = error_mitigation_properties()
+        # validate ErrorMitigationProperty structure
         for key, value in kwargs.items():
-            if hasattr(self.error_mitigation_properties, key) and (
-                kwargs["error_mitigation_technique"].lower()
-                in self.available_error_mitigation_techniques
-            ):
+            if hasattr(self.error_mitigation_properties, key):
                 pass  # setattr(self.error_mitigation, key, value)
             else:
                 raise ValueError(
                     f"Specified argument `{value}` for `{key}` in set_error_mitigation_properties is not supported"
                 )
+            
+        self.error_mitigation_properties = error_mitigation_properties(**kwargs)  
 
-        self.error_mitigation_properties = ErrorMitigationProperties(**kwargs)
         return None
 
     @check_compiled

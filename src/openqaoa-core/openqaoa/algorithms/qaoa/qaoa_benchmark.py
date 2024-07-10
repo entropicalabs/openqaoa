@@ -432,6 +432,8 @@ class QAOABenchmark:
                 1 if one_plot else sum([1 if values[key][0] else 0 for key in values])
             )
             fig, ax = plt.subplots(nrows=nrows, ncols=1, figsize=(6.5, 5 * nrows))
+        else:
+            fig = ax.get_figure()
 
         # plot the requested plots
         count_sp = 0  # counter of subplots
@@ -553,8 +555,8 @@ class QAOABenchmark:
         if ax_input is None:
             if nrows > 1:
                 fig.subplots_adjust(hspace=0.3)  # add some space between the subplots
-            plt.show()
-            plt.close(fig)
+        
+        return fig, ax
 
     @staticmethod
     def __ordered_points(n_params, n_points_axis):

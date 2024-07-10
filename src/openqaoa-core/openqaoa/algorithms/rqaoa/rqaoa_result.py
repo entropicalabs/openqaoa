@@ -144,10 +144,18 @@ class RQAOAResult(dict):
         """
         return self["intermediate_steps"][step]["corr_matrix"]
 
-    def plot_corr_matrix(self, step, cmap="cool"):
+    def plot_corr_matrix(self, step, cmap="cool", ax=None):
         """
         Plots the correlation matrix of the i-th step of the RQAOA.
         TODO : add more options
         """
-        plt.imshow(self.get_corr_matrix(step=step), cmap=cmap)
-        plt.colorbar()
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        im = ax.imshow(self.get_corr_matrix(step=step), cmap=cmap)
+        cbar = ax.figure.colorbar(im, ax=ax)
+        
+        return fig, ax

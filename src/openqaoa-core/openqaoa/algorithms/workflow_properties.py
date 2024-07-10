@@ -264,15 +264,34 @@ class BackendProperties(WorkflowProperties):
     #             f"cvar_alpha must be between 0 and 1. Received {value}.")
     #     self._cvar_alpha = value
 
-
 class ErrorMitigationProperties(WorkflowProperties):
     """
-    Optional, choose an error mitigation technique for the QAOA circuit. Currently supports only SPAM Twirling.
+    Optional, choose an error mitigation technique for the QAOA circuit.
 
     Parameters
     ----------
     error_mitigation_technique: str
-        The name of the error mitigation technique. Only 'spam_twirling' supported for now.
+        The name of the error mitigation technique. Currently supported values: "spam_twirling" for the Spam Twirling mitigation method, and "mitiq_zne" for the Zero-Noise Extrapolation (ZNE) mitigation method from Mitiq framework.
+    """
+    
+    def __init__(
+        self,
+        error_mitigation_technique: Optional[str] = None,
+    ):
+        self.error_mitigation_technique = (
+            error_mitigation_technique.lower()
+            if type(error_mitigation_technique) == str
+            else error_mitigation_technique
+        )
+
+class SpamProperties(ErrorMitigationProperties):
+    """
+    Class containing all the required parameters for the execution of the SPAM twirling mitigation technique.
+
+    Parameters
+    ----------
+    error_mitigation_technique: str
+        The name of the error mitigation technique.
     n_batches: Optional[int] = int
         Number of batches in which the total number of shots is divided to. For every batch, we choose a set of qubits at random to which we apply X gates and classical negating. The dafault value is set to 10 to be comparable with most problem sizes in NISQ without creating too much of an overhead.
     calibration_data_location: str
@@ -284,12 +303,8 @@ class ErrorMitigationProperties(WorkflowProperties):
         error_mitigation_technique: Optional[str] = None,
         n_batches: Optional[int] = 10,
         calibration_data_location: Optional[str] = None,
-    ):
-        self.error_mitigation_technique = (
-            error_mitigation_technique.lower()
-            if type(error_mitigation_technique) == str
-            else error_mitigation_technique
-        )
+    ):         
+        super().__init__(error_mitigation_technique)
 
         if isinstance(n_batches, int) and n_batches > 0:
             self.n_batches = n_batches
@@ -307,7 +322,6 @@ class ErrorMitigationProperties(WorkflowProperties):
                         "measurement_outcomes"
                     ]
                     calibration_registers = calibration_data["register"]
-
             except FileNotFoundError:
                 raise FileNotFoundError(
                     "Calibration data file not found at specified location: {}".format(
@@ -328,6 +342,45 @@ class ErrorMitigationProperties(WorkflowProperties):
                 )
 
         self.calibration_data_location = calibration_data_location
+
+class MitiqZNEProperties(ErrorMitigationProperties):
+    """
+    Class containing all the required parameters for the execution of the Mitiq Zero-Noise Extrapolation mitigation technique.
+
+    Parameters
+    ----------
+    error_mitigation_technique: str
+        The name of the error mitigation technique.
+    factory: str
+        The name of the zero-noise extrapolation method. Supported values: "Richardson", "Linear", "Poly", "Exp", "PolyExp", "AdaExp", "FakeNodes".
+    scaling: str
+        The name of the function for scaling the noise of a quantum circuit. Supported values: "fold_gates_at_random" ("fold_gates_from_right", "fold_gates_from_left" not supported as of version 0.8).
+    scale_factors: List[int]
+        Sequence of noise scale factors at which expectation values should be measured.
+        For factory = "AdaExp", just the first element of the list will be considered.
+    order: int
+        Extrapolation order (degree of the polynomial fit). It cannot exceed len(scale_factors) - 1.
+        Only used for factory = "Poly" or "PolyExp".
+    steps: int
+        The number of optimization steps. At least 3 are necessary.
+        Only used for factory = "AdaExp".
+    """
+
+    def __init__(
+        self,
+        error_mitigation_technique: Optional[str] = None,
+        factory: str = 'Linear',
+        scaling: str = 'fold_gates_at_random',
+        scale_factors: List[int] = [1,2,3],
+        order: int = 1, 
+        steps: int = 4
+    ):         
+        super().__init__(error_mitigation_technique)
+        self.factory = factory
+        self.scaling = scaling
+        self.scale_factors = scale_factors
+        self.order = order
+        self.steps = steps
 
 
 class ClassicalOptimizer(WorkflowProperties):

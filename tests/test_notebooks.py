@@ -83,6 +83,9 @@ def test_13_optimizers():
 def test_14_benchmark():
     notebook_test_function("./examples/14_qaoa_benchmark.ipynb")
 
+def test_15_zne():
+    notebook_test_function("./examples/15_Zero_Noise_Extrapolation.ipynb")
+
 
 def test_X_dumping_data():
     notebook_test_function("./examples/X_dumping_data.ipynb")
@@ -97,11 +100,13 @@ def test_tutorial_quantum_approximate_optimization_algorithm():
 
 
 # @pytest.mark.notebook
+@pytest.mark.cplex
 def test_docplex_example():
     notebook_test_function("./examples/community_tutorials/02_docplex_example.ipynb")
 
 
 # @pytest.mark.notebook
+@pytest.mark.cplex
 def test_portfolio_optimization():
     notebook_test_function(
         "./examples/community_tutorials/03_portfolio_optimization.ipynb"
@@ -109,5 +114,6 @@ def test_portfolio_optimization():
 
 
 # @pytest.mark.notebook
+@pytest.mark.cplex
 def test_binpacking():
     notebook_test_function("./examples/community_tutorials/04_binpacking.ipynb")
