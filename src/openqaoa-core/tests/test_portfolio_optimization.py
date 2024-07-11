@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import numpy as np
 from openqaoa.problems import PortfolioOptimization
 
@@ -95,6 +96,7 @@ class TestPortfolioOptimization(unittest.TestCase):
         self.assertEqual(qubo.terms, qubo_random.terms)
         self.assertEqual(qubo.constant, qubo_random.constant)
 
+    @pytest.mark.cplex
     def test_portfoliooptimization_classical_sol(self):
         """Test the portfolio optimization set random instance method classical solution"""
 
@@ -118,6 +120,7 @@ class TestPortfolioOptimization(unittest.TestCase):
 
         self.assertEqual(po_sol, sol)
 
+    @pytest.mark.cplex
     def test_portfoliooptimization_plot(self):
         """Test portfolio optimization random instance method"""
         import matplotlib.pyplot as plt

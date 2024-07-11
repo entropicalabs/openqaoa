@@ -55,7 +55,8 @@ class GateMapLabel:
         """
         String representation of the Gatemap label
         """
-        representation = f"{self.n_qubits}Q_" if self.n_qubits is not None else ""
+        n_str = "ONE" if self.n_qubits == 1 else "TWO" if self.n_qubits == 2 else ""
+        representation = f"{n_str}Q_" if self.n_qubits is not None else ""
         representation += f"{self.type.value}" if self.type.value is not None else ""
         representation += f"_seq{self.sequence}" if self.sequence is not None else ""
         representation += f"_layer{self.layer}" if self.layer is not None else ""

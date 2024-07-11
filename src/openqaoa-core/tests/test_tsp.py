@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -265,6 +266,7 @@ class TestTSP_LP(unittest.TestCase):
         self.assertEqual(expected_weights, tsp_qubo.weights)
         self.assertEqual(expected_constant, tsp_qubo.constant)
 
+    @pytest.mark.cplex
     def test_tsp_lp_length(self):
         """Testing TSP LP problem creation"""
         cities = 3
@@ -273,6 +275,7 @@ class TestTSP_LP(unittest.TestCase):
         distance_expected = 2.4792766646401967
         self.assertEqual(distance_expected, tsp.get_distance(solution))
 
+    @pytest.mark.cplex
     def test_tsp_lp_plot(self):
         """Testing TSP LP problem creation"""
 

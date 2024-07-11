@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -98,6 +99,7 @@ class TestMIS(unittest.TestCase):
                 "Input problem graph must be a networkx Graph.", str(e.exception)
             )
 
+    @pytest.mark.cplex
     def test_mis_classical_sol(self):
         """Test the maximal independent set random instance method classical solution"""
 

@@ -427,7 +427,10 @@ def plot_graph(G: nx.Graph, ax=None, colormap="seismic") -> None:
     """
 
     # Create plot figure
-    fig, ax = plt.subplots(figsize=(10, 6), ncols=1)
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6), ncols=1)
+    else:
+        fig = ax.get_figure()
 
     # Extract all graph attributes
     biases_and_nodes = nx.get_node_attributes(G, "weight")
@@ -497,10 +500,7 @@ def plot_graph(G: nx.Graph, ax=None, colormap="seismic") -> None:
             with_labels=True,
         )
 
-    # Show plot
-
-    plt.show()
-    return None
+    return fig, ax
 
 
 def random_classical_hamiltonian(
@@ -844,6 +844,8 @@ def plot_energy_spectrum(
     # If no axis provided, define figure
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=(3, 5))
+    else:
+        fig = ax.get_figure()
 
     # Plot energy levels
     for i, energy in enumerate(unique_energies):
@@ -858,7 +860,7 @@ def plot_energy_spectrum(
     )
     ax.legend(loc="center left", fontsize=8)
 
-    return None
+    return fig, ax
 
 
 def low_energy_states(

@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Log in with Azure
         uses: azure/login@v1
         with:
@@ -34,7 +34,7 @@ jobs:
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          make dev-install-tests
+          make dev-install-tests-cplex
           pip install ipykernel
       - name: Setup IBMQ account
         env:
@@ -81,7 +81,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install OpenQAOA
         run: |

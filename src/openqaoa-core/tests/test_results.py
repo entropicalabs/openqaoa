@@ -2,6 +2,7 @@ import unittest
 import itertools
 import networkx as nw
 import numpy as np
+import matplotlib.pyplot as plt
 
 from openqaoa import QAOA, RQAOA
 from openqaoa.algorithms import QAOAResult, RQAOAResult
@@ -657,7 +658,8 @@ class TestingRQAOAResultOutputs(unittest.TestCase):
 
         # test the plot_corr_matrix method
         for i in range(results["number_steps"]):
-            results.plot_corr_matrix(step=i)
+            fig, _ = results.plot_corr_matrix(step=i)
+            plt.close(fig)
 
     def test_rqaoa_result_asdict(self):
         """

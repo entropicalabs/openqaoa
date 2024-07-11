@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -212,6 +213,7 @@ class TestVRP(unittest.TestCase):
         self.assertTrue(vrp_prob_random.terms[0] == [0, 1])
         self.assertTrue(vrp_prob_random.terms[-1] == [27])
 
+    @pytest.mark.cplex
     def test_vrp_plot(self):
         """
         Testing the random_instance method of the VRP problem class using the
@@ -238,6 +240,7 @@ class TestVRP(unittest.TestCase):
         self.assertEqual(type(ax_vrp_str), plt.Axes)
         plt.close(fig_vrp_str)
 
+    @pytest.mark.cplex
     def test_vrp_type_checking(self):
         """
         Checks if the type-checking returns the right error.
