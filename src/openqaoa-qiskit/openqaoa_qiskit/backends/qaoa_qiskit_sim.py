@@ -3,8 +3,8 @@ from typing import Union, List, Tuple, Optional
 
 # IBM Qiskit imports
 from qiskit import QuantumCircuit, QuantumRegister
-from qiskit.providers.aer import AerSimulator
-from qiskit.providers.aer.noise import NoiseModel
+from qiskit_aer import AerSimulator
+from qiskit_aer.noise import NoiseModel
 from qiskit.quantum_info import Statevector, SparsePauliOp
 from qiskit.circuit import Parameter
 
