@@ -246,8 +246,8 @@ class RYYGateMap(TwoQubitRotationGateMap):
             ),
             (CX, [self.qubit_1, self.qubit_2]),
             (
-                RY,
-                [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, -np.pi / 2)],
+                RX,
+                [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, -np.pi / 2)],
             ),
             (
                 RX,
