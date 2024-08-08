@@ -80,6 +80,7 @@ def XY_mixer_hamiltonian(
     connectivity_topology_dict = {
         "full": list(itertools.combinations(range(n_qubits), 2)),
         "chain": [(i, i + 1) for i in range(n_qubits - 1)],
+        "cyclic": [(i, i + 1) for i in range(n_qubits - 1) if i % 2 == 0] + [(i, i + 1) for i in range(n_qubits - 1) if i % 2 != 0] + [(0, n_qubits - 1)],
         "star": [(0, i + 1) for i in range(n_qubits - 1)],
     }
 
@@ -155,6 +156,7 @@ def quick_create_mixer_for_topology(
     connectivity_topology_dict = {
         "full": list(itertools.combinations(range(n_qubits), 2)),
         "chain": [(i, i + 1) for i in range(n_qubits - 1)],
+        "cyclic": [(i, i + 1) for i in range(n_qubits - 1) if i % 2 == 0] + [(i, i + 1) for i in range(n_qubits - 1) if i % 2 != 0] + [(0, n_qubits - 1)],
         "star": [(0, i + 1) for i in range(n_qubits - 1)],
     }
 
