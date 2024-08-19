@@ -1,3 +1,3 @@
-from .algorithms import QAOA, RQAOA, QAOABenchmark
+from .algorithms import QAOA, RQAOA, FQAOA, QAOABenchmark
 from .problems import QUBO
 from .backends import create_device
