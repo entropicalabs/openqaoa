@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from openqaoa.backends.qaoa_analytical_sim import QAOABackendAnalyticalSimulator
-from openqaoa.algorithms import QAOA, RQAOA
+from openqaoa.algorithms import QAOA, RQAOA, FQAOA
 from openqaoa.problems import MaximumCut
 from openqaoa.backends.qaoa_device import create_device
 from openqaoa.utilities import (
@@ -184,6 +184,28 @@ class TestingQAOABackendAnalyticalSimulator(unittest.TestCase):
         opt_solution_string = list(opt_solution.keys())[0]
 
         assert opt_solution_string == "01011010"
+
+    def test_fqaoa_raises_value_error_with_analytical_simulator(self):
+        """
+        Test to ensure that initializing FQAOA with the 'analytical_simulator'
+        raises a ValueError.
+        """
+        # Create a 3-regular weighted graph and a qubo problem
+        g = random_k_regular_graph(
+            degree=3, nodes=range(8), seed=2642, weighted=True, biases=False
+        )
+        maxcut_qubo = MaximumCut(g).qubo
+
+        # Define the device to be the analytical simulator
+        device = create_device(location="local", name="analytical_simulator")
+
+        # Define the FQAOA object and set its params
+        with self.assertRaises(ValueError):
+            fqaoa = FQAOA(device)
+
+        with self.assertRaises(ValueError):
+            fqaoa = FQAOA()
+            fqaoa.set_device(device)
 
     def test_exact_solution(self):
         """
