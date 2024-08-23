@@ -7,7 +7,7 @@ import numpy as np
 import datetime
 from copy import deepcopy
 
-from openqaoa import QAOA, RQAOA
+from openqaoa import QAOA, RQAOA, FQAOA
 from openqaoa.problems import NumberPartition
 from openqaoa.algorithms import QAOAResult, RQAOAResult
 from openqaoa.algorithms.baseworkflow import Workflow
@@ -23,6 +23,11 @@ from openqaoa.algorithms.workflow_properties import (
     CircuitProperties,
 )
 from openqaoa.algorithms.rqaoa.rqaoa_workflow_properties import RqaoaParameters
+from openqaoa.algorithms.fqaoa.fqaoa_utils import (
+    get_analytical_fermi_orbitals,
+    get_statevector,
+    generate_random_portfolio_data,
+)
 from openqaoa.backends import create_device, DeviceLocal
 from openqaoa.backends.cost_function import cost_function
 
@@ -39,7 +44,7 @@ from openqaoa.qaoa_components import (
 )
 from openqaoa.backends import QAOAvectorizedBackendSimulator
 from openqaoa.backends.basebackend import QAOABaseBackendStatevector
-from openqaoa.problems import MinimumVertexCover, QUBO, MaximumCut
+from openqaoa.problems import MinimumVertexCover, PortfolioOptimization, QUBO, MaximumCut
 from openqaoa.optimizers.qaoa_optimizer import available_optimizers
 from openqaoa.optimizers.training_vqa import (
     ScipyOptimizer,
