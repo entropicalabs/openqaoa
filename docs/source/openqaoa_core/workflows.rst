@@ -1,7 +1,7 @@
 Workflows
 =================================
 
-Workflows are a simple reference API to build complex quantum optimisations problems. Currently, it supports creations of `QAOA` and `Recursive QAOA` workflows.
+Workflows are a simple reference API to build complex quantum optimisations problems. Currently, it supports creations of `QAOA`, `Recursive QAOA`, `Fermionic QAOA` workflows.
 
 Workflows are designed to aid the user to focus on the optimisation problem, while delegating the construction and the execution of the specific algorithm to `OpenQAOA`
 
@@ -54,7 +54,11 @@ To choose the strategy, set the parameter ``rqaoa_type`` using the `set_rqaoa_pa
     :members:
     :undoc-members:
     :inherited-members:
-    
+
+.. autoclass:: openqaoa.algorithms.fqaoa.fqaoa_workflow.FQAOA
+    :members:
+    :undoc-members:
+    :inherited-members:
 
 RQAOA Workflow Properties
 -------------------------

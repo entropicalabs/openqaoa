@@ -6,6 +6,7 @@ OpenQAOA Core API Reference
 
    workflows
    rqaoa
+   fqaoa
    problems
    qaoaparameters
    backends

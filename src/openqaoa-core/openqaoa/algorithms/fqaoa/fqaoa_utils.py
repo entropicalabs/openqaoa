@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from itertools import combinations
 from scipy import linalg
 import numpy as np
@@ -169,7 +169,7 @@ def get_analytical_fermi_orbitals(
         raise ValueError("analytical solutions support only 'cyclic'")
 
     if hopping <= 0.0: raise ValueError("analytical solutions support hopping > 0")
-    
+
     orbitals = np.zeros((n_fermions, n_qubits), dtype = np.float64)
     if n_fermions % 2 == 0:
         for jw in range(n_qubits):
@@ -261,7 +261,7 @@ def generate_random_portfolio_data(
         num_assets: int,
         num_days: int,
         seed: Optional[int] = None,
-) -> Tuple[List[float], List[List[float]], np.ndarray]:
+) -> tuple[list[float], list[list[float]], np.ndarray]:
     """
     Generates random portfolio data including mean returns, covariance matrix,
     and historical price movements for a given number of assets and days.
@@ -290,7 +290,7 @@ def generate_random_portfolio_data(
     influenced by a time trend and random fluctuations, suitable for use in
     portfolio optimization and risk analysis.
     """
-    
+
     # If a seed is provided, set the random seed
     if seed is not None:
         np.random.seed(seed)
