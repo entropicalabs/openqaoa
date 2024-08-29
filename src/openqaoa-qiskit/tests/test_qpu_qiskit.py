@@ -9,7 +9,6 @@ from collections import OrderedDict
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
-from qiskit.tools.monitor import job_monitor
 from qiskit_ibm_provider.job.exceptions import IBMJobError
 from qiskit.converters import circuit_to_dag, dag_to_circuit
 

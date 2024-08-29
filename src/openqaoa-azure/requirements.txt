@@ -1,4 +1,4 @@
 qdk
-qiskit-qir
+qiskit-qir~=0.5.0
 qiskit-ionq
 azure-quantum[qiskit]
