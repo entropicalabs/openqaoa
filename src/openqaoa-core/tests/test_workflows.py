@@ -2109,7 +2109,7 @@ class TestingFQAOA(unittest.TestCase):
         num_assets, budget = 5, 3
         problem = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
-        # run qaoa with different param_type, and save the objects in a list
+        # run fqaoa with different param_type, and save the objects in a list
         fqaoas = []
         for param_type in PARAMS_CLASSES_MAPPER.keys():
             fqaoa = FQAOA()
@@ -2119,7 +2119,7 @@ class TestingFQAOA(unittest.TestCase):
             fqaoa.compile(problem=problem, n_fermions=budget)
             fqaoas.append(fqaoa)
 
-        # for each qaoa object, test the evaluate_circuit method
+        # for each fqaoa object, test the evaluate_circuit method
         for fqaoa in fqaoas:
             # evaluate the circuit with random dict of params
             params = {
