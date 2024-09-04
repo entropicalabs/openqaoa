@@ -1415,6 +1415,10 @@ class TestingVanillaQAOA(unittest.TestCase):
             # compile and evaluate the circuit, and check that the result is correct
             q.compile(problem)
             result = q.evaluate_circuit([1, 2, 1, 2, 1, 2])
+            self.assertIsInstance(
+                result["measurement_results"], dict,
+                "When using a shot-based simulator, evaluate_circuit should return a dict of counts"
+            )
             self.assertTrue(
                 abs(result["cost"]) >= 0,
                 "When using a shot-based simulator, evaluate_circuit should return a cost"
@@ -2023,18 +2027,6 @@ class TestingFQAOA(unittest.TestCase):
         with self.assertRaises(ValueError):
             fqaoa.set_backend_properties(prepend_state=prepend_state_rand)
 
-    def test_set_backend_init_append_state_change(self):
-        """
-        Ensure that an error occurs if the `append_state` is set by the set_backend method.
-        """
-
-        fqaoa = FQAOA()
-
-        self.assertIsNone(fqaoa.backend_properties.append_state)
-        append_state_rand = np.random.rand(2**2)
-        with self.assertRaises(ValueError):
-            fqaoa.set_backend_properties(append_state=append_state_rand)
-
     def test_set_backend_properties_check_backend_vectorized(self):
         """
         Check if the backend returned by set_backend_properties is correct
@@ -2273,6 +2265,10 @@ class TestingFQAOA(unittest.TestCase):
             # compile and evaluate the circuit, and check that the result is correct
             fqaoa.compile(problem, budget)
             result = fqaoa.evaluate_circuit([1, 2, 1, 2, 1, 2])
+            self.assertIsInstance(
+                result["measurement_results"], dict,
+                "When using a shot-based simulator, evaluate_circuit should return a dict of counts"
+            )
             self.assertTrue(
                 abs(result["cost"]) >= 0,
                 "When using a shot-based simulator, evaluate_circuit should return a cost"

@@ -788,7 +788,7 @@ class FermiBackendProperties(WorkflowProperties):
             raise ValueError("In FQAOA, append_state is not recognized.")
         self.init_hadamard = False
         self.prepend_state = None
-        self.append_state = None
+        self.append_state = append_state
         self.n_shots = n_shots
         self.cvar_alpha = cvar_alpha
         self.noise_model = noise_model
