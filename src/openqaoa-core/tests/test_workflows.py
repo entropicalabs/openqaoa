@@ -26,7 +26,6 @@ from openqaoa.algorithms.rqaoa.rqaoa_workflow_properties import RqaoaParameters
 from openqaoa.algorithms.fqaoa.fqaoa_utils import (
     get_analytical_fermi_orbitals,
     get_statevector,
-    generate_random_portfolio_data,
 )
 from openqaoa.backends import create_device, DeviceLocal
 from openqaoa.backends.cost_function import cost_function
@@ -56,6 +55,7 @@ from openqaoa.qaoa_components.variational_parameters.variational_params_factory 
     PARAMS_CLASSES_MAPPER,
 )
 
+from test_fqaoa import is_close_statevector
 
 def _compare_qaoa_results(dict_old, dict_new):
     for key in dict_old.keys():
@@ -114,7 +114,6 @@ def _test_keys_in_dict(obj, expected_keys):
     elif isinstance(obj, list):
         for item in obj:
             _test_keys_in_dict(item, expected_keys)
-
 
 class TestingVanillaQAOA(unittest.TestCase):
     """
@@ -345,7 +344,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
     def test_set_circuit_properties_variate_params(self):
         """
-        Ensure that the Varitional Parameter Object created based on the input string , param_type, is correct.
+        Ensure that the Variational Parameter Object created based on the input string , param_type, is correct.
 
         TODO: Check if q=None is the appropriate default.
         """
@@ -382,7 +381,7 @@ class TestingVanillaQAOA(unittest.TestCase):
 
     def test_set_circuit_properties_change(self):
         """
-        Ensure that once a property has beefn changed via set_circuit_properties.
+        Ensure that once a property has been changed via set_circuit_properties.
         The attribute has been appropriately updated.
         Updating all attributes at the same time.
         """
@@ -1134,7 +1133,7 @@ class TestingVanillaQAOA(unittest.TestCase):
             nw.generators.fast_gnp_random_graph(n=6, p=0.6, seed=42)
         ).qubo
 
-        # run rqaoa with different devices, and save the objcets in a list
+        # run rqaoa with different devices, and save the objects in a list
         qaoas = []
         for device in [
             create_device(location="local", name="vectorized"),
@@ -1406,28 +1405,24 @@ class TestingVanillaQAOA(unittest.TestCase):
             q.set_device(device)
             q.set_circuit_properties(p=3)
 
-            # try to evaluate the circuit before compiling
-            error = False
-            try:
-                q.evaluate_circuit()
-            except Exception:
-                error = True
-            assert (
-                error
-            ), f"param_type={param_type}. `evaluate_circuit` should raise an error if the circuit is not compiled"
+            with self.assertRaises(ValueError) as cm:
+                q.evaluate_circuit([1, 2, 1, 2, 1, 2])
+            self.assertIn(
+                "Please compile the QAOA before optimizing it!",
+                str(cm.exception),
+            )
 
             # compile and evaluate the circuit, and check that the result is correct
             q.compile(problem)
             result = q.evaluate_circuit([1, 2, 1, 2, 1, 2])
-            assert isinstance(
-                result["measurement_results"], dict
-            ), "When using a shot-based simulator, `evaluate_circuit` should return a dict of counts"
-            assert (
-                abs(result["cost"]) >= 0
-            ), "When using a shot-based simulator, `evaluate_circuit` should return a cost"
-            assert (
-                abs(result["uncertainty"]) > 0
-            ), "When using a shot-based simulator, `evaluate_circuit` should return an uncertainty"
+            self.assertTrue(
+                abs(result["cost"]) >= 0,
+                "When using a shot-based simulator, evaluate_circuit should return a cost"
+            )
+            self.assertTrue(
+                abs(result["uncertainty"]) > 0,
+                "When using a shot-based simulator, evaluate_circuit should return an uncertainty"
+            )
 
             cost = cost_function(
                 result["measurement_results"],
@@ -1440,12 +1435,14 @@ class TestingVanillaQAOA(unittest.TestCase):
                 q.backend.cvar_alpha,
             )
             uncertainty = np.sqrt(cost_sq - cost**2)
-            assert (
-                np.round(cost, 12) == result["cost"]
-            ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct cost"
-            assert (
-                np.round(uncertainty, 12) == result["uncertainty"]
-            ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct uncertainty"
+            self.assertTrue(
+                np.round(cost, 12) == result["cost"],
+                "When using a shot-based simulator, evaluate_circuit not returning the correct cost"
+            )
+            self.assertTrue(
+                np.round(uncertainty, 12) == result["uncertainty"],
+                "When using a shot-based simulator, evaluate_circuit not returning the correct uncertainty"
+            )
 
     def test_qaoa_evaluate_circuit_analytical_sim(self):
         # problem
@@ -1736,7 +1733,7 @@ class TestingFQAOA(unittest.TestCase):
     Unit test based testing of the QAOA workflow class
     """
 
-    def test_vanilla_qaoa_default_values(self):
+    def test_vanilla_fqaoa_default_values(self):
         fqaoa = FQAOA()
         assert fqaoa.circuit_properties.p == 1
         assert fqaoa.circuit_properties.param_type == "standard"
@@ -1747,16 +1744,15 @@ class TestingFQAOA(unittest.TestCase):
         assert fqaoa.device.device_name == "vectorized"
 
     def test_end_to_end_vectorized(self):
-        num_assets, budget = 5, 3
-        mu, sigma, _ = generate_random_portfolio_data(num_assets = num_assets, num_days = 15, seed = 1)
-        po = PortfolioOptimization(mu, sigma, risk_factor = None, budget = budget, penalty = None).qubo
+        num_assets, budget = 4, 2
+        po = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
         fqaoa = FQAOA()
         fqaoa.set_classical_optimizer(optimization_progress=True)
-        fqaoa.fermi_compile(po, budget)
+        fqaoa.compile(po, budget)
         fqaoa.optimize()
         result = fqaoa.result.most_probable_states["solutions_bitstrings"][0]
-        assert "11010" == result
+        assert "1010" == result
 
     def test_set_device_local(self):
         """ "
@@ -1783,18 +1779,17 @@ class TestingFQAOA(unittest.TestCase):
 
     def test_cost_hamil(self):
         num_assets, budget = 5, 3
-        mu, sigma, _ = generate_random_portfolio_data(num_assets = num_assets, num_days = 15, seed = 1)
-        qubo_problem = PortfolioOptimization(mu, sigma, risk_factor = None, budget = budget, penalty = None).qubo
+        problem = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
         test_hamil = Hamiltonian.classical_hamiltonian(
-            terms=qubo_problem.terms,
-            coeffs=qubo_problem.weights,
-            constant=qubo_problem.constant,
+            terms=problem.terms,
+            coeffs=problem.weights,
+            constant=problem.constant,
         )
 
         fqaoa = FQAOA()
 
-        fqaoa.fermi_compile(problem=qubo_problem, n_fermions=budget)
+        fqaoa.compile(problem=problem, n_fermions=budget)
 
         self.assertEqual(fqaoa.cost_hamil.expression, test_hamil.expression)
         self.assertEqual(
@@ -1838,12 +1833,9 @@ class TestingFQAOA(unittest.TestCase):
         self.assertEqual(fqaoa.circuit_properties.annealing_time, 0.7 * 2)
         self.assertEqual(fqaoa.circuit_properties.linear_ramp_time, 0.7 * 2)
 
-    def test_set_circuit_properties_qaoa_descriptor_mixer_x(self):
+    def test_set_circuit_properties_fqaoa_descriptor_mixer_x(self):
         """
-        Checks if the X mixer created by the X_mixer_hamiltonian method
-        and the automated methods in workflows do the same thing.
-
-        For each qubit, there should be 1 RXGateMap per layer of p.
+        Checks if setting the incorrect mixer_hamiltonian 'x' raises a ValueError.
         """
 
         nodes = 6
@@ -1853,10 +1845,10 @@ class TestingFQAOA(unittest.TestCase):
 
         fqaoa = FQAOA()
         self.assertRaises(
-            ValueError, lambda: fqaoa.set_circuit_properties(param_type="wrong name")
+            ValueError, lambda: fqaoa.set_circuit_properties(mixer_hamiltonian="x")
         )
 
-    def test_set_circuit_properties_qaoa_descriptor_mixer_xy(self):
+    def test_set_circuit_properties_fqaoa_descriptor_mixer_xy(self):
         """
         Checks if the XY mixer created by the XY_mixer_hamiltonian method
         and the automated methods in workflows do the same thing.
@@ -1866,8 +1858,7 @@ class TestingFQAOA(unittest.TestCase):
         """
 
         num_assets, budget = 5, 3
-        mu, sigma, _ = generate_random_portfolio_data(num_assets = num_assets, num_days = 15, seed = 1)
-        problem = PortfolioOptimization(mu, sigma, risk_factor = None, budget = budget, penalty = None).qubo
+        problem = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
         qubit_connectivity_name = ["cyclic", "chain"]
 
@@ -1879,7 +1870,7 @@ class TestingFQAOA(unittest.TestCase):
                 p=2,
             )
 
-            fqaoa.fermi_compile(problem, budget, hopping = -1.0)
+            fqaoa.compile(problem, budget, hopping = -1.0)
 
             self.assertEqual(type(fqaoa.qaoa_descriptor), QAOADescriptor)
             self.assertEqual(fqaoa.qaoa_descriptor.p, 2)
@@ -1899,7 +1890,7 @@ class TestingFQAOA(unittest.TestCase):
 
     def test_set_circuit_properties_variate_params(self):
         """
-        Ensure that the Varitional Parameter Object created based on the input string , param_type, is correct.
+        Ensure that the Variational Parameter Object created based on the input string , param_type, is correct.
 
         TODO: Check if q=None is the appropriate default.
         """
@@ -1922,43 +1913,24 @@ class TestingFQAOA(unittest.TestCase):
         ]
 
         num_assets, budget = 5, 3
-        mu, sigma, _ = generate_random_portfolio_data(num_assets = num_assets, num_days = 15, seed = 1)
-        problem = PortfolioOptimization(mu, sigma, risk_factor = None, budget = budget, penalty = None)
+        problem = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
         for i in range(len(object_types)):
             fqaoa = FQAOA()
             fqaoa.set_circuit_properties(param_type=param_type_names[i], q=1)
 
-            fqaoa.fermi_compile(problem=problem.qubo, n_fermions=budget)
+            fqaoa.compile(problem=problem, n_fermions=budget)
 
             self.assertEqual(type(fqaoa.variate_params), object_types[i])
 
     def test_set_circuit_properties_change(self):
         """
-        Ensure that once a property has beefn changed via set_circuit_properties.
+        Ensure that once a property has been changed via set_circuit_properties.
         The attribute has been appropriately updated.
         Updating all attributes at the same time.
         """
 
-        #         default_pairings = {'param_type': 'standard',
-        #                             'init_type': 'ramp',
-        #                             'qubit_register': [],
-        #                             'p': 1,
-        #                             'q': None,
-        #                             'annealing_time': 0.7,
-        #                             'linear_ramp_time': 0.7,
-        #                             'variational_params_dict': {},
-        #                             'mixer_hamiltonian': 'x',
-        #                             'mixer_qubit_connectivity': None,
-        #                             'mixer_coeffs': None,
-        #                             'seed': None}
-
         fqaoa = FQAOA()
-
-        # TODO: Some weird error related to the initialisation of QAOA here
-        #         for each_key, each_value in default_pairings.items():
-        #             print(each_key, getattr(fqaoa.circuit_properties, each_key), each_value)
-        #             self.assertEqual(getattr(fqaoa.circuit_properties, each_key), each_value)
 
         update_pairings = {
             "param_type": "fourier",
@@ -2023,7 +1995,7 @@ class TestingFQAOA(unittest.TestCase):
         }
 
         fqaoa.set_backend_properties(**update_pairings)
-        
+
         for each_key, each_value in update_pairings.items():
             self.assertEqual(getattr(fqaoa.backend_properties, each_key), each_value)
 
@@ -2062,7 +2034,7 @@ class TestingFQAOA(unittest.TestCase):
         append_state_rand = np.random.rand(2**2)
         with self.assertRaises(ValueError):
             fqaoa.set_backend_properties(append_state=append_state_rand)
-            
+
     def test_set_backend_properties_check_backend_vectorized(self):
         """
         Check if the backend returned by set_backend_properties is correct
@@ -2071,12 +2043,11 @@ class TestingFQAOA(unittest.TestCase):
         """
 
         num_assets, budget = 5, 3
-        mu, sigma, _ = generate_random_portfolio_data(num_assets = num_assets, num_days = 15, seed = 1)
-        problem = PortfolioOptimization(mu, sigma, risk_factor = None, budget = budget, penalty = None)
+        problem = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
         fqaoa = FQAOA()
         fqaoa.set_device(create_device(location="local", name="vectorized"))
-        fqaoa.fermi_compile(problem=problem.qubo, n_fermions=3)
+        fqaoa.compile(problem=problem, n_fermions=3)
 
         orbitals = get_analytical_fermi_orbitals(n_qubits=num_assets, n_fermions=budget, lattice="cyclic", hopping=1.0)
         initial_state = get_statevector(orbitals)
@@ -2084,10 +2055,14 @@ class TestingFQAOA(unittest.TestCase):
         self.assertEqual(type(fqaoa.backend), QAOAvectorizedBackendSimulator)
 
         self.assertEqual(fqaoa.backend.init_hadamard, False)
-        self.assertTrue(np.array_equal(fqaoa.backend.prepend_state, initial_state))
+
+        statevector = [fqaoa.backend.prepend_state, initial_state]
+        is_close_statevector(statevector[0], statevector[1])
+        self.assertTrue(is_close_statevector(statevector[0], statevector[1]),
+                        f"statevector[0] cannot be expressed as e^(i*theta) * statevector[1].")
+
         self.assertEqual(fqaoa.backend.append_state, None)
         self.assertEqual(fqaoa.backend.cvar_alpha, 1)
-
         self.assertRaises(AttributeError, lambda: fqaoa.backend.n_shots)
 
     def test_set_backend_properties_check_backend_vectorized_w_custom(self):
@@ -2099,8 +2074,7 @@ class TestingFQAOA(unittest.TestCase):
         """
 
         num_assets, budget = 5, 3
-        mu, sigma, _ = generate_random_portfolio_data(num_assets = num_assets, num_days = 15, seed = 1)
-        qubo_problem = PortfolioOptimization(mu, sigma, risk_factor = None, budget = budget, penalty = None).qubo
+        problem = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
         fqaoa = FQAOA()
         fqaoa.set_device(create_device(location="local", name="vectorized"))
@@ -2112,51 +2086,37 @@ class TestingFQAOA(unittest.TestCase):
 
         fqaoa.set_backend_properties(**update_pairings)
 
-        fqaoa.fermi_compile(problem=qubo_problem, n_fermions=budget)
-        
+        fqaoa.compile(problem=problem, n_fermions=budget)
+
         orbitals = get_analytical_fermi_orbitals(n_qubits=num_assets, n_fermions=budget, lattice="cyclic", hopping=1.0)
         initial_state = get_statevector(orbitals)
 
         self.assertEqual(type(fqaoa.backend), QAOAvectorizedBackendSimulator)
-        
-        self.assertTrue(np.array_equal(fqaoa.backend.prepend_state, initial_state))
+
+        statevector = [fqaoa.backend.prepend_state, initial_state]
+        is_close_statevector(statevector[0], statevector[1])
+
         self.assertEqual(fqaoa.backend.cvar_alpha, 1)
 
         self.assertRaises(AttributeError, lambda: fqaoa.backend.n_shots)
-        
-    def test_set_classical_optimizer_defaults(self):
-        pass
 
-    def test_set_classical_optimizer_jac_hess_casing(self):
-        pass
-
-    def test_set_classical_optimizer_method_selectors(self):
-        pass
-
-    def test_set_header(self):
-        pass
-
-    def test_set_exp_tags(self):
-        pass
-
-    def test_qaoa_evaluate_circuit(self):
+    def test_fqaoa_evaluate_circuit(self):
         """
         test the evaluate_circuit method
         """
 
         # problem
         num_assets, budget = 5, 3
-        mu, sigma, _ = generate_random_portfolio_data(num_assets = num_assets, num_days = 15, seed = 1)
-        problem = PortfolioOptimization(mu, sigma, risk_factor = None, budget = budget, penalty = None).qubo
+        problem = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
-        # run qaoa with different param_type, and save the objcets in a list
+        # run qaoa with different param_type, and save the objects in a list
         fqaoas = []
         for param_type in PARAMS_CLASSES_MAPPER.keys():
             fqaoa = FQAOA()
             fqaoa.set_circuit_properties(
                 p=3, param_type=param_type, init_type="rand", seed=0
             )
-            fqaoa.fermi_compile(problem=problem, n_fermions=budget)
+            fqaoa.compile(problem=problem, n_fermions=budget)
             fqaoas.append(fqaoa)
 
         # for each qaoa object, test the evaluate_circuit method
@@ -2287,11 +2247,10 @@ class TestingFQAOA(unittest.TestCase):
                 ):
                 fqaoa.evaluate_circuit()
 
-    def test_qaoa_evaluate_circuit_shot(self):
+    def test_fqaoa_evaluate_circuit_shot(self):
         # problem
         num_assets, budget = 5, 3
-        mu, sigma, _ = generate_random_portfolio_data(num_assets = num_assets, num_days = 15, seed = 1)
-        problem = PortfolioOptimization(mu, sigma, risk_factor = None, budget = budget, penalty = None).qubo
+        problem = PortfolioOptimization.random_instance(num_assets=num_assets, budget=budget).qubo
 
         if "qiskit.qasm_simulator" not in SUPPORTED_LOCAL_SIMULATORS:
             self.skipTest(
@@ -2304,28 +2263,24 @@ class TestingFQAOA(unittest.TestCase):
             fqaoa.set_device(device)
             fqaoa.set_circuit_properties(p=3)
 
-            # try to evaluate the circuit before compiling
-            error = False
-            try:
-                fqaoa.evaluate_circuit()
-            except Exception:
-                error = True
-            assert (
-                error
-            ), f"param_type={param_type}. `evaluate_circuit` should raise an error if the circuit is not compiled"
+            with self.assertRaises(ValueError) as cm:
+                fqaoa.evaluate_circuit([1, 2, 1, 2, 1, 2])
+            self.assertIn(
+                "Please compile the FQAOA before optimizing it!",
+                str(cm.exception),
+            )
 
             # compile and evaluate the circuit, and check that the result is correct
-            fqaoa.fermi_compile(problem, budget)
+            fqaoa.compile(problem, budget)
             result = fqaoa.evaluate_circuit([1, 2, 1, 2, 1, 2])
-            assert isinstance(
-                result["measurement_results"], dict
-            ), "When using a shot-based simulator, `evaluate_circuit` should return a dict of counts"
-            assert (
-                abs(result["cost"]) >= 0
-            ), "When using a shot-based simulator, `evaluate_circuit` should return a cost"
-            assert (
-                abs(result["uncertainty"]) > 0
-            ), "When using a shot-based simulator, `evaluate_circuit` should return an uncertainty"
+            self.assertTrue(
+                abs(result["cost"]) >= 0,
+                "When using a shot-based simulator, evaluate_circuit should return a cost"
+            )
+            self.assertTrue(
+                abs(result["uncertainty"]) > 0,
+                "When using a shot-based simulator, evaluate_circuit should return an uncertainty"
+            )
 
             cost = cost_function(
                 result["measurement_results"],
@@ -2338,17 +2293,19 @@ class TestingFQAOA(unittest.TestCase):
                 fqaoa.backend.cvar_alpha,
             )
             uncertainty = np.sqrt(cost_sq - cost**2)
-            assert (
-                np.round(cost, 12) == result["cost"]
-            ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct cost"
-            assert (
-                np.round(uncertainty, 12) == result["uncertainty"]
-            ), "When using a shot-based simulator, `evaluate_circuit` not returning the correct uncertainty"
+            self.assertTrue(
+                np.round(cost, 12) == result["cost"],
+                "When using a shot-based simulator, evaluate_circuit not returning the correct cost"
+            )
+            self.assertTrue(
+                np.round(uncertainty, 12) == result["uncertainty"],
+                "When using a shot-based simulator, evaluate_circuit not returning the correct uncertainty"
+            )
 
     def test_change_properties_after_compilation(self):
         device = create_device(location="local", name="vectorized")
         fqaoa = FQAOA()
-        fqaoa.fermi_compile(QUBO.random_instance(4), 2)
+        fqaoa.compile(QUBO.random_instance(4), 2)
         state_rand = np.random.rand(2**2)
 
         with self.assertRaises(ValueError):

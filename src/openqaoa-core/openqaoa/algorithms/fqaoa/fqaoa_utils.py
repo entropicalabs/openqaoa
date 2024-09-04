@@ -134,8 +134,8 @@ def get_analytical_fermi_orbitals(
         The number of fermions, which determines how many rows of the 
         orbital matrix are considered in the computation.
     lattice : str
-        The type of lattice configuration. Currently, only 'cyclic' lattice configurations 
-        are supported.
+        The type of lattice configuration. Only 'cyclic' lattice configurations 
+        is supported.
     hopping : float
         The hopping parameter, which must be greater than 0. This value represents 
         the amplitude of hopping between lattice sites.
@@ -165,7 +165,7 @@ def get_analytical_fermi_orbitals(
     if n_fermions > n_qubits:
         raise ValueError(f"n_fermions ({n_fermions}) cannot be greater than n_qubits ({n_qubits}).")
 
-    if lattice not in 'cyclic':
+    if lattice not in ['cyclic']:
         raise ValueError("analytical solutions support only 'cyclic'")
 
     if hopping <= 0.0: raise ValueError("analytical solutions support hopping > 0")
@@ -245,7 +245,7 @@ def get_fermi_orbitals(
         raise ValueError(f"n_fermions ({n_fermions}) cannot be greater than n_qubits ({n_qubits}).")
 
     if lattice not in ALLOWED_LATTICE:
-        raise ValueError(f"In FQAOA, lattice {lattice} is not recognised. Please use {ALLOWED_LATTICE}")
+        raise ValueError(f"In FQAOA, lattice {lattice} is not recognized. Please use {ALLOWED_LATTICE}")
 
     if hopping == 0.0: raise ValueError("In FQAOA, hopping = 0 is not recgnized. Please use hopping != 0")
 

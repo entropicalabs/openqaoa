@@ -178,10 +178,10 @@ Your first FQAOA workflow
 
    from openqaoa import FQAOA
    fqaoa = FQAOA()
-   fqaoa.fermi_compile(qubo_problem, n_fermions)
+   fqaoa.compile(qubo_problem, n_fermions)
    fqaoa.optimize()
 
-FQAOA intrinsically imposes a hard constraint where the hamming wieght is equal to n_fermions.
+FQAOA intrinsically imposes a hard constraint where the hamming weight is equal to n_fermions.
 
 Factory mode
 ------------
@@ -317,7 +317,8 @@ Contents
    notebooks/14_qaoa_benchmark.ipynb
    notebooks/X_dumping_data.ipynb
    notebooks/15_Zero_Noise_Extrapolation.ipynb
-   notebooks/16_FQAOA_examples.ipynb
+   notebooks/16_FQAOA_example.ipynb
+   notebooks/17_FQAOA_advanced_parametrization.ipynb
 
 Indices and tables
 ==================

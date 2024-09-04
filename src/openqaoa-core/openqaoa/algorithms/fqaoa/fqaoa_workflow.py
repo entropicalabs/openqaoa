@@ -46,6 +46,14 @@ ALLOWED_PARAM_TYPES = [
 ALLOWED_INIT_TYPES = ["rand", "ramp", "custom"]
 ALLOWED_MIXERS = ["xy"]
 ALLOWED_LATTICE = ["cyclic", "chain"]
+ALLOWED_LOCAL_SIMUALTORS = [
+    "vectorized",
+    "pyquil.statevector_simulator",
+    'qiskit.qasm_simulator',
+    'qiskit.shot_simulator',
+    'qiskit.statevector_simulator',
+]
+NOT_ALLOWED_LOCAL_SIMULATORS = ["analytical_simulator"]
 
 class FQAOA(Workflow):
     """
@@ -103,10 +111,11 @@ class FQAOA(Workflow):
     to use the function.
 
     >>> fqaoa = FQAOA()
-    >>> fqaoa.fermi_compile(problem, n_fermions)
+    >>> fqaoa.compile(problem, n_fermions)
     >>> fqaoa.optimize()
 
-    Where `problem` is an instance of portfolio optimization and `n_fermions` is a constraint value.
+    Where `problem` is an instance of `openqaoa.problems.problem.QUBO`
+    with hamming weight constant constraint, where `n_fermions` is a constraint value.
 
     If you want to use non-default parameters:
 
@@ -123,7 +132,7 @@ class FQAOA(Workflow):
     >>> fqaoa_custom.set_device(device)
     >>> fqaoa_custom.set_backend_properties(n_shots=200)
     >>> fqaoa_custom.set_classical_optimizer(method='nelder-mead', maxiter=2)
-    >>> fqaoa_custom.fermi_compile(problem, n_fermions)
+    >>> fqaoa_custom.compile(problem, n_fermions)
     >>> fqaoa_custom.optimize()
     """
 
@@ -141,8 +150,8 @@ class FQAOA(Workflow):
         self.backend_properties = FermiBackendProperties()
 
         # Exception handling in FQAOA
-        if device.device_name == 'analytical_simulator':
-            raise ValueError("FQAOA cannot be performed on the analytical simulator")
+        if device.device_name in NOT_ALLOWED_LOCAL_SIMULATORS:
+            raise ValueError(f"FQAOA does not support {NOT_ALLOWED_LOCAL_SIMULATORS}.")
 
         # change header algorithm to fqaoa
         self.header["algorithm"] = "fqaoa"
@@ -158,8 +167,9 @@ class FQAOA(Workflow):
             Device to be used by the optimizer.
         """
 
-        if device.device_name == 'analytical_simulator':
-            raise ValueError("FQAOA cannot be performed on the analytical simulator")
+        # Exception handling in FQAOA
+        if device.device_name in NOT_ALLOWED_LOCAL_SIMULATORS:
+            raise ValueError(f"FQAOA does not support {NOT_ALLOWED_LOCAL_SIMULATORS}.")
 
         # Call the parent class's set_device method to handle the rest
         super().set_device(device)
@@ -189,8 +199,8 @@ class FQAOA(Workflow):
         self.backend_properties = FermiBackendProperties(**kwargs)
 
         return None
-    @check_compiled
 
+    @check_compiled
     def set_circuit_properties(self, **kwargs):
         """
         Specify the circuit properties to construct QAOA circuit
@@ -257,22 +267,6 @@ class FQAOA(Workflow):
         routing_function: Optional[Callable] = None,
     ):
         """
-        Prevents usage of the compile method.
-        """
-
-        raise NotImplementedError(
-            "In FQAOA, the compile(problem) method cannot be used; please use fermi_compile(problem, n_femions) instead."
-        )
-
-    def fermi_compile(
-        self,
-        problem: QUBO = None,
-        n_fermions: int = None,
-        hopping: float = 1.0,
-        verbose: bool = False,
-        routing_function: Optional[Callable] = None,
-    ):
-        """
         Initialise the trainable parameters for FQAOA according to the specified
         strategies and by passing the problem statement
 
@@ -297,7 +291,7 @@ class FQAOA(Workflow):
 
         # connect to the QPU specified
         self.device.check_connection()
-        # we compile the method of the parent class to genereate the id and
+        # we compile the method of the parent class to generate the id and
         # check the problem is a QUBO object and save it
         super().compile(problem=problem)
 
@@ -350,8 +344,7 @@ class FQAOA(Workflow):
         lattice = self.circuit_properties.mixer_qubit_connectivity
 
         # fermion orbitals
-        if lattice == "cyclic" and hopping > 0.0: orbitals = get_analytical_fermi_orbitals(self.n_qubits, self.n_fermions, lattice, hopping)
-        else: orbitals = get_fermi_orbitals(self.n_qubits, self.n_fermions, lattice, hopping)
+        orbitals = get_fermi_orbitals(self.n_qubits, self.n_fermions, lattice, hopping)
 
         # initial statevector or circuit
         if self.device.device_name in 'vectorized':
@@ -487,7 +480,7 @@ class FQAOA(Workflow):
         """
         # before evaluating the circuit we check that the QAOA object has been compiled
         if self.compiled is False:
-            raise ValueError("Please compile the QAOA before optimizing it!")
+            raise ValueError("Please compile the FQAOA before optimizing it!")
 
         # Check the type of the input parameters and save them as a
         # QAOAVariationalBaseParams object at the variable `params_obj`
@@ -654,7 +647,7 @@ class FQAOA(Workflow):
             gate = X(gate_applicator, i)
             gate.apply_gate(initial_circuit)
 
-        # appply `givens rotation gate`
+        # apply `givens rotation gate`
         gtheta = get_givens_rotation_angle(orbitals)
         i = (self.n_qubits-self.n_fermions)*self.n_fermions
         for irow in range(self.n_fermions-1, -1, -1):
@@ -712,21 +705,20 @@ class GivensRotationGateMap(GateMap):
 
     @property
     def _decomposition_standard(self) -> List[Tuple]:
-        givens_rotation = []
-        givens_rotation.append((RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]))
-        givens_rotation.append((RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]))
-        givens_rotation.append((RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]))
-        givens_rotation.append((X,  [self.qubit_1]))
-        givens_rotation.append((CX, [self.qubit_1, self.qubit_2]))
-        givens_rotation.append((RY, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, self.angle)]))
-        givens_rotation.append((RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, self.angle)]))
-        givens_rotation.append((CX, [self.qubit_1, self.qubit_2]))
-        givens_rotation.append((RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]))
-        givens_rotation.append((X,  [self.qubit_1]))
-        givens_rotation.append((RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, -np.pi / 2)]))
-        givens_rotation.append((RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, -np.pi / 2)]))
-
-        return givens_rotation
+        return[
+            (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]),
+            (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]),
+            (RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]),
+            (X,  [self.qubit_1]),
+            (CX, [self.qubit_1, self.qubit_2]),
+            (RY, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, self.angle)]),
+            (RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, self.angle)]),
+            (CX, [self.qubit_1, self.qubit_2]),
+            (RY, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, np.pi / 2)]),
+            (X,  [self.qubit_1]),
+            (RZ, [self.qubit_2, RotationAngle(lambda x: x, self.gate_label, -np.pi / 2)]),
+            (RZ, [self.qubit_1, RotationAngle(lambda x: x, self.gate_label, -np.pi / 2)]),
+        ]
 
 class FermiBackendProperties(WorkflowProperties):
     """
@@ -765,7 +757,7 @@ class FermiBackendProperties(WorkflowProperties):
     rewiring: str
         Specify the rewiring strategy for compilation for Rigetti QPUs through QCS
     disable_qubit_rewiring: bool
-        enable/disbale qubit rewiring when accessing QPUs via the AWS `braket`
+        enable/disable qubit rewiring when accessing QPUs via the AWS `braket`
     """
 
     def __init__(
@@ -789,11 +781,11 @@ class FermiBackendProperties(WorkflowProperties):
         disable_qubit_rewiring: Optional[bool] = None,
     ):
         if init_hadamard:
-            raise ValueError("In FQAOA, init_hadamard is not recognised.")
+            raise ValueError("In FQAOA, init_hadamard is not recognized.")
         if prepend_state is not None:
-            raise ValueError("In FQAOA, prepend_state is not recognised.")
+            raise ValueError("In FQAOA, prepend_state is not recognized.")
         if append_state is not None:
-            raise ValueError("In FQAOA, append_state is not recognised.")
+            raise ValueError("In FQAOA, append_state is not recognized.")
         self.init_hadamard = False
         self.prepend_state = None
         self.append_state = None
@@ -848,9 +840,9 @@ class FermiCircuitProperties(WorkflowProperties):
             linear_ramp_time if linear_ramp_time is not None else 0.7 * self.p
         )
         if mixer_hamiltonian.lower() not in ALLOWED_MIXERS:
-            raise ValueError(f"In FQAOA, mixer_hamiltonian {mixer_hamiltonian.lower()} is not recognised. Please use {ALLOWED_MIXERS}")
+            raise ValueError(f"In FQAOA, mixer_hamiltonian {mixer_hamiltonian.lower()} is not recognized.")
         if mixer_qubit_connectivity not in ALLOWED_LATTICE:
-            raise ValueError(f"In FQAOA, mixer_qubit_connectivity {mixer_qubit_connectivity} is not recognised. Please use {ALLOWED_LATTICE}")
+            raise ValueError(f"In FQAOA, mixer_qubit_connectivity {mixer_qubit_connectivity} is not recognized.")
         self.mixer_hamiltonian = mixer_hamiltonian
         self.mixer_qubit_connectivity = mixer_qubit_connectivity
         self.mixer_coeffs = mixer_coeffs
@@ -864,7 +856,7 @@ class FermiCircuitProperties(WorkflowProperties):
     def param_type(self, value):
         if value not in ALLOWED_PARAM_TYPES:
             raise ValueError(
-                f"param_type {value} is not recognised. Please use {ALLOWED_PARAM_TYPES}"
+                f"param_type {value} is not recognized. Please use {ALLOWED_PARAM_TYPES}"
             )
         self._param_type = value
 
@@ -876,7 +868,7 @@ class FermiCircuitProperties(WorkflowProperties):
     def init_type(self, value):
         if value not in ALLOWED_INIT_TYPES:
             raise ValueError(
-                f"init_type {value} is not recognised. Please use {ALLOWED_INIT_TYPES}"
+                f"init_type {value} is not recognized. Please use {ALLOWED_INIT_TYPES}"
             )
         self._init_type = value
 
@@ -888,7 +880,7 @@ class FermiCircuitProperties(WorkflowProperties):
     def mixer_hamiltonian(self, value):
         if value not in ALLOWED_MIXERS:
             raise ValueError(
-                f"mixer_hamiltonian {value} is not recognised. Please use {ALLOWED_MIXERS}"
+                f"mixer_hamiltonian {value} is not recognized. Please use {ALLOWED_MIXERS}"
             )
         self._mixer_hamiltonian = value
 

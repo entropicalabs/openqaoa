@@ -7,7 +7,6 @@ from openqaoa.algorithms.fqaoa.fqaoa_utils import (
     get_fermi_orbitals,
     get_givens_rotation_angle,
     get_statevector,
-    generate_random_portfolio_data,
 )
 
 """
@@ -39,7 +38,7 @@ class TestFQAOAUtils(unittest.TestCase):
 
     def test_fermi_orbitals_equivalence_to_statevector(self):
         """
-        Test that get_analytical_fermi_oribalts and get_fermi_orbitals are equivalent by outputting statevector.
+        Test that get_analytical_fermi_orbitals and get_fermi_orbitals are equivalent by outputting statevector.
 
         The test consists of generating analytical and numerical free fermi orbitals
         and checking that the respective state vectors are numerically consistent.
@@ -49,23 +48,13 @@ class TestFQAOAUtils(unittest.TestCase):
                 (5, 3, "cyclic", 1.0),
                 (5, 2, "cyclic", 1.0)
         ]:
-            try:
-                orbitals1 = get_analytical_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
-            except ValueError as e:
-                self.fail(f"Unexpected exception raised: {e}")
+            analytical_fermi_orbitals = get_analytical_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
+            fermi_orbitals = get_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
+            statevector = [get_statevector(analytical_fermi_orbitals), get_statevector(fermi_orbitals)]
+            self.assertTrue(is_close_statevector(statevector[0], statevector[1]),
+                            "statevector[0] cannot be expressed as e^(i*theta) * statevector[1].")
 
-            try:
-                orbitals2 = get_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
-            except ValueError as e:
-                self.fail(f"Unexpected exception raised: {e}")
-
-            statevector = []
-            for orbitals in [orbitals1, orbitals2]:
-                statevector.append(get_statevector(orbitals))
-            # Check statevector[0] = e^(i*theta) * statevector[1].
-            self.assertTrue(self.is_close_statevector(statevector), "Statevectors are not equivalent up to a global phase.")
-
-    def test_gicvens_rotation_angle_length(self):
+    def test_givens_rotation_angle_length(self):
         """
         Test with various valid inputs for get_givens_rotation_angle.
 
@@ -79,13 +68,12 @@ class TestFQAOAUtils(unittest.TestCase):
             lattice = params["lattice"]
             hopping = params["hopping"]
 
-            if lattice == "cyclic" and hopping > 0.0: orbitals = get_analytical_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
-            else: orbitals = get_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
+            if lattice == "cyclic" and hopping > 0.0:
+                orbitals = get_analytical_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
+            else:
+                orbitals = get_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
 
-            try:
-                gtheta = get_givens_rotation_angle(orbitals)
-            except ValueError as e:
-                self.fail(f"Unexpected exception raised: {e}")
+            gtheta = get_givens_rotation_angle(orbitals)
 
             # Check the diagonal matrix
             self.assertTrue(self.is_left_aligned_diagonal_matrix(orbitals), "orbitals are not diagonalized")
@@ -108,8 +96,10 @@ class TestFQAOAUtils(unittest.TestCase):
             lattice = params["lattice"]
             hopping = params["hopping"]
 
-            if lattice == "cyclic" and hopping > 0.0: orbitals0 = get_analytical_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
-            else: orbitals0 = get_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
+            if lattice == "cyclic" and hopping > 0.0:
+                orbitals0 = get_analytical_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
+            else:
+                orbitals0 = get_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
 
             orbitals1 = copy.deepcopy(orbitals0)
             gtheta = get_givens_rotation_angle(orbitals1)
@@ -129,16 +119,9 @@ class TestFQAOAUtils(unittest.TestCase):
                         temp = matrix[ik][icol - 1]
                         matrix[ik][icol - 1] = temp * np.cos(-angle) - matrix[ik][icol] * np.sin(-angle)
                         matrix[ik][icol] = temp * np.sin(-angle) + matrix[ik][icol] * np.cos(-angle)
-            statevector = []
-            for i, orbitals in enumerate([orbitals0, matrix]):
-
-                try:
-                    statevector.append(get_statevector(orbitals))
-                except ValueError as e:
-                    self.fail(f"Unexpected exception raised: {e}")
-
-            # Check statevector[0] = e^(i*theta) * statevector[1].
-            self.assertTrue(self.is_close_statevector(statevector), "statevectors are incorrect")
+            statevector = [get_statevector(orbitals0), get_statevector(matrix)]
+            self.assertTrue(is_close_statevector(statevector[0], statevector[1]),
+                            "statevector[0] cannot be expressed as e^(i*theta) * statevector[1].")
 
     # exception handling
     def test_fermi_analytical_orbital_invalid_input(self):
@@ -148,6 +131,7 @@ class TestFQAOAUtils(unittest.TestCase):
                 (3, 5, "cyclic", 1.0), # n_fermions > n_qubits
                 (5, 3, "cyclic", -1.0), # hopping < 0.0
                 (5, 3, "cyclic", 0.0), # hopping = 0.0
+                (5, 3, "cyc", 1.0), # lattice = "cyc"
         ]:
             with self.assertRaises(ValueError):
                 get_analytical_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
@@ -164,79 +148,12 @@ class TestFQAOAUtils(unittest.TestCase):
             with self.assertRaises(ValueError):
                 get_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
 
-    def test_generate_portfolio_data_shapes(self):
-        """Test that the function returns outputs with correct shapes."""
-        num_assets, num_days = 10, 15
-        # Generate data with the seed
-        seed = 1
-        mu, sigma, hist_exp = generate_random_portfolio_data(num_assets, num_days, seed)
-
-        # Check the shape
-        self.assertEqual(len(mu), num_assets)
-        self.assertEqual(len(sigma), num_assets)
-        self.assertEqual(len(sigma[0]), num_assets)
-        self.assertEqual(hist_exp.shape, (num_assets, num_days))
-
-    def test_generate_portfolio_data_without_seed(self):
-        """Test that setting a seed produces the same output."""
-        num_assets, num_days = 10, 15
-        # Generate data without the seed
-        mu1, sigma1, hist_exp1 = generate_random_portfolio_data(num_assets, num_days)
-        mu2, sigma2, hist_exp2 = generate_random_portfolio_data(num_assets, num_days)
-
-        # Check that the two runs produce different results
-        self.assertNotEqual(mu1, mu2)
-        self.assertNotEqual(sigma1, sigma2)
-        self.assertFalse(np.array_equal(hist_exp1, hist_exp2))
-
-    @staticmethod
-    def is_close_statevector(statevector) -> bool:
-        """
-        Checks if statevector[0] can be expressed as e^(i*theta) * statevector[1].
-        """
-
-        # Threshold for considering a value to be zero
-        tolerance = 1e-10
-
-        # Check if statevector[0] is approximately zero where statevector[1] is approximately zero
-        zero_mask_1 = np.isclose(statevector[1], 0, atol=tolerance)
-        zero_mask_0 = np.isclose(statevector[0], 0, atol=tolerance)
-
-        if np.all(zero_mask_1 == zero_mask_0):
-            # Create a mask to avoid division by zero
-            non_zero_mask = ~np.isclose(statevector[1], 0, atol=tolerance)
-
-            # Compute the ratio with the mask applied
-            ratio = statevector[0][non_zero_mask] / statevector[1][non_zero_mask]
-
-            # Verify if all ratios have the same phase angle
-            theta_calculated = np.angle(ratio)
-            theta_adjusted = (theta_calculated + np.pi) % (2 * np.pi) - np.pi
-
-            # Check if the phase difference is consistent
-            consistent_phase = np.allclose(theta_adjusted, theta_adjusted[0])
-
-            if consistent_phase:
-                theta = theta_adjusted[0]
-                print(f"statevector[0] can be expressed as e^(i*theta) * statevector[1] with theta={theta}.")
-                return True
-            print("statevector[0] cannot be expressed as e^(i*theta) * statevector[1].")
-            print('theta_adjusted', theta_adjusted)
-            return False
-        print("It cannot be confirmed that statevector[0] is approximately zero when statevector[1] is approximately zero.")
-        for i in range(len(statevector[0])):
-            print(statevector[0][i], statevector[1][i])
-        return False
-
     @staticmethod
     def is_left_aligned_diagonal_matrix(matrix: np.ndarray) -> bool:
         """
         Checks if the matrix has the most left-aligned diagonal elements as either 1 or -1,
         and all other elements as 0.
         """
-
-        np.set_printoptions(precision=3, suppress=True, linewidth=100)
-        print('fermi orbitals diagonalized by givens rotations')
 
         rows, cols = matrix.shape
         for i in range(rows):
@@ -248,6 +165,40 @@ class TestFQAOAUtils(unittest.TestCase):
                     if not np.isclose(matrix[i, j], 0):
                         return False
         return True
+
+def is_close_statevector(statevector1, statevector2) -> bool:
+    """
+    Checks if statevector1 can be expressed as e^(i*theta) * statevector2.
+    """
+
+    # Threshold for considering a value to be zero
+    tolerance = 1e-10
+
+    # Check if statevector1 is approximately zero where statevector2 is approximately zero
+    zero_mask_0 = np.isclose(statevector1, 0, atol=tolerance)
+    zero_mask_1 = np.isclose(statevector2, 0, atol=tolerance)
+
+    if np.all(zero_mask_1 == zero_mask_0):
+        # Create a mask to avoid division by zero
+        non_zero_mask = ~np.isclose(statevector2, 0, atol=tolerance)
+
+        # Compute the ratio with the mask applied
+        ratio = statevector1[non_zero_mask] / statevector2[non_zero_mask]
+
+        # Verify if all ratios have the same phase angle
+        theta_calculated = np.angle(ratio)
+        theta_adjusted = (theta_calculated + np.pi) % (2 * np.pi) - np.pi
+        consistent_phase = np.allclose(theta_adjusted, theta_adjusted[0])
+
+        # Verify if all absolute values are same
+        absolute_ratio = np.abs(statevector1[non_zero_mask] / statevector2[non_zero_mask])
+        consistent_magnitude = np.allclose(absolute_ratio, absolute_ratio[0])
+
+        if consistent_phase and consistent_magnitude:
+            return True
+
+        return False
+    return False
 
 if __name__ == '__main__':
     unittest.main()
