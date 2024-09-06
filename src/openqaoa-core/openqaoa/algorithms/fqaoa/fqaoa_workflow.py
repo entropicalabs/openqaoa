@@ -3,7 +3,6 @@ from copy import deepcopy
 import numpy as np
 
 from .fqaoa_utils import (
-    get_analytical_fermi_orbitals,
     get_fermi_orbitals,
     get_statevector,
     get_givens_rotation_angle,
@@ -76,7 +75,7 @@ class FQAOA(Workflow):
         The circuit properties of the FQAOA workflow. Use to set depth `p`,
         choice of parameterization, parameter initialisation strategies, mixer hamiltonians.
         For a complete list of its parameters and usage please see the method `set_circuit_properties`
-    backend_properties: `BackendProperties`
+    backend_properties: `FermiBackendProperties`
         The backend properties of the FQAOA workflow. Use to set the backend properties
         such as the number of shots and the cvar values.
         For a complete list of its parameters and usage please see the method `set_backend_properties`
@@ -107,8 +106,10 @@ class FQAOA(Workflow):
 
     Examples
     --------
-    Examples should be written in doctest format, and should illustrate how
-    to use the function.
+    Basic usage with default settings:
+
+    Initialize FQAOA with default parameters. This approach is straightforward and uses standard configurations.
+    This is suitable when the problem's requirements align with the default settings of FQAOA.
 
     >>> fqaoa = FQAOA()
     >>> fqaoa.compile(problem, n_fermions)
@@ -117,7 +118,10 @@ class FQAOA(Workflow):
     Where `problem` is an instance of `openqaoa.problems.problem.QUBO`
     with hamming weight constant constraint, where `n_fermions` is a constraint value.
 
-    If you want to use non-default parameters:
+    Custom usage with non-default parameters:
+
+    If your problem requires specific configurations or optimization strategies, you can customize the FQAOA instance
+    by setting circuit properties, choosing a different device, adjusting backend settings, or selecting a different classical optimizer.
 
     >>> fqaoa_custom = FQAOA()
     >>> fqaoa_custom.set_circuit_properties(
@@ -177,15 +181,44 @@ class FQAOA(Workflow):
     @check_compiled
     def set_backend_properties(self, **kwargs):
         """
-        Override set_backend_properties to use FermiBackendProperties.
+        Specify the backend properties to construct FQAOA circuit
 
         Parameters
         ----------
-        **kwargs : dict
-            Keyword arguments representing backend properties.
-
-            - init_hadamard : bool
-                Whether to apply the Hadamard gate during initialization. This will be overridden to False.
+        device: DeviceBase
+            The device to use for the backend.
+        prepend_state: Union[openqaoa.basebackend.QuantumCircuitBase,numpy.ndarray(complex)]
+            The initial state for FQAOA is specified within the `FQAOA.compile` method, and therefore
+            `prepend_state` should not be set here. Providing a value for this property will
+            raise a ValueError.
+        append_state: Union[QuantumCircuitBase,numpy.ndarray(complex)]
+            The state appended to the circuit.
+        init_hadamard: bool
+            Specifies whether to apply the Hadamard gate during initialization.
+            This is always set to `False` in FQAOA and will raise a ValueError if set to `True`.
+        n_shots: int
+            The number of shots to be used for the shot-based computation.
+        cvar_alpha: float
+            The value of the CVaR parameter.
+        noise_model: NoiseModel
+            The `qiskit` noise model to be used for the shot-based simulator.
+        initial_qubit_mapping: Union[List[int], numpy.ndarray]
+            Mapping from physical to logical qubit indices, used to eventually
+            construct the quantum circuit.  For example, for a system composed by 3 qubits
+           `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit
+            and the right hand side is the logical qubits
+        qiskit_simulation_method: str
+            Specify the simulation method to use with the `qiskit.AerSimulator`
+        qiskit_optimization_level: int, optional
+            Specify the qiskit.transpile optimization level. Choose from 0,1,2,3
+        seed_simulator: int
+            Specify a seed for `qiskit` simulators
+        active_reset: bool
+            To use the active_reset functionality on Rigetti backends through QCS
+        rewiring: str
+            Specify the rewiring strategy for compilation for Rigetti QPUs through QCS
+        disable_qubit_rewiring: bool
+            enable/disable qubit rewiring when accessing QPUs via the AWS `braket`
         """
 
         for key, value in kwargs.items():
@@ -195,7 +228,6 @@ class FQAOA(Workflow):
                 raise ValueError(
                     f"Specified argument `{value}` for `{key}` in set_backend_properties is not supported"
                 )
-
         self.backend_properties = FermiBackendProperties(**kwargs)
 
         return None
@@ -203,21 +235,21 @@ class FQAOA(Workflow):
     @check_compiled
     def set_circuit_properties(self, **kwargs):
         """
-        Specify the circuit properties to construct QAOA circuit
+        Specify the circuit properties to construct FQAOA circuit
 
         Parameters
         ----------
         qubit_register: `list`
-            Select the desired qubits to run the QAOA program. Meant to be used as a qubit
+            Select the desired qubits to run the FQAOA program. Meant to be used as a qubit
             selector for qubits on a QPU. Defaults to a list from 0 to n-1 (n = number of qubits)
         p: `int`
-            Depth `p` of the QAOA circuit
+            Depth `p` of the FQAOA circuit
         q: `int`
-            Analogue of `p` of the QAOA circuit in the Fourier parameterization
+            Analogue of `p` of the FQAOA circuit in the Fourier parameterization
         param_type: `str`
-            Choose the QAOA circuit parameterization. Currently supported parameterizations include:
-            `'standard'`: Standard QAOA parameterization
-            `'standard_w_bias'`: Standard QAOA parameterization with a separate parameter for single-qubit terms.
+            Choose the FQAOA circuit parameterization. Currently supported parameterizations include:
+            `'standard'`: Standard FQAOA parameterization
+            `'standard_w_bias'`: Standard FQAOA parameterization with a separate parameter for single-qubit terms.
             `'extended'`: Individual parameter for each qubit and each term in the Hamiltonian.
             `'fourier'`: Fourier circuit parameterization
             `'fourier_extended'`: Fourier circuit parameterization with individual parameter
@@ -225,7 +257,7 @@ class FQAOA(Workflow):
             `'fourier_w_bias'`: Fourier circuit parameterization with a separate
             parameter for single-qubit terms
         init_type: `str`
-            Initialisation strategy for the QAOA circuit parameters. Allowed init_types:
+            Initialisation strategy for the FQAOA circuit parameters. Allowed init_types:
             `'rand'`: Randomly initialise circuit parameters
             `'ramp'`: Linear ramp from Hamiltonian initialisation of circuit
             parameters (inspired from Quantum Annealing)
@@ -242,7 +274,7 @@ class FQAOA(Workflow):
         annealing_time: `float`
             Total time to run the FQAOA program in the Annealing parameterization (digitised annealing)
         linear_ramp_time: `float`
-            The slope(rate) of linear ramp initialisation of QAOA parameters.
+            The slope(rate) of linear ramp initialisation of FQAOA parameters.
         variational_params_dict: `dict`
             Dictionary object specifying the initial value of each circuit parameter for
             the chosen parameterization, if the `init_type` is selected as `'custom'`.
@@ -280,9 +312,9 @@ class FQAOA(Workflow):
         Parameters
         ----------
         problem: `QUBO`
-            portfolio optimisation problems converted to QUBO using penalty methods
+            QUBO problem to be solved by FQAOA
         n_fermions: `int`
-            a constraint value, budgets in portfolio optimization problem.
+            Number of fermions corresponding to the value of the constraint
         hopping: `float`, optional
             the coefficient of the fermionic mixer Hamiltonian
         verbose: bool
@@ -343,10 +375,8 @@ class FQAOA(Workflow):
         # Backend configuration required for initial state preparation in FQAOA.
         lattice = self.circuit_properties.mixer_qubit_connectivity
 
-        # fermion orbitals
-        orbitals = get_fermi_orbitals(self.n_qubits, self.n_fermions, lattice, hopping)
-
         # initial statevector or circuit
+        orbitals = get_fermi_orbitals(self.n_qubits, self.n_fermions, lattice, hopping)
         if self.device.device_name in 'vectorized':
             self.backend_properties.prepend_state = get_statevector(orbitals)
         else:
@@ -619,7 +649,7 @@ class FQAOA(Workflow):
 
         return serializable_dict
 
-    def _fermi_initial_circuit(self, orbitals: np.array, gate_applicator: object) -> object:
+    def _fermi_initial_circuit(self, orbitals: np.ndarray, gate_applicator: object) -> object:
         """
         Constructs the initial quantum circuit for the FQAOA.
 
@@ -629,7 +659,7 @@ class FQAOA(Workflow):
 
         Parameters
         ----------
-        orbitals : np.array
+        orbitals : numpy.ndarray
             A numpy array containing the orbital information needed to compute the Givens rotation angles.
         gate_applicator : object
             An object responsible for applying quantum gates to the circuit.
@@ -722,42 +752,12 @@ class GivensRotationGateMap(GateMap):
 
 class FermiBackendProperties(WorkflowProperties):
     """
-    Choose the backend on which to run the QAOA circuits
+    Tunable backend properties for FQAOA circuit to be specified by the user.
 
-    Parameters
-    ----------
-    device: DeviceBase
-        The device to use for the backend.
-    prepend_state: Union[openqaoa.basebackend.QuantumCircuitBase,numpy.ndarray(complex)]
-        The state prepended to the circuit.
-    append_state: Union[QuantumCircuitBase,numpy.ndarray(complex)]
-        The state appended to the circuit.
-    init_hadamard: bool
-        Whether to apply a Hadamard gate to the beginning of the
-        QAOA part of the circuit.
-    n_shots: int
-        The number of shots to be used for the shot-based computation.
-    cvar_alpha: float
-        The value of the CVaR parameter.
-    noise_model: NoiseModel
-        The `qiskit` noise model to be used for the shot-based simulator.
-    initial_qubit_mapping: Union[List[int], numpy.ndarray]
-        Mapping from physical to logical qubit indices, used to eventually
-        construct the quantum circuit.  For example, for a system composed by 3 qubits
-       `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit
-        and the right hand side is the logical qubits
-    qiskit_simulation_method: str
-        Specify the simulation method to use with the `qiskit.AerSimulator`
-    qiskit_optimization_level: int, optional
-        Specify the qiskit.transpile optimization level. Choose from 0,1,2,3
-    seed_simulator: int
-        Specify a seed for `qiskit` simulators
-    active_reset: bool
-        To use the active_reset functionality on Rigetti backends through QCS
-    rewiring: str
-        Specify the rewiring strategy for compilation for Rigetti QPUs through QCS
-    disable_qubit_rewiring: bool
-        enable/disable qubit rewiring when accessing QPUs via the AWS `braket`
+    The only difference with `BackendProperties` is  that `init_hadamard` and `prepend_state`
+    are constrained in FQAOA. Because the initial state for FQAOA is specified within the `FQAOA.compile` method,
+    and therefore `init_hadamard` and `prepend_state` should not be set here.
+    Providing a value for this property will raise a ValueError.
     """
 
     def __init__(
@@ -784,8 +784,6 @@ class FermiBackendProperties(WorkflowProperties):
             raise ValueError("In FQAOA, init_hadamard is not recognized.")
         if prepend_state is not None:
             raise ValueError("In FQAOA, prepend_state is not recognized.")
-        if append_state is not None:
-            raise ValueError("In FQAOA, append_state is not recognized.")
         self.init_hadamard = False
         self.prepend_state = None
         self.append_state = append_state
@@ -802,9 +800,9 @@ class FermiBackendProperties(WorkflowProperties):
 
 class FermiCircuitProperties(WorkflowProperties):
     """
-    Tunable properties of the FQAOA circuit to be specified by the user
+    Tunable circuit properties of the FQAOA circuit to be specified by the user
 
-    The only difference with CircuitProperties is that mixer_hamiltonian is limited to "xy"
+    The only difference with `CircuitProperties` is that mixer_hamiltonian is limited to "xy"
     and mixer_qubit connetivity is limited to "cyclic" or "chain".
     """
 

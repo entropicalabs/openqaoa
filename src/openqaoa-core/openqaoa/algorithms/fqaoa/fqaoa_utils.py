@@ -5,7 +5,7 @@ import numpy as np
 
 ALLOWED_LATTICE = ["cyclic", "chain"]
 
-def get_givens_rotation_angle(orbitals: np.array) -> List[float]:
+def get_givens_rotation_angle(orbitals: np.ndarray) -> List[float]:
     """
     Compute the Givens rotation angles for transforming the orbital matrix `orbitals`.
 
@@ -16,7 +16,7 @@ def get_givens_rotation_angle(orbitals: np.array) -> List[float]:
 
     Parameters
     ----------
-    orbitals : np.array
+    orbitals : numpy.ndarray
         A 2D NumPy array representing the matrix of orbitals. The matrix should have a shape of 
         (n_fermions, n_qubits), where `n_fermions` is the number of rows and `n_qubits` is 
         the number of columns.
@@ -66,13 +66,13 @@ def get_givens_rotation_angle(orbitals: np.array) -> List[float]:
 
     return gtheta
 
-def get_statevector(orbitals: np.array) -> np.ndarray:
+def get_statevector(orbitals: np.ndarray) -> np.ndarray:
     """
     Compute the statevector from fermionic orbitals.
 
     Parameters
     ----------
-    orbitals : np.array
+    orbitals : np.ndarray
         A 2D NumPy array representing the matrix of orbitals. The matrix should have a shape of 
         (n_fermions, n_qubits), where `n_fermions` is the number of rows and `n_qubits` is 
         the number of columns.
@@ -297,7 +297,7 @@ def generate_random_portfolio_data(
 
     # Generate historical-like data for multiple assets over a number of days
     random_asset_factors = (1 - 2 * np.random.rand(num_assets)).reshape(-1, 1)
-    day_indices = np.array([np.arange(num_days) for i in range(num_assets)]) + np.random.randint(10)
+    day_indices = np.ndarray([np.arange(num_days) for i in range(num_assets)]) + np.random.randint(10)
     random_fluctuations = 1 - 2 * np.random.rand(num_assets, num_days)
 
     # The resulting matrix hist_exp represents the daily returns or price levels of the assets
@@ -359,7 +359,7 @@ def _get_free_eigen(
 
     return eig[1]
 
-def _unitary_sparsification(orbitals: np.array) -> np.ndarray:
+def _unitary_sparsification(orbitals: np.ndarray) -> np.ndarray:
     """
     Perform a unitary transformation to sparsify a matrix `orbitals`
     by setting the elements in the upper triangular region to zero.
