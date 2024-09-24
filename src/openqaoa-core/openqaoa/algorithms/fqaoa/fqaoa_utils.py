@@ -16,7 +16,7 @@ def get_givens_rotation_angle(orbitals: np.ndarray) -> List[float]:
 
     Parameters
     ----------
-    orbitals : numpy.ndarray
+    orbitals : np.ndarray
         A 2D NumPy array representing the matrix of orbitals. The matrix should have a shape of 
         (n_fermions, n_qubits), where `n_fermions` is the number of rows and `n_qubits` is 
         the number of columns.
@@ -79,7 +79,7 @@ def get_statevector(orbitals: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    numpy.ndarray
+    np.ndarray
         A 1D NumPy array of complex numbers representing the statevector of the quantum system. 
         The length of this array is `2**n_qubits`, corresponding to all possible basis states.
 
@@ -231,7 +231,7 @@ def get_fermi_orbitals(
 
     Returns
     -------
-    numpy.ndarray
+    np.ndarray
         matrix representation of Fermionic orbitals.
     
     Notes
@@ -297,7 +297,7 @@ def generate_random_portfolio_data(
 
     # Generate historical-like data for multiple assets over a number of days
     random_asset_factors = (1 - 2 * np.random.rand(num_assets)).reshape(-1, 1)
-    day_indices = np.ndarray([np.arange(num_days) for i in range(num_assets)]) + np.random.randint(10)
+    day_indices = np.array([np.arange(num_days) for i in range(num_assets)]) + np.random.randint(10)
     random_fluctuations = 1 - 2 * np.random.rand(num_assets, num_days)
 
     # The resulting matrix hist_exp represents the daily returns or price levels of the assets
@@ -377,7 +377,7 @@ def _unitary_sparsification(orbitals: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    numpy.ndarray
+    np.ndarray
         The modified matrix `orbitals` with its upper triangular elements set to zero.
     """
 

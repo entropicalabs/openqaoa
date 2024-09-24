@@ -187,11 +187,11 @@ class FQAOA(Workflow):
         ----------
         device: DeviceBase
             The device to use for the backend.
-        prepend_state: Union[openqaoa.basebackend.QuantumCircuitBase,numpy.ndarray(complex)]
+        prepend_state: Union[openqaoa.basebackend.QuantumCircuitBase,np.ndarray(complex)]
             The initial state for FQAOA is specified within the `FQAOA.compile` method, and therefore
             `prepend_state` should not be set here. Providing a value for this property will
             raise a ValueError.
-        append_state: Union[QuantumCircuitBase,numpy.ndarray(complex)]
+        append_state: Union[QuantumCircuitBase,np.ndarray(complex)]
             The state appended to the circuit.
         init_hadamard: bool
             Specifies whether to apply the Hadamard gate during initialization.
@@ -202,7 +202,7 @@ class FQAOA(Workflow):
             The value of the CVaR parameter.
         noise_model: NoiseModel
             The `qiskit` noise model to be used for the shot-based simulator.
-        initial_qubit_mapping: Union[List[int], numpy.ndarray]
+        initial_qubit_mapping: Union[List[int], np.ndarray]
             Mapping from physical to logical qubit indices, used to eventually
             construct the quantum circuit.  For example, for a system composed by 3 qubits
            `qubit_layout=[1,3,2]`, maps `1<->0`, `3<->1`, `2<->2`, where the left hand side is the physical qubit
@@ -659,7 +659,7 @@ class FQAOA(Workflow):
 
         Parameters
         ----------
-        orbitals : numpy.ndarray
+        orbitals : np.ndarray
             A numpy array containing the orbital information needed to compute the Givens rotation angles.
         gate_applicator : object
             An object responsible for applying quantum gates to the circuit.
