@@ -16,6 +16,7 @@ from openqaoa.utilities import (
     XY_mixer_hamiltonian,
     is_valid_uuid,
     ground_state_hamiltonian,
+    is_close_statevector,
 )
 from openqaoa.algorithms.workflow_properties import (
     BackendProperties,
@@ -54,8 +55,6 @@ from openqaoa.optimizers.training_vqa import (
 from openqaoa.qaoa_components.variational_parameters.variational_params_factory import (
     PARAMS_CLASSES_MAPPER,
 )
-
-from test_fqaoa import is_close_statevector
 
 def _compare_qaoa_results(dict_old, dict_new):
     for key in dict_old.keys():
@@ -2048,9 +2047,7 @@ class TestingFQAOA(unittest.TestCase):
 
         self.assertEqual(fqaoa.backend.init_hadamard, False)
 
-        statevector = [fqaoa.backend.prepend_state, initial_state]
-        is_close_statevector(statevector[0], statevector[1])
-        self.assertTrue(is_close_statevector(statevector[0], statevector[1]),
+        self.assertTrue(is_close_statevector(fqaoa.backend.prepend_state, initial_state),
                         f"statevector[0] cannot be expressed as e^(i*theta) * statevector[1].")
 
         self.assertEqual(fqaoa.backend.append_state, None)
@@ -2085,8 +2082,8 @@ class TestingFQAOA(unittest.TestCase):
 
         self.assertEqual(type(fqaoa.backend), QAOAvectorizedBackendSimulator)
 
-        statevector = [fqaoa.backend.prepend_state, initial_state]
-        is_close_statevector(statevector[0], statevector[1])
+        self.assertTrue(is_close_statevector(fqaoa.backend.prepend_state, initial_state),
+                        f"statevector[0] cannot be expressed as e^(i*theta) * statevector[1].")
 
         self.assertEqual(fqaoa.backend.cvar_alpha, 1)
 

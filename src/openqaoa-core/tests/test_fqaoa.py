@@ -2,6 +2,8 @@ import unittest
 import copy
 import numpy as np
 
+from openqaoa.utilities import is_close_statevector
+
 from openqaoa.algorithms.fqaoa.fqaoa_utils import (
     get_analytical_fermi_orbitals,
     get_fermi_orbitals,
@@ -50,8 +52,7 @@ class TestFQAOAUtils(unittest.TestCase):
         ]:
             analytical_fermi_orbitals = get_analytical_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
             fermi_orbitals = get_fermi_orbitals(n_qubits, n_fermions, lattice, hopping)
-            statevector = [get_statevector(analytical_fermi_orbitals), get_statevector(fermi_orbitals)]
-            self.assertTrue(is_close_statevector(statevector[0], statevector[1]),
+            self.assertTrue(is_close_statevector(get_statevector(analytical_fermi_orbitals), get_statevector(fermi_orbitals)),
                             "statevector[0] cannot be expressed as e^(i*theta) * statevector[1].")
 
     def test_givens_rotation_angle_length(self):
@@ -119,8 +120,7 @@ class TestFQAOAUtils(unittest.TestCase):
                         temp = matrix[ik][icol - 1]
                         matrix[ik][icol - 1] = temp * np.cos(-angle) - matrix[ik][icol] * np.sin(-angle)
                         matrix[ik][icol] = temp * np.sin(-angle) + matrix[ik][icol] * np.cos(-angle)
-            statevector = [get_statevector(orbitals0), get_statevector(matrix)]
-            self.assertTrue(is_close_statevector(statevector[0], statevector[1]),
+            self.assertTrue(is_close_statevector(get_statevector(orbitals0), get_statevector(matrix)),
                             "statevector[0] cannot be expressed as e^(i*theta) * statevector[1].")
 
     # exception handling
@@ -165,40 +165,6 @@ class TestFQAOAUtils(unittest.TestCase):
                     if not np.isclose(matrix[i, j], 0):
                         return False
         return True
-
-def is_close_statevector(statevector1, statevector2) -> bool:
-    """
-    Checks if statevector1 can be expressed as e^(i*theta) * statevector2.
-    """
-
-    # Threshold for considering a value to be zero
-    tolerance = 1e-10
-
-    # Check if statevector1 is approximately zero where statevector2 is approximately zero
-    zero_mask_0 = np.isclose(statevector1, 0, atol=tolerance)
-    zero_mask_1 = np.isclose(statevector2, 0, atol=tolerance)
-
-    if np.all(zero_mask_1 == zero_mask_0):
-        # Create a mask to avoid division by zero
-        non_zero_mask = ~np.isclose(statevector2, 0, atol=tolerance)
-
-        # Compute the ratio with the mask applied
-        ratio = statevector1[non_zero_mask] / statevector2[non_zero_mask]
-
-        # Verify if all ratios have the same phase angle
-        theta_calculated = np.angle(ratio)
-        theta_adjusted = (theta_calculated + np.pi) % (2 * np.pi) - np.pi
-        consistent_phase = np.allclose(theta_adjusted, theta_adjusted[0])
-
-        # Verify if all absolute values are same
-        absolute_ratio = np.abs(statevector1[non_zero_mask] / statevector2[non_zero_mask])
-        consistent_magnitude = np.allclose(absolute_ratio, absolute_ratio[0])
-
-        if consistent_phase and consistent_magnitude:
-            return True
-
-        return False
-    return False
 
 if __name__ == '__main__':
     unittest.main()
