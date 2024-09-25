@@ -1985,10 +1985,15 @@ def knapsack_balanced_basis(
 
     return wavefunction
 
-def is_close_statevector(statevector1, statevector2) -> bool:
+def is_close_statevector(statevector1: np.ndarray, statevector2: np.ndarray) -> bool:
     """
     Checks if statevector1 can be expressed as e^(i*theta) * statevector2.
+    Both statevector1 and statevector2 must be numpy arrays of the same size.
     """
+
+    # Check for size consistency
+    if statevector1.shape != statevector2.shape:
+        raise ValueError("The statevectors must have the same shape.")
 
     # Threshold for considering a value to be zero
     tolerance = 1e-10
