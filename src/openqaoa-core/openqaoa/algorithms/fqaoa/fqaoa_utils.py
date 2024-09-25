@@ -109,7 +109,7 @@ def get_statevector(orbitals: np.ndarray) -> np.ndarray:
         for i, j in enumerate(indices):
             cof[:, i] = orbitals[:, j]
         # Calculate the determinant and store it in the statevector
-        statevector[inum] = np.linalg.det(cof)
+        statevector[inum] = linalg.det(cof)
 
     return statevector
 
