@@ -315,10 +315,10 @@ Contents
    notebooks/12_testing_azure.ipynb
    notebooks/13_optimizers.ipynb
    notebooks/14_qaoa_benchmark.ipynb
-   notebooks/X_dumping_data.ipynb
    notebooks/15_Zero_Noise_Extrapolation.ipynb
    notebooks/16_FQAOA_example.ipynb
-   notebooks/17_FQAOA_advanced_parametrization.ipynb
+   notebooks/17_FQAOA_advanced_parameterization.ipynb
+   notebooks/X_dumping_data.ipynb
 
 Indices and tables
 ==================
