@@ -104,7 +104,7 @@ class PortfolioOptimization(Problem):
 
         # Specific the objective of the
         # portfolio optimization function
-        objective_function = -np.array(self.mu) @ x + x.T @ np.array(self.sigma) @ x
+        objective_function = -np.array(self.mu) @ x + self.risk_factor * x.T @ np.array(self.sigma) @ x
 
         # For this problem it aims to maximize the profit
         # of those assets minimizing the risk of the investment
