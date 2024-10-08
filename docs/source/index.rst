@@ -171,6 +171,18 @@ Your first RQAOA workflow
 
 rqaoa_type can take two values which select elimination strategies. The user can choose between `adaptive` or `custom`.
 
+Your first FQAOA workflow
+-------------------------
+
+.. code-block:: python
+
+   from openqaoa import FQAOA
+   fqaoa = FQAOA()
+   fqaoa.compile(qubo_problem, n_fermions)
+   fqaoa.optimize()
+
+FQAOA intrinsically imposes a hard constraint where the hamming weight is equal to n_fermions.
+
 Factory mode
 ------------
 The user is also free to directly access the source code without using the workflow API. 
@@ -303,8 +315,10 @@ Contents
    notebooks/12_testing_azure.ipynb
    notebooks/13_optimizers.ipynb
    notebooks/14_qaoa_benchmark.ipynb
-   notebooks/X_dumping_data.ipynb
    notebooks/15_Zero_Noise_Extrapolation.ipynb
+   notebooks/16_FQAOA_example.ipynb
+   notebooks/17_FQAOA_advanced_parameterization.ipynb
+   notebooks/X_dumping_data.ipynb
 
 Indices and tables
 ==================

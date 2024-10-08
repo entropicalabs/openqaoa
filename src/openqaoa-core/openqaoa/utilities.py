@@ -1984,3 +1984,43 @@ def knapsack_balanced_basis(
     ) / np.sqrt(len(wavefn_locs))
 
     return wavefunction
+
+def is_close_statevector(statevector1: np.ndarray, statevector2: np.ndarray) -> bool:
+    """
+    Checks if statevector1 can be expressed as e^(i*theta) * statevector2.
+    Both statevector1 and statevector2 must be numpy arrays of the same size.
+    """
+
+    # Check for size consistency
+    if statevector1.shape != statevector2.shape:
+        raise ValueError("The statevectors must have the same shape.")
+
+    # Threshold for considering a value to be zero
+    tolerance = 1e-10
+
+    # Check if statevector1 is approximately zero where statevector2 is approximately zero
+    zero_mask_0 = np.isclose(statevector1, 0, atol=tolerance)
+    zero_mask_1 = np.isclose(statevector2, 0, atol=tolerance)
+
+    if np.all(zero_mask_1 == zero_mask_0):
+        # Create a mask to avoid division by zero
+        non_zero_mask = ~np.isclose(statevector2, 0, atol=tolerance)
+
+        # Compute the ratio with the mask applied
+        ratio = statevector1[non_zero_mask] / statevector2[non_zero_mask]
+
+        # Verify if all ratios have the same phase angle
+        theta_calculated = np.angle(ratio)
+        theta_adjusted = (theta_calculated + np.pi) % (2 * np.pi) - np.pi
+        consistent_phase = np.allclose(theta_adjusted, theta_adjusted[0])
+
+        # Verify if all absolute values are same
+        absolute_ratio = np.abs(statevector1[non_zero_mask] / statevector2[non_zero_mask])
+        consistent_magnitude = np.allclose(absolute_ratio, absolute_ratio[0])
+
+        if consistent_phase and consistent_magnitude:
+            return True
+
+        return False
+    return False
+
