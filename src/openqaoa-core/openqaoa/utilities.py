@@ -55,12 +55,14 @@ def XY_mixer_hamiltonian(
     n_qubits: int,
     qubit_connectivity: Union[List[list], List[tuple], str] = "full",
     coeffs: List[float] = None,
+    optimize: bool = False,
+    cost_hamiltonian: Hamiltonian = None,
+    p: int = None,
+    init_type: str = None,
+    n_calls: int = 50,
 ) -> Hamiltonian:
     r"""
-    Construct a Hamiltonian object to implement the XY mixer.
-
-    .. Important::
-            The XY mixer is not implemented with :math:`RXY` Gates, but with :math:`H_{XY}=\frac{1}{2}(\sum_{i,j} X_iX_j+Y_iY_j)`
+    Construct a Hamiltonian object to implement the XY mixer, with optional Bayesian Optimization for coefficients.
 
     Parameters
     ----------
@@ -70,6 +72,16 @@ def XY_mixer_hamiltonian(
         The connectivity of the qubits in the mixer Hamiltonian.
     coeffs: `List[float]`
         The coefficients of the XY terms in the Hamiltonian.
+    optimize: `bool`
+        Whether to optimize the coefficients using Bayesian Optimization.
+    cost_hamiltonian: `Hamiltonian`
+        The cost Hamiltonian for QAOA (required if optimize=True).
+    p: `int`
+        The depth of the QAOA circuit (required if optimize=True).
+    init_type: `str`
+        The initialization strategy for QAOA parameters (required if optimize=True).
+    n_calls: `int`
+        The number of Bayesian Optimization evaluations (default: 50).
 
     Returns
     -------
@@ -94,7 +106,7 @@ def XY_mixer_hamiltonian(
                 f"Please choose connection topology from {list(connectivity_topology_dict.keys())}"
             )
 
-    # Define connectivty according to user input
+    # Define connectivity according to user input
     else:
         # Extract indices from connectivity
         indices = set([qubit for term in qubit_connectivity for qubit in term])
@@ -107,6 +119,25 @@ def XY_mixer_hamiltonian(
 
     # If no coefficients provided, set all to the number of terms
     coeffs = [0.5] * 2 * len(qubit_connectivity) if coeffs is None else coeffs
+
+    # Optimize coefficients using Bayesian Optimization if requested
+    if optimize:
+        if cost_hamiltonian is None or p is None or init_type is None:
+            raise ValueError("cost_hamiltonian, p, and init_type must be provided for optimization.")
+
+        # Define the search space for the coefficients
+        space = [Real(0, 1, name=f'coeff_{i}') for i in range(2 * len(qubit_connectivity))]
+
+        # Run Bayesian Optimization
+        result = gp_minimize(
+            lambda coeffs: objective_function(coeffs, n_qubits, qubit_connectivity, cost_hamiltonian, p, init_type),
+            space,
+            n_calls=n_calls,
+            random_state=42
+        )
+
+        # Use the optimized coefficients
+        coeffs = result.x
 
     # Initialize list of terms
     terms = []
