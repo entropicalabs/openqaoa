@@ -73,7 +73,7 @@ class TestingUtilities(unittest.TestCase):
         sizes = range(2, 10)
 
         # Set of default connectivities
-        connectivities = ["full", "chain", "star"]
+        connectivities = ["full", "chain", "cyclic", "star"]
 
         # String of Pauli objects contained in the XY mixer Hamiltonian
         terms_strings = ["XX", "YY"]
@@ -93,6 +93,9 @@ class TestingUtilities(unittest.TestCase):
 
                     elif connectivity == "chain":
                         terms_indices = [(i, i + 1) for i in range(n_qubits - 1)]
+
+                    elif connectivity == "cyclic":
+                        terms_indices = [(i, i + 1) for i in range(n_qubits - 1) if i % 2 == 0] + [(i, i + 1) for i in range(n_qubits - 1) if i % 2 != 0] + [(0, n_qubits - 1)]
 
                     else:
                         terms_indices = [(0, i) for i in range(1, n_qubits)]
@@ -139,7 +142,7 @@ class TestingUtilities(unittest.TestCase):
         # Exception case - Insert an connectivity input name that is not supported
 
         # Supported connectivities
-        supported_connectivities = ["full", "chain", "star"]
+        supported_connectivities = ["full", "chain", "cyclic", "star"]
 
         # Choose a wrong connectivity
         connectivity = "bubbletea"
@@ -167,7 +170,7 @@ class TestingUtilities(unittest.TestCase):
         n_qubits = 10
 
         # Define a qubit connectivity for X, and a connectivity for XY mixers
-        connectivities = [None, "star", "full", "chain"]
+        connectivities = [None, "star", "full", "chain", "cyclic"]
 
         for connectivity in connectivities:
             # Define connectivity explicit indexing
@@ -178,6 +181,11 @@ class TestingUtilities(unittest.TestCase):
 
             elif connectivity == "chain":
                 terms_indices = [(i, i + 1) for i in range(n_qubits - 1)]
+                input_coefficients = 2 * [1 for _ in range(len(terms_indices))]
+                mixer_type = "xy"
+
+            elif connectivity == "cyclic":
+                terms_indices = [(i, i + 1) for i in range(n_qubits - 1) if i % 2 == 0] + [(i, i + 1) for i in range(n_qubits - 1) if i % 2 != 0] + [(0, n_qubits - 1)]
                 input_coefficients = 2 * [1 for _ in range(len(terms_indices))]
                 mixer_type = "xy"
 
